@@ -145,10 +145,17 @@ h1 .grad{
 
 /* ---- Nút CTA ---- */
 .actions{
-  display:flex;gap:16px;flex-wrap:wrap;justify-content:center;
+  display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:center;
   margin-top:38px;
   animation:fadeUp .7s var(--ease) .24s both;
 }
+.cta-img{
+  height:76px;width:auto;max-width:120px;object-fit:contain;
+  border-radius:var(--radius-md);
+  filter:drop-shadow(0 10px 24px rgba(95,211,255,.35));
+  transition:transform .25s var(--ease);
+}
+.cta-img:hover{transform:translateY(-3px) scale(1.03);}
 .btn{
   display:inline-flex;align-items:center;gap:11px;
   padding:16px 30px;border-radius:var(--radius-lg);
@@ -199,6 +206,29 @@ footer a:hover{color:var(--accent);}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
+/* ---- Nút chuyển ngôn ngữ ---- */
+.lang-switch{
+  position:fixed;top:20px;right:20px;z-index:20;
+  display:inline-flex;align-items:center;gap:2px;
+  padding:4px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));
+  box-shadow:var(--shadow-soft);
+  animation:fadeUp .7s var(--ease) both;
+}
+.lang-switch button{
+  border:none;background:transparent;color:var(--ink-soft);
+  font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.04em;
+  padding:7px 14px;border-radius:999px;
+  transition:background .2s var(--ease), color .2s var(--ease);
+}
+.lang-switch button:hover{color:var(--ink);}
+.lang-switch button.active{
+  color:#0a1030;
+  background:linear-gradient(120deg, var(--sun) 0%, var(--sun-warm) 100%);
+  box-shadow:0 6px 16px -6px rgba(255,157,61,.6);
+}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important;}
 }
@@ -209,47 +239,119 @@ footer a:hover{color:var(--accent);}
 <div id="stars2"></div>
 <div class="sun-glow"></div>
 
+<!-- Nút chuyển ngôn ngữ -->
+<div class="lang-switch" role="group" aria-label="Language / Ngôn ngữ">
+  <button type="button" data-lang="vi">VI</button>
+  <button type="button" data-lang="en">EN</button>
+</div>
+
 <main class="wrap">
-  <span class="badge"><span class="dot"></span>Bản đồ 3D tương tác</span>
+  <span class="badge"><span class="dot"></span><span data-i18n="badge">Bản đồ 3D tương tác</span></span>
 
-  <h1>Chào mừng đến <span class="grad">AstroQ</span></h1>
+  <h1><span data-i18n="hero_welcome">Chào mừng đến</span> <span class="grad">AstroQ</span></h1>
 
-  <p class="lead">
+  <p class="lead" data-i18n="lead">
     Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to
     và tìm hiểu từng hành tinh với giao diện trực quan, sống động.
   </p>
 
   <div class="actions">
+    <!-- Ảnh minh hoạ bên cạnh nút -->
+    <img class="cta-img" src="img/1.png" alt="AstroQ" />
     <!-- Link tới trang explorer (trang phụ) -->
     <a class="btn btn-primary" href="explorer.html">
-      Bắt đầu khám phá
+      <span data-i18n="cta_primary">Bắt đầu khám phá</span>
       <span class="arrow">→</span>
     </a>
-    <a class="btn btn-ghost" href="#features">Tính năng nổi bật</a>
+    <a class="btn btn-ghost" href="#features" data-i18n="cta_secondary">Tính năng nổi bật</a>
   </div>
 
   <section class="features" id="features">
     <div class="card">
       <div class="ico">🪐</div>
-      <h3>8 hành tinh</h3>
-      <p>Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.</p>
+      <h3 data-i18n="f1_title">8 hành tinh</h3>
+      <p data-i18n="f1_desc">Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.</p>
     </div>
     <div class="card">
       <div class="ico">🔭</div>
-      <h3>Tương tác 3D</h3>
-      <p>Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.</p>
+      <h3 data-i18n="f2_title">Tương tác 3D</h3>
+      <p data-i18n="f2_desc">Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.</p>
     </div>
     <div class="card">
       <div class="ico">✨</div>
-      <h3>Thông tin trực quan</h3>
-      <p>Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.</p>
+      <h3 data-i18n="f3_title">Thông tin trực quan</h3>
+      <p data-i18n="f3_desc">Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.</p>
     </div>
   </section>
 </main>
 
 <footer>
   AstroQ · Solar System Explorer &nbsp;·&nbsp;
-  <a href="explorer.html">Mở trình khám phá →</a>
+  <a href="explorer.html" data-i18n="footer_link">Mở trình khám phá →</a>
 </footer>
+
+<script>
+/* ============================================================
+   i18n — hỗ trợ Tiếng Việt & English
+   ============================================================ */
+const I18N = {
+  vi: {
+    title: "AstroQ — Khám phá Hệ Mặt Trời",
+    badge: "Bản đồ 3D tương tác",
+    hero_welcome: "Chào mừng đến",
+    lead: "Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to và tìm hiểu từng hành tinh với giao diện trực quan, sống động.",
+    cta_primary: "Bắt đầu khám phá",
+    cta_secondary: "Tính năng nổi bật",
+    f1_title: "8 hành tinh",
+    f1_desc: "Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.",
+    f2_title: "Tương tác 3D",
+    f2_desc: "Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.",
+    f3_title: "Thông tin trực quan",
+    f3_desc: "Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.",
+    footer_link: "Mở trình khám phá →"
+  },
+  en: {
+    title: "AstroQ — Explore the Solar System",
+    badge: "Interactive 3D map",
+    hero_welcome: "Welcome to",
+    lead: "Travel through the Solar System in real-time 3D — rotate, zoom, and learn about every planet through a vivid, intuitive interface.",
+    cta_primary: "Start exploring",
+    cta_secondary: "Key features",
+    f1_title: "8 planets",
+    f1_desc: "Simulated orbits and scale of every planet in the Solar System.",
+    f2_title: "3D interaction",
+    f2_desc: "Drag, drop and zoom smoothly to view the universe from any angle.",
+    f3_title: "Visual insights",
+    f3_desc: "A modern glass data panel for every celestial body you select.",
+    footer_link: "Open the explorer →"
+  }
+};
+
+function applyLang(lang){
+  const dict = I18N[lang] || I18N.vi;
+  document.documentElement.lang = lang;
+  document.title = dict.title;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll(".lang-switch button").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+  });
+  try { localStorage.setItem("astroq-lang", lang); } catch(e){}
+}
+
+// Khởi tạo: ưu tiên lựa chọn đã lưu, sau đó tới ngôn ngữ trình duyệt, mặc định VI.
+(function initLang(){
+  let saved;
+  try { saved = localStorage.getItem("astroq-lang"); } catch(e){}
+  const browser = (navigator.language || "vi").toLowerCase().startsWith("en") ? "en" : "vi";
+  applyLang(saved || browser);
+})();
+
+document.querySelectorAll(".lang-switch button").forEach(btn => {
+  btn.addEventListener("click", () => applyLang(btn.getAttribute("data-lang")));
+});
+</script>
 </body>
 </html>
