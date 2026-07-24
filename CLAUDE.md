@@ -54,6 +54,8 @@
 > Ghi mới nhất lên trên.
 
 ### 2026-07-25
+- Thêm 2 thẻ nhân vật bí ẩn (khoá) ở màn chọn: bóng đen + dấu "?" phát sáng, click hiện toast "sắp mở khoá". — `js/auth-flow.js`, `select.html`
+- Đổi tên nhân vật ở màn chọn: raica→Castor, báo→Umbra, chim→Ignis, chó→Sirius, chuột→Lyrae, cú→Moros, cua→Karkinos. Đồng bộ cỡ avatar trong khung (zoom nhẹ + căn giữa; ảnh đều 1080²). — `js/auth-flow.js`, `select.html`
 - Bỏ nút "Đăng nhập" riêng ở index; chỉ còn 1 nút "Trải nghiệm ngay" → mở popup (đăng nhập nằm trong popup). — `index.html`
 - Luồng mới: Đăng ký → `select.html` → `dashboard.html`; đăng nhập → thẳng dashboard, dùng lại avatar. — `index.html`, `select.html`, `js/auth-flow.js`, `dashboard.html`
 - Tạo `select.html` (ID card glassmorphism, roster 3D bounce, HUD role/trait/stats neon, dấu APPROVED) + `js/auth-flow.js`. Dùng ảnh `3d/` + `ava/`.
