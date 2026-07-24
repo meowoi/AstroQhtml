@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AstroQ — Bảng điều khiển Người chơi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+<style>
+/* ---- Tokens ---- */
+:root{
+  --ink:#eaf1ff; --ink-soft:#a9b8e8; --ink-faint:#7f8dc4;
+  --glass:rgba(16,26,60,0.55); --glass-strong:rgba(12,20,50,0.78);
+  --glass-brd:rgba(150,180,255,0.18); --glass-brd-strong:rgba(160,190,255,0.4);
+  --sun:#ffcf6b; --sun-warm:#ff9d3d; --accent:#5fd3ff; --accent-2:#8f7bff; --good:#63e6a8;
+  --shadow-soft:0 18px 50px -18px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.4);
+  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --jelly:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;}
+body{font-family:var(--font-body);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(ellipse at 50% 16%, #101838 0%, #0a0e20 44%, #070913 100%);}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px;}
+
+/* ============================================================
+   NỀN: cửa sổ tàu vũ trụ (ngân hà + sao trôi + Trái Đất dưới quỹ đạo)
+   ============================================================ */
+.nebula{position:fixed;inset:-10%;z-index:0;pointer-events:none;filter:blur(8px);
+  background:
+    radial-gradient(closest-side at 22% 28%, rgba(143,123,255,.30), transparent 70%),
+    radial-gradient(closest-side at 78% 18%, rgba(95,211,255,.22), transparent 70%),
+    radial-gradient(closest-side at 62% 72%, rgba(255,120,180,.16), transparent 70%),
+    radial-gradient(closest-side at 8% 78%, rgba(99,230,168,.12), transparent 70%);
+  animation:nebulaDrift 70s ease-in-out infinite alternate;}
+@keyframes nebulaDrift{from{transform:translate3d(0,0,0) scale(1);}to{transform:translate3d(-26px,20px,0) scale(1.08);}}
+
+.starfield{position:fixed;inset:-60%;z-index:0;pointer-events:none;background-repeat:repeat;}
+#stars1{opacity:.85;background-image:
+  radial-gradient(1.4px 1.4px at 20% 30%, #fff, transparent),
+  radial-gradient(1.6px 1.6px at 80% 20%, #dcecff, transparent),
+  radial-gradient(1px 1px at 60% 70%, #cfe0ff, transparent),
+  radial-gradient(1.2px 1.2px at 40% 85%, #fff, transparent),
+  radial-gradient(1px 1px at 90% 55%, #bcd0ff, transparent);
+  background-size:520px 520px;animation:drift1 150s linear infinite, twinkle 5s ease-in-out infinite;}
+#stars2{opacity:.5;background-image:
+  radial-gradient(1px 1px at 15% 45%, #fff, transparent),
+  radial-gradient(1px 1px at 75% 15%, #d8e6ff, transparent),
+  radial-gradient(1px 1px at 55% 90%, #fff, transparent),
+  radial-gradient(1px 1px at 35% 25%, #cfe0ff, transparent);
+  background-size:300px 300px;animation:drift2 90s linear infinite, twinkle 3.4s ease-in-out infinite .9s;}
+@keyframes drift1{from{transform:translate3d(0,0,0);}to{transform:translate3d(-260px,180px,0);}}
+@keyframes drift2{from{transform:translate3d(0,0,0);}to{transform:translate3d(180px,-260px,0);}}
+@keyframes twinkle{0%,100%{opacity:.35;}50%{opacity:.95;}}
+
+/* Trái Đất cong nhìn từ cửa kính (dưới đáy) */
+.earth{position:fixed;left:50%;bottom:-92vw;transform:translateX(-50%);width:170vw;height:170vw;border-radius:50%;z-index:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 26%, #3a7ddf 0%, #245aa8 34%, #12336f 58%, #0a1c44 76%, #060c22 100%);
+  box-shadow:0 -40px 160px 8px rgba(95,150,255,.4);}
+.earth::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 40% 20%, rgba(120,220,255,.35), transparent 42%),
+             radial-gradient(circle at 66% 40%, rgba(99,230,168,.16), transparent 30%);}
+.earth::after{content:"";position:absolute;inset:-2px;border-radius:50%;
+  box-shadow:inset 0 26px 70px rgba(180,220,255,.55), 0 0 60px 6px rgba(120,180,255,.35);}
+
+/* ============================================================
+   KHUNG CABIN / KÍNH PHI THUYỀN
+   ============================================================ */
+.cockpit{position:fixed;inset:0;z-index:40;pointer-events:none;}
+/* Vành khung kim loại tối bao quanh cửa kính vòm + tối mờ mép */
+.cockpit .frame{position:absolute;inset:0;border-radius:42px;
+  box-shadow:
+    inset 0 0 0 15px #0a0e1b,                    /* vành vỏ tàu tối */
+    inset 0 0 0 17px rgba(130,160,230,.18),      /* line sáng viền trong */
+    inset 0 0 0 19px rgba(0,0,0,.6),
+    inset 0 0 120px 34px rgba(3,5,16,.78);}      /* tối mờ mép kính */
+/* Góc kim loại (canopy struts) — ghép từ 2 thanh gradient tạo chữ L */
+.cockpit .corner{position:absolute;width:132px;height:132px;}
+.cockpit .corner::before,.cockpit .corner::after{content:"";position:absolute;
+  background:linear-gradient(135deg,#2c3757 0%,#141b30 55%,#0a0f1e 100%);
+  box-shadow:inset 0 1px 0 rgba(170,200,255,.3), inset 0 0 0 1px rgba(90,120,190,.25), 0 6px 18px rgba(0,0,0,.6);}
+.cockpit .corner::before{height:18px;left:0;right:0;}   /* thanh ngang */
+.cockpit .corner::after{width:18px;top:0;bottom:0;}      /* thanh dọc */
+.cockpit .corner.tl{top:14px;left:14px;}
+.cockpit .corner.tl::before{top:0;border-radius:10px 10px 10px 0;}
+.cockpit .corner.tl::after{left:0;border-radius:10px 0 0 10px;}
+.cockpit .corner.tr{top:14px;right:14px;}
+.cockpit .corner.tr::before{top:0;border-radius:10px 10px 0 10px;}
+.cockpit .corner.tr::after{right:0;border-radius:0 10px 10px 0;}
+.cockpit .corner.bl{bottom:14px;left:14px;}
+.cockpit .corner.bl::before{bottom:0;border-radius:10px 0 10px 10px;}
+.cockpit .corner.bl::after{left:0;border-radius:10px 0 0 10px;}
+.cockpit .corner.br{bottom:14px;right:14px;}
+.cockpit .corner.br::before{bottom:0;border-radius:0 10px 10px 10px;}
+.cockpit .corner.br::after{right:0;border-radius:0 10px 10px 0;}
+/* Vạch neon mảnh chạy dọc mép trong khung (hi-tech) */
+.cockpit .rim{position:absolute;inset:19px;border-radius:30px;border:1px solid rgba(56,189,248,.28);
+  box-shadow:0 0 22px rgba(56,189,248,.18), inset 0 0 22px rgba(56,189,248,.1);}
+/* Quầng sáng phản chiếu trên kính */
+.cockpit .glare{position:absolute;inset:0;mix-blend-mode:screen;opacity:.7;
+  background:
+    linear-gradient(118deg, transparent 34%, rgba(190,225,255,.05) 46%, rgba(220,235,255,.12) 50%, rgba(190,225,255,.04) 55%, transparent 66%),
+    radial-gradient(60% 40% at 30% 8%, rgba(200,225,255,.10), transparent 70%);}
+
+/* ============================================================
+   HEADER = BẢNG TRẠNG THÁI TÀU
+   ============================================================ */
+.statusbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px clamp(20px,4vw,54px);
+  background:linear-gradient(180deg, rgba(10,16,44,.9), rgba(10,16,44,.55));
+  border-bottom:1px solid rgba(95,211,255,.25);
+  box-shadow:0 6px 30px -14px rgba(0,0,0,.8), inset 0 -1px 0 rgba(95,211,255,.12);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.ship-id{display:flex;align-items:center;gap:11px;}
+.ship-id .mark{width:34px;height:34px;border-radius:11px;flex:none;
+  background:radial-gradient(circle at 32% 28%, #fff2cf, var(--sun) 45%, var(--sun-warm) 90%);box-shadow:0 0 20px rgba(255,175,80,.6);}
+.ship-id b{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.02em;}
+.ship-id .hull{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--good);border:1px solid rgba(99,230,168,.35);padding:2px 7px;border-radius:6px;}
+
+.gauges{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;flex-wrap:wrap;}
+.gauge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:12px;
+  background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+.gauge .g-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-faint);}
+.gauge img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(143,123,255,.6));}
+.gauge .g-val{font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff;}
+.gauge .g-val.mono{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--accent);}
+.gauge .bar{position:relative;width:52px;height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;}
+.gauge .bar i{position:absolute;inset:0;width:50%;border-radius:6px;display:block;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s var(--ease);}
+.gauge.o2 .bar i{background:linear-gradient(90deg,#63e6a8,#3fd6c9);}
+.gauge.fuel img{width:19px;height:19px;}
+.gauge.fuel .g-val{color:#d9c9ff;}
+
+.controls{display:flex;align-items:center;gap:10px;}
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;transition:background .2s,color .2s;}
+.lang-switch button:hover{color:var(--ink);}
+.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
+.user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+.user .avatar{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+.user .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:5px;}
+.user .meta .nm{font-family:var(--font-display);font-weight:600;font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user .meta .role{font-family:var(--font-mono);font-size:9px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;}
+.logout-btn{flex:none;cursor:pointer;border:1px solid var(--glass-brd);background:rgba(255,255,255,.05);color:var(--ink-soft);
+  border-radius:999px;padding:8px 13px;font-family:var(--font-display);font-weight:600;font-size:12px;transition:background .16s,color .16s,border-color .16s,transform .1s;}
+.logout-btn:hover{background:rgba(255,120,120,.16);border-color:rgba(255,120,120,.4);color:var(--ink);}
+.logout-btn:active{transform:scale(.95);}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(18px,3vw,34px) clamp(20px,4vw,54px) 70px;}
+
+/* ---- HERO: nhân vật đứng tự do (không khung) ---- */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 0 6px;}
+.hero .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 12px rgba(95,211,255,.6);}
+.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4.4vw,40px);margin:8px 0 0;line-height:1.1;
+  text-shadow:0 2px 30px rgba(95,150,255,.4);}
+.hero p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:10px 0 0;max-width:560px;}
+
+/* --- Bệ Hologram (Holo-Desk) --- */
+.holo{position:relative;margin-top:18px;padding-bottom:56px;}
+.holo .beam{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);width:min(620px,90%);height:200px;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 100%, rgba(95,211,255,.42), rgba(143,123,255,.16) 42%, transparent 72%);filter:blur(6px);}
+.holo .base{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(560px,88%);height:70px;pointer-events:none;
+  border-radius:50%;background:radial-gradient(ellipse at 50% 50%, rgba(95,211,255,.6), rgba(95,211,255,.14) 52%, transparent 74%);
+  box-shadow:0 0 66px rgba(95,211,255,.5);animation:holoPulse 3s ease-in-out infinite;}
+.holo .base::before,.holo .base::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;}
+.holo .base::before{width:80%;height:62%;border:1px solid rgba(120,220,255,.55);}
+.holo .base::after{width:52%;height:40%;border:1px solid rgba(170,240,255,.4);}
+@keyframes holoPulse{0%,100%{opacity:.82;}50%{opacity:1;}}
+
+.crew{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,2vw,22px);flex-wrap:wrap;}
+.crew figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;}
+.crew figure::after{content:"";position:absolute;bottom:34px;left:50%;transform:translateX(-50%);width:80%;height:26px;border-radius:50%;z-index:-1;
+  background:radial-gradient(ellipse at 50% 100%, rgba(120,210,255,.55), transparent 70%);filter:blur(4px);}
+.crew img{display:block;width:100%;height:auto;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55)) drop-shadow(0 6px 12px rgba(95,180,255,.35));}
+.crew .comet{width:clamp(96px,13vw,150px);animation:sway 5.5s ease-in-out infinite;}
+.crew .byte {width:clamp(96px,13vw,150px);animation:sway 6s ease-in-out infinite .4s;}
+.crew figcaption{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--ink-soft);
+  border:1px solid rgba(56,189,248,.35);border-radius:6px;padding:2px 8px;background:rgba(8,14,38,.6);white-space:nowrap;box-shadow:0 0 12px rgba(56,189,248,.22);}
+
+/* Nhóm 3 Quark + đai năng lượng nối nhau */
+.quarks{position:relative;display:flex;align-items:flex-end;gap:clamp(4px,1.4vw,16px);padding:0 12px;}
+.quarks .belt{position:absolute;left:2%;right:2%;bottom:42px;height:3px;border-radius:3px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(56,189,248,.9),rgba(143,123,255,.95),rgba(56,189,248,.9),transparent);
+  box-shadow:0 0 16px rgba(56,189,248,.85);animation:beltPulse 2.4s ease-in-out infinite;}
+@keyframes beltPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
+.crew .quark{width:clamp(72px,9vw,110px);
+  filter:drop-shadow(0 14px 22px rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(56,189,248,.55));}
+.crew .q1{animation:squish 2.8s ease-in-out infinite;}
+.crew .q2{animation:squish 2.8s ease-in-out infinite .45s;}
+.crew .q3{animation:squish 2.8s ease-in-out infinite .9s;}
+@keyframes squish{
+  0%,100%{transform:translateY(0) scale(1,1);}
+  30%{transform:translateY(-16px) scale(.93,1.07);}
+  55%{transform:translateY(0) scale(1.07,.93);}
+  78%{transform:translateY(-5px) scale(.98,1.02);}
+}
+@keyframes sway{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-8px) rotate(1deg);}}
+
+/* ---- CARDS = MÀN HÌNH HUD SCI-FI ---- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;margin-top:34px;}
+.hud{
+  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.95);
+  position:relative;display:flex;flex-direction:column;
+  border-radius:16px;padding:20px 22px;
+  border:1px solid var(--neon);
+  /* Kính mờ bán trong suốt + 4 góc neon sci-fi (8 vạch) */
+  background:
+    linear-gradient(var(--neonS),var(--neonS)) left 12px top 12px/17px 2px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) left 12px top 12px/2px 17px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) right 12px top 12px/17px 2px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) right 12px top 12px/2px 17px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) left 12px bottom 12px/17px 2px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) left 12px bottom 12px/2px 17px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) right 12px bottom 12px/17px 2px no-repeat,
+    linear-gradient(var(--neonS),var(--neonS)) right 12px bottom 12px/2px 17px no-repeat,
+    linear-gradient(180deg, rgba(15,23,42,.6), rgba(15,23,42,.6));
+  box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 26px -4px var(--neon), inset 0 0 34px -14px var(--neonS);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  transition:transform .35s var(--jelly), box-shadow .35s var(--ease), border-color .35s var(--ease);
+  animation:hudPulse 4s ease-in-out infinite;
+}
+@keyframes hudPulse{0%,100%{box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 20px -6px var(--neon), inset 0 0 34px -16px var(--neonS);}
+  50%{box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 34px -2px var(--neon), inset 0 0 40px -12px var(--neonS);}}
+/* Lưới tech mờ */
+.hud::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;border-radius:inherit;
+  background-image:linear-gradient(rgba(120,160,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(120,160,255,.06) 1px, transparent 1px);
+  background-size:22px 22px;-webkit-mask:linear-gradient(180deg,#000,transparent 78%);mask:linear-gradient(180deg,#000,transparent 78%);}
+.hud:hover{transform:translateY(-8px) scale(1.02);border-color:rgba(125,211,252,.85);
+  box-shadow:0 34px 66px -22px rgba(0,0,0,.75), 0 0 50px 0 var(--neonS), inset 0 0 44px -10px var(--neonS);animation:none;}
+
+.hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;}
+.hud-line.top{margin-bottom:14px;}
+.hud-line.bot{margin-top:16px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;}
+.hud-line .ok{color:var(--good);}
+.hud-line .led{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1.6s steps(1,end) infinite;margin-right:6px;}
+@keyframes blink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
+
+.hud .ic{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:28px;
+  background:var(--ic-bg, rgba(95,211,255,.16));border:1px solid var(--neon);box-shadow:inset 0 0 18px -6px var(--neon);
+  margin-bottom:14px;transition:transform .35s var(--jelly);}
+.hud:hover .ic{transform:scale(1.1) rotate(-6deg);}
+.hud .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
+.hud h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
+.hud p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:11px 0 16px;flex:1;}
+.hud .cost{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--sun);
+  background:rgba(255,207,107,.12);border:1px solid rgba(255,207,107,.3);padding:5px 11px;border-radius:999px;margin-bottom:14px;align-self:flex-start;}
+.hud .cost img{width:16px;height:16px;object-fit:contain;}
+.hud .cost span{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;}
+
+/* Viền/góc neon dùng chung màu cyan (rgba(56,189,248,...)); chỉ đổi tông icon + nút cho từng khu vực */
+.card--quiz{--ic-bg:rgba(56,189,248,.18);}
+.card--game{--ic-bg:rgba(255,157,61,.18);}
+.card--map {--ic-bg:rgba(143,123,255,.2);}
+
+.jelly-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;width:100%;
+  padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));box-shadow:0 12px 26px -12px var(--neon);
+  transition:transform .3s var(--jelly),filter .2s;}
+.card--game .jelly-btn{background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
+.card--map .jelly-btn{background:linear-gradient(120deg,#a48bff,var(--accent-2));}
+.jelly-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
+.jelly-btn:active{transform:scale(.93);}
+
+/* ============ MODALS + TOAST ============ */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),visibility .3s;}
+.modal.show{opacity:1;visibility:visible;pointer-events:auto;}
+.modal-card{width:100%;max-width:420px;text-align:center;position:relative;
+  background:var(--glass-strong);border:1px solid var(--glass-brd-strong);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border-radius:26px;box-shadow:var(--shadow-soft), 0 0 40px -8px rgba(95,211,255,.4);padding:32px 28px 24px;
+  transform:translateY(12px) scale(.96);transition:transform .35s var(--jelly);}
+.modal.show .modal-card{transform:none;}
+.modal-ic{font-size:44px;line-height:1;}
+.modal-card h3{font-family:var(--font-display);font-weight:700;font-size:22px;margin:12px 0 0;}
+.modal-card p{color:var(--ink-soft);font-size:14px;line-height:1.6;margin:12px 0 0;}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+.m-btn{border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;
+  border-radius:16px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;
+  transition:transform .25s var(--jelly),background .16s,border-color .16s;}
+.m-btn:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
+.m-btn:active{transform:scale(.93);}
+.m-btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#04060f;border-color:transparent;}
+.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
+
+.quiz-q{font-family:var(--font-display);font-weight:600;font-size:16px;margin:16px 0 4px;}
+.quiz-opts{display:flex;flex-direction:column;gap:9px;margin-top:14px;text-align:left;}
+.quiz-opt{cursor:pointer;border:1px solid var(--glass-brd);background:rgba(255,255,255,.05);color:var(--ink);
+  border-radius:14px;padding:12px 14px;font-size:14px;font-weight:500;transition:background .15s,border-color .15s,transform .2s var(--jelly);}
+.quiz-opt:hover{background:rgba(255,255,255,.1);border-color:var(--glass-brd-strong);}
+.quiz-opt:active{transform:scale(.98);}
+.quiz-opt.correct{background:rgba(99,230,168,.18);border-color:var(--good);}
+.quiz-opt.wrong{background:rgba(255,120,120,.16);border-color:#ff7a7a;}
+
+.toast{position:fixed;top:96px;left:50%;z-index:70;transform:translateX(-50%) translateY(-14px);
+  padding:12px 20px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--glass-brd-strong);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--shadow-soft);
+  color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:720px){
+  .gauges{order:3;width:100%;justify-content:flex-start;}
+  .hero p{max-width:100%;}
+}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
+</style>
+</head>
+<body>
+
+<!-- Nền cửa sổ tàu vũ trụ -->
+<div class="nebula"></div>
+<div class="starfield" id="stars1"></div>
+<div class="starfield" id="stars2"></div>
+<div class="earth"></div>
+
+<!-- Khung vỏ tàu kim loại + kính vòm -->
+<div class="cockpit" aria-hidden="true">
+  <span class="frame"></span>
+  <span class="rim"></span>
+  <span class="corner tl"></span><span class="corner tr"></span>
+  <span class="corner bl"></span><span class="corner br"></span>
+  <span class="glare"></span>
+</div>
+
+<!-- ============ HEADER = BẢNG TRẠNG THÁI TÀU ============ -->
+<header class="statusbar">
+  <div class="ship-id"><span class="mark"></span><b>AstroQ</b><span class="hull">HULL · OK</span></div>
+
+  <div class="gauges">
+    <!-- Nhiên liệu = Thiên thạch tím -->
+    <div class="gauge fuel" title="Nhiên liệu · Thiên thạch tím">
+      <span class="g-label" data-i18n="st_fuel">FUEL</span>
+      <img src="img/tt.png" alt="Thiên thạch tím" />
+      <span class="g-val" id="purple-asteroids">0</span>
+      <span class="bar"><i id="fuel-bar"></i></span>
+    </div>
+    <!-- Oxy -->
+    <div class="gauge o2" title="Oxy">
+      <span class="g-label" data-i18n="st_o2">O₂</span>
+      <span class="g-val" id="o2-val">98%</span>
+      <span class="bar o2bar"><i id="o2-bar"></i></span>
+    </div>
+    <!-- Tọa độ hiện tại -->
+    <div class="gauge coord" title="Tọa độ">
+      <span class="g-label" data-i18n="st_coord">COORD</span>
+      <span class="g-val mono" id="coord-val">--</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="lang-switch" role="group" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <div class="user">
+      <span class="avatar" id="user-avatar">A</span>
+      <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" data-i18n="role">Người chơi</span></span>
+    </div>
+    <button class="logout-btn" id="logout" type="button" data-i18n="logout" title="Đăng xuất">Đăng xuất</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ HERO: phi hành đoàn đứng tự do (không khung) ============ -->
+  <section class="hero">
+    <span class="eyebrow" data-i18n="banner_eyebrow">Căn cứ AstroQ</span>
+    <h1 id="welcome">Chào mừng trở lại, Nhà thám hiểm!</h1>
+    <p data-i18n="banner_desc">Chọn một khu vực để bắt đầu: học kiến thức, thử tài trong game, hay du hành khắp thiên hà.</p>
+
+    <!-- Bệ Hologram: Mèo Comet, Byte + 3 bạn Quark (đổi tên file trong img nếu cần) -->
+    <div class="holo" aria-hidden="true">
+      <div class="beam"></div>
+      <div class="base"></div>
+      <div class="crew">
+        <figure><img class="comet" src="img/m1.png" alt="" /><figcaption>COMET</figcaption></figure>
+        <div class="quarks">
+          <span class="belt"></span>
+          <figure><img class="quark q1" src="img/qg1.png" alt="" /><figcaption>QUARK-01</figcaption></figure>
+          <figure><img class="quark q2" src="img/qb1.png" alt="" /><figcaption>QUARK-02</figcaption></figure>
+          <figure><img class="quark q3" src="img/q1.png" alt="" /><figcaption>QUARK-03</figcaption></figure>
+        </div>
+        <figure><img class="byte" src="img/b1.png" alt="" /><figcaption>BYTE</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 CARD = MÀN HÌNH HUD ============ -->
+  <section class="cards">
+    <!-- Trạm Tri Thức -->
+    <article class="hud card--quiz">
+      <div class="hud-line top"><span><span class="led"></span>MOD-01</span><span class="ok">SYS.ONLINE</span></div>
+      <div class="ic">🧠</div>
+      <span class="tag" data-i18n="quiz_tag">Học &amp; Quiz</span>
+      <h3 data-i18n="quiz_title">Trạm Tri Thức</h3>
+      <p data-i18n="quiz_desc">Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.</p>
+      <button class="jelly-btn" id="btn-quiz" data-i18n="quiz_btn">Vào học &amp; làm Quiz</button>
+      <div class="hud-line bot"><span>LOC: EARTH_ORBIT</span><span>PWR: 100%</span></div>
+    </article>
+
+    <!-- Phòng Trái Lực -->
+    <article class="hud card--game">
+      <div class="hud-line top"><span><span class="led"></span>MOD-02</span><span class="ok">SYS.ONLINE</span></div>
+      <div class="ic">🎮</div>
+      <span class="tag" data-i18n="game_tag">Game 2D</span>
+      <h3 data-i18n="game_title">Phòng Trái Lực</h3>
+      <p data-i18n="game_desc">Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.</p>
+      <span class="cost"><img src="img/tt.png" alt="Thiên thạch tím" /><b>5</b><span data-i18n="game_cost_per">/ lượt</span></span>
+      <button class="jelly-btn" id="btn-game" data-i18n="game_btn">Chơi Game</button>
+      <div class="hud-line bot"><span>FEE: 5 / RUN</span><span>PWR: 100%</span></div>
+    </article>
+
+    <!-- Bản Đồ Thiên Hà -->
+    <article class="hud card--map">
+      <div class="hud-line top"><span><span class="led"></span>MOD-03</span><span class="ok">SYS.ONLINE</span></div>
+      <div class="ic">🌌</div>
+      <span class="tag" data-i18n="map_tag">Khám phá 3D</span>
+      <h3 data-i18n="map_title">Bản Đồ Thiên Hà</h3>
+      <p data-i18n="map_desc">Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.</p>
+      <a class="jelly-btn" href="explorer.html" data-i18n="map_btn">Mở bản đồ</a>
+      <div class="hud-line bot"><span>NAV: MILKY_WAY</span><span>SIG: STRONG</span></div>
+    </article>
+  </section>
+</main>
+
+<!-- MODAL: nhắc đi làm Quiz khi thiếu tt -->
+<div class="modal" id="need-quiz" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-ic">🪐</div>
+    <h3 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h3>
+    <p id="need-body"></p>
+    <div class="modal-actions">
+      <button class="m-btn primary" id="need-go" data-i18n="need_go">Làm Quiz ngay</button>
+      <button class="m-btn" id="need-later" data-i18n="need_later">Để sau</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Quiz demo -->
+<div class="modal" id="quiz-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-ic">🧠</div>
+    <h3 data-i18n="quiz_modal_title">Trạm Tri Thức</h3>
+    <div class="quiz-q" id="quiz-q">Câu hỏi…</div>
+    <div class="quiz-opts" id="quiz-opts"></div>
+    <div class="modal-actions">
+      <button class="m-btn" id="quiz-close" data-i18n="quiz_close">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Hệ thống số dư Thiên thạch tím -->
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+  var GAME_COST = 5;
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ============ i18n (đồng bộ với astroq-lang) ============ */
+  var I18N = {
+    vi:{
+      role:"Người chơi", banner_eyebrow:"Căn cứ AstroQ", welcome_pre:"Chào mừng trở lại,",
+      banner_desc:"Chọn một khu vực để bắt đầu: học kiến thức, thử tài trong game, hay du hành khắp thiên hà.",
+      st_fuel:"NHIÊN LIỆU", st_o2:"OXY", st_coord:"TỌA ĐỘ",
+      quiz_tag:"Học & Quiz", quiz_title:"Trạm Tri Thức",
+      quiz_desc:"Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.",
+      quiz_btn:"Vào học & làm Quiz",
+      game_tag:"Game 2D", game_title:"Phòng Trái Lực",
+      game_desc:"Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.",
+      game_cost_per:"/ lượt", game_btn:"Chơi Game",
+      map_tag:"Khám phá 3D", map_title:"Bản Đồ Thiên Hà",
+      map_desc:"Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.",
+      map_btn:"Mở bản đồ", logout:"Đăng xuất",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Phòng Trái Lực nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay", need_later:"Để sau",
+      quiz_modal_title:"Trạm Tri Thức", quiz_close:"Đóng", guest:"Nhà thám hiểm",
+      toast_game:"🎮 Vào Phòng Trái Lực! Đã trừ 5 tt.",
+      toast_correct:"✅ Chính xác! +10 tt", toast_wrong:"❌ Chưa đúng, thử lại lần sau nhé!",
+      title:"AstroQ — Bảng điều khiển Người chơi"
+    },
+    en:{
+      role:"Player", banner_eyebrow:"AstroQ Base", welcome_pre:"Welcome back,",
+      banner_desc:"Pick an area to begin: learn, test your skills in a game, or travel across the galaxy.",
+      st_fuel:"FUEL", st_o2:"O₂", st_coord:"COORD",
+      quiz_tag:"Learn & Quiz", quiz_title:"Knowledge Station",
+      quiz_desc:"Learn astronomy facts and answer quizzes to earn more Purple Asteroids.",
+      quiz_btn:"Study & take Quiz",
+      game_tag:"2D Game", game_title:"Gravity Room",
+      game_desc:"Test your reflexes in a 2D game. Each play costs a few Purple Asteroids.",
+      game_cost_per:"/ play", game_btn:"Play Game",
+      map_tag:"3D exploration", map_title:"Galaxy Map",
+      map_desc:"Fly through the Solar System and nearby star regions in real-time 3D.",
+      map_btn:"Open map", logout:"Log out",
+      need_title:"Not enough Purple Asteroids!",
+      need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Gravity Room but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
+      need_go:"Do Quiz now", need_later:"Later",
+      quiz_modal_title:"Knowledge Station", quiz_close:"Close", guest:"Explorer",
+      toast_game:"🎮 Entered the Gravity Room! −5 tt.",
+      toast_correct:"✅ Correct! +10 tt", toast_wrong:"❌ Not quite — try again next time!",
+      title:"AstroQ — Player Dashboard"
+    }
+  };
+  var LANG = "vi";
+  try{ var sv=localStorage.getItem("astroq-lang"); if(sv==="en"||sv==="vi") LANG=sv;
+       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  var QUIZ = {
+    vi:[
+      { q:"Hành tinh nào gần Mặt Trời nhất?", opts:["Sao Kim","Sao Thủy","Trái Đất"], a:1 },
+      { q:"Hành tinh nào có vành đai băng đá nổi tiếng?", opts:["Sao Thổ","Sao Hỏa","Sao Mộc"], a:0 },
+      { q:"Ngôi sao gần Mặt Trời nhất là?", opts:["Sirius","Proxima Centauri","Sao Barnard"], a:1 },
+      { q:"Hành tinh nào được mệnh danh 'Hành tinh Đỏ'?", opts:["Sao Mộc","Sao Hải Vương","Sao Hỏa"], a:2 }
+    ],
+    en:[
+      { q:"Which planet is closest to the Sun?", opts:["Venus","Mercury","Earth"], a:1 },
+      { q:"Which planet is famous for its icy rings?", opts:["Saturn","Mars","Jupiter"], a:0 },
+      { q:"What is the closest star to the Sun?", opts:["Sirius","Proxima Centauri","Barnard's Star"], a:1 },
+      { q:"Which planet is nicknamed the 'Red Planet'?", opts:["Jupiter","Neptune","Mars"], a:2 }
+    ]
+  };
+
+  function getUser(){ try{ return JSON.parse(localStorage.getItem("astroq-user")||"null"); }catch(e){ return null; } }
+  function userName(){ var u=getUser(); return (u&&(u.name||u.email))||t("guest"); }
+
+  /* ---- Số dư = nhiên liệu ---- */
+  function paintBalance(){
+    var bal = Economy.getAsteroids();
+    $("purple-asteroids").textContent = bal;
+    var fb=$("fuel-bar"); if(fb) fb.style.width = Math.max(4, Math.min(100, bal)) + "%";
+  }
+
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    var name = userName();
+    $("user-name").textContent = name;
+    $("user-avatar").textContent = name.trim().charAt(0).toUpperCase();
+    $("welcome").textContent = t("welcome_pre") + " " + name + "!";
+    if($("need-quiz").classList.contains("show")) renderNeedBody();
+    if($("quiz-modal").classList.contains("show")) openQuiz(true);
+  }
+
+  /* ---- Modal + toast ---- */
+  function openModal(el){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); }
+  function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
+  function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
+  var toastTimer=null;
+  function toast(msg){ var el=$("toast"); el.textContent=msg; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 2600); }
+
+  /* ---- Phòng Trái Lực: kiểm tra số dư ---- */
+  $("btn-game").addEventListener("click", function(){
+    if(Economy.getAsteroids() < GAME_COST){ renderNeedBody(); openModal($("need-quiz")); return; }
+    Economy.useAsteroids(GAME_COST);
+    toast(t("toast_game"));
+    // Demo: chưa có game 2D thật → điều hướng tại đây khi có, ví dụ: window.location.href="game2d.html";
+  });
+  $("need-later").addEventListener("click", function(){ closeModal($("need-quiz")); });
+  $("need-go").addEventListener("click", function(){ closeModal($("need-quiz")); openQuiz(); });
+
+  /* ---- Trạm Tri Thức: quiz demo ---- */
+  var quizIdx=0, quizLocked=false;
+  function openQuiz(keepIdx){
+    if(!keepIdx){ quizIdx = Math.floor(Date.now()/1000) % QUIZ.vi.length; quizLocked=false; }
+    var item=(QUIZ[LANG]||QUIZ.vi)[quizIdx];
+    $("quiz-q").textContent=item.q;
+    var box=$("quiz-opts"); box.innerHTML="";
+    item.opts.forEach(function(text,i){
+      var b=document.createElement("button"); b.className="quiz-opt"; b.type="button"; b.textContent=text;
+      if(quizLocked && i===item.a) b.classList.add("correct");
+      b.addEventListener("click", function(){ answer(i,b); });
+      box.appendChild(b);
+    });
+    openModal($("quiz-modal"));
+  }
+  function answer(i,btn){
+    if(quizLocked) return; quizLocked=true;
+    var item=(QUIZ[LANG]||QUIZ.vi)[quizIdx];
+    if(i===item.a){ btn.classList.add("correct"); Economy.addAsteroids(10); toast(t("toast_correct"));
+      setTimeout(function(){ closeModal($("quiz-modal")); }, 900); }
+    else{ btn.classList.add("wrong"); $("quiz-opts").children[item.a].classList.add("correct"); toast(t("toast_wrong"));
+      setTimeout(function(){ closeModal($("quiz-modal")); }, 1200); }
+  }
+  $("btn-quiz").addEventListener("click", function(){ openQuiz(); });
+  $("quiz-close").addEventListener("click", function(){ closeModal($("quiz-modal")); });
+  [ $("need-quiz"), $("quiz-modal") ].forEach(function(m){ m.addEventListener("click", function(e){ if(e.target===m) closeModal(m); }); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal($("need-quiz")); closeModal($("quiz-modal")); } });
+
+  /* ---- Thông số tàu giả lập: O₂ + tọa độ ---- */
+  function pad(n,len){ n=String(n); while(n.length<len) n="0"+n; return n; }
+  function tickTelemetry(){
+    var o2 = 96 + Math.floor(Math.random()*4);           // 96–99%
+    $("o2-val").textContent = o2 + "%";
+    var ob=$("o2-bar"); if(ob) ob.style.width = o2 + "%";
+    var lat=(7 + Math.random()*0.9).toFixed(2), lon=(142 + Math.random()*0.9).toFixed(2);
+    var alt = 418 + Math.floor(Math.random()*6);
+    $("coord-val").textContent = lat+"°N "+lon+"°E · ALT "+alt+"km";
+  }
+
+  /* ---- Khởi tạo ---- */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+  tickTelemetry(); setInterval(tickTelemetry, 2500);
+
+  document.querySelectorAll(".lang-switch button").forEach(function(b){
+    b.addEventListener("click", function(){ var l=b.getAttribute("data-lang"); try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
+  });
+  var logoutBtn=$("logout");
+  if(logoutBtn) logoutBtn.addEventListener("click", function(){ try{ localStorage.removeItem("astroq-user"); }catch(e){} window.location.href="index.html"; });
+  window.addEventListener("storage", function(e){ if(e.key==="astroq-lang" && (e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue); });
+})();
+</script>
+</body>
+</html>

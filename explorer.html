@@ -113,8 +113,25 @@ button{font-family:inherit;color:inherit;cursor:pointer;}
   position:fixed;z-index:10;top:18px;left:18px;bottom:18px;width:var(--panel-w);
   border-radius:var(--radius-xl);
   display:flex;flex-direction:column;overflow:hidden;
-  animation:deckIn .7s var(--ease) both;
+  animation:deckIn .7s var(--ease) backwards;
+  transition:transform .45s var(--ease), opacity .35s var(--ease);
 }
+/* Collapsed state (desktop): slide the deck off-screen to the left */
+#deck.collapsed{transform:translateX(calc(-100% - 26px));opacity:0;pointer-events:none;}
+/* Collapse button in the deck header */
+.deck-collapse{
+  flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink-soft);
+  transition:background .16s,color .16s,transform .1s;
+}
+body.theme-light .deck-collapse{background:rgba(255,255,255,.5);}
+.deck-collapse:hover{background:rgba(255,255,255,.12);color:var(--ink);}
+.deck-collapse:active{transform:scale(.92);}
+.deck-collapse svg{width:17px;height:17px;}
+/* Floating button to reopen the collapsed deck */
+#deck-reopen{position:fixed;z-index:13;top:16px;left:16px;width:46px;height:46px;border-radius:14px;display:none;place-items:center;}
+#deck-reopen svg{width:20px;height:20px;}
+#deck-reopen.show{display:grid;}
 @keyframes deckIn{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
 .deck-head{padding:22px 22px 14px;}
 .brand{display:flex;align-items:center;gap:12px;}
@@ -207,6 +224,16 @@ body.theme-light .track{background:rgba(60,90,170,.18);}
 
 .deck-foot{padding:12px 16px 16px;border-top:1px solid var(--glass-brd);display:flex;gap:8px;align-items:center;}
 .hint{font-size:10.5px;color:var(--ink-faint);line-height:1.4;flex:1;}
+.home-btn{
+  flex:none;display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);
+  border-radius:var(--radius-md);padding:9px 13px;font-size:12.5px;font-weight:600;font-family:var(--font-display);
+  transition:background .16s,border-color .16s,transform .1s;
+}
+body.theme-light .home-btn{background:rgba(255,255,255,.5);}
+.home-btn:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
+.home-btn:active{transform:scale(.96);}
+.home-btn svg{width:15px;height:15px;}
 
 /* ============================================================
    INFO PANEL (right, slides in on planet select)
@@ -375,6 +402,27 @@ body.theme-light .nm-item:hover{background:rgba(60,90,170,.08);}
 }
 .nm-toast.show{opacity:1;transform:none;}
 
+/* Confirm-travel / locked-mission modal */
+.nm-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  background:rgba(6,9,28,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s var(--ease),visibility .28s;}
+.nm-modal.show{opacity:1;visibility:visible;pointer-events:auto;}
+.nm-modal-card{max-width:392px;width:calc(100% - 48px);border-radius:var(--radius-xl);padding:30px 28px 24px;text-align:center;
+  transform:translateY(10px) scale(.97);transition:transform .32s var(--ease);}
+.nm-modal.show .nm-modal-card{transform:none;}
+.nm-modal-ic{font-size:40px;line-height:1;}
+.nm-modal-title{font-family:var(--font-display);font-weight:700;font-size:20px;margin:12px 0 0;color:var(--ink);}
+.nm-modal-msg{font-size:13.5px;line-height:1.55;color:var(--ink-soft);margin:12px 0 0;}
+.nm-modal-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
+.nm-modal-btn{border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);
+  border-radius:var(--radius-md);padding:12px 22px;font-family:var(--font-display);font-weight:600;font-size:14px;
+  transition:background .16s,border-color .16s,transform .1s;}
+body.theme-light .nm-modal-btn{background:rgba(255,255,255,.5);}
+.nm-modal-btn:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
+.nm-modal-btn:active{transform:scale(.96);}
+.nm-modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#06122b;border-color:transparent;}
+.nm-modal-btn.primary:hover{filter:brightness(1.08);}
+
 /* Smooth cross-fade when switching Region/Universe tabs */
 @keyframes nmFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .nm-panel:not(.nm-hidden){animation:nmFade .34s var(--ease);}
@@ -500,6 +548,36 @@ body.theme-light .loc-item:hover{background:rgba(60,90,170,.08);}
 .loc-lock{font-size:11px;color:var(--ink-faint);}
 .loc-empty{font-size:11.5px;color:var(--ink-faint);text-align:center;padding:8px;}
 
+/* ---- Solar Neighborhood 3D view ---- */
+#nbh{position:fixed;inset:0;z-index:5;display:none;
+  background:radial-gradient(ellipse at 50% 32%, #12204d 0%, #0a1030 55%, #06091c 100%);}
+#nbh.show{display:block;}
+#nbh-canvas{position:absolute;inset:0;}
+#nbh-canvas canvas{display:block;}
+#nbh-labels{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.nbh-lab{
+  pointer-events:auto;cursor:pointer;font:600 11px/1 var(--font-display,sans-serif);letter-spacing:.05em;
+  color:#eaf1ff;background:rgba(16,24,56,.55);border:1px solid rgba(150,180,255,.25);
+  padding:3px 9px;border-radius:20px;white-space:nowrap;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:background .15s,transform .15s;}
+.nbh-lab:hover{background:rgba(95,211,255,.3);transform:scale(1.06);}
+.nbh-lab.sun{color:#3a1e00;background:linear-gradient(135deg,var(--sun),var(--sun-warm));border-color:transparent;}
+.nbh-top{position:fixed;z-index:8;top:18px;left:50%;transform:translateX(-50%);
+  padding:9px 18px;border-radius:999px;font-family:var(--font-display);font-weight:600;font-size:13px;
+  letter-spacing:.04em;color:var(--ink);display:inline-flex;align-items:center;gap:8px;}
+.nbh-hint{position:fixed;z-index:8;top:64px;left:50%;transform:translateX(-50%);
+  padding:7px 14px;border-radius:999px;font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+.nbh-back{position:fixed;z-index:8;bottom:22px;left:50%;transform:translateX(-50%);
+  display:inline-flex;align-items:center;gap:8px;border:1px solid var(--glass-brd);
+  border-radius:var(--radius-md);padding:12px 22px;font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--ink);
+  transition:background .16s,border-color .16s,transform .1s;}
+.nbh-back:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
+.nbh-back:active{transform:translateX(-50%) scale(.97);}
+@media (max-width:720px){
+  .nbh-top{top:70px;font-size:12px;padding:8px 14px;}
+  .nbh-hint{display:none;}
+}
+
 /* ---- Star info panel (Solar Neighborhood) ---- */
 #star-info{position:fixed;z-index:15;top:18px;right:18px;bottom:18px;width:var(--info-w);border-radius:var(--radius-xl);display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 30px));opacity:0;pointer-events:none;transition:transform .6s var(--ease),opacity .5s var(--ease);}
 #star-info.open{transform:none;opacity:1;pointer-events:auto;}
@@ -551,16 +629,41 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
 <div id="scene"></div>
 <div id="labels"></div>
 
+<!-- ============ SOLAR NEIGHBORHOOD 3D VIEW (nearby stars) ============ -->
+<div id="nbh" aria-hidden="true">
+  <div id="nbh-canvas"></div>
+  <div id="nbh-labels"></div>
+  <div class="nbh-top panel" id="nbh-title">✦ <span id="nbh-title-txt">Solar Neighborhood</span></div>
+  <div class="nbh-hint panel" id="nbh-hint">Drag to orbit · Scroll to zoom · Click a star</div>
+  <button class="nbh-back panel" id="nbh-back" type="button">↩ <span id="nbh-back-txt">Solar System</span></button>
+</div>
+
 <!-- Loading intro -->
 <div id="loader">
   <div class="loader-orb"></div>
-  <div class="loader-title">Solar System Explorer</div>
-  <div class="loader-sub">Building the universe…</div>
+  <div class="loader-title" data-i18n="loaderTitle">Solar System Explorer</div>
+  <div class="loader-sub" data-i18n="loaderSub">Entering…</div>
 </div>
+<!-- Đồng bộ ngôn ngữ màn hình loading ngay lập tức (trước khi script chính chạy) -->
+<script>
+(function(){
+  var lang; try{ lang=localStorage.getItem('astroq-lang'); }catch(e){}
+  if(lang!=='vi') return;  // mặc định HTML đã là tiếng Anh
+  var t=document.querySelector('#loader .loader-title');
+  var s=document.querySelector('#loader .loader-sub');
+  if(t) t.textContent='Khám phá Hệ Mặt Trời';
+  if(s) s.textContent='Đang tiến vào…';
+})();
+</script>
 
 <!-- Mobile menu toggle -->
 <button id="menu-btn" class="panel" aria-label="Open controls">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+
+<!-- Reopen button (shown when the left deck is collapsed on desktop) -->
+<button id="deck-reopen" class="panel" type="button" aria-label="Mở bảng điều khiển" title="Mở bảng điều khiển">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 </button>
 
 <!-- ============ LEFT CONTROL DECK ============ -->
@@ -572,10 +675,9 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
         <h1 id="deck-title">Solar System<br/>Explorer</h1>
         <div class="brand-sub" data-i18n="exhibit">Interactive Exhibit</div>
       </div>
-      <div class="lang" role="group" aria-label="Language">
-        <button class="lang-btn active" data-lang="en" type="button">EN</button>
-        <button class="lang-btn" data-lang="vi" type="button">VI</button>
-      </div>
+      <button class="deck-collapse" id="deck-collapse" type="button" aria-label="Thu gọn bảng điều khiển" title="Thu gọn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
     </div>
     <p class="lede" id="deck-lede" data-i18n="lede">Fly through our cosmic neighbourhood. Tap any world to glide closer and discover what makes it wonderful — and whether life could ever call it home.</p>
   </div>
@@ -613,8 +715,8 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
       <label class="switch"><input type="checkbox" id="t-labels" checked><span class="track"></span></label>
     </div>
     <div class="toggle">
-      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke-linecap="round"/></svg><span data-i18n="dayMode">Day mode</span></span>
-      <label class="switch"><input type="checkbox" id="t-theme"><span class="track"></span></label>
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18a9 9 0 1 1 17 0"/><path d="M12 14a2 2 0 1 0 0-4"/><path d="m12.8 10.6 3.2-2.6"/></svg><span data-i18n="perfMode">Reduce quality</span></span>
+      <label class="switch"><input type="checkbox" id="t-perf"><span class="track"></span></label>
     </div>
 
     <div class="section-label" data-i18n="camera">Camera</div>
@@ -636,6 +738,10 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
 
   <div class="deck-foot">
     <div class="hint" data-i18n="hint">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+    <a class="home-btn" href="dashboard.html" title="Quay lại" aria-label="Quay lại Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      <span data-i18n="home">Quay lại</span>
+    </a>
   </div>
 </aside>
 
@@ -685,6 +791,19 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
 <!-- ============ (Navigation is merged into the left deck as a collapsible tree) ============ -->
 <div class="nm-toast" id="nm-toast">🚧 Coming Soon</div>
 
+<!-- Confirm-travel / locked-mission popup -->
+<div class="nm-modal" id="nm-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="nm-modal-card panel">
+    <div class="nm-modal-ic" id="nm-modal-ic">🚀</div>
+    <h3 class="nm-modal-title" id="nm-modal-title"></h3>
+    <p class="nm-modal-msg" id="nm-modal-msg" style="display:none"></p>
+    <div class="nm-modal-actions">
+      <button class="nm-modal-btn primary" id="nm-modal-yes" type="button">Yes</button>
+      <button class="nm-modal-btn" id="nm-modal-no" type="button">No</button>
+    </div>
+  </div>
+</div>
+
 <!-- Space-travel transition overlay -->
 <div class="nm-warp" id="nm-warp" aria-hidden="true">
   <canvas id="nm-warp-cv"></canvas>
@@ -715,12 +834,13 @@ window.LANG = 'en';
 // UI-chrome dictionary.
 window.I18N = {
   en:{
+    loaderTitle:'Solar System Explorer', loaderSub:'Entering…',
     brand1:'Solar System', brand2:'Explorer', exhibit:'Interactive Exhibit',
     lede:'Fly through our cosmic neighbourhood. Tap any world to glide closer and discover what makes it wonderful — and whether life could ever call it home.',
     searchPh:'Search a planet…', worlds:'Worlds', explore:'Explore', go:'Travel here', simulation:'Simulation', display:'Display', camera:'Camera',
     play:'Play', pause:'Pause', simSpeed:'Simulation speed',
-    orbits:'Orbit lines', labels:'Labels', dayMode:'Day mode',
-    resetCam:'Reset camera', wholeSystem:'Whole Solar System',
+    orbits:'Orbit lines', labels:'Labels', perfMode:'Reduce quality',
+    resetCam:'Reset camera', wholeSystem:'Whole Solar System', home:'Back',
     hint:'Drag to orbit · Scroll to zoom · Right-drag to pan',
     prev:'Previous', next:'Next', navSystem:'Solar System', flySun:'Fly to Sun',
     regionMap:'Region Map', universeMap:'Universe Map', currentRegion:'Current region', journey:'Your journey',
@@ -740,15 +860,18 @@ window.I18N = {
     sLum:'Luminosity', sPlanets:'Known planets', sVisible:'Visible to the eye',
     secAbout:'About this star', secHab:'Could life exist nearby?', secSee:'How to spot it',
     secExplore:'Exploration ideas', backRegion:'Back to region',
-    tapStar:'Tap a star to explore it', scale10:'10 light-years'
+    tapStar:'Tap a star to explore it', scale10:'10 light-years',
+    goThereTitle:'Do you want to go there?', yesBtn:'Yes', noBtn:'No',
+    unlockTitle:'Unlock the mission to travel there', missionNow:'Start the mission now', later:'Later', missionSoon:'Missions are coming soon!'
   },
   vi:{
+    loaderTitle:'Khám phá Hệ Mặt Trời', loaderSub:'Đang tiến vào…',
     brand1:'Khám phá', brand2:'Hệ Mặt Trời', exhibit:'Triển lãm tương tác',
     lede:'Bay xuyên khu vực vũ trụ quanh ta. Chạm vào bất kỳ thế giới nào để tới gần hơn và khám phá điều kỳ diệu của nó — cùng câu hỏi liệu sự sống có thể tồn tại ở đó.',
     searchPh:'Tìm một hành tinh…', worlds:'Các thế giới', explore:'Khám phá', go:'Du hành tới đây', simulation:'Mô phỏng', display:'Hiển thị', camera:'Máy quay',
     play:'Phát', pause:'Tạm dừng', simSpeed:'Tốc độ mô phỏng',
-    orbits:'Đường quỹ đạo', labels:'Nhãn tên', dayMode:'Chế độ ban ngày',
-    resetCam:'Đặt lại máy quay', wholeSystem:'Toàn Hệ Mặt Trời',
+    orbits:'Đường quỹ đạo', labels:'Nhãn tên', perfMode:'Giảm cấu hình',
+    resetCam:'Đặt lại máy quay', wholeSystem:'Toàn Hệ Mặt Trời', home:'Quay lại',
     hint:'Kéo để xoay · Cuộn để phóng · Chuột phải để di chuyển',
     prev:'Trước', next:'Tiếp', navSystem:'Hệ Mặt Trời', flySun:'Bay tới Mặt Trời',
     regionMap:'Bản đồ Vùng', universeMap:'Bản đồ Vũ trụ', currentRegion:'Vùng hiện tại', journey:'Hành trình của bạn',
@@ -768,7 +891,9 @@ window.I18N = {
     sLum:'Độ sáng', sPlanets:'Hành tinh đã biết', sVisible:'Thấy bằng mắt thường',
     secAbout:'Về ngôi sao', secHab:'Sự sống có thể tồn tại gần đó?', secSee:'Cách quan sát',
     secExplore:'Ý tưởng thám hiểm', backRegion:'Về vùng',
-    tapStar:'Chạm vào một ngôi sao để khám phá', scale10:'10 năm ánh sáng'
+    tapStar:'Chạm vào một ngôi sao để khám phá', scale10:'10 năm ánh sáng',
+    goThereTitle:'Bạn muốn đến đó chứ?', yesBtn:'Yes', noBtn:'No',
+    unlockTitle:'Hãy mở khóa nhiệm vụ để đi tới', missionNow:'Làm nhiệm vụ ngay', later:'Để sau', missionSoon:'Nhiệm vụ sắp ra mắt!'
   },
   t:function(k){ var d=this[window.LANG]||this.en; return (d && d[k]!=null)?d[k]:(this.en[k]!=null?this.en[k]:k); }
 };
@@ -789,6 +914,15 @@ window.bodySub = function(id){ var m=window.BODY_SUB[window.LANG]||window.BODY_S
 
 // Vietnamese overrides for the info panel. English falls back to PLANET_DATA/MOON_DATA.
 window.BODY_VI = {
+  sun:{ name:'Mặt Trời', subtitle:'Ngôi sao của chúng ta',
+    dayLabel:'Tự quay (xích đạo)', yearLabel:'Quay quanh Ngân Hà',
+    stats:{diameter:'1.391.000 km',mass:'1,989 × 10³⁰ kg',gravity:'274 m/s²',distanceFromEarth:'149,6 triệu km (1 AU)',distance:'Trung tâm Hệ Mặt Trời',day:'~27 ngày Trái Đất',year:'~230 triệu năm',temp:'5.500 °C bề mặt · ~15 triệu °C lõi',atmosphere:'~73% hydro + ~25% heli',moons:'0 (có 8 hành tinh)'},
+    surface:'Mặt Trời không có bề mặt rắn — nó là một quả cầu plasma nóng khổng lồ đang xoay. Lớp sáng ta nhìn thấy là quang cầu ở khoảng 5.500 °C, bọc ngoài là vành nhật hoa mờ nóng hàng triệu độ.',
+    magnetic:'Có — một từ trường mạnh và rối, đảo cực khoảng 11 năm một lần, tạo ra vết đen, lóa Mặt Trời và gió Mặt Trời.',
+    facts:['Mặt Trời chiếm khoảng 99,8% toàn bộ khối lượng của Hệ Mặt Trời.','Có thể nhét khoảng 1,3 triệu Trái Đất vào bên trong nó.','Ánh sáng của nó mất khoảng 8 phút để tới Trái Đất.','Nó là một ngôi sao dãy chính loại G ("sao lùn vàng") khoảng 4,6 tỉ năm tuổi.'],
+    life:{can:false,label:'Không có sự sống — nhưng tạo ra sự sống',why:'Không gì sống được trên hay trong Mặt Trời: đó là plasma nóng hàng triệu độ. Nhưng chính ánh sáng và hơi ấm ổn định của nó lại là thứ khiến sự sống trên Trái Đất trở nên khả dĩ.'},
+    discoveries:'Tàu Parker Solar Probe của NASA là tàu vũ trụ đầu tiên bay xuyên vành nhật hoa của Mặt Trời, trong khi Đài quan sát Động lực học Mặt Trời (SDO) theo dõi lóa và vết đen suốt ngày đêm.',
+    eco:{surface:'Không có mặt đất rắn — một đại dương plasma cuộn trào điểm xuyết những vết đen nguội hơn.',weather:'"Thời tiết vũ trụ": lóa Mặt Trời và các vụ phun trào nhật hoa bắn ra khắp Hệ Mặt Trời.',atmosphere:'Các lớp plasma — quang cầu, sắc cầu và vành nhật hoa rộng lớn bên ngoài.',water:'Không — quá nóng cho bất kỳ chất lỏng nào.',ice:'Không có.',rocks:'Không — Mặt Trời là khí và plasma, không phải đá.',volcanoes:'Không, nhưng các tai lửa vươn cao khỏi bề mặt như những đài phun rực lửa.',dust:'Không; sức nóng của nó quét sạch không gian lân cận.',clouds:'Plasma phát sáng và các cụm vết đen tối.',radiation:'Nguồn gốc của tất cả — ánh sáng, nhiệt và dòng hạt không ngừng gọi là gió Mặt Trời.',microbes:'Không thể — không gì sống nổi ở hàng triệu độ.'} },
   mercury:{ name:'Sao Thủy', subtitle:'Sứ giả nhanh nhẹn',
     stats:{diameter:'4.879 km',mass:'3,30 × 10²³ kg',gravity:'3,7 m/s²',distance:'57,9 triệu km',day:'59 ngày Trái Đất',year:'88 ngày Trái Đất',temp:'−173 °C đến 427 °C',atmosphere:'Gần như không có',moons:'0'},
     surface:'Một quả cầu đá và kim loại bị Mặt Trời nung nóng, đầy hố va chạm và những vách đá khổng lồ hình thành khi hành tinh nguội đi và co lại.',
@@ -912,20 +1046,20 @@ window.STARS = {
       explore:['Được nhiều kính thiên văn không gian nghiên cứu'],
       discoveries:'Sirius B là sao lùn trắng đầu tiên được phát hiện, hé lộ cách các ngôi sao lụi tàn.' } },
   'barnards-star':{ color:'#ff9a5c', color2:'#a8541e', glow:'rgba(255,140,80,.55)',
-    en:{ name:'Barnard\u2019s Star', subtitle:'The speedy runaway', type:'Red dwarf (M4)', distance:'5.96 light-years', constellation:'Ophiuchus', mass:'0.16 Suns', radius:'0.19 Suns', temp:'≈2,900 °C', luminosity:'0.0035 Suns', planets:'Debated', visible:'No — telescope needed',
+    en:{ name:'Barnard\u2019s Star', subtitle:'The speedy runaway', type:'Red dwarf (M4)', distance:'5.96 light-years', constellation:'Ophiuchus', mass:'0.16 Suns', radius:'0.19 Suns', temp:'≈2,900 °C', luminosity:'0.0035 Suns', planets:'At least 1 (Barnard b)', visible:'No — telescope needed',
       about:'A faint, ancient red dwarf famous for racing across the sky faster than any other star — nicknamed "Barnard\u2019s Runaway Star."',
       hab:'Very old and dim; any planets would be cold, making life unlikely.',
       see:'Too faint for the eye; astronomers track its rapid motion from year to year.',
       facts:['It moves across the sky faster than any known star.','It is one of the oldest stars near us.','It may be over 10 billion years old.'],
       explore:['Long-term astrometry campaigns'],
-      discoveries:'Signs of a planet have come and gone; the search continues.' },
-    vi:{ name:'Sao Barnard', subtitle:'Ngôi sao chạy nhanh', type:'Sao lùn đỏ (M4)', distance:'5,96 năm ánh sáng', constellation:'Xà Phu (Ophiuchus)', mass:'0,16 Mặt Trời', radius:'0,19 Mặt Trời', temp:'≈2.900 °C', luminosity:'0,0035 Mặt Trời', planets:'Còn tranh cãi', visible:'Không — cần kính thiên văn',
+      discoveries:'In 2024, astronomers confirmed at least one tiny planet — Barnard b — orbiting the star, ending a long search.' },
+    vi:{ name:'Sao Barnard', subtitle:'Ngôi sao chạy nhanh', type:'Sao lùn đỏ (M4)', distance:'5,96 năm ánh sáng', constellation:'Xà Phu (Ophiuchus)', mass:'0,16 Mặt Trời', radius:'0,19 Mặt Trời', temp:'≈2.900 °C', luminosity:'0,0035 Mặt Trời', planets:'Ít nhất 1 (Barnard b)', visible:'Không — cần kính thiên văn',
       about:'Một sao lùn đỏ mờ và cổ xưa, nổi tiếng vì lướt ngang bầu trời nhanh hơn mọi ngôi sao khác — biệt danh "Ngôi sao chạy trốn của Barnard".',
-      hab:'Rất già và mờ; nếu có hành tinh thì cũng lạnh giá, khó có sự sống.',
+      hab:'Rất già và mờ; các hành tinh sát bên quá nóng hoặc quá lạnh, khó có sự sống.',
       see:'Quá mờ với mắt thường; nhà thiên văn theo dõi chuyển động nhanh của nó qua từng năm.',
       facts:['Nó di chuyển ngang bầu trời nhanh nhất trong các sao đã biết.','Là một trong những ngôi sao già nhất gần ta.','Có thể hơn 10 tỉ năm tuổi.'],
       explore:['Các chiến dịch đo vị trí sao dài hạn'],
-      discoveries:'Dấu hiệu về một hành tinh đến rồi đi; việc tìm kiếm vẫn tiếp tục.' } },
+      discoveries:'Năm 2024, các nhà thiên văn xác nhận ít nhất một hành tinh nhỏ — Barnard b — quay quanh ngôi sao này, khép lại cuộc tìm kiếm dài.' } },
   'wolf-359':{ color:'#ff7a5a', color2:'#9e2e1e', glow:'rgba(255,110,80,.55)',
     en:{ name:'Wolf 359', subtitle:'A tiny, flaring ember', type:'Red dwarf (M6)', distance:'7.86 light-years', constellation:'Leo', mass:'0.09 Suns', radius:'0.16 Suns', temp:'≈2,500 °C', luminosity:'0.0011 Suns', planets:'Candidates', visible:'No — very faint',
       about:'One of the smallest, coolest and faintest stars near the Sun — a flickering red dwarf that flares often.',
@@ -1054,7 +1188,7 @@ const PLANET_DATA = [
   },
   {
     id:'venus', name:'Venus', subtitle:'Earth\'s fiery twin',
-    color:0xf0cf8e, colorB:0xb9884a, orbitR:22, radius:1.5, orbitSpeed:1.62, spin:-0.006, tilt:3.09,
+    color:0xf0cf8e, colorB:0xb9884a, orbitR:22, radius:1.5, orbitSpeed:1.62, orbitDir:-1, spin:-0.006, tilt:3.09,
     stats:{ diameter:'12,104 km', mass:'4.87 × 10²⁴ kg', gravity:'8.9 m/s²',
       distance:'108.2 million km', day:'243 Earth days', year:'225 Earth days',
       temp:'465 °C (average)', atmosphere:'Thick CO₂ + sulfuric-acid clouds', moons:'0' },
@@ -1271,6 +1405,53 @@ const MOON_DATA = {
     radiation:'High — no atmosphere or field to shield the surface.',
     microbes:'None known; conditions are far too extreme.' }
 };
+
+/* The Sun — our home star. Figures cross-checked with NASA
+   (nasa.gov "Sun" & NASA Sun fact sheet). It sits at the centre, so it is built
+   separately from the planet-orbit loop but shares the same info-panel shape. */
+const SUN_DATA = {
+  id:'sun', name:'Sun', subtitle:'Our home star',
+  color:0xffe08a, colorB:0xff8a2e, gas:true, radius:6, tilt:0,
+  dayLabel:'Rotation (equator)', yearLabel:'Orbit around the galaxy',
+  stats:{ diameter:'1,391,000 km', mass:'1.989 × 10³⁰ kg', gravity:'274 m/s²',
+    distanceFromEarth:'149.6 million km (1 AU)', distance:'Centre of the Solar System',
+    day:'~27 Earth days', year:'~230 million years',
+    temp:'5,500 °C surface · ~15 million °C core',
+    atmosphere:'~73% hydrogen + ~25% helium', moons:'0 (has 8 planets)' },
+  surface:'The Sun has no solid surface — it is a giant spinning ball of hot plasma. The bright layer we see is the photosphere at about 5,500 °C, wrapped in a faint, million-degree outer atmosphere called the corona.',
+  magnetic:'Yes — a powerful, tangled magnetic field that flips roughly every 11 years and drives sunspots, solar flares and the solar wind.',
+  facts:[
+    'The Sun holds about 99.8% of all the mass in the Solar System.',
+    'Around 1.3 million Earths could fit inside it.',
+    'Its light takes about 8 minutes to reach Earth.',
+    'It is a G-type main-sequence star (a "yellow dwarf") roughly 4.6 billion years old.'
+  ],
+  life:{ can:false, label:'No life — but it makes life possible',
+    why:'Nothing can live on or in the Sun: it is plasma heated to millions of degrees. Yet its steady light and warmth are exactly what make life on Earth possible.' },
+  missions:['SOHO','Parker Solar Probe','Solar Orbiter','SDO'], future:['ESA Vigil','MUSE solar explorer'],
+  discoveries:'NASA\'s Parker Solar Probe became the first spacecraft to fly through the Sun\'s corona, while the Solar Dynamics Observatory watches flares and sunspots around the clock.',
+  eco:{ surface:'No solid ground — a churning ocean of plasma dotted with darker, cooler sunspots.',
+    weather:'"Space weather": solar flares and coronal mass ejections erupt out into the Solar System.',
+    atmosphere:'Layers of plasma — the photosphere, the chromosphere, and the vast outer corona.',
+    water:'None — far too hot for any liquid.', ice:'None.',
+    rocks:'None — the Sun is gas and plasma, not rock.', volcanoes:'None, but towering prominences arch off the surface like fiery fountains.',
+    dust:'None; its heat sweeps nearby space clean.', clouds:'Glowing plasma and dark sunspot groups.',
+    radiation:'The source of it all — light, heat and a constant stream of particles called the solar wind.',
+    microbes:'Impossible — nothing survives millions of degrees.' }
+};
+
+/* Nearest stars for the Solar Neighborhood 3D map. ra/dec (J2000, degrees) and
+   ly (light-years) are from published astrometry (SIMBAD / NASA); they let us place
+   each star at its true direction and distance from the Sun. `size` is an artistic
+   relative marker size (Sirius large; red dwarfs small). Colours come from window.STARS. */
+const NEIGHBOR_STARS = [
+  { id:'proxima-centauri', ra:217.43, dec:-62.68, ly:4.24, size:0.5 },
+  { id:'alpha-centauri',   ra:219.90, dec:-60.83, ly:4.37, size:1.1 },
+  { id:'barnards-star',    ra:269.45, dec:  4.69, ly:5.96, size:0.5 },
+  { id:'wolf-359',         ra:164.12, dec:  7.01, ly:7.86, size:0.42 },
+  { id:'sirius',           ra:101.29, dec:-16.72, ly:8.60, size:1.5 },
+  { id:'ross-128',         ra:176.93, dec:  0.80, ly:11.0, size:0.5 }
+];
 
 /* ============================================================================
    2. PROCEDURAL TEXTURES  —  everything drawn in code, zero external files.
@@ -1541,7 +1722,9 @@ class CelestialBody {
       this.group.getWorldPosition(this.worldPos);
       return;
     }
-    this.angle = this.cfg.baseAngle + simTime*this.cfg.orbitSpeed*0.12;
+    // orbitDir flips the direction of revolution (default +1 = clockwise in this view).
+    // Venus is set to -1 so it orbits counter-clockwise, uniquely opposite to the others.
+    this.angle = this.cfg.baseAngle + simTime*this.cfg.orbitSpeed*0.12*(this.cfg.orbitDir||1);
     const r=this.cfg.orbitR;
     this.group.position.set(Math.cos(this.angle)*r, 0, Math.sin(this.angle)*r);
     this.mesh.rotation.y += this.cfg.spin*dt*4;
@@ -1641,7 +1824,9 @@ class SolarSystem {
       emissive:0xffb347, emissiveIntensity:2.4, emissiveMap:ProceduralTextures.planet({id:'su', gas:true, color:0xffd27a, colorB:0xff6a1a})
     });
     this.sun=new THREE.Mesh(geo,mat);
-    this.sun.userData.body={cfg:{id:'sun', radius:6}, worldPos:new THREE.Vector3(0,0,0), isSun:true};
+    // Full config + no-op setSelected so the Sun works with selectBody()/the info panel,
+    // exactly like a planet (it keeps its own permanent corona glow, so no selection glow).
+    this.sun.userData.body={cfg:SUN_DATA, worldPos:new THREE.Vector3(0,0,0), isSun:true, setSelected(){}};
     this.scene.add(this.sun);
 
     // Warm layered corona glow.
@@ -1880,9 +2065,9 @@ class App {
     speed.addEventListener('input', ()=>{ this.speed=parseFloat(speed.value); sval.textContent=this.speed.toFixed(1)+'×'; });
 
     // Toggles
-    document.getElementById('t-orbits').addEventListener('change', e=>this.system.setOrbitsVisible(e.target.checked));
-    document.getElementById('t-labels').addEventListener('change', e=>document.getElementById('labels').style.display=e.target.checked?'block':'none');
-    document.getElementById('t-theme').addEventListener('change', e=>document.body.classList.toggle('theme-light', e.target.checked));
+    document.getElementById('t-orbits').addEventListener('change', e=>{ this.system.setOrbitsVisible(e.target.checked); this.setNeighborhoodOrbits(e.target.checked); });
+    document.getElementById('t-labels').addEventListener('change', e=>{ document.getElementById('labels').style.display=e.target.checked?'block':'none'; this.setNeighborhoodLabels(e.target.checked); });
+    document.getElementById('t-perf').addEventListener('change', e=>this.setLowQuality(e.target.checked));
 
     // Camera buttons
     document.getElementById('reset-cam').addEventListener('click', ()=>this._deselectToOverview());
@@ -1893,7 +2078,7 @@ class App {
     document.getElementById('nav-prev').addEventListener('click', ()=>this._cycle(-1));
     document.getElementById('nav-next').addEventListener('click', ()=>this._cycle(1));
     document.getElementById('nav-back').addEventListener('click', ()=>this._deselectToOverview());
-    document.getElementById('nav-sun').addEventListener('click', ()=>this._flySun());
+    document.getElementById('nav-sun').addEventListener('click', ()=>this.selectBody(this.system.sun.userData.body));
 
     // Mobile drawer
     const menu=document.getElementById('menu-btn'), deck=document.getElementById('deck');
@@ -1944,8 +2129,7 @@ class App {
     const hits=this.raycaster.intersectObjects(this.system.raycastTargets(), false);
     if(hits.length){
       const b=hits[0].object.userData.body;
-      if(b.isSun){ this._flySun(); }
-      else this.selectBody(b);
+      this.selectBody(b);   // works for the Sun too — opens its info panel like a planet
     }
   }
 
@@ -1992,6 +2176,167 @@ class App {
     document.querySelectorAll('.planet-item').forEach(el=>{
       el.classList.toggle('active', this.selected && el.dataset.id===this.selected.cfg.id);
     });
+  }
+
+  /* ---------------- Solar Neighborhood: a real 3D map of the nearest stars ----------------
+     Its own renderer/scene/camera so it never disturbs the Solar-System app. Stars sit at
+     their true direction (RA/Dec) and distance (light-years × SCALE) from the Sun. */
+  _initNeighborhood(){
+    const SCALE=7, maxR=11*SCALE;
+    const host=document.getElementById('nbh-canvas');
+    const renderer=new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    host.appendChild(renderer.domElement);
+
+    const scene=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(52, 1, 0.1, 5000);
+    cam.position.set(0, maxR*0.55, maxR*1.7);
+
+    const controls=new OrbitControls(cam, renderer.domElement);
+    controls.enableDamping=true; controls.dampingFactor=0.08; controls.rotateSpeed=0.6;
+    controls.minDistance=6; controls.maxDistance=520; controls.target.set(0,0,0);
+
+    const lr=new CSS2DRenderer();
+    lr.domElement.style.cssText='position:absolute;top:0;left:0;pointer-events:none;';
+    document.getElementById('nbh-labels').appendChild(lr.domElement);
+
+    scene.add(new THREE.AmbientLight(0x8090c0, 0.8));
+
+    // Distant background starfield for depth.
+    const N=1400, bp=new Float32Array(N*3);
+    for(let i=0;i<N;i++){ const rr=700+Math.random()*1800, th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+      bp[i*3]=rr*Math.sin(ph)*Math.cos(th); bp[i*3+1]=rr*Math.cos(ph); bp[i*3+2]=rr*Math.sin(ph)*Math.sin(th); }
+    const bg=new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.BufferAttribute(bp,3));
+    scene.add(new THREE.Points(bg, new THREE.PointsMaterial({ color:0x9fb4e6, size:1.5, sizeAttenuation:false, transparent:true, opacity:0.7 })));
+
+    // Distance reference rings (5 ly, 10 ly) with labels.
+    const mkRing=(ly)=>{ const seg=140, p=[]; for(let i=0;i<=seg;i++){ const a=i/seg*Math.PI*2; p.push(new THREE.Vector3(Math.cos(a)*ly*SCALE,0,Math.sin(a)*ly*SCALE)); }
+      const g=new THREE.BufferGeometry().setFromPoints(p); return new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color:0x5f7bd0, transparent:true, opacity:0.22 })); };
+    const ring5=mkRing(5), ring10=mkRing(10); scene.add(ring5); scene.add(ring10);
+    this._nbhRings=[ring5, ring10];
+    this._nbhRingLabelObjs=[];
+
+    // Sun at the centre.
+    const sun=new THREE.Mesh(new THREE.SphereGeometry(1.3,32,32), new THREE.MeshBasicMaterial({ color:0xffd36b }));
+    const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:ProceduralTextures.glow('255,200,110'), transparent:true, opacity:0.85, depthWrite:false, blending:THREE.AdditiveBlending }));
+    sunGlow.scale.setScalar(10); sun.add(sunGlow); scene.add(sun);
+    const sunEl=document.createElement('div'); sunEl.className='nbh-lab sun'; sunEl.textContent=(window.bodyName?window.bodyName('sun'):'Sun');
+    const sunLab=new CSS2DObject(sunEl); sunLab.position.set(0,2.4,0); sun.add(sunLab); this._nbhSunLabel=sunEl; this._nbhSunLab=sunLab;
+
+    // The stars themselves.
+    const toXYZ=(s)=>{ const ra=s.ra*Math.PI/180, dec=s.dec*Math.PI/180, d=s.ly*SCALE;
+      return new THREE.Vector3(d*Math.cos(dec)*Math.cos(ra), d*Math.sin(dec), d*Math.cos(dec)*Math.sin(ra)); };
+    const meshes=[];
+    for(const s of NEIGHBOR_STARS){
+      const info=(window.STARS&&window.STARS[s.id])||{};
+      const col=new THREE.Color(info.color||'#ffffff');
+      const pos=toXYZ(s);
+      const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,24), new THREE.MeshBasicMaterial({ color:col }));
+      m.scale.setScalar(s.size); m.position.copy(pos); m.userData.starId=s.id; scene.add(m);
+      const rgb=Math.round(col.r*255)+','+Math.round(col.g*255)+','+Math.round(col.b*255);
+      const glow=new THREE.Sprite(new THREE.SpriteMaterial({ map:ProceduralTextures.glow(rgb), transparent:true, opacity:0.9, depthWrite:false, blending:THREE.AdditiveBlending }));
+      glow.scale.setScalar(Math.max(5, s.size*7)); m.add(glow);
+      const el=document.createElement('div'); el.className='nbh-lab'; el.textContent=(window.starName?window.starName(s.id):s.id);
+      el.addEventListener('click', ()=>{ if(window.showStarInfo) window.showStarInfo(s.id); });
+      const lab=new CSS2DObject(el); lab.position.set(0, s.size+1.6, 0); m.add(lab);
+      meshes.push({ id:s.id, mesh:m, pos, labelEl:el, label:lab });
+    }
+
+    // Click / tap a star to zoom in and open its info panel.
+    renderer.domElement.addEventListener('pointerdown', (e)=>{ this._nbhDown=[e.clientX,e.clientY]; });
+    renderer.domElement.addEventListener('pointerup', (e)=>{
+      if(!this._nbhDown) return;
+      if(Math.abs(e.clientX-this._nbhDown[0])>6 || Math.abs(e.clientY-this._nbhDown[1])>6) return;
+      const rect=renderer.domElement.getBoundingClientRect();
+      const pt=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
+      const ray=new THREE.Raycaster(); ray.setFromCamera(pt, cam);
+      const hits=ray.intersectObjects(meshes.map(o=>o.mesh), false);
+      if(hits.length && window.showStarInfo) window.showStarInfo(hits[0].object.userData.starId);
+    });
+
+    this._nbh={ renderer, scene, cam, controls, lr, meshes, SCALE };
+    this._nbhClock=new THREE.Clock();
+    this._nbhReady=true;
+  }
+
+  openNeighborhood(){
+    try{ if(!this._nbhReady) this._initNeighborhood(); }
+    catch(err){ console.warn('[neighborhood] init failed', err); return false; }
+    this.neighborhoodActive=true;
+    if(this.selected){ this.selected.setSelected(false); this.selected=null; }
+    const info=document.getElementById('info'); if(info) info.classList.remove('open');
+    const nav=document.getElementById('nav'); if(nav) nav.classList.remove('show');
+    const hostEl=document.getElementById('nbh'); hostEl.classList.add('show'); hostEl.setAttribute('aria-hidden','false');
+    // Mirror the Display toggles so orbit rings / labels match the checkboxes.
+    const to=document.getElementById('t-orbits'), tl=document.getElementById('t-labels');
+    this.setNeighborhoodOrbits(!to || to.checked);
+    this.setNeighborhoodLabels(!tl || tl.checked);
+    this._nbhResize();
+    if(!this._nbhRAF) this._nbhLoop();
+    return true;
+  }
+
+  // Show/hide the neighborhood's distance rings (and their "ly" annotations).
+  setNeighborhoodOrbits(v){
+    if(!this._nbh) return;
+    (this._nbhRings||[]).forEach(r=>{ r.visible=v; });
+    (this._nbhRingLabelObjs||[]).forEach(o=>{ o.visible=v; });
+  }
+  // Show/hide the neighborhood's star name labels (and the Sun label).
+  // CSS2DRenderer resets element.style.display each frame, so toggle .visible on the objects.
+  setNeighborhoodLabels(v){
+    if(!this._nbh) return;
+    this._nbh.meshes.forEach(o=>{ if(o.label) o.label.visible=v; });
+    if(this._nbhSunLab) this._nbhSunLab.visible=v;
+  }
+
+  closeNeighborhood(){
+    this.neighborhoodActive=false;
+    const hostEl=document.getElementById('nbh'); if(hostEl){ hostEl.classList.remove('show'); hostEl.setAttribute('aria-hidden','true'); }
+    if(this._nbhRAF){ cancelAnimationFrame(this._nbhRAF); this._nbhRAF=null; }
+    if(window.__closeStar) window.__closeStar();
+  }
+
+  focusNeighborStar(id){                     // camera-only fly-in (info panel handled by caller)
+    if(!this._nbh) return;
+    const o=this._nbh.meshes.find(m=>m.id===id); if(!o) return;
+    const cam=this._nbh.cam, controls=this._nbh.controls;
+    const dist=Math.max(6, o.mesh.scale.x*9 + 7);
+    let dir=cam.position.clone().sub(o.pos);
+    if(dir.lengthSq()<0.001) dir.set(0, dist*0.4, dist);
+    dir.y=Math.abs(dir.y)+dist*0.35; dir.normalize();
+    this._nbhTween={ fromPos:cam.position.clone(), toPos:o.pos.clone().add(dir.multiplyScalar(dist)),
+      fromTgt:controls.target.clone(), toTgt:o.pos.clone(), t:0 };
+  }
+
+  _nbhResize(){
+    if(!this._nbh) return;
+    const host=document.getElementById('nbh-canvas');
+    const w=host.clientWidth||innerWidth, h=host.clientHeight||innerHeight;
+    this._nbh.renderer.setSize(w,h); this._nbh.cam.aspect=w/h; this._nbh.cam.updateProjectionMatrix();
+    this._nbh.lr.setSize(w,h);
+  }
+
+  _nbhRelocalize(){
+    if(!this._nbh) return;
+    if(this._nbhSunLabel) this._nbhSunLabel.textContent=(window.bodyName?window.bodyName('sun'):'Sun');
+    this._nbh.meshes.forEach(o=>{ if(o.labelEl) o.labelEl.textContent=(window.starName?window.starName(o.id):o.id); });
+  }
+
+  _nbhLoop(){
+    if(!this.neighborhoodActive){ this._nbhRAF=null; return; }
+    this._nbhRAF=requestAnimationFrame(()=>this._nbhLoop());
+    const nb=this._nbh, dt=Math.min(0.05, this._nbhClock.getDelta());
+    if(this._nbhTween){
+      const tw=this._nbhTween; tw.t=Math.min(1, tw.t + dt/(reducedMotion?0.3:1.1));
+      const e=tw.t<0.5?4*tw.t*tw.t*tw.t:1-Math.pow(-2*tw.t+2,3)/2;
+      nb.cam.position.lerpVectors(tw.fromPos, tw.toPos, e);
+      nb.controls.target.lerpVectors(tw.fromTgt, tw.toTgt, e);
+      if(tw.t>=1) this._nbhTween=null;
+    }
+    nb.controls.update();
+    nb.renderer.render(nb.scene, nb.cam);
+    nb.lr.render(nb.scene, nb.cam);
   }
 
   _fillInfo(rawCfg){
@@ -2069,6 +2414,19 @@ class App {
     this.composer.setSize(innerWidth, innerHeight);
     this.labelRenderer.setSize(innerWidth, innerHeight);
     this._resizePreview();
+    this._nbhResize();
+  }
+
+  /* "Reduce quality" — lighten the GPU load for weaker machines while keeping every
+     planet, label and info panel fully visible. Drops the render resolution and skips
+     the bloom post-processing (its heaviest cost). */
+  setLowQuality(on){
+    this.lowQuality=!!on;
+    const pr = on ? 1 : Math.min(devicePixelRatio,2);
+    this.renderer.setPixelRatio(pr);
+    if(this.composer && this.composer.setPixelRatio) this.composer.setPixelRatio(pr);
+    if(this._nbh && this._nbh.renderer) this._nbh.renderer.setPixelRatio(pr);
+    this._onResize();
   }
 
   _loop(){
@@ -2080,7 +2438,8 @@ class App {
     this.system.update(simDt, this.playing);
     this.director.update(dt);
 
-    this.composer.render();
+    if(this.lowQuality) this.renderer.render(this.scene, this.camera);
+    else this.composer.render();
     this.labelRenderer.render(this.scene, this.camera);
 
     // Scene is live — reveal it on the very first frame (no artificial wait).
@@ -2130,7 +2489,7 @@ try{
     { id:'solar-system', title:'Solar System', icon:'☀', status:'current', live:true,
       blurb:'Our home system — a star and the worlds that circle it.',
       locations:BODIES },
-    { id:'solar-neighborhood', title:'Solar Neighborhood', icon:'✦', status:'locked', hasInfo:true, diagram:true,
+    { id:'solar-neighborhood', title:'Solar Neighborhood', icon:'✦', status:'locked', hasInfo:true, diagram:true, unlocked:true,
       blurb:'The closest stars to our Sun — each just light-years away. Tap any star to explore what it is really like.',
       locations:[
         {id:'alpha-centauri', c:'#ffe6b0', c2:'#c99a52'},
@@ -2190,7 +2549,7 @@ try{
   function goTo(id){
     var app=window.solarApp; if(!app) return;
     try{
-      if(id==='sun'){ if(typeof app._flySun==='function') app._flySun(); }
+      if(id==='sun'){ if(app.system && app.system.sun && typeof app.selectBody==='function') app.selectBody(app.system.sun.userData.body); }
       else if(app.system && typeof app.system.bodyById==='function'){
         var b=app.system.bodyById(id);
         if(b && typeof app.selectBody==='function') app.selectBody(b);
@@ -2205,6 +2564,48 @@ try{
     var d=app.director;
     if(d && d.focusIsSun && d.state && d.state!=='overview') return 'sun';
     return null;
+  }
+
+  /* ---- Confirm-travel / locked-mission popup ---- */
+  var modal=$('nm-modal'), modalYes=$('nm-modal-yes'), modalNo=$('nm-modal-no'),
+      modalTitle=$('nm-modal-title'), modalMsg=$('nm-modal-msg'), modalIc=$('nm-modal-ic');
+  var modalOnYes=null, modalOnNo=null;
+  function hideModal(){ if(!modal) return; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+  function openModal(o){
+    if(!modal) return;
+    modalIc.textContent = o.icon||'🚀';
+    modalTitle.textContent = o.title||'';
+    if(o.msg){ modalMsg.style.display=''; modalMsg.textContent=o.msg; } else { modalMsg.style.display='none'; }
+    modalYes.textContent = o.yes||'Yes'; modalNo.textContent = o.no||'No';
+    modalOnYes = o.onYes||null; modalOnNo = o.onNo||null;
+    modal.classList.add('show'); modal.setAttribute('aria-hidden','false');
+  }
+  if(modal){
+    modalYes.addEventListener('click', function(){ var f=modalOnYes; hideModal(); if(f) f(); });
+    modalNo.addEventListener('click', function(){ var f=modalOnNo; hideModal(); if(f) f(); });
+    modal.addEventListener('click', function(e){ if(e.target===modal) hideModal(); });   // click backdrop = dismiss
+    addEventListener('keydown', function(e){ if(e.key==='Escape' && modal.classList.contains('show')) hideModal(); });
+  }
+  // A region is "unlocked" if it has a real, explorable scene.
+  function regionUnlocked(r){ return !!(r && (r.live || r.unlocked)); }
+
+  /* Clicking a planet/star in the tree. Never opens the info panel across regions —
+     first it asks to travel (unlocked) or to unlock a mission (locked). */
+  function locationClick(r, loc){
+    var d=$('deck'); if(d) d.classList.remove('open');
+    if(!regionUnlocked(r)){                       // locked region → must unlock a mission first
+      openModal({ icon:'🔒', title:T('unlockTitle'), yes:T('missionNow'), no:T('later'),
+        onYes:function(){ showToast('🚧 '+T('missionSoon')); } });
+      return;
+    }
+    if(r.id!==currentRegion.id){                  // unlocked, but not where we currently are → confirm travel
+      openModal({ icon:'🚀', title:T('goThereTitle'), yes:T('yesBtn'), no:T('noBtn'),
+        onYes:function(){ travelTo(r); } });
+      return;
+    }
+    // Same, unlocked region → open the body directly.
+    if(r.live) goTo(loc.id);
+    else if(r.hasInfo) showStarInfo(loc.id);
   }
 
   /* ---- MERGED NAVIGATION TREE: regions (groups) → locations (subsets) ---- */
@@ -2273,7 +2674,7 @@ try{
           it.innerHTML='<span class="loc-dot" style="background:radial-gradient(circle at 33% 30%,'+loc.c+','+loc.c2+')"></span>'+
             '<span class="loc-meta"><span class="loc-nm">'+esc(o.name)+'</span>'+(ds?'<span class="loc-ds">'+esc(ds)+'</span>':'')+'</span>'+
             (active?'<span class="loc-here">🚀</span>':'');
-          it.addEventListener('click', (function(id){ return function(){ goTo(id); var d=$('deck'); if(d) d.classList.remove('open'); }; })(loc.id));
+          it.addEventListener('click', (function(rr,ll){ return function(){ locationClick(rr,ll); }; })(r,loc));
         } else if(r.hasInfo){
           var activeS = loc.id===openStarId;
           it.className='loc-item'+(activeS?' active':''); it.dataset.id=loc.id;
@@ -2281,12 +2682,12 @@ try{
           it.innerHTML='<span class="loc-dot" style="background:radial-gradient(circle at 33% 30%,'+loc.c+','+loc.c2+')"></span>'+
             '<span class="loc-meta"><span class="loc-nm">'+esc(o.name)+'</span>'+(sds?'<span class="loc-ds">'+esc(sds)+'</span>':'')+'</span>'+
             '<span class="loc-lock" style="color:var(--accent)">›</span>';
-          it.addEventListener('click', (function(id){ return function(){ showStarInfo(id); var d=$('deck'); if(d) d.classList.remove('open'); }; })(loc.id));
+          it.addEventListener('click', (function(rr,ll){ return function(){ locationClick(rr,ll); }; })(r,loc));
         } else {
           it.className='loc-item preview';
           it.innerHTML='<span class="loc-dot" style="background:rgba(150,170,220,.45)"></span>'+
             '<span class="loc-meta"><span class="loc-nm">'+esc(o.name)+'</span></span><span class="loc-lock">🔒</span>';
-          it.addEventListener('click', (function(rr){ return function(){ showToast('🔒 '+RT(rr)+' — '+T('comingSoon')); }; })(r));
+          it.addEventListener('click', (function(rr,ll){ return function(){ locationClick(rr,ll); }; })(r,loc));
         }
         inner.appendChild(it);
       });
@@ -2337,6 +2738,9 @@ try{
     $('star-scroll').scrollTop=0;
     $('star-info').classList.add('open'); $('star-info').setAttribute('aria-hidden','false');
     renderTree($('search')?$('search').value:'');   // reflect active row in the tree
+    // If the 3D neighborhood view is open, glide the camera to the chosen star.
+    if(window.solarApp && window.solarApp.neighborhoodActive && typeof window.solarApp.focusNeighborStar==='function')
+      window.solarApp.focusNeighborStar(id);
   }
   function closeStar(){ openStarId=null; var p=$('star-info'); if(p){ p.classList.remove('open'); p.setAttribute('aria-hidden','true'); } renderTree($('search')?$('search').value:''); }
   function cycleStar(dir){ var r=starRegion(); if(!r) return; var arr=r.locations; var i=arr.map(function(l){return l.id;}).indexOf(openStarId); if(i<0) return; i=(i+dir+arr.length)%arr.length; showStarInfo(arr[i].id); }
@@ -2345,7 +2749,12 @@ try{
     var b=$('star-back'); if(b) b.addEventListener('click', closeStar);
     var pv=$('star-prev'); if(pv) pv.addEventListener('click', function(){ cycleStar(-1); });
     var nx=$('star-next'); if(nx) nx.addEventListener('click', function(){ cycleStar(1); });
+    var nbk=$('nbh-back'); if(nbk) nbk.addEventListener('click', function(){ travelTo(REGIONS[0]); });
   })();
+
+  // Expose the star panel so the module's 3D neighborhood view can drive it.
+  window.showStarInfo = showStarInfo;
+  window.__closeStar  = closeStar;
 
 
   /* ---- Search filters the merged tree ---- */
@@ -2456,7 +2865,7 @@ try{
     // 1. Fade out into the warp overlay + show destination title.
     warpK.textContent = region.id===currentRegion.id ? T('arriving') : T('traveling');
     warpN.textContent = RT(region);
-    warpSub.textContent = region.live ? T('enterRegion') : T('charting');
+    warpSub.textContent = (region.live || region.id==='solar-neighborhood') ? T('enterRegion') : T('charting');
     warp.classList.add('show'); warp.setAttribute('aria-hidden','false');
     startWarp();
 
@@ -2467,8 +2876,16 @@ try{
       currentRegion = region;
       openState[region.id] = true;                   // auto-expand the region we arrived in
       renderTree($('search')?$('search').value:'');
-      if(region.live){ hidePlace(); overview(); }     // reveal the real Solar System scene
-      else { showPlace(region); }                     // show the region placeholder
+      var app=window.solarApp;
+      if(region.id==='solar-neighborhood'){
+        hidePlace();
+        var ok = app && typeof app.openNeighborhood==='function' && app.openNeighborhood();
+        if(!ok) showPlace(region);                     // fallback to the 2D star chart if 3D is unavailable
+      } else {
+        if(app && typeof app.closeNeighborhood==='function') app.closeNeighborhood();
+        if(region.live){ hidePlace(); overview(); }    // reveal the real Solar System scene
+        else { showPlace(region); }                    // show the region placeholder
+      }
 
       // 3. Fade the warp overlay back out to reveal the destination.
       warp.classList.remove('show'); warp.setAttribute('aria-hidden','true');
@@ -2524,10 +2941,16 @@ try{
     setLbl('nav-prev',T('prev')); setLbl('nav-next',T('next')); setLbl('nav-back',T('navSystem')); setLbl('nav-sun',T('flySun'));
     var ret=$('nm-place-return'); if(ret) ret.textContent='↩ '+T('returnHome');
     var sb=$('star-back'); if(sb) sb.textContent=T('backRegion');
+    // Solar Neighborhood 3D overlay chrome.
+    var nbReg=null; for(var ri=0;ri<REGIONS.length;ri++){ if(REGIONS[ri].id==='solar-neighborhood'){ nbReg=REGIONS[ri]; break; } }
+    var nt=$('nbh-title-txt'); if(nt) nt.textContent = nbReg?RT(nbReg):'Solar Neighborhood';
+    var nbk=$('nbh-back-txt'); if(nbk) nbk.textContent=T('navSystem');
+    var nh=$('nbh-hint'); if(nh) nh.textContent=T('hint');
     var app=window.solarApp;
     if(app){
       var pl=$('play-label'); if(pl) pl.textContent = app.playing?T('pause'):T('play');
       if(app.selected && app.selected.cfg && typeof app._fillInfo==='function') app._fillInfo(app.selected.cfg);
+      if(typeof app._nbhRelocalize==='function') app._nbhRelocalize();
     }
     document.querySelectorAll('#labels [data-body-id]').forEach(function(el){ el.textContent=LN(el.dataset.bodyId); });
     renderTree($('search')?$('search').value:'');
@@ -2541,10 +2964,43 @@ try{
   // Expose a tiny hook so future code can refresh/relocalize the navigation tree.
   window.NM = { render:function(){ renderTree($('search')?$('search').value:''); }, setLanguage:applyLanguage };
 
-  // Initial build.
-  applyLanguage(window.LANG||'en');
+  // Initial build — đồng bộ ngôn ngữ với lựa chọn đã lưu ở trang index (localStorage "astroq-lang").
+  var savedLang; try{ savedLang=localStorage.getItem('astroq-lang'); }catch(e){}
+  applyLanguage((savedLang==='vi'||savedLang==='en') ? savedLang : (window.LANG||'en'));
+
+  // Cập nhật ngay khi ngôn ngữ được đổi ở tab/trang khác (vd: quay lại index đổi rồi trở lại).
+  window.addEventListener('storage', function(e){
+    if(e.key==='astroq-lang' && (e.newValue==='vi'||e.newValue==='en')) applyLanguage(e.newValue);
+  });
   setInterval(refresh, 200);
   refresh();
+})();
+</script>
+
+<!-- Thu gọn / mở rộng bảng điều khiển bên trái -->
+<script>
+(function(){
+  var deck=document.getElementById('deck');
+  if(!deck) return;
+  var collapseBtn=document.getElementById('deck-collapse');
+  var reopen=document.getElementById('deck-reopen');
+  var menu=document.getElementById('menu-btn');
+  var mq=window.matchMedia('(max-width:720px)');
+
+  function collapse(){
+    if(mq.matches){ deck.classList.remove('open'); return; }  // mobile: chỉ đóng drawer
+    deck.classList.add('collapsed');
+    if(reopen) reopen.classList.add('show');
+  }
+  function expand(){
+    deck.classList.remove('collapsed');
+    if(reopen) reopen.classList.remove('show');
+  }
+
+  if(collapseBtn) collapseBtn.addEventListener('click', collapse);
+  if(reopen) reopen.addEventListener('click', expand);
+  if(menu) menu.addEventListener('click', expand);               // dùng nút menu mobile cũng bỏ trạng thái thu gọn
+  mq.addEventListener('change', function(e){ if(e.matches) expand(); }); // rời desktop -> bỏ thu gọn
 })();
 </script>
 </body>

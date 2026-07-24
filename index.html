@@ -206,6 +206,156 @@ footer a:hover{color:var(--accent);}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
+/* ============================================================
+   Nhân vật bay lơ lửng (b1, m4, q1)
+   - Nằm ở z-index:1 => luôn ở SAU nội dung (.wrap z-index:2),
+     nên đường bay & điểm dừng không đè lên chữ / nút.
+   ============================================================ */
+.floaty{
+  position:fixed;z-index:1;pointer-events:none;
+  width:clamp(82px, 9vw, 124px);        /* đồng bộ kích thước mọi nhân vật */
+  will-change:transform;
+}
+.floaty img{display:block;width:100%;height:auto;filter:drop-shadow(0 12px 26px rgba(0,0,0,.45));}
+
+/* b1 to hơn để trông bằng cho1 (tỉ lệ nhân vật trong ảnh khác nhau) */
+.f-b1{width:clamp(112px, 12vw, 168px);}
+/* raica1: nhân vật trong ảnh nhỏ & khó nhìn → phóng khung to hẳn (> các nhân vật khác) */
+.f-raica1{width:clamp(158px, 17vw, 240px);}
+
+/* Điểm dừng — phân bố đều quanh rìa màn hình, tránh cột nội dung ở giữa và
+   tránh góc dưới-trái (nơi 3qok đáp + nút Contact Us). */
+.f-raica1{top:12%;left:9%;}     /* góc trên-trái */
+.f-b1    {top:46%;left:5%;}     /* rìa trái, giữa */
+.f-luna1 {top:17%;left:89%;}    /* góc trên-phải */
+.f-cho1  {top:35%;left:78%;}    /* trên-phải, dưới luna1 */
+.f-m1    {top:62%;left:92%;}    /* rìa phải, dưới */
+
+/* Thời gian xuất hiện lệch nhau (stagger) để không trùng lúc. */
+/* --- raica1: xuất hiện từ góc TRÊN-TRÁI --- */
+.f-raica1{animation:flyInTL 1.9s var(--ease) 0s both;}
+.f-raica1 img{animation:bob 4.4s ease-in-out 1.9s infinite;}
+
+/* --- b1: bay vào từ TRÁI --- */
+.f-b1{animation:flyInLeft 1.8s var(--ease) .3s both;}
+.f-b1 img{animation:bob 4.2s ease-in-out 2.1s infinite;}
+
+/* --- luna1 + cho1: CÙNG bay từ góc TRÊN-PHẢI xuống --- */
+.f-luna1{animation:flyInTR 2s var(--ease) .9s both;}
+.f-luna1 img{animation:bob 4.6s ease-in-out 2.9s infinite;}
+.f-cho1{animation:flyInTR 2.1s var(--ease) .9s both;}
+.f-cho1 img{animation:bob 5s ease-in-out 3s infinite;}
+
+/* --- m1: bay vào từ PHẢI --- */
+.f-m1{animation:flyInRight 2.1s var(--ease) 1.3s both;}
+.f-m1 img{animation:bob 4.8s ease-in-out 3.4s infinite;}
+
+@keyframes flyInLeft{
+  0%  {transform:translateX(-130vw);opacity:0;}
+  55% {opacity:1;}
+  100%{transform:translateX(0);opacity:1;}
+}
+@keyframes flyInRight{
+  0%  {transform:translateX(130vw);opacity:0;}
+  55% {opacity:1;}
+  100%{transform:translateX(0);opacity:1;}
+}
+@keyframes flyInTL{
+  0%  {transform:translate(-70vw,-82vh);opacity:0;}
+  55% {opacity:1;}
+  100%{transform:translate(0,0);opacity:1;}
+}
+@keyframes flyInTR{
+  0%  {transform:translate(70vw,-82vh);opacity:0;}
+  55% {opacity:1;}
+  100%{transform:translate(0,0);opacity:1;}
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0)     rotate(-2deg);}
+  50%    {transform:translateY(-14px) rotate(2deg);}
+}
+
+/* ============================================================
+   Màn kịch: qg1 (từ trên-trái) + qb1 (đi bộ từ dưới-phải) + q1 (bay chéo, tự xoay)
+   → sau 5s chụm quanh qg1 (không chèn nhau) rồi hợp thành 3qok với hào quang,
+     thu nhỏ dần và trôi xuống góc dưới-trái; hiện nút Contact Us bên phải.
+   Điều phối bằng JS; nằm z-index:1 (sau nội dung), không đè chữ.
+   ============================================================ */
+.iscene{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.ic{position:fixed;left:16%;top:62%;transform:translate(-50%,-50%);}
+.ic .mv{opacity:0;transition:transform 1.6s cubic-bezier(.42,0,.2,1), opacity .8s ease;}
+.ic .bob{display:block;position:relative;animation:bob 4s ease-in-out infinite;}
+.ic .spin{display:block;animation:spin 7s linear infinite;}   /* q1 tự quay tròn quanh mình */
+.ic img{display:block;width:100%;height:auto;filter:drop-shadow(0 12px 26px rgba(0,0,0,.45));}
+/* Đồng bộ kích thước q1 = qg1 = qb1 */
+.ic-qg1{width:clamp(82px, 9vw, 124px);}
+.ic-qb1{width:clamp(82px, 9vw, 124px);}
+.ic-q1 {width:clamp(82px, 9vw, 124px);}
+.ic-3qok{width:clamp(120px, 14vw, 192px);}
+.ic-3qok .mv3{opacity:0;transition:transform 1.7s cubic-bezier(.5,0,.2,1), opacity .5s ease;}  /* thu nhỏ + trôi xuống */
+.ic-3qok.show .mv3{opacity:1;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* q1 bị "văng ra": quỹ đạo lung tung rồi dừng ở góc phải-trên (lệch so với neo .ic) */
+@keyframes flingTR{
+  0%  {transform:translate(18vw, 92vh);opacity:0;}
+  12% {opacity:1;}
+  30% {transform:translate(-16vw,-16vh);}
+  48% {transform:translate(50vw, 16vh);}
+  66% {transform:translate(4vw, -44vh);}
+  84% {transform:translate(58vw,-28vh);}
+  100%{transform:translate(64vw,-52vh);opacity:1;}
+}
+
+/* Dấu hỏi chấm nhấp nháy trên đầu qg1 */
+.qmark{position:absolute;left:50%;top:-1.35em;transform:translateX(-50%);
+  font:800 clamp(20px,2.4vw,30px)/1 var(--font-display);color:var(--sun);
+  text-shadow:0 0 14px rgba(255,207,107,.95);animation:qblink 1s steps(1,end) infinite;}
+@keyframes qblink{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+
+/* Hai má hồng lúc ẩn lúc hiện của qb1 (vị trí gần đúng — có thể tinh chỉnh) */
+.cheek{position:absolute;top:50%;width:20%;height:13%;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,120,150,.9), rgba(255,120,150,0) 70%);
+  animation:cheekPulse 1.5s ease-in-out infinite;}
+.cheek-l{left:16%;}
+.cheek-r{right:16%;}
+@keyframes cheekPulse{0%,100%{opacity:0;}50%{opacity:.95;}}
+
+/* Vòng vàng phát sáng khi tạo thành 3qok */
+.ic-3qok img{position:relative;z-index:1;}
+.ic-3qok.show img{animation:pop .6s var(--ease) both;}
+.ring{position:absolute;left:50%;top:50%;width:150%;height:150%;transform:translate(-50%,-50%);
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, rgba(255,207,107,0) 52%, rgba(255,207,107,.5) 64%, rgba(255,180,80,.18) 78%, transparent 86%);
+  box-shadow:0 0 70px 16px rgba(255,190,90,.5);opacity:0;}
+.ic-3qok.show .ring{opacity:1;animation:ringPulse 2.4s ease-in-out infinite;}
+.burst{position:absolute;left:50%;top:50%;width:70%;height:70%;
+  transform:translate(-50%,-50%) scale(.3);border:3px solid rgba(255,207,107,.9);border-radius:50%;opacity:0;}
+.ic-3qok.show .burst{animation:burst 1s ease-out both;}
+@keyframes pop{0%{transform:scale(.2);opacity:0;}60%{transform:scale(1.15);opacity:1;}100%{transform:scale(1);opacity:1;}}
+@keyframes ringPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.75;}50%{transform:translate(-50%,-50%) scale(1.12);opacity:1;}}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.3);opacity:.9;}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0;}}
+
+/* Nút Contact Us — xuất hiện bên phải 3qok sau khi nó đáp xuống góc dưới-trái */
+.contact-cta{
+  position:fixed;z-index:15;left:0;top:0;transform:translateY(-50%);
+  display:inline-flex;align-items:center;gap:9px;
+  padding:13px 22px;border-radius:var(--radius-lg);
+  font-family:var(--font-display);font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap;
+  color:#0a1030;background:linear-gradient(120deg, var(--sun) 0%, var(--sun-warm) 100%);
+  box-shadow:0 14px 34px -10px rgba(255,157,61,.6), 0 0 0 1px rgba(255,255,255,.12) inset;
+  opacity:0;pointer-events:none;transition:opacity .5s ease, box-shadow .25s var(--ease), transform .25s var(--ease);
+}
+.contact-cta.show{opacity:1;pointer-events:auto;}
+.contact-cta:hover{transform:translateY(-50%) translateY(-2px);box-shadow:0 20px 44px -10px rgba(255,157,61,.75), 0 0 0 1px rgba(255,255,255,.2) inset;}
+.contact-cta svg{width:17px;height:17px;}
+
+/* Màn hình hẹp: ẩn để không lấn vào nội dung */
+@media (max-width:880px){
+  .floaty{display:none;}
+  .iscene{display:none;}
+  .contact-cta{display:none;}
+}
+
 /* ---- Nút chuyển ngôn ngữ ---- */
 .lang-switch{
   position:fixed;top:20px;right:20px;z-index:20;
@@ -229,6 +379,71 @@ footer a:hover{color:var(--accent);}
   box-shadow:0 6px 16px -6px rgba(255,157,61,.6);
 }
 
+/* ============================================================
+   Màn hình Đăng nhập / Đăng ký (mở khi bấm "Tính năng nổi bật")
+   ============================================================ */
+.auth-overlay{
+  position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(6,9,28,.62);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),visibility .3s;
+}
+.auth-overlay.show{opacity:1;visibility:visible;pointer-events:auto;}
+.auth-card{
+  position:relative;width:100%;max-width:400px;
+  background:var(--glass-strong);border:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(160%);backdrop-filter:blur(var(--blur)) saturate(160%);
+  border-radius:var(--radius-xl);box-shadow:var(--shadow-soft);
+  padding:34px 30px 30px;text-align:left;
+  transform:translateY(12px) scale(.97);transition:transform .34s var(--ease);
+}
+.auth-overlay.show .auth-card{transform:none;}
+.auth-close{
+  position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink-soft);
+  transition:background .16s,color .16s;
+}
+.auth-close:hover{background:rgba(255,255,255,.12);color:var(--ink);}
+.auth-close svg{width:16px;height:16px;}
+.auth-brand{display:flex;align-items:center;gap:11px;margin-bottom:6px;}
+.auth-brand .mark{width:34px;height:34px;border-radius:11px;flex:none;
+  background:radial-gradient(circle at 32% 28%, #fff2cf, var(--sun) 45%, var(--sun-warm) 90%);
+  box-shadow:0 0 18px rgba(255,175,80,.55);}
+.auth-title{font-family:var(--font-display);font-weight:700;font-size:22px;margin:14px 0 4px;color:var(--ink);}
+.auth-sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5;}
+.auth-field{margin-bottom:14px;}
+.auth-field label{display:block;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--ink-soft);margin-bottom:6px;}
+.auth-field input{
+  width:100%;border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);
+  border-radius:var(--radius-md);padding:12px 13px;font-size:14px;font-family:var(--font-body);
+  transition:border-color .2s,background .2s;
+}
+.auth-field input::placeholder{color:var(--ink-faint);}
+.auth-field input:focus{outline:none;border-color:var(--accent);background:rgba(95,211,255,.08);}
+.auth-submit{
+  width:100%;margin-top:6px;border:none;cursor:pointer;
+  padding:14px;border-radius:var(--radius-lg);font-family:var(--font-display);font-weight:600;font-size:15px;color:#0a1030;
+  background:linear-gradient(120deg, var(--sun) 0%, var(--sun-warm) 100%);
+  box-shadow:0 14px 34px -12px rgba(255,157,61,.6), 0 0 0 1px rgba(255,255,255,.12) inset;
+  transition:transform .2s var(--ease),filter .2s;
+}
+.auth-submit:hover{transform:translateY(-2px);filter:brightness(1.05);}
+.auth-alt{margin-top:18px;font-size:13px;color:var(--ink-soft);text-align:center;}
+.auth-switch{background:none;border:none;cursor:pointer;color:var(--accent);font-family:var(--font-display);font-weight:600;font-size:13px;padding:0 2px;text-decoration:underline;text-underline-offset:2px;}
+.auth-switch:hover{color:var(--sun);}
+.auth-pane[hidden]{display:none;}
+
+/* Thông báo đăng nhập thành công */
+.auth-toast{
+  position:fixed;top:20px;left:50%;z-index:60;transform:translateX(-50%) translateY(-14px);
+  padding:11px 18px;border-radius:999px;
+  background:var(--glass-strong);border:1px solid var(--glass-brd-strong);
+  -webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));box-shadow:var(--shadow-soft);
+  color:var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);
+}
+.auth-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important;}
 }
@@ -238,6 +453,27 @@ footer a:hover{color:var(--accent);}
 <div id="stars"></div>
 <div id="stars2"></div>
 <div class="sun-glow"></div>
+
+<!-- Nhân vật bay lơ lửng (ảnh trong /img) -->
+<div class="floaty f-raica1" aria-hidden="true"><img src="img/raica1.png" alt="" /></div>
+<div class="floaty f-b1" aria-hidden="true"><img src="img/b1.png" alt="" /></div>
+<div class="floaty f-luna1" aria-hidden="true"><img src="img/luna1.png" alt="" /></div>
+<div class="floaty f-cho1" aria-hidden="true"><img src="img/cho1.png" alt="" /></div>
+<div class="floaty f-m1" aria-hidden="true"><img src="img/m1.png" alt="" /></div>
+
+<!-- Màn kịch qg1 + qb1 + q1 → 3qok -->
+<div class="iscene" aria-hidden="true">
+  <div class="ic ic-qg1" id="ic-qg1"><div class="mv"><div class="bob"><img src="img/qg1.png" alt="" /><span class="qmark">?</span></div></div></div>
+  <div class="ic ic-qb1" id="ic-qb1"><div class="mv"><div class="bob"><img src="img/qb1.png" alt="" /><span class="cheek cheek-l"></span><span class="cheek cheek-r"></span></div></div></div>
+  <div class="ic ic-q1"  id="ic-q1"><div class="mv"><div class="spin"><img src="img/q1.png" alt="" /></div></div></div>
+  <div class="ic ic-3qok" id="ic-3qok"><div class="mv3"><div class="ring"></div><div class="burst"></div><img src="img/3qok.png" alt="" /></div></div>
+</div>
+
+<!-- Nút Contact Us (hiện sau khi 3qok đáp xuống góc dưới-trái) -->
+<a class="contact-cta" id="contact-cta" href="#contact">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="m4 6 8 6 8-6"/></svg>
+  <span>Contact Us</span>
+</a>
 
 <!-- Nút chuyển ngôn ngữ -->
 <div class="lang-switch" role="group" aria-label="Language / Ngôn ngữ">
@@ -256,14 +492,7 @@ footer a:hover{color:var(--accent);}
   </p>
 
   <div class="actions">
-    <!-- Ảnh minh hoạ bên cạnh nút -->
-    <img class="cta-img" src="img/1.png" alt="AstroQ" />
-    <!-- Link tới trang explorer (trang phụ) -->
-    <a class="btn btn-primary" href="explorer.html">
-      <span data-i18n="cta_primary">Bắt đầu khám phá</span>
-      <span class="arrow">→</span>
-    </a>
-    <a class="btn btn-ghost" href="#features" data-i18n="cta_secondary">Tính năng nổi bật</a>
+    <a class="btn btn-ghost" id="open-auth" href="#" data-i18n="cta_secondary">Tính năng nổi bật</a>
   </div>
 
   <section class="features" id="features">
@@ -290,6 +519,61 @@ footer a:hover{color:var(--accent);}
   <a href="explorer.html" data-i18n="footer_link">Mở trình khám phá →</a>
 </footer>
 
+<!-- ============ Màn hình Đăng nhập / Đăng ký ============ -->
+<div class="auth-overlay" id="auth-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="auth-card">
+    <button class="auth-close" id="auth-close" type="button" aria-label="Đóng">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="auth-brand"><span class="mark"></span><strong style="font-family:var(--font-display);font-size:16px">AstroQ</strong></div>
+
+    <!-- Đăng nhập -->
+    <form class="auth-pane" id="auth-login" novalidate>
+      <h2 class="auth-title" data-i18n="auth_login_title">Đăng nhập</h2>
+      <p class="auth-sub" data-i18n="auth_login_sub">Đăng nhập để mở khoá mọi tính năng của AstroQ.</p>
+      <div class="auth-field">
+        <label for="login-email" data-i18n="auth_email">Email</label>
+        <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required />
+      </div>
+      <div class="auth-field">
+        <label for="login-pass" data-i18n="auth_password">Mật khẩu</label>
+        <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required />
+      </div>
+      <button class="auth-submit" type="submit" data-i18n="auth_login_btn">Đăng nhập</button>
+      <div class="auth-alt">
+        <span data-i18n="auth_no_account">Chưa là thành viên?</span>
+        <button type="button" class="auth-switch" id="to-register" data-i18n="auth_register_link">Đăng ký</button>
+      </div>
+    </form>
+
+    <!-- Đăng ký -->
+    <form class="auth-pane" id="auth-register" novalidate hidden>
+      <h2 class="auth-title" data-i18n="auth_register_title">Đăng ký</h2>
+      <p class="auth-sub" data-i18n="auth_register_sub">Tạo tài khoản miễn phí để bắt đầu khám phá.</p>
+      <div class="auth-field">
+        <label for="reg-name" data-i18n="auth_name">Họ và tên</label>
+        <input id="reg-name" type="text" autocomplete="name" placeholder="Nguyễn Văn A" required />
+      </div>
+      <div class="auth-field">
+        <label for="reg-email" data-i18n="auth_email">Email</label>
+        <input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com" required />
+      </div>
+      <div class="auth-field">
+        <label for="reg-pass" data-i18n="auth_password">Mật khẩu</label>
+        <input id="reg-pass" type="password" autocomplete="new-password" placeholder="••••••••" required />
+      </div>
+      <button class="auth-submit" type="submit" data-i18n="auth_register_btn">Tạo tài khoản</button>
+      <div class="auth-alt">
+        <span data-i18n="auth_have_account">Đã có tài khoản?</span>
+        <button type="button" class="auth-switch" id="to-login" data-i18n="auth_login_link">Đăng nhập</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Thông báo đăng nhập thành công -->
+<div class="auth-toast" id="auth-toast" role="status" aria-live="polite"></div>
+
 <script>
 /* ============================================================
    i18n — hỗ trợ Tiếng Việt & English
@@ -301,14 +585,31 @@ const I18N = {
     hero_welcome: "Chào mừng đến",
     lead: "Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to và tìm hiểu từng hành tinh với giao diện trực quan, sống động.",
     cta_primary: "Bắt đầu khám phá",
-    cta_secondary: "Tính năng nổi bật",
+    cta_secondary: "Khám phá ngay",
     f1_title: "8 hành tinh",
     f1_desc: "Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.",
     f2_title: "Tương tác 3D",
     f2_desc: "Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.",
     f3_title: "Thông tin trực quan",
     f3_desc: "Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.",
-    footer_link: "Mở trình khám phá →"
+    footer_link: "Mở trình khám phá →",
+    auth_login_title: "Đăng nhập",
+    auth_login_sub: "Đăng nhập để mở khoá mọi tính năng của AstroQ.",
+    auth_email: "Email",
+    auth_password: "Mật khẩu",
+    auth_login_btn: "Đăng nhập",
+    auth_no_account: "Chưa là thành viên?",
+    auth_register_link: "Đăng ký",
+    auth_register_title: "Đăng ký",
+    auth_register_sub: "Tạo tài khoản miễn phí để bắt đầu khám phá.",
+    auth_name: "Họ và tên",
+    auth_register_btn: "Tạo tài khoản",
+    auth_have_account: "Đã có tài khoản?",
+    auth_login_link: "Đăng nhập",
+    auth_logout: "Đăng xuất",
+    auth_success: "Đăng nhập thành công!",
+    auth_reg_success: "Tạo tài khoản thành công!",
+    auth_hello: "Xin chào"
   },
   en: {
     title: "AstroQ — Explore the Solar System",
@@ -316,14 +617,31 @@ const I18N = {
     hero_welcome: "Welcome to",
     lead: "Travel through the Solar System in real-time 3D — rotate, zoom, and learn about every planet through a vivid, intuitive interface.",
     cta_primary: "Start exploring",
-    cta_secondary: "Key features",
+    cta_secondary: "Explore now",
     f1_title: "8 planets",
     f1_desc: "Simulated orbits and scale of every planet in the Solar System.",
     f2_title: "3D interaction",
     f2_desc: "Drag, drop and zoom smoothly to view the universe from any angle.",
     f3_title: "Visual insights",
     f3_desc: "A modern glass data panel for every celestial body you select.",
-    footer_link: "Open the explorer →"
+    footer_link: "Open the explorer →",
+    auth_login_title: "Log in",
+    auth_login_sub: "Sign in to unlock all of AstroQ's features.",
+    auth_email: "Email",
+    auth_password: "Password",
+    auth_login_btn: "Log in",
+    auth_no_account: "Not a member yet?",
+    auth_register_link: "Sign up",
+    auth_register_title: "Sign up",
+    auth_register_sub: "Create a free account to start exploring.",
+    auth_name: "Full name",
+    auth_register_btn: "Create account",
+    auth_have_account: "Already have an account?",
+    auth_login_link: "Log in",
+    auth_logout: "Log out",
+    auth_success: "Logged in successfully!",
+    auth_reg_success: "Account created!",
+    auth_hello: "Hi"
   }
 };
 
@@ -352,6 +670,171 @@ function applyLang(lang){
 document.querySelectorAll(".lang-switch button").forEach(btn => {
   btn.addEventListener("click", () => applyLang(btn.getAttribute("data-lang")));
 });
+</script>
+
+<!-- ============================================================
+     Điều phối màn kịch: qg1 (trên-trái) + qb1 (đi bộ từ dưới) + q1
+     → sau 5 giây hợp lại thành 3qok với vòng vàng phát sáng.
+     ============================================================ -->
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var qg1 = document.getElementById("ic-qg1"),
+      qb1 = document.getElementById("ic-qb1"),
+      q1  = document.getElementById("ic-q1"),
+      ok  = document.getElementById("ic-3qok"),
+      cta = document.getElementById("contact-cta");
+  if(!qg1 || !qb1 || !q1 || !ok) return;
+
+  var Mqg = qg1.querySelector(".mv"),
+      Mqb = qb1.querySelector(".mv"),
+      Mq1 = q1.querySelector(".mv"),
+      mv3 = ok.querySelector(".mv3");
+
+  // Vị trí (transform lệch so với neo .ic tại M = left:16% top:62%).
+  var REST   = { qg:"translate(0,0)",         qb:"translate(7vw,9vh)",    q1:"translate(11vw,-3vh)" };
+  var START  = { qg:"translate(-74vw,-74vh)",  qb:"translate(46vw,90vh)",  q1:"translate(62vw,76vh)" };
+  var GATHER = { qb:"translate(-6vw,3vh)",     q1:"translate(6vw,-3vh)" };   // chụm quanh qg1, không chèn nhau
+  function set(el, t, o){ el.style.transform = t; el.style.opacity = o; }
+
+  // Đáp xuống góc dưới-trái, cách mép màn hình 2cm, rồi đặt nút Contact Us bên phải.
+  var CM = 96/2.54, MARGIN = 2*CM, FINAL_SCALE = 0.5, landed = false;
+  function layoutLanded(){
+    if(!landed) return;
+    var mx = innerWidth*0.16, my = innerHeight*0.62;         // tâm neo .ic (khớp CSS left/top)
+    var w = mv3.offsetWidth || 160, h = mv3.offsetHeight || 160;
+    var halfW = w*FINAL_SCALE/2, halfH = h*FINAL_SCALE/2;
+    var cx = MARGIN + halfW, cy = innerHeight - MARGIN - halfH;
+    mv3.style.transform = "translate("+(cx-mx).toFixed(1)+"px,"+(cy-my).toFixed(1)+"px) scale("+FINAL_SCALE+")";
+    if(cta){ cta.style.left = (cx + halfW + 16).toFixed(1)+"px"; cta.style.top = cy.toFixed(1)+"px"; }
+  }
+  addEventListener("resize", layoutLanded);
+
+  if(reduce){
+    // Reduced-motion: bỏ hoạt cảnh, hiện thẳng 3qok đã đáp góc + nút.
+    qg1.style.display = qb1.style.display = q1.style.display = "none";
+    ok.classList.add("show"); landed = true; layoutLanded();
+    if(cta) cta.classList.add("show");
+    return;
+  }
+
+  // 1) qg1 & qb1: đặt ngoài màn hình rồi bay vào vị trí chờ.
+  set(Mqg, START.qg, "0"); set(Mqb, START.qb, "0");
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    set(Mqg, REST.qg, "1"); set(Mqb, REST.qb, "1");
+  }); });
+
+  // 1b) q1: bị "văng ra" theo quỹ đạo lung tung + tự xoay, dừng ở góc phải-trên,
+  //     sau đó mới bay về cạnh qg1.
+  var Q1_FLING_END = "translate(64vw,-52vh)";
+  Mq1.style.animation = "flingTR 2.4s cubic-bezier(.5,.05,.2,1) both";
+  setTimeout(function(){
+    Mq1.style.animation = "none";
+    Mq1.style.transform = Q1_FLING_END; Mq1.style.opacity = "1";   // giữ chỗ ở góc phải-trên, tránh nhảy
+    void Mq1.offsetWidth;                                          // reflow
+    Mq1.style.transition = "transform 1.4s cubic-bezier(.42,0,.2,1), opacity .8s ease";
+    requestAnimationFrame(function(){ set(Mq1, REST.q1, "1"); });  // bay về cạnh qg1
+  }, 2400 + 600);   // fling 2.4s + dừng 0.6s ở góc phải-trên
+
+  // 3) Sau 5 giây: qb1 và q1 chụm quanh qg1 (không chèn nhau) → hợp thành 3qok.
+  setTimeout(function(){
+    Mq1.style.transitionDuration = "1.6s";              // gom về nhanh như qb1 (entrance mới chậm)
+    set(Mqb, GATHER.qb, "1"); set(Mq1, GATHER.q1, "1");
+    setTimeout(function(){
+      Mqg.style.opacity = "0"; Mqb.style.opacity = "0"; Mq1.style.opacity = "0";
+      ok.classList.add("show");                                   // 3qok + hào quang
+      setTimeout(function(){ qg1.style.display = qb1.style.display = q1.style.display = "none"; }, 600);
+      // 4) Thu nhỏ dần + trôi xuống góc dưới-trái, xong thì hiện Contact Us.
+      setTimeout(function(){
+        landed = true; layoutLanded();
+        setTimeout(function(){ if(cta) cta.classList.add("show"); }, 1800);
+      }, 900);
+    }, 1700);
+  }, 5000);
+})();
+</script>
+
+<!-- Hệ thống số dư "Thiên thạch tím" -->
+<script src="economy.js"></script>
+
+<!-- ============================================================
+     Màn hình Đăng nhập / Đăng ký + GIẢ LẬP đăng nhập thành công (demo)
+     ============================================================ -->
+<script>
+(function(){
+  var overlay = document.getElementById("auth-overlay"),
+      openBtn = document.getElementById("open-auth"),
+      closeBtn = document.getElementById("auth-close"),
+      loginPane = document.getElementById("auth-login"),
+      regPane = document.getElementById("auth-register"),
+      toReg = document.getElementById("to-register"),
+      toLogin = document.getElementById("to-login"),
+      toast = document.getElementById("auth-toast");
+  if(!overlay || !openBtn) return;
+
+  var SESSION_KEY = "astroq-user";
+  function t(key){ try{ var d=I18N[document.documentElement.lang]||I18N.vi; return d[key]||key; }catch(e){ return key; } }
+  function getUser(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)||"null"); }catch(e){ return null; } }
+  function setUser(u){ try{ localStorage.setItem(SESSION_KEY, JSON.stringify(u)); }catch(e){} }
+  function clearUser(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+  function showPane(register){ loginPane.hidden = register; regPane.hidden = !register; }
+  function open(register){
+    showPane(!!register);
+    overlay.classList.add("show"); overlay.setAttribute("aria-hidden","false");
+    var f = (register ? regPane : loginPane).querySelector("input");
+    if(f) setTimeout(function(){ f.focus(); }, 60);
+  }
+  function close(){ overlay.classList.remove("show"); overlay.setAttribute("aria-hidden","true"); }
+
+  var toastTimer=null;
+  function showToast(msg){
+    if(!toast) return;
+    toast.textContent = "✅ " + msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2800);
+  }
+
+  // GIẢ LẬP đăng nhập thành công (demo — chưa xác thực thật với server).
+  function loginAs(user, successKey){
+    setUser(user);
+    if(window.Economy) Economy.getAsteroids();   // đảm bảo khởi tạo số dư (mặc định 50)
+    close();
+    showToast(t(successKey) + " " + t("auth_hello") + " " + (user.name || user.email) + "!");
+    // Đăng nhập xong → vào Bảng điều khiển người chơi (dashboard).
+    setTimeout(function(){ window.location.href = "dashboard.html"; }, 1000);
+  }
+
+  openBtn.addEventListener("click", function(e){
+    e.preventDefault();
+    if(getUser()) window.location.href = "dashboard.html";   // đã đăng nhập → khám phá ngay
+    else open(false);                                        // chưa → màn hình đăng nhập
+  });
+  if(closeBtn) closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });   // bấm nền = đóng
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape" && overlay.classList.contains("show")) close(); });
+  if(toReg)   toReg.addEventListener("click", function(){ open(true); });    // chưa là thành viên → đăng ký
+  if(toLogin) toLogin.addEventListener("click", function(){ open(false); });
+
+  // Đăng nhập: nhận email bất kỳ (demo) → coi như thành công.
+  loginPane.addEventListener("submit", function(e){
+    e.preventDefault();
+    var emailEl = document.getElementById("login-email");
+    var email = (emailEl.value || "").trim();
+    if(!email){ emailEl.focus(); return; }
+    loginAs({ name: email.split("@")[0], email: email }, "auth_success");
+  });
+  // Đăng ký: tạo tài khoản (demo) → tự đăng nhập luôn.
+  regPane.addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = (document.getElementById("reg-email").value || "").trim();
+    var name  = (document.getElementById("reg-name").value || "").trim();
+    if(!email){ document.getElementById("reg-email").focus(); return; }
+    loginAs({ name: name || email.split("@")[0], email: email }, "auth_reg_success");
+  });
+
+})();
 </script>
 </body>
 </html>
