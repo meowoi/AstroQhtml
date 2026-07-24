@@ -497,7 +497,6 @@ footer a:hover{color:var(--accent);}
       <span data-i18n="cta_try">Trải nghiệm ngay</span>
       <span class="arrow">→</span>
     </a>
-    <a class="btn btn-ghost" id="btn-login" href="#" data-i18n="cta_login">Đăng nhập</a>
   </div>
 
   <section class="features" id="features">
@@ -773,7 +772,6 @@ document.querySelectorAll(".lang-switch button").forEach(btn => {
 (function(){
   var overlay = document.getElementById("auth-overlay"),
       btnTry = document.getElementById("btn-try"),
-      btnLogin = document.getElementById("btn-login"),
       closeBtn = document.getElementById("auth-close"),
       loginPane = document.getElementById("auth-login"),
       regPane = document.getElementById("auth-register"),
@@ -806,17 +804,12 @@ document.querySelectorAll(".lang-switch button").forEach(btn => {
     toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2800);
   }
 
-  // Hai lối vào ở màn hình chính.
-  if(btnTry) btnTry.addEventListener("click", function(e){          // Khách mới → Đăng ký
+  // Một lối vào duy nhất: bấm "Trải nghiệm ngay" mới mở popup (Đăng ký; có link sang Đăng nhập).
+  if(btnTry) btnTry.addEventListener("click", function(e){
     e.preventDefault();
     var u=getUser();
-    if(u && u.character) window.location.href = "dashboard.html";   // đã có hồ sơ → vào thẳng
-    else open(true);                                                // mở popup ĐĂNG KÝ
-  });
-  if(btnLogin) btnLogin.addEventListener("click", function(e){      // Người dùng cũ → Đăng nhập
-    e.preventDefault();
-    if(getUser()) window.location.href = "dashboard.html";          // đã đăng nhập → vào thẳng
-    else open(false);                                               // mở popup ĐĂNG NHẬP
+    if(u && u.character) window.location.href = "dashboard.html";   // đã có hồ sơ → vào thẳng dashboard
+    else open(true);                                                // mở popup (mặc định ĐĂNG KÝ)
   });
   if(closeBtn) closeBtn.addEventListener("click", close);
   overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });   // bấm nền = đóng
