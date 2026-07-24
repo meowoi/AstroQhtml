@@ -222,6 +222,8 @@ footer a:hover{color:var(--accent);}
 .f-b1{width:clamp(112px, 12vw, 168px);}
 /* raica1: nhân vật trong ảnh nhỏ & khó nhìn → phóng khung to hẳn (> các nhân vật khác) */
 .f-raica1{width:clamp(158px, 17vw, 240px);}
+/* Làm raica1 sáng hơn (giữ đổ bóng) */
+.f-raica1 img{filter:brightness(1.32) saturate(1.06) drop-shadow(0 12px 26px rgba(0,0,0,.45));}
 
 /* Điểm dừng — phân bố đều quanh rìa màn hình, tránh cột nội dung ở giữa và
    tránh góc dưới-trái (nơi 3qok đáp + nút Contact Us). */
@@ -471,7 +473,6 @@ footer a:hover{color:var(--accent);}
 
 <!-- Nút Contact Us (hiện sau khi 3qok đáp xuống góc dưới-trái) -->
 <a class="contact-cta" id="contact-cta" href="#contact">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="m4 6 8 6 8-6"/></svg>
   <span>Contact Us</span>
 </a>
 
@@ -492,7 +493,11 @@ footer a:hover{color:var(--accent);}
   </p>
 
   <div class="actions">
-    <a class="btn btn-ghost" id="open-auth" href="#" data-i18n="cta_secondary">Tính năng nổi bật</a>
+    <a class="btn btn-primary" id="btn-try" href="#">
+      <span data-i18n="cta_try">Trải nghiệm ngay</span>
+      <span class="arrow">→</span>
+    </a>
+    <a class="btn btn-ghost" id="btn-login" href="#" data-i18n="cta_login">Đăng nhập</a>
   </div>
 
   <section class="features" id="features">
@@ -586,6 +591,8 @@ const I18N = {
     lead: "Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to và tìm hiểu từng hành tinh với giao diện trực quan, sống động.",
     cta_primary: "Bắt đầu khám phá",
     cta_secondary: "Khám phá ngay",
+    cta_try: "Trải nghiệm ngay",
+    cta_login: "Đăng nhập",
     f1_title: "8 hành tinh",
     f1_desc: "Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.",
     f2_title: "Tương tác 3D",
@@ -618,6 +625,8 @@ const I18N = {
     lead: "Travel through the Solar System in real-time 3D — rotate, zoom, and learn about every planet through a vivid, intuitive interface.",
     cta_primary: "Start exploring",
     cta_secondary: "Explore now",
+    cta_try: "Try it now",
+    cta_login: "Log in",
     f1_title: "8 planets",
     f1_desc: "Simulated orbits and scale of every planet in the Solar System.",
     f2_title: "3D interaction",
@@ -763,14 +772,15 @@ document.querySelectorAll(".lang-switch button").forEach(btn => {
 <script>
 (function(){
   var overlay = document.getElementById("auth-overlay"),
-      openBtn = document.getElementById("open-auth"),
+      btnTry = document.getElementById("btn-try"),
+      btnLogin = document.getElementById("btn-login"),
       closeBtn = document.getElementById("auth-close"),
       loginPane = document.getElementById("auth-login"),
       regPane = document.getElementById("auth-register"),
       toReg = document.getElementById("to-register"),
       toLogin = document.getElementById("to-login"),
       toast = document.getElementById("auth-toast");
-  if(!overlay || !openBtn) return;
+  if(!overlay) return;
 
   var SESSION_KEY = "astroq-user";
   function t(key){ try{ var d=I18N[document.documentElement.lang]||I18N.vi; return d[key]||key; }catch(e){ return key; } }
@@ -796,20 +806,17 @@ document.querySelectorAll(".lang-switch button").forEach(btn => {
     toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2800);
   }
 
-  // GIẢ LẬP đăng nhập thành công (demo — chưa xác thực thật với server).
-  function loginAs(user, successKey){
-    setUser(user);
-    if(window.Economy) Economy.getAsteroids();   // đảm bảo khởi tạo số dư (mặc định 50)
-    close();
-    showToast(t(successKey) + " " + t("auth_hello") + " " + (user.name || user.email) + "!");
-    // Đăng nhập xong → vào Bảng điều khiển người chơi (dashboard).
-    setTimeout(function(){ window.location.href = "dashboard.html"; }, 1000);
-  }
-
-  openBtn.addEventListener("click", function(e){
+  // Hai lối vào ở màn hình chính.
+  if(btnTry) btnTry.addEventListener("click", function(e){          // Khách mới → Đăng ký
     e.preventDefault();
-    if(getUser()) window.location.href = "dashboard.html";   // đã đăng nhập → khám phá ngay
-    else open(false);                                        // chưa → màn hình đăng nhập
+    var u=getUser();
+    if(u && u.character) window.location.href = "dashboard.html";   // đã có hồ sơ → vào thẳng
+    else open(true);                                                // mở popup ĐĂNG KÝ
+  });
+  if(btnLogin) btnLogin.addEventListener("click", function(e){      // Người dùng cũ → Đăng nhập
+    e.preventDefault();
+    if(getUser()) window.location.href = "dashboard.html";          // đã đăng nhập → vào thẳng
+    else open(false);                                               // mở popup ĐĂNG NHẬP
   });
   if(closeBtn) closeBtn.addEventListener("click", close);
   overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });   // bấm nền = đóng
@@ -817,21 +824,30 @@ document.querySelectorAll(".lang-switch button").forEach(btn => {
   if(toReg)   toReg.addEventListener("click", function(){ open(true); });    // chưa là thành viên → đăng ký
   if(toLogin) toLogin.addEventListener("click", function(){ open(false); });
 
-  // Đăng nhập: nhận email bất kỳ (demo) → coi như thành công.
+  // ĐĂNG NHẬP (người dùng cũ, demo): giữ lại hồ sơ đã có (avatar/nhân vật) → dashboard.
   loginPane.addEventListener("submit", function(e){
     e.preventDefault();
     var emailEl = document.getElementById("login-email");
     var email = (emailEl.value || "").trim();
     if(!email){ emailEl.focus(); return; }
-    loginAs({ name: email.split("@")[0], email: email }, "auth_success");
+    var existing = getUser();
+    if(!existing){ setUser({ name: email.split("@")[0], email: email }); }   // chưa có hồ sơ → tạo tối thiểu
+    if(window.Economy) Economy.getAsteroids();                               // giữ số dư đã có
+    close();
+    var u = getUser();
+    showToast(t("auth_success") + " " + t("auth_hello") + " " + ((u&&(u.name||u.email))||email) + "!");
+    setTimeout(function(){ window.location.href = "dashboard.html"; }, 1000);
   });
-  // Đăng ký: tạo tài khoản (demo) → tự đăng nhập luôn.
+  // ĐĂNG KÝ (khách mới, demo): tạo hồ sơ → sang màn Cấp Thẻ ID & Chọn Nhân Vật.
   regPane.addEventListener("submit", function(e){
     e.preventDefault();
     var email = (document.getElementById("reg-email").value || "").trim();
     var name  = (document.getElementById("reg-name").value || "").trim();
     if(!email){ document.getElementById("reg-email").focus(); return; }
-    loginAs({ name: name || email.split("@")[0], email: email }, "auth_reg_success");
+    setUser({ name: name || email.split("@")[0], email: email });            // chưa có character
+    close();
+    showToast(t("auth_reg_success"));
+    setTimeout(function(){ window.location.href = "select.html"; }, 900);    // → chọn nhân vật
   });
 
 })();
