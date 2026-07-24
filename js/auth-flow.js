@@ -13,7 +13,7 @@
     { id:"m",     name:"Comet", model:"3d/m3d.png",     ava:"ava/avam.png",     role:{vi:"Phi công trưởng",en:"Chief Pilot"},   trait:{vi:"Lanh lợi & tò mò",en:"Quick & curious"},  stats:{pow:78,spd:90,iq:74} },
     { id:"b",     name:"Byte",  model:"3d/b3d.png",     ava:"ava/avab.png",     role:{vi:"Kỹ sư hệ thống",en:"Systems Engineer"},trait:{vi:"Điềm tĩnh & logic",en:"Calm & logical"}, stats:{pow:70,spd:66,iq:95} },
     { id:"q",     name:"Quark", model:"3d/q3d.png",     ava:"ava/q2.png",       role:{vi:"Trinh sát",en:"Scout"},               trait:{vi:"Nhanh nhẹn & tinh nghịch",en:"Nimble & playful"}, stats:{pow:60,spd:96,iq:70} },
-    { id:"raica", name:"Castor",   model:"3d/raica3d.png", ava:"ava/avaraica.png", role:{vi:"Chỉ huy",en:"Commander"},             trait:{vi:"Quyết đoán & ấm áp",en:"Decisive & warm"}, stats:{pow:88,spd:72,iq:82} },
+    { id:"raica", name:"Castor",   model:"3d/raica3d.png", ava:"ava/avaraica.png", zoom:1.6, role:{vi:"Chỉ huy",en:"Commander"},             trait:{vi:"Quyết đoán & ấm áp",en:"Decisive & warm"}, stats:{pow:88,spd:72,iq:82} },
     { id:"bao",   name:"Umbra",    model:"3d/bao3D.png",   ava:"ava/avabao.png",   role:{vi:"Đội trưởng tấn công",en:"Strike Leader"},trait:{vi:"Dũng mãnh & nhanh",en:"Fierce & fast"}, stats:{pow:94,spd:92,iq:66} },
     { id:"chim",  name:"Ignis",    model:"3d/chim3D.png",  ava:"ava/avachim.png",  role:{vi:"Hoa tiêu",en:"Navigator"},            trait:{vi:"Tự do & tinh mắt",en:"Free & sharp-eyed"}, stats:{pow:64,spd:88,iq:80} },
     { id:"cho",   name:"Sirius",   model:"3d/cho2.png",    ava:"ava/avacho.png",   role:{vi:"Vệ binh",en:"Guardian"},              trait:{vi:"Trung thành & gan dạ",en:"Loyal & brave"}, stats:{pow:82,spd:78,iq:72} },
@@ -87,7 +87,7 @@
     selected=c;
     document.querySelectorAll(".char").forEach(function(b){ b.classList.toggle("active", b.dataset.id===id); });
     var av=$("card-ava");
-    if(av){ av.src=c.ava; av.classList.remove("pop"); void av.offsetWidth; av.classList.add("pop"); }  // thẻ ID đổi avatar
+    if(av){ av.style.setProperty("--z", c.zoom||1); av.src=c.ava; av.classList.remove("pop"); void av.offsetWidth; av.classList.add("pop"); }  // thẻ ID đổi avatar + zoom riêng
     if($("hud-info")) $("hud-info").classList.add("show");
     fillHud(c);
   }
@@ -106,7 +106,7 @@
     var profile={
       name:name, pilotName:name,
       character:selected.id, selectedCharacter:selected.id,
-      avatar:selected.ava, email:existing.email||"", purpleAsteroids:0
+      avatar:selected.ava, avatarZoom:selected.zoom||1, email:existing.email||"", purpleAsteroids:0
     };
     try{ localStorage.setItem(LS_USER, JSON.stringify(profile)); }catch(e){}
     try{ localStorage.setItem(LS_AST, "0"); }catch(e){}   // nhiên liệu (Thiên thạch tím) ban đầu = 0

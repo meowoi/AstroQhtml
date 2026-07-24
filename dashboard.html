@@ -560,7 +560,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
     // Avatar: dùng ảnh nhân vật đã chọn (thư mục ava) nếu có, ngược lại hiện chữ cái đầu.
     var u = getUser(), av = $("user-avatar");
     if(av){
-      if(u && u.avatar){ av.innerHTML = '<img src="'+u.avatar+'" alt="" />'; av.style.background = "none"; }
+      if(u && u.avatar){ av.innerHTML = '<img src="'+u.avatar+'" alt="" style="transform:scale('+(u.avatarZoom||1)+');transform-origin:center;" />'; av.style.background = "none"; }
       else { av.textContent = name.trim().charAt(0).toUpperCase(); av.style.background = ""; }
     }
     $("welcome").textContent = t("welcome_pre") + " " + name + "!";

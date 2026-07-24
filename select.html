@@ -63,10 +63,10 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:6px clam
 .ava-frame{width:132px;height:132px;margin:16px auto 6px;border-radius:50%;overflow:hidden;position:relative;
   border:2px solid var(--glass-brd-strong);box-shadow:0 0 30px rgba(56,189,248,.55), inset 0 0 20px rgba(0,0,0,.5);
   background:radial-gradient(circle at 50% 40%, rgba(56,189,248,.25), rgba(10,16,40,.6));}
-/* Zoom nhẹ + căn giữa để đồng bộ cỡ đầu nhân vật hiển thị trong khung (ảnh đều 1080²) */
-.ava-frame img{position:absolute;inset:-7%;width:114%;height:114%;object-fit:cover;object-position:center;display:block;}
+/* Zoom theo từng nhân vật (--z) để đồng bộ cỡ đầu, không lẹm vào đầu (mặc định 1 = không phóng) */
+.ava-frame img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transform:scale(var(--z,1));transform-origin:center;}
 .ava-frame img.pop{animation:avaPop .42s var(--jelly);}
-@keyframes avaPop{0%{transform:scale(.55);opacity:.2;}100%{transform:scale(1);opacity:1;}}
+@keyframes avaPop{0%{transform:scale(calc(var(--z,1)*.55));opacity:.2;}100%{transform:scale(var(--z,1));opacity:1;}}
 .idcard-name-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-faint);margin:14px 0 6px;text-transform:uppercase;}
 #pilot-name{width:100%;border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);border-radius:12px;
   padding:12px 13px;font-size:15px;font-family:var(--font-body);transition:border-color .2s,background .2s;}

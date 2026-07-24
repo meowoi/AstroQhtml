@@ -54,6 +54,8 @@
 > Ghi mới nhất lên trên.
 
 ### 2026-07-25
+- Avatar khung tròn: bỏ zoom mặc định (100%, không lẹm đầu); zoom riêng theo `zoom` mỗi nhân vật (Castor=1.6 vì đầu nhỏ trong ảnh). Đồng bộ zoom sang avatar header dashboard (`avatarZoom`). — `select.html`, `js/auth-flow.js`, `dashboard.html`
+- Thẻ bí ẩn: bỏ bóng đen, giữ dấu "?" phát sáng. — `select.html`
 - Thêm 2 thẻ nhân vật bí ẩn (khoá) ở màn chọn: bóng đen + dấu "?" phát sáng, click hiện toast "sắp mở khoá". — `js/auth-flow.js`, `select.html`
 - Đổi tên nhân vật ở màn chọn: raica→Castor, báo→Umbra, chim→Ignis, chó→Sirius, chuột→Lyrae, cú→Moros, cua→Karkinos. Đồng bộ cỡ avatar trong khung (zoom nhẹ + căn giữa; ảnh đều 1080²). — `js/auth-flow.js`, `select.html`
 - Bỏ nút "Đăng nhập" riêng ở index; chỉ còn 1 nút "Trải nghiệm ngay" → mở popup (đăng nhập nằm trong popup). — `index.html`
