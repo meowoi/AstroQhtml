@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AstroQ — Thư Viện Khám Phá</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --bg:#0b0f19; --bg2:#0d1322;
+  --ink:#eaf1ff; --ink-soft:#a9b8e8; --ink-faint:#7f8dc4;
+  --cyan:#38bdf8; --purple:#c084fc; --green:#4ade80; --amber:#fb923c; --gold:#ffcf6b;
+  --brd:rgba(120,160,255,.18);
+  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
+  --ease:cubic-bezier(.22,.61,.36,1); --jelly:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;}
+body{font-family:var(--font-body);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);}
+button{font-family:inherit;} a{color:inherit;text-decoration:none;} input{font-family:inherit;}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px;}
+.lic{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex:none;}
+.starfield{position:fixed;inset:-40%;z-index:0;pointer-events:none;background-repeat:repeat;opacity:.6;
+  background-image:radial-gradient(1.2px 1.2px at 20% 30%,#fff,transparent),radial-gradient(1.3px 1.3px at 80% 20%,#dcecff,transparent),radial-gradient(1px 1px at 60% 70%,#cfe0ff,transparent),radial-gradient(1px 1px at 40% 85%,#fff,transparent);
+  background-size:520px 520px;animation:drift 160s linear infinite;}
+@keyframes drift{from{transform:translate3d(0,0,0);}to{transform:translate3d(-240px,160px,0);}}
+
+.wrap{position:relative;z-index:10;max-width:1240px;margin:0 auto;padding:0 clamp(12px,3vw,26px) 70px;}
+
+/* ============ TOPBAR ============ */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;
+  background:linear-gradient(180deg, rgba(11,15,25,.9), rgba(11,15,25,.35));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+.back-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-mono);font-size:12px;letter-spacing:.05em;
+  color:var(--ink-soft);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.4);border-radius:10px;padding:9px 13px;transition:background .18s,transform .12s;}
+.back-btn:hover{background:rgba(56,189,248,.18);} .back-btn:active{transform:scale(.94);}
+.search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:12px;
+  background:rgba(9,14,28,.7);border:1px solid var(--brd);color:var(--cyan);}
+.search input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-size:14px;}
+.search input::placeholder{color:var(--ink-faint);}
+.srcfilter{display:inline-flex;gap:3px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--brd);}
+.srcfilter button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-mono);font-weight:600;font-size:11px;letter-spacing:.04em;padding:6px 11px;border-radius:999px;transition:.2s;}
+.srcfilter button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+.currency{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:12px;background:rgba(26,16,44,.55);border:1px solid rgba(192,132,252,.42);}
+.gem{position:relative;width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:8px;
+  background:radial-gradient(circle at 50% 38%, rgba(192,132,252,.5), rgba(143,123,255,.12) 68%, transparent);box-shadow:0 0 15px rgba(192,132,252,.8), inset 0 0 9px rgba(192,132,252,.5);animation:gemPulse 2.4s ease-in-out infinite;}
+.gem img{width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
+.gem.bump{animation:gemBump .5s var(--jelly);}
+@keyframes gemPulse{0%,100%{box-shadow:0 0 12px rgba(192,132,252,.55), inset 0 0 8px rgba(192,132,252,.4);}50%{box-shadow:0 0 22px rgba(192,132,252,1), inset 0 0 12px rgba(192,132,252,.7);}}
+@keyframes gemBump{0%{transform:scale(1);}40%{transform:scale(1.4);}100%{transform:scale(1);}}
+.currency .c-val{font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;}
+.lang-switch{display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--brd);}
+.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 8px;border-radius:999px;}
+.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+
+/* ============ 3-COLUMN LAYOUT ============ */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;margin-top:16px;}
+@media(max-width:860px){.layout{grid-template-columns:1fr;}}
+
+/* LEFT SIDEBAR */
+.side{position:sticky;top:70px;align-self:start;display:flex;flex-direction:column;gap:16px;}
+@media(max-width:860px){.side{position:static;}}
+.side-card{border-radius:16px;padding:14px 13px;border:1px solid var(--brd);background:rgba(15,23,42,.5);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 20px 46px -26px rgba(0,0,0,.7);}
+.side-title{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px;}
+.cat{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;text-align:left;padding:9px 11px;border-radius:11px;color:var(--ink);
+  border:1px solid transparent;background:transparent;transition:background .18s,border-color .18s,transform .15s;margin-bottom:4px;}
+.cat:hover{background:rgba(56,189,248,.08);} .cat:active{transform:scale(.97);}
+.cat.active{background:linear-gradient(120deg,rgba(56,189,248,.16),rgba(192,132,252,.12));border-color:rgba(56,189,248,.5);}
+.cat .c-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:15px;color:var(--cat-c,var(--cyan));background:var(--cat-bg,rgba(56,189,248,.14));border:1px solid var(--cat-c,rgba(56,189,248,.4));}
+.cat .c-nm{flex:1;font-size:13.5px;font-weight:500;}
+.cat .c-n{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);}
+.cat--astronomy{--cat-c:#38bdf8;--cat-bg:rgba(56,189,248,.14);}
+.cat--ai{--cat-c:#c084fc;--cat-bg:rgba(192,132,252,.14);}
+.cat--quantum{--cat-c:#4ade80;--cat-bg:rgba(74,222,128,.14);}
+.cat--robot{--cat-c:#fb923c;--cat-bg:rgba(251,146,60,.14);}
+.cat--all{--cat-c:#9fb0d0;--cat-bg:rgba(159,176,208,.14);}
+.stats{display:flex;flex-direction:column;gap:10px;}
+.stat{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(15,23,42,.5);border:1px solid var(--brd);}
+.stat .s-ic{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:16px;color:var(--s-c);background:var(--s-bg);border:1px solid var(--s-c);}
+.stat .s-b{display:flex;flex-direction:column;line-height:1.1;}
+.stat .s-v{font-family:var(--font-display);font-weight:700;font-size:18px;color:#fff;}
+.stat .s-l{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;}
+.stat.read{--s-c:#38bdf8;--s-bg:rgba(56,189,248,.14);}
+.stat.coll{--s-c:#c084fc;--s-bg:rgba(192,132,252,.14);} .stat.coll .s-v{color:#e9d7ff;}
+
+/* CENTER FEED */
+.feed{min-width:0;}
+/* Hero card */
+.hero{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:0;border-radius:20px;overflow:hidden;cursor:pointer;
+  border:1px solid rgba(56,189,248,.35);box-shadow:0 26px 60px -28px rgba(0,0,0,.8), 0 0 40px -14px rgba(56,189,248,.4);
+  transition:transform .35s var(--jelly),box-shadow .35s;}
+.hero:hover{transform:translateY(-4px);box-shadow:0 34px 70px -26px rgba(0,0,0,.85),0 0 54px -8px rgba(56,189,248,.6);}
+@media(max-width:620px){.hero{grid-template-columns:1fr;}}
+.imgbox{position:relative;overflow:hidden;background:radial-gradient(circle at 40% 35%, var(--c1,#2f6fd0), var(--c2,#1c4c96) 55%, var(--c3,#081d44) 100%);}
+.imgbox .em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:56px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));z-index:1;}
+.imgbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;}
+.imgbox::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(90deg,transparent 55%,rgba(11,15,25,.5)),linear-gradient(180deg,transparent 60%,rgba(11,15,25,.35));}
+.hero .imgbox{min-height:220px;}
+.hero-body{position:relative;padding:22px 22px 20px;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(15,23,42,.62),rgba(15,23,42,.55));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.badge{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  color:#cfe8ff;background:rgba(6,10,22,.6);border:1px solid rgba(120,180,255,.45);padding:4px 10px;border-radius:999px;}
+.badge.nasa{color:#cfe8ff;border-color:rgba(120,180,255,.5);}
+.badge.esa{color:#bfead4;border-color:rgba(74,222,128,.5);}
+.badge.ai{color:#e6ccff;border-color:rgba(192,132,252,.5);}
+.hero-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-top:12px;}
+.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(19px,2.6vw,26px);line-height:1.25;margin:6px 0 0;}
+.hero p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 0;flex:1;}
+.read-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;align-self:flex-start;margin-top:16px;cursor:pointer;border:none;
+  padding:12px 20px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:14px;color:#04060f;
+  background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);transition:transform .25s var(--jelly),filter .2s;}
+.read-btn img{width:15px;height:15px;object-fit:contain;}
+.read-btn:hover{filter:brightness(1.08);transform:translateY(-2px);} .read-btn:active{transform:scale(.94);}
+
+.feed-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:26px 0 2px;}
+.feed-head .ft{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);}
+.feed-head .fc{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:18px;margin-top:14px;}
+.card{position:relative;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;cursor:pointer;
+  border:1px solid var(--brd);background:rgba(15,23,42,.5);box-shadow:0 18px 44px -26px rgba(0,0,0,.7);
+  transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
+.card:hover{transform:translateY(-6px);border-color:rgba(56,189,248,.65);box-shadow:0 28px 56px -22px rgba(0,0,0,.8),0 0 30px -6px rgba(56,189,248,.55);}
+.card .imgbox{height:130px;}
+.card .imgbox .em{font-size:40px;}
+.card .cbody{padding:12px 13px 14px;display:flex;flex-direction:column;flex:1;}
+.card .cbody .badge{margin-bottom:9px;}
+.card .cbody h3{font-family:var(--font-display);font-weight:600;font-size:14.5px;line-height:1.32;margin:0;color:#fff;}
+.card .cbody .foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+.card .r{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--purple);
+  background:rgba(192,132,252,.12);border:1px solid rgba(192,132,252,.4);padding:3px 9px;border-radius:999px;}
+.card .r img{width:13px;height:13px;object-fit:contain;} .card .r.done{color:var(--green);background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.4);}
+.card .cat-dot{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;color:var(--ink-faint);text-transform:uppercase;}
+.empty{grid-column:1/-1;text-align:center;color:var(--ink-faint);font-size:14px;padding:40px 0;}
+
+/* ============ READER MODAL ============ */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(4,6,20,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .3s;}
+.modal.show{opacity:1;visibility:visible;}
+.reader{width:100%;max-width:600px;max-height:90vh;overflow:auto;border-radius:22px;position:relative;
+  background:linear-gradient(180deg, rgba(16,22,40,.98), rgba(11,15,25,.99));border:1px solid rgba(56,189,248,.45);
+  box-shadow:0 28px 70px -26px rgba(0,0,0,.9), 0 0 48px -12px rgba(56,189,248,.5);transform:translateY(12px) scale(.97);transition:transform .35s var(--jelly);}
+.modal.show .reader{transform:none;}
+.r-close{position:absolute;top:12px;right:12px;z-index:5;width:34px;height:34px;border-radius:10px;cursor:pointer;border:1px solid var(--brd);background:rgba(9,14,28,.75);color:var(--ink);font-size:15px;transition:background .18s,transform .12s;}
+.r-close:hover{background:rgba(255,255,255,.12);} .r-close:active{transform:scale(.9);}
+.r-hero{position:relative;height:210px;overflow:hidden;border-radius:22px 22px 0 0;}
+.r-hero .em{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:70px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55));z-index:1;}
+.r-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;}
+.r-hero::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(180deg,transparent 45%,rgba(11,15,25,.92));}
+.r-badge{position:absolute;top:12px;left:14px;z-index:4;}
+.r-in{padding:6px 24px 22px;}
+.r-in h2{font-family:var(--font-display);font-weight:700;font-size:22px;line-height:1.3;margin:8px 0 0;}
+.r-body{color:var(--ink-soft);font-size:15px;line-height:1.7;margin:14px 0 0;}
+.r-body p{margin:0 0 12px;}
+/* mascot box */
+.mascot{display:flex;align-items:flex-start;gap:12px;margin:14px 0 0;padding:14px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(56,189,248,.1),rgba(192,132,252,.08));border:1px solid rgba(56,189,248,.4);}
+.mascot img{width:54px;height:auto;flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5)) drop-shadow(0 0 10px rgba(56,189,248,.4));}
+.mascot .m-body .m-who{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);}
+.mascot .m-body p{font-size:13.5px;line-height:1.55;color:var(--ink);margin:5px 0 0;}
+.mascot .m-body b{color:var(--cyan);}
+.credit{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;color:var(--ink-faint);margin-top:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.credit a{color:var(--cyan);display:inline-flex;align-items:center;gap:4px;}
+.r-actions{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+.r-claim{width:100%;cursor:pointer;border:none;padding:13px;border-radius:14px;font-family:var(--font-display);font-weight:700;font-size:14px;color:#04060f;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);transition:transform .25s var(--jelly),filter .2s,opacity .2s;}
+.r-claim img{width:17px;height:17px;object-fit:contain;}
+.r-claim:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.3);box-shadow:none;}
+.r-claim.done{background:rgba(74,222,128,.16);color:var(--green);border:1px solid rgba(74,222,128,.5);}
+.r-quiz{width:100%;cursor:pointer;padding:14px;border-radius:14px;font-family:var(--font-display);font-weight:700;font-size:14.5px;color:#04060f;border:none;
+  background:linear-gradient(120deg,var(--gold),var(--amber));box-shadow:0 12px 26px -12px rgba(251,146,60,.8);transition:transform .25s var(--jelly),filter .2s;}
+.r-quiz:hover{filter:brightness(1.07);transform:translateY(-2px);} .r-quiz:active{transform:scale(.95);}
+
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:80;padding:12px 20px;border-radius:999px;
+  background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);color:var(--ink);font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
+</style>
+</head>
+<body>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <!-- ============ TOPBAR ============ -->
+  <header class="top">
+    <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Trạm Tri Thức</span></button>
+    <label class="search"><span id="ic-search"></span><input id="q" type="search" placeholder="Tìm bài viết…" data-i18n-ph="search_ph" /></label>
+    <div class="srcfilter" id="srcfilter" role="group" aria-label="Nguồn">
+      <button data-src="all" class="active" data-i18n="src_all">Tất cả</button>
+      <button data-src="NASA">NASA</button>
+      <button data-src="ESA">ESA</button>
+      <button data-src="AI & Tech" data-i18n="src_ai">AI &amp; Tech</button>
+    </div>
+    <div class="currency" title="Thiên thạch tím"><span class="gem" id="gem"><img src="img/tt.png" alt="tt" /></span><span class="c-val" id="bal">0</span></div>
+    <div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="vi">VI</button><button type="button" data-lang="en">EN</button></div>
+  </header>
+
+  <!-- ============ 3-COLUMN LAYOUT ============ -->
+  <div class="layout">
+    <!-- LEFT SIDEBAR -->
+    <aside class="side">
+      <div class="side-card">
+        <div class="side-title"><span id="ic-cat"></span>[ <span data-i18n="topics">CHỦ ĐỀ</span> ]</div>
+        <div id="cats"></div>
+      </div>
+      <div class="side-card">
+        <div class="side-title"><span id="ic-award"></span>[ <span data-i18n="progress">TIẾN ĐỘ</span> ]</div>
+        <div class="stats">
+          <div class="stat read"><span class="s-ic" id="ic-read"></span><span class="s-b"><span class="s-v" id="st-read">0</span><span class="s-l" data-i18n="st_read">Đã đọc (bài)</span></span></div>
+          <div class="stat coll"><span class="s-ic"><img src="img/tt.png" alt="tt" style="width:16px;height:16px;object-fit:contain" /></span><span class="s-b"><span class="s-v" id="st-coll">0</span><span class="s-l" data-i18n="st_coll">Đã thu thập</span></span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER FEED -->
+    <main class="feed">
+      <div id="hero-wrap"></div>
+      <div class="feed-head"><span class="ft">[ DATA_FEED · <span data-i18n="articles">Bài viết</span> ]</span><span class="fc" id="feed-count"></span></div>
+      <div class="grid" id="grid"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ READER MODAL ============ -->
+<div class="modal" id="reader" role="dialog" aria-modal="true">
+  <div class="reader">
+    <button class="r-close" id="r-close" aria-label="Close">✕</button>
+    <div class="r-hero" id="r-hero"><span class="em" id="r-em"></span><span class="badge r-badge" id="r-badge"></span></div>
+    <div class="r-in">
+      <h2 id="r-title"></h2>
+      <div class="r-body" id="r-body"></div>
+      <div class="mascot" id="r-mascot">
+        <img id="r-mascot-img" src="img/b1.png" alt="" />
+        <div class="m-body"><div class="m-who" id="r-mascot-who">BYTE</div><p id="r-mascot-text"></p></div>
+      </div>
+      <div class="credit"><span id="ic-ext"></span><span id="r-credit"></span> · <a id="r-link" target="_blank" rel="noopener"><span data-i18n="src_link">Nguồn</span> <span id="ic-ext2"></span></a></div>
+      <div class="r-actions">
+        <button class="r-claim" id="r-claim"></button>
+        <button class="r-quiz" id="r-quiz">⚡ <span data-i18n="quiz_cta">LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU</span> (+20 <img class="tt-inline" src="img/tt.png" alt="tt" />)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var READ_KEY="astroq-read", READ_SECS=5;
+
+  /* ===== i18n ===== */
+  var I18N={
+    vi:{ title:"AstroQ — Thư Viện Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
+      src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
+      st_read:"Đã đọc (bài)", st_coll:"Đã thu thập", articles:"Bài viết", all_topics:"Tất cả chủ đề",
+      cat_astronomy:"Thiên văn", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot",
+      featured:"Bài viết nổi bật", read_now:"Đọc Ngay", src_link:"Nguồn",
+      reading:"Đang đọc…", claim:"Đã đọc xong · Nhận", claimed:"✓ Đã nhận thưởng đọc", read_badge:"Đã đọc",
+      quiz_cta:"LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU", credit:"Nguồn dữ liệu",
+      toast_claim:"+{n} {tt} · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
+    en:{ title:"AstroQ — Discovery Library", back:"Back to Knowledge Station", search_ph:"Search articles…",
+      src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
+      st_read:"Read (articles)", st_coll:"Collected", articles:"Articles", all_topics:"All topics",
+      cat_astronomy:"Astronomy", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots",
+      featured:"Featured article", read_now:"Read Now", src_link:"Source",
+      reading:"Reading…", claim:"Finished · Claim", claimed:"✓ Reading reward claimed", read_badge:"Read",
+      quiz_cta:"TAKE THE QUIZ IF YOU UNDERSTOOD IT", credit:"Data source",
+      toast_claim:"+{n} {tt} · Knowledge loaded!", none:"No matching articles found." }
+  };
+  var LANG="vi";
+  try{ var sv=localStorage.getItem("astroq-lang"); if(sv==="en"||sv==="vi") LANG=sv;
+       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+
+  /* ===== Icon lucide ===== */
+  var LIC={
+    search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    award:'<circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/>',
+    ext:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    telescope:'<path d="m10.07 12.49-6.18 1.32a.93.93 0 0 1-1.11-.7l-.54-2.15a1.07 1.07 0 0 1 .69-1.27l13.5-4.44"/><path d="m13.56 11.75 4.33-.92"/><path d="m16 21-3.1-6.21"/><path d="M16.49 5.94a2 2 0 0 1 1.45-2.43l1.09-.27a1 1 0 0 1 1.21.73l1.52 6.06a1 1 0 0 1-.73 1.21l-1.09.27a2 2 0 0 1-2.42-1.45z"/><path d="m6.16 8.63 1.11 4.46"/><path d="m8 21 3.1-6.21"/><circle cx="12" cy="13" r="2"/>',
+    cpu:'<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
+    atom:'<circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/>',
+    bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+    layers:'<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-9.17 4.16a2 2 0 0 1-1.66 0L2 12.5"/>'
+  };
+  function lic(n,c){ return '<svg class="lic '+(c||"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LIC[n]||"")+'</svg>'; }
+
+  var CAT_ICON={astronomy:"telescope", ai:"cpu", quantum:"atom", robot:"bot"};
+
+  /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
+  var IMG="https://images-assets.nasa.gov/image/";
+  var ARTICLES=[
+    { id:"lib-nebula", hero:true, src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"], reward:15,
+      img:IMG+"PIA25433/PIA25433~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/mission/webb/",
+      title:{vi:"Tinh vân Đại Bàng — vườn ươm của các ngôi sao",en:"The Eagle Nebula — a nursery of stars"},
+      body:{vi:["Trong vũ trụ có những đám mây khí và bụi khổng lồ gọi là <b>tinh vân</b>. Bên trong chúng, khí co lại và nóng dần lên cho tới khi bùng cháy thành những ngôi sao mới.",
+                "Tinh vân Đại Bàng nổi tiếng với 'Những Cột Trụ Sáng Tạo' — các cột khí cao hàng nghìn tỉ km, nơi hàng loạt ngôi sao đang chào đời."],
+            en:["Space has giant clouds of gas and dust called <b>nebulae</b>. Inside them, gas squeezes together and heats up until it lights up as new stars.",
+                "The Eagle Nebula is famous for the 'Pillars of Creation' — towers of gas trillions of km tall where many stars are being born."]},
+      term:{who:"comet", word:{vi:"Tinh vân",en:"Nebula"}, text:{vi:"<b>Tinh vân</b> là 'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",en:"A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱"}} },
+
+    { id:"lib-andromeda", src:"NASA", cat:"astronomy", em:"🌀", c:["#c6d8ff","#5a78c8","#20305e"], reward:12,
+      img:IMG+"PIA04921/PIA04921~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/",
+      title:{vi:"Thiên hà Tiên Nữ — người hàng xóm khổng lồ",en:"The Andromeda Galaxy — our giant neighbour"},
+      body:{vi:["<b>Thiên hà</b> là một tập hợp khổng lồ gồm hàng trăm tỉ ngôi sao. Trái Đất của chúng ta nằm trong thiên hà Dải Ngân Hà.",
+                "Tiên Nữ (Andromeda) là thiên hà lớn gần chúng ta nhất, cách khoảng 2,5 triệu năm ánh sáng — và đang tiến lại gần Dải Ngân Hà!"],
+            en:["A <b>galaxy</b> is a huge collection of hundreds of billions of stars. Our Earth lives in the Milky Way galaxy.",
+                "Andromeda is the nearest big galaxy to us, about 2.5 million light-years away — and it's slowly heading toward the Milky Way!"]},
+      term:{who:"byte", word:{vi:"Năm ánh sáng",en:"Light-year"}, text:{vi:"<b>Năm ánh sáng</b> là quãng đường ánh sáng đi trong 1 năm — cực kỳ xa nhé! 🤖",en:"A <b>light-year</b> is how far light travels in one year — incredibly far! 🤖"}} },
+
+    { id:"lib-mars", src:"NASA", cat:"robot", em:"🔴", c:["#ffcaa8","#d1642f","#5e2410"], reward:12,
+      img:IMG+"PIA21496/PIA21496~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://mars.nasa.gov/",
+      title:{vi:"Robot Perseverance khám phá Sao Hỏa",en:"Perseverance rover exploring Mars"},
+      body:{vi:["<b>Xe tự hành</b> (rover) là robot 6 bánh do NASA gửi lên Sao Hỏa. Nó tự lái, chụp ảnh và thu thập mẫu đá.",
+                "Perseverance đang tìm dấu vết của sự sống cổ đại và thử tạo khí oxy từ bầu khí quyển Sao Hỏa để giúp con người sau này."],
+            en:["A <b>rover</b> is a six-wheeled robot NASA sends to Mars. It drives itself, takes photos and collects rock samples.",
+                "Perseverance is looking for signs of ancient life and even makes oxygen from Mars' air to help future explorers."]},
+      term:{who:"byte", word:{vi:"Xe tự hành",en:"Rover"}, text:{vi:"<b>Rover</b> là robot biết tự lái trên hành tinh khác — giống anh em họ của tớ! 🤖",en:"A <b>rover</b> is a robot that drives itself on another planet — like my cousin! 🤖"}} },
+
+    { id:"lib-blackhole", src:"NASA", cat:"quantum", em:"🕳️", c:["#ffe1a8","#f2a53c","#3a2410"], reward:13,
+      img:IMG+"PIA23122/PIA23122~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/universe/black-holes/",
+      title:{vi:"Hố đen khổng lồ ở thiên hà M87",en:"The giant black hole in galaxy M87"},
+      body:{vi:["<b>Hố đen</b> là nơi có lực hấp dẫn mạnh đến mức ngay cả ánh sáng cũng không thoát ra được.",
+                "Ở trung tâm thiên hà M87 có một hố đen nặng gấp hàng tỉ lần Mặt Trời. Năm 2019, con người lần đầu chụp được 'bóng' của nó."],
+            en:["A <b>black hole</b> is a place where gravity is so strong that not even light can escape.",
+                "At the center of galaxy M87 sits a black hole billions of times heavier than the Sun. In 2019 humans first photographed its 'shadow'."]},
+      term:{who:"comet", word:{vi:"Hấp dẫn",en:"Gravity"}, text:{vi:"<b>Hấp dẫn</b> là lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",en:"<b>Gravity</b> is the pull that draws things together — a black hole pulls so hard it even traps light! 🐱"}} },
+
+    { id:"lib-exoplanet", src:"AI & Tech", cat:"ai", em:"🪐", c:["#e6c6ff","#a06be0","#3a1f6e"], reward:12,
+      img:IMG+"PIA22082/PIA22082~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/exoplanets/",
+      title:{vi:"AI giúp tìm hành tinh ngoài Hệ Mặt Trời",en:"AI helps find planets beyond the Solar System"},
+      body:{vi:["<b>Ngoại hành tinh</b> là những hành tinh quay quanh một ngôi sao khác, không phải Mặt Trời của chúng ta.",
+                "Máy tính dùng <b>trí tuệ nhân tạo</b> để soi hàng triệu ngôi sao, nhận ra lúc ánh sáng chớp mờ đi — dấu hiệu có hành tinh đi ngang qua."],
+            en:["<b>Exoplanets</b> are planets orbiting other stars, not our Sun.",
+                "Computers use <b>artificial intelligence</b> to scan millions of stars and spot tiny dips in brightness — a sign a planet passed in front."]},
+      term:{who:"byte", word:{vi:"Trí tuệ nhân tạo",en:"Artificial Intelligence"}, text:{vi:"<b>AI</b> giúp máy tính học từ ví dụ để tự nhận ra quy luật — như cách tớ học vậy! 🤖",en:"<b>AI</b> lets computers learn from examples to spot patterns by themselves — just like me! 🤖"}} },
+
+    { id:"lib-saturn", src:"NASA", cat:"astronomy", em:"🪐", c:["#ffe6b0","#d9a441","#5e3f14"], reward:10,
+      img:IMG+"PIA22766/PIA22766~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/saturn/",
+      title:{vi:"Tàu Cassini và vành đai Sao Thổ",en:"Cassini and Saturn's rings"},
+      body:{vi:["Sao Thổ nổi tiếng với những <b>vành đai</b> tuyệt đẹp làm từ hàng tỉ mảnh băng và đá, từ nhỏ như hạt cát đến to như ngôi nhà.",
+                "Tàu Cassini đã bay quanh Sao Thổ suốt 13 năm, gửi về vô số hình ảnh và khám phá về hành tinh này cùng các mặt trăng của nó."],
+            en:["Saturn is famous for its beautiful <b>rings</b> made of billions of pieces of ice and rock, from grains of sand to house-sized chunks.",
+                "The Cassini spacecraft orbited Saturn for 13 years, sending back countless images and discoveries about the planet and its moons."]},
+      term:{who:"comet", word:{vi:"Vành đai",en:"Rings"}, text:{vi:"<b>Vành đai</b> Sao Thổ không phải một khối liền — nó là hàng tỉ viên băng bay quanh cùng nhau! 🐱",en:"Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱"}} },
+
+    { id:"lib-gaia", src:"ESA", cat:"astronomy", em:"🛰️", c:["#b6f5cf","#3fd6a0","#12503a"], reward:11,
+      img:"", credit:"ESA / Gaia / DPAC", url:"https://www.esa.int/Science_Exploration/Space_Science/Gaia",
+      title:{vi:"Tàu Gaia của ESA vẽ bản đồ 3D Ngân Hà",en:"ESA's Gaia maps the Milky Way in 3D"},
+      body:{vi:["<b>ESA</b> là Cơ quan Vũ trụ châu Âu. Tàu Gaia của họ đo vị trí và chuyển động của gần 2 tỉ ngôi sao.",
+                "Nhờ đó, các nhà khoa học dựng nên tấm <b>bản đồ sao</b> ba chiều chi tiết nhất về thiên hà của chúng ta."],
+            en:["<b>ESA</b> is the European Space Agency. Its Gaia spacecraft measures the position and motion of nearly 2 billion stars.",
+                "From this, scientists build the most detailed 3D <b>star map</b> of our galaxy ever made."]},
+      term:{who:"byte", word:{vi:"Bản đồ sao",en:"Star map"}, text:{vi:"<b>Bản đồ sao</b> cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",en:"A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖"}} },
+
+    { id:"lib-qubit", src:"AI & Tech", cat:"quantum", em:"⚛️", c:["#c6ffe6","#4ade80","#155e40"], reward:12,
+      img:"", credit:"MIT / IBM Research", url:"https://www.ibm.com/quantum",
+      title:{vi:"Máy tính lượng tử là gì?",en:"What is a quantum computer?"},
+      body:{vi:["Máy tính thường dùng các bit chỉ mang giá trị 0 hoặc 1. Máy tính lượng tử dùng <b>qubit</b>, có thể mang cả 0 và 1 cùng lúc.",
+                "Nhờ vậy, máy tính lượng tử có thể thử rất nhiều lời giải một lúc, giúp giải những bài toán mà máy tính thường mất hàng nghìn năm."],
+            en:["Normal computers use bits that are only 0 or 1. Quantum computers use <b>qubits</b>, which can be both 0 and 1 at the same time.",
+                "This lets quantum computers try many answers at once, solving problems that would take normal computers thousands of years."]},
+      term:{who:"byte", word:{vi:"Qubit",en:"Qubit"}, text:{vi:"<b>Qubit</b> giống một đồng xu đang xoay tít — vừa là mặt ngửa vừa là mặt sấp cho tới khi bạn nhìn! 🤖",en:"A <b>qubit</b> is like a spinning coin — both heads and tails until you look! 🤖"}} }
+  ];
+
+  /* ===== Đọc / thưởng / thống kê ===== */
+  function readSet(){ try{ return JSON.parse(localStorage.getItem(READ_KEY)||"[]"); }catch(e){ return []; } }
+  function isRead(id){ return readSet().indexOf(id)>=0; }
+  function markRead(id){ var s=readSet(); if(s.indexOf(id)<0){ s.push(id); try{ localStorage.setItem(READ_KEY,JSON.stringify(s)); }catch(e){} } }
+  function libReadCount(){ var s=readSet(); return ARTICLES.filter(function(a){ return s.indexOf(a.id)>=0; }); }
+
+  function paintBalance(){ $("bal").textContent=Economy.getAsteroids(); }
+  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
+  function paintStats(){ var read=libReadCount(); $("st-read").textContent=read.length;
+    $("st-coll").textContent=read.reduce(function(s,a){return s+a.reward;},0); }
+
+  /* ===== Filter state ===== */
+  var fSearch="", fSrc="all", fCat="all";
+
+  function imgboxHtml(a){
+    var em='<span class="em">'+a.em+'</span>';
+    var img = a.img ? '<img src="'+a.img+'" alt="" loading="lazy" onerror="this.style.display=\'none\'" />' : '';
+    return '<div class="imgbox" style="--c1:'+a.c[0]+';--c2:'+a.c[1]+';--c3:'+a.c[2]+'">'+em+img+'</div>';
+  }
+  function badgeHtml(a){
+    var cls = a.src==="NASA"?"nasa":(a.src==="ESA"?"esa":"ai");
+    return '<span class="badge '+cls+'">🛰️ '+a.src+'</span>';
+  }
+
+  /* ===== Render hero ===== */
+  function renderHero(){
+    var a=ARTICLES.filter(function(x){return x.hero;})[0]; if(!a) return;
+    var read=isRead(a.id);
+    $("hero-wrap").innerHTML =
+      '<article class="hero" data-id="'+a.id+'">'+imgboxHtml(a)+
+        '<div class="hero-body">'+badgeHtml(a)+
+          '<div class="hero-eyebrow">'+t("featured")+'</div>'+
+          '<h1>'+L(a.title)+'</h1>'+
+          '<p>'+L({vi:a.body.vi[0].replace(/<[^>]+>/g,""),en:a.body.en[0].replace(/<[^>]+>/g,"")})+'</p>'+
+          '<button class="read-btn">'+lic("book")+' '+t("read_now")+' (+'+a.reward+' <img src="img/tt.png" alt="tt" />)</button>'+
+        '</div>'+
+      '</article>';
+  }
+
+  /* ===== Render grid ===== */
+  function matches(a){
+    if(fSrc!=="all" && a.src!==fSrc) return false;
+    if(fCat!=="all" && a.cat!==fCat) return false;
+    if(fSearch){ var s=(L(a.title)+" "+L({vi:a.body.vi.join(" "),en:a.body.en.join(" ")})).toLowerCase();
+      if(s.indexOf(fSearch)<0) return false; }
+    return true;
+  }
+  function render(){
+    var list=ARTICLES.filter(function(a){ return !a.hero && matches(a); });
+    var box=$("grid");
+    if(!list.length){ box.innerHTML='<div class="empty">'+t("none")+'</div>'; $("feed-count").textContent="0"; return; }
+    box.innerHTML=list.map(function(a){
+      var read=isRead(a.id);
+      var r=read?'<span class="r done">'+lic("book")+' '+t("read_badge")+'</span>'
+                :'<span class="r"><img src="img/tt.png" alt="tt" />+'+a.reward+'</span>';
+      return '<article class="card" data-id="'+a.id+'">'+imgboxHtml(a)+
+        '<div class="cbody">'+badgeHtml(a)+'<h3>'+L(a.title)+'</h3>'+
+          '<div class="foot">'+r+'<span class="cat-dot">'+t("cat_"+a.cat)+'</span></div>'+
+        '</div></article>';
+    }).join("");
+    $("feed-count").textContent=list.length;
+  }
+
+  /* ===== Sidebar categories ===== */
+  function renderCats(){
+    var cats=["all","astronomy","ai","quantum","robot"];
+    $("cats").innerHTML=cats.map(function(c){
+      var n = c==="all" ? ARTICLES.length : ARTICLES.filter(function(a){return a.cat===c;}).length;
+      var ic = c==="all" ? "layers" : CAT_ICON[c];
+      var nm = c==="all" ? t("all_topics") : t("cat_"+c);
+      return '<button class="cat cat--'+c+(fCat===c?' active':'')+'" data-cat="'+c+'">'+
+        '<span class="c-ic">'+lic(ic)+'</span><span class="c-nm">'+nm+'</span><span class="c-n">'+n+'</span></button>';
+    }).join("");
+  }
+
+  /* ===== Reader ===== */
+  var curArt=null, rTimer=null, rLeft=0;
+  function openReader(id){
+    var a=null; for(var i=0;i<ARTICLES.length;i++){ if(ARTICLES[i].id===id) a=ARTICLES[i]; }
+    if(!a) return; curArt=a;
+    var rh=$("r-hero"); rh.style.setProperty("--c1",a.c[0]); rh.style.setProperty("--c2",a.c[1]); rh.style.setProperty("--c3",a.c[2]);
+    $("r-em").textContent=a.em;
+    rh.querySelectorAll("img").forEach(function(x){x.remove();});
+    if(a.img){ var im=document.createElement("img"); im.src=a.img; im.alt=""; im.onerror=function(){ this.remove(); }; rh.insertBefore(im, $("r-badge")); }
+    $("r-badge").className="badge r-badge "+(a.src==="NASA"?"nasa":(a.src==="ESA"?"esa":"ai")); $("r-badge").textContent="🛰️ "+a.src;
+    $("r-title").textContent=L(a.title);
+    $("r-body").innerHTML=L(a.body).map(function(p){return "<p>"+p+"</p>";}).join("");
+    // mascot
+    var who=a.term.who;
+    $("r-mascot-img").src = who==="comet" ? "img/m1.png" : "img/b1.png";
+    $("r-mascot-who").textContent = who==="comet" ? "COMET" : "BYTE";
+    $("r-mascot-text").innerHTML = "<b>"+L(a.term.word)+":</b> "+L(a.term.text);
+    // credit + link
+    $("r-credit").textContent = t("credit")+": "+a.credit;
+    $("r-link").href=a.url;
+    // claim
+    var btn=$("r-claim"); clearInterval(rTimer);
+    if(isRead(a.id)){ btn.className="r-claim done"; btn.disabled=true; btn.textContent=t("claimed"); }
+    else{ btn.className="r-claim"; btn.disabled=true; rLeft=READ_SECS; btn.textContent=t("reading")+" ("+rLeft+"s)";
+      rTimer=setInterval(function(){ rLeft--;
+        if(rLeft<=0){ clearInterval(rTimer); btn.disabled=false; btn.innerHTML=t("claim")+' +'+a.reward+' <img src="img/tt.png" alt="tt" />'; }
+        else btn.textContent=t("reading")+" ("+rLeft+"s)"; },1000); }
+    $("reader").classList.add("show");
+  }
+  function closeReader(){ clearInterval(rTimer); $("reader").classList.remove("show"); }
+  function claim(){
+    if(!curArt || isRead(curArt.id)) return;
+    markRead(curArt.id); Economy.addAsteroids(curArt.reward); paintBalance(); bumpGem();
+    toast(t("toast_claim").replace("{n}",curArt.reward));
+    var btn=$("r-claim"); btn.className="r-claim done"; btn.disabled=true; btn.textContent=t("claimed");
+    renderHero(); render(); renderCats(); paintStats();
+  }
+
+  /* ===== Toast ===== */
+  var toastTimer=null;
+  function toast(msg){ var el=$("toast"); el.innerHTML=String(msg).replace(/\{tt\}/g,"<img class='tt-inline' src='img/tt.png' alt='tt'/>"); el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); },2400); }
+
+  /* ===== Ngôn ngữ ===== */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG; document.title=t("title");
+    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ el.placeholder=t(el.getAttribute("data-i18n-ph")); });
+    document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    $("ic-search").innerHTML=lic("search"); $("ic-cat").innerHTML=lic("layers"); $("ic-award").innerHTML=lic("award");
+    $("ic-read").innerHTML=lic("book"); $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");
+    renderHero(); render(); renderCats(); paintStats();
+    if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
+  }
+
+  /* ===== Sự kiện ===== */
+  $("back").addEventListener("click", function(){ window.location.href="learn.html"; });
+  $("q").addEventListener("input", function(e){ fSearch=(e.target.value||"").trim().toLowerCase(); render(); });
+  $("srcfilter").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest("button"):null; if(!b) return;
+    fSrc=b.getAttribute("data-src");
+    $("srcfilter").querySelectorAll("button").forEach(function(x){ x.classList.toggle("active", x===b); }); render(); });
+  $("cats").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest(".cat"):null; if(!b) return;
+    fCat=b.getAttribute("data-cat"); renderCats(); render(); });
+  $("hero-wrap").addEventListener("click", function(e){ var h=e.target.closest?e.target.closest(".hero"):null; if(h) openReader(h.getAttribute("data-id")); });
+  $("grid").addEventListener("click", function(e){ var c=e.target.closest?e.target.closest(".card"):null; if(c) openReader(c.getAttribute("data-id")); });
+  $("r-close").addEventListener("click", closeReader);
+  $("r-claim").addEventListener("click", claim);
+  $("r-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  $("reader").addEventListener("click", function(e){ if(e.target===$("reader")) closeReader(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeReader(); });
+  document.querySelectorAll(".lang-switch button").forEach(function(b){
+    b.addEventListener("click", function(){ var l=b.getAttribute("data-lang"); try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
+  });
+  window.addEventListener("storage", function(e){ if(e.key==="astroq-lang"&&(e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue); });
+
+  /* ===== Khởi tạo ===== */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "id": "nasa-img-pia26703",
+  "source": "NASA Image and Video Library",
+  "source_reference": "NASA Images API (images-api.nasa.gov)",
+  "date": "2026-01-26",
+  "title": "Dark Matter Revealed in Webb, Hubble Observations",
+  "media_type": "image",
+  "image_url": "http://images-assets.nasa.gov/image/PIA26703/PIA26703~orig.jpg",
+  "hd_image_url": "http://images-assets.nasa.gov/image/PIA26703/PIA26703~orig.jpg",
+  "thumbnail_url": "https://images-assets.nasa.gov/image/PIA26703/PIA26703~large.jpg",
+  "explanation": "These images show the presence of dark matter in the same region of sky, created using data from NASA’s Webb telescope in 2026 (right) and from the Hubble Space Telescope in 2007 (left). Webb’s higher resolution is providing new insights into how this invisible component influences the distribution of ordinary matter in the universe.  The James Webb Space Telescope is solving mysteries in our solar system, looking beyond to distant worlds around other stars, and probing the mysterious structures and origins of our universe and our place in it. Webb is an international program led by NASA with its partners, ESA (European Space Agency) and CSA (Canadian Space Agency).  Webb’s MIRI was developed through a 50-50 partnership between NASA and ESA. A division of Caltech in Pasadena, California, JPL led the U.S. contribution to MIRI. JPL also led development of MIRI’s cryocooler, done in collaboration with Northrop Grumman in Redondo Beach, California, and NASA’s Goddard Space Flight Center in Greenbelt, Maryland.  To learn more about Webb, visit:  https://science.nasa.gov/webb",
+  "copyright": "NASA/STScI/A. Pagan",
+  "nasa_url": "https://images.nasa.gov/details/PIA26703",
+  "api_source_url": "https://images-api.nasa.gov/search",
+  "reward_purple_meteors": 6,
+  "extra": {
+    "nasa_id": "PIA26703",
+    "keywords": [
+      "Webb",
+      "Dark Matter",
+      "James Webb Space Telescope"
+    ]
+  }
+}

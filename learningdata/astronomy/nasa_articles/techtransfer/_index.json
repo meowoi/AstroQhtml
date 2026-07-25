@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "source": "techtransfer",
+    "date_start": "2025-07-25",
+    "date_end": "2026-07-25",
+    "days": 365,
+    "reward": 6,
+    "used_demo_key": true,
+    "query": null,
+    "rover": null,
+    "tt_kind": "patent"
+  },
+  "count": 3,
+  "articles": [
+    {
+      "id": "nasa-tt-patent-gsc-tops-247",
+      "date": "",
+      "title": "Robot -Driven Blind Mate Interface",
+      "source": "NASA TechTransfer (patent)",
+      "media_type": "patent",
+      "image_url": "",
+      "nasa_url": "https://technology.nasa.gov/patent/GSC-TOPS-247",
+      "reward_purple_meteors": 6
+    },
+    {
+      "id": "nasa-tt-patent-gsc-tops-360",
+      "date": "",
+      "title": "Visual Inspection Posable Invertebrate Robot (VIPIR)",
+      "source": "NASA TechTransfer (patent)",
+      "media_type": "patent",
+      "image_url": "",
+      "nasa_url": "https://technology.nasa.gov/patent/GSC-TOPS-360",
+      "reward_purple_meteors": 6
+    },
+    {
+      "id": "nasa-tt-patent-ksc-tops-7",
+      "date": "",
+      "title": "Regolith Advanced Surface Systems Operations Robot (RASSOR) Excavator",
+      "source": "NASA TechTransfer (patent)",
+      "media_type": "patent",
+      "image_url": "",
+      "nasa_url": "https://technology.nasa.gov/patent/KSC-TOPS-7",
+      "reward_purple_meteors": 6
+    }
+  ]
+}

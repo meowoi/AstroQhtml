@@ -681,8 +681,8 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   $("need-later").addEventListener("click", function(){ closeModal($("need-quiz")); });
   $("need-go").addEventListener("click", function(){ window.location.href="quiz.html"; });
 
-  /* ---- Trạm Tri Thức → màn Chẩn đoán toàn màn hình (quiz.html) ---- */
-  $("btn-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  /* ---- Trạm Tri Thức (Learning Hub) → learn.html ---- */
+  $("btn-quiz").addEventListener("click", function(){ window.location.href="learn.html"; });
   $("need-quiz").addEventListener("click", function(e){ if(e.target===$("need-quiz")) closeModal($("need-quiz")); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal($("need-quiz")); } });
 

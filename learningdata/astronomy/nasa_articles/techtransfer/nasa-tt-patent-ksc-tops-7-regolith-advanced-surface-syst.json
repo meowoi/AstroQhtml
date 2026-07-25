@@ -1,0 +1,21 @@
+{
+  "id": "nasa-tt-patent-ksc-tops-7",
+  "source": "NASA TechTransfer (patent)",
+  "source_reference": "NASA TechTransfer API (technology.nasa.gov/api/query)",
+  "date": "",
+  "title": "Regolith Advanced Surface Systems Operations Robot (RASSOR) Excavator",
+  "media_type": "patent",
+  "image_url": "",
+  "hd_image_url": "",
+  "thumbnail_url": "",
+  "explanation": "NASA Kennedy Space Center seeks partners interested in the commercial application of the Regolith Advanced Surface Systems Operations Robot (RASSOR) Excavator. NASAs Kennedy Space Center is soliciting licensees for this innovative technology. RASSOR is a teleoperated mobile robotic platform with a unique space regolith excavation capability. Its design incorporates net-zero reaction force, thus allowing it to load, haul, and dump space regolith under extremely low gravity conditions with high reliability. With space transportation costs hovering at approximately $4,000 per pound and tight launch vehicle shroud constraints, this compact, lightweight unit enables the launch of an efficient, rugged, versatile robotic excavator on precursor landing missions with minimum cost. RASSOR could also be scaled up and used for terrestrial mining operations in difficult-to-reach or dangerous locations.",
+  "copyright": "NASA",
+  "nasa_url": "https://technology.nasa.gov/patent/KSC-TOPS-7",
+  "api_source_url": "https://technology.nasa.gov/api/query",
+  "reward_purple_meteors": 6,
+  "extra": {
+    "case": "KSC-TOPS-7",
+    "category": "KSC-TOPS-7",
+    "center": "KSC"
+  }
+}

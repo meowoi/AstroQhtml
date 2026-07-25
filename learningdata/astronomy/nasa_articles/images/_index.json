@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "source": "images",
+    "date_start": "2025-07-25",
+    "date_end": "2026-07-25",
+    "days": 365,
+    "reward": 6,
+    "used_demo_key": true,
+    "query": "James Webb",
+    "rover": null,
+    "tt_kind": null
+  },
+  "count": 2,
+  "articles": [
+    {
+      "id": "nasa-img-pia26702",
+      "date": "2026-01-26",
+      "title": "Webb Data Reveals Dark Matter",
+      "source": "NASA Image and Video Library",
+      "media_type": "image",
+      "image_url": "http://images-assets.nasa.gov/image/PIA26702/PIA26702~orig.png",
+      "nasa_url": "https://images.nasa.gov/details/PIA26702",
+      "reward_purple_meteors": 6
+    },
+    {
+      "id": "nasa-img-pia26703",
+      "date": "2026-01-26",
+      "title": "Dark Matter Revealed in Webb, Hubble Observations",
+      "source": "NASA Image and Video Library",
+      "media_type": "image",
+      "image_url": "http://images-assets.nasa.gov/image/PIA26703/PIA26703~orig.jpg",
+      "nasa_url": "https://images.nasa.gov/details/PIA26703",
+      "reward_purple_meteors": 6
+    }
+  ]
+}

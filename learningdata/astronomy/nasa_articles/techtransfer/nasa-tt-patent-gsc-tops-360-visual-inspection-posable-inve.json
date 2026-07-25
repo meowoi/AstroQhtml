@@ -1,0 +1,21 @@
+{
+  "id": "nasa-tt-patent-gsc-tops-360",
+  "source": "NASA TechTransfer (patent)",
+  "source_reference": "NASA TechTransfer API (technology.nasa.gov/api/query)",
+  "date": "",
+  "title": "Visual Inspection Posable Invertebrate Robot (VIPIR)",
+  "media_type": "patent",
+  "image_url": "",
+  "hd_image_url": "",
+  "thumbnail_url": "",
+  "explanation": "On-orbit spacecraft maintenance and repair of components are critical for extending mission lifespans and ensuring operational safety. Traditional inspection methods, like astronaut extravehicular activities (EVAs), are risky and resource-intensive, while fixed cameras offer limited views. To address these challenges, innovators at NASA’s Goddard Space Flight Center developed the Visual Inspection Posable Invertebrate Robot (VIPIR) system, a tele-operated robotic imaging system offering advanced capabilities for visual assessments of space-based assets. VIPIR is a significant leap forward in the realm of on-orbit robotic inspection, evaluation, and servicing systems. Integrating a dexterous, flexible video borescope with advanced articulation mechanisms, VIPIR allows NASA to remotely inspect spacecraft components that would otherwise be difficult or impossible to view, enabling subsequent repairs and maintenance.",
+  "copyright": "NASA",
+  "nasa_url": "https://technology.nasa.gov/patent/GSC-TOPS-360",
+  "api_source_url": "https://technology.nasa.gov/api/query",
+  "reward_purple_meteors": 6,
+  "extra": {
+    "case": "GSC-TOPS-360",
+    "category": "GSC-TOPS-360",
+    "center": "GSFC"
+  }
+}

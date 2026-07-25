@@ -1,0 +1,21 @@
+{
+  "id": "nasa-tt-patent-gsc-tops-247",
+  "source": "NASA TechTransfer (patent)",
+  "source_reference": "NASA TechTransfer API (technology.nasa.gov/api/query)",
+  "date": "",
+  "title": "Robot -Driven Blind Mate Interface",
+  "media_type": "patent",
+  "image_url": "",
+  "hd_image_url": "",
+  "thumbnail_url": "",
+  "explanation": "Many robot operations require connecting modules, tools, or other types of hardware to accomplish assembly or servicing tasks. When working in harsh environments, robots must be enabled to make these kinds of connections without human intervention. These robotic operations must be capable of surviving all kinds of harsh environments, from outer space to the deep sea. Additionally, robot operations must be suitable for many different structures and assemblies. As a result, there is a need for a reliable robot -friendly mechanism that allows structural, electrical, and fluid connections to be made. The Robot -Driven Blind Mate Interface is capable of providing connection mechanisms for a variety of couplings and can operate in harsh environments as well.",
+  "copyright": "NASA",
+  "nasa_url": "https://technology.nasa.gov/patent/GSC-TOPS-247",
+  "api_source_url": "https://technology.nasa.gov/api/query",
+  "reward_purple_meteors": 6,
+  "extra": {
+    "case": "GSC-TOPS-247",
+    "category": "GSC-TOPS-247",
+    "center": "GSFC"
+  }
+}
