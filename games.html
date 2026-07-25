@@ -117,15 +117,14 @@ a{color:inherit;text-decoration:none;}
 /* Nút "Sắp ra mắt" — trong suốt (chỉ viền nét đứt mờ) */
 .play-btn.locked{background:transparent;color:var(--ink-faint);border:1px dashed rgba(120,160,255,.32);box-shadow:none;cursor:not-allowed;}
 .play-btn.locked:hover{filter:none;transform:none;}
-/* Nhãn "Sắp ra mắt" */
-.gcard.soon{opacity:.92;}
-.gcard.soon .ribbon{position:absolute;top:14px;right:-32px;transform:rotate(38deg);
-  background:linear-gradient(120deg,var(--amber),#f97316);color:#2a1400;font-family:var(--font-mono);font-size:9px;font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;padding:4px 34px;box-shadow:0 6px 14px rgba(0,0,0,.5);}
+/* Thẻ "Sắp ra mắt" — chỉ mờ nhẹ (đã bỏ nhãn góc phải) */
+.gcard.soon{opacity:.9;}
 
 .card--gravity{--neon:rgba(56,189,248,.4);--neonS:rgba(56,189,248,.9);--ic-bg:rgba(56,189,248,.18);}
 .card--racer  {--neon:rgba(251,146,60,.42);--neonS:rgba(251,146,60,.95);--ic-bg:rgba(251,146,60,.18);}
 .card--blaster{--neon:rgba(239,68,68,.42);--neonS:rgba(239,68,68,.95);--ic-bg:rgba(239,68,68,.18);}
+.card--maze   {--neon:rgba(74,222,128,.42);--neonS:rgba(74,222,128,.95);--ic-bg:rgba(74,222,128,.18);}
+.card--catch  {--neon:rgba(255,207,107,.45);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.2);}
 .card--match  {--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
 
 /* ============ MODAL "chưa đủ" + TOAST ============ */
@@ -214,7 +213,7 @@ a{color:inherit;text-decoration:none;}
       title:"AstroQ — Sảnh Trò Chơi", back:"Về Khoang Lái",
       eyebrow:"Sảnh Trò Chơi", title_h:"Chọn một trò chơi để bắt đầu",
       intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
-      per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt", soon_ribbon:"Sắp ra mắt",
+      per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
       soon_toast:"🚧 Trò chơi này sắp ra mắt — luyện Quiz để tích Thiên thạch trước nhé!",
@@ -224,7 +223,7 @@ a{color:inherit;text-decoration:none;}
       title:"AstroQ — Arcade Bay", back:"Return to Cockpit",
       eyebrow:"Arcade Bay", title_h:"Pick a game to start",
       intro:"Each play costs a few Purple Meteors. Earn more at the Knowledge Station if you run low!",
-      per_run:"/ play", play:"Play now", soon:"Coming soon", soon_ribbon:"Coming soon",
+      per_run:"/ play", play:"Play now", soon:"Coming soon",
       diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now", need_later:"Later",
       soon_toast:"🚧 This game is coming soon — practice quizzes to stock up on meteors!",
@@ -256,7 +255,15 @@ a{color:inherit;text-decoration:none;}
     { key:"match", cls:"card--match", icon:"✨", cost:3, diff:"easy", status:"soon", file:"",
       tag:{vi:"Giải đố", en:"Puzzle"},
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
-      desc:{vi:"Nối các ngôi sao đúng thứ tự để vẽ nên những chòm sao rực rỡ.", en:"Connect stars in the right order to draw glowing constellations."} }
+      desc:{vi:"Nối các ngôi sao đúng thứ tự để vẽ nên những chòm sao rực rỡ.", en:"Connect stars in the right order to draw glowing constellations."} },
+    { key:"maze", cls:"card--maze", icon:"🌀", cost:4, diff:"medium", status:"soon", file:"",
+      tag:{vi:"Giải đố", en:"Puzzle"},
+      name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
+      desc:{vi:"Dẫn phi hành gia qua mê cung sao để tìm lối thoát và thu tinh thể.", en:"Guide the astronaut through a star maze to find the exit and collect crystals."} },
+    { key:"catch", cls:"card--catch", icon:"🌟", cost:3, diff:"easy", status:"soon", file:"",
+      tag:{vi:"Phản xạ", en:"Reflex"},
+      name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
+      desc:{vi:"Hứng những ngôi sao băng may mắn rơi xuống, né các sao chổi lửa.", en:"Catch the lucky falling stars while dodging fiery comets."} }
   ];
 
   /* ================= Số dư ================= */
@@ -266,15 +273,16 @@ a{color:inherit;text-decoration:none;}
   /* ================= Render thẻ trò chơi ================= */
   var n=0;
   function render(){
-    $("games").innerHTML = GAMES.map(function(g,i){
+    // Sắp xếp: game đã có (ready) trước, game sắp ra mắt (soon) sau
+    var list = GAMES.slice().sort(function(a,b){ return (a.status==="ready"?0:1) - (b.status==="ready"?0:1); });
+    $("games").innerHTML = list.map(function(g,i){
       var soon = g.status!=="ready";
       var code = "ARCADE-"+("0"+(i+1)).slice(-2);
       var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span style="color:var(--green)">SYS.ONLINE</span>';
-      var ribbon = soon ? '<span class="ribbon">'+t("soon_ribbon")+'</span>' : '';
       var btn = soon
         ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("soon")+'</button>'
         : '<button class="play-btn" data-key="'+g.key+'">'+t("play")+'</button>';
-      return '<article class="gcard '+g.cls+(soon?' soon':'')+'">'+ribbon+
+      return '<article class="gcard '+g.cls+(soon?' soon':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
         '<div class="ic">'+g.icon+'</div>'+
         '<span class="tag">'+L(g.tag)+'</span>'+

@@ -51,7 +51,7 @@ button{font-family:inherit;}
 .stage{position:relative;flex:1;margin:0 clamp(12px,3vw,24px) clamp(12px,3vw,24px);border-radius:18px;overflow:hidden;
   border:1px solid rgba(56,189,248,.3);
   box-shadow:0 24px 60px -28px rgba(0,0,0,.8), 0 0 40px -16px rgba(56,189,248,.4), inset 0 0 40px -20px rgba(120,220,255,.5);
-  background:linear-gradient(180deg,#070c1a,#0a1226);cursor:none;touch-action:none;}
+  background:linear-gradient(180deg,#070c1a,#0a1226);cursor:default;touch-action:none;}
 canvas{display:block;width:100%;height:100%;}
 
 /* HUD trong sân */
@@ -114,7 +114,7 @@ canvas{display:block;width:100%;height:100%;}
 <!-- ===== Header ===== -->
 <header class="top">
   <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
-  <span class="tag">[ ASTEROID_DODGE ]</span>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
   <div class="currency" title="Thiên thạch tím">
     <span class="gem" id="gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
     <span class="c-val" id="bal">0</span>
@@ -184,6 +184,19 @@ canvas{display:block;width:100%;height:100%;}
       </div>
     </div>
   </div>
+
+  <!-- Tạm dừng (ESC) -->
+  <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+    <div class="ov-card">
+      <div class="ov-ic">⏸️</div>
+      <h2 data-i18n="pause_title">Kết thúc lượt?</h2>
+      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+      <div class="acts">
+        <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+        <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -202,27 +215,31 @@ canvas{display:block;width:100%;height:100%;}
       title:"AstroQ — Né Thiên Thạch", back:"Về Sảnh", home_btn:"Khoang Lái",
       hud_score:"Điểm", hud_best:"Kỷ lục", mined_lbl:"Đã khai thác",
       start_title:"Né Thiên Thạch",
-      how1:"🕹️ <b>Di chuyển</b>: rê chuột / chạm, hoặc phím ◀ ▶ (A/D).",
+      how1:"🕹️ <b>Di chuyển</b>: phím ◀ ▲ ▼ ▶ hoặc A W S D.",
       how2:"☄️ <b>Né</b> các thiên thạch lao xuống — chạm là kết thúc!",
       how3:"💎 <b>Thu</b> Thiên thạch tím để cộng ngay vào số dư.",
       cost_line:"Mỗi lượt: <b>"+COST+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
       start_btn:"Bắt đầu", over_title:"Kết thúc lượt!", again_btn:"Chơi lại",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
       start_toast:"−"+COST+" {tt} · Bay nào!", mine_toast:"+1 {tt}",
-      newbest:"🏆 Kỷ lục mới!"
+      newbest:"🏆 Kỷ lục mới!",
+      pause_title:"Kết thúc lượt?", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      resume:"Chơi tiếp", to_hub:"Về Sảnh Game"
     },
     en:{
       title:"AstroQ — Asteroid Dodge", back:"Arcade", home_btn:"Cockpit",
       hud_score:"Score", hud_best:"Best", mined_lbl:"Mined",
       start_title:"Asteroid Dodge",
-      how1:"🕹️ <b>Move</b>: drag mouse / touch, or ◀ ▶ (A/D) keys.",
+      how1:"🕹️ <b>Move</b>: ◀ ▲ ▼ ▶ arrow keys or A W S D.",
       how2:"☄️ <b>Dodge</b> the falling asteroids — one hit ends the run!",
       how3:"💎 <b>Collect</b> Purple Meteors to add them to your balance instantly.",
       cost_line:"Per run: <b>"+COST+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
       start_btn:"Start", over_title:"Run over!", again_btn:"Play again",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
       start_toast:"−"+COST+" {tt} · Fly!", mine_toast:"+1 {tt}",
-      newbest:"🏆 New best!"
+      newbest:"🏆 New best!",
+      pause_title:"End this run?", pause_body:"Continue playing or return to the arcade?",
+      resume:"Keep playing", to_hub:"Back to Arcade"
     }
   };
   var LANG="vi";
@@ -241,13 +258,8 @@ canvas{display:block;width:100%;height:100%;}
   function sHit(){ beep(150,0.22,"sawtooth",0.06); beep(90,0.28,"sawtooth",0.06,0.1); }
   function sStart(){ beep(440,0.08,"square",0.04); beep(620,0.1,"square",0.04,0.08); }
 
-  /* ===== Nhân vật do người dùng đã chọn (astroq-user) ===== */
-  function getUser(){ try{ return JSON.parse(localStorage.getItem("astroq-user")||"null"); }catch(e){ return null; } }
-  // id nhân vật → ảnh render (khớp CHARACTERS trong js/auth-flow.js)
-  var SPRITES={ m:"3d/m3d.png", b:"3d/b3d.png", q:"3d/q3d.png", raica:"3d/raica3d.png", bao:"3d/bao3D.png",
-                chim:"3d/chim3D.png", cho:"3d/cho2.png", chuot:"3d/chuot3d.png", cu:"3d/cu3d.png", cua:"3d/cua3d.png" };
-  var _u=getUser()||{};
-  var spritePath = SPRITES[_u.character] || _u.avatar || "img/b1.png";
+  /* ===== Nhân vật người chơi: cố định dùng Luna (img/luna2.png) ===== */
+  var spritePath = "img/luna2.png";
 
   /* ===== Ảnh ===== */
   var sprite=new Image(), spriteReady=false, spriteAspect=1;
@@ -265,8 +277,9 @@ canvas{display:block;width:100%;height:100%;}
     DPR=Math.min(2, window.devicePixelRatio||1);
     cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
     ctx.setTransform(DPR,0,0,DPR,0,0);
-    sizeByte(); byte.x=Math.min(Math.max(byte.x,byte.w/2),W-byte.w/2);
-    if(state!=="play"){ targetX=byte.x; }
+    sizeByte();
+    byte.x=Math.min(Math.max(byte.x,byte.w/2),W-byte.w/2);
+    byte.y=Math.min(Math.max(byte.y,byte.h/2),H-byte.h/2);
   }
   // Cỡ nhân vật giữ đúng tỉ lệ ảnh (nằm gọn trong khung ~78×72)
   function sizeByte(){
@@ -280,7 +293,7 @@ canvas{display:block;width:100%;height:100%;}
   /* ===== Trạng thái game ===== */
   var state="start"; // start | play | over
   var byte={x:400,y:460,w:56,h:56};
-  var targetX=400, keyL=false, keyR=false, MOVE=520;
+  var keyL=false, keyR=false, keyU=false, keyD=false, MOVE=520;
   var rocks=[], gems=[], parts=[], stars=[];
   var elapsed=0, score=0, mined=0, spawnT=0, spawnN=0, shake=0;
   var best=0; try{ best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0; }catch(e){}
@@ -296,7 +309,7 @@ canvas{display:block;width:100%;height:100%;}
     if(Economy.getAsteroids() < COST){ showNeed(); return; }
     Economy.useAsteroids(COST); paintBalance(); bumpGem();
     rocks=[]; gems=[]; parts=[]; elapsed=0; score=0; mined=0; spawnT=0; spawnN=0; shake=0;
-    byte.x=W/2; targetX=W/2; keyL=keyR=false;
+    byte.x=W/2; byte.y=H-byte.h*0.5-16; keyL=keyR=keyU=keyD=false;
     hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need");
     state="play"; last=0; sStart(); toast(t("start_toast"));
     paintHud();
@@ -322,6 +335,10 @@ canvas{display:block;width:100%;height:100%;}
   function showOv(id){ $(id).classList.add("show"); }
   function hideOv(id){ $(id).classList.remove("show"); }
 
+  /* ===== Tạm dừng (ESC) ===== */
+  function pauseGame(){ if(state!=="play") return; state="paused"; keyL=keyR=keyU=keyD=false; showOv("ov-pause"); }
+  function resumeGame(){ if(state!=="paused") return; hideOv("ov-pause"); state="play"; last=0; }
+
   /* ===== HUD ===== */
   function paintHud(){ $("score").textContent=Math.floor(score); $("mined").textContent=mined; $("best").textContent=best; }
 
@@ -336,11 +353,13 @@ canvas{display:block;width:100%;height:100%;}
   }
   function update(dt){
     elapsed+=dt; score+=dt*12;
-    // điều khiển Byte
-    if(keyL) targetX-=MOVE*dt;
-    if(keyR) targetX+=MOVE*dt;
-    targetX=Math.max(byte.w/2, Math.min(W-byte.w/2, targetX));
-    byte.x += (targetX-byte.x)*Math.min(1,dt*15);
+    // điều khiển Byte bằng bàn phím (◀▲▼▶ hoặc A/W/S/D) — di chuyển 2 chiều
+    var mx=0,my=0;
+    if(keyL) mx-=1; if(keyR) mx+=1; if(keyU) my-=1; if(keyD) my+=1;
+    if(mx&&my){ mx*=0.7071; my*=0.7071; }   // chuẩn hoá chéo
+    byte.x += mx*MOVE*dt; byte.y += my*MOVE*dt;
+    byte.x = Math.max(byte.w/2, Math.min(W-byte.w/2, byte.x));
+    byte.y = Math.max(byte.h/2, Math.min(H-byte.h/2, byte.y));
 
     // sinh thiên thạch + đá quý
     spawnT-=dt;
@@ -396,18 +415,6 @@ canvas{display:block;width:100%;height:100%;}
       ctx.beginPath(); ctx.arc(pt.x,pt.y,2.4,0,6.28); ctx.fill(); }
     ctx.globalAlpha=1;
     ctx.restore();
-    // Reticle "+" theo con trỏ (chỉ khi đang chơi) — vẽ ngoài rung để bám đúng chuột
-    if(state==="play" && pointerIn) drawReticle();
-  }
-  function drawReticle(){
-    var x=pointerX, y=pointerY;
-    ctx.save(); ctx.strokeStyle="rgba(56,189,248,.95)"; ctx.lineWidth=2;
-    ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=10;
-    ctx.beginPath(); ctx.arc(x,y,10,0,6.28); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x-17,y); ctx.lineTo(x-5,y); ctx.moveTo(x+5,y); ctx.lineTo(x+17,y);
-    ctx.moveTo(x,y-17); ctx.lineTo(x,y-5); ctx.moveTo(x,y+5); ctx.lineTo(x,y+17);
-    ctx.stroke(); ctx.restore();
   }
   function drawRock(a){
     ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
@@ -441,6 +448,7 @@ canvas{display:block;width:100%;height:100%;}
     document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(function(el){ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
     document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
     if($("ov-need").classList.contains("show")) showNeed();
   }
 
@@ -451,22 +459,23 @@ canvas{display:block;width:100%;height:100%;}
     el.classList.add("show");
     clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 1600); }
 
-  /* ===== Điều khiển ===== */
-  var pointerX=0, pointerY=0, pointerIn=false;
-  function ptr(e){ var r=cv.getBoundingClientRect(); pointerX=e.clientX-r.left; pointerY=e.clientY-r.top; pointerIn=true; targetX=pointerX; }
-  stage.addEventListener("pointermove", ptr);
-  stage.addEventListener("pointerdown", ptr);
-  stage.addEventListener("pointerleave", function(){ pointerIn=false; });
+  /* ===== Điều khiển (chỉ bàn phím, không dùng chuột) ===== */
   document.addEventListener("keydown", function(e){
     var k=(e.key||"").toLowerCase();
+    if(k==="escape"){ if(state==="play"){ pauseGame(); } else if(state==="paused"){ resumeGame(); } else { window.location.href="games.html"; } return; }
     if(k==="arrowleft"||k==="a"){ keyL=true; }
     if(k==="arrowright"||k==="d"){ keyR=true; }
+    if(k==="arrowup"||k==="w"){ keyU=true; }
+    if(k==="arrowdown"||k==="s"){ keyD=true; }
+    if(k==="arrowup"||k==="arrowdown"||k===" "){ e.preventDefault(); }   // chặn cuộn trang
     if((k===" "||k==="enter") && state!=="play"){ if($("ov-start").classList.contains("show")) startRound(); else if($("ov-over").classList.contains("show")) startRound(); }
   });
   document.addEventListener("keyup", function(e){
     var k=(e.key||"").toLowerCase();
     if(k==="arrowleft"||k==="a"){ keyL=false; }
     if(k==="arrowright"||k==="d"){ keyR=false; }
+    if(k==="arrowup"||k==="w"){ keyU=false; }
+    if(k==="arrowdown"||k==="s"){ keyD=false; }
   });
 
   $("start-btn").addEventListener("click", startRound);
@@ -476,6 +485,8 @@ canvas{display:block;width:100%;height:100%;}
   $("home-btn").addEventListener("click", function(){ window.location.href="dashboard.html"; });
   $("need-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   $("need-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  $("resume-btn").addEventListener("click", resumeGame);
+  $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   document.querySelectorAll(".lang-switch button").forEach(function(b){
     b.addEventListener("click", function(){ var l=b.getAttribute("data-lang");
       try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });

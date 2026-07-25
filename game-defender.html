@@ -122,7 +122,7 @@ canvas{display:block;width:100%;height:100%;}
 <!-- ===== Header ===== -->
 <header class="top">
   <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
-  <span class="tag">[ SPACE_DEFENDER ]</span>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
   <div class="currency" title="Thiên thạch tím">
     <span class="gem" id="gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
     <span class="c-val" id="bal">0</span>
@@ -202,6 +202,19 @@ canvas{display:block;width:100%;height:100%;}
       </div>
     </div>
   </div>
+
+  <!-- Tạm dừng (ESC) -->
+  <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+    <div class="ov-card">
+      <div class="ov-ic">⏸️</div>
+      <h2 data-i18n="pause_title">Kết thúc lượt?</h2>
+      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+      <div class="acts">
+        <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+        <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -222,6 +235,7 @@ canvas{display:block;width:100%;height:100%;}
     COST: 5,                 // Thiên thạch tím mỗi lượt
     fireInterval: 0.16,      // giây giữa 2 phát
     bulletSpeed: 640,
+    shipSpeed: 500,          // px/giây — tốc độ tàu (nhạy, không trễ)
     hullStart: 100,
     quizHeal: 20,            // % hồi máu khi trả lời đúng
     quizReward: 5,           // tt cộng khi đúng
@@ -238,33 +252,37 @@ canvas{display:block;width:100%;height:100%;}
       title:"AstroQ — Space Defender", back:"Về Sảnh", to_list:"Danh sách Game",
       hull:"Máu tàu", hud_score:"Điểm",
       start_title:"Space Defender",
-      how1:"🎯 <b>Ngắm</b>: rê chuột / phím ◀ ▶ để xoay pháo.",
-      how2:"🔫 <b>Bắn</b>: chuột trái hoặc phím Space.",
+      how1:"🕹️ <b>Di chuyển tàu</b>: phím ◀ ▲ ▼ ▶ hoặc A W S D.",
+      how2:"🎯 <b>Ngắm & bắn</b>: rê chuột để ngắm, chuột trái / Space để bắn.",
       how3:"💜 Bắn <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví.",
       how4:"⭐ Bắn <b>Thiên thạch vàng</b>: mở câu đố Thiên văn.",
-      how5:"🛡️ Đừng để thiên thạch lọt qua — tàu sẽ mất máu!",
+      how5:"🛡️ Đừng để thiên thạch đâm hoặc lọt qua — tàu sẽ mất máu!",
       cost_line:"Mỗi lượt: <b>"+5+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
       start_btn:"Bắt đầu", over_title:"Tàu đã bị phá huỷ!", again_btn:"Chơi lại",
       r_shot:"TT bắn được", r_bonus:"Thưởng điểm", r_get:"Thực nhận", to_list_short:"Danh sách",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
       start_toast:"−5 {tt} · Bảo vệ tàu!", quiz_ok:"✅ Chính xác! +5 {tt} · +20% máu",
-      quiz_no:"❌ Chưa đúng — chiến đấu tiếp!", newbest:"🏆 Kỷ lục mới!"
+      quiz_no:"❌ Chưa đúng — chiến đấu tiếp!", newbest:"🏆 Kỷ lục mới!",
+      pause_title:"Kết thúc lượt?", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      resume:"Chơi tiếp", to_hub:"Về Sảnh Game"
     },
     en:{
       title:"AstroQ — Space Defender", back:"Arcade", to_list:"Game list",
       hull:"Hull", hud_score:"Score",
       start_title:"Space Defender",
-      how1:"🎯 <b>Aim</b>: move mouse / ◀ ▶ keys to rotate the cannon.",
-      how2:"🔫 <b>Fire</b>: left click or Space.",
+      how1:"🕹️ <b>Move ship</b>: ◀ ▲ ▼ ▶ arrows or A W S D.",
+      how2:"🎯 <b>Aim & fire</b>: mouse to aim, left click / Space to shoot.",
       how3:"💜 Shoot <b>Purple Meteors</b>: +10 score & +1 to wallet.",
       how4:"⭐ Shoot <b>Gold Meteors</b>: opens an astronomy quiz.",
-      how5:"🛡️ Don't let meteors slip past — your hull takes damage!",
+      how5:"🛡️ Don't let meteors ram or slip past — your hull takes damage!",
       cost_line:"Per run: <b>"+5+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
       start_btn:"Start", over_title:"Ship destroyed!", again_btn:"Play again",
       r_shot:"Meteors shot", r_bonus:"Score bonus", r_get:"You get", to_list_short:"List",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
       start_toast:"−5 {tt} · Defend!", quiz_ok:"✅ Correct! +5 {tt} · +20% hull",
-      quiz_no:"❌ Not quite — keep fighting!", newbest:"🏆 New best!"
+      quiz_no:"❌ Not quite — keep fighting!", newbest:"🏆 New best!",
+      pause_title:"End this run?", pause_body:"Continue playing or return to the arcade?",
+      resume:"Keep playing", to_hub:"Back to Arcade"
     }
   };
   var LANG="vi";
@@ -300,8 +318,14 @@ canvas{display:block;width:100%;height:100%;}
     start:function(){ beep(440,0.08,"square",0.04); beep(620,0.1,"square",0.04,0.08); }
   };
 
-  /* ===== Ảnh tt (đá quý) ===== */
+  /* ===== Ảnh ===== */
   var ttImg=new Image(), ttReady=false; ttImg.onload=function(){ ttReady=true; }; ttImg.src="img/tt.png";
+  // Nhân vật điều khiển = Luna (img/luna2.png)
+  var shipImg=new Image(), shipReady=false, shipAspect=1, shipW=58, shipH=58;
+  shipImg.onload=function(){ shipReady=true; shipAspect=(shipImg.naturalWidth/shipImg.naturalHeight)||1; sizeShip(); };
+  shipImg.onerror=function(){ if(shipImg.src.indexOf("b1.png")<0) shipImg.src="img/b1.png"; };
+  shipImg.src="img/luna2.png";
+  function sizeShip(){ var mw=64,mh=60,a=shipAspect||1; var w=mw,h=w/a; if(h>mh){ h=mh; w=h*a; } shipW=Math.round(w); shipH=Math.round(h); }
 
   /* ===== Canvas ===== */
   var stage=$("stage"), cv=$("cv"), ctx=cv.getContext("2d");
@@ -312,7 +336,7 @@ canvas{display:block;width:100%;height:100%;}
     DPR=Math.min(2, window.devicePixelRatio||1);
     cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
     ctx.setTransform(DPR,0,0,DPR,0,0);
-    ship.x=W/2; ship.y=H-38;
+    sizeShip(); ship.x=W/2; ship.y=H-Math.round(shipH*0.5)-8;
   }
   window.addEventListener("resize", fit);
 
@@ -341,7 +365,7 @@ canvas{display:block;width:100%;height:100%;}
     Economy.useAsteroids(CONFIG.COST); paintBalance(); bumpGem();
     bullets=[]; rocks=[]; parts=[];
     hull=CONFIG.hullStart; score=0; meteors=0; elapsed=0; spawnT=0.4; bossT=CONFIG.bossEvery; shake=0; flash=0; fireCd=0; firing=false;
-    aim=-Math.PI/2; ship.x=W/2; ship.y=H-38;
+    aim=-Math.PI/2; ship.x=W/2; ship.y=H-Math.round(shipH*0.5)-8;
     hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-quiz");
     state="play"; last=0; SFX.start(); toast(t("start_toast")); paintHud();
   }
@@ -365,6 +389,10 @@ canvas{display:block;width:100%;height:100%;}
   }
   function showOv(id){ $(id).classList.add("show"); }
   function hideOv(id){ $(id).classList.remove("show"); }
+
+  /* ===== Tạm dừng (ESC) ===== */
+  function pauseGame(){ if(state!=="play") return; state="paused"; firing=false; showOv("ov-pause"); }
+  function resumeGame(){ if(state!=="paused") return; hideOv("ov-pause"); state="play"; last=0; }
 
   /* ===== HUD ===== */
   function paintHud(){
@@ -425,9 +453,16 @@ canvas{display:block;width:100%;height:100%;}
 
   function update(dt){
     elapsed+=dt; score+=dt*4;   // điểm sống sót nhẹ
-    // ngắm bằng phím
-    if(keyL) aim-=2.4*dt; if(keyR) aim+=2.4*dt;
-    aim=Math.max(-(Math.PI-0.12), Math.min(-0.12, aim)); // giữ hướng lên
+    // Di chuyển tàu bằng phím (nhạy, không trễ)
+    var mx=0,my=0;
+    if(keyL) mx-=1; if(keyR) mx+=1; if(keyU) my-=1; if(keyD) my+=1;
+    if(mx&&my){ mx*=0.7071; my*=0.7071; }
+    ship.x += mx*CONFIG.shipSpeed*dt; ship.y += my*CONFIG.shipSpeed*dt;
+    ship.x = Math.max(shipW/2, Math.min(W-shipW/2, ship.x));
+    ship.y = Math.max(H*0.32, Math.min(H-shipH/2-4, ship.y));
+    // Ngắm pháo theo con trỏ (nếu dùng), luôn giữ hướng lên
+    if(pointerIn){ aim=Math.atan2(pointerY-(ship.y-shipH*0.16), pointerX-ship.x); }
+    aim=Math.max(-(Math.PI-0.12), Math.min(-0.12, aim));
     // bắn
     fireCd-=dt;
     if(firing && fireCd<=0){ shoot(); fireCd=CONFIG.fireInterval; }
@@ -446,6 +481,9 @@ canvas{display:block;width:100%;height:100%;}
         if(dx*dx+dy*dy < (a.r+3)*(a.r+3)){ bullets.splice(b2,1); a.hp--; SFX.hitRock(); burst(bl2.x,bl2.y, rockColor(a),6);
           if(a.hp<=0){ destroyRock(a); rocks.splice(i,1); break; } } }
       if(a.hp<=0) continue;
+      // đâm vào tàu → trừ máu + phá thạch
+      var sdx=a.x-ship.x, sdy=a.y-ship.y, sr=shipW*0.30;
+      if(sdx*sdx+sdy*sdy < (a.r+sr)*(a.r+sr)){ burst(a.x,a.y, rockColor(a),16); damageHull(CONFIG.damage[a.type]||6); rocks.splice(i,1); continue; }
       // lọt qua đáy → trừ máu tàu
       if(a.y-a.r> H){ damageHull(CONFIG.damage[a.type]||6); rocks.splice(i,1); continue; }
     }
@@ -494,24 +532,27 @@ canvas{display:block;width:100%;height:100%;}
     if(state==="play" && pointerIn) drawReticle();
   }
   function drawBullet(bl){
-    ctx.save(); ctx.strokeStyle="#8ff0ff"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.shadowColor="rgba(120,240,255,.95)"; ctx.shadowBlur=10;
-    ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.lineTo(bl.x-bl.vx*0.018, bl.y-bl.vy*0.018); ctx.stroke(); ctx.restore();
+    // Tia laser TÍM
+    ctx.save(); ctx.lineCap="round"; ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=12;
+    ctx.strokeStyle="#c084fc"; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.lineTo(bl.x-bl.vx*0.022, bl.y-bl.vy*0.022); ctx.stroke();
+    ctx.strokeStyle="#f2e6ff"; ctx.lineWidth=2;                 // lõi sáng
+    ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.lineTo(bl.x-bl.vx*0.018, bl.y-bl.vy*0.018); ctx.stroke();
+    ctx.restore();
   }
   function drawShip(){
-    var x=ship.x,y=ship.y;
-    // hào quang
-    ctx.save(); ctx.shadowColor="rgba(56,189,248,.6)"; ctx.shadowBlur=16;
-    // thân tàu
-    var g=ctx.createLinearGradient(0,y-18,0,y+16); g.addColorStop(0,"#bfe6ff"); g.addColorStop(.5,"#3f8fd6"); g.addColorStop(1,"#1b3a66");
-    ctx.fillStyle=g; ctx.beginPath();
-    ctx.moveTo(x,y-16); ctx.lineTo(x+22,y+12); ctx.lineTo(x+9,y+8); ctx.lineTo(x,y+15); ctx.lineTo(x-9,y+8); ctx.lineTo(x-22,y+12); ctx.closePath(); ctx.fill();
+    var x=ship.x, y=ship.y, w=shipW, h=shipH;
+    // Nhân vật Luna (img/luna2.png)
+    ctx.save(); ctx.shadowColor="rgba(192,132,252,.55)"; ctx.shadowBlur=16;
+    if(shipReady){ ctx.drawImage(shipImg, x-w/2, y-h/2, w, h); }
+    else { ctx.fillStyle="#d8c6ff"; ctx.beginPath(); ctx.arc(x,y,w*0.34,0,6.28); ctx.fill(); }
     ctx.restore();
-    // buồng lái
-    ctx.fillStyle="rgba(120,220,255,.85)"; ctx.beginPath(); ctx.arc(x,y-2,5,0,6.28); ctx.fill();
-    // pháo (xoay theo aim)
-    ctx.save(); ctx.translate(x,y-4); ctx.rotate(aim+Math.PI/2); ctx.shadowColor="rgba(56,189,248,.8)"; ctx.shadowBlur=8;
-    ctx.fillStyle="#cfe8ff"; ctx.fillRect(-3,-24,6,24);
-    ctx.fillStyle="#8ff0ff"; ctx.beginPath(); ctx.arc(0,-24,3.4,0,6.28); ctx.fill(); ctx.restore();
+    // pháo laser tím xoay theo aim
+    ctx.save(); ctx.translate(x, y-h*0.16); ctx.rotate(aim+Math.PI/2);
+    ctx.shadowColor="rgba(192,132,252,.85)"; ctx.shadowBlur=9;
+    ctx.fillStyle="#e6ccff"; ctx.fillRect(-3,-22,6,22);
+    ctx.fillStyle="#c084fc"; ctx.beginPath(); ctx.arc(0,-22,3.6,0,6.28); ctx.fill();
+    ctx.restore();
   }
   function drawRock(a){
     var x=a.x,y=a.y,r=a.r; var col=a.type;
@@ -553,6 +594,7 @@ canvas{display:block;width:100%;height:100%;}
     document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(function(el){ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
     document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
     if($("ov-need").classList.contains("show")) showNeed();
     if($("ov-quiz").classList.contains("show")){ var it=QUIZ[quizIdx]; $("q-text").textContent=L(it.q);
       var oo=$("q-opts").children; for(var i=0;i<oo.length && i<it.o.length;i++) oo[i].textContent=L(it.o[i]); }
@@ -564,24 +606,30 @@ canvas{display:block;width:100%;height:100%;}
     clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 1700); }
 
   /* ===== Điều khiển ===== */
-  var keyL=false, keyR=false;
-  function ptr(e){ var r=cv.getBoundingClientRect(); pointerX=e.clientX-r.left; pointerY=e.clientY-r.top; pointerIn=true;
-    aim=Math.atan2(pointerY-(ship.y-4), pointerX-ship.x); aim=Math.max(-(Math.PI-0.12), Math.min(-0.12, aim)); }
+  var keyL=false, keyR=false, keyU=false, keyD=false;
+  function ptr(e){ var r=cv.getBoundingClientRect(); pointerX=e.clientX-r.left; pointerY=e.clientY-r.top; pointerIn=true; }
   stage.addEventListener("pointermove", ptr);
   stage.addEventListener("pointerdown", function(e){ ptr(e); if(state==="play"){ firing=true; shoot(); fireCd=CONFIG.fireInterval; } });
   window.addEventListener("pointerup", function(){ firing=false; });
   stage.addEventListener("pointerleave", function(){ pointerIn=false; });
   document.addEventListener("keydown", function(e){
     var k=(e.key||"").toLowerCase();
+    if(k==="escape"){ if(state==="play"){ pauseGame(); } else if(state==="paused"){ resumeGame(); } else { window.location.href="games.html"; } return; }
+    // Di chuyển tàu: A=trái, W=lên, D=phải, S=xuống (hoặc mũi tên)
     if(k==="arrowleft"||k==="a"){ keyL=true; }
     if(k==="arrowright"||k==="d"){ keyR=true; }
-    if(k===" "||k==="spacebar"){ if(state==="play"){ e.preventDefault(); if(!firing){ shoot(); fireCd=CONFIG.fireInterval; } firing=true; }
-      else if($("ov-start").classList.contains("show")||$("ov-over").classList.contains("show")){ e.preventDefault(); startRound(); } }
+    if(k==="arrowup"||k==="w"){ keyU=true; }
+    if(k==="arrowdown"||k==="s"){ keyD=true; }
+    if(k==="arrowup"||k==="arrowdown"||k===" "){ e.preventDefault(); }
+    if(k===" "||k==="spacebar"){ if(state==="play"){ if(!firing){ shoot(); fireCd=CONFIG.fireInterval; } firing=true; }
+      else if($("ov-start").classList.contains("show")||$("ov-over").classList.contains("show")){ startRound(); } }
   });
   document.addEventListener("keyup", function(e){
     var k=(e.key||"").toLowerCase();
     if(k==="arrowleft"||k==="a"){ keyL=false; }
     if(k==="arrowright"||k==="d"){ keyR=false; }
+    if(k==="arrowup"||k==="w"){ keyU=false; }
+    if(k==="arrowdown"||k==="s"){ keyD=false; }
     if(k===" "||k==="spacebar"){ firing=false; }
   });
 
@@ -591,6 +639,8 @@ canvas{display:block;width:100%;height:100%;}
   $("hub-btn").addEventListener("click", function(){ window.location.href="games.html"; });
   $("need-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   $("need-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  $("resume-btn").addEventListener("click", resumeGame);
+  $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   document.querySelectorAll(".lang-switch button").forEach(function(b){
     b.addEventListener("click", function(){ var l=b.getAttribute("data-lang"); try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
   });
