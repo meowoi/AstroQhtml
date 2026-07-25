@@ -1,0 +1,760 @@
+{
+  "topic": "Trí tuệ nhân tạo (AI)",
+  "topic_id": "ai",
+  "level": 1,
+  "grade_target": "Lớp 1 · Tiểu học",
+  "reward_purple_meteors": 10,
+  "count": 25,
+  "questions": [
+    {
+      "id": "ASTRO_AI_LV01_Q001",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Xin chào! Tớ là Byte. Đố bạn tớ là ai nào?",
+      "question_text": "Byte trong AstroQ là loại nhân vật gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Một chú mèo"
+        },
+        {
+          "id": "B",
+          "text": "Một chú robot"
+        },
+        {
+          "id": "C",
+          "text": "Một hành tinh"
+        },
+        {
+          "id": "D",
+          "text": "Một ngôi sao"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Byte là một chú robot — cỗ máy do con người chế tạo để làm theo hướng dẫn. Robot không phải sinh vật sống.",
+      "source_reference": "Khan Academy – Intro to Computing",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q002",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Comet đây! Cậu có biết 'AI' nghĩa là gì không?",
+      "question_text": "AI (Trí tuệ nhân tạo) có nghĩa là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Máy móc được dạy để 'suy nghĩ' và làm việc thông minh"
+        },
+        {
+          "id": "B",
+          "text": "Máy móc biết bay"
+        },
+        {
+          "id": "C",
+          "text": "Một loại pin"
+        },
+        {
+          "id": "D",
+          "text": "Một món ăn"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "AI là trí tuệ nhân tạo: giúp máy tính học và làm những việc cần sự 'thông minh' như nhận diện hình ảnh hay trả lời câu hỏi.",
+      "source_reference": "Google AI for Education",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q003",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Byte muốn di chuyển. Tớ cần điều gì trước tiên nhỉ?",
+      "question_text": "Robot như Byte cần gì để biết phải làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Hướng dẫn (lệnh) từ con người"
+        },
+        {
+          "id": "B",
+          "text": "Thức ăn"
+        },
+        {
+          "id": "C",
+          "text": "Giấc ngủ"
+        },
+        {
+          "id": "D",
+          "text": "Nước uống"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Robot làm theo các lệnh được lập trình. Không có lệnh, robot không tự biết phải làm gì.",
+      "source_reference": "MIT OpenCourseWare – Intro to Robotics (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q004",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Nhìn quanh nhà bạn xem, thứ nào 'thông minh' nào?",
+      "question_text": "Thiết bị nào dưới đây là ví dụ có dùng AI?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Cục tẩy"
+        },
+        {
+          "id": "B",
+          "text": "Cái ghế gỗ"
+        },
+        {
+          "id": "C",
+          "text": "Loa thông minh biết trả lời câu hỏi"
+        },
+        {
+          "id": "D",
+          "text": "Quyển vở"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Loa thông minh (trợ lý ảo) dùng AI để hiểu giọng nói và trả lời bạn.",
+      "source_reference": "Khan Academy – AI in everyday life",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q005",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Comet muốn AI nhận ra tớ. Phải dạy thế nào đây?",
+      "question_text": "Muốn dạy AI nhận ra con mèo, ta nên làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Cho AI ăn cá"
+        },
+        {
+          "id": "B",
+          "text": "Cho AI xem thật nhiều hình con mèo"
+        },
+        {
+          "id": "C",
+          "text": "Tắt máy tính đi"
+        },
+        {
+          "id": "D",
+          "text": "Vẽ một ngôi sao"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI học từ ví dụ. Xem thật nhiều ảnh mèo giúp AI dần nhận ra mèo — đây là ý tưởng của 'máy học'.",
+      "source_reference": "Google AI for Education – Machine Learning basics",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q006",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Đố vui: ai đã làm ra tớ - robot Byte?",
+      "question_text": "Ai là người tạo ra robot?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Robot tự sinh ra"
+        },
+        {
+          "id": "B",
+          "text": "Cơn mưa"
+        },
+        {
+          "id": "C",
+          "text": "Cây cối"
+        },
+        {
+          "id": "D",
+          "text": "Con người"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Robot là máy móc do con người thiết kế và chế tạo, không tự sinh ra như sinh vật sống.",
+      "source_reference": "Khan Academy – Intro to Computing",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q007",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Comet là mèo thật, Byte là máy. Khác nhau chỗ nào ta?",
+      "question_text": "Điều gì đúng về mèo Comet mà robot Byte KHÔNG có?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Comet cần được lập trình"
+        },
+        {
+          "id": "B",
+          "text": "Comet chạy bằng pin"
+        },
+        {
+          "id": "C",
+          "text": "Comet làm bằng kim loại"
+        },
+        {
+          "id": "D",
+          "text": "Comet cần ăn và ngủ vì là sinh vật sống"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Mèo là sinh vật sống nên cần ăn, ngủ, lớn lên. Robot là máy móc, hoạt động bằng năng lượng như pin hoặc điện.",
+      "source_reference": "Khan Academy – Living vs non-living",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q008",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Máy tính rất giỏi, nhưng nó 'hiểu' cái gì nhỉ?",
+      "question_text": "Máy tính làm việc dựa trên điều gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Mùi hương"
+        },
+        {
+          "id": "B",
+          "text": "Suy nghĩ trong đầu bạn"
+        },
+        {
+          "id": "C",
+          "text": "Giấc mơ ban đêm"
+        },
+        {
+          "id": "D",
+          "text": "Những lệnh, hướng dẫn rõ ràng"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Máy tính chỉ làm theo các lệnh rõ ràng mà con người đưa vào; nó không tự đoán được suy nghĩ của bạn.",
+      "source_reference": "MIT OpenCourseWare – How computers work (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q009",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Điện thoại của ba mẹ cũng có AI đấy!",
+      "question_text": "AI trong điện thoại thường có thể làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Tưới cây"
+        },
+        {
+          "id": "B",
+          "text": "Nấu ăn giúp bạn"
+        },
+        {
+          "id": "C",
+          "text": "Giặt quần áo"
+        },
+        {
+          "id": "D",
+          "text": "Hiểu giọng nói của bạn"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Trợ lý ảo trong điện thoại dùng AI để nghe và hiểu giọng nói, rồi giúp bạn tìm thông tin hay đặt báo thức.",
+      "source_reference": "Google AI for Education",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q010",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Robot hút bụi ở nhà tránh tường thế nào nhỉ?",
+      "question_text": "Robot hút bụi tránh va vào tường là nhờ có?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Bánh kẹo"
+        },
+        {
+          "id": "B",
+          "text": "Đôi cánh"
+        },
+        {
+          "id": "C",
+          "text": "Cảm biến"
+        },
+        {
+          "id": "D",
+          "text": "Màu sơn đẹp"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Cảm biến giúp robot 'cảm nhận' vật ở xung quanh để dừng lại hoặc rẽ, tránh va chạm.",
+      "source_reference": "MIT OpenCourseWare – Sensors (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q011",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Cụm từ 'máy học' nghe hay ghê, nó là gì vậy Byte?",
+      "question_text": "'Máy học' (machine learning) nghĩa là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Máy học hỏi từ các ví dụ"
+        },
+        {
+          "id": "B",
+          "text": "Máy đến trường đi học"
+        },
+        {
+          "id": "C",
+          "text": "Máy nằm ngủ"
+        },
+        {
+          "id": "D",
+          "text": "Máy hát karaoke"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Máy học là cách máy tính trở nên giỏi hơn bằng việc xem nhiều ví dụ, thay vì được lập trình từng bước cụ thể.",
+      "source_reference": "Google AI for Education – Machine Learning basics",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q012",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Xe tự lái không có mắt như Comet, vậy nó 'nhìn' bằng gì?",
+      "question_text": "Xe tự lái dùng gì để 'nhìn' thấy đường?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Camera và cảm biến"
+        },
+        {
+          "id": "B",
+          "text": "Đôi mắt thật như người"
+        },
+        {
+          "id": "C",
+          "text": "Đôi tai"
+        },
+        {
+          "id": "D",
+          "text": "Cái mũi"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Xe tự lái dùng camera và cảm biến để 'nhìn' đường, xe cộ và người đi bộ, rồi AI xử lý thông tin đó.",
+      "source_reference": "Stanford CS – Autonomous vehicles (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q013",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Có bạn máy trò chuyện bằng chữ với tớ, gọi là gì ấy nhỉ?",
+      "question_text": "Chatbot là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Một chú chim biết hót"
+        },
+        {
+          "id": "B",
+          "text": "Chương trình trò chuyện bằng chữ với bạn"
+        },
+        {
+          "id": "C",
+          "text": "Một chiếc bánh"
+        },
+        {
+          "id": "D",
+          "text": "Một hành tinh"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Chatbot là chương trình máy tính có thể trò chuyện, trả lời câu hỏi bằng chữ hoặc giọng nói.",
+      "source_reference": "Khan Academy – AI in everyday life",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q014",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Vì sao ứng dụng cứ gợi ý đúng video tớ thích thế?",
+      "question_text": "AI gợi ý video bạn có thể thích dựa vào đâu?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Hoàn toàn ngẫu nhiên"
+        },
+        {
+          "id": "B",
+          "text": "Màu áo bạn đang mặc"
+        },
+        {
+          "id": "C",
+          "text": "Thời tiết hôm nay"
+        },
+        {
+          "id": "D",
+          "text": "Những video bạn đã xem trước đó"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Hệ thống gợi ý học từ lịch sử xem của bạn để đề xuất nội dung tương tự mà bạn có thể thích.",
+      "source_reference": "Google AI for Education – Recommender systems",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q015",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Điện thoại mở khoá khi thấy mặt chủ nhân - hay chưa!",
+      "question_text": "Mở khoá điện thoại bằng khuôn mặt là nhờ công nghệ nào?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Nhận diện khuôn mặt"
+        },
+        {
+          "id": "B",
+          "text": "Nghe nhạc"
+        },
+        {
+          "id": "C",
+          "text": "Chụp X-quang"
+        },
+        {
+          "id": "D",
+          "text": "Đo nhiệt độ"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "AI nhận diện khuôn mặt so sánh gương mặt trước camera với gương mặt chủ nhân đã lưu để mở khoá.",
+      "source_reference": "IEEE – Face recognition (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q016",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Lỡ tớ ra lệnh sai cho Byte thì sao ta?",
+      "question_text": "Nếu ta ra lệnh sai cho robot thì điều gì xảy ra?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Robot tự biết sửa lại cho đúng"
+        },
+        {
+          "id": "B",
+          "text": "Robot làm sai theo đúng lệnh đã nhận"
+        },
+        {
+          "id": "C",
+          "text": "Robot biến mất"
+        },
+        {
+          "id": "D",
+          "text": "Robot đi ngủ"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Robot làm đúng y theo lệnh nhận được; lệnh sai sẽ cho kết quả sai. Vì vậy ta phải hướng dẫn thật cẩn thận.",
+      "source_reference": "MIT OpenCourseWare – Programming logic (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q017",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "AI muốn giỏi thì cần 'ăn' gì nhỉ? (không phải cá đâu Comet!)",
+      "question_text": "AI cần gì để học?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Âm nhạc"
+        },
+        {
+          "id": "B",
+          "text": "Kẹo ngọt"
+        },
+        {
+          "id": "C",
+          "text": "Ánh nắng"
+        },
+        {
+          "id": "D",
+          "text": "Dữ liệu (thông tin, ví dụ)"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "AI học từ dữ liệu — càng nhiều ví dụ tốt thì AI càng học được nhiều điều.",
+      "source_reference": "Google AI for Education – Data & learning",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q018",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Byte đọc được tiếng Anh lẫn tiếng Việt cơ đấy!",
+      "question_text": "Việc nào sau đây AI có thể giúp?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Giúp bạn mọc răng"
+        },
+        {
+          "id": "B",
+          "text": "Dịch từ tiếng Anh sang tiếng Việt"
+        },
+        {
+          "id": "C",
+          "text": "Giúp bạn cao lên"
+        },
+        {
+          "id": "D",
+          "text": "Thở giúp bạn"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI dịch ngôn ngữ bằng cách học từ rất nhiều câu ở hai thứ tiếng khác nhau.",
+      "source_reference": "Khan Academy – AI in everyday life",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q019",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Tớ làm việc theo từng bước có thứ tự. Chuỗi bước đó tên là gì?",
+      "question_text": "Một chuỗi các bước theo thứ tự để hoàn thành việc gì đó gọi là?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Bài hát"
+        },
+        {
+          "id": "B",
+          "text": "Thuật toán"
+        },
+        {
+          "id": "C",
+          "text": "Bức tranh"
+        },
+        {
+          "id": "D",
+          "text": "Giấc mơ"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Thuật toán là danh sách các bước theo thứ tự để giải quyết một việc — giống công thức nấu ăn.",
+      "source_reference": "Khan Academy – Algorithms (Hour of Code)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q020",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Loa thông minh giúp bạn kiểu gì nhỉ?",
+      "question_text": "Trợ lý ảo trên loa hoặc điện thoại giúp bạn bằng cách nào?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Tự quét nhà bằng chổi"
+        },
+        {
+          "id": "B",
+          "text": "Nấu cơm"
+        },
+        {
+          "id": "C",
+          "text": "Nghe câu hỏi và trả lời"
+        },
+        {
+          "id": "D",
+          "text": "Đi bộ ra ngoài"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Trợ lý ảo nghe câu hỏi của bạn, dùng AI để hiểu và đưa ra câu trả lời hoặc thực hiện lệnh đơn giản.",
+      "source_reference": "Google AI for Education",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q021",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Điều nào nói đúng nhất về robot?",
+      "question_text": "Câu nào đúng về robot?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Robot mọc lên từ hạt giống"
+        },
+        {
+          "id": "B",
+          "text": "Robot là một con vật"
+        },
+        {
+          "id": "C",
+          "text": "Robot là máy móc do con người điều khiển và lập trình"
+        },
+        {
+          "id": "D",
+          "text": "Robot tự lớn lên như em bé"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Robot là máy móc; con người thiết kế, chế tạo và lập trình để robot thực hiện công việc.",
+      "source_reference": "Khan Academy – Intro to Computing",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q022",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Byte có thể đọc chữ bạn viết tay rồi đưa vào máy tính!",
+      "question_text": "AI nhận ra chữ viết tay để làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Ăn trang giấy"
+        },
+        {
+          "id": "B",
+          "text": "Chuyển chữ viết tay thành chữ trên máy tính"
+        },
+        {
+          "id": "C",
+          "text": "Xé quyển vở"
+        },
+        {
+          "id": "D",
+          "text": "Tô màu bức tranh"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI có thể 'đọc' chữ viết tay và chuyển thành văn bản số để máy tính lưu và tìm kiếm được.",
+      "source_reference": "IEEE – Handwriting recognition (concept)",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q023",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Muốn AI phân biệt táo với chuối thì dạy sao ta?",
+      "question_text": "Muốn AI phân biệt được quả táo và quả chuối, ta cho nó xem gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Một bài thơ"
+        },
+        {
+          "id": "B",
+          "text": "Một ngôi sao"
+        },
+        {
+          "id": "C",
+          "text": "Nhiều ảnh táo và chuối có dán nhãn tên"
+        },
+        {
+          "id": "D",
+          "text": "Không cho xem gì cả"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Cho AI xem nhiều ảnh có ghi rõ 'táo' hay 'chuối' giúp nó học cách phân biệt hai loại quả.",
+      "source_reference": "Google AI for Education – Image classification",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q024",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "Trong các thứ này, cái nào KHÔNG phải robot nhỉ?",
+      "question_text": "Thứ nào dưới đây KHÔNG phải là robot?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Mèo Comet đang ngủ"
+        },
+        {
+          "id": "B",
+          "text": "Robot hút bụi"
+        },
+        {
+          "id": "C",
+          "text": "Cánh tay máy trong nhà máy"
+        },
+        {
+          "id": "D",
+          "text": "Robot Byte"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Mèo Comet là sinh vật sống, không phải máy móc. Ba lựa chọn còn lại đều là robot.",
+      "source_reference": "Khan Academy – Living vs non-living",
+      "reward_purple_meteors": 10
+    },
+    {
+      "id": "ASTRO_AI_LV01_Q025",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 1,
+      "grade_target": "Lớp 1 · Tiểu học",
+      "mascot_dialog": "AI còn giúp cả các bác sĩ nữa đó!",
+      "question_text": "AI có thể giúp bác sĩ bằng cách nào?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Tự mổ một mình không cần bác sĩ"
+        },
+        {
+          "id": "B",
+          "text": "Xem ảnh chụp để hỗ trợ tìm dấu hiệu bệnh"
+        },
+        {
+          "id": "C",
+          "text": "Thay thế hoàn toàn bác sĩ"
+        },
+        {
+          "id": "D",
+          "text": "Không giúp được gì"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI hỗ trợ bác sĩ phân tích hình ảnh y tế để phát hiện dấu hiệu bất thường, nhưng quyết định cuối cùng vẫn do bác sĩ là con người.",
+      "source_reference": "Stanford CS – AI in Healthcare (concept)",
+      "reward_purple_meteors": 10
+    }
+  ]
+}

@@ -1,0 +1,760 @@
+{
+  "topic": "Trí tuệ nhân tạo (AI)",
+  "topic_id": "ai",
+  "level": 2,
+  "grade_target": "Lớp 2 · Tiểu học",
+  "reward_purple_meteors": 14,
+  "count": 25,
+  "questions": [
+    {
+      "id": "ASTRO_AI_LV02_Q001",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Khi bạn nói với loa thông minh, giọng nói của bạn gọi là gì?",
+      "question_text": "Khi bạn nói một câu hỏi cho loa thông minh, giọng nói đó được gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Màn hình"
+        },
+        {
+          "id": "B",
+          "text": "Đầu ra (output)"
+        },
+        {
+          "id": "C",
+          "text": "Cục pin"
+        },
+        {
+          "id": "D",
+          "text": "Đầu vào (input)"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Thông tin ta đưa vào máy (giọng nói, chữ, hình ảnh) gọi là 'đầu vào' (input).",
+      "source_reference": "MIT OpenCourseWare – Input/Output (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q002",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Vậy câu trả lời loa nói ra thì gọi là gì?",
+      "question_text": "Câu trả lời mà loa thông minh phát ra cho bạn được gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Đầu vào (input)"
+        },
+        {
+          "id": "B",
+          "text": "Đầu ra (output)"
+        },
+        {
+          "id": "C",
+          "text": "Dây điện"
+        },
+        {
+          "id": "D",
+          "text": "Nút bấm"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Kết quả máy tạo ra sau khi xử lý (câu trả lời, hình ảnh) gọi là 'đầu ra' (output).",
+      "source_reference": "MIT OpenCourseWare – Input/Output (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q003",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Byte thú thật nhé: đôi khi tớ cũng đoán sai đấy!",
+      "question_text": "Điều nào sau đây đúng về AI?",
+      "options": [
+        {
+          "id": "A",
+          "text": "AI đôi khi cũng mắc lỗi, không phải lúc nào cũng đúng"
+        },
+        {
+          "id": "B",
+          "text": "AI luôn luôn đúng 100%"
+        },
+        {
+          "id": "C",
+          "text": "AI không bao giờ cần dữ liệu"
+        },
+        {
+          "id": "D",
+          "text": "AI là phép thuật"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "AI học từ dữ liệu nên có thể đoán sai, nhất là khi gặp thứ lạ hoặc dữ liệu chưa tốt. Vì vậy con người cần kiểm tra lại.",
+      "source_reference": "Khan Academy – Limitations of AI",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q004",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Quá trình cho AI học từ dữ liệu có tên riêng đấy!",
+      "question_text": "Quá trình cho AI học từ nhiều ví dụ được gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Lau màn hình"
+        },
+        {
+          "id": "B",
+          "text": "Tắt máy"
+        },
+        {
+          "id": "C",
+          "text": "Sạc pin"
+        },
+        {
+          "id": "D",
+          "text": "Huấn luyện (training)"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "'Huấn luyện' là quá trình đưa nhiều dữ liệu vào để AI học ra quy luật và làm tốt nhiệm vụ.",
+      "source_reference": "Google AI for Education – Training a model",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q005",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Nghe giọng nói và nhìn hình ảnh là hai việc khác nhau nha!",
+      "question_text": "Việc AI 'nghe và hiểu giọng nói' được gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Chơi bóng"
+        },
+        {
+          "id": "B",
+          "text": "Nhận diện khuôn mặt"
+        },
+        {
+          "id": "C",
+          "text": "Vẽ tranh"
+        },
+        {
+          "id": "D",
+          "text": "Nhận diện giọng nói"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Nhận diện giọng nói giúp máy chuyển lời nói thành chữ hoặc lệnh; khác với nhận diện khuôn mặt (xử lý hình ảnh).",
+      "source_reference": "IEEE – Speech recognition (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q006",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Robot muốn hoạt động thì cần thứ này!",
+      "question_text": "Robot cần gì để có thể hoạt động?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Một giấc ngủ trưa"
+        },
+        {
+          "id": "B",
+          "text": "Nguồn năng lượng như pin hoặc điện"
+        },
+        {
+          "id": "C",
+          "text": "Một bữa cơm"
+        },
+        {
+          "id": "D",
+          "text": "Một cốc nước"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Robot là máy móc nên cần năng lượng (pin, điện) để các bộ phận hoạt động.",
+      "source_reference": "Khan Academy – How machines get power",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q007",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Có loại cảm biến biết trời sáng hay tối đó!",
+      "question_text": "Cảm biến ánh sáng giúp robot biết điều gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Bài hát tên gì"
+        },
+        {
+          "id": "B",
+          "text": "Món ăn có ngon không"
+        },
+        {
+          "id": "C",
+          "text": "Xung quanh đang sáng hay tối"
+        },
+        {
+          "id": "D",
+          "text": "Hôm nay thứ mấy"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Cảm biến ánh sáng đo lượng ánh sáng, giúp thiết bị biết khi nào sáng, khi nào tối (ví dụ đèn tự bật ban đêm).",
+      "source_reference": "MIT OpenCourseWare – Sensors (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q008",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Còn bộ phận nào giúp robot 'nghe' âm thanh?",
+      "question_text": "Bộ phận nào giúp thiết bị 'nghe' được âm thanh?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Đèn pin"
+        },
+        {
+          "id": "B",
+          "text": "Bánh xe"
+        },
+        {
+          "id": "C",
+          "text": "Micro (cảm biến âm thanh)"
+        },
+        {
+          "id": "D",
+          "text": "Cục tẩy"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Micro thu âm thanh và chuyển thành tín hiệu để máy xử lý — nhờ đó loa thông minh nghe được bạn nói.",
+      "source_reference": "IEEE – Microphones & audio (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q009",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "AI rất giỏi tìm ra quy luật lặp đi lặp lại!",
+      "question_text": "AI thường giỏi việc tìm ra điều gì trong dữ liệu?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Mùi vị món ăn"
+        },
+        {
+          "id": "B",
+          "text": "Quy luật, mẫu lặp lại (pattern)"
+        },
+        {
+          "id": "C",
+          "text": "Cảm xúc thật của con người"
+        },
+        {
+          "id": "D",
+          "text": "Giấc mơ"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI rất mạnh trong việc phát hiện mẫu (pattern) lặp lại trong dữ liệu, ví dụ nhận ra chữ số hay hình dạng.",
+      "source_reference": "Stanford CS – Pattern recognition (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q010",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Muốn AI học giỏi thì dữ liệu nên thế nào?",
+      "question_text": "Điều gì giúp AI học tốt hơn?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Không có dữ liệu nào"
+        },
+        {
+          "id": "B",
+          "text": "Có nhiều dữ liệu tốt và đúng"
+        },
+        {
+          "id": "C",
+          "text": "Chỉ một tấm ảnh duy nhất"
+        },
+        {
+          "id": "D",
+          "text": "Dữ liệu bị sai hết"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Càng nhiều dữ liệu đúng và đa dạng, AI càng học được nhiều và dự đoán chính xác hơn.",
+      "source_reference": "Google AI for Education – Data quality",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q011",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Byte trông vui vẻ, nhưng tớ có cảm xúc thật không nhỉ?",
+      "question_text": "AI và robot có cảm xúc thật như con người không?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Có, chúng biết đau"
+        },
+        {
+          "id": "B",
+          "text": "Có, chúng buồn vui y như người"
+        },
+        {
+          "id": "C",
+          "text": "Có, chúng biết yêu thương"
+        },
+        {
+          "id": "D",
+          "text": "Không, chúng chỉ bắt chước chứ không có cảm xúc thật"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "AI có thể bắt chước biểu cảm hay giọng điệu, nhưng không có cảm xúc thật như con người.",
+      "source_reference": "Khan Academy – What AI can and cannot do",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q012",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Kể tên một 'trợ lý ảo' mà bạn từng nghe xem nào!",
+      "question_text": "Ví dụ nào sau đây là một trợ lý ảo dùng AI?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Cái thước kẻ"
+        },
+        {
+          "id": "B",
+          "text": "Cái bút chì"
+        },
+        {
+          "id": "C",
+          "text": "Quả bóng bay"
+        },
+        {
+          "id": "D",
+          "text": "Trợ lý giọng nói trên điện thoại thông minh"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Các trợ lý giọng nói trên điện thoại/loa thông minh dùng AI để nghe, hiểu và trả lời bạn.",
+      "source_reference": "Google AI for Education",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q013",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Trong nhà máy, robot làm việc gì giỏi nhất?",
+      "question_text": "Robot trong nhà máy thường được dùng để làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Kể chuyện cổ tích"
+        },
+        {
+          "id": "B",
+          "text": "Lắp ráp sản phẩm lặp đi lặp lại thật chính xác"
+        },
+        {
+          "id": "C",
+          "text": "Hát ru em bé"
+        },
+        {
+          "id": "D",
+          "text": "Trồng hoa ngoài vườn"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Robot công nghiệp giỏi làm các việc lặp lại, chính xác và không mệt, ví dụ lắp ráp xe hơi.",
+      "source_reference": "IEEE – Industrial robotics (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q014",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Hộp thư điện tử tự lọc thư rác - ai làm việc đó vậy?",
+      "question_text": "AI giúp email của bạn bằng cách nào?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Xoá hết mọi email"
+        },
+        {
+          "id": "B",
+          "text": "Gửi email thay bạn khi bạn ngủ"
+        },
+        {
+          "id": "C",
+          "text": "In email ra giấy"
+        },
+        {
+          "id": "D",
+          "text": "Lọc bớt thư rác (spam) không mong muốn"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "AI học cách nhận ra thư rác và tự đưa chúng vào thư mục spam, giúp hộp thư của bạn gọn gàng.",
+      "source_reference": "Stanford CS – Spam filtering (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q015",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Ứng dụng bản đồ tìm đường nhanh nhờ đâu?",
+      "question_text": "Ứng dụng bản đồ chỉ đường dùng AI để làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Tìm đường đi ngắn hoặc nhanh cho bạn"
+        },
+        {
+          "id": "B",
+          "text": "Vẽ tranh phong cảnh"
+        },
+        {
+          "id": "C",
+          "text": "Đo chiều cao của bạn"
+        },
+        {
+          "id": "D",
+          "text": "Nấu bữa tối"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Ứng dụng bản đồ dùng thuật toán và AI để tìm quãng đường ngắn/nhanh, có xét cả tình trạng giao thông.",
+      "source_reference": "MIT OpenCourseWare – Shortest path (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q016",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Camera đọc được biển số xe đấy, tài chưa!",
+      "question_text": "AI đọc chữ và số trên biển số xe để làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Nhận ra xe ra vào bãi đỗ tự động"
+        },
+        {
+          "id": "B",
+          "text": "Sơn lại chiếc xe"
+        },
+        {
+          "id": "C",
+          "text": "Bơm bánh xe"
+        },
+        {
+          "id": "D",
+          "text": "Rửa xe"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "AI 'đọc' biển số (nhận dạng ký tự) giúp bãi xe tự nhận ra xe ra/vào mà không cần nhập tay.",
+      "source_reference": "IEEE – Optical Character Recognition (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q017",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Có AI dịch ngay lời nói sang tiếng khác luôn kìa!",
+      "question_text": "AI dịch giọng nói trực tiếp giúp ích gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Giúp cây lớn nhanh hơn"
+        },
+        {
+          "id": "B",
+          "text": "Giúp hai người nói hai thứ tiếng hiểu nhau"
+        },
+        {
+          "id": "C",
+          "text": "Làm trời mưa"
+        },
+        {
+          "id": "D",
+          "text": "Tăng điểm kiểm tra tự động"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "AI nghe một thứ tiếng và nói ra thứ tiếng khác gần như ngay lập tức, giúp mọi người giao tiếp dễ hơn.",
+      "source_reference": "Google AI for Education – Speech translation",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q018",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "'NẾU trời tối THÌ bật đèn' - đây là kiểu suy nghĩ gì?",
+      "question_text": "Câu 'NẾU trời tối THÌ bật đèn' là ví dụ của?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Một bức ảnh"
+        },
+        {
+          "id": "B",
+          "text": "Một bài hát"
+        },
+        {
+          "id": "C",
+          "text": "Một quyết định theo điều kiện (nếu... thì...)"
+        },
+        {
+          "id": "D",
+          "text": "Một cục pin"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "Máy móc ra quyết định đơn giản theo điều kiện: 'nếu... thì...'. Đây là nền tảng của tư duy lập trình.",
+      "source_reference": "Khan Academy – Conditionals (Hour of Code)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q019",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Camera an ninh biết có ai đi qua - nhờ gì thế?",
+      "question_text": "Camera an ninh thông minh có thể nhận ra điều gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Ước mơ của bạn"
+        },
+        {
+          "id": "B",
+          "text": "Suy nghĩ của con mèo"
+        },
+        {
+          "id": "C",
+          "text": "Bài tập về nhà của bạn"
+        },
+        {
+          "id": "D",
+          "text": "Có chuyển động hoặc có người xuất hiện"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Camera thông minh dùng AI để phát hiện chuyển động hoặc người, rồi báo cho chủ nhà.",
+      "source_reference": "IEEE – Motion detection (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q020",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Gõ được vài chữ, máy đã đoán từ tiếp theo cho tớ!",
+      "question_text": "Khi bạn gõ chữ, AI gợi ý từ tiếp theo được gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Chụp ảnh"
+        },
+        {
+          "id": "B",
+          "text": "Gợi ý tự động (autocomplete)"
+        },
+        {
+          "id": "C",
+          "text": "Tắt nguồn"
+        },
+        {
+          "id": "D",
+          "text": "Phóng to màn hình"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Gợi ý tự động dự đoán từ bạn sắp gõ dựa trên các từ thường đi cùng nhau, giúp gõ nhanh hơn.",
+      "source_reference": "Stanford CS – Language models (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q021",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Trong game, đối thủ 'máy' chơi cùng bạn là do ai điều khiển?",
+      "question_text": "Trong trò chơi điện tử, nhân vật do máy điều khiển chơi cùng bạn là nhờ?",
+      "options": [
+        {
+          "id": "A",
+          "text": "AI trong trò chơi"
+        },
+        {
+          "id": "B",
+          "text": "Một bạn học ngồi trong máy"
+        },
+        {
+          "id": "C",
+          "text": "Phép thuật"
+        },
+        {
+          "id": "D",
+          "text": "Cục pin"
+        }
+      ],
+      "correct_option_id": "A",
+      "explanation": "Nhân vật máy trong game được điều khiển bằng AI để phản ứng lại hành động của người chơi.",
+      "source_reference": "Stanford CS – Game AI (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q022",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Robot thú cưng biết kêu khi được vuốt ve đó Comet!",
+      "question_text": "Robot thú cưng phản ứng khi được vuốt ve là nhờ có?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Chiếc mũi thật"
+        },
+        {
+          "id": "B",
+          "text": "Trái tim thật"
+        },
+        {
+          "id": "C",
+          "text": "Bộ lông thật"
+        },
+        {
+          "id": "D",
+          "text": "Cảm biến chạm"
+        }
+      ],
+      "correct_option_id": "D",
+      "explanation": "Cảm biến chạm nhận biết khi có tay chạm vào, giúp robot thú cưng phản ứng như kêu hay cử động.",
+      "source_reference": "MIT OpenCourseWare – Touch sensors (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q023",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Thùng rác thông minh biết rác nào ra rác nào - hay ghê!",
+      "question_text": "Máy phân loại rác thông minh dùng camera và AI để làm gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Biến rác thành vàng"
+        },
+        {
+          "id": "B",
+          "text": "Ăn hết rác"
+        },
+        {
+          "id": "C",
+          "text": "Nhận ra loại rác để phân loại đúng thùng"
+        },
+        {
+          "id": "D",
+          "text": "Đốt cháy nhà"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "AI nhìn hình ảnh rác qua camera và học cách phân biệt để bỏ đúng thùng (giấy, nhựa, hữu cơ...).",
+      "source_reference": "IEEE – Waste sorting with vision (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q024",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Byte có thể đọc truyện thành tiếng cho bạn nghe!",
+      "question_text": "Công nghệ đọc chữ trên màn hình thành giọng nói gọi là gì?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Chụp ảnh màn hình"
+        },
+        {
+          "id": "B",
+          "text": "Chuyển văn bản thành giọng nói (text-to-speech)"
+        },
+        {
+          "id": "C",
+          "text": "Vẽ tranh"
+        },
+        {
+          "id": "D",
+          "text": "Tắt tiếng"
+        }
+      ],
+      "correct_option_id": "B",
+      "explanation": "Text-to-speech đọc chữ viết thành giọng nói, rất hữu ích cho người khiếm thị hoặc khi nghe truyện.",
+      "source_reference": "IEEE – Text-to-Speech (concept)",
+      "reward_purple_meteors": 14
+    },
+    {
+      "id": "ASTRO_AI_LV02_Q025",
+      "topic": "Trí tuệ nhân tạo (AI)",
+      "level": 2,
+      "grade_target": "Lớp 2 · Tiểu học",
+      "mascot_dialog": "Điều quan trọng nhất khi dùng AI là gì nhỉ?",
+      "question_text": "Vì sao con người vẫn cần kiểm tra kết quả của AI?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Vì AI cần đi ngủ"
+        },
+        {
+          "id": "B",
+          "text": "Vì AI thích được khen"
+        },
+        {
+          "id": "C",
+          "text": "Vì AI có thể sai, cần con người bảo đảm đúng và an toàn"
+        },
+        {
+          "id": "D",
+          "text": "Vì AI sợ bóng tối"
+        }
+      ],
+      "correct_option_id": "C",
+      "explanation": "AI là công cụ hỗ trợ và có thể mắc lỗi, nên con người luôn cần kiểm tra để bảo đảm kết quả đúng và an toàn.",
+      "source_reference": "Khan Academy – Responsible AI",
+      "reward_purple_meteors": 14
+    }
+  ]
+}
