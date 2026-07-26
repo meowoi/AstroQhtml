@@ -5,7 +5,7 @@
    ============================================================ */
 (function () {
   "use strict";
-  var LS_USER = "astroq-user", LS_LANG = "astroq-lang", LS_AST = "astroq-asteroids";
+  var LS_USER = "astroq-user", LS_AST = "astroq-asteroids";   // ngôn ngữ: AstroQ.getLang/setLang
 
   /* Nhân vật — ghép ảnh 3D (thư mục 3d) với avatar (thư mục ava).
      role/trait/stats là dữ liệu tạm (sẽ cập nhật sau). */
@@ -34,13 +34,10 @@
          err_name:"Please enter a pilot name!", clearance:"CLEARANCE: ROOKIE", tap:"Tap a character to view its stats",
          mystery_toast:"Mystery character — unlocking soon!" }
   };
-  var LANG = "vi";
-  try{ var sv=localStorage.getItem(LS_LANG); if(sv==="en"||sv==="vi") LANG=sv;
-       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  var LANG = AstroQ.getLang();
   function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
 
-  function getUser(){ try{ return JSON.parse(localStorage.getItem(LS_USER)||"null"); }catch(e){ return null; } }
-  var $ = function(id){ return document.getElementById(id); };
+  var getUser = AstroQ.getUser;
   var selected = null;
 
   function applyLang(lang){
@@ -92,9 +89,7 @@
     fillHud(c);
   }
 
-  var toastTimer=null;
-  function toast(msg){ var el=$("sel-toast"); if(!el) return; el.textContent=msg; el.classList.add("show");
-    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); },2200); }
+  var toast = AstroQ.makeToast("sel-toast", 2200);
 
   /* ---- BẮT ĐẦU HÀNH TRÌNH ---- */
   function startJourney(){
@@ -124,9 +119,7 @@
     applyLang(LANG);
     var sb=$("start-journey"); if(sb) sb.addEventListener("click", startJourney);
     var ni=$("pilot-name"); if(ni) ni.addEventListener("keydown", function(e){ if(e.key==="Enter") startJourney(); });
-    document.querySelectorAll(".lang-switch button").forEach(function(b){
-      b.addEventListener("click", function(){ var l=b.getAttribute("data-lang"); try{ localStorage.setItem(LS_LANG,l); }catch(e){} applyLang(l); });
-    });
+    AstroQ.initLang(applyLang);
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

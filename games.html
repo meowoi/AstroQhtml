@@ -5,155 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AstroQ — Sảnh Trò Chơi</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/fonts.css" />
 
-<style>
-:root{
-  --bg:#0b0f19; --bg2:#0d1322;
-  --ink:#eaf1ff; --ink-soft:#a9b8e8; --ink-faint:#7f8dc4;
-  --cyan:#38bdf8; --purple:#c084fc; --green:#4ade80; --amber:#fb923c; --red:#ef4444;
-  --brd:rgba(120,160,255,.18);
-  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
-  --ease:cubic-bezier(.22,.61,.36,1); --jelly:cubic-bezier(.34,1.56,.64,1);
-}
-*{box-sizing:border-box;}
-html,body{margin:0;min-height:100%;}
-body{font-family:var(--font-body);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);}
-button{font-family:inherit;}
-a{color:inherit;text-decoration:none;}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px;}
-
-.starfield{position:fixed;inset:-40%;z-index:0;pointer-events:none;background-repeat:repeat;opacity:.7;
-  background-image:
-    radial-gradient(1.3px 1.3px at 20% 30%, #fff, transparent),
-    radial-gradient(1.4px 1.4px at 80% 20%, #dcecff, transparent),
-    radial-gradient(1px 1px at 60% 70%, #cfe0ff, transparent),
-    radial-gradient(1.1px 1.1px at 40% 85%, #fff, transparent),
-    radial-gradient(1px 1px at 90% 55%, #bcd0ff, transparent);
-  background-size:520px 520px;animation:drift 160s linear infinite, tw 5s ease-in-out infinite;}
-@keyframes drift{from{transform:translate3d(0,0,0);}to{transform:translate3d(-240px,160px,0);}}
-@keyframes tw{0%,100%{opacity:.45;}50%{opacity:.85;}}
-.nebula{position:fixed;inset:-10%;z-index:0;pointer-events:none;filter:blur(10px);opacity:.7;
-  background:
-    radial-gradient(closest-side at 18% 24%, rgba(192,132,252,.22), transparent 70%),
-    radial-gradient(closest-side at 82% 22%, rgba(56,189,248,.18), transparent 70%),
-    radial-gradient(closest-side at 60% 82%, rgba(74,222,128,.12), transparent 70%);}
-
-.wrap{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:0 clamp(14px,3vw,30px) 70px;}
-
-/* ============ HEADER ============ */
-.hub-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0 12px;
-  background:linear-gradient(180deg, rgba(11,15,25,.85), rgba(11,15,25,.2));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
-.back-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
-  font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--ink-soft);
-  background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.4);border-radius:10px;padding:9px 14px;
-  transition:background .18s,transform .12s,box-shadow .2s;}
-.back-btn:hover{background:rgba(56,189,248,.18);box-shadow:0 0 18px -6px rgba(56,189,248,.7);}
-.back-btn:active{transform:scale(.94);}
-.hub-tag{flex:1;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;}
-.currency{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:12px;
-  background:rgba(26,16,44,.55);border:1px solid rgba(192,132,252,.42);}
-.gem{position:relative;width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:8px;
-  background:radial-gradient(circle at 50% 38%, rgba(192,132,252,.5), rgba(143,123,255,.12) 68%, transparent);
-  box-shadow:0 0 16px rgba(192,132,252,.8), inset 0 0 10px rgba(192,132,252,.5);animation:gemPulse 2.4s ease-in-out infinite;}
-.gem img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
-.gem.bump{animation:gemBump .5s var(--jelly);}
-@keyframes gemPulse{0%,100%{box-shadow:0 0 13px rgba(192,132,252,.55), inset 0 0 8px rgba(192,132,252,.4);}
-  50%{box-shadow:0 0 24px rgba(192,132,252,1), inset 0 0 13px rgba(192,132,252,.7);}}
-@keyframes gemBump{0%{transform:scale(1);}40%{transform:scale(1.4);}100%{transform:scale(1);}}
-.currency .c-val{font-family:var(--font-display);font-weight:700;font-size:16px;color:#e9d7ff;}
-.lang-switch{display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
-
-/* ============ HERO ============ */
-.hero{text-align:center;padding:20px 0 6px;}
-.hero .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 12px rgba(95,211,255,.6);}
-.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4.4vw,38px);margin:8px 0 0;
-  text-shadow:0 2px 30px rgba(95,150,255,.4);}
-.hero p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:10px auto 0;max-width:560px;}
-
-/* ============ GAME GRID ============ */
-.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:22px;margin-top:30px;}
-.gcard{position:relative;display:flex;flex-direction:column;border-radius:18px;padding:20px 20px 18px;
-  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.9);
-  border:1px solid var(--neon);
-  background:linear-gradient(180deg, rgba(15,23,42,.62), rgba(15,23,42,.5));
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  box-shadow:0 22px 50px -24px rgba(0,0,0,.72), 0 0 26px -6px var(--neon), inset 0 0 34px -16px var(--neonS);
-  transition:transform .35s var(--jelly),box-shadow .35s var(--ease),border-color .35s var(--ease);}
-.gcard:hover{transform:translateY(-8px) scale(1.02);border-color:var(--neonS);
-  box-shadow:0 34px 66px -22px rgba(0,0,0,.78), 0 0 46px -2px var(--neonS), inset 0 0 40px -12px var(--neonS);}
-.gcard .hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;}
-.gcard .hud-line.top{margin-bottom:14px;}
-.gcard .hud-line .led{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s steps(1,end) infinite;margin-right:6px;}
-.gcard .hud-line .soon{color:var(--amber);}
-@keyframes blink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
-.gcard .ic{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;
-  background:var(--ic-bg,rgba(56,189,248,.16));border:1px solid var(--neon);box-shadow:inset 0 0 18px -6px var(--neon);
-  margin-bottom:14px;transition:transform .35s var(--jelly);}
-.gcard:hover .ic{transform:scale(1.1) rotate(-6deg);}
-.gcard .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
-.gcard h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
-.gcard p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 14px;flex:1;}
-.gcard .cost{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin-bottom:14px;
-  font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--purple);
-  background:rgba(192,132,252,.12);border:1px solid rgba(192,132,252,.4);padding:5px 11px;border-radius:999px;}
-.gcard .cost img{width:16px;height:16px;object-fit:contain;}
-.gcard .cost span{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;}
-/* Nút "Chơi ngay" — đồng bộ MÀU XANH cho mọi thẻ sẵn sàng */
-.play-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;width:100%;
-  padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
-  background:linear-gradient(120deg,var(--cyan),#2f80ed);box-shadow:0 12px 26px -12px rgba(56,189,248,.7);
-  transition:transform .3s var(--jelly),filter .2s;}
-.play-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
-.play-btn:active{transform:scale(.93);}
-/* Nút "Sắp ra mắt" — trong suốt (chỉ viền nét đứt mờ) */
-.play-btn.locked{background:transparent;color:var(--ink-faint);border:1px dashed rgba(120,160,255,.32);box-shadow:none;cursor:not-allowed;}
-.play-btn.locked:hover{filter:none;transform:none;}
-/* Thẻ "Sắp ra mắt" — chỉ mờ nhẹ (đã bỏ nhãn góc phải) */
-.gcard.soon{opacity:.9;}
-
-.card--gravity{--neon:rgba(56,189,248,.4);--neonS:rgba(56,189,248,.9);--ic-bg:rgba(56,189,248,.18);}
-.card--racer  {--neon:rgba(251,146,60,.42);--neonS:rgba(251,146,60,.95);--ic-bg:rgba(251,146,60,.18);}
-.card--blaster{--neon:rgba(239,68,68,.42);--neonS:rgba(239,68,68,.95);--ic-bg:rgba(239,68,68,.18);}
-.card--maze   {--neon:rgba(74,222,128,.42);--neonS:rgba(74,222,128,.95);--ic-bg:rgba(74,222,128,.18);}
-.card--catch  {--neon:rgba(255,207,107,.45);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.2);}
-.card--match  {--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
-
-/* ============ MODAL "chưa đủ" + TOAST ============ */
-.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;
-  background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
-  opacity:0;visibility:hidden;transition:opacity .3s;}
-.modal.show{opacity:1;visibility:visible;}
-.modal-card{width:100%;max-width:400px;text-align:center;padding:30px 26px 24px;border-radius:24px;
-  background:linear-gradient(180deg, rgba(16,22,40,.97), rgba(11,15,25,.98));
-  border:1px solid rgba(192,132,252,.45);box-shadow:0 24px 60px -24px rgba(0,0,0,.9), 0 0 40px -10px rgba(192,132,252,.5);}
-.modal-ic{font-size:44px;}
-.modal-card h3{font-family:var(--font-display);font-weight:700;font-size:21px;margin:12px 0 0;}
-.modal-card p{color:var(--ink-soft);font-size:14px;line-height:1.6;margin:12px 0 0;}
-.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
-.m-btn{border:1px solid var(--brd);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;
-  border-radius:14px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;transition:transform .2s var(--jelly),background .18s;}
-.m-btn:hover{background:rgba(255,255,255,.12);}
-.m-btn:active{transform:scale(.93);}
-.m-btn.primary{border:none;color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
-.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
-
-.toast{position:fixed;top:74px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:80;
-  padding:12px 20px;border-radius:999px;background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 14px 30px -14px rgba(0,0,0,.8);
-  color:var(--ink);font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-@media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
-</style>
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/games.css" />
+<script src="js/ui-common.js"></script>
 </head>
 <body>
 
@@ -205,7 +61,6 @@ a{color:inherit;text-decoration:none;}
 <script>
 (function(){
   "use strict";
-  var $ = function(id){ return document.getElementById(id); };
 
   /* ================= i18n ================= */
   var I18N = {
@@ -230,9 +85,7 @@ a{color:inherit;text-decoration:none;}
       start_toast:"🎮 Launching game…"
     }
   };
-  var LANG="vi";
-  try{ var sv=localStorage.getItem("astroq-lang"); if(sv==="en"||sv==="vi") LANG=sv;
-       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
@@ -278,7 +131,7 @@ a{color:inherit;text-decoration:none;}
     $("games").innerHTML = list.map(function(g,i){
       var soon = g.status!=="ready";
       var code = "ARCADE-"+("0"+(i+1)).slice(-2);
-      var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span style="color:var(--green)">SYS.ONLINE</span>';
+      var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span class="online">SYS.ONLINE</span>';
       var btn = soon
         ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("soon")+'</button>'
         : '<button class="play-btn" data-key="'+g.key+'">'+t("play")+'</button>';
@@ -290,7 +143,7 @@ a{color:inherit;text-decoration:none;}
         '<p>'+L(g.desc)+'</p>'+
         '<span class="cost"><img src="img/tt.png" alt="Thiên thạch tím" /><b>'+g.cost+'</b><span>'+t("per_run")+'</span></span>'+
         btn+
-        '<div class="hud-line" style="margin-top:12px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;">'+
+        '<div class="hud-line foot">'+
           '<span>DIFF: '+t("diff_"+g.diff).toUpperCase()+'</span><span>FEE: '+g.cost+'</span></div>'+
       '</article>';
     }).join("");
@@ -319,9 +172,7 @@ a{color:inherit;text-decoration:none;}
   function closeNeed(){ $("need").classList.remove("show"); }
 
   /* ================= Toast ================= */
-  var toastTimer=null;
-  function toast(msg){ var el=$("toast"); el.textContent=msg; el.classList.add("show");
-    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 2600); }
+  var toast = AstroQ.makeToast("toast", 2600);
 
   /* ================= Ngôn ngữ ================= */
   function applyLang(lang){
@@ -329,7 +180,7 @@ a{color:inherit;text-decoration:none;}
     document.documentElement.lang=LANG;
     document.title=t("title");
     document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
-    document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    AstroQ.markLangButtons(LANG);
     render();
     if($("need").classList.contains("show")) { /* giữ nguyên; sẽ cập nhật khi mở lại */ }
   }
@@ -344,11 +195,7 @@ a{color:inherit;text-decoration:none;}
   $("need-go").addEventListener("click", function(){ window.location.href="quiz.html"; });
   $("need").addEventListener("click", function(e){ if(e.target===$("need")) closeNeed(); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeNeed(); });
-  document.querySelectorAll(".lang-switch button").forEach(function(b){
-    b.addEventListener("click", function(){ var l=b.getAttribute("data-lang");
-      try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
-  });
-  window.addEventListener("storage", function(e){ if(e.key==="astroq-lang"&&(e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue); });
+  AstroQ.initLang(applyLang);
 
   /* ================= Khởi tạo ================= */
   paintBalance();

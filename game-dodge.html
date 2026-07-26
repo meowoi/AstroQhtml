@@ -5,109 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>AstroQ — Né Thiên Thạch</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/fonts.css" />
 
-<style>
-:root{
-  --bg:#0b0f19; --bg2:#0d1322;
-  --ink:#eaf1ff; --ink-soft:#a9b8e8; --ink-faint:#7f8dc4;
-  --cyan:#38bdf8; --purple:#c084fc; --green:#4ade80; --amber:#fb923c; --red:#ef4444;
-  --brd:rgba(120,160,255,.18);
-  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
-  --ease:cubic-bezier(.22,.61,.36,1); --jelly:cubic-bezier(.34,1.56,.64,1);
-}
-*{box-sizing:border-box;}
-html,body{margin:0;height:100%;}
-body{font-family:var(--font-body);color:var(--ink);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);display:flex;flex-direction:column;}
-button{font-family:inherit;}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px;}
-
-/* ===== Header ===== */
-.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px clamp(12px,3vw,24px);z-index:5;}
-.back-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;
-  color:var(--ink-soft);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.4);border-radius:10px;padding:8px 13px;
-  transition:background .18s,transform .12s;}
-.back-btn:hover{background:rgba(56,189,248,.18);}
-.back-btn:active{transform:scale(.94);}
-.top .tag{flex:1;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;}
-.currency{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:rgba(26,16,44,.55);border:1px solid rgba(192,132,252,.42);}
-.gem{position:relative;width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:8px;
-  background:radial-gradient(circle at 50% 38%, rgba(192,132,252,.5), rgba(143,123,255,.12) 68%, transparent);
-  box-shadow:0 0 14px rgba(192,132,252,.8), inset 0 0 9px rgba(192,132,252,.5);}
-.gem img{width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
-.gem.bump{animation:gemBump .5s var(--jelly);}
-@keyframes gemBump{0%{transform:scale(1);}40%{transform:scale(1.4);}100%{transform:scale(1);}}
-.currency .c-val{font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;}
-.lang-switch{display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
-
-/* ===== Sân chơi ===== */
-.stage{position:relative;flex:1;margin:0 clamp(12px,3vw,24px) clamp(12px,3vw,24px);border-radius:18px;overflow:hidden;
-  border:1px solid rgba(56,189,248,.3);
-  box-shadow:0 24px 60px -28px rgba(0,0,0,.8), 0 0 40px -16px rgba(56,189,248,.4), inset 0 0 40px -20px rgba(120,220,255,.5);
-  background:linear-gradient(180deg,#070c1a,#0a1226);cursor:default;touch-action:none;}
-canvas{display:block;width:100%;height:100%;}
-
-/* HUD trong sân */
-.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none;z-index:2;flex-wrap:wrap;}
-.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:11px;
-  background:rgba(9,14,28,.6);border:1px solid var(--brd);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
-.chip .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--ink-faint);text-transform:uppercase;}
-.chip .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;}
-.chip.mtr .v{color:#e9d7ff;}
-.chip.best{margin-left:auto;}
-.chip img{width:15px;height:15px;object-fit:contain;}
-
-/* ===== Overlay (start / over / need) ===== */
-.ov{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:18px;cursor:default;
-  background:rgba(4,6,20,.62);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-  opacity:0;visibility:hidden;transition:opacity .3s;}
-.ov.show{opacity:1;visibility:visible;}
-.ov-card{width:100%;max-width:420px;text-align:center;padding:26px 24px 22px;border-radius:22px;position:relative;
-  background:linear-gradient(180deg, rgba(16,22,40,.97), rgba(11,15,25,.98));
-  border:1px solid rgba(56,189,248,.45);box-shadow:0 26px 64px -26px rgba(0,0,0,.9), 0 0 44px -12px rgba(56,189,248,.5);
-  transform:translateY(12px) scale(.97);transition:transform .35s var(--jelly);}
-.ov.show .ov-card{transform:none;}
-.ov-tag{display:inline-flex;font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);
-  border:1px solid rgba(56,189,248,.4);border-radius:999px;padding:4px 12px;}
-.ov-ic{font-size:42px;margin-top:8px;}
-.ov-card h2{font-family:var(--font-display);font-weight:700;font-size:24px;margin:8px 0 0;}
-.ov-card p{color:var(--ink-soft);font-size:14px;line-height:1.55;margin:12px 0 0;}
-.ov-card .how{display:flex;flex-direction:column;gap:6px;margin:16px 0 0;text-align:left;font-size:13.5px;color:var(--ink-soft);}
-.ov-card .how b{color:#fff;}
-.cost{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:8px 15px;border-radius:999px;
-  font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;
-  background:rgba(192,132,252,.14);border:1px solid rgba(192,132,252,.45);}
-.cost img{width:18px;height:18px;object-fit:contain;}
-.stars{display:flex;justify-content:center;gap:8px;margin:14px 0 4px;}
-.stars .st{font-size:38px;line-height:1;filter:grayscale(1) brightness(.5);transform:scale(.72);opacity:.5;
-  transition:transform .4s var(--jelly),filter .4s,opacity .4s;}
-.stars .st.on{filter:none;transform:scale(1);opacity:1;text-shadow:0 0 18px rgba(251,191,36,.9);}
-.res{display:flex;gap:12px;margin:14px 0 2px;}
-.res .cell{flex:1;padding:11px;border-radius:13px;background:rgba(15,23,42,.5);border:1px solid var(--brd);}
-.res .cell .rv{font-family:var(--font-display);font-weight:700;font-size:20px;color:#fff;}
-.res .cell .rl{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;margin-top:2px;}
-.res .cell.mtr .rv{color:#e9d7ff;}
-.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
-.acts button{flex:1;min-width:110px;cursor:pointer;border-radius:14px;padding:13px 12px;font-family:var(--font-display);font-weight:600;font-size:14px;
-  border:1px solid var(--brd);background:rgba(255,255,255,.06);color:var(--ink);transition:transform .2s var(--jelly),filter .2s,background .2s;}
-.acts button:hover{background:rgba(255,255,255,.12);}
-.acts button:active{transform:scale(.94);}
-.acts .primary{border:none;color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);}
-.acts .primary:hover{filter:brightness(1.08);}
-.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
-
-.toast{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-12px);z-index:20;
-  padding:10px 18px;border-radius:999px;background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);
-  color:var(--ink);font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-</style>
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-dodge.css" />
+<script src="js/ui-common.js"></script>
 </head>
 <body>
 
@@ -205,7 +107,6 @@ canvas{display:block;width:100%;height:100%;}
 <script>
 (function(){
   "use strict";
-  var $ = function(id){ return document.getElementById(id); };
   var COST = 5;                 // Thiên thạch tím mỗi lượt
   var BEST_KEY = "astroq-dodge-best";
 
@@ -242,9 +143,7 @@ canvas{display:block;width:100%;height:100%;}
       resume:"Keep playing", to_hub:"Back to Arcade"
     }
   };
-  var LANG="vi";
-  try{ var sv=localStorage.getItem("astroq-lang"); if(sv==="en"||sv==="vi") LANG=sv;
-       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
 
   /* ===== Âm thanh ===== */
@@ -447,17 +346,13 @@ canvas{display:block;width:100%;height:100%;}
     document.documentElement.lang=LANG; document.title=t("title");
     document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(function(el){ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
-    document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    AstroQ.markLangButtons(LANG);
     if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
     if($("ov-need").classList.contains("show")) showNeed();
   }
 
   /* ===== Toast (icon = ảnh Thiên thạch tím qua token {tt}) ===== */
-  var toastTimer=null;
-  function toast(msg){ var el=$("toast");
-    el.innerHTML=String(msg).replace(/\{tt\}/g, "<img class='tt-inline' src='img/tt.png' alt='tt'/>");
-    el.classList.add("show");
-    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 1600); }
+  var toast = AstroQ.makeToast("toast", 1600);
 
   /* ===== Điều khiển (chỉ bàn phím, không dùng chuột) ===== */
   document.addEventListener("keydown", function(e){
@@ -487,11 +382,7 @@ canvas{display:block;width:100%;height:100%;}
   $("need-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
   $("resume-btn").addEventListener("click", resumeGame);
   $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
-  document.querySelectorAll(".lang-switch button").forEach(function(b){
-    b.addEventListener("click", function(){ var l=b.getAttribute("data-lang");
-      try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
-  });
-  window.addEventListener("storage", function(e){ if(e.key==="astroq-lang"&&(e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue); });
+  AstroQ.initLang(applyLang);
   // Tạm dừng khi rời tab để tránh nhảy khung
   document.addEventListener("visibilitychange", function(){ if(!document.hidden) last=0; });
 

@@ -1,0 +1,41 @@
+/* ==========================================================
+   common.css - CSS dung chung cho moi trang AstroQ.
+   Moi trang: <link common.css> roi <link css/<trang>.css>
+   (file rieng load sau nen van override duoc).
+   ========================================================== */
+:root{--ink:#eaf1ff;--ink-soft:#a9b8e8;--ink-faint:#7f8dc4;--ease:cubic-bezier(.22,.61,.36,1);}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{font-family:var(--font-body);color:var(--ink);-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;}
+a{color:inherit;}
+:focus-visible{outline-offset:3px;border-radius:8px;}
+.starfield{position:fixed;inset:-40%;z-index:0;pointer-events:none;background-repeat:repeat;background-size:520px 520px;}
+@keyframes drift{from{transform:translate3d(0,0,0);}to{transform:translate3d(-240px,160px,0);}}
+.nebula{position:fixed;inset:-10%;z-index:0;pointer-events:none;}
+@keyframes tw{0%,100%{opacity:.45;}50%{opacity:.85;}}
+.back-btn{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.4);border-radius:10px;}
+.back-btn:hover{background:rgba(56,189,248,.18);}
+.lic{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex:none;}
+.back-btn:active{transform:scale(.94);}
+.currency{display:inline-flex;align-items:center;gap:8px;border-radius:12px;background:rgba(26,16,44,.55);border:1px solid rgba(192,132,252,.42);}
+.gem{position:relative;flex:none;display:grid;place-items:center;border-radius:8px;background:radial-gradient(circle at 50% 38%, rgba(192,132,252,.5), rgba(143,123,255,.12) 68%, transparent);}
+.gem.bump{animation:gemBump .5s var(--jelly);}
+canvas{display:block;}
+.currency .c-val{font-family:var(--font-display);font-weight:700;color:#e9d7ff;}
+@keyframes gemBump{0%{transform:scale(1);}40%{transform:scale(1.4);}100%{transform:scale(1);}}
+.lang-switch{display:inline-flex;gap:2px;padding:4px;border-radius:999px;}
+.hero .eyebrow{font-family:var(--font-mono);letter-spacing:.28em;text-transform:uppercase;text-shadow:0 0 12px rgba(95,211,255,.6);}
+@keyframes blink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;}
+.modal.show{opacity:1;visibility:visible;}
+.modal-actions{display:flex;gap:10px;justify-content:center;}
+.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
+.toast{position:fixed;left:50%;border-radius:999px;color:var(--ink);font-weight:600;opacity:0;pointer-events:none;}
+.toast .toast-msg{display:inline-flex;align-items:center;gap:2px;}
+.toast .toast-ic{width:20px;height:20px;flex:none;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.toast .toast-ic circle{opacity:.9;}
+.toast .toast-ic.ok{stroke:var(--good,#63e6a8);filter:drop-shadow(0 0 6px rgba(99,230,168,.7));}
+.toast .toast-ic.bad{stroke:#ff8a8a;filter:drop-shadow(0 0 6px rgba(255,120,120,.6));}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important;} }

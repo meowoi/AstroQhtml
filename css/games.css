@@ -1,0 +1,109 @@
+/* games.css - CSS rieng cua games.html (dung chung: css/common.css) */
+:root{--bg:#0b0f19;--bg2:#0d1322;--cyan:#38bdf8;--purple:#c084fc;--green:#4ade80;--amber:#fb923c;--red:#ef4444;--brd:rgba(120,160,255,.18);--font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;--font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;--jelly:cubic-bezier(.34,1.56,.64,1);}
+html,body{min-height:100%;}
+body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);}
+a{text-decoration:none;}
+:focus-visible{outline:2px solid var(--cyan);}
+
+.starfield{opacity:.7;background-image:
+    radial-gradient(1.3px 1.3px at 20% 30%, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 80% 20%, #dcecff, transparent),
+    radial-gradient(1px 1px at 60% 70%, #cfe0ff, transparent),
+    radial-gradient(1.1px 1.1px at 40% 85%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 55%, #bcd0ff, transparent);animation:drift 160s linear infinite, tw 5s ease-in-out infinite;}
+.nebula{filter:blur(10px);opacity:.7;background:
+    radial-gradient(closest-side at 18% 24%, rgba(192,132,252,.22), transparent 70%),
+    radial-gradient(closest-side at 82% 22%, rgba(56,189,248,.18), transparent 70%),
+    radial-gradient(closest-side at 60% 82%, rgba(74,222,128,.12), transparent 70%);}
+
+.wrap{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:0 clamp(14px,3vw,30px) 70px;}
+
+/* ============ HEADER ============ */
+.hub-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0 12px;
+  background:linear-gradient(180deg, rgba(11,15,25,.85), rgba(11,15,25,.2));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+.back-btn{letter-spacing:.08em;padding:9px 14px;transition:background .18s,transform .12s,box-shadow .2s;}
+.back-btn:hover{box-shadow:0 0 18px -6px rgba(56,189,248,.7);}
+.hub-tag{flex:1;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;}
+.currency{padding:7px 13px;}
+.gem{width:26px;height:26px;box-shadow:0 0 16px rgba(192,132,252,.8), inset 0 0 10px rgba(192,132,252,.5);animation:gemPulse 2.4s ease-in-out infinite;}
+.gem img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
+@keyframes gemPulse{0%,100%{box-shadow:0 0 13px rgba(192,132,252,.55), inset 0 0 8px rgba(192,132,252,.4);}
+  50%{box-shadow:0 0 24px rgba(192,132,252,1), inset 0 0 13px rgba(192,132,252,.7);}}
+.currency .c-val{font-size:16px;}
+.lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
+.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
+.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+
+/* ============ HERO ============ */
+.hero{text-align:center;padding:20px 0 6px;}
+.hero .eyebrow{font-size:12px;color:var(--cyan);}
+.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4.4vw,38px);margin:8px 0 0;
+  text-shadow:0 2px 30px rgba(95,150,255,.4);}
+.hero p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:10px auto 0;max-width:560px;}
+
+/* ============ GAME GRID ============ */
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:22px;margin-top:30px;}
+.gcard{position:relative;display:flex;flex-direction:column;border-radius:18px;padding:20px 20px 18px;
+  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.9);
+  border:1px solid var(--neon);
+  background:linear-gradient(180deg, rgba(15,23,42,.62), rgba(15,23,42,.5));
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 22px 50px -24px rgba(0,0,0,.72), 0 0 26px -6px var(--neon), inset 0 0 34px -16px var(--neonS);
+  transition:transform .35s var(--jelly),box-shadow .35s var(--ease),border-color .35s var(--ease);}
+.gcard:hover{transform:translateY(-8px) scale(1.02);border-color:var(--neonS);
+  box-shadow:0 34px 66px -22px rgba(0,0,0,.78), 0 0 46px -2px var(--neonS), inset 0 0 40px -12px var(--neonS);}
+.gcard .hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;}
+.gcard .hud-line.top{margin-bottom:14px;}
+.gcard .hud-line.foot{margin-top:12px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;}
+.gcard .hud-line .led{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s steps(1,end) infinite;margin-right:6px;}
+.gcard .hud-line .soon{color:var(--amber);}
+.gcard .hud-line .online{color:var(--green);}
+.gcard .ic{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;
+  background:var(--ic-bg,rgba(56,189,248,.16));border:1px solid var(--neon);box-shadow:inset 0 0 18px -6px var(--neon);
+  margin-bottom:14px;transition:transform .35s var(--jelly);}
+.gcard:hover .ic{transform:scale(1.1) rotate(-6deg);}
+.gcard .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
+.gcard h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
+.gcard p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 14px;flex:1;}
+.gcard .cost{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin-bottom:14px;
+  font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--purple);
+  background:rgba(192,132,252,.12);border:1px solid rgba(192,132,252,.4);padding:5px 11px;border-radius:999px;}
+.gcard .cost img{width:16px;height:16px;object-fit:contain;}
+.gcard .cost span{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;}
+/* Nút "Chơi ngay" — đồng bộ MÀU XANH cho mọi thẻ sẵn sàng */
+.play-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;width:100%;
+  padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
+  background:linear-gradient(120deg,var(--cyan),#2f80ed);box-shadow:0 12px 26px -12px rgba(56,189,248,.7);
+  transition:transform .3s var(--jelly),filter .2s;}
+.play-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
+.play-btn:active{transform:scale(.93);}
+/* Nút "Sắp ra mắt" — trong suốt (chỉ viền nét đứt mờ) */
+.play-btn.locked{background:transparent;color:var(--ink-faint);border:1px dashed rgba(120,160,255,.32);box-shadow:none;cursor:not-allowed;}
+.play-btn.locked:hover{filter:none;transform:none;}
+/* Thẻ "Sắp ra mắt" — chỉ mờ nhẹ (đã bỏ nhãn góc phải) */
+.gcard.soon{opacity:.9;}
+
+.card--gravity{--neon:rgba(56,189,248,.4);--neonS:rgba(56,189,248,.9);--ic-bg:rgba(56,189,248,.18);}
+.card--racer  {--neon:rgba(251,146,60,.42);--neonS:rgba(251,146,60,.95);--ic-bg:rgba(251,146,60,.18);}
+.card--blaster{--neon:rgba(239,68,68,.42);--neonS:rgba(239,68,68,.95);--ic-bg:rgba(239,68,68,.18);}
+.card--maze   {--neon:rgba(74,222,128,.42);--neonS:rgba(74,222,128,.95);--ic-bg:rgba(74,222,128,.18);}
+.card--catch  {--neon:rgba(255,207,107,.45);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.2);}
+.card--match  {--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
+
+/* ============ MODAL "chưa đủ" + TOAST ============ */
+.modal{z-index:60;padding:20px;background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s;}
+.modal-card{width:100%;max-width:400px;text-align:center;padding:30px 26px 24px;border-radius:24px;
+  background:linear-gradient(180deg, rgba(16,22,40,.97), rgba(11,15,25,.98));
+  border:1px solid rgba(192,132,252,.45);box-shadow:0 24px 60px -24px rgba(0,0,0,.9), 0 0 40px -10px rgba(192,132,252,.5);}
+.modal-ic{font-size:44px;}
+.modal-card h3{font-family:var(--font-display);font-weight:700;font-size:21px;margin:12px 0 0;}
+.modal-card p{color:var(--ink-soft);font-size:14px;line-height:1.6;margin:12px 0 0;}
+.modal-actions{flex-wrap:wrap;margin-top:22px;}
+.m-btn{border:1px solid var(--brd);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;
+  border-radius:14px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;transition:transform .2s var(--jelly),background .18s;}
+.m-btn:hover{background:rgba(255,255,255,.12);}
+.m-btn:active{transform:scale(.93);}
+.m-btn.primary{border:none;color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+
+.toast{top:74px;transform:translateX(-50%) translateY(-14px);z-index:80;padding:12px 20px;background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 14px 30px -14px rgba(0,0,0,.8);font-size:14px;transition:opacity .3s,transform .3s;}

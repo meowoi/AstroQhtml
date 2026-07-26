@@ -5,319 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AstroQ — Bảng điều khiển Người chơi</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/fonts.css" />
 
-<style>
-/* ---- Tokens ---- */
-:root{
-  --ink:#eaf1ff; --ink-soft:#a9b8e8; --ink-faint:#7f8dc4;
-  --glass:rgba(16,26,60,0.55); --glass-strong:rgba(12,20,50,0.78);
-  --glass-brd:rgba(150,180,255,0.18); --glass-brd-strong:rgba(160,190,255,0.4);
-  --sun:#ffcf6b; --sun-warm:#ff9d3d; --accent:#5fd3ff; --accent-2:#8f7bff; --good:#63e6a8;
-  --shadow-soft:0 18px 50px -18px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.4);
-  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
-  --ease:cubic-bezier(.22,.61,.36,1);
-  --jelly:cubic-bezier(.34,1.56,.64,1);
-}
-*{box-sizing:border-box;}
-html,body{margin:0;min-height:100%;}
-body{font-family:var(--font-body);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  background:#060c22;}
-/* NỀN: ảnh khoang tàu (background/Khoangluna.png) phủ kín màn hình */
-.bg-photo{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url("background/Khoangluna.png") center center / cover no-repeat;}
-/* Lớp phủ tối nhẹ để chữ + card nổi rõ trên nền ảnh */
-.bg-photo::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(6,12,34,.45) 0%, rgba(6,12,34,.28) 40%, rgba(6,12,34,.55) 100%);}
-a{color:inherit;text-decoration:none;}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px;}
-
-/* ============================================================
-   HEADER = BẢNG TRẠNG THÁI TÀU
-   ============================================================ */
-.statusbar{
-  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  padding:12px clamp(20px,4vw,54px);
-  background:linear-gradient(180deg, rgba(10,16,44,.9), rgba(10,16,44,.55));
-  border-bottom:1px solid rgba(95,211,255,.25);
-  box-shadow:0 6px 30px -14px rgba(0,0,0,.8), inset 0 -1px 0 rgba(95,211,255,.12);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-}
-.ship-id{display:flex;align-items:center;gap:11px;}
-.ship-id .mark{width:34px;height:34px;border-radius:11px;flex:none;
-  background:radial-gradient(circle at 32% 28%, #fff2cf, var(--sun) 45%, var(--sun-warm) 90%);box-shadow:0 0 20px rgba(255,175,80,.6);}
-.ship-id b{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.02em;}
-.ship-id .hull{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--good);border:1px solid rgba(99,230,168,.35);padding:2px 7px;border-radius:6px;}
-
-.gauges{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;flex-wrap:wrap;}
-.gauge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:12px;
-  background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
-.gauge .g-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-faint);}
-.gauge img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(143,123,255,.6));}
-.gauge .g-val{font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff;}
-.gauge .g-val.mono{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--accent);}
-.gauge .bar{position:relative;width:52px;height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;}
-.gauge .bar i{position:absolute;inset:0;width:50%;border-radius:6px;display:block;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s var(--ease);}
-.gauge.o2 .bar i{background:linear-gradient(90deg,#63e6a8,#3fd6c9);}
-.gauge.fuel{border-color:rgba(192,132,252,.42);background:rgba(26,16,44,.55);}
-.gauge.fuel .g-val{color:#e6d3ff;}
-/* Huy hiệu "Thiên thạch tím" — gem tím phát sáng */
-.gem-badge{position:relative;width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:8px;
-  background:radial-gradient(circle at 50% 38%, rgba(192,132,252,.45), rgba(143,123,255,.12) 68%, transparent);
-  box-shadow:0 0 14px rgba(192,132,252,.7), inset 0 0 10px rgba(192,132,252,.4);animation:gemPulse 2.6s ease-in-out infinite;}
-.gem-badge img{width:17px;height:17px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
-@keyframes gemPulse{0%,100%{box-shadow:0 0 12px rgba(192,132,252,.5), inset 0 0 8px rgba(192,132,252,.35);}
-  50%{box-shadow:0 0 22px rgba(192,132,252,.95), inset 0 0 13px rgba(192,132,252,.6);}}
-/* Flight Streak — hổ phách phát sáng */
-.gauge.streak{border-color:rgba(251,146,60,.42);background:rgba(38,22,8,.55);}
-.gauge.streak .g-val{color:#ffd7a6;}
-.gauge.streak .streak-ic{color:#fb923c;display:inline-flex;font-size:16px;
-  filter:drop-shadow(0 0 8px rgba(251,146,60,.9));animation:flameFlick 1.5s ease-in-out infinite;}
-.gauge.streak .streak-unit{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#eaa668;}
-@keyframes flameFlick{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-1px) scale(1.09);}}
-
-.controls{display:flex;align-items:center;gap:10px;}
-.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;transition:background .2s,color .2s;}
-.lang-switch button:hover{color:var(--ink);}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
-.user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
-.user .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(56,189,248,.4);}
-.user .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
-.user .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:5px;}
-.user .meta .nm{font-family:var(--font-display);font-weight:600;font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user .meta .role{font-family:var(--font-mono);font-size:9px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;}
-.logout-btn{flex:none;cursor:pointer;border:1px solid var(--glass-brd);background:rgba(255,255,255,.05);color:var(--ink-soft);
-  border-radius:999px;padding:8px 13px;font-family:var(--font-display);font-weight:600;font-size:12px;transition:background .16s,color .16s,border-color .16s,transform .1s;}
-.logout-btn:hover{background:rgba(255,120,120,.16);border-color:rgba(255,120,120,.4);color:var(--ink);}
-.logout-btn:active{transform:scale(.95);}
-
-/* ============================================================
-   MAIN
-   ============================================================ */
-main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(18px,3vw,34px) clamp(20px,4vw,54px) 70px;}
-
-/* ---- HERO: tiêu đề chào mừng (đưa lên sát mép khung kính) ---- */
-.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 0 6px;}
-.hero .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 12px rgba(95,211,255,.6);}
-.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4.4vw,40px);margin:8px 0 0;line-height:1.1;
-  text-shadow:0 2px 30px rgba(95,150,255,.4);}
-.hero p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:10px 0 0;max-width:560px;}
-
-/* ============================================================
-   STATS HUD — Tiến trình học tập & Gamification
-   ============================================================ */
-/* Icon lucide-style (kế thừa currentColor + font-size) */
-.lic{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex:none;}
-@keyframes spin{to{transform:rotate(360deg);}}
-@keyframes barFlow{from{background-position:0 0;}to{background-position:200% 0;}}
-
-.stats-hud{position:relative;z-index:1;margin:26px auto 0;width:min(880px,100%);
-  display:grid;grid-template-columns:1.12fr 1fr;gap:16px;padding:20px 18px 18px;border-radius:20px;
-  border:1px solid rgba(56,189,248,.32);
-  background:linear-gradient(180deg, rgba(11,15,25,.62), rgba(13,19,34,.5));
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
-  box-shadow:0 26px 62px -26px rgba(0,0,0,.78), 0 0 46px -14px rgba(56,189,248,.4), inset 0 0 32px -18px rgba(120,220,255,.6);}
-@media(max-width:640px){.stats-hud{grid-template-columns:1fr;}}
-.stats-hud .panel-tag{position:absolute;top:-10px;left:20px;display:inline-flex;align-items:center;gap:6px;
-  font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
-  background:#0b0f19;border:1px solid rgba(56,189,248,.42);padding:3px 10px;border-radius:999px;box-shadow:0 0 14px rgba(56,189,248,.35);}
-.stats-hud .panel-tag .led{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1.6s steps(1,end) infinite;}
-
-/* --- Cột trái: Tiến trình hành tinh / thiên hà --- */
-.sh-left{display:flex;flex-direction:column;gap:13px;padding:6px 16px 2px 4px;border-right:1px solid rgba(120,160,255,.14);}
-@media(max-width:640px){.sh-left{border-right:none;border-bottom:1px solid rgba(120,160,255,.14);padding:6px 0 14px;}}
-.xp-head{display:flex;align-items:center;gap:12px;}
-.xp-orb{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:22px;color:var(--accent);
-  background:rgba(56,189,248,.14);border:1px solid rgba(56,189,248,.42);box-shadow:inset 0 0 16px -6px rgba(56,189,248,.9);}
-.xp-orb .lic{animation:spin 16s linear infinite;}
-.xp-title{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
-.xp-level{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;margin-top:1px;}
-.xp-level #planet-name{color:var(--accent);}
-.xp-bar{position:relative;height:10px;border-radius:8px;background:rgba(255,255,255,.09);overflow:hidden;box-shadow:inset 0 0 8px rgba(0,0,0,.5);}
-.xp-bar i{position:absolute;inset:0;width:0;border-radius:8px;display:block;
-  background:linear-gradient(90deg,var(--accent),#c084fc);background-size:200% 100%;
-  box-shadow:0 0 14px rgba(192,132,252,.7);transition:width .85s var(--ease);animation:barFlow 3.5s linear infinite;}
-.xp-meta{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-soft);}
-.xp-meta b{color:#c084fc;font-weight:700;}
-.galaxy-row{display:flex;align-items:center;gap:9px;margin-top:2px;padding-top:12px;border-top:1px dashed rgba(150,180,255,.18);}
-.galaxy-row .lic{color:#c084fc;font-size:18px;filter:drop-shadow(0 0 6px rgba(192,132,252,.7));}
-.galaxy-row .gx-txt{font-size:13px;color:var(--ink-soft);}
-.galaxy-row .gx-txt b{color:#fff;font-family:var(--font-display);}
-.gx-pips{display:flex;gap:4px;margin-left:auto;}
-.gx-pips span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(120,160,255,.3);}
-.gx-pips span.on{background:radial-gradient(circle,#c084fc,#8f7bff);box-shadow:0 0 8px rgba(192,132,252,.85);border-color:transparent;}
-
-/* --- Cột phải: 3 mini stat tiles --- */
-.sh-right{display:grid;grid-template-columns:1fr;gap:10px;}
-.stat-tile{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;
-  border:1px solid rgba(120,160,255,.18);background:rgba(15,23,42,.44);
-  transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
-.stat-tile:hover{transform:translateY(-3px);border-color:var(--tile-brd);
-  box-shadow:0 12px 26px -14px rgba(0,0,0,.7), 0 0 22px -6px var(--tile-glow);}
-.stat-tile .st-ic{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:19px;
-  color:var(--tile-c);background:var(--tile-bg);border:1px solid var(--tile-brd);box-shadow:inset 0 0 14px -6px var(--tile-c);}
-.stat-tile .st-body{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
-.stat-tile .st-val{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;}
-.stat-tile .st-lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tile-time{--tile-c:#38bdf8;--tile-bg:rgba(56,189,248,.14);--tile-brd:rgba(56,189,248,.42);--tile-glow:rgba(56,189,248,.6);}
-.tile-acc{--tile-c:#fb923c;--tile-bg:rgba(251,146,60,.14);--tile-brd:rgba(251,146,60,.42);--tile-glow:rgba(251,146,60,.6);}
-.tile-badge{--tile-c:#c084fc;--tile-bg:rgba(192,132,252,.14);--tile-brd:rgba(192,132,252,.42);--tile-glow:rgba(192,132,252,.6);}
-
-/* ============================================================
-   CONSOLE DƯỚI — Radar kỹ năng + Nhật ký hoạt động
-   ============================================================ */
-.console-row{display:grid;grid-template-columns:310px 1fr;gap:22px;margin-top:26px;}
-@media(max-width:760px){.console-row{grid-template-columns:1fr;}}
-.console{position:relative;border-radius:16px;padding:15px 18px 17px;
-  border:1px solid rgba(52,211,153,.3);
-  background:linear-gradient(180deg, rgba(6,16,20,.66), rgba(8,18,26,.5));
-  -webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);
-  box-shadow:0 22px 48px -24px rgba(0,0,0,.78), inset 0 0 32px -16px rgba(52,211,153,.55);}
-.console .con-tag{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#5ff2c0;}
-.console .con-tag .b{color:rgba(120,255,210,.55);}
-/* Radar */
-.radar-wrap{display:grid;place-items:center;padding:6px 0 2px;}
-.radar-svg{width:100%;max-width:236px;height:auto;overflow:visible;filter:drop-shadow(0 0 10px rgba(52,211,153,.35));}
-.rr-ring{fill:none;stroke:rgba(95,240,192,.16);stroke-width:1;}
-.rr-axis{stroke:rgba(95,240,192,.2);stroke-width:1;}
-.rr-fill{fill:rgba(56,189,248,.22);stroke:#38bdf8;stroke-width:1.6;filter:drop-shadow(0 0 6px rgba(56,189,248,.85));}
-.rr-dot{fill:#c084fc;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
-.rr-label{fill:#9fe9d4;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;}
-.rr-sweep-g{transform-box:view-box;transform-origin:100px 100px;animation:radarSweep 4s linear infinite;}
-.rr-wedge{fill:rgba(95,240,192,.14);}
-.rr-sweep{stroke:rgba(120,255,210,.9);stroke-width:1.4;filter:drop-shadow(0 0 6px rgba(95,240,192,.95));}
-@keyframes radarSweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-/* Nhật ký */
-.log-list{display:flex;flex-direction:column;}
-.log-item{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid rgba(120,160,255,.1);}
-.log-item:last-child{border-bottom:none;}
-.log-item .lg-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:15px;color:#5ff2c0;
-  background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.32);}
-.log-item .lg-body{flex:1;min-width:0;}
-.log-item .lg-text{font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.log-item .lg-time{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;}
-
-/* ---- CARDS = MÀN HÌNH HUD SCI-FI ---- */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;margin-top:34px;}
-.hud{
-  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.95);
-  position:relative;display:flex;flex-direction:column;
-  border-radius:16px;padding:20px 22px;
-  border:1px solid var(--neon);
-  /* Kính mờ bán trong suốt + 4 góc neon sci-fi (8 vạch) */
-  background:
-    linear-gradient(var(--neonS),var(--neonS)) left 12px top 12px/17px 2px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) left 12px top 12px/2px 17px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) right 12px top 12px/17px 2px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) right 12px top 12px/2px 17px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) left 12px bottom 12px/17px 2px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) left 12px bottom 12px/2px 17px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) right 12px bottom 12px/17px 2px no-repeat,
-    linear-gradient(var(--neonS),var(--neonS)) right 12px bottom 12px/2px 17px no-repeat,
-    linear-gradient(180deg, rgba(15,23,42,.66), rgba(15,23,42,.5));
-  box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 26px -4px var(--neon), inset 0 0 34px -14px var(--neonS);
-  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
-  transition:transform .35s var(--jelly), box-shadow .35s var(--ease), border-color .35s var(--ease);
-  animation:hudPulse 4s ease-in-out infinite;
-}
-@keyframes hudPulse{0%,100%{box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 20px -6px var(--neon), inset 0 0 34px -16px var(--neonS);}
-  50%{box-shadow:0 22px 50px -24px rgba(0,0,0,.7), 0 0 34px -2px var(--neon), inset 0 0 40px -12px var(--neonS);}}
-/* Lưới tech mờ */
-.hud::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;border-radius:inherit;
-  background-image:linear-gradient(rgba(120,160,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(120,160,255,.06) 1px, transparent 1px);
-  background-size:22px 22px;-webkit-mask:linear-gradient(180deg,#000,transparent 78%);mask:linear-gradient(180deg,#000,transparent 78%);}
-.hud:hover{transform:translateY(-8px) scale(1.02);border-color:rgba(125,211,252,.85);
-  box-shadow:0 34px 66px -22px rgba(0,0,0,.75), 0 0 50px 0 var(--neonS), inset 0 0 44px -10px var(--neonS);animation:none;}
-
-.hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;}
-.hud-line.top{margin-bottom:14px;}
-.hud-line.bot{margin-top:16px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;}
-.hud-line .ok{color:var(--good);}
-.hud-line .led{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1.6s steps(1,end) infinite;margin-right:6px;}
-@keyframes blink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
-
-.hud .ic{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:28px;
-  background:var(--ic-bg, rgba(95,211,255,.16));border:1px solid var(--neon);box-shadow:inset 0 0 18px -6px var(--neon);
-  margin-bottom:14px;transition:transform .35s var(--jelly);}
-.hud:hover .ic{transform:scale(1.1) rotate(-6deg);}
-.hud .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
-.hud h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
-.hud p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:11px 0 16px;flex:1;}
-.hud .cost{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--sun);
-  background:rgba(255,207,107,.12);border:1px solid rgba(255,207,107,.3);padding:5px 11px;border-radius:999px;margin-bottom:14px;align-self:flex-start;}
-.hud .cost img{width:16px;height:16px;object-fit:contain;}
-.hud .cost span{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;}
-
-/* Viền/góc neon dùng chung màu cyan (rgba(56,189,248,...)); chỉ đổi tông icon + nút cho từng khu vực */
-.card--quiz{--ic-bg:rgba(56,189,248,.18);}
-.card--game{--ic-bg:rgba(255,157,61,.18);}
-.card--map {--ic-bg:rgba(143,123,255,.2);}
-
-.jelly-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;width:100%;
-  padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
-  background:linear-gradient(120deg,var(--accent),var(--accent-2));box-shadow:0 12px 26px -12px var(--neon);
-  transition:transform .3s var(--jelly),filter .2s;}
-.card--game .jelly-btn{background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
-.card--map .jelly-btn{background:linear-gradient(120deg,#a48bff,var(--accent-2));}
-.jelly-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
-.jelly-btn:active{transform:scale(.93);}
-
-/* ============ MODALS + TOAST ============ */
-.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;
-  background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
-  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),visibility .3s;}
-.modal.show{opacity:1;visibility:visible;pointer-events:auto;}
-.modal-card{width:100%;max-width:420px;text-align:center;position:relative;
-  background:var(--glass-strong);border:1px solid var(--glass-brd-strong);
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
-  border-radius:26px;box-shadow:var(--shadow-soft), 0 0 40px -8px rgba(95,211,255,.4);padding:32px 28px 24px;
-  transform:translateY(12px) scale(.96);transition:transform .35s var(--jelly);}
-.modal.show .modal-card{transform:none;}
-.modal-ic{font-size:44px;line-height:1;}
-.modal-card h3{font-family:var(--font-display);font-weight:700;font-size:22px;margin:12px 0 0;}
-.modal-card p{color:var(--ink-soft);font-size:14px;line-height:1.6;margin:12px 0 0;}
-.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
-.m-btn{border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink);cursor:pointer;
-  border-radius:16px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;
-  transition:transform .25s var(--jelly),background .16s,border-color .16s;}
-.m-btn:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
-.m-btn:active{transform:scale(.93);}
-.m-btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#04060f;border-color:transparent;}
-.tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
-
-
-.toast{position:fixed;top:96px;left:50%;z-index:70;transform:translateX(-50%) translateY(-14px);
-  display:inline-flex;align-items:center;gap:9px;
-  padding:12px 20px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--glass-brd-strong);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--shadow-soft);
-  color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap;
-  opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast .toast-msg{display:inline-flex;align-items:center;gap:2px;}
-.toast .toast-ic{width:20px;height:20px;flex:none;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-.toast .toast-ic circle{opacity:.9;}
-.toast .toast-ic.ok{stroke:var(--good);filter:drop-shadow(0 0 6px rgba(99,230,168,.7));}
-.toast .toast-ic.bad{stroke:#ff8a8a;filter:drop-shadow(0 0 6px rgba(255,120,120,.6));}
-
-@media (max-width:720px){
-  .gauges{order:3;width:100%;justify-content:flex-start;}
-  .hero p{max-width:100%;}
-}
-@media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
-</style>
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+<script src="js/icons.js"></script>
+<script src="js/ui-common.js"></script>
 </head>
 <body>
 
-<!-- Nền: ảnh khoang tàu Khoangluna.png -->
-<div class="bg-photo" aria-hidden="true"></div>
+<!-- Nền: ảnh khoang lái. Dùng <picture> thay vì background-image trong CSS để:
+     · trình duyệt tự chọn AVIF (99 KB) hay WebP (149 KB) tuỳ khả năng hỗ trợ
+     · tự chọn bản 1280 hay 1920 theo bề rộng thật cần phủ (sizes bên dưới)
+     · fetchpriority="high" cho tải sớm — ảnh nền khai báo trong CSS bị phát hiện muộn.
+     sizes="max(100vw,153vh)" = bề rộng ảnh sau khi object-fit:cover phủ kín màn hình
+     (tỉ lệ ảnh 1920/1253 ≈ 1,53) nên màn dọc/điện thoại vẫn nhận bản đủ nét.
+     Kiểu dáng + lớp phủ tối: css/dashboard.css (.bg-photo) -->
+<div class="bg-photo" aria-hidden="true">
+  <picture>
+    <source type="image/avif" sizes="max(100vw,153vh)"
+            srcset="background/Khoangluna-1280.avif 1280w, background/Khoangluna-1920.avif 1920w" />
+    <source type="image/webp" sizes="max(100vw,153vh)"
+            srcset="background/Khoangluna-1280.webp 1280w, background/Khoangluna-1920.webp 1920w" />
+    <img src="background/Khoangluna-1920.webp" alt="" width="1920" height="1253"
+         fetchpriority="high" decoding="async" />
+  </picture>
+</div>
 
 <!-- ============ HEADER = BẢNG TRẠNG THÁI TÀU ============ -->
 <header class="statusbar">
@@ -469,7 +182,6 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 (function(){
   "use strict";
   var GAME_COST = 5;
-  var $ = function(id){ return document.getElementById(id); };
 
   /* ============ i18n (đồng bộ với astroq-lang) ============ */
   var I18N = {
@@ -526,13 +238,10 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
       title:"AstroQ — Player Dashboard"
     }
   };
-  var LANG = "vi";
-  try{ var sv=localStorage.getItem("astroq-lang"); if(sv==="en"||sv==="vi") LANG=sv;
-       else if((navigator.language||"vi").toLowerCase().indexOf("en")===0) LANG="en"; }catch(e){}
+  var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
 
-  function getUser(){ try{ return JSON.parse(localStorage.getItem("astroq-user")||"null"); }catch(e){ return null; } }
-  function userName(){ var u=getUser(); return (u&&(u.name||u.email))||t("guest"); }
+  function userName(){ var u=AstroQ.getUser(); return (u&&(u.name||u.email))||t("guest"); }
 
   /* ============================================================
      THỐNG KÊ HỌC TẬP & GAMIFICATION
@@ -561,18 +270,6 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
     ]
   };
   try{ if(window.AstroQStats) STATS = window.AstroQStats; }catch(e){}
-
-  /* ---- Icon lucide-style (inline SVG, kế thừa currentColor) ---- */
-  var LIC = {
-    sparkles:'<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
-    clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-    award:'<circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/>',
-    orbit:'<circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 21.9a10 10 0 0 0 9.94-15.42M13.5 2.1a10 10 0 0 0-9.84 15.42"/>'
-  };
-  function lic(name, cls){
-    return '<svg class="lic '+(cls||"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LIC[name]||"")+'</svg>';
-  }
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
   /* ---- Số dư Thiên thạch tím = nhiên liệu ---- */
@@ -644,11 +341,11 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
     document.documentElement.lang = LANG;
     document.title = t("title");
     document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
-    document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
+    AstroQ.markLangButtons(LANG);
     var name = userName();
     $("user-name").textContent = name;
     // Avatar: dùng ảnh nhân vật đã chọn (thư mục ava) nếu có, ngược lại hiện chữ cái đầu.
-    var u = getUser(), av = $("user-avatar");
+    var u = AstroQ.getUser(), av = $("user-avatar");
     if(av){
       if(u && u.avatar){ av.innerHTML = '<img src="'+u.avatar+'" alt="" style="transform:scale('+(u.avatarZoom||1)+');transform-origin:center;" />'; av.style.background = "none"; }
       else { av.textContent = name.trim().charAt(0).toUpperCase(); av.style.background = ""; }
@@ -662,19 +359,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   function openModal(el){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); }
   function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
   function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
-  var toastTimer=null;
-  var TT_IMG = '<img class="tt-inline" src="img/tt.png" alt="Thiên thạch tím" />';
-  var TOAST_IC = {
-    ok:'<svg class="toast-ic ok" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.4l3 3 6-6.4"/></svg>',
-    bad:'<svg class="toast-ic bad" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>'
-  };
-  function toast(msg, type){
-    var el=$("toast");
-    var body = String(msg).replace(/\{tt\}/g, TT_IMG);
-    el.innerHTML = (TOAST_IC[type]||"") + '<span class="toast-msg">'+body+'</span>';
-    el.classList.add("show");
-    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); }, 2600);
-  }
+  var toast = AstroQ.makeToast("toast", 2600);
 
   /* ---- Phòng Trái Lực → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
   $("btn-game").addEventListener("click", function(){ window.location.href="games.html"; });
@@ -703,12 +388,9 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   applyLang(LANG);
   tickTelemetry(); setInterval(tickTelemetry, 2500);
 
-  document.querySelectorAll(".lang-switch button").forEach(function(b){
-    b.addEventListener("click", function(){ var l=b.getAttribute("data-lang"); try{ localStorage.setItem("astroq-lang",l); }catch(e){} applyLang(l); });
-  });
+  AstroQ.initLang(applyLang);
   var logoutBtn=$("logout");
-  if(logoutBtn) logoutBtn.addEventListener("click", function(){ try{ localStorage.removeItem("astroq-user"); }catch(e){} window.location.href="index.html"; });
-  window.addEventListener("storage", function(e){ if(e.key==="astroq-lang" && (e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue); });
+  if(logoutBtn) logoutBtn.addEventListener("click", function(){ AstroQ.clearUser(); window.location.href="index.html"; });
 })();
 </script>
 </body>
