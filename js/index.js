@@ -1,5 +1,5 @@
 /* ============================================================
-   coming-soon.js — Landing page waitlist của astroQ.org
+   index.js — Trang chủ astroQ.org: landing "Sắp ra mắt" + waitlist
    Dùng lại: js/ui-common.js ($, getLang/setLang/initLang/markLangButtons,
    makeToast, esc) và js/icons.js (lic).
    Không backend: email lưu vào localStorage["astroq-waitlist"] và
