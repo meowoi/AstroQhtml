@@ -3,84 +3,220 @@
   sitemap.xml — astroQ.org
   Chỉ liệt kê URL công khai đang cho phép lập chỉ mục.
 
-  Giai đoạn trước ra mắt (đến ~08/2026): trang chủ + bộ bài Wiki là công khai;
+  Giai đoạn trước ra mắt (đến ~08/2026): trang chủ + Wiki (VI & EN) là công khai;
   landing-app.html đang để noindex, còn các trang app (dashboard, select, learn,
   library, quiz, games, game-*, explorer) chưa mở nên không đưa vào sitemap.
-  Khi app mở cửa: thêm <url> cho từng trang muốn được tìm thấy và cập nhật <lastmod>.
+  Mỗi cặp bài VI/EN khai báo hreflang lẫn nhau qua <xhtml:link>.
+  Sinh lại bằng scratchpad/gen_wiki.py + đoạn cập nhật sitemap.
 -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Wiki AEO: 10 bài kiến thức + trang mục lục -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://astroq.org/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Wiki AEO — mục lục -->
   <url>
     <loc>https://astroq.org/wiki/</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/" />
   </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/" />
+  </url>
+
+  <!-- Wiki AEO — 10 bài × 2 ngôn ngữ -->
   <url>
     <loc>https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/what-is-quantum-physics.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/what-is-quantum-physics.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/what-is-quantum-physics.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/ai-va-robotics-khac-nhau.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ai-va-robotics-khac-nhau.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/ai-vs-robotics-programming.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ai-va-robotics-khac-nhau.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/ai-vs-robotics-programming.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ai-va-robotics-khac-nhau.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/ai-vs-robotics-programming.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ai-va-robotics-khac-nhau.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-black-holes-form.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/how-black-holes-form.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-black-holes-form.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-the-iss-works.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/how-the-iss-works.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-the-iss-works.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/why-mars-is-red.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/why-mars-is-red.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/why-mars-is-red.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/what-is-the-big-bang.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/what-is-the-big-bang.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/what-is-the-big-bang.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/when-should-kids-learn-coding.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/when-should-kids-learn-coding.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/when-should-kids-learn-coding.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/comet-va-byte-la-ai.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/comet-va-byte-la-ai.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/who-are-comet-and-byte.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/comet-va-byte-la-ai.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/who-are-comet-and-byte.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/comet-va-byte-la-ai.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/who-are-comet-and-byte.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/comet-va-byte-la-ai.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/purple-meteors-hoat-dong.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/purple-meteors-hoat-dong.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-purple-meteors-work.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/purple-meteors-hoat-dong.html" />
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/en/how-purple-meteors-work.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/purple-meteors-hoat-dong.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/how-purple-meteors-work.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/purple-meteors-hoat-dong.html" />
   </url>
   <url>
     <loc>https://astroq.org/wiki/ung-dung-thien-van-doi-song.html</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ung-dung-thien-van-doi-song.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/space-technology-in-daily-life.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ung-dung-thien-van-doi-song.html" />
   </url>
-
   <url>
-    <loc>https://astroq.org/</loc>
+    <loc>https://astroq.org/wiki/en/space-technology-in-daily-life.html</loc>
     <lastmod>2026-07-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/wiki/ung-dung-thien-van-doi-song.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/wiki/en/space-technology-in-daily-life.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/wiki/ung-dung-thien-van-doi-song.html" />
   </url>
 </urlset>

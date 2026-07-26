@@ -1,42 +1,70 @@
 # robots.txt — astroQ.org
 # Chính sách: mở hoàn toàn cho cả công cụ tìm kiếm lẫn AI crawler.
-# Lưu ý: KHÔNG dùng Disallow cho các trang đang đặt noindex (vd landing-app.html) —
-# chặn ở robots.txt sẽ khiến bot không đọc được thẻ meta noindex bên trong.
+#
+# Khu nội dung kiến thức (được phép cào và trích dẫn):
+#   /wiki/     — 10 bài tiếng Việt + mục lục
+#   /wiki/en/  — 10 bài tiếng Anh + mục lục
+#   /llms.txt  — bản tóm tắt dành riêng cho LLM/AI engine
+#
+# Lưu ý: KHÔNG dùng Disallow cho các trang đang đặt noindex (vd landing-app.html
+# và các trang app) — chặn ở robots.txt sẽ khiến bot không tải được trang nên
+# không bao giờ đọc được thẻ meta noindex bên trong.
 
 # ---------- Mặc định: mọi bot ----------
+# Chỉ một nhóm "*" duy nhất: khai báo nhiều nhóm cùng user-agent gây nhập nhằng,
+# một số parser chỉ đọc nhóm khớp đầu tiên.
 User-agent: *
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
+Allow: /llms.txt
 
 # ---------- OpenAI ----------
 # GPTBot: thu thập dữ liệu huấn luyện
 User-agent: GPTBot
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ChatGPT-User: truy cập theo yêu cầu tức thời của người dùng trong ChatGPT
 User-agent: ChatGPT-User
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ---------- Perplexity ----------
 User-agent: PerplexityBot
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ---------- Anthropic (Claude) ----------
 User-agent: ClaudeBot
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 User-agent: Claude-Web
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ---------- Google ----------
 # Google-Extended: quyền dùng nội dung cho Gemini / Vertex AI.
 # Không ảnh hưởng tới việc Googlebot lập chỉ mục cho Google Search.
 User-agent: Google-Extended
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ---------- Apple ----------
 # Applebot-Extended: quyền dùng nội dung cho Apple Intelligence.
 User-agent: Applebot-Extended
 Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
 
 # ---------- Sitemap ----------
 Sitemap: https://astroq.org/sitemap.xml
+
+# Bản tóm tắt dành riêng cho LLM/AI engine: https://astroq.org/llms.txt

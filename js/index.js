@@ -142,14 +142,10 @@
     if(lang === "en" || lang === "vi") LANG = lang;
     document.documentElement.lang = LANG;
     document.title = t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){
-      el.textContent = t(el.getAttribute("data-i18n"));
-    });
-    document.querySelectorAll("[data-i18n-html]").forEach(function(el){
-      el.innerHTML = t(el.getAttribute("data-i18n-html"));
-    });
-    document.querySelectorAll("[data-i18n-ph]").forEach(function(el){
-      el.setAttribute("placeholder", t(el.getAttribute("data-i18n-ph")));
+    AstroQ.applyTexts(t);            // nội dung + placeholder/title/aria-label/alt
+    // Wiki có 2 bản: /wiki/ (VI) và /wiki/en/ — link phải theo ngôn ngữ đang chọn
+    document.querySelectorAll('a[href^="wiki/"]').forEach(function(el){
+      el.setAttribute("href", LANG === "en" ? "wiki/en/" : "wiki/");
     });
     AstroQ.markLangButtons(LANG);
     renderCountdown();
