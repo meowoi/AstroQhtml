@@ -6,6 +6,10 @@
 #   /wiki/en/  — 10 bài tiếng Anh + mục lục
 #   /llms.txt  — bản tóm tắt dành riêng cho LLM/AI engine
 #
+# /docs/ bị Disallow trong MỌI nhóm: đó là ghi chú kỹ thuật nội bộ, và vì là file .md
+# nên không gắn được thẻ meta noindex — chặn crawl là cách duy nhất. Phải lặp lại ở
+# từng nhóm vì bot chỉ đọc nhóm khớp cụ thể nhất, không kế thừa từ nhóm "*".
+#
 # Lưu ý: KHÔNG dùng Disallow cho các trang đang đặt noindex (vd landing-app.html
 # và các trang app) — chặn ở robots.txt sẽ khiến bot không tải được trang nên
 # không bao giờ đọc được thẻ meta noindex bên trong.
@@ -18,6 +22,7 @@ Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
 Allow: /llms.txt
+Disallow: /docs/
 
 # ---------- OpenAI ----------
 # GPTBot: thu thập dữ liệu huấn luyện
@@ -25,29 +30,34 @@ User-agent: GPTBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 # ChatGPT-User: truy cập theo yêu cầu tức thời của người dùng trong ChatGPT
 User-agent: ChatGPT-User
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 # ---------- Perplexity ----------
 User-agent: PerplexityBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 # ---------- Anthropic (Claude) ----------
 User-agent: ClaudeBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 User-agent: Claude-Web
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 # ---------- Google ----------
 # Google-Extended: quyền dùng nội dung cho Gemini / Vertex AI.
@@ -56,6 +66,7 @@ User-agent: Google-Extended
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Disallow: /docs/
 
 # ---------- Apple ----------
 # Applebot-Extended: quyền dùng nội dung cho Apple Intelligence.
@@ -63,12 +74,6 @@ User-agent: Applebot-Extended
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
-
-# ---------- Tài liệu nội bộ ----------
-# /docs/ là ghi chú kỹ thuật cho đội phát triển, không phải nội dung cho người đọc.
-# Dùng Disallow ở đây là ĐÚNG (khác với các trang app): file .md không gắn được
-# thẻ meta noindex, nên chặn crawl là cách duy nhất giữ nó khỏi kết quả tìm kiếm.
-User-agent: *
 Disallow: /docs/
 
 # ---------- Sitemap ----------
