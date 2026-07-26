@@ -128,10 +128,8 @@
 
   /* ================= Số dư ================= */
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
-  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
 
   /* ================= Render thẻ trò chơi ================= */
-  var n=0;
   function render(){
     // Sắp xếp: game đã có (ready) trước, game sắp ra mắt (soon) sau
     var list = GAMES.slice().sort(function(a,b){ return (a.status==="ready"?0:1) - (b.status==="ready"?0:1); });

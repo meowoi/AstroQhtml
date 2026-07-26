@@ -179,14 +179,12 @@
   </div>
 </div>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Hệ thống số dư Thiên thạch tím -->
 <script src="economy.js"></script>
 <script>
 (function(){
   "use strict";
-  var GAME_COST = 5;
 
   /* ============ i18n (đồng bộ với astroq-lang) ============ */
   var I18N = {
@@ -368,11 +366,9 @@
     if($("need-quiz").classList.contains("show")) renderNeedBody();
   }
 
-  /* ---- Modal + toast ---- */
-  function openModal(el){ el.classList.add("show"); el.setAttribute("aria-hidden","false"); }
+  /* ---- Modal ---- */
   function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
   function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
-  var toast = AstroQ.makeToast("toast", 2600);
 
   /* ---- Phòng Trái Lực → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
   $("btn-game").addEventListener("click", function(){ window.location.href="games.html"; });
@@ -385,7 +381,6 @@
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal($("need-quiz")); } });
 
   /* ---- Thông số tàu giả lập: O₂ + tọa độ ---- */
-  function pad(n,len){ n=String(n); while(n.length<len) n="0"+n; return n; }
   function tickTelemetry(){
     var o2 = 96 + Math.floor(Math.random()*4);           // 96–99%
     $("o2-val").textContent = o2 + "%";

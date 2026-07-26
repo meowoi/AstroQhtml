@@ -262,7 +262,6 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .m-btn:active{transform:scale(.93);}
 .m-btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#04060f;border-color:transparent;}
 
-.toast{top:96px;z-index:70;transform:translateX(-50%) translateY(-14px);display:inline-flex;align-items:center;gap:9px;padding:12px 20px;background:var(--glass-strong);border:1px solid var(--glass-brd-strong);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--shadow-soft);font-size:14px;white-space:nowrap;transition:opacity .3s var(--ease),transform .3s var(--ease);}
 
 @media (max-width:720px){
   .gauges{order:3;width:100%;justify-content:flex-start;}
