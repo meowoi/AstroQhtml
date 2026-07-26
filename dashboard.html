@@ -398,8 +398,15 @@
 
   AstroQ.initLang(applyLang);
   var logoutBtn=$("logout");
-  if(logoutBtn) logoutBtn.addEventListener("click", function(){ AstroQ.clearUser(); window.location.href="landing-app.html"; });
+  if(logoutBtn) logoutBtn.addEventListener("click", function(){
+    var done = function(){ window.location.href = "landing-app.html"; };
+    // AstroQAuth.logout() xoá cả phiên Firebase lẫn hồ sơ trong máy.
+    // Dự phòng: module chưa nạp xong thì vẫn xoá được hồ sơ local.
+    if(window.AstroQAuth) AstroQAuth.logout().then(done, done);
+    else { AstroQ.clearUser(); done(); }
+  });
 })();
 </script>
+<script type="module" src="js/firebase-auth.js"></script>
 </body>
 </html>

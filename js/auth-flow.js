@@ -100,13 +100,17 @@
     if(!selected) selected=CHARACTERS[0];
     var existing=getUser()||{};
     // Lưu hồ sơ phi hành gia (kèm alias theo yêu cầu: pilotName / selectedCharacter / purpleAsteroids)
-    var profile={
+    // Object.assign để GIỮ LẠI uid/email do Firebase ghi lúc đăng ký —
+    // ghi đè nguyên object như trước sẽ làm mất uid, hồ sơ không còn gắn với tài khoản.
+    var profile = Object.assign({}, existing, {
       name:name, pilotName:name,
       character:selected.id, selectedCharacter:selected.id,
-      avatar:selected.ava, avatarZoom:selected.zoom||1, email:existing.email||"", purpleAsteroids:0
-    };
+      avatar:selected.ava, avatarZoom:selected.zoom||1,
+      email: existing.email||"", purpleAsteroids: existing.purpleAsteroids||0
+    });
     try{ localStorage.setItem(LS_USER, JSON.stringify(profile)); }catch(e){}
-    try{ localStorage.setItem(LS_AST, "0"); }catch(e){}   // nhiên liệu (Thiên thạch tím) ban đầu = 0
+    // Chỉ khởi tạo số dư cho pilot MỚI. Người cũ đổi nhân vật không bị mất Thiên thạch tím.
+    try{ if(localStorage.getItem(LS_AST)===null) localStorage.setItem(LS_AST, "0"); }catch(e){}
 
     var stamp=$("stamp"); if(stamp) stamp.classList.add("show");   // đóng dấu APPROVED
     var btn=$("start-journey"); if(btn) btn.disabled=true;

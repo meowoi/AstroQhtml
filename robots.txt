@@ -64,6 +64,13 @@ Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
 
+# ---------- Tài liệu nội bộ ----------
+# /docs/ là ghi chú kỹ thuật cho đội phát triển, không phải nội dung cho người đọc.
+# Dùng Disallow ở đây là ĐÚNG (khác với các trang app): file .md không gắn được
+# thẻ meta noindex, nên chặn crawl là cách duy nhất giữ nó khỏi kết quả tìm kiếm.
+User-agent: *
+Disallow: /docs/
+
 # ---------- Sitemap ----------
 Sitemap: https://astroq.org/sitemap.xml
 

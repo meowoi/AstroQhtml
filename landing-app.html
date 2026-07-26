@@ -108,6 +108,7 @@
         <label for="login-pass" data-i18n="auth_password">Mật khẩu</label>
         <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required />
       </div>
+      <button type="button" class="auth-forgot" id="auth-forgot" data-i18n="auth_forgot">Quên mật khẩu?</button>
       <button class="auth-submit" type="submit" data-i18n="auth_login_btn">Đăng nhập</button>
       <div class="auth-alt">
         <span data-i18n="auth_no_account">Chưa là thành viên?</span>
@@ -149,6 +150,7 @@
    ============================================================ */
 const I18N = {
   vi: {
+    auth_forgot:"Quên mật khẩu?",
       a_lang:"Ngôn ngữ",
       a_close:"Đóng",
       reg_name_ph:"Nguyễn Văn A",
@@ -186,6 +188,7 @@ const I18N = {
     auth_hello: "Xin chào"
   },
   en: {
+    auth_forgot:"Forgot password?",
       a_lang:"Language",
       a_close:"Close",
       reg_name_ph:"Alex Nguyen",
@@ -366,32 +369,13 @@ AstroQ.initLang(applyLang);
   if(toLogin) toLogin.addEventListener("click", function(){ open(false); });
 
   // ĐĂNG NHẬP (người dùng cũ, demo): giữ lại hồ sơ đã có (avatar/nhân vật) → dashboard.
-  loginPane.addEventListener("submit", function(e){
-    e.preventDefault();
-    var emailEl = document.getElementById("login-email");
-    var email = (emailEl.value || "").trim();
-    if(!email){ emailEl.focus(); return; }
-    var existing = getUser();
-    if(!existing){ setUser({ name: email.split("@")[0], email: email }); }   // chưa có hồ sơ → tạo tối thiểu
-    if(window.Economy) Economy.getAsteroids();                               // giữ số dư đã có
-    close();
-    var u = getUser();
-    showToast(t("auth_success") + " " + t("auth_hello") + " " + ((u&&(u.name||u.email))||email) + "!");
-    setTimeout(function(){ window.location.href = "dashboard.html"; }, 1000);
-  });
   // ĐĂNG KÝ (khách mới, demo): tạo hồ sơ → sang màn Cấp Thẻ ID & Chọn Nhân Vật.
-  regPane.addEventListener("submit", function(e){
-    e.preventDefault();
-    var email = (document.getElementById("reg-email").value || "").trim();
-    var name  = (document.getElementById("reg-name").value || "").trim();
-    if(!email){ document.getElementById("reg-email").focus(); return; }
-    setUser({ name: name || email.split("@")[0], email: email });            // chưa có character
-    close();
-    showToast(t("auth_reg_success"));
-    setTimeout(function(){ window.location.href = "select.html"; }, 900);    // → chọn nhân vật
-  });
+  /* Submit của 2 form do js/firebase-auth-ui.js (ES module) đảm nhận.
+     Module luôn chạy sau script này nên chắc chắn thấy được AstroQAuthUI bên dưới. */
+  window.AstroQAuthUI = { close: close, toast: showToast, t: t, showPane: showPane };
 
 })();
 </script>
+<script type="module" src="js/firebase-auth-ui.js"></script>
 </body>
 </html>
