@@ -14,6 +14,7 @@ const SDK = "https://www.gstatic.com/firebasejs/12.16.0";
 
 let auth = null;
 let fb = null;                 // các hàm của firebase-auth SDK, nạp động
+let pendingName = "";          // tên nhập lúc đăng ký, ghi vào hồ sơ sau khi xác minh xong
 
 /* Chỉ tải SDK khi đã có config — tránh kéo vài trăm KB vô ích. */
 async function boot(){
@@ -46,6 +47,7 @@ const ERR = {
     "auth/network-request-failed":"Mất kết nối mạng. Kiểm tra lại đường truyền.",
     "auth/unauthorized-domain":   "Tên miền này chưa được cho phép trong Firebase Console.",
     "auth/operation-not-allowed": "Chưa bật đăng nhập bằng Email/Password trong Firebase Console.",
+    "auth/requires-recent-login":  "Phiên đã cũ. Đăng nhập lại rồi thử tiếp nhé.",
     _default:                     "Có lỗi xảy ra. Thử lại sau ít phút nhé."
   },
   en: {
@@ -61,6 +63,7 @@ const ERR = {
     "auth/network-request-failed":"Network error. Check your connection.",
     "auth/unauthorized-domain":   "This domain is not authorised in the Firebase Console.",
     "auth/operation-not-allowed": "Email/Password sign-in is not enabled in the Firebase Console.",
+    "auth/requires-recent-login":  "Session too old. Please sign in again.",
     _default:                     "Something went wrong. Please try again."
   }
 };
@@ -88,25 +91,61 @@ function syncProfile(user, extra){
 const AstroQAuth = {
   isConfigured,
 
-  /** Đăng ký tài khoản mới. → { ok } | { ok:false, message } */
+  /** Đăng ký. Tài khoản được tạo ngay (Firebase không có luồng "xác minh trước khi tạo"),
+      nhưng CHƯA ghi hồ sơ vào máy và CHƯA cho vào app cho tới khi xác minh email.
+      → { ok:true, needVerify:true, email } | { ok:false, message } */
   async register(name, email, password){
     if(!(await boot())) return NOT_CONFIGURED;
     try{
       const cred = await fb.createUserWithEmailAndPassword(auth, email, password);
       // displayName không đặt được lúc tạo, phải cập nhật ở bước riêng
       if(name) await fb.updateProfile(cred.user, { displayName: name });
-      syncProfile(cred.user, name ? { name } : null);
-      return { ok: true, user: cred.user };
+      pendingName = name || "";
+      await fb.sendEmailVerification(cred.user);
+      // Cố ý KHÔNG gọi syncProfile: chưa xác minh thì chưa có hồ sơ trong máy,
+      // nhờ vậy mọi lối vào app (đều dựa trên uid trong localStorage) đều bị chặn.
+      return { ok: true, needVerify: true, email: cred.user.email };
     }catch(e){ return fail(e); }
   },
 
-  /** Đăng nhập. → { ok } | { ok:false, message } */
+  /** Đăng nhập. Email chưa xác minh → KHÔNG cho vào, trả needVerify.
+      → { ok:true } | { ok:false, needVerify:true, email } | { ok:false, message } */
   async login(email, password){
     if(!(await boot())) return NOT_CONFIGURED;
     try{
       const cred = await fb.signInWithEmailAndPassword(auth, email, password);
+      await fb.reload(cred.user);                    // lấy trạng thái emailVerified mới nhất
+      if(!cred.user.emailVerified){
+        // Giữ nguyên phiên (không signOut) để còn gửi lại được email xác minh.
+        // Không ghi hồ sơ → vẫn không vào được app.
+        return { ok: false, needVerify: true, email: cred.user.email };
+      }
       syncProfile(cred.user);
       return { ok: true, user: cred.user };
+    }catch(e){ return fail(e); }
+  },
+
+  /** Gửi lại email xác minh cho tài khoản đang ở trạng thái chờ. */
+  async resendVerification(){
+    if(!(await boot())) return NOT_CONFIGURED;
+    const u = auth.currentUser;
+    if(!u) return { ok: false, message: errMsg("auth/requires-recent-login") };
+    try{ await fb.sendEmailVerification(u); return { ok: true }; }
+    catch(e){ return fail(e); }
+  },
+
+  /** Người dùng bấm "Tôi đã xác minh xong" → hỏi lại Firebase.
+      Xác minh rồi thì mới ghi hồ sơ vào máy. */
+  async checkVerified(){
+    if(!(await boot())) return NOT_CONFIGURED;
+    const u = auth.currentUser;
+    if(!u) return { ok: false, message: errMsg("auth/requires-recent-login") };
+    try{
+      await fb.reload(u);
+      if(!u.emailVerified) return { ok: false, stillPending: true };
+      syncProfile(u, pendingName ? { name: pendingName } : null);
+      pendingName = "";
+      return { ok: true, user: u };
     }catch(e){ return fail(e); }
   },
 

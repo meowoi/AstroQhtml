@@ -380,6 +380,20 @@ footer a:hover{color:var(--accent);}
 .auth-switch:hover{color:var(--sun);}
 .auth-pane[hidden]{display:none;}
 
+/* ---- Màn chờ xác minh email ---- */
+.auth-verify{text-align:center;}
+.verify-ic{width:60px;height:60px;margin:6px auto 0;border-radius:50%;display:grid;place-items:center;
+  color:var(--accent);background:rgba(95,211,255,.12);border:1px solid rgba(95,211,255,.4);
+  box-shadow:0 0 28px -10px var(--accent);animation:verifyIn .45s var(--jelly) both;}
+.verify-ic svg{width:28px;height:28px;}
+@keyframes verifyIn{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.verify-mail{margin:0 0 18px;font-family:var(--font-mono);font-size:13.5px;word-break:break-all;
+  color:var(--ink);padding:9px 14px;border-radius:10px;
+  background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+.auth-verify .auth-alt{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.auth-verify .auth-alt .sep{opacity:.45;}
+.verify-note{margin:14px 0 0;font-size:12px;line-height:1.55;color:var(--ink-faint);}
+
 /* Thông báo đăng nhập thành công */
 .auth-toast{
   position:fixed;top:20px;left:50%;z-index:60;transform:translateX(-50%) translateY(-14px);

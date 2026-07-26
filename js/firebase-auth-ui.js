@@ -22,10 +22,16 @@ if(!$("auth-login") || !$("auth-register")){
 const TXT = {
   vi: { wait:"Đang xử lý…", demo:"Chế độ demo: chưa cấu hình Firebase.",
         need_email:"Nhập email của bạn trước đã nhé.",
-        sent:"Đã gửi email đặt lại mật khẩu. Kiểm tra hòm thư nhé!" },
+        sent:"Đã gửi email đặt lại mật khẩu. Kiểm tra hòm thư nhé!",
+        v_sent:"Đã gửi lại email xác minh!",
+        v_pending:"Chưa thấy xác minh. Bấm link trong email rồi thử lại nhé.",
+        v_ok:"Xác minh thành công! Đang đưa bạn vào trạm…" },
   en: { wait:"Please wait…", demo:"Demo mode: Firebase is not configured.",
         need_email:"Enter your email first.",
-        sent:"Password reset email sent. Check your inbox!" }
+        sent:"Password reset email sent. Check your inbox!",
+        v_sent:"Verification email sent again!",
+        v_pending:"Not verified yet. Click the link in the email, then try again.",
+        v_ok:"Verified! Taking you to the station…" }
 };
 const tx = (k) => (TXT[AstroQ.getLang()] || TXT.vi)[k];
 
@@ -59,6 +65,19 @@ function demoRegister(name, email){
   setTimeout(() => { location.href = "select.html"; }, 900);
 }
 
+/* ---------------- Màn chờ xác minh email ---------------- */
+function showVerify(email){
+  $("auth-login").hidden = true;
+  $("auth-register").hidden = true;
+  $("auth-verify").hidden = false;
+  const slot = $("verify-mail");
+  if(slot) slot.textContent = email || "";
+}
+function backToLogin(){
+  $("auth-verify").hidden = true;
+  UI.showPane(false);              // hiện lại pane Đăng nhập
+}
+
 /* ---------------- Đăng nhập ---------------- */
 $("auth-login").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -73,6 +92,7 @@ $("auth-login").addEventListener("submit", async (e) => {
   busy(form, true);
   const res = await AstroQAuth.login(email, pass);
   busy(form, false);
+  if(res.needVerify){ showVerify(res.email || email); return; }   // đúng mật khẩu nhưng chưa xác minh
   if(!res.ok){ UI.toast(res.message); $("login-pass").focus(); return; }
 
   UI.close();
@@ -98,9 +118,38 @@ $("auth-register").addEventListener("submit", async (e) => {
   busy(form, false);
   if(!res.ok){ UI.toast(res.message); return; }
 
+  // Tài khoản đã tạo nhưng CHƯA vào được app — phải xác minh email trước.
+  showVerify(res.email || email);
+});
+
+/* ---------------- Nút trong màn xác minh ---------------- */
+const vCheck = $("verify-check"), vResend = $("verify-resend"), vBack = $("verify-back");
+
+if(vCheck) vCheck.addEventListener("click", async () => {
+  if(!vCheck.dataset.label) vCheck.dataset.label = vCheck.textContent.trim();
+  vCheck.disabled = true; vCheck.textContent = tx("wait");
+  const res = await AstroQAuth.checkVerified();
+  vCheck.disabled = false; vCheck.textContent = vCheck.dataset.label;
+
+  if(res.stillPending){ UI.toast(tx("v_pending")); return; }
+  if(!res.ok){ UI.toast(res.message); return; }
+
   UI.close();
-  UI.toast(UI.t("auth_reg_success"));
-  setTimeout(() => { location.href = "select.html"; }, 900);   // → chọn nhân vật
+  UI.toast(tx("v_ok"));
+  const u = AstroQ.getUser() || {};
+  setTimeout(() => { location.href = u.character ? "dashboard.html" : "select.html"; }, 900);
+});
+
+if(vResend) vResend.addEventListener("click", async () => {
+  vResend.disabled = true;
+  const res = await AstroQAuth.resendVerification();
+  vResend.disabled = false;
+  UI.toast(res.ok ? tx("v_sent") : res.message);
+});
+
+if(vBack) vBack.addEventListener("click", () => {
+  AstroQAuth.logout();          // bỏ phiên chưa xác minh
+  backToLogin();
 });
 
 /* ---------------- Quên mật khẩu ---------------- */
