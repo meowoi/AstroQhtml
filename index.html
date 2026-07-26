@@ -18,11 +18,16 @@
 <meta property="og:url" content="https://astroq.org/" />
 <meta property="og:title" content="astroQ.org — Khám Phá Ngân Hà Tri Thức" />
 <meta property="og:description" content="Nền tảng học tập tương tác chủ đề Vũ trụ, AI & Vật lý Lượng tử dành cho các nhà khám phá trẻ. Đăng ký sớm nhận 500 Purple Meteors." />
-<meta property="og:image" content="https://astroq.org/img/m1.png" />
+<meta property="og:image" content="https://astroq.org/img/og-cover.jpg" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="astroQ.org — Khám Phá Ngân Hà Tri Thức. Mèo Comet và Robot Byte, tặng 500 Purple Meteors cho người đăng ký sớm." />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="astroQ.org — Khám Phá Ngân Hà Tri Thức" />
 <meta name="twitter:description" content="Học Thiên văn, AI & Vật lý Lượng tử qua nhiệm vụ vũ trụ. Đăng ký waitlist nhận 500 Purple Meteors." />
-<meta name="twitter:image" content="https://astroq.org/img/m1.png" />
+<meta name="twitter:image" content="https://astroq.org/img/og-cover.jpg" />
+<meta name="twitter:image:alt" content="astroQ.org — Khám Phá Ngân Hà Tri Thức. Mèo Comet và Robot Byte, tặng 500 Purple Meteors cho người đăng ký sớm." />
 
 <!-- ===================== JSON-LD: EducationalApplication ===================== -->
 <script type="application/ld+json">
@@ -216,13 +221,16 @@
       </div>
 
       <!-- Form waitlist -->
-      <form class="wl-form" id="wl-form" novalidate>
+      <!-- action/method để form vẫn gửi được nếu JS lỗi; bình thường JS chặn và gửi bằng fetch -->
+      <form class="wl-form" id="wl-form" action="https://formspree.io/f/xkodplgp" method="POST" novalidate>
         <label class="sr-only" for="wl-email" data-i18n="wl_label">Địa chỉ email</label>
         <div class="field">
           <input type="email" id="wl-email" name="email" autocomplete="email" required
                  placeholder="phihanhgia@astroq.org" data-i18n-ph="wl_ph" aria-describedby="wl-hint" />
-          <!-- Bẫy bot: người dùng thật không bao giờ điền ô này -->
-          <input type="text" id="wl-company" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <!-- Bẫy bot: người thật không bao giờ điền. Tên "_gotcha" để Formspree cũng tự lọc ở server -->
+          <input type="text" id="wl-gotcha" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <!-- Tiêu đề email thông báo trong hộp thư Formspree -->
+          <input type="hidden" name="_subject" value="[astroQ.org] Đăng ký waitlist mới" />
         </div>
         <button class="btn-primary wl-submit" id="wl-submit" type="submit" data-i18n="wl_cta">
           Nhận 500 Purple Meteors &amp; Vé Sớm 🚀

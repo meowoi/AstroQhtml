@@ -10,7 +10,8 @@
 
   /* Ngày mở cửa chính thức (giờ Việt Nam, UTC+7) — dùng cho đồng hồ đếm ngược */
   var LAUNCH_AT = new Date("2026-08-01T00:00:00+07:00").getTime();
-  var LS_WAITLIST = "astroq-waitlist";      // [{ email, ts, lang }]
+  var LS_WAITLIST = "astroq-waitlist";      // bản sao dự phòng trên máy khách: [{ email, ts, lang, sent }]
+  var FORM_ENDPOINT = "https://formspree.io/f/xkodplgp";   // nhận email waitlist
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   /* ============================ i18n ============================ */
@@ -32,17 +33,18 @@
       wl_desc:"Đăng ký ngay hôm nay để nhận ngay <b>500 PURPLE METEORS</b> (đơn vị tiền thưởng trên astroQ.org) dùng để nâng cấp phi thuyền &amp; mở khóa hành tinh ngay khi hệ thống ra mắt!",
       wl_label:"Địa chỉ email", wl_ph:"phihanhgia@astroq.org",
       wl_cta:"Nhận 500 Purple Meteors & Vé Sớm 🚀",
-      wl_sending:"Đang gửi tín hiệu…",
+      wl_sending:"Đang gửi...",
       wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào đầu tháng 8/2026.",
-      done_title:"Đã ghi danh vào phi hành đoàn!",
-      done_body:'Vé mời sớm đã được giữ cho <b id="wl-done-mail">bạn</b>. 500 Purple Meteors sẽ nằm sẵn trong khoang khi astroQ.org mở cửa.',
+      done_title:"🚀 Đã nhận vé sớm & 500 Purple Meteors thành công!",
+      done_body:'Kiểm tra hòm thư của bạn nhé — vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. 500 Purple Meteors sẽ nằm sẵn trong khoang khi astroQ.org mở cửa.',
       done_again:"Đăng ký email khác",
 
       err_empty:"Nhập email của bạn để nhận vé mời sớm nhé!",
       err_format:"Email chưa đúng định dạng — kiểm tra lại giúp Byte nhé.",
-      ok_new:"Ghi danh thành công! 500 {tt} đang chờ bạn.",
-      ok_dup:"Email này đã có trong phi hành đoàn rồi!",
-      err_net:"Tín hiệu bị nhiễu, thử lại sau vài giây nhé.",
+      ok_short:"Ghi danh thành công! 500 {tt} đang chờ bạn.",
+      ok_dup:"Email này đã có trong phi hành đoàn — đã cập nhật lại!",
+      err_send:"Trạm mặt đất chưa nhận được tín hiệu. Kiểm tra lại email rồi thử lần nữa nhé.",
+      err_net:"Mất kết nối tới trạm. Email đã được giữ tạm trên máy bạn — thử lại sau vài giây nhé.",
 
       aeo_h2:"astroQ.org là gì?",
       aeo_answer:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Vật lý Lượng tử, AI và Robotics thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
@@ -82,17 +84,18 @@
       wl_desc:"Sign up today and get <b>500 PURPLE METEORS</b> (the reward currency on astroQ.org) to upgrade your ship &amp; unlock planets the moment we launch!",
       wl_label:"Email address", wl_ph:"astronaut@astroq.org",
       wl_cta:"Claim 500 Purple Meteors & Early Access 🚀",
-      wl_sending:"Sending signal…",
+      wl_sending:"Sending...",
       wl_hint:"No spam. You'll only hear from us at the official launch in early August 2026.",
-      done_title:"You're on the crew list!",
-      done_body:'Your early-access pass is reserved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when astroQ.org opens.',
+      done_title:"🚀 Early pass & 500 Purple Meteors secured!",
+      done_body:'Check your inbox — the early-access pass is reserved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when astroQ.org opens.',
       done_again:"Use another email",
 
       err_empty:"Enter your email to grab an early-access pass!",
       err_format:"That email looks off — mind double-checking it for Byte?",
-      ok_new:"You're in! 500 {tt} are waiting for you.",
-      ok_dup:"This email is already on the crew list!",
-      err_net:"Signal interference, please try again in a moment.",
+      ok_short:"You're in! 500 {tt} are waiting for you.",
+      ok_dup:"This email was already on the crew list — record updated!",
+      err_send:"Ground control didn't get that. Double-check the address and try once more.",
+      err_net:"Lost contact with the station. Your email is saved locally — try again in a moment.",
 
       aeo_h2:"What is astroQ.org?",
       aeo_answer:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
@@ -178,20 +181,38 @@
     try{ localStorage.setItem(LS_WAITLIST, JSON.stringify(list)); }catch(e){}
   }
 
-  /* Mô phỏng gọi API — đổi sang backend thật chỉ cần thay thân hàm này bằng:
-     return fetch("/api/waitlist", {method:"POST", headers:{"Content-Type":"application/json"},
-       body: JSON.stringify({email: email})}).then(function(r){ return r.json(); });        */
+  /* Lưu bản sao vào máy khách. Luôn chạy dù Formspree thành công hay không, để
+     không mất lead khi mạng hỏng — cờ "sent" cho biết đã lên server hay chưa. */
+  function backup(email, sent){
+    var list = readList();
+    var rec = { email: email, ts: new Date().toISOString(), lang: LANG, sent: !!sent }, dup = false;
+    for(var i = 0; i < list.length; i++){
+      if(list[i] && list[i].email === email){ list[i] = rec; dup = true; break; }
+    }
+    if(!dup) list.push(rec);
+    writeList(list);
+    return dup;                                      // true = email này đã đăng ký trước đó
+  }
+
+  /* Gửi lên Formspree bằng fetch (AJAX) — không rời trang.
+     Formspree trả JSON khi có header Accept: application/json:
+       thành công -> 200 { ok: true }
+       lỗi        -> 4xx { errors: [{ field, message }] }                        */
   function submitWaitlist(email){
-    return new Promise(function(resolve){
-      setTimeout(function(){
-        var list = readList();
-        var dup = list.some(function(x){ return x && x.email === email; });
-        if(!dup){
-          list.push({ email: email, ts: new Date().toISOString(), lang: LANG });
-          writeList(list);
-        }
-        resolve({ ok: true, duplicated: dup, position: list.length });
-      }, 900);                                        // giả lập độ trễ mạng
+    var data = new FormData();
+    data.append("email", email);
+    data.append("_subject", "[astroQ.org] Đăng ký waitlist mới");
+    data.append("lang", LANG);                       // để biết người đăng ký xem bản VI hay EN
+    return fetch(FORM_ENDPOINT, {
+      method: "POST",
+      body: data,
+      headers: { "Accept": "application/json" }
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(body){
+        if(res.ok) return { ok: true };
+        var msg = body && body.errors && body.errors.length ? body.errors[0].message : "";
+        return { ok: false, status: res.status, message: msg };
+      });
     });
   }
 
@@ -233,12 +254,23 @@
     setLoading(true);
     submitWaitlist(email).then(function(res){
       setLoading(false);
-      if(!res || !res.ok) return toast(t("err_net"), "bad");
+      if(!res.ok){                                   // Formspree từ chối (email sai, hết quota…)
+        backup(email, false);                        // vẫn giữ lead trên máy khách
+        input.classList.add("invalid");
+        // Formspree trả lỗi bằng tiếng Anh ("should be an email") — không hiển thị
+        // thẳng cho người dùng, chỉ ghi console để lập trình viên xem.
+        if(window.console) console.warn("[waitlist] Formspree", res.status, res.message);
+        return toast(t("err_send"), "bad");
+      }
+      var dup = backup(email, true);
+      input.value = "";                              // reset ô nhập
+      input.classList.remove("invalid");
       paintDone(email);
-      toast(res.duplicated ? t("ok_dup") : t("ok_new"), "ok");
+      toast(dup ? t("ok_dup") : t("ok_short"), "ok");
       doneBox.scrollIntoView({ behavior:"smooth", block:"center" });
-    }).catch(function(){
+    }).catch(function(){                             // mất mạng / bị chặn
       setLoading(false);
+      backup(email, false);
       toast(t("err_net"), "bad");
     });
   });
