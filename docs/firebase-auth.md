@@ -3,6 +3,9 @@
 Hướng dẫn viết riêng cho astroQ.org — bám đúng cấu trúc file hiện có
 (`landing-app.html`, `js/ui-common.js`, `js/auth-flow.js`, `economy.js`).
 
+> Liên quan: [`backend-astroqsv.md`](backend-astroqsv.md) — kế hoạch backend .NET 10 trên AWS Lambda.
+> Ở đó có phân tích **Firebase Auth vs tự làm xác thực trong Lambda** — đọc trước khi làm backend.
+
 ---
 
 ## 0. Đọc trước khi bắt tay
