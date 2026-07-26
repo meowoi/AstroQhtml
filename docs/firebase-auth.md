@@ -43,7 +43,7 @@ Thông lệ phổ biến là **dùng email của phụ huynh** và ghi rõ đi�
 5. Quay lại **Authentication → Settings → Authorized domains** → **Add domain** → nhập `astroq.org`.
    `localhost` đã có sẵn nên chạy thử ở máy vẫn được.
 
-> Nếu bỏ qua bước 5, đăng nhập sẽ báo lỗi `auth/unauthorized-domain` khi chạy trên tên miền thật.
+> **Đính chính:** với đăng nhập Email/Password thuần thì Authorized domains **không** chặn — danh sách này áp cho luồng OAuth (popup Google/Facebook) và cho link trong email hệ thống. Vẫn nên thêm `astroq.org` ngay: cần cho email đặt lại mật khẩu, và cho việc thêm đăng nhập Google sau này.
 
 ---
 
@@ -58,12 +58,12 @@ Dán config lấy ở Bước 1 vào đầu file.
    ES MODULE: nạp bằng <script type="module">, chạy SAU mọi script cổ điển.
    Phụ thuộc: js/ui-common.js (AstroQ.setUser / getUser / clearUser / getLang).
    ============================================================ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   getAuth, setPersistence, browserLocalPersistence,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 /* ---- Dán nguyên khối config từ Firebase Console vào đây ---- */
 const firebaseConfig = {

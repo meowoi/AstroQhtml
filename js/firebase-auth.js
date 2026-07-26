@@ -10,7 +10,7 @@
    ============================================================ */
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
 
-const SDK = "https://www.gstatic.com/firebasejs/12.4.0";
+const SDK = "https://www.gstatic.com/firebasejs/12.16.0";
 
 let auth = null;
 let fb = null;                 // các hàm của firebase-auth SDK, nạp động

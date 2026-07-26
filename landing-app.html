@@ -358,9 +358,13 @@ AstroQ.initLang(applyLang);
   // Một lối vào duy nhất: bấm "Trải nghiệm ngay" mới mở popup (Đăng ký; có link sang Đăng nhập).
   if(btnTry) btnTry.addEventListener("click", function(e){
     e.preventDefault();
-    var u=getUser();
-    if(u && u.character) window.location.href = "dashboard.html";   // đã có hồ sơ → vào thẳng dashboard
-    else open(true);                                                // mở popup (mặc định ĐĂNG KÝ)
+    var u = getUser();
+    // Chỉ vào thẳng dashboard khi hồ sơ gắn với một tài khoản Firebase thật (có uid).
+    // Hồ sơ cũ từ thời demo không có uid → vẫn phải đăng nhập, nếu không thì
+    // chỉ cần localStorage còn sót là bỏ qua được toàn bộ xác thực.
+    var authed = u && u.character && (!window.AstroQAuth || !AstroQAuth.isConfigured || u.uid);
+    if(authed) window.location.href = "dashboard.html";
+    else open(!u);            // chưa có gì → ĐĂNG KÝ; có hồ sơ cũ → ĐĂNG NHẬP
   });
   if(closeBtn) closeBtn.addEventListener("click", close);
   overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });   // bấm nền = đóng

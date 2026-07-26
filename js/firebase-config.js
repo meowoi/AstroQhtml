@@ -22,12 +22,15 @@
    ============================================================ */
 
 export const firebaseConfig = {
-  apiKey:            "",
-  authDomain:        "",
-  projectId:         "",
-  storageBucket:     "",
-  messagingSenderId: "",
-  appId:             ""
+  apiKey:            "AIzaSyDljo-O_8S6D8l4KP8YHxutLjO9LqLNx-A",
+  authDomain:        "astroq-782f7.firebaseapp.com",
+  projectId:         "astroq-782f7",
+  storageBucket:     "astroq-782f7.firebasestorage.app",
+  messagingSenderId: "553344918184",
+  appId:             "1:553344918184:web:83aa45a74b10a0f9e8589d"
+  // measurementId: "G-DPJ0N2306C"  ← chỉ dùng cho Google Analytics.
+  // Cố ý KHÔNG bật: thêm một SDK nữa (~50 KB) và là script theo dõi hành vi
+  // trên nền tảng dành cho trẻ em. Bật sau nếu thực sự cần đo lường.
 };
 
 /* Đã cấu hình hay chưa — chỉ cần 3 trường bắt buộc là đủ để khởi tạo. */
