@@ -33,8 +33,8 @@
       <span class="e-pct" id="energy-pct">0%</span>
     </div>
 
-    <div class="currency" title="Thiên thạch tím">
-      <span class="gem" id="currency-gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="currency-gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
       <span class="c-val" id="bal">0</span>
       <span class="c-lbl" data-i18n="currency">Thiên thạch tím</span>
     </div>
@@ -113,7 +113,7 @@
       <div class="sheet-title" id="sheet-title">—</div>
     </div>
     <div class="sheet-body" id="sheet-body">—</div>
-    <div class="sheet-award hide" id="sheet-award">+20 <img src="img/tt.png" alt="Thiên thạch tím" /></div>
+    <div class="sheet-award hide" id="sheet-award">+20 <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></div>
     <button class="next-btn" id="next-btn" data-i18n="next">CÂU TIẾP THEO</button>
   </div>
 </div>
@@ -124,7 +124,7 @@
     <span class="sum-tag" data-i18n="sys_diag">[ SYS.DIAGNOSTIC ]</span>
     <div class="sum-title" data-i18n="sum_title">HOÀN THÀNH NHIỆM VỤ</div>
     <div class="stars" id="stars"><span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span></div>
-    <div class="sum-mined"><img src="img/tt.png" alt="Thiên thạch tím" />+<span id="sum-mined">0</span></div>
+    <div class="sum-mined"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />+<span id="sum-mined">0</span></div>
     <div class="sum-grid">
       <div class="sum-cell"><div class="sc-val" id="sum-acc">0%</div><div class="sc-lbl" data-i18n="accuracy">Độ chính xác</div></div>
       <div class="sum-cell"><div class="sc-val" id="sum-score">0/5</div><div class="sc-lbl" data-i18n="correct_lbl">Câu đúng</div></div>
@@ -163,6 +163,7 @@
   /* ================= i18n ================= */
   var I18N = {
     vi:{
+      tt_name:"Thiên thạch tím",
       title:"AstroQ — Trạm Tri Thức · Chẩn đoán",
       exit:"Rút lui", energy:"NĂNG LƯỢNG", currency:"Thiên thạch tím", q_word:"CÂU",
       engage:"KÍCH HOẠT", next:"CÂU TIẾP THEO",
@@ -185,6 +186,7 @@
       timeup_bubble:"Hết giờ rồi! Byte cần nhanh hơn ở câu sau nhé.", correct_bubble:"Tuyệt vời! Byte đã né được thiên thạch! 🎉"
     },
     en:{
+      tt_name:"Purple Meteor",
       title:"AstroQ — Knowledge Station · Diagnostic",
       exit:"Retreat", energy:"ENERGY", currency:"Purple Meteor", q_word:"Q",
       engage:"ENGAGE", next:"NEXT QUESTION",
@@ -481,7 +483,7 @@
     $("sheet-ic").textContent = ok ? "✅" : (protectedThisQ?"🛡️":"💥");
     $("sheet-title").textContent = ok ? t("ok_title") : (protectedThisQ? t("shield_title") : t("no_title"));
     $("sheet-body").innerHTML = ok ? L(it.ok) : (protectedThisQ? t("shield_body") : L(it.no));
-    if(ok) $("sheet-award").innerHTML = '+'+lastGain+' <img src="img/tt.png" alt="Thiên thạch tím" />';
+    if(ok) $("sheet-award").innerHTML = '+'+lastGain+' <img src="img/tt.png" alt="'+t("tt_name")+'" />';
     $("sheet-award").classList.toggle("hide", !ok);
     sh.classList.add("show");
   }
@@ -513,7 +515,7 @@
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang=LANG;
     document.title=t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     // vẽ lại phần động theo ngôn ngữ (không phá trạng thái đang trả lời)
     var it=QUESTIONS[idx];

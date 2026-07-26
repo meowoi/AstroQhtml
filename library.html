@@ -25,13 +25,13 @@
   <header class="top">
     <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Trạm Tri Thức</span></button>
     <label class="search"><span id="ic-search"></span><input id="q" type="search" placeholder="Tìm bài viết…" data-i18n-ph="search_ph" /></label>
-    <div class="srcfilter" id="srcfilter" role="group" aria-label="Nguồn">
+    <div class="srcfilter" id="srcfilter" role="group" data-i18n-aria="a_source" aria-label="Nguồn">
       <button data-src="all" class="active" data-i18n="src_all">Tất cả</button>
       <button data-src="NASA">NASA</button>
       <button data-src="ESA">ESA</button>
       <button data-src="AI & Tech" data-i18n="src_ai">AI &amp; Tech</button>
     </div>
-    <div class="currency" title="Thiên thạch tím"><span class="gem" id="gem"><img src="img/tt.png" alt="tt" /></span><span class="c-val" id="bal">0</span></div>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím"><span class="gem" id="gem"><img src="img/tt.png" alt="tt" /></span><span class="c-val" id="bal">0</span></div>
     <div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="vi">VI</button><button type="button" data-lang="en">EN</button></div>
   </header>
 
@@ -92,7 +92,9 @@
 
   /* ===== i18n ===== */
   var I18N={
-    vi:{ title:"AstroQ — Thư Viện Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
+    vi:{
+      tt_name:"Thiên thạch tím",
+      a_source:"Nguồn", title:"AstroQ — Thư Viện Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
       src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
       st_read:"Đã đọc (bài)", st_coll:"Đã thu thập", articles:"Bài viết", all_topics:"Tất cả chủ đề",
       cat_astronomy:"Thiên văn", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot",
@@ -100,7 +102,9 @@
       reading:"Đang đọc…", claim:"Đã đọc xong · Nhận", claimed:"✓ Đã nhận thưởng đọc", read_badge:"Đã đọc",
       quiz_cta:"LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU", credit:"Nguồn dữ liệu",
       toast_claim:"+{n} {tt} · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
-    en:{ title:"AstroQ — Discovery Library", back:"Back to Knowledge Station", search_ph:"Search articles…",
+    en:{
+      tt_name:"Purple Meteor",
+      a_source:"Source", title:"AstroQ — Discovery Library", back:"Back to Knowledge Station", search_ph:"Search articles…",
       src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
       st_read:"Read (articles)", st_coll:"Collected", articles:"Articles", all_topics:"All topics",
       cat_astronomy:"Astronomy", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots",
@@ -312,8 +316,7 @@
   function applyLang(lang){
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang=LANG; document.title=t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
-    document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ el.placeholder=t(el.getAttribute("data-i18n-ph")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     $("ic-search").innerHTML=lic("search"); $("ic-cat").innerHTML=lic("layers"); $("ic-award").innerHTML=lic("award");
     $("ic-read").innerHTML=lic("book"); $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");

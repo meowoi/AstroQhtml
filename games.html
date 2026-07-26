@@ -26,8 +26,8 @@
   <header class="hub-top">
     <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khoang Lái</span></button>
     <span class="hub-tag">[ ARCADE_BAY ]</span>
-    <div class="currency" title="Thiên thạch tím">
-      <span class="gem" id="gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
       <span class="c-val" id="bal">0</span>
     </div>
     <div class="lang-switch" role="group" aria-label="Language">
@@ -70,6 +70,7 @@
   /* ================= i18n ================= */
   var I18N = {
     vi:{
+      tt_name:"Thiên thạch tím",
       title:"AstroQ — Sảnh Trò Chơi", back:"Về Khoang Lái",
       eyebrow:"Sảnh Trò Chơi", title_h:"Chọn một trò chơi để bắt đầu",
       intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
@@ -80,6 +81,7 @@
       start_toast:"🎮 Đang khởi động trò chơi…"
     },
     en:{
+      tt_name:"Purple Meteor",
       title:"AstroQ — Arcade Bay", back:"Return to Cockpit",
       eyebrow:"Arcade Bay", title_h:"Pick a game to start",
       intro:"Each play costs a few Purple Meteors. Earn more at the Knowledge Station if you run low!",
@@ -146,7 +148,7 @@
         '<span class="tag">'+L(g.tag)+'</span>'+
         '<h3>'+L(g.name)+'</h3>'+
         '<p>'+L(g.desc)+'</p>'+
-        '<span class="cost"><img src="img/tt.png" alt="Thiên thạch tím" /><b>'+g.cost+'</b><span>'+t("per_run")+'</span></span>'+
+        '<span class="cost"><img src="img/tt.png" alt="'+t("tt_name")+'" /><b>'+g.cost+'</b><span>'+t("per_run")+'</span></span>'+
         btn+
         '<div class="hud-line foot">'+
           '<span>DIFF: '+t("diff_"+g.diff).toUpperCase()+'</span><span>FEE: '+g.cost+'</span></div>'+
@@ -184,7 +186,7 @@
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang=LANG;
     document.title=t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     render();
     if($("need").classList.contains("show")) { /* giữ nguyên; sẽ cập nhật khi mở lại */ }

@@ -43,14 +43,14 @@
 
   <div class="gauges">
     <!-- Thiên thạch tím (Purple Meteor) -->
-    <div class="gauge fuel" title="Thiên thạch tím">
+    <div class="gauge fuel" data-i18n-title="tt_name" title="Thiên thạch tím">
       <span class="g-label" data-i18n="st_fuel">METEOR</span>
-      <span class="gem-badge"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
+      <span class="gem-badge"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
       <span class="g-val" id="purple-asteroids">0</span>
       <span class="bar"><i id="fuel-bar"></i></span>
     </div>
     <!-- Flight Streak -->
-    <div class="gauge streak" title="Chuỗi ngày bay liên tiếp">
+    <div class="gauge streak" data-i18n-title="a_streak" title="Chuỗi ngày bay liên tiếp">
       <span class="g-label" data-i18n="st_streak">STREAK</span>
       <span class="streak-ic" aria-hidden="true"><svg class="lic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
       <span class="g-val" id="streak-val">0</span>
@@ -63,14 +63,14 @@
       <span class="bar o2bar"><i id="o2-bar"></i></span>
     </div>
     <!-- Tọa độ hiện tại -->
-    <div class="gauge coord" title="Tọa độ">
+    <div class="gauge coord" data-i18n-title="a_coord" title="Tọa độ">
       <span class="g-label" data-i18n="st_coord">COORD</span>
       <span class="g-val mono" id="coord-val">--</span>
     </div>
   </div>
 
   <div class="controls">
-    <div class="lang-switch" role="group" aria-label="Language / Ngôn ngữ">
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
       <button type="button" data-lang="vi">VI</button>
       <button type="button" data-lang="en">EN</button>
     </div>
@@ -78,7 +78,7 @@
       <span class="avatar" id="user-avatar">A</span>
       <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" data-i18n="role">Người chơi</span></span>
     </div>
-    <button class="logout-btn" id="logout" type="button" data-i18n="logout" title="Đăng xuất">Đăng xuất</button>
+    <button class="logout-btn" id="logout" type="button" data-i18n="logout" data-i18n-title="logout" title="Đăng xuất">Đăng xuất</button>
   </div>
 </header>
 
@@ -136,7 +136,7 @@
       <span class="tag" data-i18n="game_tag">Game 2D</span>
       <h3 data-i18n="game_title">Phòng Trái Lực</h3>
       <p data-i18n="game_desc">Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.</p>
-      <span class="cost"><img src="img/tt.png" alt="Thiên thạch tím" /><b>5</b><span data-i18n="game_cost_per">/ lượt</span></span>
+      <span class="cost"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><b>5</b><span data-i18n="game_cost_per">/ lượt</span></span>
       <button class="jelly-btn" id="btn-game" data-i18n="game_btn">Chơi Game</button>
       <div class="hud-line bot"><span>FEE: 5 / RUN</span><span>PWR: 100%</span></div>
     </article>
@@ -191,6 +191,10 @@
   /* ============ i18n (đồng bộ với astroq-lang) ============ */
   var I18N = {
     vi:{
+      a_lang:"Ngôn ngữ",
+      tt_name:"Thiên thạch tím",
+      a_streak:"Chuỗi ngày bay liên tiếp",
+      a_coord:"Tọa độ",
       role:"Người chơi", banner_eyebrow:"Căn cứ AstroQ", welcome_pre:"Chào mừng trở lại,",
       banner_desc:"Chọn một khu vực để bắt đầu: học kiến thức, thử tài trong game, hay du hành khắp thiên hà.",
       st_fuel:"THIÊN THẠCH", st_o2:"OXY", st_coord:"TỌA ĐỘ", st_streak:"CHUỖI BAY", st_streak_unit:"ngày",
@@ -217,6 +221,10 @@
       title:"AstroQ — Bảng điều khiển Người chơi"
     },
     en:{
+      a_lang:"Language",
+      tt_name:"Purple Meteor",
+      a_streak:"Consecutive flight days",
+      a_coord:"Coordinates",
       role:"Player", banner_eyebrow:"AstroQ Base", welcome_pre:"Welcome back,",
       banner_desc:"Pick an area to begin: learn, test your skills in a game, or travel across the galaxy.",
       st_fuel:"METEOR", st_o2:"O₂", st_coord:"COORD", st_streak:"STREAK", st_streak_unit:"days",
@@ -345,7 +353,7 @@
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang = LANG;
     document.title = t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     var name = userName();
     $("user-name").textContent = name;

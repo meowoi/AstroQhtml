@@ -17,6 +17,10 @@
   /* ============================ i18n ============================ */
   var I18N = {
     vi:{
+      a_lang:"Ngôn ngữ",
+      a_crew:"Phi hành đoàn đồng hành",
+      a_comet:"Mèo Comet — phi công vũ trụ, linh vật của astroQ.org",
+      a_byte:"Robot Byte — trợ lý AI, linh vật của astroQ.org",
       title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 8/2026",
       status:"TRẠM ĐANG KHỞI ĐỘNG",
       eyebrow:"PRE-LAUNCH · MISSION 001",
@@ -68,6 +72,10 @@
       foot_note:"Nền tảng học STEM tương tác cho nhà khám phá trẻ"
     },
     en:{
+      a_lang:"Language",
+      a_crew:"Your companion crew",
+      a_comet:"Comet the cat — space pilot, astroQ.org mascot",
+      a_byte:"Byte the robot — AI assistant, astroQ.org mascot",
       title:"astroQ.org — Explore the Galaxy of Knowledge | Launching Aug 2026",
       status:"STATION WARMING UP",
       eyebrow:"PRE-LAUNCH · MISSION 001",

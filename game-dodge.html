@@ -22,8 +22,8 @@
 <header class="top">
   <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
   <span class="tag" id="gtag">[ ASTROQ ]</span>
-  <div class="currency" title="Thiên thạch tím">
-    <span class="gem" id="gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
     <span class="c-val" id="bal">0</span>
   </div>
   <div class="lang-switch" role="group" aria-label="Language">
@@ -118,6 +118,7 @@
   /* ===== i18n ===== */
   var I18N = {
     vi:{
+      tt_name:"Thiên thạch tím",
       title:"AstroQ — Né Thiên Thạch", back:"Về Sảnh", home_btn:"Khoang Lái",
       hud_score:"Điểm", hud_best:"Kỷ lục", mined_lbl:"Đã khai thác",
       start_title:"Né Thiên Thạch",
@@ -133,6 +134,7 @@
       resume:"Chơi tiếp", to_hub:"Về Sảnh Game"
     },
     en:{
+      tt_name:"Purple Meteor",
       title:"AstroQ — Asteroid Dodge", back:"Arcade", home_btn:"Cockpit",
       hud_score:"Score", hud_best:"Best", mined_lbl:"Mined",
       start_title:"Asteroid Dodge",
@@ -349,8 +351,7 @@
   function applyLang(lang){
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang=LANG; document.title=t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
-    document.querySelectorAll("[data-i18n-html]").forEach(function(el){ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
     if($("ov-need").classList.contains("show")) showNeed();

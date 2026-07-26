@@ -56,7 +56,7 @@
 </button>
 
 <!-- Reopen button (shown when the left deck is collapsed on desktop) -->
-<button id="deck-reopen" class="panel" type="button" aria-label="Mở bảng điều khiển" title="Mở bảng điều khiển">
+<button id="deck-reopen" class="panel" type="button" data-i18n-aria="aOpenDeck" aria-label="Mở bảng điều khiển" data-i18n-title="aOpenDeck" title="Mở bảng điều khiển">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 </button>
 
@@ -69,7 +69,7 @@
         <h1 id="deck-title">Solar System<br/>Explorer</h1>
         <div class="brand-sub" data-i18n="exhibit">Interactive Exhibit</div>
       </div>
-      <button class="deck-collapse" id="deck-collapse" type="button" aria-label="Thu gọn bảng điều khiển" title="Thu gọn">
+      <button class="deck-collapse" id="deck-collapse" type="button" data-i18n-aria="aCollapse" aria-label="Thu gọn bảng điều khiển" data-i18n-title="aCollapseShort" title="Thu gọn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
     </div>
@@ -132,7 +132,7 @@
 
   <div class="deck-foot">
     <div class="hint" data-i18n="hint">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
-    <a class="home-btn" href="dashboard.html" title="Quay lại" aria-label="Quay lại Dashboard">
+    <a class="home-btn" href="dashboard.html" data-i18n-title="aBack" title="Quay lại" data-i18n-aria="aBackDash" aria-label="Quay lại Dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
       <span data-i18n="home">Quay lại</span>
     </a>
@@ -228,6 +228,11 @@ window.LANG = 'en';
 // UI-chrome dictionary.
 window.I18N = {
   en:{
+    aOpenDeck:'Open controls',
+    aCollapse:'Collapse controls',
+    aCollapseShort:'Collapse',
+    aBack:'Back',
+    aBackDash:'Back to dashboard',
     loaderTitle:'Solar System Explorer', loaderSub:'Entering…',
     brand1:'Solar System', brand2:'Explorer', exhibit:'Interactive Exhibit',
     lede:'Fly through our cosmic neighbourhood. Tap any world to glide closer and discover what makes it wonderful — and whether life could ever call it home.',
@@ -259,6 +264,11 @@ window.I18N = {
     unlockTitle:'Unlock the mission to travel there', missionNow:'Start the mission now', later:'Later', missionSoon:'Missions are coming soon!'
   },
   vi:{
+    aOpenDeck:'Mở bảng điều khiển',
+    aCollapse:'Thu gọn bảng điều khiển',
+    aCollapseShort:'Thu gọn',
+    aBack:'Quay lại',
+    aBackDash:'Quay lại Dashboard',
     loaderTitle:'Khám phá Hệ Mặt Trời', loaderSub:'Đang tiến vào…',
     brand1:'Khám phá', brand2:'Hệ Mặt Trời', exhibit:'Triển lãm tương tác',
     lede:'Bay xuyên khu vực vũ trụ quanh ta. Chạm vào bất kỳ thế giới nào để tới gần hơn và khám phá điều kỳ diệu của nó — cùng câu hỏi liệu sự sống có thể tồn tại ở đó.',
@@ -2328,8 +2338,7 @@ try{
   function applyLanguage(lang){
     window.LANG = lang;
     document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===lang); });
-    document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=T(el.dataset.i18n); });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder', T(el.dataset.i18nPh)); });
+    AstroQ.applyTexts(T);
     var dt=$('deck-title'); if(dt) dt.innerHTML=T('brand1')+'<br/>'+T('brand2');
     setLbl('nav-prev',T('prev')); setLbl('nav-next',T('next')); setLbl('nav-back',T('navSystem')); setLbl('nav-sun',T('flySun'));
     var ret=$('nm-place-return'); if(ret) ret.textContent='↩ '+T('returnHome');

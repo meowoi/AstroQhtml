@@ -27,8 +27,8 @@
   <header class="top">
     <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khoang Lái</span></button>
     <div class="htitle" data-i18n="title_h">TRẠM TRI THỨC &amp; DỮ LIỆU VŨ TRỤ</div>
-    <div class="currency" title="Thiên thạch tím">
-      <span class="gem" id="gem"><img src="img/tt.png" alt="Thiên thạch tím" /></span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
       <span class="c-val" id="bal">0</span>
     </div>
     <div class="lang-switch" role="group" aria-label="Language">
@@ -101,6 +101,7 @@
   /* ===== i18n ===== */
   var I18N = {
     vi:{
+      tt_name:"Thiên thạch tím",
       title:"AstroQ — Trạm Tri Thức", back:"Về Khoang Lái",
       title_h:"TRẠM TRI THỨC & DỮ LIỆU VŨ TRỤ", eyebrow:"Trạm Tri Thức",
       intro:"Chọn hành trình học của bạn: khám phá dữ liệu vũ trụ từ NASA · ESA · MIT, hoặc thử tài qua Quiz để săn Thiên thạch tím.",
@@ -117,6 +118,7 @@
       toast_claim:"+{n} {tt} · Kiến thức nạp đầy!"
     },
     en:{
+      tt_name:"Purple Meteor",
       title:"AstroQ — Knowledge Station", back:"Return to Cockpit",
       title_h:"KNOWLEDGE STATION & COSMIC DATA", eyebrow:"Knowledge Station",
       intro:"Choose your learning path: explore cosmic data from NASA · ESA · MIT, or test yourself with quizzes to mine Purple Meteors.",
@@ -235,7 +237,7 @@
   function applyLang(lang){
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang=LANG; document.title=t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
+    AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     $("ic-lib").innerHTML=lic("telescope"); $("ic-quiz").innerHTML=lic("zap");
     $("ic-lib-btn").innerHTML=lic("book"); $("ic-quiz-btn").innerHTML=lic("zap");

@@ -23,12 +23,14 @@
   ];
 
   var I18N = {
-    vi:{ title:"CẤP THẺ ID PHI HÀNH GIA", subtitle:"Chọn nhân vật & đặt tên để bắt đầu", pilot:"PHI HÀNH GIA",
+    vi:{
+      a_lang:"Ngôn ngữ", title:"CẤP THẺ ID PHI HÀNH GIA", subtitle:"Chọn nhân vật & đặt tên để bắt đầu", pilot:"PHI HÀNH GIA",
          name_label:"TÊN PHI HÀNH GIA", name_ph:"Nhập tên của bạn…", start:"BẮT ĐẦU HÀNH TRÌNH",
          choose:"CHỌN NHÂN VẬT", role:"CHỨC VỤ", trait:"TÍNH CÁCH", s_pow:"NĂNG LƯỢNG", s_spd:"TỐC ĐỘ", s_iq:"TRÍ TUỆ",
          err_name:"Hãy nhập tên phi hành gia!", clearance:"QUYỀN: TÂN BINH", tap:"Chạm vào một nhân vật để xem thông tin",
          mystery_toast:"Nhân vật bí ẩn — sắp mở khoá!" },
-    en:{ title:"ASTRONAUT ID ISSUE", subtitle:"Pick a character & name to begin", pilot:"PILOT",
+    en:{
+      a_lang:"Language", title:"ASTRONAUT ID ISSUE", subtitle:"Pick a character & name to begin", pilot:"PILOT",
          name_label:"PILOT NAME", name_ph:"Enter your name…", start:"START THE JOURNEY",
          choose:"CHOOSE YOUR CHARACTER", role:"ROLE", trait:"PERSONALITY", s_pow:"POWER", s_spd:"SPEED", s_iq:"INTELLECT",
          err_name:"Please enter a pilot name!", clearance:"CLEARANCE: ROOKIE", tap:"Tap a character to view its stats",
@@ -44,7 +46,7 @@
     if(lang==="en"||lang==="vi") LANG=lang;
     document.documentElement.lang = LANG;
     document.title = "AstroQ — " + t("title");
-    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+    AstroQ.applyTexts(t);
     var np=$("pilot-name"); if(np) np.placeholder = t("name_ph");
     document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
     if(selected) fillHud(selected);

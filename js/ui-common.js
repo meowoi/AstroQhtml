@@ -29,6 +29,34 @@
   }
   function setLang(lang){ try{ localStorage.setItem(LS_LANG, lang); }catch(e){} }
 
+  /* Dịch toàn bộ nội dung + THUỘC TÍNH trong trang theo hàm tra từ `t`.
+     Gọi một lần trong applyLang của mỗi trang, thay cho việc tự viết vòng lặp.
+
+       data-i18n="key"        → textContent
+       data-i18n-html="key"   → innerHTML   (dùng khi chuỗi có <b>, <br/>…)
+       data-i18n-ph="key"     → placeholder
+       data-i18n-title="key"  → title       (tooltip)
+       data-i18n-aria="key"   → aria-label  (trình đọc màn hình)
+       data-i18n-alt="key"    → alt         (ảnh)                              */
+  var I18N_ATTR = { ph:"placeholder", title:"title", aria:"aria-label", alt:"alt" };
+  function applyTexts(t, root){
+    var r = root || document;
+    r.querySelectorAll("[data-i18n]").forEach(function(el){
+      el.textContent = t(el.getAttribute("data-i18n"));
+    });
+    r.querySelectorAll("[data-i18n-html]").forEach(function(el){
+      el.innerHTML = t(el.getAttribute("data-i18n-html"));
+    });
+    for(var k in I18N_ATTR){
+      if(!I18N_ATTR.hasOwnProperty(k)) continue;
+      (function(attr, sel){
+        r.querySelectorAll("[data-i18n-" + sel + "]").forEach(function(el){
+          el.setAttribute(attr, t(el.getAttribute("data-i18n-" + sel)));
+        });
+      })(I18N_ATTR[k], k);
+    }
+  }
+
   /* Bật/tắt trạng thái active của nút đổi ngôn ngữ. */
   function markLangButtons(lang, sel){
     document.querySelectorAll(sel||".lang-switch button").forEach(function(b){
@@ -53,7 +81,12 @@
      makeToast(el|id, ms) -> toast(msg, type)
      · "{tt}" trong msg  → ảnh Thiên thạch tím (img/tt.png)
      · type "ok"/"bad"   → icon check/cross phát sáng ở đầu toast   */
-  var TT_IMG = '<img class="tt-inline" src="img/tt.png" alt="Thiên thạch tím" />';
+  /* Ảnh Thiên thạch tím chèn vào toast qua token {tt}. alt đổi theo ngôn ngữ đang chọn
+     — hàm chứ không phải hằng, vì người dùng có thể đổi ngôn ngữ giữa chừng. */
+  function ttImg(){
+    return '<img class="tt-inline" src="img/tt.png" alt="' +
+           (getLang() === "en" ? "Purple Meteor" : "Thiên thạch tím") + '" />';
+  }
   var TOAST_IC = {
     ok:'<svg class="toast-ic ok" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.4l3 3 6-6.4"/></svg>',
     bad:'<svg class="toast-ic bad" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>'
@@ -63,7 +96,7 @@
     return function(msg, type){
       var node = (typeof el==="string") ? $(el) : el;
       if(!node) return;
-      var body = String(msg).replace(/\{tt\}/g, TT_IMG);
+      var body = String(msg).replace(/\{tt\}/g, ttImg());
       node.innerHTML = (TOAST_IC[type]||"") + '<span class="toast-msg">'+body+'</span>';
       node.classList.add("show");
       clearTimeout(timer);
@@ -73,7 +106,7 @@
 
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
               getLang:getLang, setLang:setLang, markLangButtons:markLangButtons,
-              initLang:initLang, makeToast:makeToast, TT_IMG:TT_IMG,
+              initLang:initLang, applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
               LS_USER:LS_USER, LS_LANG:LS_LANG };
 
   global.AstroQ = global.AstroQ || {};
