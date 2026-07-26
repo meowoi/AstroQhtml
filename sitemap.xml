@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml — astroQ.org
+  Chỉ liệt kê URL công khai đang cho phép lập chỉ mục.
+
+  Giai đoạn trước ra mắt (đến ~08/2026) chỉ có trang chủ là công khai:
+  landing-app.html đang để noindex, còn các trang app (dashboard, select, learn,
+  library, quiz, games, game-*, explorer) chưa mở nên không đưa vào sitemap.
+  Khi app mở cửa: thêm <url> cho từng trang muốn được tìm thấy và cập nhật <lastmod>.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://astroq.org/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

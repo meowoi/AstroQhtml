@@ -1,0 +1,42 @@
+# robots.txt — astroQ.org
+# Chính sách: mở hoàn toàn cho cả công cụ tìm kiếm lẫn AI crawler.
+# Lưu ý: KHÔNG dùng Disallow cho các trang đang đặt noindex (vd landing-app.html) —
+# chặn ở robots.txt sẽ khiến bot không đọc được thẻ meta noindex bên trong.
+
+# ---------- Mặc định: mọi bot ----------
+User-agent: *
+Allow: /
+
+# ---------- OpenAI ----------
+# GPTBot: thu thập dữ liệu huấn luyện
+User-agent: GPTBot
+Allow: /
+
+# ChatGPT-User: truy cập theo yêu cầu tức thời của người dùng trong ChatGPT
+User-agent: ChatGPT-User
+Allow: /
+
+# ---------- Perplexity ----------
+User-agent: PerplexityBot
+Allow: /
+
+# ---------- Anthropic (Claude) ----------
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# ---------- Google ----------
+# Google-Extended: quyền dùng nội dung cho Gemini / Vertex AI.
+# Không ảnh hưởng tới việc Googlebot lập chỉ mục cho Google Search.
+User-agent: Google-Extended
+Allow: /
+
+# ---------- Apple ----------
+# Applebot-Extended: quyền dùng nội dung cho Apple Intelligence.
+User-agent: Applebot-Extended
+Allow: /
+
+# ---------- Sitemap ----------
+Sitemap: https://astroq.org/sitemap.xml

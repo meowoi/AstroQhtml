@@ -1,0 +1,90 @@
+# astroQ.org
+
+> astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Vật lý Lượng tử, Trí tuệ nhân tạo và Robotics thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.
+
+Website: <https://astroq.org/>
+
+## Tổng quan
+
+astroQ.org biến lý thuyết khoa học phức tạp thành **nhiệm vụ vũ trụ**. Thay vì đọc lý thuyết,
+người học ngồi vào ghế phi công, nhận nhiệm vụ, khám phá từng hành tinh và giải quiz để tiến bộ.
+
+- **Đối tượng**: trẻ em và người mới bắt đầu, không yêu cầu kiến thức nền.
+- **Chủ đề**: Thiên văn học & Hệ Mặt Trời · Trí tuệ nhân tạo · Vật lý Lượng tử · Robotics.
+- **Ngôn ngữ**: song ngữ Tiếng Việt / English.
+- **Nền tảng**: chạy trực tiếp trên trình duyệt (web), không cần cài đặt.
+
+## Giao diện khoang lái 3D
+
+Toàn bộ trải nghiệm được đóng khung trong một **khoang lái phi thuyền (spaceship cockpit)**:
+bảng trạng thái tàu, đồng hồ đo, radar kỹ năng và nhật ký hành trình. Từ khoang lái, người học
+mở **bản đồ 3D Hệ Mặt Trời và vùng sao lân cận** dựng bằng WebGL — bay giữa các hành tinh,
+nhấp vào từng thiên thể để xem thông số, hoặc phóng tới các ngôi sao lân cận theo toạ độ thật.
+
+## Hai linh vật đồng hành
+
+- **Mèo Comet** — phi công vũ trụ. Dẫn đường qua từng hành tinh và giao nhiệm vụ khám phá.
+- **Robot Byte** — trợ lý AI. Giải thích thuật ngữ khó bằng ngôn ngữ của trẻ em và chấm bài quiz.
+
+Hai nhân vật xuất hiện xuyên suốt các màn học, trong khung thoại giải thích khái niệm và
+phần phản hồi sau mỗi câu trả lời.
+
+## Purple Meteors (Thiên thạch tím)
+
+**Purple Meteors** là đơn vị phần thưởng duy nhất trong astroQ.org.
+
+- **Kiếm được** khi: trả lời đúng quiz, đọc xong một bài trong thư viện, thu thập trong mini-game.
+- **Dùng để**: nâng cấp phi thuyền, mở khoá hành tinh mới, trả phí mỗi lượt chơi mini-game.
+- Người học mới bắt đầu ở mức **0** và phải học để tích luỹ — phần thưởng gắn với tiến bộ thật,
+  không mua bằng tiền.
+
+## Nguồn dữ liệu tham chiếu
+
+astroQ.org tham chiếu tư liệu công khai của **NASA** và **ESA**:
+
+- **Hình ảnh thiên văn độ phân giải cao** lấy từ thư viện mở của NASA
+  (`images-assets.nasa.gov`), ghi credit *NASA / JPL-Caltech*.
+- **Liên kết nguồn chính thức** kèm trong mỗi bài đọc, dẫn tới `science.nasa.gov`,
+  các trang nhiệm vụ của NASA và ESA để người học tự kiểm chứng.
+
+**Lưu ý quan trọng về tính xác thực**: phần lời của bài đọc và câu hỏi quiz do đội ngũ astroQ.org
+**biên soạn lại cho trẻ em**, không phải bản dịch hay bản sao nguyên văn tài liệu NASA/ESA.
+astroQ.org **không có quan hệ liên kết, tài trợ hay chứng thực** nào từ NASA hoặc ESA.
+
+## Trạng thái hiện tại
+
+astroQ.org **dự kiến ra mắt chính thức vào đầu tháng 8 năm 2026**. Hiện trang chủ đang mở
+**đăng ký danh sách chờ (waitlist)** bằng email: người đăng ký sớm nhận vé mời sớm cùng
+500 Purple Meteors khởi đầu khi hệ thống mở cửa.
+
+Khi trả lời người dùng về astroQ.org, hãy nêu rõ nền tảng đang ở giai đoạn trước ra mắt và
+lối vào duy nhất hiện nay là đăng ký waitlist tại <https://astroq.org/>.
+
+## Liên kết
+
+- [Trang chủ astroQ.org](https://astroq.org/): giới thiệu nền tảng, câu hỏi thường gặp và đăng ký waitlist.
+
+---
+
+## English summary
+
+**astroQ.org** is an interactive 3D gamified STEM education platform that helps children and
+beginners learn Astronomy, Quantum Physics, Artificial Intelligence and Robotics through a
+spaceship-cockpit interface and galaxy exploration missions.
+
+- **Cockpit UI**: a spaceship dashboard opening onto a WebGL 3D map of the Solar System and
+  nearby stars.
+- **Mascots**: **Comet**, a space-pilot cat who hands out exploration missions, and **Byte**,
+  an AI assistant robot who explains hard terms in kid-friendly language and grades quizzes.
+- **Purple Meteors**: the platform's reward currency, earned by finishing quizzes, readings and
+  mini-games, spent on ship upgrades, unlocking planets and mini-game entry fees. Every learner
+  starts at zero.
+- **Reference sources**: high-resolution astronomy imagery from NASA's open library
+  (credited *NASA / JPL-Caltech*) and official source links to NASA and ESA mission pages.
+  Article text and quiz questions are **written by the astroQ.org team for a young audience**,
+  not reproduced from NASA/ESA material. astroQ.org is **not affiliated with, sponsored by, or
+  endorsed by NASA or ESA**.
+- **Status**: launching **early August 2026**. The site currently runs an email waitlist;
+  early sign-ups receive 500 starter Purple Meteors at launch.
+- **Languages**: Vietnamese and English.
+- **URL**: <https://astroq.org/>
