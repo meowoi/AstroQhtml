@@ -3,12 +3,80 @@
   sitemap.xml — astroQ.org
   Chỉ liệt kê URL công khai đang cho phép lập chỉ mục.
 
-  Giai đoạn trước ra mắt (đến ~08/2026) chỉ có trang chủ là công khai:
+  Giai đoạn trước ra mắt (đến ~08/2026): trang chủ + bộ bài Wiki là công khai;
   landing-app.html đang để noindex, còn các trang app (dashboard, select, learn,
   library, quiz, games, game-*, explorer) chưa mở nên không đưa vào sitemap.
   Khi app mở cửa: thêm <url> cho từng trang muốn được tìm thấy và cập nhật <lastmod>.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Wiki AEO: 10 bài kiến thức + trang mục lục -->
+  <url>
+    <loc>https://astroq.org/wiki/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/vat-ly-luong-tu-la-gi.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/ai-va-robotics-khac-nhau.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/ho-den-hinh-thanh-nhu-the-nao.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/tram-vu-tru-iss-hoat-dong.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/sao-hoa-mau-do-va-su-song.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/thuyet-vu-no-lon-big-bang.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/tre-em-may-tuoi-hoc-lap-trinh.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/comet-va-byte-la-ai.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/purple-meteors-hoat-dong.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://astroq.org/wiki/ung-dung-thien-van-doi-song.html</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <url>
     <loc>https://astroq.org/</loc>
     <lastmod>2026-07-26</lastmod>

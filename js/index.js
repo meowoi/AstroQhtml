@@ -17,6 +17,8 @@
   /* ============================ i18n ============================ */
   var I18N = {
     vi:{
+      wiki_link:"Đọc thêm 10 bài kiến thức nền tảng trong astroQ.org Wiki →",
+      foot_wiki:"Wiki",
       a_lang:"Ngôn ngữ",
       a_crew:"Phi hành đoàn đồng hành",
       a_comet:"Mèo Comet — phi công vũ trụ, linh vật của astroQ.org",
@@ -72,6 +74,8 @@
       foot_note:"Nền tảng học STEM tương tác cho nhà khám phá trẻ"
     },
     en:{
+      wiki_link:"Read 10 foundational explainers in the astroQ.org Wiki →",
+      foot_wiki:"Wiki",
       a_lang:"Language",
       a_crew:"Your companion crew",
       a_comet:"Comet the cat — space pilot, astroQ.org mascot",

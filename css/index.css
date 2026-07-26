@@ -288,3 +288,13 @@ a{text-decoration:none;}
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
   box-shadow:0 14px 30px -14px rgba(0,0,0,.85);
   transition:opacity .3s var(--ease), transform .3s var(--ease);}
+
+/* Dẫn sang Wiki sau khối FAQ */
+.faq-more{margin:18px 0 0;text-align:center;}
+.faq-more a{display:inline-block;font-family:var(--font-display);font-weight:600;font-size:14.5px;
+  color:var(--cyan);padding:11px 20px;border-radius:12px;
+  background:rgba(0,255,255,.07);border:1px solid rgba(0,255,255,.3);
+  transition:background .18s,transform .14s;}
+.faq-more a:hover{background:rgba(0,255,255,.14);transform:translateY(-2px);}
+.foot a{color:var(--ink-soft);}
+.foot a:hover{color:var(--cyan);}
