@@ -14,6 +14,7 @@ Liên quan: [`firebase-auth.md`](firebase-auth.md) — phần xác thực đang 
 | Stack CloudFormation `astroqsv` | ✅ `ap-southeast-1` |
 | API | ✅ `https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com` |
 | Bảng DynamoDB `astroq-main` | ✅ PAY_PER_REQUEST, bật TTL + PITR |
+| Email duy nhất | ✅ khoá bằng `EMAIL#<email>` trong DynamoDB (**không** dựa vào Firebase) |
 | Lambda `AstroqSV` | ✅ `dotnet10`, arm64, 512 MB |
 | SES gửi email kích hoạt | ✅ từ `no-reply@astroq.org` |
 | Đăng ký 2 giai đoạn | ✅ **34/34 phép kiểm tự động đạt** |
@@ -36,11 +37,12 @@ chứa thêm những đăng ký đang chờ. Email phải duy nhất trên **c�
              │                                          │
    ┌─────────▼──────────┐                    ┌──────────▼─────────────┐
    │ DynamoDB           │   email 10 phút    │ 1. kiểm token + hạn    │
-   │ PK=PENDING#<email> │ ─────────────────▶ │ 2. import vào Firebase │
-   │ SK=SIGNUP          │      (SES)         │    (emailVerified=true)│
-   │ + pwdHash/pwdSalt  │                    │ 3. tạo PROFILE + WALLET│
-   │ + tokenHash, ttl   │                    │ 4. xoá bản ghi chờ     │
-   └────────────────────┘                    │ 5. redirect ?activated │
+   │ PK=PENDING#<email> │ ─────────────────▶ │ 2. GIÀNH CHỖ EMAIL#    │
+   │ SK=SIGNUP          │      (SES)         │ 3. import vào Firebase │
+   │ + pwdHash/pwdSalt  │                    │    (emailVerified=true)│
+   │ + tokenHash, ttl   │                    │ 4. tạo PROFILE + WALLET│
+   │ + continueUrl      │                    │ 5. xoá bản ghi chờ     │
+   └────────────────────┘                    │ 6. redirect ?activated │
      CHƯA có Firebase                        └────────────────────────┘
 ```
 
@@ -62,6 +64,33 @@ kích hoạt thì đẩy chính hash đó lên Firebase qua `ImportUsersAsync` +
 
 `reason` có thể là `ok · already · expired · badtoken · notfound · missing · error` —
 `js/firebase-auth-ui.js` ánh xạ từng giá trị sang một câu VI/EN.
+
+### Email duy nhất — DynamoDB quyết, không phải Firebase
+
+Bản ghi `PK=EMAIL#<email>, SK=ACCOUNT` là **chốt chặn duy nhất đáng tin**. Luồng
+kích hoạt **giành chỗ trước, gọi Firebase sau**:
+
+```
+kiểm token + hạn
+  └─ ClaimEmailAsync:  PutItem  ConditionExpression = attribute_not_exists(PK)
+       ├─ thua  → reason=already, KHÔNG gọi Firebase
+       └─ thắng → import Firebase → PROFILE+WALLET → LinkEmailAsync → xoá pending
+                    └─ hỏng ở bất kỳ bước nào → ReleaseEmailAsync (nếu không
+                       nhả thì email đó bị khoá vĩnh viễn, không ai đăng ký lại được)
+```
+
+⚠️ **Vì sao không tin `fb.EmailExistsAsync` một mình.** Ngày 27/07/2026 đã gặp thật:
+một lượt `POST /auth/register` trả **202** dù email đó vừa kích hoạt xong 60 giây
+trước — đáng lẽ phải 409. *Không tái hiện lại được* (thử ngay sau khi kích hoạt thì
+409 đúng), nên nguyên nhân vẫn chưa rõ. Nhưng hậu quả thì rõ và nghiêm trọng, vì
+**`ImportUsersAsync` khi trùng email sẽ ÂM THẦM ghi đè tài khoản cũ**: không ném lỗi,
+`FailureCount = 0`, uid cũ biến mất. Hai lỗ hổng cộng lại = đăng ký lại email của
+người khác là xoá được tài khoản của họ. Ghi có điều kiện của DynamoDB không phụ
+thuộc vào hành vi của Firebase nên đóng được cả hai.
+
+Còn một lớp nữa: sau khi giành chỗ vẫn kiểm `fb.EmailExistsAsync`, để bắt các tài
+khoản tạo **trước** khi có cơ chế giữ chỗ (bản giữ chỗ mới không chặn được chúng) —
+gặp thì báo `already` và **không import đè**.
 
 **Chi tiết dễ vấp:**
 
