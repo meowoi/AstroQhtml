@@ -404,3 +404,19 @@ footer a:hover{color:var(--accent);}
   opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease);
 }
 .auth-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ---- Chỉ báo môi trường ----
+   Chỉ dựng khi đang xem ở máy hoặc đã ép ?api=… (js/firebase-auth-ui.js).
+   Trên astroq.org với cấu hình mặc định thì phần tử này không tồn tại. */
+.env-badge{
+  position:fixed;left:12px;bottom:12px;z-index:70;
+  padding:6px 11px;border-radius:999px;
+  font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.04em;
+  background:rgba(8,14,38,.82);border:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:var(--ink-faint);pointer-events:auto;cursor:help;user-select:none;
+}
+/* Vàng = đang gọi lên API thật dù đang ngồi ở máy → cẩn thận, dữ liệu là dữ liệu thật */
+.env-badge--prod{color:#ffcf6b;border-color:rgba(255,207,107,.45);}
+.env-badge--local{color:#5fd3ff;border-color:rgba(95,211,255,.45);}
+.env-badge--custom{color:#c084fc;border-color:rgba(192,132,252,.45);}

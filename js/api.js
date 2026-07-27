@@ -1,15 +1,74 @@
 /* ============================================================
    api.js — nói chuyện với backend AstroqSV (AWS Lambda + API Gateway).
 
-   CHỖ DUY NHẤT chứa địa chỉ máy chủ. Đổi stack / đổi vùng / gắn custom domain
-   thì sửa đúng một dòng dưới đây.
+   BA CHẾ ĐỘ CHẠY SONG SONG
+   ─────────────────────────────────────────────────────────────
+     prod   https://astroq.org            → API trên AWS      (mặc định khi ở astroq.org)
+     dev    http://localhost:8000         → API trên AWS      (mặc định khi ở máy)
+     local  http://localhost:8000         → API `dotnet run`  (phải tự bật)
 
-   Để rỗng ("") → mọi lời gọi trả { notConfigured:true } và phía trên tự lùi về
-   luồng cũ, trang không bao giờ vỡ (cùng nguyên tắc với js/firebase-config.js).
+   Đổi chế độ bằng THAM SỐ URL, nhớ luôn cho các lần sau:
+     ?api=prod     → ép dùng API trên AWS
+     ?api=local    → dùng API chạy ở máy (http://localhost:5080)
+     ?api=https://…→ trỏ tới một địa chỉ bất kỳ (stack thử nghiệm chẳng hạn)
+     ?api=reset    → xoá lựa chọn, quay về mặc định theo tên miền
+
+   Vì sao mặc định ở máy vẫn trỏ lên AWS: xem thử giao diện là việc thường xuyên,
+   còn bật backend là việc hiếm. Cái nào hay làm hơn thì để nó khỏi phải cấu hình.
+
+   BACKEND TỰ BIẾT CHUYỂN HƯỚNG VỀ ĐÂU — cả hai bản dùng chung một API, nhưng Lambda
+   đọc header Origin của lời gọi đăng ký (có đối chiếu allowlist) rồi ghi vào bản ghi
+   chờ, nên link kích hoạt trong email sẽ đưa bạn về đúng nơi đã đăng ký: đăng ký ở
+   localhost thì quay về localhost, ở astroq.org thì quay về astroq.org.
+
+   Để API_BASE rỗng ("") → mọi lời gọi trả { notConfigured:true } và phía trên tự lùi
+   về luồng cũ, trang không bao giờ vỡ (cùng nguyên tắc với js/firebase-config.js).
    ============================================================ */
-export const API_BASE = "https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com";
 
-export const isApiConfigured = /^https:\/\/\S+/.test(API_BASE);
+/** API đã deploy trên AWS. Đổi stack / đổi vùng / gắn custom domain thì sửa dòng này. */
+const PROD_API  = "https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com";
+
+/** Cổng của `dotnet run` trong AstroqSV/src/AstroqSV.Api (xem Properties/launchSettings.json). */
+const LOCAL_API = "http://localhost:5080";
+
+const STORE_KEY = "astroq-api";
+
+/* Tham số ?api=… có quyền cao nhất và được ghi nhớ, để bấm quanh site không mất lựa chọn. */
+function readOverride(){
+  let saved = null;
+  try{ saved = localStorage.getItem(STORE_KEY); }catch(e){}   // chế độ riêng tư chặn localStorage
+
+  const q = new URLSearchParams(location.search).get("api");
+  if(!q) return saved;
+
+  const picked = q === "local" ? LOCAL_API
+               : q === "prod"  ? PROD_API
+               : q === "reset" ? null
+               : /^https?:\/\/\S+/.test(q) ? q.replace(/\/+$/, "")
+               : saved;
+
+  try{
+    if(picked) localStorage.setItem(STORE_KEY, picked);
+    else       localStorage.removeItem(STORE_KEY);
+  }catch(e){}
+  return picked;
+}
+
+export const API_BASE = readOverride() || PROD_API;
+
+/** "prod" | "local" | "custom" — dùng để hiện chỉ báo cho người test khỏi nhầm. */
+export const API_MODE = API_BASE === PROD_API  ? "prod"
+                      : API_BASE === LOCAL_API ? "local"
+                      : "custom";
+
+export const isApiConfigured = /^https?:\/\/\S+/.test(API_BASE);
+
+/* Đang chạy ở máy thì in ra để biết mình đang gọi vào đâu — đỡ mất công đoán khi
+   thấy dữ liệu lạ. Trên astroq.org thì im lặng. */
+if(location.hostname === "localhost" || location.hostname === "127.0.0.1"){
+  console.info(`[AstroQ] API (${API_MODE}): ${API_BASE}` +
+               (API_MODE === "prod" ? "  ·  đổi bằng ?api=local" : "  ·  về mặc định bằng ?api=reset"));
+}
 
 const NOT_CONFIGURED = { ok: false, notConfigured: true, status: 0, data: {} };
 

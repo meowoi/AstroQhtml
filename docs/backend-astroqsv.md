@@ -78,6 +78,76 @@ kích hoạt thì đẩy chính hash đó lên Firebase qua `ImportUsersAsync` +
 
 ---
 
+## 0c. Chạy song song local và server
+
+Ba chế độ, đổi bằng **tham số URL** (nhớ luôn cho các lần sau, lưu ở `localStorage["astroq-api"]`):
+
+| Chế độ | Trang chạy ở | Gọi API nào | Bật thế nào |
+|---|---|---|---|
+| **prod** | `https://astroq.org` | Lambda trên AWS | mặc định |
+| **dev** | `http://localhost:8000` | Lambda trên AWS | mặc định khi ở máy |
+| **local** | `http://localhost:8000` | `dotnet run` ở máy, cổng 5080 | `?api=local` |
+
+```
+?api=prod      ép dùng API trên AWS
+?api=local     dùng API chạy ở máy
+?api=<url>     trỏ tới stack thử nghiệm bất kỳ
+?api=reset     xoá lựa chọn, về mặc định
+```
+
+Khi **không phải bản thật** (đang ở máy, hoặc đã ép `?api=`) thì góc dưới-trái hiện
+một huy hiệu `LOCAL · API prod` / `API local` — người test nhìn là biết dữ liệu mình
+vừa tạo nằm ở đâu, khỏi mở DevTools. Trên `astroq.org` với cấu hình mặc định thì
+phần tử này **không được dựng ra**.
+
+### Xem thử ở máy
+
+```powershell
+# Cửa sổ 1 — trang tĩnh
+cd AstroQhtml
+python -m http.server 8000        # http://localhost:8000/landing-app.html
+
+# Cửa sổ 2 — CHỈ khi muốn dùng backend ở máy
+cd AstroqSV/src/AstroqSV.Api
+dotnet run                        # http://localhost:5080  (health: /health)
+```
+
+`dotnet run` không cần Docker: `AddAWSLambdaHosting` chỉ kích hoạt khi thật sự chạy
+trong Lambda, ở máy nó là một app Kestrel bình thường. **Nhưng nó vẫn dùng DynamoDB,
+SES và Secrets Manager THẬT trên AWS** qua `~/.aws/credentials` — không có bản
+DynamoDB local, nên dữ liệu test ở máy và ở server nằm chung một bảng.
+
+### Link kích hoạt tự về đúng nơi đã đăng ký
+
+Đây là phần khiến hai môi trường chạy song song được mà không cần hai backend.
+
+Lambda đọc header `Origin` của lời gọi `POST /auth/register`, **đối chiếu allowlist**,
+rồi ghi kết quả vào trường `continueUrl` của bản ghi chờ. Phải ghi ngay lúc đăng ký,
+vì lúc bấm link thì request đến từ ứng dụng email — **không còn `Origin`** để biết
+người này xuất phát từ đâu.
+
+```
+đăng ký ở localhost:8000  →  kích hoạt xong về  http://localhost:8000/landing-app.html
+đăng ký ở astroq.org      →  kích hoạt xong về  https://astroq.org/landing-app.html
+```
+
+⚠️ **Bắt buộc đối chiếu allowlist.** Tin thẳng `Origin` thì kẻ tấn công đăng ký hộ
+người khác rồi trỏ link kích hoạt về trang của hắn — đúng định nghĩa *open redirect*.
+Đã kiểm: `Origin: https://astroq.org.evil.co` bị loại, rơi về mặc định.
+Trước khi chuyển hướng còn đối chiếu **lần nữa**, phòng trường hợp allowlist bị thu
+hẹp sau khi bản ghi đã nằm đó.
+
+**Allowlist chỉ khai báo một chỗ**: tham số `AllowedOrigins` trong `template.yaml`,
+dùng cho **cả hai** việc — CORS của API Gateway (`!Ref`) và biến `ALLOWED_ORIGINS`
+mà `Services/Origins.cs` đọc. Thêm môi trường mới thì sửa đúng một dòng rồi deploy.
+Bản chạy ở máy đọc cùng danh sách từ `appsettings.Development.json` (phải giữ khớp
+tay, vì máy không đọc được CloudFormation).
+
+Đã kiểm 5 trường hợp: astroq.org · localhost:8000 · 127.0.0.1:5173 · origin giả mạo ·
+không gửi Origin — **15/15 đạt**.
+
+---
+
 ## 1. Quyết định phải chốt TRƯỚC: ai lo xác thực?
 
 Đây là điểm quan trọng nhất, quyết định luôn khối lượng công việc.

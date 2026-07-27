@@ -6,7 +6,8 @@
    Nếu js/firebase-config.js chưa điền → tự lùi về CHẾ ĐỘ DEMO y như code cũ
    (ghi thẳng localStorage, không kiểm tra mật khẩu) để trang không bị vỡ.
    ============================================================ */
-import AstroQAuth from "./firebase-auth.js";
+import AstroQAuth            from "./firebase-auth.js";
+import { API_BASE, API_MODE } from "./api.js";
 
 const $  = (id) => document.getElementById(id);
 /* Bản dự phòng phải có ĐỦ mọi phương thức file này gọi — thiếu một cái là
@@ -164,6 +165,21 @@ if(vResend) vResend.addEventListener("click", async () => {
 });
 
 if(vBack) vBack.addEventListener("click", () => backToLogin(verifyEmail));
+
+/* ---------------- Chỉ báo môi trường ----------------
+   Chỉ hiện khi KHÔNG phải bản thật: đang xem ở máy, hoặc đã ép ?api=… Người test
+   nhìn một cái là biết dữ liệu mình vừa tạo nằm ở đâu, khỏi phải mở DevTools.
+   Trên astroq.org với cấu hình mặc định thì không dựng gì cả.                     */
+(function envBadge(){
+  const atHome = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  if(!atHome && API_MODE === "prod") return;
+
+  const el = document.createElement("div");
+  el.className = "env-badge env-badge--" + API_MODE;
+  el.textContent = (atHome ? "LOCAL · " : "") + "API " + API_MODE;
+  el.title = API_BASE + "  —  ?api=prod | ?api=local | ?api=reset";
+  document.body.appendChild(el);
+})();
 
 /* ---------------- Quay về từ link kích hoạt ----------------
    Server chuyển hướng tới landing-app.html?activated=1&reason=ok (hoặc 0 + lý do).
