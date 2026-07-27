@@ -1,6 +1,20 @@
 /* ============================================================
-   firebase-auth.js — Đăng ký / Đăng nhập bằng Firebase Authentication
-   (provider Email/Password — tức "tài khoản & mật khẩu", khác đăng nhập Google/Facebook).
+   firebase-auth.js — Đăng ký / Đăng nhập cho astroQ.
+
+   HAI NƠI GIỮ TÀI KHOẢN, HAI VAI TRÒ KHÁC NHAU:
+
+     ĐĂNG KÝ  →  backend AstroqSV (AWS)      — js/api.js
+        Lưu đăng ký vào DynamoDB rồi gửi email kích hoạt sống 10 phút.
+        CHƯA có tài khoản Firebase nào được tạo ở bước này.
+        Người dùng bấm link trong email → server mới tạo tài khoản Firebase
+        (đã sẵn emailVerified=true) rồi chuyển hướng về landing-app.html?activated=1.
+
+     ĐĂNG NHẬP → Firebase Authentication      — SDK tải động
+        Firebase là nơi giữ danh tính chính thức, chỉ chứa tài khoản ĐÃ kích hoạt.
+
+   Vì sao không để client tự gọi createUserWithEmailAndPassword: Firebase tạo tài
+   khoản NGAY khi gọi, không có luồng "xác minh xong mới tạo" — làm vậy sẽ tích tụ
+   tài khoản rác chưa xác thực, và không đặt được hạn 10 phút cho link.
 
    ES MODULE: nạp bằng <script type="module">, nên luôn chạy SAU mọi script cổ điển
    → AstroQ (js/ui-common.js) và Economy chắc chắn đã tồn tại.
@@ -9,6 +23,7 @@
    để phía giao diện tự lùi về chế độ demo cũ. Trang không bao giờ vỡ.
    ============================================================ */
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
+import { apiPost, isApiConfigured }     from "./api.js";
 
 const SDK = "https://www.gstatic.com/firebasejs/12.16.0";
 
@@ -48,6 +63,10 @@ const ERR = {
     "auth/unauthorized-domain":   "Tên miền này chưa được cho phép trong Firebase Console.",
     "auth/operation-not-allowed": "Chưa bật đăng nhập bằng Email/Password trong Firebase Console.",
     "auth/requires-recent-login":  "Phiên đã cũ. Đăng nhập lại rồi thử tiếp nhé.",
+    // Mã do backend AstroqSV trả về (không có tiền tố "auth/")
+    "name-too-long":              "Tên hơi dài — dùng tối đa 60 ký tự nhé.",
+    "no-pending":                 "Không có đăng ký nào đang chờ với email này. Đăng ký lại nhé.",
+    "net":                        "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.",
     _default:                     "Có lỗi xảy ra. Thử lại sau ít phút nhé."
   },
   en: {
@@ -64,12 +83,18 @@ const ERR = {
     "auth/unauthorized-domain":   "This domain is not authorised in the Firebase Console.",
     "auth/operation-not-allowed": "Email/Password sign-in is not enabled in the Firebase Console.",
     "auth/requires-recent-login":  "Session too old. Please sign in again.",
+    // Codes returned by the AstroqSV backend (no "auth/" prefix)
+    "name-too-long":              "That name is a bit long — 60 characters max.",
+    "no-pending":                 "No pending sign-up for that email. Please register again.",
+    "net":                        "Can't reach the server. Check your connection and try again.",
     _default:                     "Something went wrong. Please try again."
   }
 };
 function errMsg(code){
   const d = ERR[(window.AstroQ && AstroQ.getLang()) || "vi"] || ERR.vi;
-  return d[code] || d._default;
+  // Backend dùng mã trần ("invalid-email"), Firebase dùng "auth/invalid-email".
+  // Thử cả hai để một bảng lo được cả hai nguồn lỗi.
+  return d[code] || d["auth/" + code] || d._default;
 }
 const fail = (e) => ({ ok: false, code: e && e.code, message: errMsg(e && e.code) });
 const NOT_CONFIGURED = { ok: false, notConfigured: true, message: "" };
@@ -91,21 +116,29 @@ function syncProfile(user, extra){
 const AstroQAuth = {
   isConfigured,
 
-  /** Đăng ký. Tài khoản được tạo ngay (Firebase không có luồng "xác minh trước khi tạo"),
-      nhưng CHƯA ghi hồ sơ vào máy và CHƯA cho vào app cho tới khi xác minh email.
-      → { ok:true, needVerify:true, email } | { ok:false, message } */
+  /** Có backend AstroqSV hay không — giao diện dùng để chọn lời nhắc phù hợp. */
+  hasBackend: isApiConfigured,
+
+  /** Đăng ký qua backend AstroqSV. KHÔNG tạo tài khoản Firebase ở bước này —
+      chỉ ghi nhận vào DynamoDB và gửi email kích hoạt sống `expiresInMinutes` phút.
+      Tài khoản Firebase chỉ ra đời khi người dùng bấm link trong email.
+      → { ok:true, needVerify:true, email, expiresInMinutes } | { ok:false, message } */
   async register(name, email, password){
-    if(!(await boot())) return NOT_CONFIGURED;
-    try{
-      const cred = await fb.createUserWithEmailAndPassword(auth, email, password);
-      // displayName không đặt được lúc tạo, phải cập nhật ở bước riêng
-      if(name) await fb.updateProfile(cred.user, { displayName: name });
-      pendingName = name || "";
-      await fb.sendEmailVerification(cred.user);
-      // Cố ý KHÔNG gọi syncProfile: chưa xác minh thì chưa có hồ sơ trong máy,
-      // nhờ vậy mọi lối vào app (đều dựa trên uid trong localStorage) đều bị chặn.
-      return { ok: true, needVerify: true, email: cred.user.email };
-    }catch(e){ return fail(e); }
+    if(!isApiConfigured) return NOT_CONFIGURED;
+    pendingName = name || "";
+
+    const r = await apiPost("/auth/register", { name, email, password });
+    if(r.netError)       return { ok: false, code: "net", message: errMsg("net") };
+    if(r.notConfigured)  return NOT_CONFIGURED;
+    if(!r.ok)            return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
+
+    return {
+      ok: true, needVerify: true,
+      email: r.data.email || email,
+      expiresInMinutes: r.data.expiresInMinutes || 10,
+      // Email gửi hỏng thì vẫn trả ok (bản ghi chờ đã lưu) nhưng báo để mời bấm "Gửi lại".
+      mailSent: r.data.mailSent !== false
+    };
   },
 
   /** Đăng nhập. Email chưa xác minh → KHÔNG cho vào, trả needVerify.
@@ -125,28 +158,24 @@ const AstroQAuth = {
     }catch(e){ return fail(e); }
   },
 
-  /** Gửi lại email xác minh cho tài khoản đang ở trạng thái chờ. */
-  async resendVerification(){
-    if(!(await boot())) return NOT_CONFIGURED;
-    const u = auth.currentUser;
-    if(!u) return { ok: false, message: errMsg("auth/requires-recent-login") };
-    try{ await fb.sendEmailVerification(u); return { ok: true }; }
-    catch(e){ return fail(e); }
+  /** Gửi lại link kích hoạt. Cần `email` vì lúc này CHƯA có phiên Firebase nào —
+      tài khoản còn chưa tồn tại, chỉ có bản ghi chờ trong DynamoDB.
+      Token cũ mất hiệu lực ngay khi token mới được cấp. */
+  async resendVerification(email){
+    if(!isApiConfigured) return NOT_CONFIGURED;
+    if(!email) return { ok: false, message: errMsg("invalid-email") };
+
+    const r = await apiPost("/auth/resend", { email });
+    if(r.netError)      return { ok: false, code: "net", message: errMsg("net") };
+    if(r.notConfigured) return NOT_CONFIGURED;
+    if(!r.ok)           return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
+    return { ok: true, expiresInMinutes: r.data.expiresInMinutes || 10 };
   },
 
-  /** Người dùng bấm "Tôi đã xác minh xong" → hỏi lại Firebase.
-      Xác minh rồi thì mới ghi hồ sơ vào máy. */
-  async checkVerified(){
-    if(!(await boot())) return NOT_CONFIGURED;
-    const u = auth.currentUser;
-    if(!u) return { ok: false, message: errMsg("auth/requires-recent-login") };
-    try{
-      await fb.reload(u);
-      if(!u.emailVerified) return { ok: false, stillPending: true };
-      syncProfile(u, pendingName ? { name: pendingName } : null);
-      pendingName = "";
-      return { ok: true, user: u };
-    }catch(e){ return fail(e); }
+  /** Tên người dùng nhập ở form đăng ký, giữ trong bộ nhớ để điền sẵn sau khi kích hoạt.
+      Mất khi tải lại trang — không sao, `displayName` trên Firebase mới là nguồn thật. */
+  takePendingName(){
+    const n = pendingName; pendingName = ""; return n;
   },
 
   /** Gửi email đặt lại mật khẩu. */
@@ -181,5 +210,9 @@ window.AstroQAuth = AstroQAuth;
 if(!isConfigured){
   console.warn("[AstroQ] Chưa cấu hình js/firebase-config.js — đăng nhập đang chạy ở CHẾ ĐỘ DEMO " +
                "(không kiểm tra mật khẩu). Xem docs/firebase-auth.md.");
+}
+if(!isApiConfigured){
+  console.warn("[AstroQ] Chưa đặt API_BASE trong js/api.js — đăng ký chạy ở CHẾ ĐỘ DEMO. " +
+               "Xem docs/backend-astroqsv.md.");
 }
 export default AstroQAuth;

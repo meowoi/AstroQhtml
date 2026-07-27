@@ -7,28 +7,74 @@ Liên quan: [`firebase-auth.md`](firebase-auth.md) — phần xác thực đang 
 
 ---
 
-## 0. Tình trạng hiện tại: tôi CHƯA chạy được
+## 0. Tình trạng hiện tại — ĐÃ CHẠY THẬT *(cập nhật 27/07/2026)*
 
-Bạn yêu cầu tôi tự tạo DB, tự deploy, tự đọc CloudWatch. Máy này thiếu toàn bộ công cụ:
-
-| Cần | Trạng thái |
+| Hạng mục | Trạng thái |
 |---|---|
-| .NET SDK 10 | ❌ chưa cài |
-| AWS CLI v2 | ❌ chưa cài |
-| AWS SAM CLI | ❌ chưa cài |
-| Docker (build Native AOT) | ❌ chưa cài |
-| `~/.aws/credentials` | ❌ không có |
+| Stack CloudFormation `astroqsv` | ✅ `ap-southeast-1` |
+| API | ✅ `https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com` |
+| Bảng DynamoDB `astroq-main` | ✅ PAY_PER_REQUEST, bật TTL + PITR |
+| Lambda `AstroqSV` | ✅ `dotnet10`, arm64, 512 MB |
+| SES gửi email kích hoạt | ✅ từ `no-reply@astroq.org` |
+| Đăng ký 2 giai đoạn | ✅ **34/34 phép kiểm tự động đạt** |
 
-Cần bạn làm 2 việc thì tôi mới chạy lệnh thật được:
+Còn thiếu: `POST /auth/login`, `GET /me`, `POST /me/wallet` (đăng nhập hiện chạy
+thẳng bằng Firebase Web SDK ở client, chưa cần qua Lambda).
 
-```powershell
-winget install Microsoft.DotNet.SDK.10
-winget install Amazon.AWSCLI
-winget install Amazon.SAM-CLI
-aws configure          # nhập Access Key / Secret của IAM user có quyền deploy
+⚠️ Tài khoản AWS đang gắn `AdministratorAccess` để deploy được. **Nên thay bằng bộ
+quyền hẹp** ở mục 7 khi stack đã ổn định.
+
+---
+
+## 0b. Đăng ký 2 giai đoạn — hai DB, hai vai trò
+
+Yêu cầu: Firebase **chỉ** được chứa tài khoản đã xác thực; DynamoDB là **tập cha**,
+chứa thêm những đăng ký đang chờ. Email phải duy nhất trên **cả hai** nơi.
+
+```
+        POST /auth/register                    GET /auth/activate?e=&t=
+             │                                          │
+   ┌─────────▼──────────┐                    ┌──────────▼─────────────┐
+   │ DynamoDB           │   email 10 phút    │ 1. kiểm token + hạn    │
+   │ PK=PENDING#<email> │ ─────────────────▶ │ 2. import vào Firebase │
+   │ SK=SIGNUP          │      (SES)         │    (emailVerified=true)│
+   │ + pwdHash/pwdSalt  │                    │ 3. tạo PROFILE + WALLET│
+   │ + tokenHash, ttl   │                    │ 4. xoá bản ghi chờ     │
+   └────────────────────┘                    │ 5. redirect ?activated │
+     CHƯA có Firebase                        └────────────────────────┘
 ```
 
-Trước đó tôi vẫn viết được toàn bộ mã nguồn và file hạ tầng — chỉ không bấm nút deploy được.
+**Mật khẩu không bao giờ được lưu ở dạng thô.** Lúc đăng ký, Lambda băm ngay bằng
+**PBKDF2-SHA256, 100.000 vòng** (`Services/PasswordHasher.cs`) rồi vứt bản gốc; lúc
+kích hoạt thì đẩy chính hash đó lên Firebase qua `ImportUsersAsync` +
+`FirebaseAdmin.Auth.Hash.Pbkdf2Sha256`. Người dùng vẫn đăng nhập bằng mật khẩu ban đầu
+— đã kiểm bằng `accounts:signInWithPassword` thật. *(Firebase cho tối đa 120.000 vòng.)*
+
+**Token kích hoạt**: 32 byte ngẫu nhiên, gửi ở dạng hex trong link, nhưng DynamoDB
+**chỉ lưu SHA-256 của nó** — rò bản ghi DB cũng không dựng lại được link. So sánh bằng
+`CryptographicOperations.FixedTimeEquals` để không lộ thông tin qua thời gian phản hồi.
+
+| Endpoint | Việc |
+|---|---|
+| `POST /auth/register` | 202 · ghi bản ghi chờ + gửi link 10 phút · 409 nếu email đã có tài khoản |
+| `POST /auth/resend` | 200 · cấp token mới (token cũ chết ngay) + gia hạn 10 phút |
+| `GET /auth/activate?e=&t=` | 302 về `VERIFY_CONTINUE_URL?activated=1|0&reason=…` |
+
+`reason` có thể là `ok · already · expired · badtoken · notfound · missing · error` —
+`js/firebase-auth-ui.js` ánh xạ từng giá trị sang một câu VI/EN.
+
+**Chi tiết dễ vấp:**
+
+- Bấm **Đăng ký lại** cùng email khi bản ghi chờ còn hạn thì **không báo lỗi** — cấp
+  token mới và gửi lại (người dùng làm vậy thường là vì chưa thấy email).
+- Bấm lại link **đã dùng** trả `reason=already`, không phải lỗi.
+- Kích hoạt hỏng giữa chừng thì **giữ nguyên** bản ghi chờ để thử lại được.
+- `ttl` = `expiresAt + 86400` — DynamoDB tự dọn, không cần cron; giữ thêm 1 ngày để
+  còn tra cứu khi người dùng báo "bấm link mà kêu hết hạn".
+- ❗ **Không** đặt `PUBLIC_API_URL: !Sub 'https://${Api}...'` vào environment của
+  Lambda: `ApiFunction` sẽ phụ thuộc `Api`, mà `Api` lại route tới `ApiFunction` →
+  CloudFormation báo *Circular dependency*. Link kích hoạt được dựng từ host của
+  chính request (`AuthEndpoints.ActivateLink`), luôn đúng và không cần cấu hình.
 
 ---
 

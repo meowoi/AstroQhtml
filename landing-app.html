@@ -145,11 +145,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
       </div>
       <h2 class="auth-title" data-i18n="verify_title">Kiểm tra hòm thư của bạn</h2>
-      <p class="auth-sub" data-i18n="verify_sub">Chúng tớ vừa gửi một email xác minh. Bấm vào link trong email rồi quay lại đây.</p>
+      <p class="auth-sub" data-i18n="verify_sub">Chúng tớ vừa gửi một email kích hoạt. Bấm vào link trong email trong vòng 10 phút để tạo tài khoản nhé.</p>
       <p class="verify-mail" id="verify-mail"></p>
-      <button class="auth-submit" type="button" id="verify-check" data-i18n="verify_check">Tôi đã xác minh xong</button>
+      <button class="auth-submit" type="button" id="verify-check" data-i18n="verify_check">Tôi đã kích hoạt xong</button>
       <div class="auth-alt">
-        <button type="button" class="auth-switch" id="verify-resend" data-i18n="verify_resend">Gửi lại email</button>
+        <button type="button" class="auth-switch" id="verify-resend" data-i18n="verify_resend">Gửi lại link</button>
         <span class="sep" aria-hidden="true">·</span>
         <button type="button" class="auth-switch" id="verify-back" data-i18n="verify_back">Quay lại đăng nhập</button>
       </div>
@@ -168,9 +168,9 @@
 const I18N = {
   vi: {
     verify_title:"Kiểm tra hòm thư của bạn",
-    verify_sub:"Chúng tớ vừa gửi một email xác minh. Bấm vào link trong email rồi quay lại đây.",
-    verify_check:"Tôi đã xác minh xong",
-    verify_resend:"Gửi lại email",
+    verify_sub:"Chúng tớ vừa gửi một email kích hoạt. Bấm vào link trong email trong vòng 10 phút để tạo tài khoản nhé.",
+    verify_check:"Tôi đã kích hoạt xong",
+    verify_resend:"Gửi lại link",
     verify_back:"Quay lại đăng nhập",
     verify_note:"Không thấy email? Kiểm tra cả mục Spam / Quảng cáo nhé.",
     auth_forgot:"Quên mật khẩu?",
@@ -212,9 +212,9 @@ const I18N = {
   },
   en: {
     verify_title:"Check your inbox",
-    verify_sub:"We just sent you a verification email. Click the link inside, then come back here.",
-    verify_check:"I've verified my email",
-    verify_resend:"Resend email",
+    verify_sub:"We just sent you an activation email. Tap the link within 10 minutes to create your account.",
+    verify_check:"I've activated my account",
+    verify_resend:"Resend link",
     verify_back:"Back to sign in",
     verify_note:"Can't find it? Check your Spam / Promotions folder too.",
     auth_forgot:"Forgot password?",
@@ -373,7 +373,12 @@ AstroQ.initLang(applyLang);
   function t(key){ try{ var d=I18N[document.documentElement.lang]||I18N.vi; return d[key]||key; }catch(e){ return key; } }
   var getUser = AstroQ.getUser, setUser = AstroQ.setUser, clearUser = AstroQ.clearUser;
 
-  function showPane(register){ loginPane.hidden = register; regPane.hidden = !register; }
+  var verifyPane = document.getElementById("auth-verify");
+  // Chuyển pane thì luôn thoát khỏi màn chờ kích hoạt, nếu không nó sẽ chồng lên form.
+  function showPane(register){
+    loginPane.hidden = register; regPane.hidden = !register;
+    if(verifyPane) verifyPane.hidden = true;
+  }
   function open(register){
     showPane(!!register);
     overlay.classList.add("show"); overlay.setAttribute("aria-hidden","false");
@@ -405,7 +410,7 @@ AstroQ.initLang(applyLang);
   // ĐĂNG KÝ (khách mới, demo): tạo hồ sơ → sang màn Cấp Thẻ ID & Chọn Nhân Vật.
   /* Submit của 2 form do js/firebase-auth-ui.js (ES module) đảm nhận.
      Module luôn chạy sau script này nên chắc chắn thấy được AstroQAuthUI bên dưới. */
-  window.AstroQAuthUI = { close: close, toast: showToast, t: t, showPane: showPane };
+  window.AstroQAuthUI = { close: close, toast: showToast, t: t, showPane: showPane, open: open };
 
 })();
 </script>
