@@ -1,0 +1,144 @@
+/* ==========================================================
+   mission-intro.css — màn mở đầu Nhiệm Vụ 01 "Hành Tinh Xanh"
+   (js/mission-intro.js). Cảnh không gian vẽ trên <canvas>; ở đây chỉ có
+   khung phủ, box thoại của Comet và pop-up HUD kích hoạt sứ mệnh.
+
+   Ba lớp, xếp từ dưới lên:
+     .mi canvas   cảnh không gian (sao + Trái Đất + tàu Luna)
+     .mi-say      box thoại Comet, neo ở ĐÁY để không che hành tinh
+     .mi-pop      pop-up HUD giữa màn hình — hiện sau khi Comet nói xong
+   ========================================================== */
+
+.mi{position:fixed;inset:0;z-index:92;background:#03050f;
+  opacity:0;visibility:hidden;transition:opacity .5s var(--ease),visibility .5s;}
+.mi.show{opacity:1;visibility:visible;}
+.mi canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+/* Lớp phủ tối rất nhẹ ở đáy để chữ nổi trên nền sao */
+.mi::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 52%,rgba(3,5,15,.72) 100%);}
+
+/* ============ NÚT BỎ QUA ============ */
+.mi-skip{position:absolute;right:clamp(14px,3vw,26px);top:clamp(14px,3vh,24px);z-index:4;cursor:pointer;
+  border:1px solid rgba(150,180,255,.28);background:rgba(8,14,38,.55);color:var(--ink-soft);
+  border-radius:999px;padding:8px 15px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:background .16s,color .16s,border-color .16s,transform .1s;}
+.mi-skip:hover{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.5);color:var(--ink);}
+.mi-skip:active{transform:scale(.94);}
+
+/* ============ BOX THOẠI COMET ============
+   Neo ở ĐÁY màn hình: Trái Đất chiếm phần trên-phải, thoại nằm giữa là che mất
+   đúng cái đang được giới thiệu. z-index 3 để tàu (vẽ trên canvas, z-index 0)
+   không chờm lên chữ — trên ảnh chụp mũi tàu đè vào góc box. */
+.mi-say{position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
+  bottom:clamp(20px,5vh,54px);z-index:3;
+  width:min(680px,calc(100vw - 28px));display:flex;gap:14px;align-items:flex-start;
+  padding:16px 20px 15px;border-radius:20px;
+  border:1px solid rgba(95,211,255,.5);
+  background:linear-gradient(180deg, rgba(13,20,48,.94), rgba(10,16,40,.96));
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 26px 60px -22px rgba(0,0,0,.9), 0 0 40px -12px rgba(95,211,255,.45);
+  opacity:0;transition:opacity .45s var(--ease),transform .45s var(--ease);}
+.mi-say.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.mi-ava{width:56px;height:56px;flex:none;border-radius:16px;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(circle at 42% 32%, rgba(143,123,255,.5), rgba(56,189,248,.16) 70%, transparent);
+  border:1px solid rgba(143,123,255,.5);box-shadow:0 0 20px -4px rgba(143,123,255,.75);}
+.mi-ava img{width:100%;height:100%;object-fit:contain;display:block;
+  animation:miFloat 3.4s ease-in-out infinite;}
+@keyframes miFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+
+.mi-body{min-width:0;flex:1;}
+.mi-who{display:flex;align-items:baseline;gap:9px;}
+.mi-who .nm{font-family:var(--font-display);font-weight:700;font-size:14px;color:#cfe3ff;}
+.mi-who .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent,#5fd3ff);}
+.mi-line{font-size:14.5px;line-height:1.62;color:var(--ink);margin:7px 0 0;min-height:3.2em;}
+.mi-line b{color:#a5e4ff;}
+/* Con trỏ nhấp nháy ở cuối câu đang gõ — dấu hiệu "còn đang nói" */
+.mi-line .cur{display:inline-block;width:.55em;color:var(--accent,#5fd3ff);
+  animation:miCur .9s steps(1,end) infinite;}
+@keyframes miCur{0%,55%{opacity:1;}56%,100%{opacity:0;}}
+.mi-next{align-self:flex-end;flex:none;margin-top:auto;cursor:pointer;border:none;
+  padding:9px 15px;border-radius:12px;font-family:var(--font-display);font-weight:700;font-size:13px;
+  color:#04060f;background:linear-gradient(120deg,var(--accent,#5fd3ff),var(--accent-2,#8f7bff));
+  box-shadow:0 10px 22px -12px rgba(95,211,255,.85);
+  transition:transform .28s var(--jelly),filter .18s,opacity .25s;}
+.mi-next:hover{filter:brightness(1.08);transform:translateY(-2px);}
+.mi-next:active{transform:scale(.94);}
+.mi-next.hide{opacity:0;pointer-events:none;}
+
+@media (max-width:560px){
+  .mi-say{flex-wrap:wrap;padding:14px 15px 13px;gap:11px;}
+  .mi-ava{width:46px;height:46px;border-radius:14px;}
+  .mi-line{font-size:13.6px;}
+  .mi-next{width:100%;}
+}
+
+/* ============ POP-UP HUD KÍCH HOẠT SỨ MỆNH ============
+   Khung nét đôi kiểu bảng điều khiển: viền ngoài + 4 góc ke, đúng tông HUD
+   sci-fi của dashboard. */
+.mi-pop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.86);z-index:5;
+  width:min(560px,calc(100vw - 32px));text-align:center;padding:26px 26px 22px;border-radius:6px;
+  border:2px solid rgba(255,207,107,.85);
+  background:linear-gradient(180deg, rgba(28,20,6,.93), rgba(12,10,22,.95));
+  box-shadow:0 30px 70px -24px rgba(0,0,0,.92), 0 0 54px -10px rgba(255,207,107,.6),
+             inset 0 0 44px -18px rgba(255,207,107,.7);
+  opacity:0;visibility:hidden;
+  transition:opacity .4s var(--ease),transform .5s var(--jelly),visibility .4s;}
+.mi-pop.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);}
+/* 4 góc ke sáng — vẽ bằng background-image nên không cần thêm thẻ */
+.mi-pop::before{content:"";position:absolute;inset:5px;pointer-events:none;
+  background:
+    linear-gradient(#ffcf6b,#ffcf6b) left 0 top 0/16px 2px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) left 0 top 0/2px 16px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) right 0 top 0/16px 2px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) right 0 top 0/2px 16px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) left 0 bottom 0/16px 2px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) left 0 bottom 0/2px 16px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) right 0 bottom 0/16px 2px no-repeat,
+    linear-gradient(#ffcf6b,#ffcf6b) right 0 bottom 0/2px 16px no-repeat;}
+
+.mi-pop .code{font-family:var(--font-mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  color:#eaa668;}
+/* Chữ CHẢY như văn bản thường (display:block + ngôi sao inline), KHÔNG dùng flex.
+   Với flex + flex-wrap, trên màn 390px ngôi sao thứ hai bị đẩy xuống MỘT DÒNG
+   RIÊNG — nhìn như lỗi hiển thị (thấy trên ảnh chụp). Chảy như chữ thì nếu phải
+   xuống dòng nó cắt giữa tiêu đề, đọc vẫn tự nhiên. */
+.mi-pop h2{font-family:var(--font-display);font-weight:700;font-size:clamp(18px,4vw,27px);
+  line-height:1.25;margin:9px 0 0;color:#fff3d6;text-align:center;
+  text-shadow:0 0 26px rgba(255,207,107,.7);text-wrap:balance;}
+.mi-pop h2 .cm{display:inline-block;font-size:.82em;line-height:1;margin:0 .3em;
+  vertical-align:-0.04em;}
+/* Màn rất hẹp: bỏ giãn chữ + hạ cỡ để tiêu đề gọn trong 2 dòng */
+@media (max-width:430px){
+  .mi-pop{padding:22px 18px 18px;}
+  .mi-pop h2{font-size:17.5px;}
+  .mi-pop .code{letter-spacing:.2em;}
+  .mi-go{letter-spacing:.1em;padding:13px 12px;}
+}
+.mi-pop .sub{color:#f0dcb4;font-size:13.8px;line-height:1.6;margin:12px 0 0;}
+
+/* Nút kích hoạt: chữ trong ngoặc vuông kiểu terminal, có nhịp thở để mắt tìm thấy */
+.mi-go{margin-top:20px;cursor:pointer;width:100%;
+  border:1px solid rgba(255,207,107,.8);border-radius:6px;padding:14px 18px;
+  font-family:var(--font-mono);font-size:clamp(12px,2.6vw,14px);letter-spacing:.16em;
+  text-transform:uppercase;color:#04060f;
+  background:linear-gradient(120deg,#ffcf6b,#ff9d3d);
+  box-shadow:0 14px 30px -14px rgba(255,157,61,.9);
+  animation:miPulse 2s ease-in-out infinite;
+  transition:transform .28s var(--jelly),filter .18s;}
+.mi-go:hover{filter:brightness(1.07);transform:translateY(-2px);animation:none;}
+.mi-go:active{transform:scale(.96);}
+@keyframes miPulse{0%,100%{box-shadow:0 14px 30px -14px rgba(255,157,61,.9), 0 0 0 0 rgba(255,207,107,.55);}
+  55%{box-shadow:0 14px 30px -14px rgba(255,157,61,.9), 0 0 0 12px rgba(255,207,107,0);}}
+
+/* Bớt chuyển động: bỏ hẳn phần trượt/thu-phóng của box thoại và pop-up
+   (common.css đã tắt @keyframes, nhưng transition thì phải tắt riêng). */
+@media (prefers-reduced-motion:reduce){
+  .mi,.mi-say,.mi-pop{transition:opacity .2s linear,visibility .2s;}
+  .mi-say{transform:translateX(-50%);}
+  .mi-pop{transform:translate(-50%,-50%);}
+  .mi-pop.show{transform:translate(-50%,-50%);}
+}

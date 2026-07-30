@@ -1,0 +1,1592 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt". -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Nhiệm Vụ 01: Hành Tinh Xanh</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/mission-earth.css" />
+<script src="js/ui-common.js"></script>
+<!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js: trang này đã kéo
+     three.js, thêm 233 KB SDK nữa thì vào chậm. Chưa đăng nhập → js/progress.js
+     xếp việc vào hàng chờ, dashboard/profile sẽ gửi nốt. -->
+<script src="js/progress.js"></script>
+<!-- Âm thanh dựng bằng WebAudio, dùng chung với màn mở đầu; tôn trọng cùng một
+     lựa chọn tắt tiếng `astroq-sfx` với 3 mini-game. -->
+<script src="js/sfx.js"></script>
+<!-- TÊN huy hiệu (7,2 KB, không kéo theo gì). Màn tổng kết phải gọi được đúng tên
+     huy hiệu mà SERVER vừa mở — gõ lại tên ở trang này là hai chỗ sớm muộn lệch
+     nhau, mà `js/badges.js` đã là chỗ duy nhất khai báo tên. -->
+<script src="js/badges.js"></script>
+</head>
+<body>
+
+<!-- Cảnh 3D -->
+<canvas id="stage"></canvas>
+
+<!-- Hai lớp phủ CẢNH (không phải HUD) nên nằm NGOÀI `.me-ui`: `.me-ui` có
+     `z-index:10` và tự tạo stacking context, đặt vào trong thì `z-index:5/6` của
+     chúng vẫn vượt lên trên các bảng HUD (bảng HUD để `z-index:auto`) và che mất
+     bảng mục tiêu. Ở ngoài thì thứ tự đúng: canvas < lớp cảnh < HUD. -->
+<div class="me-era" id="era" aria-hidden="true"></div>
+<div class="me-smog" id="smog" aria-hidden="true"></div>
+
+<!-- Màn chờ nạp three.js + sinh texture -->
+<div class="me-load" id="load">
+  <span class="ring" aria-hidden="true"></span>
+  <span class="txt" id="load-txt">ĐANG NẠP HỆ THỐNG QUÉT…</span>
+  <span class="sub" id="load-sub"></span>
+</div>
+
+<!-- ============ LỚP HUD ============ -->
+<div class="me-ui">
+  <header class="me-top">
+    <button class="back hit" id="back" type="button">&lt; <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="me-tag" id="tag">[ MISSION_01 · HÀNH TINH XANH ]</span>
+    <span class="me-steps" id="steps" role="img" aria-label="Tiến độ nhiệm vụ"></span>
+    <span class="me-cur" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />
+      <span class="v" id="bal">0</span>
+    </span>
+    <button type="button" class="me-mute hit" id="mute"
+            data-i18n-title="a_sfx" title="Bật/tắt âm thanh"
+            data-i18n-aria="a_sfx" aria-label="Bật/tắt âm thanh" aria-pressed="false"></button>
+    <span class="me-lang" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" class="hit" data-lang="vi">VI</button>
+      <button type="button" class="hit" data-lang="en">EN</button>
+    </span>
+  </header>
+
+  <!-- Bảng mục tiêu bước hiện tại -->
+  <section class="me-obj" id="obj">
+    <span class="k"><span class="led"></span><span id="obj-k">MỤC TIÊU</span></span>
+    <h2><span class="ic" id="obj-ic">🎯</span><span id="obj-h">—</span></h2>
+    <p id="obj-p"></p>
+    <span class="prog" id="obj-prog">
+      <span class="bar"><i id="obj-bar"></i></span>
+      <span class="n" id="obj-n">0/0</span>
+    </span>
+  </section>
+
+  <!-- Bảng tín hiệu vệ tinh (bước 3) -->
+  <section class="me-sat" id="sat">
+    <span class="ic" aria-hidden="true">🛰️</span>
+    <div class="st" id="sat-st">SIGNAL LOST</div>
+    <span class="meter"><i id="sat-meter"></i></span>
+  </section>
+
+  <!-- Bàn tay hướng dẫn (bước 1) -->
+  <span class="me-hand" id="hand" aria-hidden="true">👆</span>
+
+  <!-- Box thoại mascot -->
+  <section class="me-say" id="say" role="status" aria-live="polite">
+    <span class="me-ava"><img id="say-ava" src="img/m1.png" alt="" /></span>
+    <span class="body">
+      <span class="who" id="say-who">Comet</span>
+      <p class="line" id="say-line"></p>
+    </span>
+    <button type="button" class="next hide hit" id="say-next">Tiếp tục</button>
+  </section>
+
+  <!-- Thẻ "vừa nhận được" — dùng chung cho mẫu sự sống (bước 6), viên nham thạch
+       (bước 2) và huy hiệu Chiến Binh Xanh (bước 7). Một thẻ cho cả ba vì trẻ đọc
+       chúng y như nhau: emoji lớn · tên · một câu · nhãn trạng thái. -->
+  <article class="me-card hit" id="card" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="top" id="card-ic">🌊</div>
+    <div class="nm" id="card-nm">—</div>
+    <p class="fact" id="card-fact"></p>
+    <span class="got" id="card-got">ĐÃ THU THẬP</span>
+  </article>
+
+  <!-- Bước 2 · Mốc thời gian 4,5 tỷ năm -->
+  <section class="me-board me-time" id="time">
+    <span class="k" id="time-k">DÒNG THỜI GIAN TRÁI ĐẤT</span>
+    <div class="rail" id="time-rail"></div>
+    <div class="era-body">
+      <h3 id="time-h">—</h3>
+      <p id="time-p"></p>
+    </div>
+  </section>
+
+  <!-- Bước 4 · Năng lượng sạch (kéo-thả) -->
+  <section class="me-board me-energy" id="energy">
+    <span class="k" id="energy-k">THAY NGUỒN NĂNG LƯỢNG</span>
+    <div class="slots" id="energy-slots"></div>
+    <div class="tray" id="energy-tray"></div>
+    <p class="hint" id="energy-hint"></p>
+  </section>
+
+  <!-- Bước 7 · Eco-Hero: phân loại NÊN / KHÔNG NÊN (kéo-thả) -->
+  <section class="me-board me-eco" id="eco">
+    <span class="k" id="eco-k">PHÂN LOẠI HÀNH ĐỘNG</span>
+    <div class="buckets">
+      <!-- `data-zone` (KHÔNG phải `data-bucket`): đó là tên thuộc tính mà `dragDrop()`
+           đọc, dùng chung cho cả 3 bảng kéo-thả. Đặt tên riêng ở đây thì mọi cú thả
+           đều tính là SAI — và bảng vẫn trông đúng, chỉ là không bao giờ xếp được thẻ
+           nào (đã đo được đúng lỗi này trong smoke test). -->
+      <div class="me-bucket good" data-zone="good">
+        <span class="hd"><span aria-hidden="true">🟢</span><span id="eco-good">NÊN LÀM</span></span>
+        <span class="drop" id="eco-good-drop"></span>
+      </div>
+      <div class="me-bucket bad" data-zone="bad">
+        <span class="hd"><span aria-hidden="true">🔴</span><span id="eco-bad">KHÔNG NÊN LÀM</span></span>
+        <span class="drop" id="eco-bad-drop"></span>
+      </div>
+    </div>
+    <div class="deck" id="eco-deck"></div>
+    <p class="hint" id="eco-hint"></p>
+  </section>
+
+  <!-- Bước 8 · Bảng 3 ô ngọc (kéo-thả) -->
+  <section class="me-board me-core" id="core">
+    <span class="k" id="core-k">MẠCH NĂNG LƯỢNG SỰ SỐNG</span>
+    <div class="slots" id="core-slots"></div>
+    <div class="tray" id="core-tray"></div>
+    <p class="hint" id="core-hint"></p>
+  </section>
+</div>
+
+<!-- ============ MÀN TỔNG KẾT ============ -->
+<div class="me-win" id="win" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="me-win-card">
+    <h2><span aria-hidden="true">🚀</span> <span id="win-h">SỨ MỆNH TRÁI ĐẤT HOÀN THÀNH!</span></h2>
+
+    <div class="me-cheer" aria-hidden="true">
+      <img src="img/m1.png" alt="" /><img src="img/b1.png" alt="" />
+    </div>
+
+    <div class="medal">
+      <div class="big" aria-hidden="true">🎖️</div>
+      <div class="nm" id="win-badge">ROOKIE ASTRONAUT</div>
+      <div class="sub" id="win-badge-sub">Huy Hiệu Phi Hành Gia Tập Sự</div>
+    </div>
+
+    <div class="sec">
+      <span class="k"><span aria-hidden="true">🎁</span><span id="win-rw-k">PHẦN THƯỞNG SỨ MỆNH</span></span>
+      <div class="rw"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />
+        <span id="win-rw-tt">—</span></div>
+      <div class="rw"><span class="ic" aria-hidden="true">📘</span><span id="win-rw-codex">—</span></div>
+      <div class="rw"><span class="ic" aria-hidden="true">⭐</span><span id="win-rw-xp">—</span></div>
+      <!-- Huy hiệu mở thêm TRONG lượt này (ví dụ 🌱 Chiến Binh Xanh ở bước Eco-Hero).
+           Chỉ hiện những cái SERVER báo trong `newBadges` — chưa đăng nhập / mất mạng
+           thì khối này rỗng chứ không tự nhận là đã mở. -->
+      <div class="rw hide" id="win-rw-badges"><span class="ic" aria-hidden="true">🏅</span>
+        <span id="win-badges">—</span></div>
+    </div>
+
+    <div class="sec">
+      <span class="k"><span aria-hidden="true">🔓</span><span id="win-un-k">HÀNH TINH MỚI ĐÃ MỞ KHOÁ</span></span>
+      <div class="unlock"><span class="ic" aria-hidden="true">🌙</span><span id="win-un">—</span></div>
+    </div>
+
+    <div class="acts">
+      <button type="button" class="go" id="win-moon" disabled>—</button>
+      <button type="button" class="ghost" id="win-awards">—</button>
+      <button type="button" class="ghost" id="win-home">—</button>
+    </div>
+  </div>
+</div>
+
+<div class="me-toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+
+<!-- Three.js: cùng phiên bản với explorer.html -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script>
+/* CANH GIỜ NẠP CẢNH 3D — đặt ở script CỔ ĐIỂN, cố ý không nằm trong module.
+   `boot()` đã bắt lỗi của `createEarthWorld`, nhưng nếu **chính module không nạp
+   được** thì `boot()` không bao giờ chạy và màn chờ quay mãi mà không nói gì.
+   Hai trường hợp thật:
+     · mở trang bằng `file://` — trình duyệt chặn ES module vì CORS (origin `null`),
+       trang này BẮT BUỘC phải chạy qua http (`python -m http.server`), y như
+       explorer.html;
+     · mất mạng / unpkg.com bị chặn — three.js nạp qua importmap từ CDN.
+   Thà nói thẳng "không nạp được" còn hơn để trẻ ngồi nhìn vòng xoay. */
+(function () {
+  var WAIT_MS = 12000;
+  setTimeout(function () {
+    if (window.__mission) return;                 // đã dựng xong, không phải lỗi
+    var load = document.getElementById('load');
+    if (!load || load.classList.contains('gone')) return;
+    var sub = document.getElementById('load-sub');
+    if (sub) {
+      sub.dataset.fail = '1';
+      sub.textContent = (localStorage.getItem('astroq-lang') === 'en')
+        ? 'Could not load the 3D library. Check your connection and reload. ' +
+          'Note: this page must be served over http, not opened as a file.'
+        : 'Không nạp được thư viện 3D. Kiểm tra kết nối mạng rồi tải lại trang nhé. ' +
+          'Lưu ý: trang này phải mở qua http, không mở trực tiếp từ file.';
+    }
+    var ring = load.querySelector('.ring');
+    if (ring) ring.style.display = 'none';
+  }, WAIT_MS);
+})();
+</script>
+
+<script type="module">
+/* ============================================================================
+   NHIỆM VỤ 01 "HÀNH TINH XANH" — 5 bước, MỘT trang, KHÔNG tải lại.
+
+   Chuyển giữa các bước bằng `world.panTo()` (camera pan/zoom của Three.js),
+   đúng yêu cầu: không load lại trang.
+
+   Cảnh 3D ở js/earth3d.js. File này chỉ lo LUỒNG: bước nào, mục tiêu gì, xong thì
+   báo lên server. **Phần thưởng do SERVER quyết** — client chỉ gửi {mission, step}
+   (xem Services/Missions.cs); không có con số thưởng nào nằm trong file này.
+
+   Mỗi bước là một object { id, enter(), pick(), tick() } nên thêm/sửa một bước
+   không phải đụng vào bước khác.
+   ========================================================================== */
+import { createEarthWorld } from './js/earth3d.js';
+
+const $ = (id) => document.getElementById(id);
+/* `js/ui-common.js` chỉ đưa `$` ra global, `esc` thì nằm trong `AstroQ` — lấy về một
+   biến cục bộ vì các hàm dựng markup dưới đây gọi nó rất nhiều lần. */
+const esc = AstroQ.esc;
+/* Tên/emoji huy hiệu lấy từ js/badges.js — CHỖ DUY NHẤT khai báo chúng. Bọc lại để
+   trang không vỡ nếu file đó chưa nạp (khi đó hiện chính id, y như achievements.html). */
+const badgeName = (id) => (window.AstroQBadges ? AstroQBadges.name(id, LANG) : id);
+const badgeIcon = (id) => (window.AstroQBadges ? AstroQBadges.icon(id) : '🎖️');
+const reduced = (() => {
+  try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+})();
+
+/* ───────────────────────────── i18n ───────────────────────────── */
+const I18N = {
+  vi: {
+    title: 'AstroQ — Nhiệm Vụ 01: Hành Tinh Xanh',
+    a_lang: 'Ngôn ngữ', a_sfx: 'Bật/tắt âm thanh',
+    tt_name: 'Thiên thạch tím', back: 'Về Trung Tâm Điều Hướng',
+    tag: '[ MISSION_01 · HÀNH TINH XANH ]',
+    load: 'ĐANG NẠP HỆ THỐNG QUÉT…',
+    load_sub: 'Đang dựng bản đồ Trái Đất 3D. Lần đầu có thể mất vài giây.',
+    load_fail: 'Không nạp được thư viện 3D. Kiểm tra kết nối mạng rồi tải lại trang nhé. ' +
+               'Lưu ý: trang này phải mở qua http, không mở trực tiếp từ file.',
+    obj_k: 'MỤC TIÊU', next: 'Tiếp tục',
+    comet: 'Comet', byte: 'Byte',
+
+    /* ⚠️ TIỀN TỐ KHOÁ = ID BƯỚC, KHÔNG PHẢI SỐ THỨ TỰ BƯỚC.
+       `s1..s5` là di sản của bản 5 bước (s1=scan · s2=sun · s3=rotation · s4=life ·
+       s5=core) — giữ nguyên vì đổi tên khoá thì phải sửa ba chỗ mà chẳng thêm nghĩa
+       gì. Ba bước thêm 29/07/2026 dùng tiền tố theo ID: `tl_` timeline · `ce_` clean
+       energy · `ec_` eco. Thêm bước nữa thì theo lối này, đừng theo số — chèn một
+       bước vào giữa là toàn bộ số sau nó sai hết. */
+
+    /* Bước 1 (scan) — Khởi động hệ thống quét */
+    s1_h: 'Khởi động hệ thống quét',
+    s1_p: 'Kéo để xoay Trái Đất, chụm/cuộn để phóng to. Rồi chạm 3 điểm tín hiệu đang nhấp nháy.',
+    s1_say1: 'Trước tiên mình dạy bạn cách điều khiển màn hình quét nhé! <b>Kéo</b> để xoay quả cầu, <b>cuộn chuột</b> (hoặc chụm hai ngón) để phóng to.',
+    s1_say2: 'Giờ hãy tìm và <b>chạm vào 3 điểm tín hiệu</b> đang nhấp nháy trên bề mặt để căn chỉnh camera!',
+    s1_n: 'Điểm tín hiệu',
+    s1_hit: 'Píp! Đã căn chỉnh {n}/3',
+    s1_done: 'Màn hình điều khiển đã sẵn sàng! Tất cả hệ thống quét: <b>SYS.ONLINE</b>!',
+
+    /* Bước 2 (timeline) — Lịch sử 4,5 tỷ năm hình thành Trái Đất */
+    tl_h: 'Lần theo dòng thời gian',
+    tl_p: 'Chạm lần lượt vào 4 mốc để xem Trái Đất đổi thay qua 4,5 tỷ năm.',
+    tl_say1: 'Trước khi đi xa hơn, mình cho bạn xem Trái Đất hồi còn <b>rất trẻ</b> nhé! Chạm vào từng mốc trên dòng thời gian, theo thứ tự từ trái sang phải.',
+    tl_k: 'DÒNG THỜI GIAN TRÁI ĐẤT',
+    tl_n: 'Mốc đã xem',
+    tl_locked: 'Đi theo thứ tự nhé — chạm vào mốc đang sáng!',
+    tl_say2: 'Từ một quả cầu dung nham thành hành tinh xanh — Trái Đất mất <b>4,5 tỷ năm</b> đấy!',
+    era_magma_y: '4,5 tỷ năm trước', era_magma_n: 'Trái Đất dung nham',
+    era_magma_p: 'Lực hấp dẫn kéo khí và bụi quanh Mặt Trời tụ lại thành hành tinh thứ ba. Bề mặt lúc này gần như nóng chảy — chưa có nước ở dạng lỏng, cũng chưa có không khí để thở.',
+    era_ocean_y: '3,8 tỷ năm trước', era_ocean_n: 'Đại dương đầu tiên',
+    era_ocean_p: 'Vỏ Trái Đất nguội và cứng lại. Hơi nước ngưng tụ, mưa xuống suốt thời gian rất dài rồi đọng thành những đại dương đầu tiên — và trong nước xuất hiện những sinh vật đơn bào cổ nhất.',
+    era_dino_y: '66 triệu năm trước', era_dino_n: 'Khủng long & rừng xanh',
+    era_dino_p: 'Cây xanh phủ kín đất liền và nhả oxy vào khí quyển. Đây là thời của khủng long, kéo dài từ khoảng 252 đến 66 triệu năm trước.',
+    era_now_y: 'Ngày nay', era_now_n: 'Hành tinh xanh',
+    era_now_p: 'Nước phủ khoảng 70% bề mặt, không khí có oxy để thở, hàng triệu loài cùng sinh sống. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.',
+    rock_nm: 'Nham Thạch Cổ Đại',
+    rock_fact: 'Một mảnh vỏ Trái Đất từ thời nó còn là dung nham đỏ rực!',
+    rock_got: 'ĐÃ LƯU VÀO KHO MẪU VẬT',
+
+    /* Bước 3 (sun) — Tìm nguồn năng lượng */
+    s2_h: 'Tìm nguồn năng lượng',
+    s2_p: 'Xoay góc nhìn ra phía xa để tìm ngôi sao đang chiếu sáng Trái Đất, rồi chạm vào nó.',
+    s2_say1: 'Ồ! Không có năng lượng thì tàu không thể hoạt động. Bạn có tìm thấy <b>ngôi sao</b> đang chiếu sáng Trái Đất ở phía xa không?',
+    s2_hint: 'Kéo sang phải để nhìn ra xa hơn nhé!',
+    s2_say2: 'Đó là <b>Mặt Trời</b> — ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất!',
+    s2_n: 'Mặt Trời',
+
+    /* Bước 4 (energy) — Kích hoạt năng lượng sạch */
+    ce_h: 'Kích hoạt năng lượng sạch',
+    ce_p: 'Kéo 3 nguồn năng lượng sạch vào 3 ống khói đang nhả khói đen.',
+    ce_say1: 'Báo động! Ba ống khói dưới kia đang <b>đốt nhiên liệu hoá thạch</b> — khói đen phủ kín khí quyển Trái Đất rồi. Giúp Byte thay bằng <b>năng lượng sạch</b> nhé!',
+    ce_k: 'THAY NGUỒN NĂNG LƯỢNG',
+    ce_hint: 'Kéo mỗi nguồn sạch vào một ống khói.',
+    /* Câu này phải đúng cho CẢ HAI kiểu thả sai (sai ống · ống đã có nguồn rồi) — một
+       bảng kéo-thả không nên phân biệt hai lỗi bằng hai câu, trẻ chỉ cần biết "thử ống
+       khác". */
+    ce_wrong: 'Chưa phải ống đó — thử ống bên cạnh xem nào!',
+    ce_n: 'Ống khói đã thay',
+    ce_swap: 'Khói đang tan… {n}/3',
+    ce_say2: 'Khói đen tan hết rồi! <b>Năng lượng sạch</b> lấy từ nắng, gió và nước chảy — thiên nhiên cấp lại hoài không hết, mà lúc chạy thì không nhả khói.',
+    ce_solar: 'Pin Mặt Trời', ce_wind: 'Cối Xoay Gió', ce_hydro: 'Thuỷ Điện',
+    ce_stack: 'ỐNG KHÓI',
+
+    /* Bước 5 (rotation) — Khôi phục tín hiệu vệ tinh */
+    s3_h: 'Khôi phục tín hiệu vệ tinh',
+    s3_p: 'Xoay Trái Đất để đưa trạm phát sóng (điểm sáng) về phía vệ tinh.',
+    s3_say1: 'Tín hiệu vệ tinh ở phía mặt tối rồi! Hãy <b>xoay Trái Đất</b> để đưa vùng trạm phát sóng quay về phía Vệ tinh nào!',
+    s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
+    s3_n: 'Cường độ tín hiệu',
+    s3_say2: 'Chính <b>sự tự quay</b> của Trái Đất đã tạo ra <b>Ban Ngày và Ban Đêm</b> đấy!',
+
+    /* Bước 6 (life) — Thu thập mẫu sự sống */
+    s4_h: 'Thu thập mẫu sự sống',
+    s4_p: 'Chạm vào 4 vùng đang nhấp nháy để thả drone xuống quét mẫu.',
+    s4_say1: 'Byte đã chuẩn bị drone quét mẫu! Hãy chạm vào <b>4 vùng</b> đang nhấp nháy trên Trái Đất nhé.',
+    s4_n: 'Mẫu đã thu',
+    s4_scan: 'Drone đang quét… SCANNING',
+    s4_card: 'ĐÃ THU THẬP',
+    s4_say2: 'Tuyệt vời! 4 mẫu đã vào bình chứa của tàu.',
+
+    /* Bước 7 (eco) — Eco-Hero: NÊN / KHÔNG NÊN làm */
+    ec_h: 'Eco-Hero: nên hay không nên?',
+    ec_p: 'Kéo từng thẻ vào rổ 🟢 NÊN LÀM hoặc 🔴 KHÔNG NÊN LÀM.',
+    ec_say1: 'Bài cuối trước khi giải mã hành tinh! Bạn đã biết cách <b>bảo vệ Trái Đất ngoài đời thật</b> chưa? Phân loại 7 hành động này giúp Byte nhé.',
+    ec_k: 'PHÂN LOẠI HÀNH ĐỘNG',
+    ec_good: 'NÊN LÀM', ec_bad: 'KHÔNG NÊN LÀM',
+    ec_hint: 'Kéo thẻ vào rổ bạn cho là đúng.',
+    ec_wrong: 'Chưa đúng rổ đâu, thử rổ bên kia xem nào!',
+    ec_n: 'Thẻ đã phân loại',
+    ec_say2: 'Bạn là <b>Chiến Binh Xanh</b> thật rồi! Toàn việc nhỏ thôi, nhưng làm mỗi ngày là bảo vệ được Trái Đất.',
+    ec_badge_fact: 'Bạn phân loại đúng cả 7 hành động bảo vệ môi trường!',
+    ec_badge_got: 'HUY HIỆU ĐÃ MỞ',
+    eco_light: 'Tắt đèn khi ra khỏi phòng',
+    eco_bottle: 'Dùng bình nước cá nhân',
+    eco_tree: 'Trồng cây xanh',
+    eco_sort: 'Phân loại rác',
+    eco_litter: 'Vứt rác bừa bãi',
+    eco_water: 'Xả lãng phí nước sạch',
+    eco_bag: 'Dùng quá nhiều túi nilon 1 lần',
+
+    /* Bước 8 (core) — Giải mã hành tinh */
+    s5_h: 'Giải mã hành tinh',
+    s5_p: 'Kéo 3 viên ngọc vào đúng 3 ô trên bảng điều khiển.',
+    s5_say1: 'Hãy giúp Byte kích hoạt <b>Mạch Năng Lượng Sự Sống</b> cho Trái Đất!',
+    s5_k: 'MẠCH NĂNG LƯỢNG SỰ SỐNG',
+    s5_hint: 'Kéo viên ngọc vào ô có nhãn tương ứng.',
+    s5_wrong: 'Gần đúng rồi, thử lại xem nào!',
+    s5_n: 'Ô đã kích hoạt',
+    s5_say2: 'Bảng điều khiển sáng rực! Màng khí quyển đã bảo bọc Trái Đất!',
+    slot_heat: 'Nhiệt độ', slot_water: 'Nước', slot_air: 'Khí thở',
+    gem_sun: 'Ngọc Mặt Trời', gem_water: 'Ngọc Giọt Nước', gem_air: 'Ngọc Khí Quyển',
+
+    /* Tổng kết */
+    win_h: 'SỨ MỆNH TRÁI ĐẤT HOÀN THÀNH!',
+    win_badge: 'ROOKIE ASTRONAUT', win_badge_sub: 'Huy Hiệu Phi Hành Gia Tập Sự',
+    win_rw_k: 'PHẦN THƯỞNG SỨ MỆNH',
+    win_tt: '+{n} Thiên thạch tím',
+    win_codex: 'Mở khoá 100% "Hồ Sơ Trái Đất" — {n}/{t} mẫu dữ liệu',
+    win_xp: '+{n} XP kinh nghiệm',
+    win_badges: 'Huy hiệu mới: {n}',
+    win_un_k: 'HÀNH TINH MỚI ĐÃ MỞ KHOÁ',
+    win_un: 'MẶT TRĂNG (THE MOON) — nhiệm vụ tiếp theo',
+    win_moon: '[ 🌙 Mặt Trăng · Sắp ra mắt ]',
+    win_awards: '[ 🏆 Xem Kho Thành Tích ]',
+    win_home: '[ 🚀 Về Trung Tâm Điều Hướng ]',
+    saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.'
+  },
+  en: {
+    title: 'AstroQ — Mission 01: The Blue Planet',
+    a_lang: 'Language', a_sfx: 'Sound on/off',
+    tt_name: 'Purple Meteor', back: 'Back to Navigation Hub',
+    tag: '[ MISSION_01 · THE BLUE PLANET ]',
+    load: 'BOOTING SCAN SYSTEM…',
+    load_sub: 'Building the 3D Earth map. The first load may take a few seconds.',
+    load_fail: "Couldn't load the 3D library. Check your connection and reload. " +
+               "Note: this page must be served over http, not opened as a file.",
+    obj_k: 'OBJECTIVE', next: 'Continue',
+    comet: 'Comet', byte: 'Byte',
+
+    s1_h: 'Boot the scan system',
+    s1_p: 'Drag to spin Earth, pinch/scroll to zoom. Then tap the 3 blinking signal points.',
+    s1_say1: "First let me teach you the scan display! <b>Drag</b> to spin the globe, <b>scroll</b> (or pinch) to zoom in.",
+    s1_say2: 'Now find and <b>tap the 3 signal points</b> blinking on the surface to align the camera!',
+    s1_n: 'Signal points',
+    s1_hit: 'Beep! Aligned {n}/3',
+    s1_done: 'Control display ready! All scan systems: <b>SYS.ONLINE</b>!',
+
+    tl_h: 'Follow the timeline',
+    tl_p: 'Tap the 4 milestones in order to watch Earth change across 4.5 billion years.',
+    tl_say1: "Before we go further, let me show you Earth when it was <b>very young</b>! Tap each milestone on the timeline, left to right.",
+    tl_k: 'EARTH TIMELINE',
+    tl_n: 'Milestones seen',
+    tl_locked: 'One at a time — tap the milestone that is glowing!',
+    tl_say2: 'From a ball of magma to a blue planet — that took Earth <b>4.5 billion years</b>!',
+    era_magma_y: '4.5 billion years ago', era_magma_n: 'The magma Earth',
+    era_magma_p: 'Gravity pulled gas and dust circling the Sun together into the third planet. Its surface was largely molten — no liquid water yet, and no air to breathe.',
+    era_ocean_y: '3.8 billion years ago', era_ocean_n: 'The first oceans',
+    era_ocean_p: "Earth's crust cooled and hardened. Water vapour condensed and rained down for a very long time, filling the first oceans — and in that water appeared the oldest single-celled life.",
+    era_dino_y: '66 million years ago', era_dino_n: 'Dinosaurs & green forests',
+    era_dino_p: 'Green plants covered the land and released oxygen into the air. This was the age of the dinosaurs, running from about 252 to 66 million years ago.',
+    era_now_y: 'Today', era_now_n: 'The blue planet',
+    era_now_p: 'Water covers about 70% of the surface, the air holds oxygen, and millions of species live here. So far this is the only planet we know of that has life.',
+    rock_nm: 'Ancient Lava Rock',
+    rock_fact: "A piece of Earth's crust from back when it was glowing molten rock!",
+    rock_got: 'SAVED TO THE SPECIMEN VAULT',
+
+    s2_h: 'Find the power source',
+    s2_p: 'Turn the view outward to find the star lighting up Earth, then tap it.',
+    s2_say1: "Oh no! Without power the ship can't run. Can you find the <b>star</b> lighting up Earth far away?",
+    s2_hint: 'Drag to the right to look further out!',
+    s2_say2: 'That is the <b>Sun</b> — the star that brings light and warmth to Earth!',
+    s2_n: 'The Sun',
+
+    ce_h: 'Switch on clean energy',
+    ce_p: 'Drag the 3 clean energy sources onto the 3 smoking chimneys.',
+    ce_say1: 'Alert! Those three chimneys are <b>burning fossil fuels</b> — black smoke has covered Earth\'s atmosphere. Help Byte swap them for <b>clean energy</b>!',
+    ce_k: 'SWAP THE POWER SOURCE',
+    ce_hint: 'Drag one clean source onto each chimney.',
+    ce_wrong: 'Not that chimney — try the one next to it!',
+    ce_n: 'Chimneys swapped',
+    ce_swap: 'The smoke is clearing… {n}/3',
+    ce_say2: 'All the black smoke is gone! <b>Clean energy</b> comes from sunlight, wind and moving water — nature keeps refilling it, and it makes no smoke while it runs.',
+    ce_solar: 'Solar Panel', ce_wind: 'Wind Turbine', ce_hydro: 'Hydro Power',
+    ce_stack: 'CHIMNEY',
+
+    s3_h: 'Restore the satellite link',
+    s3_p: 'Spin Earth to bring the broadcast station (bright dot) around to the satellite.',
+    s3_say1: 'The satellite link is on the dark side! <b>Spin Earth</b> to bring the broadcast station around to the satellite!',
+    s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
+    s3_n: 'Signal strength',
+    s3_say2: "Earth's own <b>rotation</b> is what makes <b>day and night</b>!",
+
+    s4_h: 'Collect life samples',
+    s4_p: 'Tap the 4 blinking regions to drop a scan drone.',
+    s4_say1: 'Byte prepared the scan drone! Tap the <b>4 blinking regions</b> on Earth.',
+    s4_n: 'Samples',
+    s4_scan: 'Drone scanning… SCANNING',
+    s4_card: 'COLLECTED',
+    s4_say2: 'Brilliant! All 4 samples are in the ship’s container.',
+
+    ec_h: 'Eco-Hero: should you, or shouldn\'t you?',
+    ec_p: 'Drag each card into the 🟢 SHOULD DO or 🔴 SHOULD NOT DO basket.',
+    ec_say1: 'Last lesson before we decode the planet! Do you know how to <b>protect Earth in real life</b>? Sort these 7 actions for Byte.',
+    ec_k: 'SORT THE ACTIONS',
+    ec_good: 'SHOULD DO', ec_bad: 'SHOULD NOT DO',
+    ec_hint: 'Drag a card into the basket you think is right.',
+    ec_wrong: 'Not that basket — try the other one!',
+    ec_n: 'Cards sorted',
+    ec_say2: 'You really are an <b>Eco-Warrior</b>! Small things, but done every day they protect the whole planet.',
+    ec_badge_fact: 'You sorted all 7 environmental actions correctly!',
+    ec_badge_got: 'BADGE UNLOCKED',
+    eco_light: 'Turn the lights off when you leave a room',
+    eco_bottle: 'Use your own water bottle',
+    eco_tree: 'Plant a tree',
+    eco_sort: 'Sort your waste for recycling',
+    eco_litter: 'Drop litter anywhere you like',
+    eco_water: 'Let clean water run to waste',
+    eco_bag: 'Use lots of single-use plastic bags',
+
+    s5_h: 'Decode the planet',
+    s5_p: 'Drag the 3 gems into the 3 slots on the control board.',
+    s5_say1: 'Help Byte switch on the <b>Life Energy Circuit</b> for Earth!',
+    s5_k: 'LIFE ENERGY CIRCUIT',
+    s5_hint: 'Drag each gem onto the slot with the matching label.',
+    s5_wrong: 'So close — give it another try!',
+    s5_n: 'Slots powered',
+    s5_say2: 'The board lights up! An atmosphere shield now wraps around Earth!',
+    slot_heat: 'Heat', slot_water: 'Water', slot_air: 'Air',
+    gem_sun: 'Sun Gem', gem_water: 'Water Gem', gem_air: 'Atmosphere Gem',
+
+    win_h: 'EARTH MISSION COMPLETE!',
+    win_badge: 'ROOKIE ASTRONAUT', win_badge_sub: 'Rookie Astronaut badge',
+    win_rw_k: 'MISSION REWARDS',
+    win_tt: '+{n} Purple Meteors',
+    win_codex: 'Unlocked 100% of the "Earth File" — {n}/{t} data samples',
+    win_xp: '+{n} XP',
+    win_badges: 'New badges: {n}',
+    win_un_k: 'NEW PLANET UNLOCKED',
+    win_un: 'THE MOON — next mission',
+    win_moon: '[ 🌙 The Moon · Coming soon ]',
+    win_awards: '[ 🏆 Open Trophy Hold ]',
+    win_home: '[ 🚀 Back to Navigation Hub ]',
+    saved_off: 'Not signed in — rewards are queued and will sync later.'
+  }
+};
+let LANG = AstroQ.getLang();
+const t = (k) => { const d = I18N[LANG] || I18N.vi; return d[k] != null ? d[k] : k; };
+
+/* ───────────────────── Dữ liệu từng bước ─────────────────────
+   Toạ độ lat/lon là điểm THẬT trên Trái Đất để trẻ nhìn quả cầu là nhận ra chỗ
+   đó ở đâu; chỉ dùng cho vị trí marker, không phải nội dung khoa học. */
+/* 3 điểm quét của bước hướng dẫn là ĐỘ LỆCH so với chỗ camera đang nhìn, không
+   phải lat/lon cố định.
+   Bản đầu gán cứng -35°/96°/145° (trải 180°) nên đo được: ở góc mở màn trẻ chỉ
+   thấy ĐÚNG MỘT đốm nhấp nháy, hai đốm kia ở nửa bên kia hành tinh — mà đây là
+   bước HƯỚNG DẪN, phải thấy ngay. Đặt cứng kiểu nào cũng không chắc, vì hành
+   tinh tự xoay: tuỳ lúc mở trang mà nửa nào đang hướng ra là khác nhau.
+   Lệch ±26° kinh độ → cả 3 nằm gọn trong khung, vẫn phải kéo nhẹ để chạm hết. */
+const SCAN_POINTS = [
+  { id: 'p1', dlat:  14, dlon: -26 },
+  { id: 'p2', dlat: -18, dlon:   4 },
+  { id: 'p3', dlat:   9, dlon:  27 }
+];
+const BIOMES = [
+  { id: 'water',    lat:  12, lon: -42, ic: '🌊', rgb: '110,200,255', color: 0x8fe0ff,
+    nm: { vi: 'Đại Tây Dương', en: 'Atlantic Ocean' },
+    fact: { vi: 'Nước bao phủ khoảng 70% bề mặt Trái Đất!',
+            en: 'Water covers about 70% of Earth’s surface!' },
+    cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)' },
+  { id: 'forest',   lat:  -4, lon: -62, ic: '🌳', rgb: '120,240,150', color: 0x8fffb0,
+    nm: { vi: 'Rừng Amazon', en: 'Amazon Rainforest' },
+    fact: { vi: 'Rừng cung cấp Oxy cho chúng ta hít thở!',
+            en: 'Forests provide the oxygen we breathe!' },
+    cc: '#4ade80', cbg: 'rgba(74,222,128,.28)' },
+  { id: 'animal',   lat: -75, lon:  20, ic: '🐧', rgb: '255,225,140', color: 0xffe8a0,
+    nm: { vi: 'Nam Cực', en: 'Antarctica' },
+    fact: { vi: 'Hàng triệu loài sinh vật cùng sinh sống trên Trái Đất!',
+            en: 'Millions of species share our planet!' },
+    cc: '#ffcf6b', cbg: 'rgba(255,207,107,.28)' },
+  { id: 'mountain', lat:  28, lon:  87, ic: '🏔️', rgb: '225,232,255', color: 0xe8eeff,
+    nm: { vi: 'Dãy Himalaya', en: 'The Himalayas' },
+    fact: { vi: 'Những rặng núi cao che chắn và giữ nước cho hành tinh!',
+            en: 'High mountain ranges shelter the planet and store its water!' },
+    cc: '#dbe7ff', cbg: 'rgba(219,231,255,.24)' }
+];
+/* Trạm phát sóng cho bước `rotation` — đặt ở Việt Nam cho gần trẻ. */
+const STATION = { lat: 16, lon: 108 };
+
+/* ── Bước `timeline`: 4 mốc lịch sử hình thành Trái Đất ──────────────────────
+   `era` là hậu tố class CSS đổi tông cả hành tinh (`#stage.era-magma`…). Mốc "ngày
+   nay" để `era:null` — đó chính là Trái Đất bình thường, thêm filter vào là sai.
+
+   `card` = thẻ mẫu vật trao ở mốc đó. Chỉ mốc dung nham có: viên nham thạch phải
+   xuất hiện ĐÚNG lúc trẻ đang xem hành tinh đỏ rực, không phải cuối bước.
+
+   ⚠️ Nội dung 4 mốc PHẢI khớp `learningdata/astronomy/earth_codex.json` mục
+   `earth-formation` — đó là bài đọc mở khoá sau khi xong bước này, hai bên lệch
+   nhau thì trẻ đọc lại thấy khác cái vừa xem. Con số 66 (không phải 65) triệu năm
+   theo NPS Geologic Time Scale: ranh giới cuối kỷ Phấn Trắng ở 66,0 triệu năm. */
+const ERAS = [
+  { id: 'magma', era: 'magma', ic: '🌋', card: 'rock' },
+  { id: 'ocean', era: 'ocean', ic: '🌊' },
+  { id: 'dino',  era: 'dino',  ic: '🦕' },
+  { id: 'now',   era: null,    ic: '🌍' }
+];
+
+/* ── Bước `energy`: 3 nguồn năng lượng sạch thay cho 3 ống khói ──────────────
+   `slot` là ống khói mà nguồn này thuộc về. Cố ý 1-1 (mỗi nguồn một ống) để cú
+   thả sai luôn có nghĩa "chưa đúng ống", không phải "nguồn này vô dụng". */
+const ENERGY = [
+  { id: 'solar', ic: '☀️', slot: 'st1' },
+  { id: 'wind',  ic: '🌬️', slot: 'st2' },
+  { id: 'hydro', ic: '🌊', slot: 'st3' }
+];
+const STACKS = ['st1', 'st2', 'st3'];
+
+/* ── Bước `eco`: 7 thẻ hành động, phân vào 2 rổ ──────────────────────────────
+   `b` = rổ đúng ('good' NÊN LÀM · 'bad' KHÔNG NÊN LÀM). 4 việc nên làm + 3 việc
+   không nên: cố ý LỆCH SỐ để trẻ không đếm được "chắc mỗi rổ 3 cái rưỡi" mà phải
+   đọc từng thẻ. Nội dung khớp `eco-habits` trong earth_codex.json. */
+const ECO = [
+  { id: 'light',  ic: '💡', b: 'good' },
+  { id: 'bottle', ic: '🚰', b: 'good' },
+  { id: 'tree',   ic: '🌳', b: 'good' },
+  { id: 'sort',   ic: '♻️', b: 'good' },
+  { id: 'litter', ic: '🗑️', b: 'bad'  },
+  { id: 'water',  ic: '💧', b: 'bad'  },
+  { id: 'bag',    ic: '🛍️', b: 'bad'  }
+];
+const GEMS = [
+  { id: 'sun',   ic: '☀️', slot: 'heat'  },
+  { id: 'water', ic: '💧', slot: 'water' },
+  { id: 'air',   ic: '🌬️', slot: 'air'   }
+];
+const SLOTS = ['heat', 'water', 'air'];
+
+/* ───────────────────── Trạng thái ───────────────────── */
+let world = null;
+let stepIdx = 0;                         // 0..7
+/* THỨ TỰ NÀY PHẢI KHỚP `Missions.All` ở AstroqSV/Services/Missions.cs — server tra
+   bảng theo id bước, còn thứ tự thì quyết bước nào chạy trước. Ba bước giáo dục
+   (timeline · energy · eco) xen vào giữa để mỗi bài học nối vào cảnh vừa xảy ra:
+   lịch sử ngay sau khi quét xong hành tinh, năng lượng sạch ngay sau khi thấy Mặt
+   Trời, thói quen bảo vệ môi trường ngay sau khi thu mẫu sự sống. */
+const STEP_IDS = ['scan', 'timeline', 'sun', 'energy', 'rotation', 'life', 'eco', 'core'];
+const doneSteps = new Set();             // các bước đã xong TRONG lượt này
+/* `codexTotal` chỉ là số tạm cho tới khi server trả số thật (9 = 6 mẫu cũ + 3 mẫu
+   của các bước mới). `badges` là huy hiệu SERVER báo vừa mở trong lượt này — client
+   không tự thêm vào đây bao giờ. */
+let reward = { meteors: 0, xp: 0, codex: 0, codexTotal: 9, unlocked: false, badges: [] };
+let busy = false;                        // đang chạy hiệu ứng → chặn bấm chồng
+let toastTimer = 0;
+
+function toast(msg) {
+  const el = $('toast');
+  el.innerHTML = String(msg).replace(/\{tt\}/g,
+    '<img src="img/tt.png" alt="' + t('tt_name') + '" />');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function paintBalance() { $('bal').textContent = Economy.getAsteroids(); }
+
+/* ───────────────────── Box thoại ───────────────────── */
+let sayResolve = null;
+function say(who, html, { wait = true } = {}) {
+  const el = $('say');
+  el.classList.toggle('byte', who === 'byte');
+  $('say-ava').src = who === 'byte' ? 'img/b1.png' : 'img/m1.png';
+  $('say-who').textContent = who === 'byte' ? t('byte') : t('comet');
+  $('say-line').innerHTML = html;
+  el.classList.add('show');
+  const next = $('say-next');
+  next.textContent = t('next');
+  if (!wait) { next.classList.add('hide'); return Promise.resolve(); }
+  next.classList.remove('hide');
+  return new Promise(res => { sayResolve = res; });
+}
+$('say-next').addEventListener('click', () => {
+  $('say-next').classList.add('hide');
+  const r = sayResolve; sayResolve = null;
+  if (r) r();
+});
+function hideSay() { $('say').classList.remove('show', 'lift'); }
+
+/**
+ * Lời khích lệ khi bảng kéo-thả ĐANG mở. Box thoại và bảng kéo-thả cùng neo ở đáy
+ * màn hình, nên nói mà không nhấc box lên thì nó phủ kín đúng mấy cái rổ/ô trẻ đang
+ * phải kéo thẻ vào — trẻ đọc được câu "thử lại xem nào" nhưng không thấy chỗ để thử.
+ * Đo chiều cao bảng ngay lúc gọi (nội dung bảng thay đổi theo số thẻ đã xếp).
+ */
+function boardSay(boardId, who, html) {
+  const b = $(boardId);
+  $('say').style.setProperty('--board-h', (b.offsetHeight + 12) + 'px');
+  $('say').classList.add('lift');
+  return say(who, html, { wait: false });
+}
+
+/* ───────────────────── Bảng mục tiêu ───────────────────── */
+function objective({ ic, h, p, n, total }) {
+  $('obj-ic').textContent = ic;
+  $('obj-h').textContent = h;
+  $('obj-p').textContent = p;
+  $('obj-k').textContent = t('obj_k');
+  progress(n, total);
+  $('obj').classList.add('show');
+}
+function progress(n, total) {
+  const show = total > 0;
+  $('obj-prog').style.display = show ? '' : 'none';
+  if (!show) return;
+  $('obj-bar').style.width = Math.round(n / total * 100) + '%';
+  $('obj-n').textContent = n + '/' + total;
+}
+function paintSteps() {
+  let html = '';
+  for (let i = 0; i < STEP_IDS.length; i++) {
+    if (i) html += '<span class="l' + (doneSteps.has(STEP_IDS[i - 1]) ? ' ok' : '') + '"></span>';
+    const cls = doneSteps.has(STEP_IDS[i]) ? 'ok' : (i === stepIdx ? 'now' : '');
+    html += '<span class="s ' + cls + '"></span>';
+  }
+  $('steps').innerHTML = html;
+}
+
+/* ───────────────────── Lớp phủ cảnh (mốc thời gian & khói) ─────────────────────
+   Trái Đất là canvas WebGL vẽ bằng shader trong js/earth3d.js — CSS không sửa được
+   màu lục địa/đại dương. Hai hàm dưới đây đổi CẢM GIÁC của cảnh mà không phải chạm
+   vào shader: `filter` trên chính #stage (đổi tông quả cầu) + một lớp gradient phủ
+   (đổi tông bầu trời). Đủ để trẻ thấy hành tinh khác hẳn qua từng mốc, và bản đồ bờ
+   biển thật (`COASTS`) vẫn nguyên. */
+const ERA_CLASSES = ERAS.map(e => e.era).filter(Boolean).map(e => 'era-' + e);
+function setEra(era) {
+  const st = $('stage'), ov = $('era');
+  ERA_CLASSES.forEach(c => { st.classList.remove(c); ov.classList.remove(c); });
+  ov.classList.toggle('on', !!era);
+  if (era) { st.classList.add('era-' + era); ov.classList.add('era-' + era); }
+}
+/** Độ dày khói (1 = đen kịt, 0 = trong). Giá trị ĐỘNG nên đặt qua biến CSS. */
+function setSmog(v) {
+  const el = $('smog');
+  const n = Math.max(0, Math.min(1, v));
+  el.style.setProperty('--smog', String(n));
+  el.classList.toggle('drift', n > 0 && !reduced);
+}
+
+/* ───────────────────── Bàn tay hướng dẫn ───────────────────── */
+function hand(kind) {
+  const el = $('hand');
+  el.className = 'me-hand' + (kind ? ' show ' + kind : '');
+  if (kind === 'drag') { el.style.left = '50%'; el.style.top = '58%'; }
+  if (kind === 'zoom') { el.style.left = '50%'; el.style.top = '52%'; }
+}
+function handOff() { $('hand').className = 'me-hand'; }
+
+/* ───────────────────── Báo bước xong lên server ─────────────────────
+   Client CHỈ gửi {mission, step}. Server tra Services/Missions.cs rồi cộng
+   thưởng — không có con số thưởng nào ở đây. */
+function reportStep(step) {
+  if (!window.AstroQProgress || !AstroQProgress.missionStep) {
+    return Promise.resolve({ ok: false, reason: 'no-module' });
+  }
+  return AstroQProgress.missionStep('earth', step).then(r => {
+    if (r && r.ok && r.data) {
+      if (typeof r.data.awarded === 'number') reward.meteors += r.data.awarded;
+      if (typeof r.data.xpGained === 'number') reward.xp += r.data.xpGained;
+      /* Huy hiệu do SERVER mở (`Achievements.NewlyEarned`) — client chỉ GHI LẠI để
+         hiện thẻ chúc mừng, không bao giờ tự thêm id vào đây. Chưa đăng nhập / mất
+         mạng thì danh sách rỗng và trang không nhận là đã mở được cái nào. */
+      if (Array.isArray(r.data.newBadges)) {
+        r.data.newBadges.forEach(b => {
+          if (typeof b === 'string' && reward.badges.indexOf(b) < 0) reward.badges.push(b);
+        });
+      }
+      const m = r.data.missions && r.data.missions.earth;
+      if (m) {
+        reward.codex = (m.codex || []).length;
+        reward.codexTotal = m.codexTotal || reward.codexTotal;
+        reward.unlocked = m.done === true;
+      }
+      if (r.data.awarded > 0) toast('+' + r.data.awarded + ' {tt}');
+    } else if (r && r.queued) {
+      toast(t('saved_off'));
+    }
+    paintBalance();
+    return r;
+  });
+}
+
+/* ══════════════════════════ CÁC BƯỚC ══════════════════════════
+   Mỗi bước là một object độc lập: enter() dựng cảnh + mục tiêu, pick() nhận cú
+   chạm vào cảnh 3D, tick() chạy mỗi khung nếu cần theo dõi liên tục. */
+
+const steps = {
+
+  /* ── 1. Khởi động hệ thống quét ─────────────────────────────── */
+  scan: {
+    hits: 0,
+    async enter() {
+      this.hits = 0;
+      world.showGrid(true);
+      world.setControls({ rotate: true, zoom: true });
+      /* Hành tinh ĐỨNG YÊN trong bước hướng dẫn: đây là bước dạy "kéo để xoay",
+         chuyển động duy nhất trên màn hình nên là chuyển động do trẻ tạo ra. Nó
+         cũng giữ 3 đốm nhấp nháy nằm trong khung cho tới khi trẻ chạm hết. */
+      world.setSpin(0);
+      await world.panTo({ dist: 4.0, ms: reduced ? 0 : 1400 });
+      objective({ ic: '🎯', h: t('s1_h'), p: t('s1_p'), n: 0, total: 3 });
+
+      // Bàn tay hướng dẫn: kéo → phóng to → chạm
+      hand('drag');
+      await say('comet', t('s1_say1'));
+      hand('zoom');
+      await world.panTo({ dist: 2.5, ms: reduced ? 0 : 1200 });
+      hand('tap');
+      // Đặt quanh CHỖ ĐANG NHÌN, đo ngay lúc này (camera vừa zoom xong)
+      const c = world.facingLatLon();
+      world.addMarkers(SCAN_POINTS.map(p => ({
+        id: p.id,
+        lat: Math.max(-68, Math.min(68, c.lat + p.dlat)),
+        lon: c.lon + p.dlon,
+        rgb: '95,240,255', color: 0xbdf5ff
+      })));
+      await say('comet', t('s1_say2'));
+      handOff();
+      hideSay();
+    },
+    async pick(ev) {
+      if (ev.type !== 'marker') return;
+      if (!world.markDone(ev.id)) return;
+      this.hits++;
+      // Cao dần theo số điểm đã quét — trẻ nghe là biết mình đang tiến tới
+      sfx('beep', 980 + this.hits * 140);
+      progress(this.hits, 3);
+      toast(t('s1_hit').replace('{n}', this.hits));
+      if (this.hits >= 3) await finishStep('scan');
+    },
+    async outro() {
+      sfx('ready');                       // "Scan Complete!"
+      await world.fadeGrid(reduced ? 0 : 900);
+      world.clearMarkers();
+      world.setSpin(1);                   // quét xong thì hành tinh quay lại bình thường
+      await say('byte', t('s1_done'));
+      hideSay();
+    }
+  },
+
+  /* ── 2. Lịch sử 4,5 tỷ năm hình thành Trái Đất ───────────────
+     Bước ĐỌC-XEM, không phải bước đố: không có cách nào làm sai, chỉ có đi đúng thứ
+     tự. Cố ý đặt ngay sau bước quét — trẻ vừa nhìn kỹ bề mặt hành tinh xong thì câu
+     "hành tinh này ngày xưa trông khác hẳn" mới có chỗ bám. */
+  timeline: {
+    seen: 0,
+    async enter() {
+      this.seen = 0;
+      world.setControls({ rotate: true, zoom: true });
+      world.setSpin(1);
+      await world.panTo({ dist: 3.4, ms: reduced ? 0 : 1300 });
+      objective({ ic: '🕰️', h: t('tl_h'), p: t('tl_p'), n: 0, total: ERAS.length });
+      buildTimeline();
+      await say('comet', t('tl_say1'));
+      hideSay();
+      $('time').classList.add('show');
+    },
+    /**
+     * Mở một mốc. Ba nhánh:
+     *   · mốc kế tiếp        → xem, tính tiến độ, mở mốc sau
+     *   · mốc ĐÃ xem         → cho xem lại (đây là bài học, đọc lại là chuyện tốt)
+     *     nhưng KHÔNG tính tiến độ lần nữa
+     *   · mốc còn ở phía sau → nhắc đi theo thứ tự
+     */
+    async openEra(i) {
+      if (busy || i < 0 || i >= ERAS.length) return;
+      const e = ERAS[i];
+      if (i > this.seen) { sfx('nope'); toast(t('tl_locked')); return; }
+      setEra(e.era);
+      paintEraBody(e);
+      if (i < this.seen) { paintTimeline(this.seen, i); return; }
+
+      busy = true;
+      sfx('beep', 820 + i * 90);
+      this.seen = i + 1;
+      progress(this.seen, ERAS.length);
+      /* `cur = -1` → vòng sáng "now" nhảy sang mốc KẾ TIẾP, không đứng lại ở mốc vừa
+         xem (mốc đó đã có màu xanh "ok"). Trẻ luôn nhìn thấy chỗ bấm tiếp theo. */
+      paintTimeline(this.seen, -1);
+      /* Viên nham thạch trao ĐÚNG lúc hành tinh đang đỏ rực, không phải cuối bước:
+         thẻ ghi "một mảnh vỏ Trái Đất thời còn là dung nham" mà nền sau nó đã là
+         Trái Đất xanh thì câu đó mất nghĩa. */
+      if (e.card === 'rock') {
+        await showCard({
+          ic: '🪨', nm: t('rock_nm'), fact: t('rock_fact'), tag: t('rock_got'),
+          cc: '#fb923c', cbg: 'rgba(251,146,60,.28)'
+        });
+      }
+      busy = false;
+      if (this.seen >= ERAS.length) await finishStep('timeline');
+    },
+    async outro() {
+      setEra(null);                        // trả hành tinh về màu thật
+      $('time').classList.remove('show');
+      await say('comet', t('tl_say2'));
+      hideSay();
+    }
+  },
+
+  /* ── 3. Tìm nguồn năng lượng ────────────────────────────────── */
+  sun: {
+    hinted: false,
+    async enter() {
+      this.hinted = false;
+      world.setControls({ rotate: true, zoom: true });
+      // Lùi camera ra để Mặt Trời vào được khung khi trẻ xoay
+      await world.panTo({ dist: 5.2, ms: reduced ? 0 : 1500 });
+      /* MẤT NĂNG LƯỢNG: cả hành tinh chìm vào bóng tối TRƯỚC, rồi Comet mới hỏi
+         "ngôi sao đâu?". Đúng thứ tự trong bản mô tả — và chỉ khi vừa thấy sáng ở
+         nhiệm vụ 1 thì lúc tối đi mới thành một khoảnh khắc. */
+      await world.dimSun(reduced ? 0 : 1200);
+      objective({ ic: '☀️', h: t('s2_h'), p: t('s2_p'), n: 0, total: 1 });
+      await say('comet', t('s2_say1'));
+      hideSay();
+      if (!reduced) {
+        // Gợi ý sau 9 giây nếu trẻ chưa tìm ra — không phạt, chỉ nhắc
+        this._tid = setTimeout(() => {
+          if (!doneSteps.has('sun')) { this.hinted = true; toast(t('s2_hint')); }
+        }, 9000);
+      }
+    },
+    async pick(ev) {
+      if (ev.type !== 'sun' || world.sunOn) return;
+      clearTimeout(this._tid);
+      await finishStep('sun');
+    },
+    async outro() {
+      progress(1, 1);
+      sfx('ignite');
+      await world.igniteSun(reduced ? 0 : 1700);
+      await say('comet', t('s2_say2'));
+      hideSay();
+    }
+  },
+
+  /* ── 4. Kích hoạt năng lượng sạch ────────────────────────────
+     Đặt NGAY SAU bước Mặt Trời là có chủ ý: trẻ vừa tự tay bật ngôi sao lên và nghe
+     "Mặt Trời mang năng lượng cho Trái Đất", nên câu tiếp theo — "vậy sao mình còn
+     đốt than?" — là câu hỏi tự nhiên chứ không phải bài giảng chen vào. */
+  energy: {
+    placed: new Set(),
+    async enter() {
+      this.placed = new Set();
+      world.setControls({ rotate: true, zoom: true });
+      world.setSpin(1);
+      await world.panTo({ dist: 3.8, ms: reduced ? 0 : 1300 });
+      /* Khói xuất hiện TRƯỚC khi Byte nói, y như bước Mặt Trời tắt đèn trước khi
+         Comet hỏi: thấy vấn đề rồi mới nghe kể về vấn đề. */
+      setSmog(1);
+      objective({ ic: '🔋', h: t('ce_h'), p: t('ce_p'), n: 0, total: ENERGY.length });
+      await say('byte', t('ce_say1'));
+      hideSay();
+      buildEnergy();
+      $('energy').classList.add('show');
+    },
+    async onPlace(id) {
+      if (this.placed.has(id)) return;
+      this.placed.add(id);
+      const n = this.placed.size;
+      progress(n, ENERGY.length);
+      // Khói mỏng đi theo TỪNG nguồn, không đợi đủ 3: trẻ thấy ngay việc mình vừa làm
+      // có tác dụng, mà vẫn còn khói nên biết là chưa xong.
+      setSmog(1 - n / ENERGY.length);
+      toast(t('ce_swap').replace('{n}', n));
+      if (n >= ENERGY.length) await finishStep('energy');
+    },
+    async outro() {
+      $('energy').classList.remove('show');
+      setSmog(0);
+      sfx('ready');
+      await say('byte', t('ce_say2'));
+      hideSay();
+    }
+  },
+
+  /* ── 5. Khôi phục tín hiệu vệ tinh ──────────────────────────── */
+  rotation: {
+    locked: false,
+    async enter() {
+      this.locked = false;
+      world.setControls({ zoom: true });
+      world.setSpin(0);                    // để TRẺ tự xoay, hành tinh không tự chạy
+      /* Ở bước NÀY cú kéo xoay CHÍNH HÀNH TINH, không phải camera.
+         Bản đầu để OrbitControls quay camera: nhìn thì giống nhau nhưng
+         `earth.quaternion` không đổi, nên góc giữa trạm phát sóng và vệ tinh y
+         nguyên — bước này TRẺ KHÔNG THỂ HOÀN THÀNH, nó chỉ tự xong vì hành tinh
+         tự quay (tức là ngồi chờ, không phải giải), và ở `reduced-motion` (không
+         tự quay) thì treo vĩnh viễn. Đo trên trang mới lộ ra. */
+      world.setEarthDrag(true);
+      world.setSatelliteVisible(true);
+      world.setSatelliteSignal(false);
+      await world.panTo({ dist: 4.4, ms: reduced ? 0 : 1400 });
+      objective({ ic: '🛰️', h: t('s3_h'), p: t('s3_p'), n: 0, total: 1 });
+      // Đánh dấu trạm phát sóng để trẻ biết phải xoay cái gì tới đâu
+      world.addMarkers([{ id: 'station', lat: STATION.lat, lon: STATION.lon,
+                          rgb: '255,225,140', color: 0xffe8a0 }]);
+      $('sat-st').textContent = t('s3_lost');
+      $('sat').classList.remove('ok');
+      $('sat').classList.add('show');
+      await say('byte', t('s3_say1'));
+      hideSay();
+    },
+    tick() {
+      if (this.locked) return;
+      const ang = world.stationAngleTo(STATION.lat, STATION.lon);
+      // 0° = trạm chỉ thẳng vào vệ tinh. Coi như bắt được tín hiệu dưới 20°.
+      const strength = Math.max(0, Math.min(1, 1 - ang / 90));
+      $('sat-meter').style.width = Math.round(strength * 100) + '%';
+      progress(ang < 20 ? 1 : 0, 1);
+      if (ang < 20) { this.locked = true; finishStep('rotation'); }
+    },
+    async outro() {
+      $('sat-st').textContent = t('s3_ok');
+      sfx('ready');
+      $('sat').classList.add('ok');
+      world.setSatelliteSignal(true);
+      world.setEarthDrag(false);           // trả cú kéo về cho camera
+      world.clearMarkers();
+      await say('comet', t('s3_say2'));
+      hideSay();
+      $('sat').classList.remove('show');
+      world.setSatelliteVisible(false);
+      world.setSpin(1);
+    }
+  },
+
+  /* ── 6. Thu thập mẫu sự sống ────────────────────────────────── */
+  life: {
+    got: new Set(),
+    async enter() {
+      this.got = new Set();
+      world.setControls({ rotate: true, zoom: true });
+      await world.panTo({ dist: 3.1, ms: reduced ? 0 : 1500 });
+      objective({ ic: '🛸', h: t('s4_h'), p: t('s4_p'), n: 0, total: 4 });
+      world.addMarkers(BIOMES.map(b => ({ id: b.id, lat: b.lat, lon: b.lon,
+                                          rgb: b.rgb, color: b.color })));
+      await say('byte', t('s4_say1'));
+      hideSay();
+    },
+    async pick(ev) {
+      if (ev.type !== 'marker' || busy) return;
+      const b = BIOMES.find(x => x.id === ev.id);
+      if (!b || this.got.has(b.id)) return;
+      busy = true;
+      toast(t('s4_scan'));
+      /* Dừng hành tinh + đưa camera tới đúng vùng trước khi thả drone.
+         Không làm thì hai chuyện xảy ra: hành tinh xoay tiếp nên drone quét lệch
+         khỏi chỗ trẻ vừa chạm, và vùng đó thường nằm ở MÉP quả cầu — tia laser
+         chiếu xuống tâm hành tinh nhưng trên màn hình lại trông như chiếu ngang. */
+      // Hành tinh dừng lại để drone quét đúng chỗ trẻ vừa chạm; góc camera do
+      // chính `sendDrone` đặt (nó biết cần chếch bao nhiêu độ mới thấy tia laser).
+      world.setSpin(0);
+      await world.sendDrone(b.lat, b.lon);
+      world.markDone(b.id);
+      this.got.add(b.id);
+      progress(this.got.size, 4);
+      await showCard({
+        ic: b.ic, nm: b.nm[LANG] || b.nm.vi, fact: b.fact[LANG] || b.fact.vi,
+        tag: t('s4_card'), cc: b.cc, cbg: b.cbg
+      });
+      busy = false;
+      if (this.got.size >= 4) await finishStep('life');
+    },
+    async outro() {
+      world.setSpin(1);                   // trả lại chuyển động tự quay
+      world.clearMarkers();
+      await say('byte', t('s4_say2'));
+      hideSay();
+    }
+  },
+
+  /* ── 7. Eco-Hero: NÊN / KHÔNG NÊN làm ────────────────────────
+     Bước DUY NHẤT của nhiệm vụ nói về việc trẻ làm ngoài đời, không phải trong tàu.
+     Đặt ngay sau khi thu 4 mẫu sự sống: vừa cầm trên tay bằng chứng "hành tinh này
+     có sự sống" thì câu "vậy mình giữ nó thế nào?" mới là kết luận, không phải bài
+     đạo đức gắn vào. */
+  eco: {
+    sorted: 0,
+    async enter() {
+      this.sorted = 0;
+      world.setControls({ rotate: true, zoom: true });
+      world.setSpin(1);
+      await world.panTo({ dist: 4.0, ms: reduced ? 0 : 1300 });
+      objective({ ic: '🌱', h: t('ec_h'), p: t('ec_p'), n: 0, total: ECO.length });
+      await say('byte', t('ec_say1'));
+      hideSay();
+      buildEco();
+      $('eco').classList.add('show');
+    },
+    async onSort() {
+      this.sorted++;
+      progress(this.sorted, ECO.length);
+      if (this.sorted >= ECO.length) await finishStep('eco');
+    },
+    async outro() {
+      $('eco').classList.remove('show');
+      sfx('ready');
+      await say('comet', t('ec_say2'));
+      hideSay();
+    },
+    /* Thẻ huy hiệu chỉ hiện khi SERVER báo vừa mở `eco-warrior` (chạy sau
+       `reportStep`). Chưa đăng nhập / mất mạng thì bỏ qua — nói "đã mở huy hiệu"
+       trong lúc việc còn nằm trong hàng chờ là bịa, đúng nguyên tắc của trang này. */
+    async afterReport() {
+      if (reward.badges.indexOf('eco-warrior') < 0) return;
+      sfx('fanfare');
+      await showCard({
+        ic: badgeIcon('eco-warrior'), nm: badgeName('eco-warrior'),
+        fact: t('ec_badge_fact'), tag: t('ec_badge_got'),
+        cc: '#4ade80', cbg: 'rgba(74,222,128,.28)'
+      });
+    }
+  },
+
+  /* ── 8. Giải mã hành tinh ───────────────────────────────────── */
+  core: {
+    filled: new Set(),
+    async enter() {
+      this.filled = new Set();
+      world.setControls({ rotate: true, zoom: true });
+      await world.panTo({ dist: 3.6, ms: reduced ? 0 : 1400 });
+      objective({ ic: '🧩', h: t('s5_h'), p: t('s5_p'), n: 0, total: 3 });
+      buildCore();
+      await say('byte', t('s5_say1'));
+      hideSay();
+      $('core').classList.add('show');
+    },
+    async onFill(slot) {
+      this.filled.add(slot);
+      progress(this.filled.size, 3);
+      if (this.filled.size >= 3) await finishStep('core');
+    },
+    async outro() {
+      $('core').classList.remove('show');
+      await world.shield(reduced ? 0 : 1600);
+      await say('comet', t('s5_say2'));
+      hideSay();
+    }
+  }
+};
+
+/* ───────────────────── Thẻ "vừa nhận được" ─────────────────────
+   MỘT thẻ cho cả ba thứ trẻ nhận trong nhiệm vụ: mẫu sự sống (bước `life`), viên
+   nham thạch (bước `timeline`), huy hiệu Chiến Binh Xanh (bước `eco`). Nhận đã dịch
+   sẵn (`nm`/`fact`/`tag` là chuỗi, không phải object song ngữ) vì ba chỗ gọi lấy chữ
+   từ ba nguồn khác nhau: BIOMES có object vi/en, hai chỗ kia lấy từ `t()` và từ
+   `js/badges.js`. Bắt cả ba nhét vào một hình dạng chỉ để hàm này tự dịch thì mỗi
+   chỗ gọi lại phải bọc ngược lại. */
+function showCard(c) {
+  sfx('pickup');
+  const el = $('card');
+  el.style.setProperty('--cc', c.cc);
+  el.style.setProperty('--cbg', c.cbg);
+  $('card-ic').textContent = c.ic;
+  $('card-nm').textContent = c.nm;
+  $('card-fact').textContent = c.fact;
+  $('card-got').textContent = c.tag;
+  el.classList.add('show');
+  el.setAttribute('aria-hidden', 'false');
+  return new Promise(res => {
+    const close = () => {
+      el.classList.remove('show');
+      el.setAttribute('aria-hidden', 'true');
+      el.removeEventListener('click', close);
+      setTimeout(res, 260);
+    };
+    el.addEventListener('click', close);
+    // Tự đóng sau 3,4s để trẻ không phải bấm nếu đang mải nhìn
+    setTimeout(() => { if (el.classList.contains('show')) close(); }, reduced ? 600 : 3400);
+  });
+}
+
+/* ══════════════════ KÉO-THẢ DÙNG CHUNG (3 bước) ══════════════════
+   Ba bước cần kéo-thả: `energy` (nguồn sạch → ống khói), `eco` (thẻ hành động → rổ),
+   `core` (viên ngọc → ô). Cùng một cơ chế: Pointer Events (chạy cả chuột và cảm ứng),
+   một bản sao "bay theo ngón tay", vùng dưới con trỏ sáng lên, thả đúng thì khoá lại,
+   thả sai thì KHÔNG trừ điểm — chỉ khích lệ.
+
+   Trước 29/07/2026 phần này nằm cứng trong `buildCore`. Chép sang bước thứ hai và
+   thứ ba là ba bản `pointerdown/move/drop` gần-giống-nhau: sửa một lỗi kéo-thả (ví dụ
+   `setPointerCapture` để ngón tay ra khỏi thẻ vẫn kéo được) sẽ phải nhớ sửa cả ba,
+   mà không ai nhớ. Nay chỉ còn phần KHÁC NHAU nằm ở opt.
+
+   opt = {
+     items      : mảng phần tử kéo được (mỗi cái có data-want = khoá vùng đích)
+     zones      : mảng vùng thả (mỗi cái có data-zone)
+     wide       : true = thẻ có chữ (bản bay dùng .wide và copy cả innerHTML)
+     canDrop(z) : vùng này còn nhận được không (mặc định: chưa có class 'ok')
+     onHit(el,z), onMiss(el,z)
+   } */
+function dragDrop(opt) {
+  const zones = opt.zones;
+  const keyOf = (el) => el.getAttribute('data-zone');
+  const wantOf = (el) => el.getAttribute('data-want');
+  const canDrop = opt.canDrop || ((z) => !z.classList.contains('ok'));
+  let fly = null, dragEl = null;
+
+  function zoneUnder(x, y) {
+    return zones.find(z => {
+      const r = z.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }) || null;
+  }
+  function paintOver(z) {
+    zones.forEach(x => x.classList.toggle('over', x === z && canDrop(x)));
+  }
+  function move(e) {
+    if (!fly) return;
+    fly.style.left = e.clientX + 'px';
+    fly.style.top = e.clientY + 'px';
+    paintOver(zoneUnder(e.clientX, e.clientY));
+  }
+  function drop(e) {
+    if (!fly || !dragEl) return;
+    const z = zoneUnder(e.clientX, e.clientY);
+    fly.remove(); fly = null;
+    paintOver(null);
+    dragEl.classList.remove('dragging');
+    const el = dragEl; dragEl = null;
+    /* Thả ra chỗ trống thì IM LẶNG. Bản đầu coi mọi cú thả không trúng vùng là "thả
+       sai" và bật lời khích lệ — nhưng nhấc thẻ lên rồi đổi ý bỏ xuống là chuyện
+       bình thường, báo "chưa đúng rồi" lúc đó là mắng oan. */
+    if (!z) return;
+    if (keyOf(z) === wantOf(el) && canDrop(z)) { sfx('beep', 920); opt.onHit(el, z); }
+    else { sfx('nope'); opt.onMiss(el, z); }
+  }
+
+  opt.items.forEach(el => {
+    el.addEventListener('pointerdown', (e) => {
+      if (el.classList.contains('used')) return;
+      e.preventDefault();
+      dragEl = el;
+      el.classList.add('dragging');
+      fly = document.createElement('span');
+      fly.className = 'me-fly' + (opt.wide ? ' wide' : '');
+      if (opt.wide) fly.innerHTML = el.innerHTML; else fly.textContent = el.textContent;
+      document.body.appendChild(fly);
+      move(e);
+      /* Bắt con trỏ vào chính thẻ: không có dòng này thì ngón tay/chuột đi ra khỏi
+         thẻ là mất luôn `pointermove` và thẻ đứng chết giữa đường. */
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', drop);
+    el.addEventListener('pointercancel', drop);
+  });
+}
+
+/** Nhấp nháy dòng nhắc + lời khích lệ rồi tự trả lại câu hướng dẫn cũ. */
+function nudge(boardId, hintId, wrongKey, hintKey) {
+  $(hintId).textContent = t(wrongKey);
+  boardSay(boardId, 'byte', t(wrongKey));
+  clearTimeout(nudge['_' + hintId]);
+  nudge['_' + hintId] = setTimeout(() => {
+    $(hintId).textContent = t(hintKey);
+    hideSay();
+  }, 2200);
+}
+
+/* ───────────────────── Bước 2: dòng thời gian ───────────────────── */
+function buildTimeline() {
+  $('time-k').textContent = t('tl_k');
+  $('time-rail').innerHTML = ERAS.map((e, i) =>
+    `<button type="button" class="me-era-node hit" data-era="${i}"` +
+    ` aria-label="${esc(t('era_' + e.id + '_y'))} — ${esc(t('era_' + e.id + '_n'))}">` +
+    `<span class="dot" aria-hidden="true">${e.ic}</span>` +
+    `<span class="yr">${esc(t('era_' + e.id + '_y'))}</span>` +
+    `<span class="nm">${esc(t('era_' + e.id + '_n'))}</span></button>`).join('');
+  $('time-rail').querySelectorAll('.me-era-node').forEach(b => {
+    b.addEventListener('click', () => steps.timeline.openEra(Number(b.getAttribute('data-era'))));
+  });
+  paintTimeline(0, -1);
+  $('time-h').textContent = '—';
+  $('time-p').textContent = '';
+}
+/** @param seen số mốc đã xem · @param cur mốc đang mở (để tô sáng) */
+function paintTimeline(seen, cur) {
+  $('time-rail').querySelectorAll('.me-era-node').forEach((b, i) => {
+    b.classList.toggle('ok', i < seen);
+    b.classList.toggle('now', i === (cur >= 0 ? cur : seen));
+    // Mốc còn ở phía sau thì khoá hẳn — kể cả bàn phím, để Tab không nhảy vào chỗ
+    // bấm là bị mắng "đi theo thứ tự nhé".
+    b.disabled = i > seen;
+  });
+}
+function paintEraBody(e) {
+  $('time-h').textContent = e.ic + '  ' + t('era_' + e.id + '_n');
+  $('time-p').textContent = t('era_' + e.id + '_p');
+}
+
+/* ───────────────────── Bước 4: năng lượng sạch ───────────────────── */
+function buildEnergy() {
+  $('energy-k').textContent = t('ce_k');
+  $('energy-hint').textContent = t('ce_hint');
+  $('energy-slots').innerHTML = STACKS.map(s =>
+    `<div class="me-stack" data-zone="${s}">` +
+    `<span class="puff" aria-hidden="true">💨</span>` +
+    `<span class="ic" aria-hidden="true">🏭</span>` +
+    `<span class="lb">${t('ce_stack')}</span></div>`).join('');
+  $('energy-tray').innerHTML = ENERGY.map(g =>
+    `<button type="button" class="me-gem wide hit" data-want="${g.slot}">` +
+    `<span class="ic" aria-hidden="true">${g.ic}</span>` +
+    `<span class="tx">${esc(t('ce_' + g.id))}</span></button>`).join('');
+
+  dragDrop({
+    items: Array.from($('energy-tray').querySelectorAll('.me-gem')),
+    zones: Array.from($('energy-slots').querySelectorAll('.me-stack')),
+    wide: true,
+    onHit(el, z) {
+      z.classList.add('ok');
+      // Ống khói thành trạm phát điện: đổi luôn cái emoji, không chỉ đổi màu viền
+      z.querySelector('.ic').textContent = el.querySelector('.ic').textContent;
+      z.querySelector('.lb').textContent = el.querySelector('.tx').textContent;
+      el.classList.add('used');
+      steps.energy.onPlace(el.getAttribute('data-want'));
+    },
+    onMiss() { nudge('energy', 'energy-hint', 'ce_wrong', 'ce_hint'); }
+  });
+}
+
+/* ───────────────────── Bước 7: Eco-Hero ─────────────────────
+   Hai rổ nhận NHIỀU thẻ, nên `canDrop` luôn true — khác hẳn ô ngọc/ống khói (mỗi ô
+   một thẻ). Đó chính là chỗ duy nhất ba bước khác nhau về luật thả. */
+function buildEco() {
+  $('eco-k').textContent = t('ec_k');
+  $('eco-good').textContent = t('ec_good');
+  $('eco-bad').textContent = t('ec_bad');
+  $('eco-hint').textContent = t('ec_hint');
+  $('eco-good-drop').innerHTML = '';
+  $('eco-bad-drop').innerHTML = '';
+  $('eco-deck').innerHTML = ECO.map(c =>
+    `<button type="button" class="me-gem wide hit" data-card="${c.id}" data-want="${c.b}">` +
+    `<span class="ic" aria-hidden="true">${c.ic}</span>` +
+    `<span class="tx">${esc(t('eco_' + c.id))}</span></button>`).join('');
+
+  dragDrop({
+    items: Array.from($('eco-deck').querySelectorAll('.me-gem')),
+    zones: Array.from($('eco').querySelectorAll('.me-bucket')),
+    wide: true,
+    canDrop: () => true,
+    onHit(el, z) {
+      const chip = document.createElement('span');
+      chip.className = 'me-chip';
+      chip.innerHTML = el.innerHTML;
+      // Giữ id trên chip để `applyLang` dịch lại được thẻ đã xếp (xem ghi chú ở đó)
+      chip.setAttribute('data-card', el.getAttribute('data-card'));
+      z.querySelector('.drop').appendChild(chip);
+      el.classList.add('used');
+      steps.eco.onSort();
+    },
+    onMiss() { nudge('eco', 'eco-hint', 'ec_wrong', 'ec_hint'); }
+  });
+}
+
+/* ───────────────────── Bước 8: bảng 3 ô ngọc ───────────────────── */
+function buildCore() {
+  $('core-k').textContent = t('s5_k');
+  $('core-hint').textContent = t('s5_hint');
+  $('core-slots').innerHTML = SLOTS.map(s =>
+    `<div class="me-slot" data-zone="${s}"><span class="gem"></span>` +
+    `<span class="lb">${t('slot_' + s)}</span></div>`).join('');
+  $('core-tray').innerHTML = GEMS.map(g =>
+    `<button type="button" class="me-gem hit" data-gem="${g.id}" data-want="${g.slot}" ` +
+    `title="${esc(t('gem_' + g.id))}" aria-label="${esc(t('gem_' + g.id))}">${g.ic}</button>`).join('');
+
+  dragDrop({
+    items: Array.from($('core-tray').querySelectorAll('.me-gem')),
+    zones: Array.from($('core-slots').querySelectorAll('.me-slot')),
+    onHit(el, z) {
+      z.classList.add('ok');
+      z.querySelector('.gem').textContent = el.textContent;
+      el.classList.add('used');
+      steps.core.onFill(z.getAttribute('data-zone'));
+    },
+    onMiss() { nudge('core', 'core-hint', 's5_wrong', 's5_hint'); }
+  });
+}
+
+/* ══════════════════════════ LUỒNG NHIỆM VỤ ══════════════════════════ */
+
+async function finishStep(id) {
+  if (doneSteps.has(id)) return;
+  doneSteps.add(id);
+  paintSteps();
+  const st = steps[id];
+  if (st && st.outro) await st.outro();
+  // Báo lên server SAU khi diễn xong: thưởng hiện ra lúc trẻ đang xem hiệu ứng
+  await reportStep(id);
+  /* Việc chỉ làm được KHI ĐÃ BIẾT server trả gì (bước `eco` khoe huy hiệu vừa mở).
+     Không gộp vào `outro()` vì lúc đó `reward.badges` còn rỗng — và không đảo thứ tự
+     `outro` ↔ `reportStep` vì hiệu ứng phải chạy ngay, không chờ mạng. */
+  if (st && st.afterReport) await st.afterReport();
+  await nextStep();
+}
+
+async function nextStep() {
+  if (stepIdx >= STEP_IDS.length - 1) { await showWin(); return; }
+  stepIdx++;
+  paintSteps();
+  const st = steps[STEP_IDS[stepIdx]];
+  if (st && st.enter) await st.enter();
+}
+
+/* ───────────────────── Màn tổng kết ───────────────────── */
+async function showWin() {
+  sfx('fanfare');
+  $('obj').classList.remove('show');
+  hideSay();
+  $('win-h').textContent = t('win_h');
+  $('win-badge').textContent = t('win_badge');
+  $('win-badge-sub').textContent = t('win_badge_sub');
+  $('win-rw-k').textContent = t('win_rw_k');
+  $('win-un-k').textContent = t('win_un_k');
+  $('win-rw-tt').textContent = t('win_tt').replace('{n}', reward.meteors);
+  $('win-rw-codex').textContent = t('win_codex')
+    .replace('{n}', reward.codex).replace('{t}', reward.codexTotal);
+  $('win-rw-xp').textContent = t('win_xp').replace('{n}', reward.xp);
+  /* Huy hiệu mở THÊM trong lượt (🌱 Chiến Binh Xanh…). Bỏ `rookie-astronaut` ra vì nó
+     đã có khối huân chương riêng ở trên — liệt kê hai lần thì trẻ tưởng được hai cái.
+     Rỗng thì ẩn cả dòng, không hiện "Huy hiệu mới: " trống. */
+  const extraBadges = reward.badges.filter(b => b !== 'rookie-astronaut');
+  $('win-rw-badges').classList.toggle('hide', extraBadges.length === 0);
+  if (extraBadges.length) {
+    $('win-badges').textContent = t('win_badges').replace('{n}',
+      extraBadges.map(b => badgeIcon(b) + ' ' + badgeName(b)).join(' · '));
+  }
+  $('win-un').textContent = t('win_un');
+  /* Nhiệm vụ Mặt Trăng CHƯA có — nút để `disabled` chứ không dẫn đi đâu.
+     Nút dẫn vào trang không tồn tại còn tệ hơn là nói thẳng "sắp ra mắt". */
+  $('win-moon').textContent = t('win_moon');
+  $('win-moon').disabled = true;
+  $('win-awards').textContent = t('win_awards');
+  $('win-home').textContent = t('win_home');
+  $('win').classList.add('show');
+  $('win').setAttribute('aria-hidden', 'false');
+  setTimeout(() => $('win-awards').focus(), 300);
+}
+
+/* ───────────────────── Âm thanh ─────────────────────
+   Gói một lớp mỏng quanh `AstroQSfx` để chỗ gọi không phải kiểm `if` mỗi lần, và
+   để `prefers-reduced-motion` cũng làm nhẹ phần tiếng: trẻ chọn "giảm hiệu ứng"
+   thường là vì dễ bị quá tải cảm giác, mà tiếng cũng là một loại kích thích. */
+function sfx(name, arg) {
+  if (!window.AstroQSfx) return;
+  try { AstroQSfx[name](arg); } catch (e) {}
+}
+function paintMute() {
+  const off = !window.AstroQSfx || !AstroQSfx.on();
+  $('mute').textContent = off ? '🔇' : '🔊';
+  $('mute').setAttribute('aria-pressed', off ? 'true' : 'false');
+}
+$('mute').addEventListener('click', () => {
+  const off = !AstroQSfx.on();
+  try { localStorage.setItem('astroq-sfx', off ? 'on' : 'off'); } catch (e) {}
+  paintMute();
+  if (off) sfx('beep', 880);           // bật lại thì kêu một tiếng cho biết đã bật
+});
+
+/* ───────────────────── Ngôn ngữ ───────────────────── */
+function applyLang(lang) {
+  if (lang === 'en' || lang === 'vi') LANG = lang;
+  document.documentElement.lang = LANG;
+  document.title = t('title');
+  AstroQ.applyTexts(t);
+  AstroQ.markLangButtons(LANG, '.me-lang button');
+  $('tag').textContent = t('tag');
+  $('load-txt').textContent = t('load');
+  $('load-sub').textContent = $('load-sub').dataset.fail ? t('load_fail') : t('load_sub');
+  $('obj-k').textContent = t('obj_k');
+  $('say-next').textContent = t('next');
+  if ($('win').classList.contains('show')) showWin();
+  /* ĐỔI NGÔN NGỮ GIỮA MỘT BƯỚC KÉO-THẢ: chỉ vẽ lại NHÃN, KHÔNG dựng lại bảng —
+     `build*()` sinh markup mới nên mọi ô đã kích hoạt / thẻ đã xếp biến mất và trẻ
+     phải làm lại từ đầu chỉ vì bấm EN. Vì thế mỗi bảng có một nhánh riêng ở đây, và
+     mỗi lần thêm chữ vào bảng thì phải thêm vào đúng nhánh của nó. */
+  if ($('core').classList.contains('show')) {
+    $('core-k').textContent = t('s5_k');
+    $('core-hint').textContent = t('s5_hint');
+    $('core-slots').querySelectorAll('.me-slot').forEach(s => {
+      s.querySelector('.lb').textContent = t('slot_' + s.getAttribute('data-zone'));
+    });
+    $('core-tray').querySelectorAll('.me-gem').forEach(g => {
+      const nm = t('gem_' + g.getAttribute('data-gem'));
+      g.title = nm; g.setAttribute('aria-label', nm);
+    });
+  }
+  if ($('time').classList.contains('show')) {
+    $('time-k').textContent = t('tl_k');
+    $('time-rail').querySelectorAll('.me-era-node').forEach((b, i) => {
+      const e = ERAS[i];
+      b.querySelector('.yr').textContent = t('era_' + e.id + '_y');
+      b.querySelector('.nm').textContent = t('era_' + e.id + '_n');
+      b.setAttribute('aria-label', t('era_' + e.id + '_y') + ' — ' + t('era_' + e.id + '_n'));
+    });
+    // Mốc đang mở: dịch lại đúng cái đó, không nhảy về mốc đầu
+    const cur = ERAS[Math.max(0, steps.timeline.seen - 1)];
+    if (steps.timeline.seen > 0) paintEraBody(cur);
+  }
+  if ($('energy').classList.contains('show')) {
+    $('energy-k').textContent = t('ce_k');
+    $('energy-hint').textContent = t('ce_hint');
+    $('energy-slots').querySelectorAll('.me-stack').forEach(z => {
+      // Ống khói ĐÃ thay thì nhãn là tên nguồn sạch, chưa thay thì là "ỐNG KHÓI"
+      if (!z.classList.contains('ok')) { z.querySelector('.lb').textContent = t('ce_stack'); return; }
+      const g = ENERGY.find(x => x.slot === z.getAttribute('data-zone'));
+      if (g) z.querySelector('.lb').textContent = t('ce_' + g.id);
+    });
+    $('energy-tray').querySelectorAll('.me-gem').forEach(el => {
+      const g = ENERGY.find(x => x.slot === el.getAttribute('data-want'));
+      if (g) el.querySelector('.tx').textContent = t('ce_' + g.id);
+    });
+  }
+  if ($('eco').classList.contains('show')) {
+    $('eco-k').textContent = t('ec_k');
+    $('eco-good').textContent = t('ec_good');
+    $('eco-bad').textContent = t('ec_bad');
+    $('eco-hint').textContent = t('ec_hint');
+    $('eco-deck').querySelectorAll('.me-gem').forEach(el => {
+      el.querySelector('.tx').textContent = t('eco_' + el.getAttribute('data-card'));
+    });
+    /* Thẻ đã xếp vào rổ cũng phải dịch. Chip được tạo bằng `innerHTML` của thẻ nên
+       không còn `data-card` — dò lại theo THỨ TỰ xếp trong từng rổ thì sai (thứ tự do
+       trẻ quyết), nên gắn luôn id vào chip lúc tạo. */
+    $('eco').querySelectorAll('.me-chip').forEach(chip => {
+      const id = chip.getAttribute('data-card');
+      if (id) chip.querySelector('.tx').textContent = t('eco_' + id);
+    });
+  }
+}
+
+/* ───────────────────── Khởi động ───────────────────── */
+$('back').addEventListener('click', () => { location.href = 'dashboard.html'; });
+$('win-awards').addEventListener('click', () => { location.href = 'achievements.html'; });
+$('win-home').addEventListener('click', () => { location.href = 'dashboard.html'; });
+
+paintBalance();
+paintMute();
+Economy.onAsteroidsChange(paintBalance);
+applyLang(LANG);
+AstroQ.initLang(applyLang, '.me-lang button');
+paintSteps();
+
+(async function boot() {
+  try {
+    world = await createEarthWorld($('stage'), { reduced });
+  } catch (e) {
+    $('load-sub').dataset.fail = '1';
+    $('load-sub').textContent = t('load_fail');
+    $('load').querySelector('.ring').style.display = 'none';
+    console.warn('[AstroQ] Không dựng được cảnh 3D:', e && e.message);
+    return;
+  }
+  world.onPick(ev => {
+    const st = steps[STEP_IDS[stepIdx]];
+    if (st && st.pick) st.pick(ev);
+  });
+  world.start();
+
+  // Vòng theo dõi liên tục cho bước cần đo góc (bước 3)
+  setInterval(() => {
+    const st = steps[STEP_IDS[stepIdx]];
+    if (st && st.tick) st.tick();
+  }, 120);
+
+  $('load').classList.add('gone');
+
+  /* Bề mặt điều khiển cho test tự động đi qua từng bước mà không phải bấm đúng
+     pixel. Chỉ là điều khiển, KHÔNG cấp thưởng — thưởng vẫn do server quyết.
+     ⚠️ Gán TRƯỚC `await steps.scan.enter()`: bước 1 chờ trẻ bấm "Tiếp tục" nên
+     nếu gán sau thì `window.__mission` không tồn tại cho tới khi có người bấm. */
+  window.__mission = {
+    get step() { return STEP_IDS[stepIdx]; },
+    get done() { return Array.from(doneSteps); },
+    get reward() { return { ...reward }; },
+    /* Bước 4 chặn cú chạm mới trong lúc drone đang bay (`busy`). Test phải đọc
+       được cờ này, không thì nó bấm mẫu thứ hai lúc còn bị chặn rồi báo hỏng oan. */
+    get busy() { return busy; },
+    /** Góc trạm phát sóng ↔ vệ tinh (độ) — bước 3 xong khi dưới 20°. */
+    get satAngle() { return world.stationAngleTo(STATION.lat, STATION.lon); },
+    /* ⚠️ Cố ý KHÔNG trả Promise ra ngoài. `page.evaluate` của Playwright TỰ CHỜ
+       promise nào được trả về, mà `pick()` bên trong lại chờ trẻ bấm "Tiếp tục" →
+       script test treo vĩnh viễn thay vì báo hỏng. Gọi rồi thôi; test tự chờ
+       trạng thái nó cần bằng `wait_for_function`. */
+    pick: (ev) => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.pick) st.pick(ev); return true; },
+    tick: () => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.tick) st.tick(); return true; },
+    say: () => { $('say-next').click(); return true; },
+    fill: (slot) => { steps.core.onFill(slot); return true; },
+    /* Ba bước thêm 29/07/2026. Cùng quy tắc với `pick`/`fill`: KHÔNG trả Promise —
+       `openEra` có thể chờ thẻ nham thạch (3,4s hoặc tới khi trẻ bấm), `page.evaluate`
+       tự chờ promise được trả về nên script test sẽ treo thay vì báo hỏng. */
+    era: (i) => { steps.timeline.openEra(i); return true; },
+    /** Số mốc đã xem — test chờ `era === 4` thay vì đoán theo thời gian. */
+    get eras() { return steps.timeline.seen; },
+    place: (id) => { steps.energy.onPlace(id); return true; },
+    /** Độ dày khói còn lại (1 → 0). Bằng 0 là bước năng lượng sạch đã xong. */
+    get smog() { return Number($('smog').style.getPropertyValue('--smog') || 0); },
+    sort: () => { steps.eco.onSort(); return true; },
+    get sorted() { return steps.eco.sorted; },
+    /** Huy hiệu SERVER báo vừa mở trong lượt này — test đối chiếu với Missions.cs. */
+    get badges() { return reward.badges.slice(); },
+    world
+  };
+
+  await steps.scan.enter();
+})();
+</script>
+</body>
+</html>

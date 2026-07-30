@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -16,6 +18,11 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/explorer.css" />
 <script src="js/ui-common.js"></script>
+<!-- Ghi "đã ghé hành tinh" vào Hồ sơ + Kho Thành Tích. CỐ Ý KHÔNG nạp
+     js/firebase-auth.js ở đây: trang này đã kéo three.js, thêm 233 KB SDK nữa
+     thì vào chậm. Chưa đăng nhập → js/progress.js xếp hàng chờ, dashboard gửi nốt. -->
+<script src="js/planets.js"></script>
+<script src="js/progress.js"></script>
 </head>
 <body>
 
@@ -1546,6 +1553,18 @@ class App {
     document.getElementById('info').classList.add('open');
     document.getElementById('nav').classList.add('show');
     this._syncListActive();
+
+    /* ĐÃ GHÉ HÀNH TINH → ghi vào Hồ sơ + Kho Thành Tích (js/progress.js).
+       Đây là chỗ duy nhất của trang: bay tới và mở bảng thông tin thì mới coi
+       là đã ghé. Server chỉ tính LẦN ĐẦU mỗi hành tinh, nên bấm lại không cộng
+       thêm. Mặt Trời và Mặt Trăng không nằm trong 8 hành tinh nên bỏ qua. */
+    try{
+      var pid = body.cfg && body.cfg.id;
+      if(window.AstroQProgress && window.AstroQPlanets && pid &&
+         AstroQPlanets.all().some(function(p){ return p.id === pid; })){
+        AstroQProgress.planet(pid);
+      }
+    }catch(e){}
   }
 
   _flySun(){

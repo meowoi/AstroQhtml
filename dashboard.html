@@ -8,14 +8,26 @@
      follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa,
      đồng thời bỏ noindex ở landing-app.html và bổ sung URL vào sitemap.xml. -->
 <meta name="robots" content="noindex,follow" />
-<title>AstroQ — Bảng điều khiển Người chơi</title>
+<title>AstroQ — Trung Tâm Điều Hướng</title>
 
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
+<!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
+<link rel="stylesheet" href="css/onboard-tour.css" />
+<link rel="stylesheet" href="css/warp-screen.css" />
+<link rel="stylesheet" href="css/mission-intro.css" />
 <script src="js/icons.js"></script>
 <script src="js/ui-common.js"></script>
+<!-- Dùng chung với profile.html / achievements.html -->
+<script src="js/badges.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/onboard-tour.js"></script>
+<script src="js/space-scene.js"></script>
+<script src="js/warp-screen.js"></script>
+<script src="js/mission-intro.js"></script>
 </head>
 <body>
 
@@ -49,12 +61,14 @@
       <span class="g-val" id="purple-asteroids">0</span>
       <span class="bar"><i id="fuel-bar"></i></span>
     </div>
-    <!-- Flight Streak -->
-    <div class="gauge streak" data-i18n-title="a_streak" title="Chuỗi ngày bay liên tiếp">
-      <span class="g-label" data-i18n="st_streak">STREAK</span>
+    <!-- Điểm kinh nghiệm. Trước 29/07/2026 chỗ này là "CHUỖI BAY 7 ngày" cắm
+         cứng — không có bộ đếm chuỗi ngày nào trong DB, nên đó là số bịa. Đổi
+         sang XP: số thật, do server giữ, và cũng là thứ trẻ quan tâm. -->
+    <div class="gauge streak" data-i18n-title="a_xp" title="Điểm kinh nghiệm">
+      <span class="g-label" data-i18n="st_xp">XP</span>
       <span class="streak-ic" aria-hidden="true"><svg class="lic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
-      <span class="g-val" id="streak-val">0</span>
-      <span class="streak-unit" data-i18n="st_streak_unit">ngày</span>
+      <span class="g-val" id="xp-val">0</span>
+      <span class="streak-unit">XP</span>
     </div>
     <!-- Oxy -->
     <div class="gauge o2" title="Oxy">
@@ -74,10 +88,16 @@
       <button type="button" data-lang="vi">VI</button>
       <button type="button" data-lang="en">EN</button>
     </div>
-    <div class="user">
+    <!-- data-tour: khu vực Comet chỉ vào ở màn giới thiệu (js/onboard-tour.js).
+         Đặt trên HTML thay vì cắm selector trong JS → đổi bố cục trang thì
+         chỉ phải dời thuộc tính, không phải sửa file tour. -->
+    <!-- Bấm vào avatar/tên → Hồ sơ Phi Hành Gia. Là <a> chứ không phải <div>
+         để bàn phím Tab tới được và chuột phải mở tab mới được. -->
+    <a class="user" href="profile.html" data-tour="profile"
+       data-i18n-title="open_profile" title="Mở Hồ sơ Phi Hành Gia">
       <span class="avatar" id="user-avatar">A</span>
-      <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" data-i18n="role">Người chơi</span></span>
-    </div>
+      <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" id="user-role">Cấp 1</span></span>
+    </a>
     <button class="logout-btn" id="logout" type="button" data-i18n="logout" data-i18n-title="logout" title="Đăng xuất">Đăng xuất</button>
   </div>
 </header>
@@ -85,9 +105,9 @@
 <main>
   <!-- ============ HERO: phi hành đoàn đứng tự do (không khung) ============ -->
   <section class="hero">
-    <span class="eyebrow" data-i18n="banner_eyebrow">Căn cứ AstroQ</span>
+    <span class="eyebrow" data-i18n="banner_eyebrow">🧭 Trung Tâm Điều Hướng</span>
     <h1 id="welcome">Chào mừng trở lại, Nhà thám hiểm!</h1>
-    <p data-i18n="banner_desc">Chọn một khu vực để bắt đầu: học kiến thức, thử tài trong game, hay du hành khắp thiên hà.</p>
+    <p data-i18n="banner_desc">Chọn một khu vực để bắt đầu: nhận nhiệm vụ, học kiến thức, thử tài trong game hay du hành khắp thiên hà.</p>
 
     <!-- ============ STATS HUD: tiến trình học tập & gamification ============ -->
     <div class="stats-hud">
@@ -111,38 +131,83 @@
         </div>
       </div>
 
-      <!-- Cột phải: 3 mini stat tiles -->
-      <div class="sh-right" id="stat-tiles"></div>
+      <!-- Cột phải: 3 mini stat tiles + đường vào Kho Thành Tích.
+           data-tour="awards" đặt trên cả cột để Comet chiếu sáng đúng khu vực
+           "Kho Thành Tích" gồm cả ô Huy hiệu và nút dẫn sang trang. -->
+      <div class="sh-right" data-tour="awards">
+        <div id="stat-tiles"></div>
+        <a class="sh-link" href="achievements.html" data-i18n="open_awards">🏆 Mở Kho Thành Tích</a>
+        <!-- Kho Mẫu Vật đặt cạnh Kho Thành Tích vì cùng là "bộ sưu tập", và cùng
+             đọc từ bộ đếm tiến độ. CỐ Ý không thêm card HUD thứ 4: 3 card là bố cục
+             Comet đang dẫn tham quan (js/onboard-tour.js), thêm card là phải sửa tour. -->
+        <a class="sh-link" href="specimen-vault.html" data-i18n="open_vault">📦 Mở Kho Mẫu Vật</a>
+      </div>
     </div>
   </section>
 
-  <!-- ============ 3 CARD = MÀN HÌNH HUD ============ -->
+  <!-- ============ 6 CARD = MÀN HÌNH HUD ============
+       SỐ HIỆU `MOD-nn` GHI CỐ ĐỊNH, KHÔNG sinh theo vị trí hiển thị. Ba card đầu
+       giữ nguyên MOD-01/02/03 của bản cũ, ba card thêm 29/07/2026 lấy số kế tiếp
+       MOD-04/05/06 — cùng bài học đã rút ra với `code:"ARCADE-nn"` ở games.html:
+       số hiệu đã đi vào tài liệu và cách người dùng gọi tên, đánh số lại theo thứ
+       tự mới là mọi tài liệu cũ sai hết.
+
+       THỨ TỰ HIỂN THỊ thì khác số hiệu (cũng như games.html: ready trước, soon
+       sau): Trung Tâm Nhiệm Vụ lên đầu vì đó là đường đi chính của trẻ, hai card
+       "Sắp ra mắt" xuống cuối.
+
+       ⚠️ `data-tour` chỉ có trên 3 card CŨ. Màn Comet dẫn tham quan
+       (js/onboard-tour.js) vẫn giữ 7 bước — nó không giới thiệu Research Lab và
+       Star Archive vì hai khu đó chưa dùng được, mà dẫn trẻ tới một chỗ rồi nói
+       "chưa mở đâu" thì thà đừng dẫn. Mission Control cũng chưa vào tour: thêm
+       bước là phải kiểm lại chỗ đặt box thoại trên màn 390px. -->
   <section class="cards">
-    <!-- Trạm Tri Thức -->
-    <article class="hud card--quiz">
+    <!-- Trung Tâm Nhiệm Vụ → missions.html (Sảnh Nhiệm Vụ) -->
+    <article class="hud card--mission">
+      <div class="hud-line top"><span><span class="led"></span>MOD-04</span><span class="ok">SYS.ONLINE</span></div>
+      <div class="ic">🎯</div>
+      <span class="tag" data-i18n="mission_tag">Nhiệm vụ có cốt truyện</span>
+      <h3 data-i18n="mission_title">Trung Tâm Nhiệm Vụ</h3>
+      <p data-i18n="mission_desc">Nhận lệnh bay tới một hành tinh và hoàn thành từng bước nhiệm vụ. Tiến độ được lưu lại.</p>
+      <a class="jelly-btn" href="missions.html" data-i18n="mission_btn">Xem bảng nhiệm vụ</a>
+      <div class="hud-line bot"><span>OPS: MISSION_01</span><span>PWR: 100%</span></div>
+    </article>
+
+    <!-- Tri Thức -->
+    <article class="hud card--quiz" data-tour="learn">
       <div class="hud-line top"><span><span class="led"></span>MOD-01</span><span class="ok">SYS.ONLINE</span></div>
       <div class="ic">🧠</div>
       <span class="tag" data-i18n="quiz_tag">Học &amp; Quiz</span>
-      <h3 data-i18n="quiz_title">Trạm Tri Thức</h3>
+      <h3 data-i18n="quiz_title">Tri Thức</h3>
       <p data-i18n="quiz_desc">Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.</p>
       <button class="jelly-btn" id="btn-quiz" data-i18n="quiz_btn">Vào học &amp; làm Quiz</button>
       <div class="hud-line bot"><span>LOC: EARTH_ORBIT</span><span>PWR: 100%</span></div>
     </article>
 
-    <!-- Phòng Trái Lực -->
-    <article class="hud card--game">
+    <!-- Khu Huấn Luyện (tên cũ: "Phòng Trái Lực" — đổi 29/07/2026 cho khớp
+         với lời Comet dẫn tham quan; tên EN đổi "Training Bay" → "Training
+         Simulator" cùng ngày. Class `card--game` giữ nguyên để không phải sửa
+         css/dashboard.css) -->
+    <article class="hud card--game" data-tour="train">
       <div class="hud-line top"><span><span class="led"></span>MOD-02</span><span class="ok">SYS.ONLINE</span></div>
       <div class="ic">🎮</div>
       <span class="tag" data-i18n="game_tag">Game 2D</span>
-      <h3 data-i18n="game_title">Phòng Trái Lực</h3>
+      <h3 data-i18n="game_title">Khu Huấn Luyện</h3>
       <p data-i18n="game_desc">Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.</p>
-      <span class="cost"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><b>5</b><span data-i18n="game_cost_per">/ lượt</span></span>
+      <!-- Đã bỏ badge "5 {tt} / lượt" (30/07/2026). Phí vẫn do server quyết và vẫn
+           bị trừ ở TỪNG game (`Economy.spend(<tên game>)`), chỉ là không quảng cáo
+           con số đó ngay trên card ở Trung Tâm Điều Hướng nữa. Chỗ trẻ thật sự cần
+           thấy phí là `games.html` — mỗi thẻ game ở đó có badge phí riêng, và đó cũng
+           là chỗ badge khớp đúng phí của game tương ứng (dashboard chỉ có MỘT con số
+           nên bao giờ cũng sai với Ghép Chòm Sao, game đó 3 tt/lượt chứ không phải 5).
+           Kèm theo: khoá i18n `game_cost_per` và 3 luật CSS `.hud .cost*` đã xoá vì
+           không còn ai dùng. -->
       <button class="jelly-btn" id="btn-game" data-i18n="game_btn">Chơi Game</button>
       <div class="hud-line bot"><span>FEE: 5 / RUN</span><span>PWR: 100%</span></div>
     </article>
 
     <!-- Bản Đồ Thiên Hà -->
-    <article class="hud card--map">
+    <article class="hud card--map" data-tour="map">
       <div class="hud-line top"><span><span class="led"></span>MOD-03</span><span class="ok">SYS.ONLINE</span></div>
       <div class="ic">🌌</div>
       <span class="tag" data-i18n="map_tag">Khám phá 3D</span>
@@ -150,6 +215,32 @@
       <p data-i18n="map_desc">Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.</p>
       <a class="jelly-btn" href="explorer.html" data-i18n="map_btn">Mở bản đồ</a>
       <div class="hud-line bot"><span>NAV: MILKY_WAY</span><span>SIG: STRONG</span></div>
+    </article>
+
+    <!-- Phòng Nghiên Cứu — CHƯA CÓ TRANG.
+         Nút để `disabled` chứ KHÔNG dẫn đi đâu, và đèn báo là `standby` màu hổ
+         phách chứ không phải `ok` màu xanh: dẫn vào một trang không tồn tại còn tệ
+         hơn nói thẳng "sắp ra mắt". Cùng cách đã dùng cho nút Mặt Trăng ở màn tổng
+         kết nhiệm vụ. -->
+    <article class="hud card--lab soon">
+      <div class="hud-line top"><span><span class="led standby"></span>MOD-05</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
+      <div class="ic">🔬</div>
+      <span class="tag" data-i18n="lab_tag">Thí nghiệm ảo</span>
+      <h3 data-i18n="lab_title">Phòng Nghiên Cứu</h3>
+      <p data-i18n="lab_desc">Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.</p>
+      <button class="jelly-btn" data-i18n="soon_btn" disabled>Sắp ra mắt</button>
+      <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
+    </article>
+
+    <!-- Thư Viện Thiên Văn — CHƯA CÓ TRANG (xem ghi chú ở card trên). -->
+    <article class="hud card--archive soon">
+      <div class="hud-line top"><span><span class="led standby"></span>MOD-06</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
+      <div class="ic">📚</div>
+      <span class="tag" data-i18n="archive_tag">Tra cứu</span>
+      <h3 data-i18n="archive_title">Thư Viện Thiên Văn</h3>
+      <p data-i18n="archive_desc">Tra cứu hành tinh, chòm sao và thuật ngữ thiên văn theo bảng chữ cái.</p>
+      <button class="jelly-btn" data-i18n="soon_btn" disabled>Sắp ra mắt</button>
+      <div class="hud-line bot"><span>IDX: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
     </article>
   </section>
 
@@ -165,6 +256,8 @@
     </div>
   </section>
 </main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- MODAL: nhắc đi làm Quiz khi thiếu tt -->
 <div class="modal" id="need-quiz" role="dialog" aria-modal="true" aria-hidden="true">
@@ -191,41 +284,63 @@
     vi:{
       a_lang:"Ngôn ngữ",
       tt_name:"Thiên thạch tím",
-      a_streak:"Chuỗi ngày bay liên tiếp",
+      a_xp:"Điểm kinh nghiệm",
       a_coord:"Tọa độ",
-      role:"Người chơi", banner_eyebrow:"Căn cứ AstroQ", welcome_pre:"Chào mừng trở lại,",
-      banner_desc:"Chọn một khu vực để bắt đầu: học kiến thức, thử tài trong game, hay du hành khắp thiên hà.",
-      st_fuel:"THIÊN THẠCH", st_o2:"OXY", st_coord:"TỌA ĐỘ", st_streak:"CHUỖI BAY", st_streak_unit:"ngày",
+      banner_eyebrow:"🧭 Trung Tâm Điều Hướng", welcome_pre:"Chào mừng trở lại,",
+      open_profile:"Mở Hồ sơ Phi Hành Gia", open_awards:"🏆 Mở Kho Thành Tích",
+      open_vault:"📦 Mở Kho Mẫu Vật",
+      unit_hour:"giờ", unit_min:"phút",
+      log_badge:"Mở khoá huy hiệu ‘{n}’",
+      log_empty:"Chưa có hoạt động nào. Làm Quiz hay chơi một lượt để bắt đầu nhé!",
+      ago_now:"Vừa xong", ago_min:"{n} phút trước", ago_hour:"{n} giờ trước",
+      ago_yesterday:"Hôm qua", ago_day:"{n} ngày trước",
+      banner_desc:"Chọn một khu vực để bắt đầu: nhận nhiệm vụ, học kiến thức, thử tài trong game hay du hành khắp thiên hà.",
+      st_fuel:"THIÊN THẠCH", st_o2:"OXY", st_coord:"TỌA ĐỘ", st_xp:"KINH NGHIỆM",
       prog_level:"Cấp",
       stats_tag:"Thống kê hành trình", planet_prog:"Tiến trình hành tinh", xp_label:"Điểm KN (XP)",
       galaxy_explore:"Khám phá", planets_unit:"Hành tinh",
       tile_flight:"Thời gian bay", tile_accuracy:"Độ chính xác Quiz", tile_badges:"Huy hiệu",
       radar_sub:"Kỹ năng", log_sub:"Hoạt động gần đây",
-      quiz_tag:"Học & Quiz", quiz_title:"Trạm Tri Thức",
+      quiz_tag:"Học & Quiz", quiz_title:"Tri Thức",
       quiz_desc:"Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.",
       quiz_btn:"Vào học & làm Quiz",
-      game_tag:"Game 2D", game_title:"Phòng Trái Lực",
+      game_tag:"Game 2D", game_title:"Khu Huấn Luyện",
       game_desc:"Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.",
-      game_cost_per:"/ lượt", game_btn:"Chơi Game",
+      game_btn:"Chơi Game",
       map_tag:"Khám phá 3D", map_title:"Bản Đồ Thiên Hà",
       map_desc:"Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.",
       map_btn:"Mở bản đồ", logout:"Đăng xuất",
+      mission_tag:"Nhiệm vụ có cốt truyện", mission_title:"Trung Tâm Nhiệm Vụ",
+      mission_desc:"Nhận lệnh bay tới một hành tinh và hoàn thành từng bước nhiệm vụ. Tiến độ được lưu lại.",
+      mission_btn:"Xem bảng nhiệm vụ",
+      lab_tag:"Thí nghiệm ảo", lab_title:"Phòng Nghiên Cứu",
+      lab_desc:"Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.",
+      archive_tag:"Tra cứu", archive_title:"Thư Viện Thiên Văn",
+      archive_desc:"Tra cứu hành tinh, chòm sao và thuật ngữ thiên văn theo bảng chữ cái.",
+      soon_btn:"Sắp ra mắt", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
-      need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Phòng Trái Lực nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
+      need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>khu Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
-      quiz_modal_title:"Trạm Tri Thức", quiz_close:"Đóng", guest:"Nhà thám hiểm",
-      toast_game:"Vào Phòng Trái Lực! Đã trừ 5 {tt}",
+      quiz_modal_title:"Tri Thức", quiz_close:"Đóng", guest:"Nhà thám hiểm",
+      toast_game:"Vào Khu Huấn Luyện! Đã trừ 5 {tt}",
       toast_correct:"Chính xác! +10 {tt}", toast_wrong:"Chưa đúng, thử lại lần sau nhé!",
-      title:"AstroQ — Bảng điều khiển Người chơi"
+      title:"AstroQ — Trung Tâm Điều Hướng"
     },
     en:{
       a_lang:"Language",
       tt_name:"Purple Meteor",
-      a_streak:"Consecutive flight days",
+      a_xp:"Experience points",
       a_coord:"Coordinates",
-      role:"Player", banner_eyebrow:"AstroQ Base", welcome_pre:"Welcome back,",
-      banner_desc:"Pick an area to begin: learn, test your skills in a game, or travel across the galaxy.",
-      st_fuel:"METEOR", st_o2:"O₂", st_coord:"COORD", st_streak:"STREAK", st_streak_unit:"days",
+      banner_eyebrow:"🧭 Navigation Hub", welcome_pre:"Welcome back,",
+      open_profile:"Open Astronaut Profile", open_awards:"🏆 Open Trophy Hold",
+      open_vault:"📦 Open Specimen Vault",
+      unit_hour:"h", unit_min:"min",
+      log_badge:"Unlocked ‘{n}’ badge",
+      log_empty:"No activity yet. Take a quiz or play a run to get started!",
+      ago_now:"Just now", ago_min:"{n} min ago", ago_hour:"{n} hr ago",
+      ago_yesterday:"Yesterday", ago_day:"{n} days ago",
+      banner_desc:"Pick an area to begin: take a mission, learn, test your skills in a game or travel across the galaxy.",
+      st_fuel:"METEOR", st_o2:"O₂", st_coord:"COORD", st_xp:"XP",
       prog_level:"Level",
       stats_tag:"Voyage stats", planet_prog:"Planet progress", xp_label:"XP",
       galaxy_explore:"Explored", planets_unit:"Planets",
@@ -234,54 +349,126 @@
       quiz_tag:"Learn & Quiz", quiz_title:"Knowledge Station",
       quiz_desc:"Learn astronomy facts and answer quizzes to earn more Purple Asteroids.",
       quiz_btn:"Study & take Quiz",
-      game_tag:"2D Game", game_title:"Gravity Room",
+      game_tag:"2D Game", game_title:"Training Simulator",
       game_desc:"Test your reflexes in a 2D game. Each play costs a few Purple Asteroids.",
-      game_cost_per:"/ play", game_btn:"Play Game",
+      game_btn:"Play Game",
       map_tag:"3D exploration", map_title:"Galaxy Map",
       map_desc:"Fly through the Solar System and nearby star regions in real-time 3D.",
       map_btn:"Open map", logout:"Log out",
+      mission_tag:"Story missions", mission_title:"Mission Control",
+      mission_desc:"Take your orders, fly to a planet and clear the mission step by step. Your progress is saved.",
+      mission_btn:"Open mission board",
+      lab_tag:"Virtual experiments", lab_title:"Research Lab",
+      lab_desc:"Run experiments yourself: mix elements, drop objects under different gravity.",
+      archive_tag:"Reference", archive_title:"Star Archive",
+      archive_desc:"Look up planets, constellations and astronomy terms from A to Z.",
+      soon_btn:"Coming soon", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       need_title:"Not enough Purple Asteroids!",
-      need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Gravity Room but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
+      need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
       need_go:"Do Quiz now", need_later:"Later",
       quiz_modal_title:"Knowledge Station", quiz_close:"Close", guest:"Explorer",
-      toast_game:"Entered the Gravity Room! −5 {tt}",
+      toast_game:"Entered the Training Simulator! −5 {tt}",
       toast_correct:"Correct! +10 {tt}", toast_wrong:"Not quite — try again next time!",
-      title:"AstroQ — Player Dashboard"
+      title:"AstroQ — Navigation Hub"
     }
   };
   var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 3200);
 
   function userName(){ var u=AstroQ.getUser(); return (u&&(u.name||u.email))||t("guest"); }
 
   /* ============================================================
-     THỐNG KÊ HỌC TẬP & GAMIFICATION
-     "Props" động: sửa STATS dưới đây, hoặc gán window.AstroQStats={...}
-     trước khi tải trang; gọi renderStats() để vẽ lại khi dữ liệu đổi.
+     THỐNG KÊ — SỐ THẬT, lấy từ GET /me/achievements
+     (một lần gọi trả cả cấp độ, bộ đếm và danh sách huy hiệu kèm ngày mở).
+
+     ⚠️ Trước 29/07/2026 khối này là dữ liệu BỊA cắm cứng (cấp 2 · Sao Hoả ·
+     12/30 huy hiệu · "Mở khoá huy hiệu Nhà Du Hành 2 phút trước"). Đã bỏ hết:
+     hiện số bịa cạnh trang Hồ sơ / Kho Thành Tích có số thật thì hai bên lệch
+     nhau, và trẻ không biết tin cái nào.
+
+     Chưa đăng nhập / mất mạng → mọi số về 0 và nhật ký rỗng. KHÔNG đoán, không
+     bịa; hai trang Hồ sơ và Kho Thành Tích có dải nhắc nói rõ lý do.
      ============================================================ */
   var STATS = {
-    streakDays: 7,
-    planet:  { name:"Sao Hỏa", name_en:"Mars", level:2, xpPct:38 },
-    galaxy:  { unlocked:3, total:8 },
-    flightHours: 12.5,
-    quizAccuracy: 88,
-    badges:  { earned:12, total:30 },
-    radar: [
-      { vi:"Thiên văn", en:"Astronomy",  value:82 },
-      { vi:"Vật lý",    en:"Physics",    value:64 },
-      { vi:"Phản xạ",   en:"Reflex",     value:76 },
-      { vi:"Định vị",   en:"Navigation", value:58 },
-      { vi:"Khám phá",  en:"Explore",    value:71 }
-    ],
-    activity: [
-      { icon:"award",    vi:"Mở khoá huy hiệu ‘Nhà Du Hành’", en:"Unlocked ‘Voyager’ badge",   time_vi:"2 phút trước", time_en:"2 min ago" },
-      { icon:"target",   vi:"Quiz Hệ Mặt Trời · 9/10 đúng",   en:"Solar System quiz · 9/10",   time_vi:"1 giờ trước",  time_en:"1 hr ago" },
-      { icon:"orbit",    vi:"Hoàn tất khám phá Sao Hỏa",       en:"Completed Mars exploration", time_vi:"Hôm qua",      time_en:"Yesterday" },
-      { icon:"sparkles", vi:"+120 XP từ nhiệm vụ hằng ngày",   en:"+120 XP from daily quest",   time_vi:"Hôm qua",      time_en:"Yesterday" }
-    ]
+    level: { level:1, xp:0, pct:0 },
+    progress: { quizAnswered:0, quizCorrect:0, quizAccuracy:0, gamesPlayed:0,
+                lessonsRead:0, flightSeconds:0, meteorsEarned:0, planets:[] },
+    badges: [],          // [{id, group, earned, earnedAt, current, goal}]
+    total: 0,
+    earned: 0
   };
-  try{ if(window.AstroQStats) STATS = window.AstroQStats; }catch(e){}
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+  function n0(v){ return typeof v === "number" && isFinite(v) ? v : 0; }
+
+  /* Radar kỹ năng SUY RA TỪ SỐ THẬT (không có bảng kỹ năng riêng trong DB).
+     Công thức ghi thẳng ở đây để đọc là hiểu con số ở đâu ra:
+       Thiên văn = độ chính xác Quiz          Vật lý  = 10 bài đọc → 100
+       Phản xạ   = 20 lượt game → 100         Định vị = số hành tinh đã ghé / 8
+       Khám phá  = huy hiệu đã mở / tổng số                                    */
+  function radarData(){
+    var p = STATS.progress || {};
+    var planets = (p.planets && p.planets.length) || 0;
+    var pctBadge = STATS.total > 0 ? STATS.earned / STATS.total * 100 : 0;
+    return [
+      { vi:"Thiên văn", en:"Astronomy",  value:n0(p.quizAccuracy) },
+      { vi:"Vật lý",    en:"Physics",    value:Math.min(100, n0(p.lessonsRead) * 10) },
+      { vi:"Phản xạ",   en:"Reflex",     value:Math.min(100, n0(p.gamesPlayed) * 5) },
+      { vi:"Định vị",   en:"Navigation", value:Math.round(planets / 8 * 100) },
+      { vi:"Khám phá",  en:"Explore",    value:Math.round(pctBadge) }
+    ];
+  }
+
+  /* "x phút trước" — chỉ dùng cho ngày mở huy hiệu (dữ liệu THẬT từ server). */
+  function ago(iso){
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    var m = Math.max(0, Math.floor((Date.now() - d.getTime()) / 60000));
+    if(m < 1)    return t("ago_now");
+    if(m < 60)   return t("ago_min").replace("{n}", m);
+    var h = Math.floor(m / 60);
+    if(h < 24)   return t("ago_hour").replace("{n}", h);
+    var dd = Math.floor(h / 24);
+    if(dd === 1) return t("ago_yesterday");
+    return t("ago_day").replace("{n}", dd);
+  }
+
+  /* Nhật ký = huy hiệu mở gần đây nhất. Đây là dữ liệu duy nhất có mốc thời gian
+     thật ở thời điểm này (chưa có API lịch sử) — thà 1 dòng thật còn hơn 4 dòng bịa. */
+  function activityData(){
+    return (STATS.badges || [])
+      .filter(function(b){ return b.earned && b.earnedAt; })
+      .sort(function(a,b){ return new Date(b.earnedAt) - new Date(a.earnedAt); })
+      .slice(0, 4)
+      .map(function(b){
+        return {
+          icon:"award",
+          text: t("log_badge").replace("{n}", AstroQBadges.name(b.id, LANG)),
+          time: ago(b.earnedAt)
+        };
+      });
+  }
+
+  /* Hành tinh đang đứng: lấy hành tinh ghé gần nhất, chưa ghé đâu thì Trái Đất
+     (dashboard vốn ghi LOC: EARTH_ORBIT). */
+  function currentPlanet(){
+    var list = (STATS.progress && STATS.progress.planets) || [];
+    var id = list.length ? list[list.length - 1] : "earth";
+    return AstroQPlanets.name(id, LANG);
+  }
+
+  function loadStats(){
+    AstroQProgress.achievements().then(function(r){
+      if(!(r && r.ok)) { renderStats(); return; }
+      var d = r.data || {}, a = d.achievements || {};
+      STATS.level = d.level || STATS.level;
+      STATS.progress = d.progress || STATS.progress;
+      STATS.badges = a.badges || [];
+      STATS.total = (a.summary && a.summary.total) || STATS.badges.length;
+      STATS.earned = (a.summary && a.summary.earned) || 0;
+      renderStats();
+    });
+  }
 
   /* ---- Số dư Thiên thạch tím = nhiên liệu ---- */
   function paintBalance(){
@@ -316,35 +503,52 @@
     return '<svg class="radar-svg" viewBox="0 0 200 200" role="img" aria-label="Radar">'+rings+axes+labels+'<polygon class="rr-fill" points="'+poly+'"/>'+dots+sweep+'</svg>';
   }
 
-  /* ---- Vẽ toàn bộ thống kê (gọi lại khi đổi ngôn ngữ hoặc dữ liệu) ---- */
+  /* ---- Vẽ toàn bộ thống kê (gọi lại khi đổi ngôn ngữ hoặc dữ liệu về) ---- */
   function renderStats(){
-    if($("streak-val")) $("streak-val").textContent = STATS.streakDays;
-    var p=STATS.planet, g=STATS.galaxy;
-    if($("planet-level")) $("planet-level").textContent = p.level;
-    if($("planet-name"))  $("planet-name").textContent = L({vi:p.name, en:p.name_en});
-    if($("xp-bar"))  $("xp-bar").style.width = Math.max(0,Math.min(100,p.xpPct)) + "%";
-    if($("xp-pct"))  $("xp-pct").textContent = p.xpPct;
+    var lv = STATS.level || {}, p = STATS.progress || {};
+    var planets = (p.planets && p.planets.length) || 0, gTotal = AstroQPlanets.count;
+
+    if($("xp-val"))       $("xp-val").textContent = n0(p.xp || lv.xp);
+    if($("planet-level")) $("planet-level").textContent = n0(lv.level) || 1;
+    if($("planet-name"))  $("planet-name").textContent = currentPlanet();
+    if($("xp-bar"))  $("xp-bar").style.width = Math.max(0,Math.min(100,n0(lv.pct))) + "%";
+    if($("xp-pct"))  $("xp-pct").textContent = n0(lv.pct);
     if($("xp-orb"))     $("xp-orb").innerHTML = lic("orbit");
     if($("galaxy-ic"))  $("galaxy-ic").innerHTML = lic("sparkles");
-    if($("gx-unlocked"))$("gx-unlocked").textContent = g.unlocked;
-    if($("gx-total"))   $("gx-total").textContent = g.total;
-    if($("gx-pips")){ var s=""; for(var k=0;k<g.total;k++) s+='<span class="'+(k<g.unlocked?"on":"")+'"></span>'; $("gx-pips").innerHTML=s; }
-    var hrs = STATS.flightHours + (LANG==="en"?" h":" Giờ");
+    if($("gx-unlocked"))$("gx-unlocked").textContent = planets;
+    if($("gx-total"))   $("gx-total").textContent = gTotal;
+    if($("gx-pips")){ var s=""; for(var k=0;k<gTotal;k++) s+='<span class="'+(k<planets?"on":"")+'"></span>'; $("gx-pips").innerHTML=s; }
+
+    // Thời gian bay: dưới 1 giờ hiện phút, đủ 1 giờ mới hiện giờ — "0.1 Giờ" khó đọc
+    var sec = n0(p.flightSeconds);
+    var flight = sec < 3600 ? Math.round(sec/60) + " " + t("unit_min")
+                            : (Math.round(sec/360)/10) + " " + t("unit_hour");
     var tiles=[
-      { cls:"tile-time",  icon:"clock",  val:hrs,                                          lbl:t("tile_flight") },
-      { cls:"tile-acc",   icon:"target", val:STATS.quizAccuracy+"%",                       lbl:t("tile_accuracy") },
-      { cls:"tile-badge", icon:"award",  val:STATS.badges.earned+"/"+STATS.badges.total,  lbl:t("tile_badges") }
+      { cls:"tile-time",  icon:"clock",  val:flight,                              lbl:t("tile_flight") },
+      { cls:"tile-acc",   icon:"target", val:n0(p.quizAccuracy)+"%",              lbl:t("tile_accuracy") },
+      { cls:"tile-badge", icon:"award",  val:STATS.earned+"/"+(STATS.total||0),   lbl:t("tile_badges") }
     ];
     if($("stat-tiles")) $("stat-tiles").innerHTML = tiles.map(function(x){
       return '<div class="stat-tile '+x.cls+'"><span class="st-ic">'+lic(x.icon)+'</span>'+
              '<span class="st-body"><span class="st-val">'+x.val+'</span><span class="st-lbl">'+x.lbl+'</span></span></div>';
     }).join("");
-    if($("radar-wrap")) $("radar-wrap").innerHTML = buildRadar(STATS.radar.map(function(sk){ return { label:L(sk), value:sk.value }; }));
-    if($("log-list")) $("log-list").innerHTML = STATS.activity.map(function(a){
-      return '<div class="log-item"><span class="lg-ic">'+lic(a.icon)+'</span>'+
-             '<span class="lg-body"><span class="lg-text">'+L(a)+'</span></span>'+
-             '<span class="lg-time">'+L({vi:a.time_vi,en:a.time_en})+'</span></div>';
-    }).join("");
+
+    if($("radar-wrap")) $("radar-wrap").innerHTML =
+      buildRadar(radarData().map(function(sk){ return { label:L(sk), value:sk.value }; }));
+
+    if($("log-list")){
+      var acts = activityData();
+      $("log-list").innerHTML = acts.length === 0
+        ? '<div class="log-empty">'+t("log_empty")+'</div>'
+        : acts.map(function(a){
+            return '<div class="log-item"><span class="lg-ic">'+lic(a.icon)+'</span>'+
+                   '<span class="lg-body"><span class="lg-text">'+AstroQ.esc(a.text)+'</span></span>'+
+                   '<span class="lg-time">'+a.time+'</span></div>';
+          }).join("");
+    }
+
+    // Chức vụ dưới tên ở header = cấp độ thật (trước đây là chữ "Người chơi" cứng)
+    if($("user-role")) $("user-role").textContent = t("prog_level") + " " + (n0(lv.level) || 1);
   }
 
   function applyLang(lang){
@@ -364,18 +568,22 @@
     $("welcome").textContent = t("welcome_pre") + " " + name + "!";
     renderStats();
     if($("need-quiz").classList.contains("show")) renderNeedBody();
+    // Màn giới thiệu / màn loading đang mở thì dịch theo luôn (chúng tự vẽ lại).
+    if(window.AstroQTour){ AstroQTour.setLang(LANG); AstroQTour.setName(name); }
+    if(window.AstroQWarp) AstroQWarp.setLang(LANG);
+    if(window.AstroQMissionIntro) AstroQMissionIntro.setLang(LANG);
   }
 
   /* ---- Modal ---- */
   function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
   function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
 
-  /* ---- Phòng Trái Lực → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
+  /* ---- Khu Huấn Luyện → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
   $("btn-game").addEventListener("click", function(){ window.location.href="games.html"; });
   $("need-later").addEventListener("click", function(){ closeModal($("need-quiz")); });
   $("need-go").addEventListener("click", function(){ window.location.href="quiz.html"; });
 
-  /* ---- Trạm Tri Thức (Learning Hub) → learn.html ---- */
+  /* ---- Tri Thức (Learning Hub) → learn.html ---- */
   $("btn-quiz").addEventListener("click", function(){ window.location.href="learn.html"; });
   $("need-quiz").addEventListener("click", function(e){ if(e.target===$("need-quiz")) closeModal($("need-quiz")); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal($("need-quiz")); } });
@@ -394,9 +602,55 @@
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);
+  loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
   tickTelemetry(); setInterval(tickTelemetry, 2500);
 
   AstroQ.initLang(applyLang);
+
+  /* ============================================================
+     PHI HÀNH GIA MỚI: Comet dẫn tham quan tàu → màn loading bay tới Trái Đất
+
+     Chỉ chạy MỘT LẦN cho mỗi tài khoản. Cờ `tourSeen` nằm ở DynamoDB
+     (GET|PUT /me/onboarding), localStorage chỉ là cache — xem mô tả trong
+     js/onboard-tour.js. Chưa đăng nhập / mất mạng thì vẫn dẫn tham quan.
+
+     Xem lại màn giới thiệu để thử: mở Console gõ  AstroQTour.reset()  rồi F5.
+     ============================================================ */
+  /* Màn mở đầu Nhiệm Vụ 01 "Hành Tinh Xanh" — chạy NGAY SAU màn loading Luna,
+     hoặc tự chạy khi vào dashboard nếu đã xem tour rồi mà chưa xem cutscene
+     (đổi máy, hoặc lần trước đóng tab giữa màn loading).
+     Xem lại để thử: Console gõ  AstroQMissionIntro.reset()  rồi F5. */
+  function missionIntro(){
+    if(!window.AstroQMissionIntro) return;
+    AstroQMissionIntro.autoStart({
+      lang: LANG,
+      onActivate: function(){
+        // Kích hoạt sứ mệnh → trang nhiệm vụ 3D (mission-earth.html)
+        window.location.href = "mission-earth.html";
+      }
+    });
+  }
+
+  if(window.AstroQTour){
+    AstroQTour.autoStart({
+      name: userName(),
+      lang: LANG,
+      onFinish: function(){
+        // Bấm "Khởi động động cơ" hay "Bỏ qua" đều dẫn sang màn loading:
+        // đó là lúc con tàu thật sự rời bến, không phải phần thưởng cho việc
+        // xem hết lời giới thiệu.
+        if(window.AstroQWarp) AstroQWarp.play({ lang: LANG, onDone: missionIntro });
+        else missionIntro();
+      }
+    }).then(function(ran){
+      // Tour không chạy (đã xem rồi) → vẫn phải kiểm màn mở đầu nhiệm vụ,
+      // không thì người dùng cũ sẽ không bao giờ thấy nó.
+      if(!ran) missionIntro();
+    });
+  } else {
+    missionIntro();
+  }
+
   var logoutBtn=$("logout");
   if(logoutBtn) logoutBtn.addEventListener("click", function(){
     var done = function(){ window.location.href = "landing-app.html"; };

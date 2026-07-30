@@ -65,7 +65,10 @@ a{text-decoration:none;}
 .lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;transition:background .2s,color .2s;}
 .lang-switch button:hover{color:var(--ink);}
 .lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
-.user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+.user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);
+  transition:border-color .18s,box-shadow .18s,transform .12s;}
+.user:hover{border-color:rgba(125,211,252,.7);box-shadow:0 0 18px -6px rgba(56,189,248,.8);}
+.user:active{transform:scale(.97);}
 .user .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(56,189,248,.4);}
 .user .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 .user .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:5px;}
@@ -126,8 +129,18 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .gx-pips span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(120,160,255,.3);}
 .gx-pips span.on{background:radial-gradient(circle,#c084fc,#8f7bff);box-shadow:0 0 8px rgba(192,132,252,.85);border-color:transparent;}
 
-/* --- Cột phải: 3 mini stat tiles --- */
-.sh-right{display:grid;grid-template-columns:1fr;gap:10px;}
+/* --- Cột phải: 3 mini stat tiles + đường vào Kho Thành Tích --- */
+.sh-right{display:flex;flex-direction:column;gap:10px;}
+.sh-right #stat-tiles{display:grid;grid-template-columns:1fr;gap:10px;}
+/* Nút dẫn sang achievements.html — nằm ngay dưới ô Huy hiệu để hai thứ đọc
+   như một khu: xem nhanh ở đây, xem đầy đủ thì bấm vào. */
+.sh-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;
+  padding:10px 14px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:13.5px;
+  color:#ffe9bd;border:1px solid rgba(255,207,107,.42);background:rgba(38,28,8,.5);
+  transition:background .18s,border-color .18s,transform .12s,box-shadow .2s;}
+.sh-link:hover{background:rgba(58,42,12,.66);border-color:rgba(255,207,107,.8);
+  box-shadow:0 0 22px -8px rgba(255,207,107,.85);}
+.sh-link:active{transform:scale(.96);}
 .stat-tile{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;
   border:1px solid rgba(120,160,255,.18);background:rgba(15,23,42,.44);
   transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
@@ -209,8 +222,13 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .hud:hover{transform:translateY(-8px) scale(1.02);border-color:rgba(125,211,252,.85);
   box-shadow:0 34px 66px -22px rgba(0,0,0,.75), 0 0 50px 0 var(--neonS), inset 0 0 44px -10px var(--neonS);animation:none;}
 
+/* `line-height` ĐẶT CỨNG, không để `normal`: chữ có dấu tiếng Việt ("ETA: SẮP TỚI")
+   cao hơn chữ không dấu ("SIG: STRONG") một phần pixel, nên hàng chân của card này
+   dày hơn card kia → `.hud p{flex:1}` đẩy nút lệch 1px so với card bên cạnh trong
+   cùng một hàng. Không nhìn ra bằng mắt nhưng đo là thấy, và cố định lại thì rẻ. */
 .hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;}
+  font-family:var(--font-mono);font-size:9.5px;line-height:1.5;letter-spacing:.14em;
+  color:var(--ink-faint);text-transform:uppercase;}
 .hud-line.top{margin-bottom:14px;}
 .hud-line.bot{margin-top:16px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;}
 .hud-line .ok{color:var(--good);}
@@ -223,17 +241,47 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .hud .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
 .hud h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
 .hud p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:11px 0 16px;flex:1;}
-.hud .cost{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--sun);
-  background:rgba(255,207,107,.12);border:1px solid rgba(255,207,107,.3);padding:5px 11px;border-radius:999px;margin-bottom:14px;align-self:flex-start;}
-.hud .cost img{width:16px;height:16px;object-fit:contain;}
-.hud .cost span{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;}
+/* `.hud .cost` (badge "5 {tt} / lượt") đã XOÁ ngày 30/07/2026 cùng với badge ở
+   card Khu Huấn Luyện — không card nào trên trang này còn hiện phí nữa. Badge phí
+   của từng game vẫn còn và vẫn cần: nó ở `.gcard .cost` trong css/games.css, chỗ
+   duy nhất mỗi thẻ hiện đúng phí của chính game đó. */
 
 /* Viền/góc neon dùng chung màu cyan (rgba(56,189,248,...)); chỉ đổi tông icon + nút cho từng khu vực */
-.card--quiz{--ic-bg:rgba(56,189,248,.18);}
-.card--game{--ic-bg:rgba(255,157,61,.18);}
-.card--map {--ic-bg:rgba(143,123,255,.2);}
+.card--quiz   {--ic-bg:rgba(56,189,248,.18);}
+.card--game   {--ic-bg:rgba(255,157,61,.18);}
+.card--map    {--ic-bg:rgba(143,123,255,.2);}
+.card--mission{--ic-bg:rgba(74,222,128,.18);}
+.card--lab    {--ic-bg:rgba(244,114,182,.16);}
+.card--archive{--ic-bg:rgba(255,207,107,.16);}
 
-.jelly-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;width:100%;
+/* ---- Khu vực CHƯA CÓ TRANG (Phòng Nghiên Cứu · Thư Viện Thiên Văn) ----
+   Ba việc, và cả ba đều cần thiết để card không nói dối:
+     · đèn + nhãn đổi sang HỔ PHÁCH (`.standby`) chứ không xanh: `SYS.ONLINE` màu
+       xanh cạnh một cái nút bấm không được là hai thông điệp ngược nhau;
+     · đèn NGỪNG nhấp nháy — nhấp nháy là dấu hiệu "đang hoạt động";
+     · bỏ luôn `hudPulse` và hiệu ứng nhấc lên khi hover: card không bấm được thì
+       đừng mời trẻ bấm.
+   ⚠️ Cố ý KHÔNG dùng `filter:grayscale()` để làm mờ: trên nền gradient sáng nó cho
+   ra một khối xám SÁNG HƠN card bình thường (đã đo trên ảnh chụp ở nút Mặt Trăng của
+   màn tổng kết nhiệm vụ), tức là hút mắt vào đúng cái không dùng được. */
+.hud.soon{animation:none;opacity:.82;--neon:rgba(255,207,107,.3);--neonS:rgba(255,207,107,.6);}
+.hud.soon:hover{transform:none;border-color:var(--neon);
+  box-shadow:0 22px 50px -24px rgba(0,0,0,.7),0 0 26px -4px var(--neon),
+             inset 0 0 34px -14px var(--neonS);}
+.hud.soon:hover .ic{transform:none;}
+.hud-line .standby{color:var(--sun);}
+.hud-line .led.standby{background:var(--sun);box-shadow:0 0 8px var(--sun);animation:none;}
+/* Nút "Sắp ra mắt": nét đứt trong suốt, không gradient (xem ghi chú ở trên) */
+.hud .jelly-btn[disabled]{cursor:default;background:none;box-shadow:none;transform:none;filter:none;
+  color:var(--ink-faint);border:1px dashed rgba(255,207,107,.34);}
+
+/* `border:1px solid transparent` chứ KHÔNG phải `border:none`: nút "Sắp ra mắt" bên
+   dưới thêm viền nét đứt 1px, mà chiều cao nút là `auto` nên `box-sizing:border-box`
+   không cứu — viền làm nút cao thêm 2px và nút của 2 card khoá lệch 3px so với nút
+   card bên cạnh trong cùng một hàng (đo được: 47px vs 45px). Chừa sẵn 1px trong suốt
+   ở đây thì mọi nút cùng cỡ, biến thể chỉ đổi MÀU viền. */
+.jelly-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  border:1px solid transparent;width:100%;
   padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
   background:linear-gradient(120deg,var(--accent),var(--accent-2));box-shadow:0 12px 26px -12px var(--neon);
   transition:transform .3s var(--jelly),filter .2s;}
@@ -267,3 +315,17 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   .gauges{order:3;width:100%;justify-content:flex-start;}
   .hero p{max-width:100%;}
 }
+
+/* Nhật ký rỗng — chưa có hoạt động nào. Thà một dòng thật còn hơn 4 dòng bịa:
+   trước 29/07/2026 khối này là dữ liệu cắm cứng ("Mở khoá huy hiệu Nhà Du Hành
+   2 phút trước"), giờ chỉ hiện huy hiệu THẬT vừa mở theo `earnedAt` từ server. */
+.log-empty{color:var(--ink-faint);font-size:12.8px;line-height:1.6;padding:14px 4px;}
+
+/* Toast — khung ở css/common.css, đây chỉ đặt vị trí + màu.
+   Đặt dưới thanh trạng thái (sticky, cao ~58px) để không đè lên các gauge. */
+.toast{top:78px;transform:translateX(-50%) translateY(-10px);z-index:95;
+  padding:12px 18px;font-size:13.5px;background:rgba(13,20,48,.95);
+  border:1px solid rgba(95,211,255,.5);box-shadow:0 18px 40px -18px rgba(0,0,0,.85);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  transition:opacity .28s var(--ease),transform .28s var(--ease);}
+@media (max-width:560px){ .toast{top:auto;bottom:18px;} }

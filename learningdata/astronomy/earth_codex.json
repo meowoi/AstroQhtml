@@ -1,0 +1,270 @@
+{
+  "$comment": [
+    "HỒ SƠ TRÁI ĐẤT (Planet Codex) — nội dung đọc mở khoá theo từng bước của Nhiệm Vụ 01.",
+    "",
+    "PHÂN CÔNG (giống js/badges.js ↔ Achievements.cs):",
+    "  · SERVER (AstroqSV/Services/Missions.cs) quyết mẫu dữ liệu nào ĐÃ MỞ — mỗi",
+    "    `Step.Codex` là danh sách id, và `CodexTotal()` đếm tổng. Client không tự mở.",
+    "  · FILE NÀY chỉ giữ NỘI DUNG ĐỌC song ngữ. `entries[].id` PHẢI khớp id trong",
+    "    `Missions.cs`; thiếu entry thì trang hiện id, không vỡ.",
+    "",
+    "THÊM MẪU DỮ LIỆU MỚI: thêm id vào `Step.Codex` ở server rồi thêm entry cùng id vào đây.",
+    "`entries[].step` là bước mở khoá — chỉ để tra cứu cho người biên tập, app không dùng.",
+    "",
+    "⚠️ NỘI DUNG CHƯA QUA RÀ SOÁT CHUYÊN MÔN (`reviewed_by_teacher: false` ở từng entry).",
+    "   Viết ở mức kiến thức phổ thông, tránh con số gây tranh luận; mọi URL trong",
+    "   `source_reference` đã kiểm trả 200 ngày 2026-07-29 (xem `sources_checked_at`).",
+    "   Cần giáo viên rà lại trước khi phát hành, đúng ghi chú đã dùng cho learningdata/."
+  ],
+  "topic": "Thiên văn học",
+  "topic_id": "astronomy",
+  "codex_id": "earth",
+  "mission_id": "earth",
+  "sources_checked_at": "2026-07-29",
+  "title": {
+    "vi": "Hồ Sơ Trái Đất",
+    "en": "The Earth File"
+  },
+  "count": 9,
+  "entries": [
+    {
+      "id": "earth-formation",
+      "step": "timeline",
+      "ic": "🌋",
+      "kind": "history",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Lịch sử 4,5 tỷ năm của Trái Đất",
+        "en": "Earth's 4.5-billion-year story"
+      },
+      "summary": {
+        "vi": "Trái Đất hình thành khoảng 4,5 tỷ năm trước từ khí và bụi quay quanh Mặt Trời. Từ một quả cầu nóng chảy, nó nguội dần, có đại dương, rồi có sự sống.",
+        "en": "Earth formed about 4.5 billion years ago from gas and dust circling the Sun. From a molten ball it cooled down, gained oceans, then life."
+      },
+      "body": [
+        {
+          "h": { "vi": "4,5 tỷ năm trước — Trái Đất dung nham", "en": "4.5 billion years ago — the magma Earth" },
+          "p": {
+            "vi": "Khi Hệ Mặt Trời mới thành hình, lực hấp dẫn kéo khí và bụi tụ lại thành hành tinh thứ ba tính từ Mặt Trời. Trái Đất lúc đó là một quả cầu cực nóng, bề mặt gần như nóng chảy — chưa có nước ở dạng lỏng, cũng chưa có không khí để thở.",
+            "en": "As the young Solar System settled, gravity pulled gas and dust together into the third planet from the Sun. Early Earth was searingly hot with a largely molten surface — no liquid water yet, and no air anyone could breathe."
+          }
+        },
+        {
+          "h": { "vi": "3,8 tỷ năm trước — đại dương đầu tiên và những sinh vật tí hon", "en": "3.8 billion years ago — first oceans and tiny life" },
+          "p": {
+            "vi": "Bề mặt nguội đi và cứng lại thành lớp vỏ. Hơi nước trong khí quyển ngưng tụ, mưa xuống suốt thời gian rất dài và đọng lại thành những đại dương đầu tiên. Chính trong nước, các nhà khoa học tìm thấy dấu vết của những sinh vật đơn bào cổ nhất — khoảng 3,5 đến 3,8 tỷ năm tuổi.",
+            "en": "The surface cooled and hardened into a crust. Water vapour in the atmosphere condensed and rained down for a very long time, filling the first oceans. It is in that water that scientists find traces of the oldest single-celled life — roughly 3.5 to 3.8 billion years old."
+          }
+        },
+        {
+          "h": { "vi": "66 triệu năm trước — khủng long và rừng xanh", "en": "66 million years ago — dinosaurs and green forests" },
+          "p": {
+            "vi": "Rất lâu sau đó, cây xanh phủ kín đất liền và nhả khí oxy vào khí quyển. Đây là Đại Trung Sinh — thời của khủng long, kéo dài từ khoảng 252 đến 66 triệu năm trước. Nó kết thúc bằng một đợt tuyệt chủng lớn cách nay khoảng 66 triệu năm.",
+            "en": "Much later, green plants covered the land and released oxygen into the air. This is the Mesozoic Era — the age of the dinosaurs — running from about 252 to 66 million years ago. It ended with a mass extinction around 66 million years ago."
+          }
+        },
+        {
+          "h": { "vi": "Ngày nay — hành tinh xanh", "en": "Today — the blue planet" },
+          "p": {
+            "vi": "Bây giờ Trái Đất có nước lỏng, có không khí để thở và có hàng triệu loài sinh vật. Nước phủ khoảng 70% bề mặt, nên nhìn từ ngoài không gian nó là một quả cầu xanh. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.",
+            "en": "Today Earth has liquid water, breathable air and millions of species. Water covers about 70% of its surface, which is why it looks like a blue marble from space. So far it is the only planet we know of that has life."
+          }
+        }
+      ],
+      "mascot_dialog": {
+        "vi": "Comet: Viên nham thạch bạn vừa thu được cứng như đá, nhưng 4,5 tỷ năm trước nó từng là dung nham chảy đỏ rực đấy!",
+        "en": "Comet: The lava rock you just collected is solid stone now — but 4.5 billion years ago it was glowing molten rock!"
+      },
+      "source_reference": {
+        "label": "NASA Science — Facts About Earth",
+        "url": "https://science.nasa.gov/earth/facts/"
+      },
+      "source_reference_2": {
+        "label": "U.S. National Park Service — Geologic Time Scale",
+        "url": "https://www.nps.gov/subjects/geology/time-scale.htm"
+      }
+    },
+    {
+      "id": "clean-energy",
+      "step": "energy",
+      "ic": "🔋",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Năng lượng sạch là gì?",
+        "en": "What is clean energy?"
+      },
+      "summary": {
+        "vi": "Năng lượng sạch được lấy từ những thứ tự làm mới lại được — ánh nắng, gió, nước chảy — và khi hoạt động thì không nhả khói vào không khí.",
+        "en": "Clean energy comes from things nature keeps refilling — sunlight, wind, moving water — and it puts no smoke into the air while it runs."
+      },
+      "body": [
+        {
+          "h": { "vi": "Vì sao khói lại là vấn đề", "en": "Why the smoke matters" },
+          "p": {
+            "vi": "Than đá, dầu và khí đốt được gọi là nhiên liệu hoá thạch. Muốn lấy năng lượng từ chúng thì phải ĐỐT, mà đốt thì thải ra khí CO₂ cùng nhiều chất làm bẩn không khí. Hoá thạch cũng là loại tài nguyên có hạn: dùng hết là không có thêm trong đời chúng ta.",
+            "en": "Coal, oil and natural gas are called fossil fuels. Getting energy out of them means BURNING them, and burning releases CO₂ along with substances that dirty the air. Fossil fuels are also limited: once used up, they are not replaced within our lifetimes."
+          }
+        },
+        {
+          "h": { "vi": "☀️ Pin mặt trời", "en": "☀️ Solar panels" },
+          "p": {
+            "vi": "Tấm pin mặt trời biến ánh sáng của Mặt Trời thành điện. Không có bộ phận nào phải quay, không có khói — chỉ cần trời sáng là nó làm việc.",
+            "en": "A solar panel turns sunlight straight into electricity. Nothing has to spin and nothing burns — it works whenever there is daylight."
+          }
+        },
+        {
+          "h": { "vi": "🌬️ Cối xoay gió", "en": "🌬️ Wind turbines" },
+          "p": {
+            "vi": "Gió đẩy những cánh quạt rất dài quay tròn, chuyển động quay đó làm máy phát điện chạy. Gió thì trời cho, thổi hoài không hết.",
+            "en": "Wind pushes very long blades around, and that spinning drives a generator. The wind keeps coming back on its own."
+          }
+        },
+        {
+          "h": { "vi": "🌊 Thuỷ điện", "en": "🌊 Hydroelectric power" },
+          "p": {
+            "vi": "Nước chảy từ chỗ cao xuống chỗ thấp làm quay tua-bin trong nhà máy thuỷ điện. Mưa lại đổ nước về sông, nên nguồn này cũng tự làm mới.",
+            "en": "Water falling from high to low spins a turbine inside a hydro plant. Rain refills the rivers, so this source renews itself too."
+          }
+        },
+        {
+          "h": { "vi": "Còn những nguồn sạch nào nữa?", "en": "Any other clean sources?" },
+          "p": {
+            "vi": "Ngoài ba nguồn trên còn có địa nhiệt (hơi nóng từ trong lòng đất) và sinh khối. Tất cả cùng được gọi là năng lượng tái tạo, vì thiên nhiên liên tục cấp lại.",
+            "en": "Besides those three there are geothermal energy (heat from inside the Earth) and biomass. Together they are called renewable energy, because nature keeps supplying them."
+          }
+        }
+      ],
+      "mascot_dialog": {
+        "vi": "Byte: Bạn vừa thay ba ống khói bằng ba nguồn năng lượng sạch — cảm biến của tớ báo không khí quanh Trái Đất trong hơn rồi!",
+        "en": "Byte: You just swapped three smokestacks for three clean sources — my sensors say the air around Earth is clearer already!"
+      },
+      "source_reference": {
+        "label": "U.S. EIA Energy Kids — Renewable Energy",
+        "url": "https://www.eia.gov/kids/energy-sources/renewable/"
+      }
+    },
+    {
+      "id": "eco-habits",
+      "step": "eco",
+      "ic": "🌱",
+      "kind": "action",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "10 Việc nhỏ bé giúp bảo vệ Trái Đất mỗi ngày",
+        "en": "10 small things that protect Earth every day"
+      },
+      "summary": {
+        "vi": "Không cần chờ lớn mới bảo vệ được hành tinh. Mười việc dưới đây làm được ngay hôm nay, ở nhà và ở trường.",
+        "en": "You don't have to wait until you're grown up to protect the planet. These ten things can be done today, at home and at school."
+      },
+      "list": [
+        { "ic": "💡", "vi": "Tắt đèn và quạt khi ra khỏi phòng.", "en": "Switch off lights and fans when you leave a room." },
+        { "ic": "🚰", "vi": "Dùng bình nước cá nhân thay cho chai nhựa dùng một lần.", "en": "Use your own water bottle instead of single-use plastic ones." },
+        { "ic": "🌳", "vi": "Trồng cây và chăm cho cây sống.", "en": "Plant a tree — and keep it alive." },
+        { "ic": "♻️", "vi": "Phân loại rác: rác tái chế để riêng khỏi rác thường.", "en": "Sort your waste: keep recyclables apart from the rest." },
+        { "ic": "🚿", "vi": "Khoá vòi nước khi đang đánh răng hoặc xoa xà phòng.", "en": "Turn the tap off while brushing your teeth or soaping up." },
+        { "ic": "👝", "vi": "Mang túi vải đi mua sắm thay vì lấy túi nilon.", "en": "Bring a cloth bag when shopping instead of taking plastic ones." },
+        { "ic": "🚲", "vi": "Đi bộ, đạp xe hoặc đi xe buýt cho những đoạn đường ngắn.", "en": "Walk, cycle or take the bus for short trips." },
+        { "ic": "🍚", "vi": "Ăn hết phần ăn của mình, không bỏ thừa thức ăn.", "en": "Finish your food instead of throwing it away." },
+        { "ic": "📒", "vi": "Dùng hết hai mặt giấy, sửa đồ cũ trước khi nghĩ tới mua đồ mới.", "en": "Use both sides of the paper, and mend things before buying new ones." },
+        { "ic": "🤝", "vi": "Rủ gia đình và bạn bè cùng làm — một người làm thì ít, cả lớp làm thì nhiều.", "en": "Get your family and friends to join in — one person does a little, a whole class does a lot." }
+      ],
+      "avoid": [
+        { "ic": "🗑️", "vi": "Vứt rác bừa bãi ra đường, sân trường, sông hồ.", "en": "Dropping litter on streets, playgrounds, rivers and lakes." },
+        { "ic": "💧", "vi": "Xả lãng phí nước sạch.", "en": "Letting clean water run to waste." },
+        { "ic": "🛍️", "vi": "Dùng quá nhiều túi nilon dùng một lần.", "en": "Using lots of single-use plastic bags." }
+      ],
+      "mascot_dialog": {
+        "vi": "Comet: Không việc nào trong danh sách này cần tới phi thuyền cả — bạn làm được ngay hôm nay, ở nhà mình!",
+        "en": "Comet: Not one thing on this list needs a spaceship — you can do all of it today, right at home!"
+      },
+      "source_reference": {
+        "label": "NASA Science for Kids — Earth",
+        "url": "https://science.nasa.gov/kids/earth"
+      },
+      "source_reference_2": {
+        "label": "NASA Climate",
+        "url": "https://climate.nasa.gov/"
+      }
+    },
+    {
+      "id": "sun",
+      "step": "sun",
+      "ic": "☀️",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Mặt Trời — nguồn năng lượng của Trái Đất", "en": "The Sun — Earth's power source" },
+      "summary": {
+        "vi": "Mặt Trời là ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất.",
+        "en": "The Sun is the star that brings light and warmth to Earth."
+      },
+      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+    },
+    {
+      "id": "rotation",
+      "step": "rotation",
+      "ic": "🌗",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Ban ngày và ban đêm", "en": "Day and night" },
+      "summary": {
+        "vi": "Chính sự tự quay của Trái Đất đã tạo ra ban ngày và ban đêm.",
+        "en": "Earth's own rotation is what makes day and night."
+      },
+      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+    },
+    {
+      "id": "water",
+      "step": "life",
+      "ic": "🌊",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Đại dương", "en": "The ocean" },
+      "summary": {
+        "vi": "Nước bao phủ khoảng 70% bề mặt Trái Đất!",
+        "en": "Water covers about 70% of Earth's surface!"
+      },
+      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+    },
+    {
+      "id": "forest",
+      "step": "life",
+      "ic": "🌳",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Rừng xanh", "en": "Forests" },
+      "summary": {
+        "vi": "Rừng cung cấp oxy cho chúng ta hít thở!",
+        "en": "Forests provide the oxygen we breathe!"
+      },
+      "source_reference": { "label": "NASA Science for Kids — Earth", "url": "https://science.nasa.gov/kids/earth" }
+    },
+    {
+      "id": "animal",
+      "step": "life",
+      "ic": "🐧",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Muôn loài sinh vật", "en": "Millions of species" },
+      "summary": {
+        "vi": "Hàng triệu loài sinh vật cùng sinh sống trên Trái Đất!",
+        "en": "Millions of species share our planet!"
+      },
+      "source_reference": { "label": "NASA Science for Kids — Earth", "url": "https://science.nasa.gov/kids/earth" }
+    },
+    {
+      "id": "mountain",
+      "step": "life",
+      "ic": "🏔️",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": { "vi": "Những rặng núi cao", "en": "High mountain ranges" },
+      "summary": {
+        "vi": "Những rặng núi cao che chắn và giữ nước cho hành tinh!",
+        "en": "High mountain ranges shelter the planet and store its water!"
+      },
+      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+    }
+  ]
+}

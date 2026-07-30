@@ -1,0 +1,107 @@
+/* ==========================================================
+   onboard-tour.css — Comet dẫn tham quan khoang tàu (js/onboard-tour.js)
+
+   Ba lớp, tách vai trò rõ ràng để không phải chồng hai lớp tối lên nhau:
+     .tour-block  trong suốt, CHẶN mọi cú bấm vào trang phía dưới
+     .tour-hole   ô sáng — chính nó làm tối cả trang bằng box-shadow toả
+                  9999px, nên không cần thêm lớp phủ nào nữa
+     .tour-bubble box thoại của Comet
+
+   Lớp .tour-hole để pointer-events:none, nhờ vậy vùng được chiếu sáng
+   vẫn KHÔNG bấm được (bấm vào là .tour-block ăn) — trẻ đang được dẫn
+   tham quan thì đừng để lỡ tay đi mất khỏi màn hình.
+   ========================================================== */
+
+.tour{position:fixed;inset:0;z-index:70;opacity:0;visibility:hidden;
+  transition:opacity .32s var(--ease),visibility .32s;}
+.tour.show{opacity:1;visibility:visible;}
+
+/* Chặn tương tác với trang phía dưới */
+.tour-block{position:absolute;inset:0;}
+
+/* Ô sáng — cũng chính là lớp làm tối phần còn lại */
+.tour-hole{position:fixed;pointer-events:none;border-radius:18px;
+  box-shadow:0 0 0 9999px rgba(4,7,22,.8), 0 0 0 2px rgba(95,211,255,.9), 0 0 26px 4px rgba(95,211,255,.55);
+  transition:top .5s var(--ease),left .5s var(--ease),width .5s var(--ease),height .5s var(--ease),
+             border-radius .5s var(--ease);}
+/* Bước mở đầu / kết thúc không chỉ vào đâu: thu ô sáng về giữa và tắt viền,
+   chỉ còn tác dụng làm tối cả màn hình. */
+.tour-hole.blank{box-shadow:0 0 0 9999px rgba(4,7,22,.86);}
+.tour-hole .ring{position:absolute;inset:-7px;border-radius:inherit;border:1px solid rgba(95,211,255,.5);
+  animation:tourRing 1.9s ease-out infinite;}
+.tour-hole.blank .ring{display:none;}
+@keyframes tourRing{0%{transform:scale(.98);opacity:.85;}70%{transform:scale(1.05);opacity:0;}100%{opacity:0;}}
+
+/* ---------------- Box thoại ---------------- */
+.tour-bubble{position:fixed;width:min(388px,calc(100vw - 28px));
+  display:flex;flex-direction:column;gap:2px;padding:16px 18px 14px;border-radius:20px;
+  border:1px solid rgba(95,211,255,.5);
+  background:linear-gradient(180deg, rgba(13,20,48,.96), rgba(10,16,40,.96));
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 26px 60px -22px rgba(0,0,0,.85), 0 0 40px -10px rgba(95,211,255,.45);
+  transition:top .5s var(--ease),left .5s var(--ease);}
+/* Mũi nhọn chỉ về phía ô sáng. Hướng do JS gắn class .up/.down/.left/.right
+   — tên class là cạnh của BOX có mũi nhọn, tức phía đối diện là ô sáng.
+   Hình vuông quay 45°: góc trên-trái chỉ LÊN, trên-phải chỉ SANG PHẢI,
+   dưới-phải chỉ XUỐNG, dưới-trái chỉ SANG TRÁI — nên mỗi hướng bỏ đúng
+   2 đường viền để chỉ còn 2 cạnh của cái mũi nhọn. */
+.tour-bubble::before{content:"";position:absolute;width:14px;height:14px;
+  background:rgba(13,20,48,.96);border:1px solid rgba(95,211,255,.5);transform:rotate(45deg);}
+.tour-bubble.up::before{top:-8px;left:var(--ax,34px);border-right:none;border-bottom:none;}
+.tour-bubble.down::before{bottom:-8px;left:var(--ax,34px);border-left:none;border-top:none;}
+.tour-bubble.left::before{left:-8px;top:var(--ay,34px);border-top:none;border-right:none;}
+.tour-bubble.right::before{right:-8px;top:var(--ay,34px);border-bottom:none;border-left:none;}
+.tour-bubble.none::before{display:none;}
+
+/* Comet + tên */
+.tour-who{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.tour-ava{width:46px;height:46px;flex:none;border-radius:14px;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(circle at 42% 32%, rgba(143,123,255,.5), rgba(56,189,248,.16) 70%, transparent);
+  border:1px solid rgba(143,123,255,.5);box-shadow:0 0 18px -4px rgba(143,123,255,.7);}
+.tour-ava img{width:100%;height:100%;object-fit:contain;display:block;
+  animation:tourFloat 3.4s ease-in-out infinite;}
+@keyframes tourFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+.tour-who .nm{font-family:var(--font-display);font-weight:700;font-size:13px;color:#cfe3ff;}
+.tour-who .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-top:1px;}
+
+/* Nội dung */
+.tour-title{font-family:var(--font-display);font-weight:700;font-size:18px;line-height:1.25;margin:2px 0 0;
+  color:#fff;display:flex;align-items:center;gap:8px;}
+.tour-title .ic{font-size:21px;line-height:1;}
+.tour-body{font-size:13.8px;line-height:1.62;color:var(--ink-soft);margin:8px 0 0;}
+.tour-body b{color:#fff;}
+
+/* Chân box: chấm bước + nút */
+.tour-foot{display:flex;align-items:center;gap:10px;margin-top:14px;}
+.tour-dots{display:flex;gap:5px;margin-right:auto;}
+.tour-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.16);
+  border:1px solid rgba(120,160,255,.3);transition:background .25s,box-shadow .25s;}
+.tour-dots span.on{background:radial-gradient(circle,#7dd3fc,var(--accent-2));box-shadow:0 0 8px rgba(95,211,255,.9);
+  border-color:transparent;}
+.tour-skip{cursor:pointer;border:none;background:none;color:var(--ink-faint);white-space:nowrap;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;padding:8px 4px;text-decoration:underline;
+  text-underline-offset:3px;transition:color .16s;}
+.tour-skip:hover{color:var(--ink-soft);}
+.tour-next{cursor:pointer;border:none;flex:none;color:#04060f;
+  padding:11px 18px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:14px;
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
+  box-shadow:0 12px 24px -12px rgba(95,211,255,.8);
+  transition:transform .28s var(--jelly),filter .18s;}
+.tour-next:hover{filter:brightness(1.08);transform:translateY(-2px);}
+.tour-next:active{transform:scale(.94);}
+.tour-next.go{background:linear-gradient(120deg,var(--sun),var(--sun-warm));
+  box-shadow:0 12px 24px -12px rgba(255,157,61,.85);}
+
+@media (max-width:560px){
+  .tour-bubble{padding:14px 15px 12px;}
+  .tour-title{font-size:16.5px;}
+  .tour-body{font-size:13.2px;}
+  .tour-next{padding:10px 15px;font-size:13.5px;}
+}
+
+/* Bớt chuyển động: ô sáng nhảy thẳng tới vị trí mới, không trượt.
+   (common.css đã tắt mọi @keyframes, nhưng transition thì phải tắt riêng.) */
+@media (prefers-reduced-motion:reduce){
+  .tour-hole,.tour-bubble{transition:none;}
+}

@@ -1,0 +1,34 @@
+/* ==========================================================
+   warp-screen.css — màn loading "Luna bay vào không gian rồi dừng ở Trái Đất"
+   (js/warp-screen.js). Toàn bộ phần hình vẽ trên <canvas>; ở đây chỉ có
+   khung phủ, dòng chữ và thanh tiến trình.
+   ========================================================== */
+
+.warp{position:fixed;inset:0;z-index:90;background:#03050f;
+  opacity:0;visibility:hidden;transition:opacity .45s var(--ease),visibility .45s;}
+.warp.show{opacity:1;visibility:visible;}
+.warp canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+/* Dòng chữ neo ở đáy để không che Trái Đất */
+.warp-cap{position:absolute;left:0;right:0;bottom:clamp(28px,7vh,72px);
+  display:flex;flex-direction:column;align-items:center;gap:9px;padding:0 20px;text-align:center;
+  pointer-events:none;}
+.warp-cap .lead{font-family:var(--font-mono);font-size:clamp(11px,2.6vw,13px);letter-spacing:.24em;
+  text-transform:uppercase;color:var(--accent);text-shadow:0 0 16px rgba(95,211,255,.75);}
+.warp-cap .sub{font-family:var(--font-display);font-weight:600;font-size:clamp(14px,3.4vw,19px);
+  color:#eaf1ff;text-shadow:0 2px 22px rgba(0,0,0,.85);}
+
+/* Thanh tiến trình */
+.warp-bar{position:relative;width:min(320px,72vw);height:6px;border-radius:6px;margin-top:4px;
+  background:rgba(255,255,255,.12);overflow:hidden;box-shadow:inset 0 0 8px rgba(0,0,0,.6);}
+.warp-bar i{position:absolute;inset:0;width:0;border-radius:6px;display:block;
+  background:linear-gradient(90deg,var(--accent),#c084fc);box-shadow:0 0 14px rgba(192,132,252,.8);}
+
+/* Bỏ qua — trẻ xem lần thứ hai thì không nên bắt chờ hết đoạn phim */
+.warp-skip{position:absolute;right:clamp(14px,3vw,26px);top:clamp(14px,3vh,24px);cursor:pointer;
+  border:1px solid rgba(150,180,255,.28);background:rgba(8,14,38,.55);color:var(--ink-soft);
+  border-radius:999px;padding:8px 15px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:background .16s,color .16s,border-color .16s,transform .1s;}
+.warp-skip:hover{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.5);color:var(--ink);}
+.warp-skip:active{transform:scale(.94);}
