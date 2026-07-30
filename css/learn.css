@@ -1,46 +1,29 @@
-/* learn.css - CSS rieng cua learn.html (dung chung: css/common.css) */
-:root{--bg:#0b0f19;--bg2:#0d1322;--cyan:#38bdf8;--purple:#c084fc;--green:#4ade80;--amber:#fb923c;--gold:#ffcf6b;--brd:rgba(120,160,255,.18);--font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;--font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;--jelly:cubic-bezier(.34,1.56,.64,1);}
-html,body{min-height:100%;}
-body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);} a{text-decoration:none;}
-:focus-visible{outline:2px solid var(--cyan);}
+/* ==========================================================
+   learn.css — phần RIÊNG của learn.html (Trạm Tri Thức).
 
-.starfield{opacity:.7;background-image:
-    radial-gradient(1.3px 1.3px at 20% 30%, #fff, transparent),
-    radial-gradient(1.4px 1.4px at 80% 20%, #dcecff, transparent),
-    radial-gradient(1px 1px at 60% 70%, #cfe0ff, transparent),
-    radial-gradient(1.1px 1.1px at 40% 85%, #fff, transparent),
-    radial-gradient(1px 1px at 90% 55%, #bcd0ff, transparent);animation:drift 160s linear infinite, tw 5s ease-in-out infinite;}
-.nebula{filter:blur(10px);opacity:.7;background:
-    radial-gradient(closest-side at 18% 24%, rgba(192,132,252,.22), transparent 70%),
-    radial-gradient(closest-side at 82% 22%, rgba(56,189,248,.18), transparent 70%),
-    radial-gradient(closest-side at 60% 82%, rgba(74,222,128,.12), transparent 70%);}
+   Khung chung (tokens, nền, .wrap, header .hub-top, .hero, .currency,
+   .lang-switch, .toast) ở css/page-shell.css — nạp trước file này.
+   Trước 29/07/2026 file này có bản copy riêng của toàn bộ phần đó, và header
+   mang class `.top` riêng thay vì `.hub-top` dùng chung.
+   ========================================================== */
 
-.wrap{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:0 clamp(14px,3vw,30px) 70px;}
-
-/* ============ HEADER ============ */
-.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0 12px;
-  background:linear-gradient(180deg, rgba(11,15,25,.85), rgba(11,15,25,.2));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
-.back-btn{letter-spacing:.06em;padding:9px 14px;transition:background .18s,transform .12s,box-shadow .2s;}
-.back-btn:hover{box-shadow:0 0 18px -6px rgba(56,189,248,.7);}
+/* Tiêu đề trang có chữ gradient — chỉ trang này dùng, nên ở đây. */
 .htitle{flex:1;min-width:180px;font-family:var(--font-display);font-weight:700;font-size:clamp(15px,2.4vw,21px);letter-spacing:.02em;
   background:linear-gradient(120deg,#fff,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   text-shadow:0 2px 20px rgba(95,150,255,.25);}
-.currency{padding:7px 13px;}
-.gem{width:26px;height:26px;box-shadow:0 0 16px rgba(192,132,252,.8), inset 0 0 10px rgba(192,132,252,.5);animation:gemPulse 2.4s ease-in-out infinite;}
-.gem img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
-@keyframes gemPulse{0%,100%{box-shadow:0 0 13px rgba(192,132,252,.55), inset 0 0 8px rgba(192,132,252,.4);}50%{box-shadow:0 0 24px rgba(192,132,252,1), inset 0 0 13px rgba(192,132,252,.7);}}
-.currency .c-val{font-size:16px;}
-.lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
 
-/* ============ HERO ============ */
-.hero{text-align:center;padding:22px 0 4px;}
-.hero .eyebrow{font-size:11px;color:var(--cyan);}
-.hero p{color:var(--ink-soft);font-size:14px;line-height:1.6;margin:10px auto 0;max-width:560px;}
-
+/* Hero của trang này thấp và nhỏ hơn khung chung: ngay dưới nó là 2 thẻ chế độ
+   to, để hero cao bằng khung chung thì phải cuộn mới thấy thẻ. */
+.hero{padding:22px 0 4px;}
+.hero .eyebrow{font-size:11px;}
+.hero p{font-size:14px;max-width:560px;}
 /* ============ 2 MODE CARDS ============ */
-.modes{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:26px;}
+/* ⚠️ BA thẻ chứ không còn hai (thêm MOD-C Sổ Tay 30/07/2026). Lưới 2 cột cố định
+   thì thẻ thứ ba nằm lẻ một hàng, rộng gấp đôi hai thẻ trên — trông như lỗi bố
+   cục. Điện thoại 1 cột · tablet 2 cột · từ 900px thì 3 cột đều nhau. */
+.modes{display:grid;grid-template-columns:1fr;gap:22px;margin-top:26px;}
+@media(min-width:600px){.modes{grid-template-columns:1fr 1fr;}}
+@media(min-width:900px){.modes{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:680px){.modes{grid-template-columns:1fr;}}
 .mode{position:relative;display:flex;flex-direction:column;border-radius:20px;padding:26px 24px;overflow:hidden;
   --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.9);
@@ -68,6 +51,7 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 .mode .m-btn:active{transform:scale(.94);}
 .mode--lib {--neon:rgba(56,189,248,.4);--neonS:rgba(56,189,248,.9);--ic-bg:rgba(56,189,248,.16);}
 .mode--quiz{--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
+.mode--codex{--neon:rgba(74,222,128,.4);--neonS:rgba(74,222,128,.9);--ic-bg:rgba(74,222,128,.16);}
 .mode--quiz .m-btn{background:linear-gradient(120deg,var(--purple),#8f7bff);box-shadow:0 12px 26px -12px rgba(192,132,252,.7);}
 
 /* ============ FEATURED ARTICLES ============ */
@@ -130,4 +114,5 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 .reader-claim:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.3);box-shadow:none;}
 .reader-claim.done{background:rgba(74,222,128,.16);color:var(--green);border:1px solid rgba(74,222,128,.5);}
 
-.toast{top:74px;transform:translateX(-50%) translateY(-14px);z-index:80;padding:12px 20px;background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);font-size:14px;transition:opacity .3s,transform .3s;}
+/* Toast cao hơn khung chung vì header trang này thấp hơn. */
+.toast{top:74px;z-index:80;}

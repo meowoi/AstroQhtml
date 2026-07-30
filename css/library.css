@@ -1,31 +1,47 @@
-/* library.css - CSS rieng cua library.html (dung chung: css/common.css) */
-:root{--bg:#0b0f19;--bg2:#0d1322;--cyan:#38bdf8;--purple:#c084fc;--green:#4ade80;--amber:#fb923c;--gold:#ffcf6b;--brd:rgba(120,160,255,.18);--font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;--font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;--jelly:cubic-bezier(.34,1.56,.64,1);}
-html,body{min-height:100%;}
-body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--bg2) 46%, var(--bg) 100%);} a{text-decoration:none;} input{font-family:inherit;}
-:focus-visible{outline:2px solid var(--cyan);}
-.starfield{opacity:.6;background-image:radial-gradient(1.2px 1.2px at 20% 30%,#fff,transparent),radial-gradient(1.3px 1.3px at 80% 20%,#dcecff,transparent),radial-gradient(1px 1px at 60% 70%,#cfe0ff,transparent),radial-gradient(1px 1px at 40% 85%,#fff,transparent);animation:drift 160s linear infinite;}
+/* ==========================================================
+   library.css — phần RIÊNG của library.html (Thư Viện Khám Phá).
 
-.wrap{position:relative;z-index:10;max-width:1240px;margin:0 auto;padding:0 clamp(12px,3vw,26px) 70px;}
+   Khung chung (tokens, nền, .wrap, header .hub-top, .currency, .lang-switch,
+   .toast) ở css/page-shell.css — nạp trước file này.
+   Trước 29/07/2026 file này có bản copy riêng của toàn bộ phần đó.
 
-/* ============ TOPBAR ============ */
-.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;
-  background:linear-gradient(180deg, rgba(11,15,25,.9), rgba(11,15,25,.35));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
-.back-btn{letter-spacing:.05em;padding:9px 13px;transition:background .18s,transform .12s;}
+   ⚠️ Thẻ bài viết nổi bật ở trang này từng mang class `.hero`, trùng với `.hero`
+   (tiêu đề canh giữa) của khung chung → đã đổi thành `.feat`. Trùng tên thì khung
+   chung áp `text-align:center` + padding vào một cái thẻ grid, lệch hẳn bố cục.
+   ========================================================== */
+
+/* Bố cục 3 cột cần rộng hơn khung chung (1240 thay vì 1120) và lề hẹp hơn. */
+.wrap{max-width:1240px;padding:0 clamp(12px,3vw,26px) 70px;}
+
+/* Trang này nhiều ảnh nên trời bớt sao lại một chút, và không có tinh vân —
+   để ảnh bài viết là thứ nổi nhất trên trang. */
+.starfield{opacity:.6;background-image:
+    radial-gradient(1.2px 1.2px at 20% 30%,#fff,transparent),
+    radial-gradient(1.3px 1.3px at 80% 20%,#dcecff,transparent),
+    radial-gradient(1px 1px at 60% 70%,#cfe0ff,transparent),
+    radial-gradient(1px 1px at 40% 85%,#fff,transparent);
+  animation:drift 160s linear infinite;}
+
+/* Header chật hơn (có cả ô tìm kiếm + lọc nguồn) nên bóp gap + padding. */
+.hub-top{gap:12px;padding:12px 0;
+  background:linear-gradient(180deg, rgba(11,15,25,.9), rgba(11,15,25,.35));}
+.back-btn{letter-spacing:.05em;padding:9px 13px;}
+.currency{padding:7px 12px;}
+.currency .c-val{font-size:15px;}
+.gem{width:24px;height:24px;}
+.gem img{width:16px;height:16px;}
+.lang-switch button{padding:5px 8px;}
+/* ============ Ô TÌM KIẾM + LỌC NGUỒN (chỉ trang này có) ============ */
 .search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:12px;
   background:rgba(9,14,28,.7);border:1px solid var(--brd);color:var(--cyan);}
-.search input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-size:14px;}
+/* `min-width:0` là BẮT BUỘC: <input> có bề rộng mặc định ~20 ký tự, và flex item
+   không co xuống dưới bề rộng mặc định của nó → trên màn 390px ô tìm kiếm chìa
+   ra ngoài 2px và sinh thanh cuộn ngang. (Bản cũ tràn tới 23px.) */
+.search input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--ink);font-size:14px;}
 .search input::placeholder{color:var(--ink-faint);}
 .srcfilter{display:inline-flex;gap:3px;padding:4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--brd);}
 .srcfilter button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-mono);font-weight:600;font-size:11px;letter-spacing:.04em;padding:6px 11px;border-radius:999px;transition:.2s;}
 .srcfilter button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
-.currency{padding:7px 12px;}
-.gem{width:24px;height:24px;box-shadow:0 0 15px rgba(192,132,252,.8), inset 0 0 9px rgba(192,132,252,.5);animation:gemPulse 2.4s ease-in-out infinite;}
-.gem img{width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
-@keyframes gemPulse{0%,100%{box-shadow:0 0 12px rgba(192,132,252,.55), inset 0 0 8px rgba(192,132,252,.4);}50%{box-shadow:0 0 22px rgba(192,132,252,1), inset 0 0 12px rgba(192,132,252,.7);}}
-.currency .c-val{font-size:15px;}
-.lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 8px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
 
 /* ============ 3-COLUMN LAYOUT ============ */
 .layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;margin-top:16px;}
@@ -62,25 +78,25 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 /* CENTER FEED */
 .feed{min-width:0;}
 /* Hero card */
-.hero{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:0;border-radius:20px;overflow:hidden;cursor:pointer;
+.feat{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:0;border-radius:20px;overflow:hidden;cursor:pointer;
   border:1px solid rgba(56,189,248,.35);box-shadow:0 26px 60px -28px rgba(0,0,0,.8), 0 0 40px -14px rgba(56,189,248,.4);
   transition:transform .35s var(--jelly),box-shadow .35s;}
-.hero:hover{transform:translateY(-4px);box-shadow:0 34px 70px -26px rgba(0,0,0,.85),0 0 54px -8px rgba(56,189,248,.6);}
-@media(max-width:620px){.hero{grid-template-columns:1fr;}}
+.feat:hover{transform:translateY(-4px);box-shadow:0 34px 70px -26px rgba(0,0,0,.85),0 0 54px -8px rgba(56,189,248,.6);}
+@media(max-width:620px){.feat{grid-template-columns:1fr;}}
 .imgbox{position:relative;overflow:hidden;background:radial-gradient(circle at 40% 35%, var(--c1,#2f6fd0), var(--c2,#1c4c96) 55%, var(--c3,#081d44) 100%);}
 .imgbox .em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:56px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));z-index:1;}
 .imgbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;}
 .imgbox::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(90deg,transparent 55%,rgba(11,15,25,.5)),linear-gradient(180deg,transparent 60%,rgba(11,15,25,.35));}
-.hero .imgbox{min-height:220px;}
-.hero-body{position:relative;padding:22px 22px 20px;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(15,23,42,.62),rgba(15,23,42,.55));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.feat .imgbox{min-height:220px;}
+.feat-body{position:relative;padding:22px 22px 20px;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(15,23,42,.62),rgba(15,23,42,.55));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 .badge{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
   color:#cfe8ff;background:rgba(6,10,22,.6);border:1px solid rgba(120,180,255,.45);padding:4px 10px;border-radius:999px;}
 .badge.nasa{color:#cfe8ff;border-color:rgba(120,180,255,.5);}
 .badge.esa{color:#bfead4;border-color:rgba(74,222,128,.5);}
 .badge.ai{color:#e6ccff;border-color:rgba(192,132,252,.5);}
-.hero-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-top:12px;}
-.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(19px,2.6vw,26px);line-height:1.25;margin:6px 0 0;}
-.hero p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 0;flex:1;}
+.feat-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-top:12px;}
+.feat h1{font-family:var(--font-display);font-weight:700;font-size:clamp(19px,2.6vw,26px);line-height:1.25;margin:6px 0 0;}
+.feat p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 0;flex:1;}
 .read-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;align-self:flex-start;margin-top:16px;cursor:pointer;border:none;
   padding:12px 20px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:14px;color:#04060f;
   background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);transition:transform .25s var(--jelly),filter .2s;}
@@ -143,4 +159,5 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
   background:linear-gradient(120deg,var(--gold),var(--amber));box-shadow:0 12px 26px -12px rgba(251,146,60,.8);transition:transform .25s var(--jelly),filter .2s;}
 .r-quiz:hover{filter:brightness(1.07);transform:translateY(-2px);} .r-quiz:active{transform:scale(.95);}
 
-.toast{top:70px;transform:translateX(-50%) translateY(-14px);z-index:80;padding:12px 20px;background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);font-size:14px;transition:opacity .3s,transform .3s;}
+/* Toast cao hơn khung chung vì header trang này thấp hơn. */
+.toast{top:70px;z-index:80;}

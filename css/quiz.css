@@ -243,6 +243,13 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 .sheet-title{font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--sheet-c,var(--green));}
 .sheet-body{color:var(--ink-soft);font-size:14.5px;line-height:1.55;margin:12px 0 0;}
 .sheet-body b{color:#fff;}
+/* Nguồn tham chiếu — cỡ chữ nhỏ, mono, để không tranh chỗ với lời giải thích.
+   `display:block` chứ không inline-flex: link dài phải xuống dòng gọn trên điện thoại. */
+.sheet-src{display:block;margin-top:10px;font-family:var(--font-mono);font-size:11px;
+  letter-spacing:.04em;color:var(--ink-faint);overflow-wrap:anywhere;}
+.sheet-src a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(56,189,248,.55);}
+.sheet-src a:hover{color:#fff;border-bottom-color:#fff;}
+.sheet-src.hide{display:none;}
 .sheet-award{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 14px;border-radius:999px;
   font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;
   background:rgba(192,132,252,.14);border:1px solid rgba(192,132,252,.45);box-shadow:0 0 20px -6px rgba(192,132,252,.7);}
@@ -279,6 +286,15 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
   font-family:var(--font-display);font-weight:700;font-size:20px;color:#e9d7ff;
   background:rgba(192,132,252,.14);border:1px solid rgba(192,132,252,.45);box-shadow:0 0 24px -6px rgba(192,132,252,.7);}
 .sum-mined img{width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
+/* Dòng "đạt / chưa đạt" dưới ô thưởng.
+   ⚠️ CHƯA ĐẠT DÙNG TÔNG HỔ PHÁCH, KHÔNG DÙNG ĐỎ. Đây là màn học của trẻ 8–15:
+      đỏ đọc ra thành "em sai rồi", hổ phách đọc ra thành "chưa tới, thử lại" —
+      cùng tông đã dùng cho `.standby` ở dashboard. Và câu chữ luôn kèm SỐ CÂU CẦN
+      ĐÚNG, không chỉ nói "chưa đạt". */
+.sum-note{margin-top:10px;font-family:var(--font-mono);font-size:11.5px;line-height:1.55;
+  max-width:34ch;margin-left:auto;margin-right:auto;}
+.sum-note.ok{color:var(--green);}
+.sum-note.bad{color:#fbbf24;}
 .sum-grid{display:flex;gap:12px;margin:18px 0 4px;}
 .sum-cell{flex:1;padding:12px;border-radius:14px;background:rgba(15,23,42,.5);border:1px solid var(--brd);}
 .sum-cell .sc-val{font-family:var(--font-display);font-weight:700;font-size:20px;color:#fff;}

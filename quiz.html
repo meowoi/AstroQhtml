@@ -8,7 +8,7 @@
      follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa,
      đồng thời bỏ noindex ở landing-app.html và bổ sung URL vào sitemap.xml. -->
 <meta name="robots" content="noindex,follow" />
-<title>AstroQ — Trạm Tri Thức · Chẩn đoán</title>
+<title>AstroQ — Tri Thức · Chẩn đoán</title>
 
 <link rel="stylesheet" href="css/fonts.css" />
 
@@ -113,6 +113,9 @@
       <div class="sheet-title" id="sheet-title">—</div>
     </div>
     <div class="sheet-body" id="sheet-body">—</div>
+    <!-- Nguồn tham chiếu của câu hỏi (NASA…). Ẩn với những câu khái niệm không
+         có số liệu — xem `src` trong js/quiz-questions.js. -->
+    <div class="sheet-src hide" id="sheet-src"></div>
     <div class="sheet-award hide" id="sheet-award">+20 <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></div>
     <button class="next-btn" id="next-btn" data-i18n="next">CÂU TIẾP THEO</button>
   </div>
@@ -125,6 +128,9 @@
     <div class="sum-title" data-i18n="sum_title">HOÀN THÀNH NHIỆM VỤ</div>
     <div class="stars" id="stars"><span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span></div>
     <div class="sum-mined"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />+<span id="sum-mined">0</span></div>
+    <!-- Nói rõ ĐẠT hay CHƯA, và chưa đạt thì cần bao nhiêu câu đúng. Không có dòng
+         này thì trẻ chỉ thấy "+0" mà không biết vì sao. -->
+    <div class="sum-note" id="sum-note" aria-live="polite"></div>
     <div class="sum-grid">
       <div class="sum-cell"><div class="sc-val" id="sum-acc">0%</div><div class="sc-lbl" data-i18n="accuracy">Độ chính xác</div></div>
       <div class="sum-cell"><div class="sc-val" id="sum-score">0/5</div><div class="sc-lbl" data-i18n="correct_lbl">Câu đúng</div></div>
@@ -132,7 +138,7 @@
     <div class="sum-badge">🏅 <span data-i18n="badge_unlock">Huy hiệu</span>: <b id="sum-badge">—</b></div>
     <div class="sum-actions">
       <button id="act-retry" data-i18n="act_retry">Làm lại</button>
-      <button id="act-home" data-i18n="act_home">Về Khoang Lái</button>
+      <button id="act-home" data-i18n="act_home">Về Trung Tâm Điều Hướng</button>
       <button class="primary" id="act-next" data-i18n="act_next">Nhiệm vụ tiếp</button>
     </div>
   </div>
@@ -154,6 +160,12 @@
 <div class="meteor-layer" id="meteor-layer"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Báo tiến độ lên server (Hồ sơ + Kho Thành Tích).
+     CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
+     phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
+     dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/progress.js"></script>
+<script src="js/quiz-questions.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
@@ -164,13 +176,15 @@
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Trạm Tri Thức · Chẩn đoán",
+      title:"AstroQ — Tri Thức · Chẩn đoán",
       exit:"Rút lui", energy:"NĂNG LƯỢNG", currency:"Thiên thạch tím", q_word:"CÂU",
       engage:"KÍCH HOẠT", next:"CÂU TIẾP THEO",
-      ok_title:"CHÍNH XÁC!", no_title:"CHƯA ĐÚNG!",
+      ok_title:"CHÍNH XÁC!", no_title:"CHƯA ĐÚNG!", src_label:"Nguồn",
       sys_diag:"[ SYS.DIAGNOSTIC ]", sum_title:"HOÀN THÀNH NHIỆM VỤ",
+      pass_note:"Đạt rồi! Bạn nhận {n} Thiên thạch tím.",
+      fail_note:"Chưa đạt — cần đúng ít nhất {need}/{total} câu mới nhận được Thiên thạch tím. Làm lại nhé!",
       accuracy:"Độ chính xác", correct_lbl:"Câu đúng", badge_unlock:"Huy hiệu",
-      act_retry:"Làm lại", act_home:"Về Khoang Lái", act_next:"Nhiệm vụ tiếp",
+      act_retry:"Làm lại", act_home:"Về Trung Tâm Điều Hướng", act_next:"Nhiệm vụ tiếp",
       exit_title:"Rút lui khỏi nhiệm vụ?", exit_body:"Tiến trình câu hỏi hiện tại sẽ không được lưu.",
       exit_stay:"Ở lại", exit_go:"Rút lui",
       badge_name:"Phi Công Thuật Toán",
@@ -190,10 +204,12 @@
       title:"AstroQ — Knowledge Station · Diagnostic",
       exit:"Retreat", energy:"ENERGY", currency:"Purple Meteor", q_word:"Q",
       engage:"ENGAGE", next:"NEXT QUESTION",
-      ok_title:"CORRECT!", no_title:"NOT QUITE!",
+      ok_title:"CORRECT!", no_title:"NOT QUITE!", src_label:"Source",
       sys_diag:"[ SYS.DIAGNOSTIC ]", sum_title:"MISSION COMPLETE",
+      pass_note:"Passed! You earned {n} Purple Meteors.",
+      fail_note:"Not passed — you need at least {need}/{total} correct to earn Purple Meteors. Try again!",
       accuracy:"Accuracy", correct_lbl:"Correct", badge_unlock:"Badge",
-      act_retry:"Retry", act_home:"Return to Cockpit", act_next:"Next Mission",
+      act_retry:"Retry", act_home:"Back to Navigation Hub", act_next:"Next Mission",
       exit_title:"Abort the mission?", exit_body:"Your current question progress won't be saved.",
       exit_stay:"Stay", exit_go:"Retreat",
       badge_name:"Algorithm Pilot",
@@ -213,60 +229,34 @@
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
-  /* ================= Ngân hàng câu hỏi (Byte điều hướng vành đai thiên thạch) =================
-     Cấu trúc "props": topic, q, opts[4], a (đáp án đúng), ok (giải thích đúng),
-     no (giải thích sai), hint (lời mascot). Sửa mảng này để đổi nội dung. */
-  var QUESTIONS = [
-    {
-      topic:{vi:"TRÍ TUỆ NHÂN TẠO", en:"ARTIFICIAL INTELLIGENCE"},
-      q:{vi:"Thuật toán nào giúp Byte rẽ trái để né thiên thạch?", en:"Which command turns Byte left to dodge the asteroid?"},
-      opts:[{vi:"MoveForward()",en:"MoveForward()"},{vi:"TurnLeft()",en:"TurnLeft()"},{vi:"Jump()",en:"Jump()"},{vi:"Stop()",en:"Stop()"}],
-      a:1,
-      ok:{vi:"Chính xác! Thuật toán <b>TurnLeft()</b> giúp Byte đổi hướng sang trái!", en:"Correct! <b>TurnLeft()</b> steers Byte to the left!"},
-      no:{vi:"Rất tiếc! <b>MoveForward()</b> sẽ làm Byte đâm thẳng vào thiên thạch đấy. Hãy thử lại!", en:"Oops! <b>MoveForward()</b> would crash Byte into the asteroid. Try again!"},
-      hint:{vi:"Suy nghĩ kỹ nhé! Thuật toán nào giúp tớ <b>rẽ trái</b>?", en:"Think carefully! Which command turns me <b>left</b>?"}
-    },
-    {
-      topic:{vi:"VÒNG LẶP", en:"LOOPS"},
-      q:{vi:"Byte cần nhặt 3 tinh thể giống nhau. Nên dùng cấu trúc nào?", en:"Byte must collect 3 identical crystals. Which structure fits best?"},
-      opts:[{vi:"Repeat / Vòng lặp",en:"Repeat / Loop"},{vi:"If / Nếu",en:"If"},{vi:"Print / In ra",en:"Print"},{vi:"Delete / Xoá",en:"Delete"}],
-      a:0,
-      ok:{vi:"Tuyệt! <b>Vòng lặp Repeat</b> giúp lặp lại một việc nhiều lần mà không viết lại lệnh.", en:"Great! A <b>Repeat loop</b> runs the same action many times without rewriting it."},
-      no:{vi:"Chưa đúng! Để làm lặp lại một việc, ta dùng <b>vòng lặp</b> chứ không phải lệnh này.", en:"Not quite! To repeat an action, use a <b>loop</b>, not this command."},
-      hint:{vi:"Làm đi làm lại cùng một việc — cấu trúc nào hợp nhất nhỉ?", en:"Doing the same thing over and over — which structure fits?"}
-    },
-    {
-      topic:{vi:"ĐIỀU KIỆN", en:"CONDITIONS"},
-      q:{vi:"“NẾU phía trước có thiên thạch THÌ dừng lại.” Đây là loại lệnh gì?", en:"“IF an asteroid is ahead THEN stop.” What kind of command is this?"},
-      opts:[{vi:"Lệnh điều kiện (If)",en:"Condition (If)"},{vi:"Vòng lặp",en:"Loop"},{vi:"Biến số",en:"Variable"},{vi:"Hàm vẽ",en:"Draw function"}],
-      a:0,
-      ok:{vi:"Đúng rồi! <b>Lệnh điều kiện If</b> giúp Byte quyết định dựa trên tình huống.", en:"Right! An <b>If condition</b> lets Byte decide based on the situation."},
-      no:{vi:"Chưa đúng! “Nếu… thì…” chính là <b>lệnh điều kiện (If)</b>.", en:"Not quite! “If… then…” is exactly an <b>If condition</b>."},
-      hint:{vi:"“Nếu… thì…” — nghe giống loại lệnh nào?", en:"“If… then…” — which command does that sound like?"}
-    },
-    {
-      topic:{vi:"CẢM BIẾN", en:"SENSORS"},
-      q:{vi:"Byte dùng bộ phận nào để “nhìn thấy” thiên thạch phía trước?", en:"Which part does Byte use to 'see' the asteroid ahead?"},
-      opts:[{vi:"Bánh xe",en:"Wheels"},{vi:"Pin năng lượng",en:"Battery"},{vi:"Cảm biến (Sensor)",en:"Sensor"},{vi:"Loa phát",en:"Speaker"}],
-      a:2,
-      ok:{vi:"Chuẩn! <b>Cảm biến</b> giúp robot thu thập thông tin về môi trường xung quanh.", en:"Exactly! A <b>sensor</b> lets a robot gather information about its surroundings."},
-      no:{vi:"Chưa đúng! Robot “nhìn” bằng <b>cảm biến</b>, không phải bộ phận này.", en:"Not quite! A robot 'sees' with a <b>sensor</b>, not this part."},
-      hint:{vi:"Bộ phận nào giúp robot <b>thu thập thông tin</b> xung quanh?", en:"Which part helps a robot <b>gather info</b> around it?"}
-    },
-    {
-      topic:{vi:"TRÌNH TỰ", en:"SEQUENCING"},
-      q:{vi:"Để tới đích: tiến 2 ô rồi rẽ phải. Trình tự lệnh đúng là?", en:"To reach the goal: go 2 tiles then turn right. Correct order?"},
-      opts:[{vi:"MoveForward(2) → TurnRight()",en:"MoveForward(2) → TurnRight()"},{vi:"TurnRight() → MoveForward(2)",en:"TurnRight() → MoveForward(2)"},{vi:"TurnRight() → TurnLeft()",en:"TurnRight() → TurnLeft()"},{vi:"Stop() → MoveForward(2)",en:"Stop() → MoveForward(2)"}],
-      a:0,
-      ok:{vi:"Hoàn hảo! Máy tính chạy lệnh <b>theo thứ tự từ trên xuống</b> — tiến trước, rẽ sau.", en:"Perfect! Computers run commands <b>in order, top to bottom</b> — move first, then turn."},
-      no:{vi:"Chưa đúng! Đề yêu cầu <b>tiến trước, rẽ phải sau</b> — đúng thứ tự nhé.", en:"Not quite! It says <b>move first, then turn right</b> — order matters."},
-      hint:{vi:"Thứ tự rất quan trọng: việc nào làm <b>trước</b>?", en:"Order matters: which step comes <b>first</b>?"}
-    }
-  ];
+  /* ================= Ngân hàng câu hỏi =================
+     Dữ liệu nằm ở js/quiz-questions.js (CHỖ DUY NHẤT khai báo). Ngày 30/07/2026
+     bank lên 25 câu — 20 câu thiên văn theo NASA + 5 câu lập trình cũ — nên
+     KHÔNG hỏi hết trong một lượt nữa: mỗi lượt rút ROUND_SIZE câu, ưu tiên
+     không trùng thuật ngữ. Nhờ vậy "Làm lại" ra đề khác chứ không lặp y nguyên,
+     và thêm câu vào bank không làm nhiệm vụ dài thêm.
+     Muốn đổi độ dài một lượt thì sửa ROUND_SIZE ở đây — nhớ trần thưởng của
+     server (quiz 220 ☄️ ≈ 11 câu đúng, xem AstroqSV/Services/Wallet.cs). */
+  var ROUND_SIZE = 5;
+  var QUESTIONS = AstroQQuestions.pickRound(ROUND_SIZE);
+
+  /* ================= Ngưỡng ĐẠT =================
+     Chốt 30/07/2026: LÀM QUIZ PHẢI ĐẠT MỚI CÓ THIÊN THẠCH TÍM.
+     ⚠️ ĐÂY LÀ BẢN SAO ĐỂ VẼ GIAO DIỆN. Ngưỡng THẬT là `Wallet.QuizPassRatio`
+        (0.60) ở server và server tự tính lại tỉ lệ đúng từ `correct`/`total` —
+        sửa một bên mà quên bên kia thì trẻ đọc con số của client nhưng nhận tiền
+        theo con số của server. Đổi thì sửa CẢ HAI, và phép kiểm [3d] của
+        `check_pages.py` đối chiếu hai bên.
+     ⚠️ 60% với 5 câu = đúng 3 câu. Đổi `ROUND_SIZE` thì kiểm lại `PASS_MIN`. */
+  var PASS_PCT = 60;
+  var PASS_MIN = Math.ceil(ROUND_SIZE * PASS_PCT / 100);
 
   /* ================= Trạng thái (state) ================= */
   var idx=0, selected=-1, status="idle"; // idle | correct | incorrect
   var earned=0, correctCount=0, answered=0, locked=false;
+  /* Khoá thuật ngữ đã TRẢ LỜI ĐÚNG trong lượt này → gửi lên server để Sổ Tay
+     Thuật Ngữ giải mã thẻ tương ứng (js/codex-terms.js). */
+  var okTerms=[];
   var TOTAL = QUESTIONS.length;
 
   /* Mission HUD + Power-ups */
@@ -449,14 +439,20 @@
 
     if(isCorrect){
       status="correct"; correctCount++; streak++;
+      /* ⚠️ GHI KHOÁ Ở ĐÂY, không suy lại ở màn tổng kết: `QUESTIONS` bị `pickRound`
+         rút lại mỗi lượt nên ở màn tổng kết không còn biết câu nào đã đúng. */
+      if(it.term && okTerms.indexOf(it.term)===-1) okTerms.push(it.term);
       opts[it.a].classList.add("correct");
       sndOk();
       flyMeteors(opts[it.a]);
       lastGain = AWARD * (boostOn?2:1);
       if(boostOn){ boostOn=false; }             // tiêu hao Động cơ X2
       earned += lastGain;
-      Economy.addAsteroids(lastGain);
-      paintBalance();
+      /* ⚠️ KHÔNG CỘNG VÍ Ở ĐÂY NỮA (chốt 30/07/2026: phải ĐẠT mới có thưởng).
+         Cộng từng câu thì trẻ đúng 1/5 vẫn thấy ví +20 ngay, rồi server trả 0 và
+         `setFromServer()` kéo số dư về — số dư tụt trước mắt, đúng lỗi đã sửa ở
+         phần đọc bài. `earned` giờ là "sẽ nhận nếu đạt", cộng một lần ở
+         `showSummary()`. Ngưỡng đạt do SERVER quyết (`Wallet.QuizPassRatio`). */
       setBubble(t("correct_bubble"), true);
     } else {
       status="incorrect";
@@ -485,6 +481,13 @@
     $("sheet-body").innerHTML = ok ? L(it.ok) : (protectedThisQ? t("shield_body") : L(it.no));
     if(ok) $("sheet-award").innerHTML = '+'+lastGain+' <img src="img/tt.png" alt="'+t("tt_name")+'" />';
     $("sheet-award").classList.toggle("hide", !ok);
+    // Nguồn: mở tab mới (rel=noopener), tên nguồn là danh từ riêng nên KHÔNG dịch.
+    var sc=$("sheet-src");
+    if(it.src){
+      sc.innerHTML = t("src_label")+': <a href="'+it.src.url+'" target="_blank" rel="noopener">'+
+                     AstroQ.esc(it.src.name)+'</a>';
+    }
+    sc.classList.toggle("hide", !it.src);
     sh.classList.add("show");
   }
   function closeSheet(){ $("sheet").classList.remove("show"); }
@@ -501,10 +504,39 @@
     stopTimer();
     var accPct = Math.round(correctCount/TOTAL*100);
     var stars = accPct>=80?3 : accPct>=50?2 : (correctCount>0?1:0);
-    $("sum-mined").textContent = earned;
+    /* ─── CỔNG "ĐẠT" ───
+       Ngưỡng thật nằm ở server (`Wallet.QuizPassRatio`); bản sao dưới đây CHỈ để
+       vẽ giao diện ngay, không phải để quyết định. Server trả `quizPassed` +
+       `awarded` trong phản hồi và `setFromServer()` ghi đè số dư — client có tính
+       lệch thì con số cuối vẫn là của server. */
+    var passed = accPct >= PASS_PCT;
+    var gain = passed ? earned : 0;
+
+    $("sum-mined").textContent = gain;
     $("sum-acc").textContent = accPct+"%";
     $("sum-score").textContent = correctCount+"/"+TOTAL;
     $("sum-badge").textContent = t("badge_name");
+
+    /* Cộng LẠC QUAN đúng một lần, chỉ khi đạt. Chưa đạt thì nói thẳng cần bao
+       nhiêu câu đúng — trẻ phải biết vì sao mình không được gì. */
+    if(passed && gain>0){ Economy.addAsteroids(gain); paintBalance(); }
+    var noteEl = $("sum-note");
+    if(noteEl){
+      noteEl.textContent = passed
+        ? t("pass_note").replace("{n}", gain)
+        : t("fail_note").replace("{need}", PASS_MIN).replace("{total}", TOTAL);
+      noteEl.className = "sum-note " + (passed ? "ok" : "bad");
+    }
+
+    /* Ghi lượt Quiz vào Hồ sơ + Kho Thành Tích. CHỖ DUY NHẤT của trang này —
+       gọi ở showSummary() nên mỗi lượt chỉ báo một lần. Fire-and-forget:
+       bảng tổng kết không được phải chờ mạng. Server tự tính XP và mở huy hiệu. */
+    /* ⚠️ GỬI `terms` KỂ CẢ KHI CHƯA ĐẠT. Cổng "đạt" chỉ chi phối THIÊN THẠCH TÍM;
+       trẻ trả lời đúng một thuật ngữ thì đã hiểu thuật ngữ đó, không có lý gì bắt
+       làm lại cả bài mới cho giải mã. Server kẹp số khoá theo `correct` nên không
+       giải mã được nhiều hơn số câu đúng. */
+    if(window.AstroQProgress) AstroQProgress.quiz({
+      correct: correctCount, total: TOTAL, meteors: gain, terms: okTerms });
     var stEls=$("stars").children;
     for(var i=0;i<stEls.length;i++){ (function(el,on){ setTimeout(function(){ el.classList.toggle("on", on); }, 200+ i*220); })(stEls[i], i<stars); }
     $("summary").classList.add("show");
@@ -541,7 +573,12 @@
   $("act-next").addEventListener("click", function(){ toast(t("next_toast")); restart(); });
 
   function restart(){
+    // Rút đề MỚI cho lượt sau — làm lại mà gặp đúng 5 câu vừa rồi thì trẻ chỉ
+    // học được thứ tự đáp án, không học được kiến thức.
+    QUESTIONS = AstroQQuestions.pickRound(ROUND_SIZE);
+    TOTAL = QUESTIONS.length;
     idx=0; selected=-1; status="idle"; earned=0; correctCount=0; answered=0; locked=false;
+    okTerms=[];
     streak=0; frozen=0; shieldOn=false; boostOn=false; protectedThisQ=false; resetPowerups();
     $("summary").classList.remove("show");
     var stEls=$("stars").children; for(var i=0;i<stEls.length;i++) stEls[i].classList.remove("on");

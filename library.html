@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="vi">
 <head>
@@ -13,6 +14,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/library.css" />
 <script src="js/icons.js"></script>
 <script src="js/ui-common.js"></script>
@@ -22,8 +24,9 @@
 
 <div class="wrap">
   <!-- ============ TOPBAR ============ -->
-  <header class="top">
-    <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Trạm Tri Thức</span></button>
+  <!-- .hub-top = header dùng chung ở css/page-shell.css -->
+  <header class="hub-top">
+    <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về khu Tri Thức</span></button>
     <label class="search"><span id="ic-search"></span><input id="q" type="search" placeholder="Tìm bài viết…" data-i18n-ph="search_ph" /></label>
     <div class="srcfilter" id="srcfilter" role="group" data-i18n-aria="a_source" aria-label="Nguồn">
       <button data-src="all" class="active" data-i18n="src_all">Tất cả</button>
@@ -47,7 +50,7 @@
         <div class="side-title"><span id="ic-award"></span>[ <span data-i18n="progress">TIẾN ĐỘ</span> ]</div>
         <div class="stats">
           <div class="stat read"><span class="s-ic" id="ic-read"></span><span class="s-b"><span class="s-v" id="st-read">0</span><span class="s-l" data-i18n="st_read">Đã đọc (bài)</span></span></div>
-          <div class="stat coll"><span class="s-ic"><img src="img/tt.png" alt="tt" /></span><span class="s-b"><span class="s-v" id="st-coll">0</span><span class="s-l" data-i18n="st_coll">Đã thu thập</span></span></div>
+          <div class="stat coll"><span class="s-ic" id="ic-total"></span><span class="s-b"><span class="s-v" id="st-coll">0</span><span class="s-l" data-i18n="st_coll">Tổng bài viết</span></span></div>
         </div>
       </div>
     </aside>
@@ -84,6 +87,11 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Báo tiến độ lên server (Hồ sơ + Kho Thành Tích).
+     CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
+     phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
+     dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
@@ -94,24 +102,26 @@
   var I18N={
     vi:{
       tt_name:"Thiên thạch tím",
-      a_source:"Nguồn", title:"AstroQ — Thư Viện Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
+      a_source:"Nguồn", title:"AstroQ — Thư Viện Khám Phá", back:"Về khu Tri Thức", search_ph:"Tìm bài viết…",
       src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
-      st_read:"Đã đọc (bài)", st_coll:"Đã thu thập", articles:"Bài viết", all_topics:"Tất cả chủ đề",
+      st_read:"Đã đọc (bài)", st_coll:"Tổng bài viết", articles:"Bài viết", all_topics:"Tất cả chủ đề",
       cat_astronomy:"Thiên văn", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot",
       featured:"Bài viết nổi bật", read_now:"Đọc Ngay", src_link:"Nguồn",
-      reading:"Đang đọc…", claim:"Đã đọc xong · Nhận", claimed:"✓ Đã nhận thưởng đọc", read_badge:"Đã đọc",
+      reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
+      unread_badge:"Chưa đọc",
       quiz_cta:"LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU", credit:"Nguồn dữ liệu",
-      toast_claim:"+{n} {tt} · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
+      toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
     en:{
       tt_name:"Purple Meteor",
       a_source:"Source", title:"AstroQ — Discovery Library", back:"Back to Knowledge Station", search_ph:"Search articles…",
       src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
-      st_read:"Read (articles)", st_coll:"Collected", articles:"Articles", all_topics:"All topics",
+      st_read:"Read (articles)", st_coll:"Total articles", articles:"Articles", all_topics:"All topics",
       cat_astronomy:"Astronomy", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots",
       featured:"Featured article", read_now:"Read Now", src_link:"Source",
-      reading:"Reading…", claim:"Finished · Claim", claimed:"✓ Reading reward claimed", read_badge:"Read",
+      reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
+      unread_badge:"Unread",
       quiz_cta:"TAKE THE QUIZ IF YOU UNDERSTOOD IT", credit:"Data source",
-      toast_claim:"+{n} {tt} · Knowledge loaded!", none:"No matching articles found." }
+      toast_claim:"Saved to your profile · Knowledge loaded!", none:"No matching articles found." }
   };
   var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
@@ -123,7 +133,7 @@
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
   var IMG="https://images-assets.nasa.gov/image/";
   var ARTICLES=[
-    { id:"lib-nebula", hero:true, src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"], reward:15,
+    { id:"lib-nebula", hero:true, src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"],
       img:IMG+"PIA25433/PIA25433~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/mission/webb/",
       title:{vi:"Tinh vân Đại Bàng — vườn ươm của các ngôi sao",en:"The Eagle Nebula — a nursery of stars"},
       body:{vi:["Trong vũ trụ có những đám mây khí và bụi khổng lồ gọi là <b>tinh vân</b>. Bên trong chúng, khí co lại và nóng dần lên cho tới khi bùng cháy thành những ngôi sao mới.",
@@ -132,7 +142,7 @@
                 "The Eagle Nebula is famous for the 'Pillars of Creation' — towers of gas trillions of km tall where many stars are being born."]},
       term:{who:"comet", word:{vi:"Tinh vân",en:"Nebula"}, text:{vi:"<b>Tinh vân</b> là 'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",en:"A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱"}} },
 
-    { id:"lib-andromeda", src:"NASA", cat:"astronomy", em:"🌀", c:["#c6d8ff","#5a78c8","#20305e"], reward:12,
+    { id:"lib-andromeda", src:"NASA", cat:"astronomy", em:"🌀", c:["#c6d8ff","#5a78c8","#20305e"],
       img:IMG+"PIA04921/PIA04921~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/",
       title:{vi:"Thiên hà Tiên Nữ — người hàng xóm khổng lồ",en:"The Andromeda Galaxy — our giant neighbour"},
       body:{vi:["<b>Thiên hà</b> là một tập hợp khổng lồ gồm hàng trăm tỉ ngôi sao. Trái Đất của chúng ta nằm trong thiên hà Dải Ngân Hà.",
@@ -141,7 +151,7 @@
                 "Andromeda is the nearest big galaxy to us, about 2.5 million light-years away — and it's slowly heading toward the Milky Way!"]},
       term:{who:"byte", word:{vi:"Năm ánh sáng",en:"Light-year"}, text:{vi:"<b>Năm ánh sáng</b> là quãng đường ánh sáng đi trong 1 năm — cực kỳ xa nhé! 🤖",en:"A <b>light-year</b> is how far light travels in one year — incredibly far! 🤖"}} },
 
-    { id:"lib-mars", src:"NASA", cat:"robot", em:"🔴", c:["#ffcaa8","#d1642f","#5e2410"], reward:12,
+    { id:"lib-mars", src:"NASA", cat:"robot", em:"🔴", c:["#ffcaa8","#d1642f","#5e2410"],
       img:IMG+"PIA21496/PIA21496~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://mars.nasa.gov/",
       title:{vi:"Robot Perseverance khám phá Sao Hỏa",en:"Perseverance rover exploring Mars"},
       body:{vi:["<b>Xe tự hành</b> (rover) là robot 6 bánh do NASA gửi lên Sao Hỏa. Nó tự lái, chụp ảnh và thu thập mẫu đá.",
@@ -150,7 +160,7 @@
                 "Perseverance is looking for signs of ancient life and even makes oxygen from Mars' air to help future explorers."]},
       term:{who:"byte", word:{vi:"Xe tự hành",en:"Rover"}, text:{vi:"<b>Rover</b> là robot biết tự lái trên hành tinh khác — giống anh em họ của tớ! 🤖",en:"A <b>rover</b> is a robot that drives itself on another planet — like my cousin! 🤖"}} },
 
-    { id:"lib-blackhole", src:"NASA", cat:"quantum", em:"🕳️", c:["#ffe1a8","#f2a53c","#3a2410"], reward:13,
+    { id:"lib-blackhole", src:"NASA", cat:"quantum", em:"🕳️", c:["#ffe1a8","#f2a53c","#3a2410"],
       img:IMG+"PIA23122/PIA23122~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/universe/black-holes/",
       title:{vi:"Hố đen khổng lồ ở thiên hà M87",en:"The giant black hole in galaxy M87"},
       body:{vi:["<b>Hố đen</b> là nơi có lực hấp dẫn mạnh đến mức ngay cả ánh sáng cũng không thoát ra được.",
@@ -159,7 +169,7 @@
                 "At the center of galaxy M87 sits a black hole billions of times heavier than the Sun. In 2019 humans first photographed its 'shadow'."]},
       term:{who:"comet", word:{vi:"Hấp dẫn",en:"Gravity"}, text:{vi:"<b>Hấp dẫn</b> là lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",en:"<b>Gravity</b> is the pull that draws things together — a black hole pulls so hard it even traps light! 🐱"}} },
 
-    { id:"lib-exoplanet", src:"AI & Tech", cat:"ai", em:"🪐", c:["#e6c6ff","#a06be0","#3a1f6e"], reward:12,
+    { id:"lib-exoplanet", src:"AI & Tech", cat:"ai", em:"🪐", c:["#e6c6ff","#a06be0","#3a1f6e"],
       img:IMG+"PIA22082/PIA22082~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/exoplanets/",
       title:{vi:"AI giúp tìm hành tinh ngoài Hệ Mặt Trời",en:"AI helps find planets beyond the Solar System"},
       body:{vi:["<b>Ngoại hành tinh</b> là những hành tinh quay quanh một ngôi sao khác, không phải Mặt Trời của chúng ta.",
@@ -168,7 +178,7 @@
                 "Computers use <b>artificial intelligence</b> to scan millions of stars and spot tiny dips in brightness — a sign a planet passed in front."]},
       term:{who:"byte", word:{vi:"Trí tuệ nhân tạo",en:"Artificial Intelligence"}, text:{vi:"<b>AI</b> giúp máy tính học từ ví dụ để tự nhận ra quy luật — như cách tớ học vậy! 🤖",en:"<b>AI</b> lets computers learn from examples to spot patterns by themselves — just like me! 🤖"}} },
 
-    { id:"lib-saturn", src:"NASA", cat:"astronomy", em:"🪐", c:["#ffe6b0","#d9a441","#5e3f14"], reward:10,
+    { id:"lib-saturn", src:"NASA", cat:"astronomy", em:"🪐", c:["#ffe6b0","#d9a441","#5e3f14"],
       img:IMG+"PIA22766/PIA22766~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/saturn/",
       title:{vi:"Tàu Cassini và vành đai Sao Thổ",en:"Cassini and Saturn's rings"},
       body:{vi:["Sao Thổ nổi tiếng với những <b>vành đai</b> tuyệt đẹp làm từ hàng tỉ mảnh băng và đá, từ nhỏ như hạt cát đến to như ngôi nhà.",
@@ -177,7 +187,7 @@
                 "The Cassini spacecraft orbited Saturn for 13 years, sending back countless images and discoveries about the planet and its moons."]},
       term:{who:"comet", word:{vi:"Vành đai",en:"Rings"}, text:{vi:"<b>Vành đai</b> Sao Thổ không phải một khối liền — nó là hàng tỉ viên băng bay quanh cùng nhau! 🐱",en:"Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱"}} },
 
-    { id:"lib-gaia", src:"ESA", cat:"astronomy", em:"🛰️", c:["#b6f5cf","#3fd6a0","#12503a"], reward:11,
+    { id:"lib-gaia", src:"ESA", cat:"astronomy", em:"🛰️", c:["#b6f5cf","#3fd6a0","#12503a"],
       img:"", credit:"ESA / Gaia / DPAC", url:"https://www.esa.int/Science_Exploration/Space_Science/Gaia",
       title:{vi:"Tàu Gaia của ESA vẽ bản đồ 3D Ngân Hà",en:"ESA's Gaia maps the Milky Way in 3D"},
       body:{vi:["<b>ESA</b> là Cơ quan Vũ trụ châu Âu. Tàu Gaia của họ đo vị trí và chuyển động của gần 2 tỉ ngôi sao.",
@@ -186,7 +196,7 @@
                 "From this, scientists build the most detailed 3D <b>star map</b> of our galaxy ever made."]},
       term:{who:"byte", word:{vi:"Bản đồ sao",en:"Star map"}, text:{vi:"<b>Bản đồ sao</b> cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",en:"A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖"}} },
 
-    { id:"lib-qubit", src:"AI & Tech", cat:"quantum", em:"⚛️", c:["#c6ffe6","#4ade80","#155e40"], reward:12,
+    { id:"lib-qubit", src:"AI & Tech", cat:"quantum", em:"⚛️", c:["#c6ffe6","#4ade80","#155e40"],
       img:"", credit:"MIT / IBM Research", url:"https://www.ibm.com/quantum",
       title:{vi:"Máy tính lượng tử là gì?",en:"What is a quantum computer?"},
       body:{vi:["Máy tính thường dùng các bit chỉ mang giá trị 0 hoặc 1. Máy tính lượng tử dùng <b>qubit</b>, có thể mang cả 0 và 1 cùng lúc.",
@@ -203,9 +213,11 @@
   function libReadCount(){ var s=readSet(); return ARTICLES.filter(function(a){ return s.indexOf(a.id)>=0; }); }
 
   function paintBalance(){ $("bal").textContent=Economy.getAsteroids(); }
-  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
+  /* ⚠️ Ô thứ hai TRƯỚC ĐÂY cộng tổng tt thưởng đọc bài. Đọc bài không thưởng nữa
+     nên con số đó luôn là 0 — một ô thống kê luôn bằng 0 đọc ra thành "app hỏng".
+     Đổi sang TỔNG SỐ BÀI để cặp số thành "đã đọc / tổng", có nghĩa với trẻ. */
   function paintStats(){ var read=libReadCount(); $("st-read").textContent=read.length;
-    $("st-coll").textContent=read.reduce(function(s,a){return s+a.reward;},0); }
+    $("st-coll").textContent=ARTICLES.length; }
 
   /* ===== Filter state ===== */
   var fSearch="", fSrc="all", fCat="all";
@@ -225,12 +237,12 @@
     var a=ARTICLES.filter(function(x){return x.hero;})[0]; if(!a) return;
     var read=isRead(a.id);
     $("hero-wrap").innerHTML =
-      '<article class="hero" data-id="'+a.id+'">'+imgboxHtml(a)+
-        '<div class="hero-body">'+badgeHtml(a)+
-          '<div class="hero-eyebrow">'+t("featured")+'</div>'+
+      '<article class="feat" data-id="'+a.id+'">'+imgboxHtml(a)+
+        '<div class="feat-body">'+badgeHtml(a)+
+          '<div class="feat-eyebrow">'+t("featured")+'</div>'+
           '<h1>'+L(a.title)+'</h1>'+
           '<p>'+L({vi:a.body.vi[0].replace(/<[^>]+>/g,""),en:a.body.en[0].replace(/<[^>]+>/g,"")})+'</p>'+
-          '<button class="read-btn">'+lic("book")+' '+t("read_now")+' (+'+a.reward+' <img src="img/tt.png" alt="tt" />)</button>'+
+          '<button class="read-btn">'+lic("book")+' '+t("read_now")+'</button>'+
         '</div>'+
       '</article>';
   }
@@ -250,7 +262,7 @@
     box.innerHTML=list.map(function(a){
       var read=isRead(a.id);
       var r=read?'<span class="r done">'+lic("book")+' '+t("read_badge")+'</span>'
-                :'<span class="r"><img src="img/tt.png" alt="tt" />+'+a.reward+'</span>';
+                :'<span class="r">'+lic("book")+' '+t("unread_badge")+'</span>';
       return '<article class="card" data-id="'+a.id+'">'+imgboxHtml(a)+
         '<div class="cbody">'+badgeHtml(a)+'<h3>'+L(a.title)+'</h3>'+
           '<div class="foot">'+r+'<span class="cat-dot">'+t("cat_"+a.cat)+'</span></div>'+
@@ -296,15 +308,24 @@
     if(isRead(a.id)){ btn.className="r-claim done"; btn.disabled=true; btn.textContent=t("claimed"); }
     else{ btn.className="r-claim"; btn.disabled=true; rLeft=READ_SECS; btn.textContent=t("reading")+" ("+rLeft+"s)";
       rTimer=setInterval(function(){ rLeft--;
-        if(rLeft<=0){ clearInterval(rTimer); btn.disabled=false; btn.innerHTML=t("claim")+' +'+a.reward+' <img src="img/tt.png" alt="tt" />'; }
+        if(rLeft<=0){ clearInterval(rTimer); btn.disabled=false; btn.textContent=t("claim"); }
         else btn.textContent=t("reading")+" ("+rLeft+"s)"; },1000); }
     $("reader").classList.add("show");
   }
   function closeReader(){ clearInterval(rTimer); $("reader").classList.remove("show"); }
   function claim(){
     if(!curArt || isRead(curArt.id)) return;
-    markRead(curArt.id); Economy.addAsteroids(curArt.reward); paintBalance(); bumpGem();
-    toast(t("toast_claim").replace("{n}",curArt.reward));
+    markRead(curArt.id);
+    /* ĐỌC BÀI KHÔNG THƯỞNG THIÊN THẠCH TÍM (chốt 30/07/2026).
+       ⚠️ ĐỪNG THÊM LẠI `Economy.addAsteroids(...)`. Ở đây nó còn sai nặng hơn
+          `learn.html`: hai bài `lib-nebula` (15) và `lib-blackhole` (13) VƯỢT trần
+          `Wallet.MaxPerLesson` cũ (12), nên ngay cả khi client có gửi số thưởng thì
+          trẻ vẫn bị hụt so với con số nó vừa đọc trên nút. tt chỉ đến từ LÀM QUIZ
+          ĐẠT (và thu trong mini-game); trần server giờ là 0.
+       Vẫn ghi tiến độ — cùng khoá `astroq-read` với learn.html, server chống đếm
+       trùng theo id bài. */
+    if(window.AstroQProgress) AstroQProgress.lesson(curArt.id);
+    toast(t("toast_claim"));
     var btn=$("r-claim"); btn.className="r-claim done"; btn.disabled=true; btn.textContent=t("claimed");
     renderHero(); render(); renderCats(); paintStats();
   }
@@ -319,7 +340,8 @@
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     $("ic-search").innerHTML=lic("search"); $("ic-cat").innerHTML=lic("layers"); $("ic-award").innerHTML=lic("award");
-    $("ic-read").innerHTML=lic("book"); $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");
+    $("ic-read").innerHTML=lic("book"); $("ic-total").innerHTML=lic("layers");
+    $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");
     renderHero(); render(); renderCats(); paintStats();
     if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
   }
@@ -332,7 +354,7 @@
     $("srcfilter").querySelectorAll("button").forEach(function(x){ x.classList.toggle("active", x===b); }); render(); });
   $("cats").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest(".cat"):null; if(!b) return;
     fCat=b.getAttribute("data-cat"); renderCats(); render(); });
-  $("hero-wrap").addEventListener("click", function(e){ var h=e.target.closest?e.target.closest(".hero"):null; if(h) openReader(h.getAttribute("data-id")); });
+  $("hero-wrap").addEventListener("click", function(e){ var h=e.target.closest?e.target.closest(".feat"):null; if(h) openReader(h.getAttribute("data-id")); });
   $("grid").addEventListener("click", function(e){ var c=e.target.closest?e.target.closest(".card"):null; if(c) openReader(c.getAttribute("data-id")); });
   $("r-close").addEventListener("click", closeReader);
   $("r-claim").addEventListener("click", claim);

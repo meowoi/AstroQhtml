@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Sổ Tay Thuật Ngữ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/codex.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/codex-terms.js"></script>
+<script src="economy.js"></script>
+<script src="js/progress.js"></script>
+<!-- ⚠️ CÓ nạp js/firebase-auth.js: trang này cần ID token để gọi
+     GET /me/achievements (lấy `progress.terms` — thuật ngữ đã trả lời đúng).
+     Cùng lý do như profile/achievements/specimen-vault; đã có trong danh sách cho
+     phép ở check_pages.py mục [4]. Game/quiz/learn/library vẫn KHÔNG nạp. -->
+<script type="module" src="js/firebase-auth.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về khu Tri Thức</span></button>
+    <span class="hub-tag">[ TERM_CODEX ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 data-i18n="h1">Sổ Tay Thuật Ngữ</h1>
+    <p data-i18n="sub">Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.</p>
+  </section>
+
+  <!-- Dải nhắc khi chưa đăng nhập / mất mạng — KHÔNG bịa trạng thái giải mã. -->
+  <div class="banner" id="banner" hidden><span id="banner-txt"></span></div>
+
+  <section class="panel">
+    <div class="panel-tag" data-i18n="prog_tag">[ TIẾN ĐỘ GIẢI MÃ ]</div>
+    <div class="cx-prog">
+      <div class="cx-prog-bar" role="progressbar" id="prog" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="cx-prog-fill" id="prog-fill"></span>
+      </div>
+      <div class="cx-prog-num"><b id="prog-n">0</b><span id="prog-total">/0</span></div>
+    </div>
+
+    <div class="filters">
+      <span class="lbl" data-i18n="f_status">Trạng thái</span>
+      <div class="seg" role="group" id="seg-status"></div>
+    </div>
+
+    <div class="cx-grid" id="grid"></div>
+    <p class="cx-none" id="none" hidden data-i18n="none">Không có thuật ngữ nào ở mục này.</p>
+  </section>
+
+  <p class="cx-note" data-i18n="note">* Nội dung do đội ngũ AstroQ biên soạn lại cho trẻ em từ nguồn NASA, chưa qua rà soát chuyên môn.</p>
+</div>
+
+<!-- ===== Màn soi chi tiết một thuật ngữ ===== -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" hidden>
+  <div class="cx-card">
+    <button class="cx-x" id="m-close" type="button" data-i18n-aria="a_close" aria-label="Đóng">&times;</button>
+
+    <div class="cx-head">
+      <span class="cx-ic" id="m-ic"></span>
+      <div>
+        <span class="cx-badge" id="m-state"></span>
+        <h2 id="m-title">—</h2>
+        <p class="cx-en" id="m-en">—</p>
+        <p class="cx-an" id="m-an">—</p>
+      </div>
+    </div>
+
+    <!-- Sơ đồ kỹ thuật: 3 nhãn quanh icon. Vẽ bằng SVG + CSS, 0 byte ảnh. -->
+    <div class="cx-diagram" id="m-dg" aria-hidden="true"></div>
+
+    <div class="cx-body" id="m-body">
+      <h3 data-i18n="h_def">Định nghĩa</h3>
+      <p id="m-def">—</p>
+      <h3 data-i18n="h_gr">Ví dụ dễ hiểu</h3>
+      <p id="m-gr">—</p>
+    </div>
+
+    <!-- Chưa giải mã: nói rõ cách mở, hoặc nói thật là chưa có câu hỏi. -->
+    <div class="cx-locked" id="m-locked" hidden>
+      <p id="m-locked-txt">—</p>
+      <button class="pbtn" id="m-quiz" type="button" data-i18n="go_quiz">Làm Quiz để giải mã</button>
+    </div>
+
+    <p class="cx-src" id="m-src"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+  var LANG = AstroQ.getLang();
+
+  var I18N = {
+    vi: {
+      title:"AstroQ — Sổ Tay Thuật Ngữ", back:"Về khu Tri Thức",
+      h1:"Sổ Tay Thuật Ngữ",
+      sub:"Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
+      prog_tag:"[ TIẾN ĐỘ GIẢI MÃ ]", f_status:"Trạng thái",
+      s_all:"Tất cả", s_done:"Đã giải mã", s_lock:"Chưa giải mã",
+      none:"Không có thuật ngữ nào ở mục này.",
+      note:"* Nội dung do đội ngũ AstroQ biên soạn lại cho trẻ em từ nguồn NASA, chưa qua rà soát chuyên môn.",
+      st_done:"Đã giải mã", st_lock:"Chưa giải mã", st_soon:"Sắp có câu hỏi",
+      h_def:"Định nghĩa", h_gr:"Ví dụ dễ hiểu",
+      open:"Mở sổ tay", how:"Cách mở khoá",
+      lock_hint:"Trả lời đúng câu hỏi về thuật ngữ này trong Quiz là thẻ được giải mã ngay.",
+      soon_hint:"Ngân hàng câu hỏi chưa có câu nào về thuật ngữ này, nên hiện chưa có cách giải mã. Chúng tôi đang bổ sung.",
+      go_quiz:"Làm Quiz để giải mã",
+      src_lbl:"Nguồn:", a_close:"Đóng", a_lang:"Language / Ngôn ngữ",
+      tt_name:"Thiên thạch tím",
+      b_auth:"Chưa đăng nhập nên chưa đọc được tiến độ giải mã — các thẻ dưới đây đang hiện ở trạng thái chưa giải mã.",
+      b_net:"Không kết nối được máy chủ — các thẻ dưới đây đang hiện ở trạng thái chưa giải mã."
+    },
+    en: {
+      title:"AstroQ — Terminology Codex", back:"Back to Knowledge",
+      h1:"Terminology Codex",
+      sub:"Answer a term correctly in the Quiz and its card is decoded.",
+      prog_tag:"[ DECODING PROGRESS ]", f_status:"Status",
+      s_all:"All", s_done:"Decoded", s_lock:"Not decoded",
+      none:"No terms in this group.",
+      note:"* Content rewritten for children by the AstroQ team from NASA sources; not yet reviewed by a subject expert.",
+      st_done:"Decoded", st_lock:"Not decoded", st_soon:"Questions coming",
+      h_def:"Definition", h_gr:"An easy example",
+      open:"Open codex", how:"How to unlock",
+      lock_hint:"Answer a Quiz question about this term correctly and the card is decoded right away.",
+      soon_hint:"The question bank has no questions about this term yet, so there is no way to decode it at the moment. We are adding them.",
+      go_quiz:"Take the Quiz to decode",
+      src_lbl:"Source:", a_close:"Close", a_lang:"Language / Ngôn ngữ",
+      tt_name:"Purple Meteor",
+      b_auth:"Not signed in, so decoding progress could not be read — the cards below are shown as not decoded.",
+      b_net:"Could not reach the server — the cards below are shown as not decoded."
+    }
+  };
+  function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
+
+  /* ⚠️ `done` là NGUỒN SỰ THẬT TỪ SERVER (`progress.terms`), KHÔNG có bản sao
+     trong máy. Cố ý: đoán ở client thì lúc chưa đăng nhập sẽ hiện "đã giải mã"
+     cho thứ chưa hề học — cùng nguyên tắc với achievements.html và missions.html
+     ("chưa đọc được thì hiện dấu —, KHÔNG hiện 0"). Ở đây tương đương: chưa đọc
+     được thì hiện tất cả ở trạng thái chưa giải mã, kèm dải nhắc nói rõ lý do. */
+  var done = null;             // Set khoá thuật ngữ · null = chưa đọc được
+  var status = "all";          // all | done | lock
+  var TERMS = AstroQCodex.all();
+
+  /* ================= Trạng thái một thẻ =================
+     BA trạng thái, không phải hai. `soon` là thuật ngữ CHƯA CÓ câu hỏi nào trong
+     ngân hàng — hứa "làm Quiz để giải mã" cho nó là hứa một việc không làm được
+     (bài học js/specimens.js: đừng viết "Mở khoá tại Mission 02"). */
+  function stateOf(term){
+    if(done && AstroQCodex.isDecoded(term, done)) return "done";
+    return AstroQCodex.hasPath(term) ? "lock" : "soon";
+  }
+
+  /* ================= Lưới thẻ ================= */
+  function render(){
+    var list = TERMS.filter(function(x){
+      var st = stateOf(x);
+      if(status==="done") return st==="done";
+      if(status==="lock") return st!=="done";
+      return true;
+    });
+
+    // Đã giải mã lên TRƯỚC — trẻ thấy ngay thành quả của mình (cùng lối
+    // achievements.html sắp huy hiệu đã mở lên đầu).
+    list.sort(function(a,b){
+      var sa = stateOf(a)==="done" ? 0 : 1, sb = stateOf(b)==="done" ? 0 : 1;
+      return sa - sb;
+    });
+
+    $("grid").innerHTML = list.map(function(x){
+      var st = stateOf(x), tx = AstroQCodex.text(x.id, LANG);
+      var badge = st==="done" ? t("st_done") : st==="soon" ? t("st_soon") : t("st_lock");
+      return '<button type="button" class="cx-item '+st+'" data-id="'+x.id+'" aria-label="'+
+               AstroQ.esc(tx.t)+' — '+badge+'">'+
+        '<span class="cx-i-ic">'+lic(x.ic)+'</span>'+
+        '<span class="cx-i-badge">'+badge+'</span>'+
+        '<span class="cx-i-t">'+AstroQ.esc(tx.t)+'</span>'+
+        '<span class="cx-i-en">'+AstroQ.esc(x[LANG==="en"?"vi":"en"].t)+'</span>'+
+        '<span class="cx-i-an">“'+AstroQ.esc(tx.an)+'”</span>'+
+        // Chưa giải mã thì che phần NỘI DUNG, không che đường vào: thẻ vẫn bấm được
+        // để trẻ đọc "cách mở khoá". Che bằng ô vuông, KHÔNG bằng filter:grayscale
+        // (trên nền gradient sáng grayscale cho ra khối SÁNG HƠN thẻ dùng được).
+        (st==="done"
+          ? '<span class="cx-i-sum">'+AstroQ.esc(tx.sum)+'</span>'
+          : '<span class="cx-i-red" aria-hidden="true"><i style="width:92%"></i><i style="width:64%"></i></span>')+
+        '<span class="cx-i-go">'+(st==="done"?t("open"):t("how"))+' ›</span>'+
+      '</button>';
+    }).join("");
+
+    $("none").hidden = list.length > 0;
+    paintProg();
+  }
+
+  function paintProg(){
+    var total = TERMS.length;
+    var n = done ? TERMS.filter(function(x){ return AstroQCodex.isDecoded(x, done); }).length : 0;
+    var pct = total ? Math.round(n/total*100) : 0;
+    $("prog-n").textContent = n;
+    $("prog-total").textContent = "/"+total;
+    $("prog-fill").style.width = pct+"%";
+    $("prog").setAttribute("aria-valuenow", pct);
+  }
+
+  /* ================= Bộ lọc ================= */
+  function renderSeg(){
+    /* Nhồi CHỮ ĐÃ DỊCH vào mảng, không nhồi khoá — cùng lý do như `banner()`.
+       `renderSeg()` luôn được gọi trong `applyLang()` nên chữ luôn đúng ngôn ngữ. */
+    var opts = [["all", t("s_all")], ["done", t("s_done")], ["lock", t("s_lock")]];
+    $("seg-status").innerHTML = opts.map(function(o){
+      return '<button type="button" data-v="'+o[0]+'"'+(status===o[0]?' class="on"':'')+
+             ' aria-pressed="'+(status===o[0])+'">'+o[1]+'</button>';
+    }).join("");
+  }
+  $("seg-status").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-v]"); if(!b) return;
+    status = b.getAttribute("data-v"); renderSeg(); render();
+  });
+
+  /* ================= Màn soi chi tiết ================= */
+  var lastFocus = null;
+
+  function openTerm(id){
+    var x = AstroQCodex.get(id); if(!x) return;
+    var tx = AstroQCodex.text(id, LANG), st = stateOf(x);
+    lastFocus = document.activeElement;
+
+    $("m-ic").innerHTML = lic(x.ic);
+    $("m-state").textContent = st==="done" ? t("st_done") : st==="soon" ? t("st_soon") : t("st_lock");
+    $("m-state").className = "cx-badge "+st;
+    $("m-title").textContent = tx.t;
+    $("m-en").textContent = x[LANG==="en"?"vi":"en"].t;
+    $("m-an").textContent = "“"+tx.an+"”";
+
+    $("m-dg").innerHTML = tx.dg.map(function(d){
+      return '<span class="cx-dg-i">'+AstroQ.esc(d)+'</span>';
+    }).join("");
+
+    // Chỉ hiện nội dung khi ĐÃ giải mã — đó là phần thưởng của việc học.
+    $("m-body").hidden = st!=="done";
+    if(st==="done"){ $("m-def").textContent = tx.def; $("m-gr").textContent = tx.gr; }
+
+    $("m-locked").hidden = st==="done";
+    if(st!=="done"){
+      $("m-locked-txt").textContent = st==="soon" ? t("soon_hint") : t("lock_hint");
+      // Chưa có câu hỏi thì KHÔNG dẫn sang Quiz — dẫn đi là hứa hão.
+      $("m-quiz").hidden = st==="soon";
+    }
+
+    $("m-src").innerHTML = x.src.length
+      ? t("src_lbl")+" "+x.src.map(function(s){
+          return '<a href="'+s.url+'" target="_blank" rel="noopener">'+AstroQ.esc(s.label)+'</a>';
+        }).join(" · ")
+      : "";
+
+    $("modal").hidden = false;
+    $("m-close").focus();
+  }
+
+  function closeModal(){
+    $("modal").hidden = true;
+    // Trả tiêu điểm về đúng thẻ vừa xem (cùng cách specimen-vault.html làm).
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  $("grid").addEventListener("click", function(e){
+    var b = e.target.closest(".cx-item[data-id]"); if(!b) return;
+    openTerm(b.getAttribute("data-id"));
+  });
+  $("m-close").addEventListener("click", closeModal);
+  $("modal").addEventListener("click", function(e){ if(e.target===$("modal")) closeModal(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key==="Escape" && !$("modal").hidden) closeModal();
+  });
+  $("m-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+  $("back").addEventListener("click", function(){ location.href = "learn.html"; });
+
+  /* ================= Số thật từ server ================= */
+  /* ⚠️ NHẬN CHỮ ĐÃ DỊCH, không nhận khoá. Nhận khoá (`banner("b_auth")`) thì khoá
+     i18n không xuất hiện dưới dạng `t("…")` trong mã, và phép kiểm "khoá khai mà
+     không dùng" của check_pages báo hỏng — đúng ra là báo ĐÚNG, vì lúc đó không ai
+     chứng minh được khoá đó có thật được dùng. */
+  function banner(msg){
+    $("banner-txt").textContent = msg;
+    $("banner").hidden = false;
+  }
+
+  function loadProgress(){
+    if(!window.AstroQProgress || !AstroQProgress.achievements){ banner(t("b_auth")); return; }
+    AstroQProgress.achievements().then(function(r){
+      if(!r || !r.ok || !r.data){ banner(r && r.reason==="auth" ? t("b_auth") : t("b_net")); render(); return; }
+      var p = r.data.progress || {};
+      done = new Set(p.terms || []);
+      $("banner").hidden = true;
+      render();
+    }, function(){ banner(t("b_net")); render(); });
+  }
+
+  /* ================= Ngôn ngữ ================= */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG; document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    if(!$("banner").hidden) banner(done===null ? t("b_auth") : t("b_net"));
+    renderSeg(); render();
+  }
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  /* ⚠️ GỌI `applyLang(LANG)` MỘT LẦN TRƯỚC `initLang`. `AstroQ.initLang()` chỉ gắn
+     nút VI/EN và lắng nghe tab khác đổi ngôn ngữ — nó KHÔNG tự chạy callback lần
+     đầu. Thiếu dòng này thì `AstroQ.applyTexts()` không chạy, và mọi chữ khai bằng
+     `data-i18n` trong markup (h1, phụ đề, nhãn bộ lọc…) đứng nguyên tiếng Việt kể
+     cả khi đã chọn EN — phần do JS sinh thì lại đúng EN, nên nửa trang một thứ
+     tiếng. Đo bằng Chromium mới thấy: `#m-state` ra "Not decoded" mà `h1` vẫn là
+     "Sổ Tay Thuật Ngữ". Cùng thứ tự gọi như achievements.html. */
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  loadProgress();
+})();
+</script>
+</body>
+</html>
