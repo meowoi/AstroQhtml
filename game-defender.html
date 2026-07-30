@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-defender.css" />
 <script src="js/ui-common.js"></script>
 </head>
@@ -32,456 +33,1034 @@
   </div>
 </header>
 
-<!-- ===== Sân chơi ===== -->
 <div class="stage" id="stage">
-  <canvas id="cv"></canvas>
+  <!-- Bảng HUD nằm PHÍA TRÊN canvas (không đè lên sân) — nếu đè thì chip số liệu sẽ
+       che mất vật thể đang bay tới trong khi hitbox vẫn ở đó = mất giáp oan. -->
+  <div class="hud" id="hud">
+    <div class="hullwrap" id="hullwrap">
+      <span class="k" data-i18n="hull">Giáp trạm</span>
+      <span class="hullbar" id="hullbar"><i id="hull-fill"></i></span>
+      <span class="pct" id="hull-pct">100%</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Điểm</span><span class="v" id="score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="mined">0</span>
+    </div>
 
-  <div class="hud">
-    <div class="hullwrap"><span class="k" data-i18n="hull">Máu tàu</span><span class="hullbar" id="hullbar"><i id="hull-fill"></i></span><span class="pct" id="hull-pct">100%</span></div>
-    <div class="chip"><span class="k" data-i18n="hud_score">Điểm</span><span class="v" id="score">0</span></div>
-    <div class="chip mtr"><img src="img/tt.png" alt="tt" /><span class="v" id="mined">0</span></div>
-  </div>
-
-  <!-- Start -->
-  <div class="ov show" id="ov-start">
-    <div class="ov-card">
-      <span class="ov-tag">[ MISSION_BRIEF ]</span>
-      <div class="ov-ic">🛰️</div>
-      <h2 data-i18n="start_title">Space Defender</h2>
-      <div class="how">
-        <span data-i18n-html="how1">🎯 <b>Ngắm</b>: rê chuột / phím ◀ ▶ để xoay pháo.</span>
-        <span data-i18n-html="how2">🔫 <b>Bắn</b>: chuột trái hoặc phím Space.</span>
-        <span data-i18n-html="how3">💜 Bắn <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví.</span>
-        <span data-i18n-html="how4">⭐ Bắn <b>Thiên thạch vàng</b>: mở câu đố Thiên văn.</span>
-        <span data-i18n-html="how5">🛡️ Đừng để thiên thạch lọt qua — tàu sẽ mất máu!</span>
-      </div>
-      <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
-      <div class="acts"><button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button></div>
+    <div class="hud-btns">
+      <!-- Pause: icon "⏸" khi đang chơi, "▶" khi đã tạm dừng (class .off) -->
+      <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </button>
+      <!-- Âm thanh: bật (loa) / tắt (loa gạch chéo) -->
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
     </div>
   </div>
 
-  <!-- Quiz (gold meteor) -->
-  <div class="ov ov-quiz" id="ov-quiz">
-    <div class="ov-card">
-      <span class="ov-tag">[ ASTRO_QUIZ ]</span>
-      <div class="ov-ic">⭐</div>
-      <div class="q-text" id="q-text">…</div>
-      <div class="q-opts" id="q-opts"></div>
+  <!-- .play = sân + overlay. Overlay chỉ phủ vùng này nên không che thanh HUD
+       (nút Âm thanh lúc nào cũng bấm được) và thẻ vẫn đủ chỗ trên điện thoại. -->
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <canvas id="cv"></canvas>
     </div>
-  </div>
 
-  <!-- Game over -->
-  <div class="ov" id="ov-over">
-    <div class="ov-card">
-      <span class="ov-tag">[ HULL_BREACH ]</span>
-      <div class="ov-ic">💥</div>
-      <h2 data-i18n="over_title">Tàu đã bị phá huỷ!</h2>
-      <div class="res">
-        <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="hud_score">Điểm</div></div>
-        <div class="cell"><div class="rv" id="r-shot">0</div><div class="rl" data-i18n="r_shot">TT bắn được</div></div>
-        <div class="cell"><div class="rv" id="r-bonus">0</div><div class="rl" data-i18n="r_bonus">Thưởng điểm</div></div>
-      </div>
-      <div class="reward"><img src="img/tt.png" alt="tt" /><span data-i18n="r_get">Thực nhận</span> <span id="r-reward">0</span></div>
-      <div class="acts">
-        <button class="primary" id="again-btn"><span data-i18n="again_btn">Chơi lại</span> <span class="btn-fee">(5 <img class="tt-inline" src="img/tt.png" alt="tt"/>)</span></button>
-        <button id="hub-btn" data-i18n="to_list">Danh sách Game</button>
+    <!-- Start -->
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">🛰️</div>
+        <h2 data-i18n="start_title">Space Defender</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ.</span>
+          <span data-i18n-html="how2">🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.</span>
+          <span data-i18n-html="how3">☄️ <b>Thiên thạch xám</b> 2 phát · <b>rác đỏ</b> bay nhanh, 1 phát.</span>
+          <span data-i18n-html="how4">💜 <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví tạm.</span>
+          <span data-i18n-html="how5">⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì hồi giáp & thưởng!</span>
+          <span data-i18n-html="how6">🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts"><button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button></div>
       </div>
     </div>
-  </div>
 
-  <!-- Không đủ tt -->
-  <div class="ov" id="ov-need">
-    <div class="ov-card">
-      <div class="ov-ic">🪐</div>
-      <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
-      <p id="need-body"></p>
-      <div class="acts">
-        <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
-        <button id="need-hub" data-i18n="back">Về Sảnh</button>
+    <!-- Quiz (thiên thạch vàng) -->
+    <div class="ov ov-quiz" id="ov-quiz" role="dialog" aria-modal="true">
+      <div class="ov-card">
+        <span class="ov-tag">[ ASTRO_QUIZ ]</span>
+        <div class="ov-ic">⭐</div>
+        <div class="q-reward" id="q-reward"></div>
+        <div class="q-text" id="q-text">…</div>
+        <div class="q-opts" id="q-opts"></div>
       </div>
     </div>
-  </div>
 
-  <!-- Tạm dừng (ESC) -->
-  <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
-    <div class="ov-card">
-      <div class="ov-ic">⏸️</div>
-      <h2 data-i18n="pause_title">Kết thúc lượt?</h2>
-      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
-      <div class="acts">
-        <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
-        <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+    <!-- Game over -->
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ HULL_BREACH ]</span>
+        <div class="ov-ic">💥</div>
+        <h2 data-i18n="over_title">Trạm đã bị phá huỷ!</h2>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Điểm</div></div>
+          <div class="cell wave"><div class="rv"><span id="r-time">0</span><small data-i18n="unit_s">s</small></div><div class="rl" data-i18n="held_lbl">Trụ được</div></div>
+          <div class="cell"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mined">0</div><div class="rl" data-i18n="mined_lbl">Đã thu</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>5</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Sảnh Game</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- Không đủ tt -->
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Sảnh Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tạm dừng -->
+    <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+      <div class="ov-card">
+        <div class="ov-ic">⏸️</div>
+        <h2 data-i18n="pause_title">Tạm dừng</h2>
+        <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+        <div class="acts">
+          <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+          <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.play -->
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Báo tiến độ lên server (Hồ sơ + Kho Thành Tích).
+     CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB và
+     trang này cần mượt. Không có phiên đăng nhập thì js/progress.js xếp việc
+     vào hàng chờ trong localStorage, dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 /* ============================================================
-   AstroQ · SPACE DEFENDER — mini-game 2D Canvas (vanilla, 60fps)
-   Module gọn: CONFIG (chỉnh số) · SFX (âm thanh) · draw* (hình ảnh)
-   · vòng lặp update/render · onFinishGame() cập nhật ví chính.
+   AstroQ · SPACE DEFENDER (ARCADE-02) — mini-game 2D Canvas
+   Phòng thủ 360° · Vanilla JS · requestAnimationFrame 60fps
+
+   Bố cục module để dễ chỉnh về sau:
+     CONFIG    — mọi con số gameplay (giáp, tốc độ, sát thương, phí lượt…)
+     TYPES     — 4 loại vật thể tấn công: máu / bán kính / tốc độ / điểm / sát thương
+     QUIZ      — câu đố Thiên văn khi bắn trúng thiên thạch vàng
+     SFX       — âm thanh WebAudio (có nút tắt)
+     draw*     — vẽ hình (drawStation / drawEnemy / drawWarnings …)
+     update/render — vòng lặp
+     onFinishGame(totalMeteorsEarned) — CHỖ DUY NHẤT cộng thưởng vào ví AstroQ
+
+   Hệ toạ độ ảo VUÔNG 600×600 (CONFIG.VW/VH) rồi scale ra màn hình:
+   phòng thủ 360° cần sân vuông, sân chữ nhật thì hướng trái/phải xa hơn
+   hướng trên/dưới → cùng một cú bắn mà bên khó bên dễ.
+
+   ĐỔI SANG SPRITE ẢNH: đặt CONFIG.stationSprite = "img/ten-anh.png"
+   (Trạm) — khi ảnh tải xong phần vẽ vector tự nhường chỗ. Thiên thạch tím
+   đã dùng ảnh img/tt.png sẵn.
    ============================================================ */
 (function(){
   "use strict";
 
-  /* ===== CONFIG (dễ tinh chỉnh) ===== */
+  /* ===== CONFIG — chỉnh gameplay ở đây ===== */
   var CONFIG = {
-    COST: 5,                 // Thiên thạch tím mỗi lượt
-    fireInterval: 0.16,      // giây giữa 2 phát
-    bulletSpeed: 640,
-    shipSpeed: 500,          // px/giây — tốc độ tàu (nhạy, không trễ)
+    COST: 5,                    // Thiên thạch tím trừ mỗi lượt
+    VW: 600, VH: 600,           // hệ toạ độ ảo (vuông)
+
     hullStart: 100,
-    quizHeal: 20,            // % hồi máu khi trả lời đúng
-    quizReward: 5,           // tt cộng khi đúng
-    bossEvery: 26,           // giây / lần xuất hiện boss
-    points:{ gray:5, purple:10, gold:15, boss:60 },
-    damage:{ gray:7, purple:5, gold:5, boss:24 },
-    reward:{ purpleMeteor:1, boss:3 },
-    scorePerMeteor: 25       // reward bonus = floor(score/scorePerMeteor)
+    stationR: 26,               // bán kính thân Trạm (dùng cho va chạm)
+    barrelLen: 42,              // chiều dài nòng pháo (dài để thấy rõ hướng ngắm)
+    /* Vòng khiên bám sát thân tàu (≈ nửa bề rộng ảnh) chứ KHÔNG để rộng ra:
+       va chạm xảy ra khi mép vật thể chạm r=stationR, nên vòng khiên vẽ rộng hơn
+       thế sẽ khiến vật thể "lọt vào trong khiên" mà chưa mất giáp — trông như lỗi. */
+    shieldR: 31,                // vòng khiên = mức giáp còn lại (cung sáng)
+
+    fireInterval: 0.13,         // giây giữa 2 phát
+    bulletSpeed: 700, bulletR: 4.5,
+
+    spawnR: 440,                // sinh vật thể ngoài mép (nửa đường chéo sân = 424)
+    spawn0: 1.15,               // giãn cách sinh lúc đầu (giây)
+    spawnMin: 0.34,             // giãn cách nhỏ nhất
+    spawnAcc: 0.014,            // giãn cách giảm mỗi giây
+    speedRamp: 0.0032,          // tốc độ vật thể +0,32%/giây
+
+    quizHeal: 20,               // % giáp hồi khi trả lời đúng
+    quizReward: 5,              // tt cộng khi trả lời đúng
+    quizCooldown: 12,           // giây tối thiểu giữa 2 thiên thạch vàng
+
+    aimKeySpeed: 3.4,           // rad/giây khi xoay pháo bằng ◀ ▶ (cho người dùng bàn phím)
+
+    /* Nhân vật điều khiển = phi thuyền Luna. Ảnh nhìn từ trên xuống, MŨI CHỈ LÊN,
+       nên khi vẽ phải quay thêm +90° để mũi trùng hướng ngắm (xem drawStation).
+       Đổi phi thuyền khác: thay đường dẫn ở đây; để "" thì quay về vẽ vector. */
+    stationSprite: "img/luna2.png",
+    spriteUp: -Math.PI/2,       // hướng mũi phi thuyền trong ảnh gốc (lên = -90°)
+    /* Hitbox vẫn là hình TRÒN r=stationR (bán kính không đổi khi tàu quay).
+       spriteScale để 2.6 cho thân tàu sát hitbox — vẽ to hơn nữa thì cánh tàu chìa
+       ra ngoài vùng va chạm, trông như bị đâm vào cánh mà không mất giáp. */
+    spriteScale: 2.6            // cỡ vẽ = spriteScale × stationR
+  };
+  var VW = CONFIG.VW, VH = CONFIG.VH;
+  var CX = VW/2, CY = VH/2;                 // tâm sân = vị trí Trạm
+  var BEST_KEY = "astroq-defender-best-v2"; // v2: cách tính điểm khác bản bắn-lên cũ
+  var SFX_KEY  = "astroq-sfx";              // tuỳ chọn thiết bị, dùng chung với game khác
+  var TAU = Math.PI*2;
+
+  var REDUCE = false;
+  try{ REDUCE = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(e){}
+
+  /* ===== TYPES — 4 loại vật thể tấn công =====
+     hp: số phát bắn · r: bán kính · speed: px/giây · score: điểm · dmg: % giáp mất
+     khi đâm vào Trạm (yêu cầu: 10–20%) · tt: Thiên thạch tím nhận được */
+  var TYPES = {
+    gray  : { hp:2, r:20, speed:72,  score:5,  dmg:12, tt:0 },
+    junk  : { hp:1, r:15, speed:118, score:8,  dmg:18, tt:0 },   // rác vũ trụ đỏ, bay nhanh
+    purple: { hp:1, r:16, speed:82,  score:10, dmg:10, tt:1 },
+    gold  : { hp:1, r:22, speed:52,  score:15, dmg:10, tt:0 }    // bay chậm, mở câu đố
   };
 
-  /* ===== i18n ===== */
+  /* ===== i18n (thêm khoá phải thêm ở CẢ vi và en) ===== */
+  var TT = "<img class='tt-inline' src='img/tt.png' alt='tt'/>";
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Space Defender", back:"Về Sảnh", to_list:"Danh sách Game",
-      hull:"Máu tàu", hud_score:"Điểm",
+      title:"AstroQ — Space Defender", back:"Về Sảnh", to_hub:"Về Sảnh Game", home_btn:"Trung Tâm Điều Hướng",
+      hull:"Giáp trạm", score_lbl:"Điểm", mined_lbl:"Đã thu", held_lbl:"Trụ được", best_lbl:"Kỷ lục", unit_s:"s",
       start_title:"Space Defender",
-      how1:"🕹️ <b>Di chuyển tàu</b>: phím ◀ ▲ ▼ ▶ hoặc A W S D.",
-      how2:"🎯 <b>Ngắm & bắn</b>: rê chuột để ngắm, chuột trái / Space để bắn.",
-      how3:"💜 Bắn <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví.",
-      how4:"⭐ Bắn <b>Thiên thạch vàng</b>: mở câu đố Thiên văn.",
-      how5:"🛡️ Đừng để thiên thạch đâm hoặc lọt qua — tàu sẽ mất máu!",
-      cost_line:"Mỗi lượt: <b>"+5+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
-      start_btn:"Bắt đầu", over_title:"Tàu đã bị phá huỷ!", again_btn:"Chơi lại",
-      r_shot:"TT bắn được", r_bonus:"Thưởng điểm", r_get:"Thực nhận", to_list_short:"Danh sách",
+      how1:"🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ (bàn phím: <kbd>◀</kbd> <kbd>▶</kbd>).",
+      how2:"🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.",
+      how3:"☄️ <b>Thiên thạch xám</b> chịu 2 phát · <b>rác đỏ</b> bay nhanh, 1 phát.",
+      how4:"💜 <b>Thiên thạch tím</b>: +"+TYPES.purple.score+" điểm & +1 "+TT+" vào ví tạm.",
+      how5:"⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" "+TT+"!",
+      how6:"🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.",
+      cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Bắt đầu", over_title:"Trạm đã bị phá huỷ!",
+      again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
-      start_toast:"−5 {tt} · Bảo vệ tàu!", quiz_ok:"✅ Chính xác! +5 {tt} · +20% máu",
-      quiz_no:"❌ Chưa đúng — chiến đấu tiếp!", newbest:"🏆 Kỷ lục mới!",
-      pause_title:"Kết thúc lượt?", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
-      resume:"Chơi tiếp", to_hub:"Về Sảnh Game"
+      start_toast:"−"+CONFIG.COST+" {tt} · Bảo vệ Trạm!",
+      quiz_reward:"Đúng: +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" ",
+      quiz_ok:"Chính xác! +"+CONFIG.quizReward+" {tt} · +"+CONFIG.quizHeal+"% giáp",
+      quiz_no:"Chưa đúng — chiến đấu tiếp!",
+      reward_toast:"+{n} {tt} vào ví!", paid_lbl:"Đã cộng {n} {tt} vào ví",
+      paid_none:"Lượt này chưa thu được Thiên thạch tím",
+      newbest:"🏆 Kỷ lục mới!",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
+      aim_hint:"RÊ CHUỘT ĐỂ NGẮM · GIỮ CHUỘT/SPACE ĐỂ BẮN"
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Space Defender", back:"Arcade", to_list:"Game list",
-      hull:"Hull", hud_score:"Score",
+      title:"AstroQ — Space Defender", back:"Arcade", to_hub:"Back to Arcade", home_btn:"Navigation Hub",
+      hull:"Hull", score_lbl:"Score", mined_lbl:"Collected", held_lbl:"Held for", best_lbl:"Best", unit_s:"s",
       start_title:"Space Defender",
-      how1:"🕹️ <b>Move ship</b>: ◀ ▲ ▼ ▶ arrows or A W S D.",
-      how2:"🎯 <b>Aim & fire</b>: mouse to aim, left click / Space to shoot.",
-      how3:"💜 Shoot <b>Purple Meteors</b>: +10 score & +1 to wallet.",
-      how4:"⭐ Shoot <b>Gold Meteors</b>: opens an astronomy quiz.",
-      how5:"🛡️ Don't let meteors ram or slip past — your hull takes damage!",
-      cost_line:"Per run: <b>"+5+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
-      start_btn:"Start", over_title:"Ship destroyed!", again_btn:"Play again",
-      r_shot:"Meteors shot", r_bonus:"Score bonus", r_get:"You get", to_list_short:"List",
+      how1:"🎯 <b>Aim</b>: move the mouse around — the cannon spins a full 360° to follow it (keyboard: <kbd>◀</kbd> <kbd>▶</kbd>).",
+      how2:"🔫 <b>Fire</b>: hold left click or the <kbd>Space</kbd> key.",
+      how3:"☄️ <b>Grey asteroids</b> take 2 shots · <b>red junk</b> is fast, 1 shot.",
+      how4:"💜 <b>Purple Meteors</b>: +"+TYPES.purple.score+" points & +1 "+TT+" to your run pouch.",
+      how5:"⭐ <b>Gold meteors</b>: open a quiz — get it right for +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" "+TT+"!",
+      how6:"🛡️ Anything that rams the Station at the centre costs you hull. Hull gone = game over.",
+      cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Start", over_title:"Station destroyed!",
+      again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
-      start_toast:"−5 {tt} · Defend!", quiz_ok:"✅ Correct! +5 {tt} · +20% hull",
-      quiz_no:"❌ Not quite — keep fighting!", newbest:"🏆 New best!",
-      pause_title:"End this run?", pause_body:"Continue playing or return to the arcade?",
-      resume:"Keep playing", to_hub:"Back to Arcade"
+      start_toast:"−"+CONFIG.COST+" {tt} · Defend the Station!",
+      quiz_reward:"Correct: +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" ",
+      quiz_ok:"Correct! +"+CONFIG.quizReward+" {tt} · +"+CONFIG.quizHeal+"% hull",
+      quiz_no:"Not quite — keep fighting!",
+      reward_toast:"+{n} {tt} added!", paid_lbl:"Added {n} {tt} to your wallet",
+      paid_none:"No Purple Meteors collected this run",
+      newbest:"🏆 New best!",
+      pause_title:"Paused", pause_body:"Continue playing or return to the arcade?",
+      resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
+      aim_hint:"MOVE MOUSE TO AIM · HOLD CLICK/SPACE TO FIRE"
     }
   };
   var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
-
-  /* ===== Câu đố Thiên văn (khi bắn thiên thạch vàng) ===== */
-  var QUIZ=[
-    { q:{vi:"Hành tinh nào gần Mặt Trời nhất?",en:"Which planet is closest to the Sun?"}, o:[{vi:"Sao Kim",en:"Venus"},{vi:"Sao Thủy",en:"Mercury"},{vi:"Trái Đất",en:"Earth"},{vi:"Sao Hỏa",en:"Mars"}], a:1 },
-    { q:{vi:"Ngôi sao ở trung tâm Hệ Mặt Trời là?",en:"The star at the center of the Solar System is?"}, o:[{vi:"Mặt Trăng",en:"The Moon"},{vi:"Sao Bắc Cực",en:"Polaris"},{vi:"Mặt Trời",en:"The Sun"},{vi:"Sirius",en:"Sirius"}], a:2 },
-    { q:{vi:"Hành tinh nào được gọi là 'Hành tinh Đỏ'?",en:"Which planet is the 'Red Planet'?"}, o:[{vi:"Sao Mộc",en:"Jupiter"},{vi:"Sao Hỏa",en:"Mars"},{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Kim",en:"Venus"}], a:1 },
-    { q:{vi:"Hành tinh lớn nhất Hệ Mặt Trời?",en:"Largest planet in the Solar System?"}, o:[{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Hải Vương",en:"Neptune"},{vi:"Trái Đất",en:"Earth"},{vi:"Sao Mộc",en:"Jupiter"}], a:3 },
-    { q:{vi:"Vệ tinh tự nhiên của Trái Đất là?",en:"Earth's natural satellite is?"}, o:[{vi:"Mặt Trăng",en:"The Moon"},{vi:"Sao Hỏa",en:"Mars"},{vi:"Titan",en:"Titan"},{vi:"Europa",en:"Europa"}], a:0 },
-    { q:{vi:"Hành tinh nổi tiếng với vành đai băng đá?",en:"Planet famous for its icy rings?"}, o:[{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Thủy",en:"Mercury"},{vi:"Sao Hỏa",en:"Mars"},{vi:"Sao Kim",en:"Venus"}], a:0 }
-  ];
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
-  /* ===== SFX (WebAudio synth — thay bằng file nếu muốn) ===== */
-  var AC=null;
-  function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
-  function beep(f,dur,type,vol,when){ var c=actx(); if(!c) return; var o=c.createOscillator(),g=c.createGain();
-    o.type=type||"square"; o.frequency.value=f; var s=c.currentTime+(when||0);
-    g.gain.setValueAtTime(vol||0.05,s); g.gain.exponentialRampToValueAtTime(0.0001,s+(dur||0.09));
-    o.connect(g); g.connect(c.destination); o.start(s); o.stop(s+(dur||0.09)); }
-  var SFX={
-    shoot:function(){ beep(720,0.05,"square",0.03); beep(1080,0.05,"square",0.02,0.02); },
-    hitRock:function(){ beep(220,0.05,"square",0.04); },
-    boom:function(){ beep(150,0.16,"sawtooth",0.05); beep(90,0.2,"sawtooth",0.05,0.06); },
-    meteor:function(){ beep(660,0.07,"triangle",0.05); beep(990,0.09,"triangle",0.05,0.06); },
-    gold:function(){ beep(880,0.08,"triangle",0.05); beep(1174,0.1,"triangle",0.05,0.08); },
-    hurt:function(){ beep(180,0.2,"sawtooth",0.06); beep(110,0.24,"sawtooth",0.06,0.08); },
-    start:function(){ beep(440,0.08,"square",0.04); beep(620,0.1,"square",0.04,0.08); }
-  };
+  /* ===== Câu đố Thiên văn (bắn trúng thiên thạch vàng) =====
+     Thêm câu mới: chỉ cần đẩy thêm phần tử vào mảng này (a = chỉ số đáp án đúng). */
+  var QUIZ=[
+    { q:{vi:"Hành tinh nào gần Mặt Trời nhất?",en:"Which planet is closest to the Sun?"},
+      o:[{vi:"Sao Kim",en:"Venus"},{vi:"Sao Thuỷ",en:"Mercury"},{vi:"Trái Đất",en:"Earth"},{vi:"Sao Hoả",en:"Mars"}], a:1 },
+    { q:{vi:"Ngôi sao ở trung tâm Hệ Mặt Trời là?",en:"The star at the centre of the Solar System is?"},
+      o:[{vi:"Mặt Trăng",en:"The Moon"},{vi:"Sao Bắc Cực",en:"Polaris"},{vi:"Mặt Trời",en:"The Sun"},{vi:"Sirius",en:"Sirius"}], a:2 },
+    { q:{vi:"Hành tinh nào được gọi là 'Hành tinh Đỏ'?",en:"Which planet is the 'Red Planet'?"},
+      o:[{vi:"Sao Mộc",en:"Jupiter"},{vi:"Sao Hoả",en:"Mars"},{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Kim",en:"Venus"}], a:1 },
+    { q:{vi:"Hành tinh lớn nhất Hệ Mặt Trời?",en:"Largest planet in the Solar System?"},
+      o:[{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Hải Vương",en:"Neptune"},{vi:"Trái Đất",en:"Earth"},{vi:"Sao Mộc",en:"Jupiter"}], a:3 },
+    { q:{vi:"Vệ tinh tự nhiên của Trái Đất là?",en:"Earth's natural satellite is?"},
+      o:[{vi:"Mặt Trăng",en:"The Moon"},{vi:"Sao Hoả",en:"Mars"},{vi:"Titan",en:"Titan"},{vi:"Europa",en:"Europa"}], a:0 },
+    { q:{vi:"Hành tinh nổi tiếng với vành đai băng đá?",en:"Planet famous for its icy rings?"},
+      o:[{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Thuỷ",en:"Mercury"},{vi:"Sao Hoả",en:"Mars"},{vi:"Sao Kim",en:"Venus"}], a:0 },
+    { q:{vi:"Thiên thạch bốc cháy khi bay vào khí quyển gọi là gì?",en:"What do we call a meteoroid burning up in the atmosphere?"},
+      o:[{vi:"Sao băng",en:"A meteor (shooting star)"},{vi:"Sao chổi",en:"A comet"},{vi:"Hố đen",en:"A black hole"},{vi:"Chòm sao",en:"A constellation"}], a:0 },
+    { q:{vi:"Vành đai thiên thạch nằm giữa Sao Hoả và hành tinh nào?",en:"The asteroid belt lies between Mars and which planet?"},
+      o:[{vi:"Trái Đất",en:"Earth"},{vi:"Sao Mộc",en:"Jupiter"},{vi:"Sao Thổ",en:"Saturn"},{vi:"Sao Kim",en:"Venus"}], a:1 }
+  ];
+
+  /* ===== SFX — WebAudio synth, có nút tắt (dùng chung khoá với game khác) ===== */
+  var SFX = (function(){
+    var AC=null, muted=false;
+    try{ muted = localStorage.getItem(SFX_KEY)==="0"; }catch(e){}
+    function ctxA(){
+      if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+      if(AC && AC.state==="suspended"){ try{ AC.resume(); }catch(e){} }
+      return AC;
+    }
+    function beep(f,dur,type,vol,when){
+      if(muted) return; var c=ctxA(); if(!c) return;
+      var o=c.createOscillator(), g=c.createGain();
+      o.type=type||"square"; o.frequency.value=f;
+      var s=c.currentTime+(when||0);
+      g.gain.setValueAtTime(vol||0.05,s);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+(dur||0.09));
+      o.connect(g); g.connect(c.destination); o.start(s); o.stop(s+(dur||0.09));
+    }
+    return {
+      shoot:function(){ beep(760,0.04,"square",0.025); beep(1120,0.04,"square",0.018,0.018); },
+      ping :function(){ beep(240,0.05,"square",0.035); },                   // đạn trúng nhưng chưa vỡ
+      boom :function(){ beep(170,0.14,"sawtooth",0.045); beep(95,0.18,"sawtooth",0.04,0.05); },
+      gem  :function(){ beep(880,0.06,"triangle",0.05); beep(1320,0.09,"triangle",0.045,0.05); },
+      gold :function(){ beep(880,0.08,"triangle",0.05); beep(1174,0.1,"triangle",0.05,0.08); },
+      hurt :function(){ beep(180,0.2,"sawtooth",0.06); beep(110,0.26,"sawtooth",0.055,0.08); },
+      heal :function(){ beep(660,0.09,"triangle",0.045); beep(990,0.12,"triangle",0.04,0.09); },
+      start:function(){ beep(440,0.08,"square",0.04); beep(660,0.1,"square",0.04,0.08); },
+      isMuted:function(){ return muted; },
+      toggle:function(){
+        muted=!muted;
+        try{ localStorage.setItem(SFX_KEY, muted?"0":"1"); }catch(e){}
+        if(!muted) beep(660,0.07,"square",0.04);
+        return muted;
+      },
+      unlock:ctxA
+    };
+  })();
 
   /* ===== Ảnh ===== */
-  var ttImg=new Image(), ttReady=false; ttImg.onload=function(){ ttReady=true; }; ttImg.src="img/tt.png";
-  // Nhân vật điều khiển = Luna (img/luna2.png)
-  var shipImg=new Image(), shipReady=false, shipAspect=1, shipW=58, shipH=58;
-  shipImg.onload=function(){ shipReady=true; shipAspect=(shipImg.naturalWidth/shipImg.naturalHeight)||1; sizeShip(); };
-  shipImg.onerror=function(){ if(shipImg.src.indexOf("b1.png")<0) shipImg.src="img/b1.png"; };
-  shipImg.src="img/luna2.png";
-  function sizeShip(){ var mw=64,mh=60,a=shipAspect||1; var w=mw,h=w/a; if(h>mh){ h=mh; w=h*a; } shipW=Math.round(w); shipH=Math.round(h); }
+  var ttImg=new Image(), ttReady=false;
+  ttImg.onload=function(){ ttReady=true; }; ttImg.src="img/tt.png";
+  /* Phi thuyền Luna — giữ đúng tỉ lệ ảnh, ảnh lỗi thì lùi về img/b1.png rồi mới về vector */
+  var stationImg=null, stationReady=false, shipW=76, shipH=76;
+  if(CONFIG.stationSprite){
+    stationImg=new Image();
+    stationImg.onload=function(){
+      stationReady=true;
+      var box=CONFIG.stationR*CONFIG.spriteScale;
+      var a=(stationImg.naturalWidth/stationImg.naturalHeight)||1;
+      shipW=box; shipH=box/a;
+      if(shipH>box){ shipH=box; shipW=box*a; }
+    };
+    stationImg.onerror=function(){
+      if(stationImg.src.indexOf("b1.png")<0) stationImg.src="img/b1.png"; else stationReady=false;
+    };
+    stationImg.src=CONFIG.stationSprite;
+  }
+  /* Khoảng cách từ tâm ra miệng nòng — dùng cho cả điểm sinh đạn lẫn ánh lửa đầu nòng.
+     Phi thuyền thì mũi tàu chính là nòng, nên lấy theo cỡ ảnh; vector thì lấy theo nòng vẽ. */
+  function muzzleDist(){
+    return stationReady ? shipH*0.48 : CONFIG.stationR*0.35+CONFIG.barrelLen;
+  }
 
   /* ===== Canvas ===== */
-  var stage=$("stage"), cv=$("cv"), ctx=cv.getContext("2d");
-  var W=800, H=500, DPR=1;
+  var cv=$("cv"), ctx=cv.getContext("2d");
+  var DPR=1;
+  /* Lấy đúng số pixel thật của khung rồi scale transform về hệ 600×600 → nét trên
+     mọi màn hình mà toạ độ game không đổi. */
   function fit(){
-    var r=stage.getBoundingClientRect();
-    W=Math.max(280,Math.floor(r.width)); H=Math.max(320,Math.floor(r.height));
+    var r=cv.getBoundingClientRect();
+    var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
     DPR=Math.min(2, window.devicePixelRatio||1);
-    cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    sizeShip(); ship.x=W/2; ship.y=H-Math.round(shipH*0.5)-8;
+    cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
+    ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
   }
-  window.addEventListener("resize", fit);
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(cv); }
+  else { window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); }
 
   /* ===== Trạng thái ===== */
-  var state="start";  // start | play | quiz | over
-  var ship={x:400,y:462};
-  var aim=-Math.PI/2;          // hướng pháo (radian), mặc định thẳng lên
-  var firing=false, fireCd=0;
-  var bullets=[], rocks=[], parts=[], stars=[];
-  var hull=100, score=0, meteors=0, elapsed=0, spawnT=0, bossT=0, shake=0, flash=0, quizIdx=0;
-  var best=0; try{ best=parseInt(localStorage.getItem("astroq-defender-best")||"0",10)||0; }catch(e){}
-  var pointerX=0, pointerY=0, pointerIn=false;
+  var state="start";     // start | play | quiz | paused | dying | over
+  var aim=-Math.PI/2;    // hướng pháo (radian) — mặc định chỉ lên
+  var firing=false, fireCd=0, aimKeyL=false, aimKeyR=false, muzzle=0;
+  var bullets=[], foes=[], parts=[], stars=[];
+  var hull=CONFIG.hullStart, score=0, meteors=0, elapsed=0, spawnT=0, goldT=0;
+  var shake=0, flash=0, dieT=0, quizIdx=0, radar=0;
+  var pointerX=CX, pointerY=CY-120, pointerIn=false;
+  var hudCache={}, lastPaid=0;
+  var best=0; try{ best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0; }catch(e){}
 
-  function initStars(){ stars=[]; for(var i=0;i<70;i++) stars.push({x:Math.random()*W,y:Math.random()*H,z:0.4+Math.random()*1.7,tw:Math.random()*6.28}); }
+  function initStars(){
+    stars=[];
+    for(var i=0;i<110;i++) stars.push({
+      x:Math.random()*VW, y:Math.random()*VH,
+      r:0.5+Math.random()*1.3, tw:Math.random()*TAU, sp:1.2+Math.random()*2.4
+    });
+  }
 
   /* ===== Ví ===== */
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
   function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
 
-  /* ===== onFinishGame: cập nhật ví chính AstroQ ===== */
-  function onFinishGame(rewardMeteors){ if(rewardMeteors>0) Economy.addAsteroids(rewardMeteors); paintBalance(); }
+  /* ===== onFinishGame: CHỖ DUY NHẤT cộng thưởng vào ví chính AstroQ =====
+     Trong lượt chơi, Thiên thạch tím chỉ nằm ở "ví tạm" (biến meteors);
+     kết lượt mới chốt một lần. Khi backend có API ví thì đổi đúng hàm này. */
+  function onFinishGame(totalMeteorsEarned, finalScore, secs){
+    var n=Math.max(0, Math.floor(totalMeteorsEarned||0));
+    if(n>0){ Economy.addAsteroids(n); bumpGem(); }
+    paintBalance();
+    /* Ghi vào Hồ sơ + Kho Thành Tích. Fire-and-forget: KHÔNG chờ mạng, vì
+       bảng kết quả phải hiện ngay. Server tự quyết XP + huy hiệu. */
+    if(window.AstroQProgress) AstroQProgress.game({
+      game:"defender", score:Math.max(0,Math.floor(finalScore||0)),
+      seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
+    return n;
+  }
 
-  /* ===== Bắt đầu / kết thúc ===== */
+  /* ===== Nút HUD theo trạng thái ===== */
+  function syncBtns(){
+    var b=$("btn-pause");
+    b.classList.toggle("is-hidden", !(state==="play"||state==="paused"));
+    b.classList.toggle("off", state==="paused");
+  }
+
+  /* ===== Bắt đầu / kết thúc lượt ===== */
   function startRound(){
+    /* Chặn trừ phí 2 lần: Space/Enter vừa là "bắn" vừa có thể kích hoạt nút đang focus */
+    if(state==="play" || state==="dying" || state==="quiz") return;
     if(Economy.getAsteroids() < CONFIG.COST){ showNeed(); return; }
-    Economy.useAsteroids(CONFIG.COST); paintBalance(); bumpGem();
-    bullets=[]; rocks=[]; parts=[];
-    hull=CONFIG.hullStart; score=0; meteors=0; elapsed=0; spawnT=0.4; bossT=CONFIG.bossEvery; shake=0; flash=0; fireCd=0; firing=false;
-    aim=-Math.PI/2; ship.x=W/2; ship.y=H-Math.round(shipH*0.5)-8;
-    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-quiz");
-    state="play"; last=0; SFX.start(); toast(t("start_toast")); paintHud();
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    /* Trừ phí qua Economy.spend: SERVER quyết trừ bao nhiêu (tra Wallet.Fees),
+       client chỉ gửi tên game. Hàm vẫn trả ngay true/false theo cache nên logic
+       chặn lượt chơi không đổi. Xem economy.js. */
+    Economy.spend("defender"); paintBalance(); bumpGem();
+    bullets=[]; foes=[]; parts=[];
+    hull=CONFIG.hullStart; score=0; meteors=0; elapsed=0;
+    spawnT=0.6; goldT=CONFIG.quizCooldown*0.5; fireCd=0; firing=false;
+    shake=0; flash=0; dieT=0; aim=-Math.PI/2;
+    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause"); hideOv("ov-quiz");
+    state="play"; last=0; syncBtns();
+    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+    hudCache={}; paintHud();
+  }
+  /* Giáp = 0: nổ + rung, giữ 0.8s cho người chơi thấy rồi mới hiện bảng kết quả */
+  function die(){
+    if(state!=="play") return;
+    state="dying"; dieT=0.8; syncBtns(); SFX.boom();
+    if(!REDUCE){ shake=22; flash=1; }
+    burst(CX,CY,"#ff8a8a",REDUCE?12:34,300);
+    burst(CX,CY,"#ffd166",REDUCE?8:18,220);
+    burst(CX,CY,"#7ee0ff",REDUCE?6:14,160);
+  }
+  /* Dòng "đã cộng n tt vào ví" — do JS sinh nên `applyTexts` không dịch được;
+     đổi ngôn ngữ khi đang ở bảng kết quả thì applyLang gọi lại hàm này. */
+  function paintPaid(){
+    var el=$("paid");
+    el.classList.toggle("none", lastPaid<=0);
+    el.innerHTML = lastPaid>0
+      ? t("paid_lbl").replace("{n}","<b>"+lastPaid+"</b>").replace("{tt}",AstroQ.ttImg())
+      : t("paid_none");
   }
   function gameOver(){
-    state="over"; SFX.boom(); shake=18; flash=1;
-    var s=Math.floor(score);
-    var bonus=Math.floor(s/CONFIG.scorePerMeteor);
-    var reward=meteors+bonus;
-    var isBest=s>best; if(isBest){ best=s; try{ localStorage.setItem("astroq-defender-best",String(best)); }catch(e){} }
-    $("r-score").textContent=s; $("r-shot").textContent=meteors; $("r-bonus").textContent=bonus; $("r-reward").textContent=reward;
-    onFinishGame(reward);          // ← cộng vào ví chính
-    if(isBest) toast(t("newbest"));
+    state="over"; syncBtns();
+    var s=Math.floor(score), secs=Math.floor(elapsed);
+    var isBest = s>best;
+    if(isBest){ best=s; try{ localStorage.setItem(BEST_KEY,String(best)); }catch(e){} }
+
+    $("r-score").textContent=s;
+    $("r-time").textContent=secs;
+    $("r-best").textContent=best;
+    $("r-mined").textContent=meteors;
+
+    /* Chốt thưởng vào ví chính */
+    lastPaid=onFinishGame(meteors, s, secs);
+    paintPaid();
+
+    /* Dùng lastPaid, KHÔNG đặt tên biến trùng id phần tử: `paid` sẽ trỏ vào
+       <div id="paid"> qua window (named access) nên `paid>0` âm thầm luôn sai. */
+    if(lastPaid>0) toast(t("reward_toast").replace("{n}",lastPaid));
+    else if(isBest) toast(t("newbest"));
     showOv("ov-over");
   }
   function showNeed(){
-    var tt="<img class='tt-inline' src='img/tt.png' alt='tt'/>";
+    /* Ẩn brief/kết quả trước: 2 overlay cùng hiện = 2 lớp nền tối cộng nhau */
+    hideOv("ov-start"); hideOv("ov-over");
     $("need-body").innerHTML = (LANG==="en"
-      ? "You need <b>"+CONFIG.COST+" "+tt+"</b> to play but only have <b>"+Economy.getAsteroids()+" "+tt+"</b>.<br/>Take a Quiz to earn more!"
-      : "Bạn cần <b>"+CONFIG.COST+" "+tt+"</b> để chơi nhưng chỉ có <b>"+Economy.getAsteroids()+" "+tt+"</b>.<br/>Làm Quiz để kiếm thêm nhé!");
+      ? "You need <b>"+CONFIG.COST+" "+TT+"</b> to play but only have <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Take a Quiz to earn more!"
+      : "Bạn cần <b>"+CONFIG.COST+" "+TT+"</b> để chơi nhưng chỉ có <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Làm Quiz để kiếm thêm nhé!");
     showOv("ov-need");
   }
   function showOv(id){ $(id).classList.add("show"); }
   function hideOv(id){ $(id).classList.remove("show"); }
 
-  /* ===== Tạm dừng (ESC) ===== */
-  function pauseGame(){ if(state!=="play") return; state="paused"; firing=false; showOv("ov-pause"); }
-  function resumeGame(){ if(state!=="paused") return; hideOv("ov-pause"); state="play"; last=0; }
+  /* ===== Tạm dừng ===== */
+  function pauseGame(){
+    if(state!=="play") return;
+    state="paused"; firing=false; aimKeyL=aimKeyR=false;
+    syncBtns(); showOv("ov-pause");
+  }
+  function resumeGame(){
+    if(state!=="paused") return;
+    hideOv("ov-pause");
+    state="play"; last=0; syncBtns();
+  }
+  function togglePause(){ if(state==="play") pauseGame(); else if(state==="paused") resumeGame(); }
 
-  /* ===== HUD ===== */
+  /* ===== HUD (chỉ ghi DOM khi số thay đổi) ===== */
   function paintHud(){
-    $("score").textContent=Math.floor(score); $("mined").textContent=meteors;
-    var h=Math.max(0,Math.round(hull));
-    $("hull-fill").style.width=h+"%"; $("hull-pct").textContent=h+"%";
-    var hb=$("hullbar"); hb.classList.toggle("mid", h<=55 && h>25); hb.classList.toggle("low", h<=25);
+    var s=Math.floor(score), h=Math.max(0,Math.round(hull));
+    if(hudCache.s!==s){ $("score").textContent=s; hudCache.s=s; }
+    if(hudCache.m!==meteors){ $("mined").textContent=meteors; hudCache.m=meteors; }
+    if(hudCache.h!==h){
+      $("hull-fill").style.width = h+"%";          // giá trị động do JS sinh → chấp nhận inline
+      $("hull-pct").textContent = h+"%";
+      var bar=$("hullbar"), wrap=$("hullwrap");
+      bar.classList.toggle("mid", h<=60 && h>30);
+      bar.classList.toggle("low", h<=30);
+      wrap.classList.toggle("low", h<=30);
+      hudCache.h=h;
+    }
   }
 
-  /* ===== Quiz (thiên thạch vàng) ===== */
-  function openQuiz(){
-    state="quiz"; quizIdx=Math.floor(elapsed*7 + score) % QUIZ.length;
-    var it=QUIZ[quizIdx];
-    $("q-text").textContent=L(it.q);
-    var box=$("q-opts"); box.innerHTML="";
-    var locked=false;
-    it.o.forEach(function(opt,i){
-      var b=document.createElement("button"); b.className="q-opt"; b.type="button"; b.textContent=L(opt);
-      b.addEventListener("click", function(){
-        if(locked) return; locked=true;
-        if(i===it.a){ b.classList.add("correct"); meteors+=CONFIG.quizReward; hull=Math.min(100,hull+CONFIG.quizHeal); SFX.gold(); toast(t("quiz_ok")); }
-        else{ b.classList.add("wrong"); box.children[it.a].classList.add("correct"); SFX.hurt(); toast(t("quiz_no")); }
-        paintHud();
-        setTimeout(function(){ hideOv("ov-quiz"); state="play"; last=0; }, 850);
-      });
-      box.appendChild(b);
+  /* ===== Sinh vật thể tấn công =====
+     Sinh trên VÒNG TRÒN bán kính spawnR quanh tâm → mọi hướng cách Trạm đúng
+     bằng nhau, và vì spawnR > nửa đường chéo sân nên không bao giờ "hiện ra"
+     giữa sân. Vật thể ngoài khung được báo bằng dấu nhắc ở mép (drawWarnings). */
+  function pickType(){
+    /* Rác đỏ nhiều dần theo thời gian; vàng có thời gian chờ riêng để câu đố
+       không bật lên quá dày (mỗi lần bật là dừng game). */
+    var wGray=55, wPurple=18, wJunk=10+Math.min(32, elapsed*0.55);
+    var wGold=(goldT<=0) ? 8 : 0;
+    var total=wGray+wPurple+wJunk+wGold, r=Math.random()*total;
+    if((r-=wGold)  < 0) return "gold";
+    if((r-=wJunk)  < 0) return "junk";
+    if((r-=wPurple)< 0) return "purple";
+    return "gray";
+  }
+  function spawnFoe(){
+    var key=pickType(), T=TYPES[key];
+    var a=Math.random()*TAU;
+    var x=CX+Math.cos(a)*CONFIG.spawnR, y=CY+Math.sin(a)*CONFIG.spawnR;
+    var sp=T.speed*(1+elapsed*CONFIG.speedRamp);
+    /* Hướng bay: dồn thẳng vào tâm */
+    var dx=CX-x, dy=CY-y, d=Math.hypot(dx,dy)||1;
+    foes.push({
+      key:key, hp:T.hp, r:T.r, x:x, y:y,
+      vx:dx/d*sp, vy:dy/d*sp,
+      rot:Math.random()*TAU, spin:(Math.random()-0.5)*2.2, ph:Math.random()*TAU,
+      seed:Math.floor(Math.random()*10)
     });
+    if(key==="gold") goldT=CONFIG.quizCooldown;
+  }
+
+  /* ===== Bắn ===== */
+  function shoot(){
+    var md=muzzleDist();
+    var mx=CX+Math.cos(aim)*md, my=CY+Math.sin(aim)*md;
+    bullets.push({ x:mx, y:my, vx:Math.cos(aim)*CONFIG.bulletSpeed, vy:Math.sin(aim)*CONFIG.bulletSpeed });
+    muzzle=0.07; SFX.shoot();
+  }
+
+  /* ===== Hạt ===== */
+  function burst(x,y,col,n,sp0){
+    for(var i=0;i<n;i++){
+      var a=Math.random()*TAU, sp=(sp0||160)*(0.35+Math.random());
+      parts.push({ x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+                   life:0.32+Math.random()*0.45, r:1.5+Math.random()*2.4, col:col });
+    }
+  }
+
+  /* ===== Câu đố (bắn trúng thiên thạch vàng) ===== */
+  function openQuiz(){
+    state="quiz"; firing=false; syncBtns();
+    quizIdx=Math.floor(Math.random()*QUIZ.length);
+    renderQuiz();
     showOv("ov-quiz");
+  }
+  function renderQuiz(){
+    var q=QUIZ[quizIdx];
+    $("q-reward").innerHTML = t("quiz_reward")+AstroQ.ttImg();
+    $("q-text").textContent = L(q.q);
+    var box=$("q-opts");
+    box.innerHTML="";
+    for(var i=0;i<q.o.length;i++){
+      (function(idx){
+        var b=document.createElement("button");
+        b.type="button"; b.className="q-opt"; b.textContent=L(q.o[idx]);
+        b.addEventListener("click", function(){ answerQuiz(idx, b); });
+        box.appendChild(b);
+      })(i);
+    }
+  }
+  function answerQuiz(idx, btn){
+    if(state!=="quiz") return;
+    var q=QUIZ[quizIdx], ok=(idx===q.a);
+    var opts=$("q-opts").children, i;
+    for(i=0;i<opts.length;i++) opts[i].disabled=true;
+    btn.classList.add(ok?"correct":"wrong");
+    if(!ok && opts[q.a]) opts[q.a].classList.add("correct");   // chỉ luôn đáp án đúng để còn học được
+
+    if(ok){
+      hull=Math.min(CONFIG.hullStart, hull+CONFIG.quizHeal);
+      meteors+=CONFIG.quizReward;
+      SFX.heal(); toast(t("quiz_ok"), "ok"); paintHud();
+    } else {
+      toast(t("quiz_no"), "bad");
+    }
+    setTimeout(function(){
+      hideOv("ov-quiz");
+      if(state==="quiz"){ state="play"; last=0; syncBtns(); }
+    }, ok?900:1300);
   }
 
   /* ===== Vòng lặp ===== */
-  var last=0, raf=null;
+  var last=0;
   function frame(ts){
     if(!last) last=ts;
     var dt=Math.min(0.045,(ts-last)/1000); last=ts;
     if(state==="play") update(dt);
+    else if(state==="dying") updateDying(dt);
+    else if(state==="start") updateIdle(dt);
     render();
-    raf=requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
   }
 
-  function spawnRock(){
-    var roll=Math.random(), type, r, hp;
-    if(roll<0.24){ type="purple"; r=13+Math.random()*7; hp=1; }
-    else if(roll<0.33){ type="gold"; r=15+Math.random()*6; hp=1; }
-    else{ type="gray"; r=15+Math.random()*12; hp=2; }
-    var x=r+Math.random()*(W-2*r);
-    rocks.push({ x:x, y:-r, r:r, vx:(Math.random()-0.5)*90, vy:60+elapsed*3.2+Math.random()*50, hp:hp, maxHp:hp, type:type, rot:Math.random()*6.28, spin:(Math.random()-0.5)*2.4, ph:Math.random()*6.28 });
-  }
-  function spawnBoss(){
-    var r=46+Math.random()*10, hp=12+Math.floor(elapsed/10);
-    rocks.push({ x:r+Math.random()*(W-2*r), y:-r, r:r, vx:(Math.random()-0.5)*40, vy:42+elapsed*1.2, hp:hp, maxHp:hp, type:"boss", rot:0, spin:0.4, ph:0 });
-  }
-  function shoot(){
-    var len=26, tipX=ship.x+Math.cos(aim)*len, tipY=ship.y+Math.sin(aim)*len;
-    bullets.push({ x:tipX, y:tipY, vx:Math.cos(aim)*CONFIG.bulletSpeed, vy:Math.sin(aim)*CONFIG.bulletSpeed });
-    SFX.shoot();
+  /* Màn brief: sao vẫn nhấp nháy, pháo quét qua lại cho sân đỡ chết */
+  var idleT=0;
+  function updateIdle(dt){
+    idleT+=dt; radar+=dt*0.7;
+    aim=-Math.PI/2+Math.sin(idleT*0.6)*0.9;
+    stepStars(dt); stepParts(dt);
   }
 
   function update(dt){
-    elapsed+=dt; score+=dt*4;   // điểm sống sót nhẹ
-    // Di chuyển tàu bằng phím (nhạy, không trễ)
-    var mx=0,my=0;
-    if(keyL) mx-=1; if(keyR) mx+=1; if(keyU) my-=1; if(keyD) my+=1;
-    if(mx&&my){ mx*=0.7071; my*=0.7071; }
-    ship.x += mx*CONFIG.shipSpeed*dt; ship.y += my*CONFIG.shipSpeed*dt;
-    ship.x = Math.max(shipW/2, Math.min(W-shipW/2, ship.x));
-    ship.y = Math.max(H*0.32, Math.min(H-shipH/2-4, ship.y));
-    // Ngắm pháo theo con trỏ (nếu dùng), luôn giữ hướng lên
-    if(pointerIn){ aim=Math.atan2(pointerY-(ship.y-shipH*0.16), pointerX-ship.x); }
-    aim=Math.max(-(Math.PI-0.12), Math.min(-0.12, aim));
-    // bắn
+    elapsed+=dt; radar+=dt*1.1;
+    if(goldT>0) goldT-=dt;
+    if(muzzle>0) muzzle-=dt;
+
+    /* --- ngắm: chuột (360°) hoặc ◀ ▶ cho người dùng bàn phím --- */
+    if(pointerIn) aim=Math.atan2(pointerY-CY, pointerX-CX);
+    if(aimKeyL) aim-=CONFIG.aimKeySpeed*dt;
+    if(aimKeyR) aim+=CONFIG.aimKeySpeed*dt;
+
+    /* --- bắn liên tục --- */
     fireCd-=dt;
     if(firing && fireCd<=0){ shoot(); fireCd=CONFIG.fireInterval; }
-    // đạn
-    for(var b=bullets.length-1;b>=0;b--){ var bl=bullets[b]; bl.x+=bl.vx*dt; bl.y+=bl.vy*dt;
-      if(bl.y< -12 || bl.x< -12 || bl.x>W+12) bullets.splice(b,1); }
-    // sinh thiên thạch
-    spawnT-=dt; var interval=Math.max(0.42, 1.05-elapsed*0.02);
-    if(spawnT<=0){ spawnT=interval; spawnRock(); }
-    bossT-=dt; if(bossT<=0){ bossT=CONFIG.bossEvery; spawnBoss(); }
-    // cập nhật thiên thạch + va chạm đạn
-    for(var i=rocks.length-1;i>=0;i--){ var a=rocks[i]; a.x+=a.vx*dt; a.y+=a.vy*dt; a.rot+=a.spin*dt; a.ph+=dt*4;
-      if(a.x<a.r){ a.x=a.r; a.vx=Math.abs(a.vx); } if(a.x>W-a.r){ a.x=W-a.r; a.vx=-Math.abs(a.vx); }
-      // đạn trúng
-      for(var b2=bullets.length-1;b2>=0;b2--){ var bl2=bullets[b2]; var dx=bl2.x-a.x, dy=bl2.y-a.y;
-        if(dx*dx+dy*dy < (a.r+3)*(a.r+3)){ bullets.splice(b2,1); a.hp--; SFX.hitRock(); burst(bl2.x,bl2.y, rockColor(a),6);
-          if(a.hp<=0){ destroyRock(a); rocks.splice(i,1); break; } } }
-      if(a.hp<=0) continue;
-      // đâm vào tàu → trừ máu + phá thạch
-      var sdx=a.x-ship.x, sdy=a.y-ship.y, sr=shipW*0.30;
-      if(sdx*sdx+sdy*sdy < (a.r+sr)*(a.r+sr)){ burst(a.x,a.y, rockColor(a),16); damageHull(CONFIG.damage[a.type]||6); rocks.splice(i,1); continue; }
-      // lọt qua đáy → trừ máu tàu
-      if(a.y-a.r> H){ damageHull(CONFIG.damage[a.type]||6); rocks.splice(i,1); continue; }
-    }
-    // hạt + nền
-    for(var s=0;s<stars.length;s++){ var st=stars[s]; st.y+=st.z*26*dt; st.tw+=dt*3; if(st.y>H){ st.y=0; st.x=Math.random()*W; } }
-    for(var p=parts.length-1;p>=0;p--){ var pt=parts[p]; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=60*dt; pt.life-=dt; if(pt.life<=0) parts.splice(p,1); }
-    if(shake>0) shake=Math.max(0,shake-dt*42);
-    if(flash>0) flash=Math.max(0,flash-dt*2.4);
-    paintHud();
-  }
-  function rockColor(a){ return a.type==="purple"?"#c084fc":(a.type==="gold"?"#ffcf6b":(a.type==="boss"?"#ff8a8a":"#9fb0d0")); }
-  function destroyRock(a){
-    burst(a.x,a.y, rockColor(a), a.type==="boss"?30:14); SFX.boom();
-    score+=CONFIG.points[a.type]||5;
-    if(a.type==="purple"){ meteors+=CONFIG.reward.purpleMeteor; SFX.meteor(); }
-    else if(a.type==="boss"){ meteors+=CONFIG.reward.boss; }
-    else if(a.type==="gold"){ openQuiz(); }
-    paintHud();
-  }
-  function damageHull(d){ hull-=d; shake=Math.max(shake,12); flash=Math.min(1,flash+0.7); SFX.hurt(); paintHud(); if(hull<=0){ hull=0; paintHud(); gameOver(); } }
-  function burst(x,y,col,n){ for(var i=0;i<n;i++){ var a=Math.random()*6.28,sp=50+Math.random()*180; parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.4+Math.random()*0.5,col:col}); } }
 
-  /* ===== Vẽ ===== */
+    /* --- sinh vật thể --- */
+    spawnT-=dt;
+    if(spawnT<=0){
+      spawnFoe();
+      spawnT=Math.max(CONFIG.spawnMin, CONFIG.spawn0-elapsed*CONFIG.spawnAcc);
+    }
+
+    /* --- đạn --- */
+    var i,j;
+    for(i=bullets.length-1;i>=0;i--){
+      var b=bullets[i];
+      b.x+=b.vx*dt; b.y+=b.vy*dt;
+      if(b.x<-30||b.x>VW+30||b.y<-30||b.y>VH+30){ bullets.splice(i,1); continue; }
+      /* va chạm đạn ↔ vật thể (vòng tròn, công bằng ở mọi hướng) */
+      for(j=foes.length-1;j>=0;j--){
+        var f=foes[j], dx=f.x-b.x, dy=f.y-b.y, rr=f.r+CONFIG.bulletR;
+        if(dx*dx+dy*dy <= rr*rr){
+          bullets.splice(i,1);
+          f.hp--;
+          if(f.hp>0){
+            SFX.ping(); burst(b.x,b.y,"#cfe0ff",REDUCE?3:7,140);
+          } else {
+            killFoe(j,f);
+          }
+          break;
+        }
+      }
+    }
+
+    /* --- vật thể bay vào tâm --- */
+    for(j=foes.length-1;j>=0;j--){
+      var e=foes[j];
+      e.x+=e.vx*dt; e.y+=e.vy*dt; e.rot+=e.spin*dt; e.ph+=dt*4;
+      var ex=e.x-CX, ey=e.y-CY;
+      if(ex*ex+ey*ey <= (CONFIG.stationR+e.r)*(CONFIG.stationR+e.r)){
+        /* đâm vào Trạm: mất giáp + chớp đỏ + rung màn hình */
+        var T=TYPES[e.key];
+        hull-=T.dmg;
+        foes.splice(j,1);
+        burst(e.x,e.y,"#ff9c9c",REDUCE?6:16,200);
+        SFX.hurt();
+        if(!REDUCE){ shake=Math.min(20,shake+11); flash=Math.min(1,flash+0.75); }
+        paintHud();
+        if(hull<=0){ hull=0; paintHud(); die(); return; }
+      }
+    }
+
+    stepStars(dt); stepParts(dt);
+    if(shake>0) shake=Math.max(0,shake-dt*44);
+    if(flash>0) flash=Math.max(0,flash-dt*2.6);
+    paintHud();
+  }
+
+  /* Vật thể bị hạ: cộng điểm / Thiên thạch tím, hoặc mở câu đố nếu là thạch vàng */
+  function killFoe(index, f){
+    var T=TYPES[f.key];
+    foes.splice(index,1);
+    score+=T.score;
+    if(f.key==="purple"){
+      meteors+=T.tt;
+      SFX.gem(); burst(f.x,f.y,"#c084fc",REDUCE?7:18,210);
+    } else if(f.key==="gold"){
+      SFX.gold(); burst(f.x,f.y,"#ffd166",REDUCE?8:20,200);
+      paintHud(); openQuiz(); return;
+    } else if(f.key==="junk"){
+      SFX.boom(); burst(f.x,f.y,"#ff8a8a",REDUCE?6:15,200);
+    } else {
+      SFX.boom(); burst(f.x,f.y,"#a8b6d8",REDUCE?7:17,190);
+    }
+    paintHud();
+  }
+
+  function updateDying(dt){
+    dieT-=dt;
+    stepStars(dt); stepParts(dt);
+    for(var j=foes.length-1;j>=0;j--){ var e=foes[j]; e.x+=e.vx*dt*0.3; e.y+=e.vy*dt*0.3; e.rot+=e.spin*dt; }
+    if(shake>0) shake=Math.max(0,shake-dt*44);
+    if(flash>0) flash=Math.max(0,flash-dt*1.6);
+    if(dieT<=0) gameOver();
+  }
+
+  function stepStars(dt){
+    for(var i=0;i<stars.length;i++) stars[i].tw += dt*stars[i].sp;
+  }
+  function stepParts(dt){
+    for(var p=parts.length-1;p>=0;p--){
+      var pt=parts[p]; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=0.985; pt.vy*=0.985; pt.life-=dt;
+      if(pt.life<=0) parts.splice(p,1);
+    }
+  }
+
+  /* ============================================================
+     VẼ
+     ============================================================ */
   function render(){
-    ctx.clearRect(0,0,W,H);
-    var ox=0,oy=0; if(shake>0){ ox=(Math.random()-0.5)*shake; oy=(Math.random()-0.5)*shake; }
+    ctx.fillStyle="#0b0f19"; ctx.fillRect(0,0,VW,VH);
+    /* quầng sáng rất mờ quanh Trạm: nền phẳng tuyệt đối thì sân trông trống trải,
+       quầng này cũng hướng mắt về tâm — nơi phải bảo vệ. */
+    var vg=ctx.createRadialGradient(CX,CY,30,CX,CY,VW*0.62);
+    vg.addColorStop(0,"rgba(35,54,120,.55)"); vg.addColorStop(0.5,"rgba(18,26,62,.32)"); vg.addColorStop(1,"rgba(11,15,25,0)");
+    ctx.fillStyle=vg; ctx.fillRect(0,0,VW,VH);
+    drawStars();
+
+    var ox=0,oy=0;
+    if(shake>0){ ox=(Math.random()-0.5)*shake; oy=(Math.random()-0.5)*shake; }
     ctx.save(); ctx.translate(ox,oy);
-    // sao nhấp nháy
-    for(var s=0;s<stars.length;s++){ var st=stars[s]; ctx.globalAlpha=0.35+Math.sin(st.tw)*0.3+st.z*0.15; ctx.fillStyle="#bcd4ff"; ctx.fillRect(st.x,st.y,st.z,st.z*2.6); }
-    ctx.globalAlpha=1;
-    // đạn
-    for(var b=0;b<bullets.length;b++){ var bl=bullets[b]; drawBullet(bl); }
-    // thiên thạch
-    for(var i=0;i<rocks.length;i++){ drawRock(rocks[i]); }
-    // tàu
-    drawShip();
-    // hạt
-    for(var p=0;p<parts.length;p++){ var pt=parts[p]; ctx.globalAlpha=Math.max(0,pt.life*1.6); ctx.fillStyle=pt.col; ctx.beginPath(); ctx.arc(pt.x,pt.y,2.4,0,6.28); ctx.fill(); }
-    ctx.globalAlpha=1;
+
+    drawPerimeter();
+    for(var i=0;i<foes.length;i++) drawEnemy(foes[i]);
+    drawBullets();
+    if(state!=="over") drawStation();
+    drawParts();
+
     ctx.restore();
-    // chớp đỏ khi trúng
-    if(flash>0){ ctx.save(); ctx.globalAlpha=flash*0.5; ctx.fillStyle="rgba(239,68,68,1)"; ctx.fillRect(0,0,W,H);
-      var vg=ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.75); vg.addColorStop(0,"rgba(239,68,68,0)"); vg.addColorStop(1,"rgba(239,68,68,.5)");
-      ctx.globalAlpha=flash; ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); ctx.restore(); }
-    // reticle "+" theo con trỏ khi chơi
+
+    drawWarnings();                               // dấu nhắc vật thể ngoài khung
     if(state==="play" && pointerIn) drawReticle();
+    if(state==="play" && elapsed<4.5) drawHint();
+    if(flash>0) drawFlash();
   }
-  function drawBullet(bl){
-    // Tia laser TÍM
-    ctx.save(); ctx.lineCap="round"; ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=12;
-    ctx.strokeStyle="#c084fc"; ctx.lineWidth=5;
-    ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.lineTo(bl.x-bl.vx*0.022, bl.y-bl.vy*0.022); ctx.stroke();
-    ctx.strokeStyle="#f2e6ff"; ctx.lineWidth=2;                 // lõi sáng
-    ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.lineTo(bl.x-bl.vx*0.018, bl.y-bl.vy*0.018); ctx.stroke();
+
+  function drawStars(){
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      ctx.globalAlpha=0.35+Math.sin(s.tw)*0.3+0.25;   // nhấp nháy
+      ctx.fillStyle="#dbe6ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* Vòng cảnh giới + tia radar quét — nhắc người chơi đây là phòng thủ 360° */
+  function drawPerimeter(){
+    ctx.save();
+    ctx.strokeStyle="rgba(56,189,248,.09)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(CX,CY,140,0,TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX,CY,232,0,TAU); ctx.stroke();
+    /* Tia quét: hình rẻ quạt mờ dần ra ngoài (vẽ bằng nét dày thì ra một thanh
+       xám cứng, trông như vệt bẩn chứ không phải radar đang quét). */
+    var R=276, span=0.42;
+    var g=ctx.createRadialGradient(CX,CY,20,CX,CY,R);
+    g.addColorStop(0,"rgba(56,189,248,.16)");
+    g.addColorStop(0.55,"rgba(56,189,248,.07)");
+    g.addColorStop(1,"rgba(56,189,248,0)");
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.arc(CX,CY,R,radar-span,radar); ctx.closePath(); ctx.fill();
+    /* cạnh trước của tia sáng hơn cho thấy chiều quét */
+    ctx.strokeStyle="rgba(125,225,255,.16)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(CX+Math.cos(radar)*R, CY+Math.sin(radar)*R); ctx.stroke();
     ctx.restore();
   }
-  function drawShip(){
-    var x=ship.x, y=ship.y, w=shipW, h=shipH;
-    // Nhân vật Luna (img/luna2.png)
-    ctx.save(); ctx.shadowColor="rgba(192,132,252,.55)"; ctx.shadowBlur=16;
-    if(shipReady){ ctx.drawImage(shipImg, x-w/2, y-h/2, w, h); }
-    else { ctx.fillStyle="#d8c6ff"; ctx.beginPath(); ctx.arc(x,y,w*0.34,0,6.28); ctx.fill(); }
-    ctx.restore();
-    // pháo laser tím xoay theo aim
-    ctx.save(); ctx.translate(x, y-h*0.16); ctx.rotate(aim+Math.PI/2);
-    ctx.shadowColor="rgba(192,132,252,.85)"; ctx.shadowBlur=9;
-    ctx.fillStyle="#e6ccff"; ctx.fillRect(-3,-22,6,22);
-    ctx.fillStyle="#c084fc"; ctx.beginPath(); ctx.arc(0,-22,3.6,0,6.28); ctx.fill();
+
+  /* Trạm Vũ Trụ ở TÂM + nòng pháo xoay 360° theo con trỏ */
+  function drawStation(){
+    var R=CONFIG.stationR;
+    ctx.save(); ctx.translate(CX,CY);
+
+    /* vòng khiên: cung sáng thể hiện % giáp còn lại */
+    var frac=Math.max(0,hull/CONFIG.hullStart);
+    ctx.strokeStyle="rgba(120,160,255,.16)"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,CONFIG.shieldR,0,TAU); ctx.stroke();
+    ctx.strokeStyle = frac>0.6 ? "rgba(74,222,128,.9)" : frac>0.3 ? "rgba(251,146,60,.9)" : "rgba(239,68,68,.95)";
+    ctx.lineWidth=3; ctx.lineCap="round";
+    ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.arc(0,0,CONFIG.shieldR,-Math.PI/2,-Math.PI/2+TAU*frac); ctx.stroke();
+    ctx.shadowBlur=0; ctx.lineCap="butt";
+
+    var md=muzzleDist();
+
+    if(stationReady){
+      /* --- PHI THUYỀN LUNA: cả tàu quay theo hướng ngắm ---
+         Ảnh gốc mũi chỉ LÊN nên phải bù (aim - spriteUp). Mũi tàu chính là nòng,
+         KHÔNG vẽ thêm nòng vector nữa kẻo hai thứ chồng lên nhau. */
+      ctx.save();
+      ctx.rotate(aim-CONFIG.spriteUp);
+      ctx.shadowColor="rgba(192,132,252,.5)"; ctx.shadowBlur=14;
+      ctx.drawImage(stationImg,-shipW/2,-shipH/2,shipW,shipH);
+      ctx.shadowBlur=0;
+      ctx.restore();
+      /* ánh lửa ở mũi tàu khi vừa bắn (toạ độ theo hướng ngắm, không quay ảnh) */
+      if(muzzle>0){
+        var ks=muzzle/0.07, sx=Math.cos(aim)*md, sy=Math.sin(aim)*md;
+        var sg=ctx.createRadialGradient(sx,sy,0, sx,sy, 16*ks);
+        sg.addColorStop(0,"rgba(240,250,255,.95)"); sg.addColorStop(0.45,"rgba(192,132,252,.75)"); sg.addColorStop(1,"rgba(192,132,252,0)");
+        ctx.fillStyle=sg;
+        ctx.beginPath(); ctx.arc(sx,sy,16*ks,0,TAU); ctx.fill();
+      }
+
+    } else {
+      /* --- Bản vẽ vector (khi không có ảnh): nòng pháo + thân tròn ---
+         Nòng phải DÀI và RÕ: trong game 360° thì hướng nòng là thông tin quan trọng
+         nhất trên sân, nòng cụt thì người chơi không biết mình đang chỉ đâu. */
+      ctx.save(); ctx.rotate(aim);
+      var bl=CONFIG.barrelLen;
+      ctx.shadowColor="rgba(192,132,252,.55)"; ctx.shadowBlur=10;
+      ctx.fillStyle="#7688bb";
+      ctx.fillRect(R*0.35, -5.5, bl, 11);                       // thân nòng
+      ctx.fillStyle="#dbe6ff";
+      ctx.fillRect(R*0.35+bl*0.55, -7, bl*0.34, 14);            // khối hãm sáng màu
+      ctx.fillStyle="#e9d7ff";
+      ctx.fillRect(R*0.35+bl-3, -8, 4, 16);                     // miệng nòng
+      ctx.shadowBlur=0;
+      /* 2 vạch dẫn hướng mờ → thấy rõ đường ngắm mà không rối mắt */
+      ctx.strokeStyle="rgba(192,132,252,.28)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(R*0.35+bl+8,-3); ctx.lineTo(R*0.35+bl+30,-3);
+      ctx.moveTo(R*0.35+bl+8,3); ctx.lineTo(R*0.35+bl+30,3); ctx.stroke();
+      /* ánh lửa đầu nòng khi vừa bắn */
+      if(muzzle>0){
+        var k=muzzle/0.07;
+        var mg=ctx.createRadialGradient(md,0,0, md,0, 15*k);
+        mg.addColorStop(0,"rgba(214,240,255,.95)"); mg.addColorStop(0.5,"rgba(192,132,252,.7)"); mg.addColorStop(1,"rgba(192,132,252,0)");
+        ctx.fillStyle=mg;
+        ctx.beginPath(); ctx.arc(md,0,15*k,0,TAU); ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.shadowColor="rgba(56,189,248,.6)"; ctx.shadowBlur=16;
+      var bg=ctx.createRadialGradient(-R*0.35,-R*0.4,R*0.15,0,0,R);
+      bg.addColorStop(0,"#eaf3ff"); bg.addColorStop(0.55,"#aebfe4"); bg.addColorStop(1,"#5d6b96");
+      ctx.fillStyle=bg;
+      ctx.beginPath(); ctx.arc(0,0,R,0,TAU); ctx.fill();
+      ctx.shadowBlur=0;
+      /* vành đai + 4 cửa sổ phát sáng */
+      ctx.strokeStyle="rgba(56,189,248,.85)"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(0,0,R*0.98,0,TAU); ctx.stroke();
+      for(var w=0;w<4;w++){
+        var a=w/4*TAU+radar*0.3;
+        ctx.fillStyle="rgba(125,225,255,.95)";
+        ctx.beginPath(); ctx.arc(Math.cos(a)*R*0.55, Math.sin(a)*R*0.55, R*0.14, 0, TAU); ctx.fill();
+      }
+      /* lõi */
+      ctx.fillStyle="rgba(56,189,248,.95)";
+      ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=12;
+      ctx.beginPath(); ctx.arc(0,0,R*0.26,0,TAU); ctx.fill();
+      ctx.shadowBlur=0;
+    }
     ctx.restore();
   }
-  function drawRock(a){
-    var x=a.x,y=a.y,r=a.r; var col=a.type;
-    ctx.save(); ctx.translate(x,y);
-    if(col==="purple"){ ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=18; }
-    else if(col==="gold"){ ctx.shadowColor="rgba(255,207,107,.95)"; ctx.shadowBlur=16+Math.sin(a.ph)*6; }
-    else if(col==="boss"){ ctx.shadowColor="rgba(255,120,120,.6)"; ctx.shadowBlur=16; }
-    ctx.rotate(a.rot);
-    var grd=ctx.createRadialGradient(-r*0.3,-r*0.3,r*0.2,0,0,r);
-    if(col==="purple"){ grd.addColorStop(0,"#e6c6ff"); grd.addColorStop(.55,"#a06be0"); grd.addColorStop(1,"#5a2f9e"); }
-    else if(col==="gold"){ grd.addColorStop(0,"#fff0c8"); grd.addColorStop(.55,"#f2b544"); grd.addColorStop(1,"#a9711a"); }
-    else if(col==="boss"){ grd.addColorStop(0,"#9aa6c0"); grd.addColorStop(.55,"#5a4a5e"); grd.addColorStop(1,"#3a2432"); }
-    else { grd.addColorStop(0,"#8390ad"); grd.addColorStop(.6,"#48546f"); grd.addColorStop(1,"#28324c"); }
-    ctx.fillStyle=grd; ctx.beginPath();
-    var pts=10; for(var k=0;k<=pts;k++){ var ang=k/pts*6.28; var rr=r*(0.82+((k*29)%10)/10*0.26); var px=Math.cos(ang)*rr, py=Math.sin(ang)*rr; if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
-    ctx.closePath(); ctx.fill();
-    ctx.shadowBlur=0; ctx.fillStyle="rgba(0,0,0,.26)";
-    ctx.beginPath(); ctx.arc(r*0.28,r*0.2,r*0.2,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(-r*0.32,r*0.3,r*0.12,0,6.28); ctx.fill();
+
+  function drawBullets(){
+    ctx.save();
+    ctx.shadowColor="rgba(192,132,252,.9)"; ctx.shadowBlur=10;
+    for(var i=0;i<bullets.length;i++){
+      var b=bullets[i];
+      /* tia laser tím: vệt ngắn theo hướng bay */
+      var n=Math.hypot(b.vx,b.vy)||1, ux=b.vx/n, uy=b.vy/n;
+      /* vệt dài mờ ở đuôi + lõi trắng đặc ở đầu → đọc ra "tia laser", chứ vẽ nhạt
+         một lớp thì chỉ thành viên thuốc màu tím lờ mờ. */
+      var g=ctx.createLinearGradient(b.x-ux*20,b.y-uy*20, b.x+ux*5,b.y+uy*5);
+      g.addColorStop(0,"rgba(192,132,252,0)");
+      g.addColorStop(0.55,"rgba(192,132,252,.85)");
+      g.addColorStop(1,"rgba(245,235,255,1)");
+      ctx.strokeStyle=g; ctx.lineWidth=CONFIG.bulletR*2.1; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(b.x-ux*20,b.y-uy*20); ctx.lineTo(b.x+ux*5,b.y+uy*5); ctx.stroke();
+      ctx.strokeStyle="rgba(255,255,255,.95)"; ctx.lineWidth=CONFIG.bulletR*0.85;
+      ctx.beginPath(); ctx.moveTo(b.x-ux*7,b.y-uy*7); ctx.lineTo(b.x+ux*4,b.y+uy*4); ctx.stroke();
+    }
     ctx.restore();
-    // thanh máu boss
-    if(col==="boss"){ var bw=r*1.8, bx=x-bw/2, by=y-r-12;
-      ctx.fillStyle="rgba(0,0,0,.5)"; ctx.fillRect(bx-1,by-1,bw+2,6);
-      ctx.fillStyle="#ef4444"; ctx.fillRect(bx,by,bw,4);
-      ctx.fillStyle="#4ade80"; ctx.fillRect(bx,by,bw*Math.max(0,a.hp/a.maxHp),4); }
   }
+
+  /* 4 loại vật thể — mỗi loại một hình/màu riêng để nhận ra ngay */
+  function drawEnemy(f){
+    ctx.save(); ctx.translate(f.x,f.y);
+
+    if(f.key==="purple"){
+      var pulse=1+Math.sin(f.ph)*0.1;
+      var hg=ctx.createRadialGradient(0,0,f.r*0.3,0,0,f.r*2.4*pulse);
+      hg.addColorStop(0,"rgba(192,132,252,.55)"); hg.addColorStop(1,"rgba(192,132,252,0)");
+      ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,0,f.r*2.4*pulse,0,TAU); ctx.fill();
+      ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=16;
+      if(ttReady){ var d=f.r*2.2*pulse; ctx.drawImage(ttImg,-d/2,-d/2,d,d); }
+      else { ctx.fillStyle="#c084fc"; ctx.beginPath(); ctx.arc(0,0,f.r*pulse,0,TAU); ctx.fill(); }
+
+    } else if(f.key==="gold"){
+      var gp=1+Math.sin(f.ph*1.3)*0.08;
+      var gg=ctx.createRadialGradient(0,0,f.r*0.2,0,0,f.r*2.3*gp);
+      gg.addColorStop(0,"rgba(255,207,107,.5)"); gg.addColorStop(1,"rgba(255,207,107,0)");
+      ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(0,0,f.r*2.3*gp,0,TAU); ctx.fill();
+      ctx.rotate(f.rot);
+      ctx.shadowColor="rgba(255,207,107,.95)"; ctx.shadowBlur=16;
+      var og=ctx.createRadialGradient(-f.r*0.3,-f.r*0.3,f.r*0.2,0,0,f.r);
+      og.addColorStop(0,"#fff3cf"); og.addColorStop(0.6,"#ffcf6b"); og.addColorStop(1,"#c98a1f");
+      ctx.fillStyle=og; poly(f.r,9,0.86,f.seed); ctx.fill();
+      ctx.shadowBlur=0; ctx.rotate(-f.rot);
+      /* dấu "?" cho biết bắn vào sẽ mở câu đố */
+      ctx.fillStyle="#4a3208"; ctx.font="700 "+Math.round(f.r*1.15)+"px 'Space Grotesk', system-ui, sans-serif";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText("?",0,1);
+
+    } else if(f.key==="junk"){
+      ctx.rotate(f.rot);
+      ctx.shadowColor="rgba(239,68,68,.8)"; ctx.shadowBlur=13;
+      var jg=ctx.createLinearGradient(-f.r,-f.r,f.r,f.r);
+      jg.addColorStop(0,"#ff8f8f"); jg.addColorStop(0.55,"#e03b3b"); jg.addColorStop(1,"#7d1616");
+      ctx.fillStyle=jg; poly(f.r,6,0.7,f.seed); ctx.fill();
+      ctx.shadowBlur=0;
+      /* đèn báo nhấp nháy: rác đỏ = nguy hiểm, bay nhanh */
+      ctx.fillStyle = Math.sin(f.ph*3)>0 ? "#fff0a8" : "#7a2222";
+      ctx.beginPath(); ctx.arc(0,0,f.r*0.26,0,TAU); ctx.fill();
+
+    } else {
+      /* thiên thạch xám — 2 phát mới vỡ; nứt dần khi còn 1 máu */
+      ctx.rotate(f.rot);
+      var rg=ctx.createRadialGradient(-f.r*0.32,-f.r*0.32,f.r*0.18,0,0,f.r);
+      rg.addColorStop(0,"#8291b0"); rg.addColorStop(0.6,"#44516f"); rg.addColorStop(1,"#212b45");
+      ctx.fillStyle=rg; poly(f.r,9,0.82,f.seed); ctx.fill();
+      ctx.strokeStyle="rgba(14,19,36,.5)"; ctx.lineWidth=1.3; ctx.stroke();
+      ctx.fillStyle="rgba(0,0,0,.26)";
+      ctx.beginPath(); ctx.arc(f.r*0.26,f.r*0.2,f.r*0.2,0,TAU); ctx.fill();
+      if(f.hp===1){   /* vết nứt = sắp vỡ */
+        ctx.strokeStyle="rgba(255,220,220,.75)"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(-f.r*0.6,-f.r*0.1); ctx.lineTo(-f.r*0.1,f.r*0.15);
+        ctx.lineTo(f.r*0.25,-f.r*0.3); ctx.lineTo(f.r*0.7,f.r*0.1); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  /* Đa giác gồ ghề dùng chung cho thiên thạch/rác (n đỉnh, biên độ lệch amp).
+     seed lấy từ mỗi vật thể → mỗi viên một hình, không thì cả sân giống hệt nhau. */
+  function poly(r,n,amp,seed){
+    ctx.beginPath();
+    for(var k=0;k<n;k++){
+      var ang=k/n*TAU, rr=r*(amp+((k*37+(seed||0))%10)/10*(1-amp)*2);
+      var px=Math.cos(ang)*rr, py=Math.sin(ang)*rr;
+      if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+  }
+
+  /* Dấu nhắc ở mép sân cho vật thể còn ở ngoài khung — phòng thủ 360° thì
+     người chơi phải biết đòn tấn công đến từ hướng nào mới xoay pháo kịp. */
+  function drawWarnings(){
+    var m=13, inset=8;
+    for(var i=0;i<foes.length;i++){
+      var f=foes[i];
+      if(f.x>-f.r && f.x<VW+f.r && f.y>-f.r && f.y<VH+f.r) continue;   // đã vào khung
+      var dx=f.x-CX, dy=f.y-CY, d=Math.hypot(dx,dy)||1;
+      /* cắt tia (tâm → vật thể) với hình chữ nhật khung đã co vào inset */
+      var sx=(VW/2-inset)/Math.abs(dx||1e-6), sy=(VH/2-inset)/Math.abs(dy||1e-6);
+      var s=Math.min(sx,sy);
+      var px=CX+dx*s, py=CY+dy*s, a=Math.atan2(dy,dx);
+      var col = f.key==="purple" ? "192,132,252" : f.key==="gold" ? "255,207,107"
+              : f.key==="junk" ? "239,68,68" : "168,182,216";
+      var near=Math.max(0, Math.min(1, (CONFIG.spawnR-d)/90));          // càng gần càng rõ
+      ctx.save(); ctx.translate(px,py); ctx.rotate(a);
+      ctx.globalAlpha=0.35+near*0.5;
+      ctx.fillStyle="rgba("+col+",1)";
+      ctx.shadowColor="rgba("+col+",.9)"; ctx.shadowBlur=8;
+      ctx.beginPath(); ctx.moveTo(m*0.5,0); ctx.lineTo(-m*0.45,-m*0.5); ctx.lineTo(-m*0.45,m*0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function drawParts(){
+    for(var p=0;p<parts.length;p++){
+      var pt=parts[p];
+      ctx.globalAlpha=Math.max(0,Math.min(1,pt.life*1.9));
+      ctx.fillStyle=pt.col;
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* Chớp đỏ toàn màn khi Trạm bị đâm */
+  function drawFlash(){
+    ctx.save();
+    ctx.globalAlpha=Math.min(0.5,flash*0.5);
+    var g=ctx.createRadialGradient(CX,CY,60,CX,CY,VW*0.72);
+    g.addColorStop(0,"rgba(255,60,60,0)"); g.addColorStop(1,"rgba(255,40,40,1)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+    ctx.restore();
+  }
+
+  /* Con trỏ "+" tự vẽ (sân đặt cursor:none) */
   function drawReticle(){
-    var x=pointerX,y=pointerY;
-    ctx.save(); ctx.strokeStyle="rgba(56,189,248,.95)"; ctx.lineWidth=2; ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=10;
-    ctx.beginPath(); ctx.arc(x,y,9,0,6.28); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x-16,y); ctx.lineTo(x-4,y); ctx.moveTo(x+4,y); ctx.lineTo(x+16,y); ctx.moveTo(x,y-16); ctx.lineTo(x,y-4); ctx.moveTo(x,y+4); ctx.lineTo(x,y+16); ctx.stroke();
+    ctx.save();
+    ctx.strokeStyle="rgba(125,225,255,.9)"; ctx.lineWidth=1.6;
+    ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=8;
+    ctx.beginPath();
+    ctx.moveTo(pointerX-9,pointerY); ctx.lineTo(pointerX-3,pointerY);
+    ctx.moveTo(pointerX+3,pointerY); ctx.lineTo(pointerX+9,pointerY);
+    ctx.moveTo(pointerX,pointerY-9); ctx.lineTo(pointerX,pointerY-3);
+    ctx.moveTo(pointerX,pointerY+3); ctx.lineTo(pointerX,pointerY+9);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(pointerX,pointerY,13,0,TAU); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawHint(){
+    ctx.save();
+    ctx.globalAlpha=Math.max(0, Math.min(1,(4.5-elapsed)/1.6));
+    ctx.font="600 14px 'Space Grotesk', system-ui, sans-serif";
+    ctx.textAlign="center"; ctx.fillStyle="rgba(234,241,255,.9)";
+    ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=12;
+    ctx.fillText(t("aim_hint"), CX, VH-26);
     ctx.restore();
   }
 
@@ -491,60 +1070,113 @@
     document.documentElement.lang=LANG; document.title=t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
-    if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
+    $("gtag").textContent = "[ "+t("start_title")+" ]";
+    hudCache={}; paintHud();
     if($("ov-need").classList.contains("show")) showNeed();
-    if($("ov-quiz").classList.contains("show")){ var it=QUIZ[quizIdx]; $("q-text").textContent=L(it.q);
-      var oo=$("q-opts").children; for(var i=0;i<oo.length && i<it.o.length;i++) oo[i].textContent=L(it.o[i]); }
+    if($("ov-over").classList.contains("show")) paintPaid();   // dòng thưởng do JS sinh
+    if($("ov-quiz").classList.contains("show")) renderQuiz();  // câu đố cũng do JS sinh
   }
 
   /* ===== Toast ===== */
-  var toast = AstroQ.makeToast("toast", 1700);
+  var toast = AstroQ.makeToast("toast", 1900);
 
-  /* ===== Điều khiển ===== */
-  var keyL=false, keyR=false, keyU=false, keyD=false;
-  function ptr(e){ var r=cv.getBoundingClientRect(); pointerX=e.clientX-r.left; pointerY=e.clientY-r.top; pointerIn=true; }
-  stage.addEventListener("pointermove", ptr);
-  stage.addEventListener("pointerdown", function(e){ ptr(e); if(state==="play"){ firing=true; shoot(); fireCd=CONFIG.fireInterval; } });
-  window.addEventListener("pointerup", function(){ firing=false; });
-  stage.addEventListener("pointerleave", function(){ pointerIn=false; });
+  /* ============================================================
+     ĐIỀU KHIỂN
+     ============================================================ */
+  /* Chuyển toạ độ con trỏ trên trang → hệ toạ độ ảo 600×600 */
+  function setPointer(clientX, clientY){
+    var r=cv.getBoundingClientRect();
+    if(!r.width||!r.height) return;
+    pointerX=(clientX-r.left)/r.width*VW;
+    pointerY=(clientY-r.top)/r.height*VH;
+    pointerIn=true;
+  }
+  cv.addEventListener("mousemove", function(e){ setPointer(e.clientX,e.clientY); });
+  cv.addEventListener("mouseleave", function(){ pointerIn=false; firing=false; });
+  cv.addEventListener("mousedown", function(e){
+    if(e.button!==0) return;
+    e.preventDefault(); SFX.unlock(); setPointer(e.clientX,e.clientY);
+    if(state==="play") firing=true;
+  });
+  window.addEventListener("mouseup", function(){ firing=false; });
+
+  /* Cảm ứng: chạm ở đâu thì ngắm về đó và bắn luôn */
+  cv.addEventListener("touchstart", function(e){
+    e.preventDefault(); SFX.unlock();
+    var tc=e.touches[0]; if(!tc) return;
+    setPointer(tc.clientX,tc.clientY);
+    if(state==="play") firing=true;
+  }, {passive:false});
+  cv.addEventListener("touchmove", function(e){
+    e.preventDefault();
+    var tc=e.touches[0]; if(tc) setPointer(tc.clientX,tc.clientY);
+  }, {passive:false});
+  function endTouch(){ firing=false; }
+  window.addEventListener("touchend", endTouch);
+  window.addEventListener("touchcancel", endTouch);
+  window.addEventListener("blur", function(){ firing=false; aimKeyL=aimKeyR=false; });
+
   document.addEventListener("keydown", function(e){
     var k=(e.key||"").toLowerCase();
-    if(k==="escape"){ if(state==="play"){ pauseGame(); } else if(state==="paused"){ resumeGame(); } else { window.location.href="games.html"; } return; }
-    // Di chuyển tàu: A=trái, W=lên, D=phải, S=xuống (hoặc mũi tên)
-    if(k==="arrowleft"||k==="a"){ keyL=true; }
-    if(k==="arrowright"||k==="d"){ keyR=true; }
-    if(k==="arrowup"||k==="w"){ keyU=true; }
-    if(k==="arrowdown"||k==="s"){ keyD=true; }
-    if(k==="arrowup"||k==="arrowdown"||k===" "){ e.preventDefault(); }
-    if(k===" "||k==="spacebar"){ if(state==="play"){ if(!firing){ shoot(); fireCd=CONFIG.fireInterval; } firing=true; }
-      else if($("ov-start").classList.contains("show")||$("ov-over").classList.contains("show")){ startRound(); } }
+    if(k==="escape"){
+      if(state==="play"||state==="paused") togglePause();
+      else if(state!=="quiz") window.location.href="games.html";
+      return;
+    }
+    /* Khi con trỏ bàn phím đang ở một nút thì để Space/Enter bấm nút như bình thường
+       (người dùng bàn phím vẫn chọn được đáp án quiz và nút ở bảng kết quả). */
+    var tag=(e.target && e.target.tagName)||"";
+    if(tag==="BUTTON"||tag==="A"||tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA") return;
+    if(k==="p"){ togglePause(); return; }
+    if(k==="m"){ toggleSfx(); return; }
+    if(k==="arrowleft"||k==="a"){ aimKeyL=true; e.preventDefault(); }
+    if(k==="arrowright"||k==="d"){ aimKeyR=true; e.preventDefault(); }
+    if(k===" "||k==="spacebar"||k==="enter"){
+      e.preventDefault();
+      if(e.repeat) return;
+      SFX.unlock();
+      if(state==="play") firing=true;
+      else if(state==="paused") resumeGame();
+      else if($("ov-start").classList.contains("show") || $("ov-over").classList.contains("show")) startRound();
+    }
   });
   document.addEventListener("keyup", function(e){
     var k=(e.key||"").toLowerCase();
-    if(k==="arrowleft"||k==="a"){ keyL=false; }
-    if(k==="arrowright"||k==="d"){ keyR=false; }
-    if(k==="arrowup"||k==="w"){ keyU=false; }
-    if(k==="arrowdown"||k==="s"){ keyD=false; }
-    if(k===" "||k==="spacebar"){ firing=false; }
+    if(k==="arrowleft"||k==="a") aimKeyL=false;
+    if(k==="arrowright"||k==="d") aimKeyR=false;
+    if(k===" "||k==="spacebar"||k==="enter") firing=false;
   });
 
+  /* ===== Nút HUD ===== */
+  function toggleSfx(){ $("btn-sfx").classList.toggle("off", SFX.toggle()); }
+  /* blur() sau khi bấm: nếu nút còn được focus thì Space sẽ bấm lại nút đó thay vì bắn */
+  $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
+  $("btn-sfx").addEventListener("click", function(){ this.blur(); toggleSfx(); });
+
+  /* ===== Nút overlay / điều hướng ===== */
   $("start-btn").addEventListener("click", startRound);
   $("again-btn").addEventListener("click", startRound);
   $("back").addEventListener("click", function(){ window.location.href="games.html"; });
   $("hub-btn").addEventListener("click", function(){ window.location.href="games.html"; });
+  $("home-btn").addEventListener("click", function(){ window.location.href="dashboard.html"; });
   $("need-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   $("need-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
   $("resume-btn").addEventListener("click", resumeGame);
   $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   AstroQ.initLang(applyLang);
-  document.addEventListener("visibilitychange", function(){ if(!document.hidden) last=0; });
+
+  /* Rời tab → tự tạm dừng (tránh mất giáp oan khi quay lại) */
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){ pauseGame(); } else { last=0; }
+  });
 
   /* ===== Khởi tạo ===== */
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
-  fit(); initStars(); paintHud();
+  fit(); initStars(); syncBtns();
+  $("btn-sfx").classList.toggle("off", SFX.isMuted());
   applyLang(LANG);
-  raf=requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>

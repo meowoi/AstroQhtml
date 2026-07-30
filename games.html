@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/games.css" />
 <script src="js/ui-common.js"></script>
 </head>
@@ -24,7 +25,7 @@
 <div class="wrap">
   <!-- ============ HEADER ============ -->
   <header class="hub-top">
-    <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khoang Lái</span></button>
+    <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
     <span class="hub-tag">[ ARCADE_BAY ]</span>
     <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
       <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
@@ -40,7 +41,7 @@
   <section class="hero">
     <span class="eyebrow" data-i18n="eyebrow">Sảnh Trò Chơi</span>
     <h1 data-i18n="title_h">Chọn một trò chơi để bắt đầu</h1>
-    <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!</p>
+    <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở khu Tri Thức nếu chưa đủ nhé!</p>
   </section>
 
   <!-- ============ GAME GRID (đổ từ JS) ============ -->
@@ -71,9 +72,9 @@
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Sảnh Trò Chơi", back:"Về Khoang Lái",
+      title:"AstroQ — Sảnh Trò Chơi", back:"Về Trung Tâm Điều Hướng",
       eyebrow:"Sảnh Trò Chơi", title_h:"Chọn một trò chơi để bắt đầu",
-      intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
+      intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở khu Tri Thức nếu chưa đủ nhé!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -82,7 +83,7 @@
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Arcade Bay", back:"Return to Cockpit",
+      title:"AstroQ — Arcade Bay", back:"Back to Navigation Hub",
       eyebrow:"Arcade Bay", title_h:"Pick a game to start",
       intro:"Each play costs a few Purple Meteors. Earn more at the Knowledge Station if you run low!",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
@@ -98,29 +99,33 @@
 
   /* ================= Danh mục trò chơi (dữ liệu động) =================
      status: "ready" → tính phí + mở file; "soon" → hiện "Sắp ra mắt".
-     Khi có game thật, đặt status:"ready" và file:"ten-game.html". */
+     Khi có game thật, đặt status:"ready" và file:"ten-game.html".
+     `code` là số hiệu CỐ ĐỊNH ghi thẳng trong dữ liệu — trước đây nó sinh theo vị
+     trí sau khi sort nên mỗi lần một game "soon" thành "ready" là số hiệu của cả
+     dãy nhảy hết, trong khi số hiệu đã đi vào tài liệu và lời nói của người dùng
+     ("ARCADE-04 = Ghép Chòm Sao"). Thêm game mới thì cấp số kế tiếp, không sửa số cũ. */
   var GAMES = [
-    { key:"dodge", cls:"card--gravity", icon:"🪐", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
-      tag:{vi:"Né vật cản", en:"Dodge"},
+    { key:"dodge", code:"ARCADE-01", cls:"card--gravity", icon:"🪐", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
+      tag:{vi:"Bay ngang & né tránh", en:"Side-scroll & dodge"},
       name:{vi:"Né Thiên Thạch", en:"Asteroid Dodge"},
-      desc:{vi:"Điều khiển Byte né vành đai thiên thạch và khai thác Thiên thạch tím càng lâu càng tốt!", en:"Steer Byte to dodge the asteroid belt and mine Purple Meteors for as long as you can!"} },
-    { key:"racer", cls:"card--racer", icon:"☄️", cost:5, diff:"medium", status:"soon", file:"",
+      desc:{vi:"Điều khiển Byte nhấp nháy bay ngang qua khe hẹp của vành đai thiên thạch và thu thập Thiên thạch tím trên đường bay!", en:"Blink Byte sideways through the narrow gaps of the asteroid belt and collect Purple Meteors along the way!"} },
+    { key:"racer", code:"ARCADE-03", cls:"card--racer", icon:"☄️", cost:5, diff:"medium", status:"soon", file:"",
       tag:{vi:"Đua tốc độ", en:"Racing"},
       name:{vi:"Đường Đua Sao Chổi", en:"Comet Racer"},
       desc:{vi:"Tăng tốc vượt chướng ngại vật, về đích trước khi hết nhiên liệu.", en:"Speed past obstacles and reach the finish before fuel runs out."} },
-    { key:"defender", cls:"card--blaster", icon:"🛰️", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
-      tag:{vi:"Bắn mục tiêu", en:"Shooter"},
+    { key:"defender", code:"ARCADE-02", cls:"card--blaster", icon:"🛰️", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
+      tag:{vi:"Phòng thủ 360°", en:"360° defense"},
       name:{vi:"Space Defender", en:"Space Defender"},
-      desc:{vi:"Xoay pháo laser bắn hạ thiên thạch bảo vệ tàu; trúng thạch vàng mở câu đố Thiên văn!", en:"Rotate your laser cannon to blast asteroids and defend your ship; gold ones trigger an astronomy quiz!"} },
-    { key:"match", cls:"card--match", icon:"✨", cost:3, diff:"easy", status:"soon", file:"",
+      desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
+    { key:"match", code:"ARCADE-04", cls:"card--match", icon:"✨", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       tag:{vi:"Giải đố", en:"Puzzle"},
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
-      desc:{vi:"Nối các ngôi sao đúng thứ tự để vẽ nên những chòm sao rực rỡ.", en:"Connect stars in the right order to draw glowing constellations."} },
-    { key:"maze", cls:"card--maze", icon:"🌀", cost:4, diff:"medium", status:"soon", file:"",
+      desc:{vi:"Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!", en:"Link the stars in number order to draw a real constellation — finish it and unlock a fun fact about the night sky!"} },
+    { key:"maze", code:"ARCADE-05", cls:"card--maze", icon:"🌀", cost:4, diff:"medium", status:"soon", file:"",
       tag:{vi:"Giải đố", en:"Puzzle"},
       name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
       desc:{vi:"Dẫn phi hành gia qua mê cung sao để tìm lối thoát và thu tinh thể.", en:"Guide the astronaut through a star maze to find the exit and collect crystals."} },
-    { key:"catch", cls:"card--catch", icon:"🌟", cost:3, diff:"easy", status:"soon", file:"",
+    { key:"catch", code:"ARCADE-06", cls:"card--catch", icon:"🌟", cost:3, diff:"easy", status:"soon", file:"",
       tag:{vi:"Phản xạ", en:"Reflex"},
       name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
       desc:{vi:"Hứng những ngôi sao băng may mắn rơi xuống, né các sao chổi lửa.", en:"Catch the lucky falling stars while dodging fiery comets."} }
@@ -133,9 +138,9 @@
   function render(){
     // Sắp xếp: game đã có (ready) trước, game sắp ra mắt (soon) sau
     var list = GAMES.slice().sort(function(a,b){ return (a.status==="ready"?0:1) - (b.status==="ready"?0:1); });
-    $("games").innerHTML = list.map(function(g,i){
+    $("games").innerHTML = list.map(function(g){
       var soon = g.status!=="ready";
-      var code = "ARCADE-"+("0"+(i+1)).slice(-2);
+      var code = g.code || "ARCADE-??";
       var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span class="online">SYS.ONLINE</span>';
       var btn = soon
         ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("soon")+'</button>'
@@ -170,7 +175,7 @@
     var tt = '<img class="tt-inline" src="img/tt.png" alt="tt"/>';
     var body = LANG==="en"
       ? 'You need <b>'+cost+' '+tt+'</b> to play but only have <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!'
-      : 'Bạn cần <b>'+cost+' '+tt+'</b> để chơi nhưng chỉ có <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!';
+      : 'Bạn cần <b>'+cost+' '+tt+'</b> để chơi nhưng chỉ có <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Hãy ghé <b>khu Tri Thức</b> làm Quiz để kiếm thêm nhé!';
     $("need-body").innerHTML = body;
     $("need").classList.add("show");
   }
@@ -203,6 +208,9 @@
   AstroQ.initLang(applyLang);
 
   /* ================= Khởi tạo ================= */
+  /* Số dư đọc từ cache của economy.js. KHÔNG gọi server ở đây: trang này không
+     nạp SDK Firebase (233 KB) nên không có phiên đăng nhập để gọi, và số thật đã
+     được dashboard đồng bộ trước khi trẻ bấm vào Sảnh. */
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);

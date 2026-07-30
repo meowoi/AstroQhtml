@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa,
+     đồng thời bỏ noindex ở landing-app.html và bổ sung URL vào sitemap.xml. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Ghép Chòm Sao</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/game-constellation.css" />
+<script src="js/ui-common.js"></script>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<!-- ===== Sân chơi (khung 800×500 giữ tỉ lệ, canvas + HUD nằm trong .stage) ===== -->
+<div class="stage" id="stage">
+  <!-- Bảng HUD nằm PHÍA TRÊN canvas (không đè lên sân) — đè lên thì chip số liệu
+       che mất ngôi sao đang phải nối mà vùng bấm vẫn ở đó. -->
+  <div class="hud" id="hud">
+    <div class="chip cons">
+      <span class="v" id="hb-name">—</span>
+      <span class="sub" id="hb-sub">—</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="time_lbl">Thời gian</span><span class="v" id="hb-time">0:00</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+
+    <div class="hud-btns">
+      <!-- Pause: icon "⏸" khi đang chơi, "▶" khi đã tạm dừng (class .off) -->
+      <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </button>
+      <!-- Âm thanh: bật (loa) / tắt (loa gạch chéo) -->
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- .play = vùng chơi: sân + các overlay. Overlay chỉ phủ vùng này nên KHÔNG che
+       bảng HUD phía trên (nút Âm thanh lúc nào cũng bấm được). -->
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <canvas id="cv"></canvas>
+    </div>
+
+  <!-- Brief -->
+  <div class="ov show" id="ov-start">
+    <div class="ov-card">
+      <span class="ov-tag">[ MISSION_BRIEF ]</span>
+      <div class="ov-ic">✨</div>
+      <h2 data-i18n="start_title">Ghép Chòm Sao</h2>
+      <div class="how">
+        <span data-i18n-html="how1">✨ <b>Nối</b> các ngôi sao <b>đúng thứ tự số</b>: 1 → 2 → 3 → …</span>
+        <span data-i18n-html="how2">🖱️ <b>Cách nối</b>: bấm sao đầu rồi bấm sao kế tiếp, hoặc kéo từ sao này sang sao kia.</span>
+        <span data-i18n-html="how3">🔭 Ghép xong cả chòm sao sẽ <b>bừng sáng</b> và mở ra một điều thú vị về nó!</span>
+      </div>
+      <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="tt" /></div>
+      <div class="acts">
+        <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thông tin thiên văn (bật ngay khi ghép xong) -->
+  <div class="ov ov-fact" id="ov-fact">
+    <div class="ov-card">
+      <span class="ov-tag">[ STAR_LOG ]</span>
+      <div class="ov-ic">🔭</div>
+      <h2 id="fact-name">—</h2>
+      <div class="fact-sub" id="fact-sub">—</div>
+      <p class="fact-text" id="fact-text"></p>
+      <div class="acts">
+        <button class="primary" id="fact-btn" data-i18n="fact_btn">Xem kết quả</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bảng kết quả -->
+  <div class="ov" id="ov-over">
+    <div class="ov-card">
+      <span class="ov-tag">[ PUZZLE_SOLVED ]</span>
+      <div class="ov-ic">🏆</div>
+      <h2 data-i18n="over_title">Ghép thành công!</h2>
+      <div class="res">
+        <div class="cell time"><div class="rv" id="r-time">0:00</div><div class="rl" data-i18n="time_lbl">Thời gian</div></div>
+        <div class="cell time"><div class="rv" id="r-best">—</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+        <div class="cell miss"><div class="rv" id="r-miss">0</div><div class="rl" data-i18n="miss_lbl">Nối sai</div></div>
+        <div class="cell mtr"><div class="rv" id="r-reward">0</div><div class="rl" data-i18n="reward_lbl">Thưởng Thiên thạch tím</div></div>
+      </div>
+      <div class="paid" id="paid"></div>
+      <div class="acts">
+        <button class="primary" id="again-btn" data-i18n-html="again_btn">Chòm sao khác · <b>3</b></button>
+        <button id="hub-btn" data-i18n="to_hub">Về Sảnh Game</button>
+        <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Không đủ tt -->
+  <div class="ov" id="ov-need">
+    <div class="ov-card">
+      <div class="ov-ic">🪐</div>
+      <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+      <p id="need-body"></p>
+      <div class="acts">
+        <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+        <button id="need-hub" data-i18n="to_hub">Về Sảnh Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tạm dừng (ESC / nút ⏸) -->
+  <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+    <div class="ov-card">
+      <div class="ov-ic">⏸️</div>
+      <h2 data-i18n="pause_title">Tạm dừng</h2>
+      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+      <div class="acts">
+        <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+        <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+      </div>
+    </div>
+  </div>
+  </div><!-- /.play -->
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Báo tiến độ lên server (Hồ sơ + Kho Thành Tích).
+     CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB và
+     trang này cần mượt. Không có phiên đăng nhập thì js/progress.js xếp việc
+     vào hàng chờ trong localStorage, dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/progress.js"></script>
+<script src="economy.js"></script>
+<script>
+/* ============================================================
+   AstroQ · GHÉP CHÒM SAO (ARCADE-04) — mini-game giải đố 2D Canvas
+   Vanilla JS · requestAnimationFrame · không thư viện ngoài
+
+   Bố cục module để dễ chỉnh về sau:
+     CONFIG    — mọi con số gameplay (phí lượt, thưởng, bán kính bấm…)
+     SKY       — DỮ LIỆU CHÒM SAO: mảng toạ độ JSON, thêm chòm mới chỉ cần
+                 thêm 1 phần tử (stars + sketch + fact), không sửa logic
+     SFX       — âm thanh WebAudio (có nút tắt/bật)
+     draw*     — vẽ hình (drawSky / drawStar / drawLink / drawSketch …)
+     update/render — vòng lặp 60fps
+     onFinishGame(rewardMeteors) — CHỖ DUY NHẤT cộng thưởng vào ví AstroQ
+
+   LUẬT: nối các ngôi sao theo ĐÚNG thứ tự số 1 → 2 → 3 → … Nối đúng thì
+   đường nối khoá cố định (neon cyan), nối sai thì nhấp nháy đỏ rồi huỷ.
+   Toạ độ mọi thứ theo hệ ẢO 800×500 rồi scale ra màn hình, nên hình chòm
+   sao không bị bóp méo và vùng bấm y hệt nhau trên mọi thiết bị.
+   ============================================================ */
+(function(){
+  "use strict";
+
+  /* ===== CONFIG — chỉnh gameplay ở đây ===== */
+  var CONFIG = {
+    COST: 3,                  // Thiên thạch tím trừ mỗi lượt (DIFF: Dễ)
+    VW: 800, VH: 500,         // hệ toạ độ ảo: vẽ theo 800×500 rồi scale ra màn hình
+
+    rewardMin: 8, rewardMax: 15,   // khoảng thưởng khi giải xong
+    parPerLink: 5,            // giây "chuẩn" cho mỗi đường nối (tính điểm nhanh/chậm)
+
+    hitR: 30,                 // bán kính bấm quanh một ngôi sao (rộng tay cho trẻ nhỏ)
+    starR: 8.5,               // bán kính lõi ngôi sao mốc
+    wrongT: 0.45,             // giây đường nối sai nhấp nháy đỏ rồi tan
+    guideAfter: 9,            // giây bí không nối được thì hiện đường gợi ý mờ
+    factDelay: 1.35,          // giây xem hiệu ứng bừng sáng trước khi mở modal
+    bgStars: 240              // số sao nền nhấp nháy (REDUCE sẽ giảm còn nửa)
+  };
+  var VW = CONFIG.VW, VH = CONFIG.VH;
+  var BEST_KEY = "astroq-constellation-best";   // { <key chòm sao>: giây nhanh nhất }
+  var SFX_KEY  = "astroq-sfx";                  // tuỳ chọn thiết bị, dùng chung với các game khác
+  var TAU = Math.PI*2;
+
+  /* Người dùng bật "giảm chuyển động" → bớt sao nền, bỏ hạt bay */
+  var REDUCE = false;
+  try{ REDUCE = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(e){}
+
+  /* ============================================================
+     SKY — DỮ LIỆU CHÒM SAO (thêm chòm mới ở đây là xong)
+       stars : [{id, x, y}] — id chạy 1..n, ĐÚNG thứ tự phải nối
+       sketch: mảng các đường phác thảo hình chòm sao (hiện khi ghép xong)
+       fact  : 1–2 câu thiên văn có thật, song ngữ
+     Toạ độ theo hệ ảo 800×500, chừa mép ≥60px để nhãn số không bị cắt.
+     ============================================================ */
+  var SKY = [
+    {
+      key:"ursa-major",
+      name:{vi:"Chòm sao Đại Hùng", en:"Ursa Major"},
+      sub:{vi:"Ursa Major · Gấu Lớn", en:"The Great Bear"},
+      stars:[
+        {id:1, x:170, y:150},   // Dubhe
+        {id:2, x:186, y:262},   // Merak
+        {id:3, x:302, y:288},   // Phecda
+        {id:4, x:316, y:190},   // Megrez
+        {id:5, x:424, y:166},   // Alioth
+        {id:6, x:534, y:192},   // Mizar
+        {id:7, x:648, y:146}    // Alkaid
+      ],
+      sketch:[[
+        {x:118,y:196},{x:132,y:150},{x:120,y:118},{x:150,y:96},{x:186,y:104},{x:214,y:88},
+        {x:262,y:104},{x:300,y:150},{x:366,y:148},{x:436,y:138},{x:524,y:158},{x:602,y:148},
+        {x:666,y:118},{x:702,y:132},{x:690,y:174},{x:640,y:208},{x:558,y:224},{x:470,y:230},
+        {x:396,y:252},{x:352,y:324},{x:316,y:346},{x:286,y:330},{x:300,y:296},{x:262,y:302},
+        {x:236,y:342},{x:206,y:346},{x:190,y:318},{x:206,y:284},{x:172,y:288},{x:148,y:262},{x:118,y:196}
+      ]],
+      fact:{
+        vi:"Bảy ngôi sao sáng nhất của Đại Hùng tạo thành hình <b>cái gàu múc nước</b> (Big Dipper). Hai sao ở mép gàu — <b>Dubhe</b> và <b>Merak</b> — chỉ gần như thẳng tới <b>sao Bắc Cực Polaris</b>, nên người đi biển xưa dùng chúng để tìm hướng bắc.",
+        en:"The seven brightest stars of Ursa Major form the <b>Big Dipper</b>. Its two pointer stars — <b>Dubhe</b> and <b>Merak</b> — line up almost exactly with <b>Polaris, the North Star</b>, so sailors have used them to find north for centuries."
+      }
+    },
+    {
+      key:"cassiopeia",
+      name:{vi:"Chòm sao Thiên Hậu", en:"Cassiopeia"},
+      sub:{vi:"Cassiopeia · hình chữ W", en:"Cassiopeia · the W shape"},
+      stars:[
+        {id:1, x:142, y:252},   // Caph
+        {id:2, x:262, y:332},   // Schedar
+        {id:3, x:392, y:236},   // Gamma Cas
+        {id:4, x:522, y:332},   // Ruchbah
+        {id:5, x:652, y:242}    // Segin
+      ],
+      sketch:[
+        [{x:112,y:388},{x:130,y:240},{x:174,y:222},{x:262,y:352},{x:392,y:210},{x:522,y:352},{x:614,y:224},{x:662,y:238},{x:688,y:388}],
+        [{x:120,y:388},{x:680,y:388}]
+      ],
+      fact:{
+        vi:"Năm ngôi sao sáng nhất xếp thành <b>chữ W</b> (nửa đêm nhìn lại giống chữ M). Chính trong chòm sao này, năm <b>1572</b>, Tycho Brahe thấy một “ngôi sao mới” bừng lên — nay ta biết đó là một vụ nổ <b>sao siêu mới (supernova)</b>.",
+        en:"Its five brightest stars trace a <b>letter W</b> (it looks like an M later at night). It was here, in <b>1572</b>, that Tycho Brahe saw a “new star” flare up — today we know it was a <b>supernova</b> explosion."
+      }
+    },
+    {
+      key:"orion",
+      name:{vi:"Chòm sao Lạp Hộ", en:"Orion"},
+      sub:{vi:"Orion · Người Thợ Săn", en:"Orion · the Hunter"},
+      stars:[
+        {id:1, x:482, y:112},   // Betelgeuse (vai)
+        {id:2, x:330, y:124},   // Bellatrix (vai)
+        {id:3, x:356, y:256},   // Mintaka (đai)
+        {id:4, x:416, y:270},   // Alnilam (đai)
+        {id:5, x:476, y:282},   // Alnitak (đai)
+        {id:6, x:502, y:404},   // Saiph (chân)
+        {id:7, x:332, y:398}    // Rigel (chân)
+      ],
+      sketch:[
+        [{x:404,y:62},{x:438,y:78},{x:432,y:106}],
+        [{x:330,y:124},{x:482,y:112},{x:494,y:198},{x:476,y:282},{x:502,y:404},{x:436,y:396},
+         {x:418,y:302},{x:374,y:332},{x:352,y:402},{x:300,y:392},{x:330,y:264},{x:318,y:162},{x:330,y:124}],
+        [{x:330,y:124},{x:250,y:158},{x:234,y:238}],
+        [{x:482,y:112},{x:566,y:78},{x:594,y:120}]
+      ],
+      fact:{
+        vi:"Ba ngôi sao thẳng hàng ở giữa là <b>Đai Lạp Hộ</b>. Ngay dưới đai có <b>Tinh vân Lạp Hộ (M42)</b> — một “nhà máy” đang sinh ra các ngôi sao mới, cách Trái Đất khoảng <b>1.300 năm ánh sáng</b> và nhìn thấy được bằng mắt thường ở nơi trời thật tối.",
+        en:"The three stars in a row are <b>Orion’s Belt</b>. Just below it sits the <b>Orion Nebula (M42)</b> — a factory busy making brand-new stars, about <b>1,300 light-years</b> away and visible to the naked eye under a really dark sky."
+      }
+    },
+    {
+      key:"scorpius",
+      name:{vi:"Chòm sao Bọ Cạp", en:"Scorpius"},
+      sub:{vi:"Scorpius · Thần Nông", en:"Scorpius · the Scorpion"},
+      stars:[
+        {id:1, x:152, y:112},
+        {id:2, x:222, y:162},
+        {id:3, x:260, y:228},
+        {id:4, x:304, y:304},
+        {id:5, x:380, y:364},
+        {id:6, x:474, y:394},
+        {id:7, x:564, y:356},
+        {id:8, x:606, y:276}
+      ],
+      sketch:[
+        [{x:96,y:98},{x:150,y:132},{x:188,y:112}],
+        [{x:152,y:112},{x:222,y:162},{x:260,y:228},{x:304,y:304},{x:380,y:364},{x:474,y:394},
+         {x:564,y:356},{x:606,y:276},{x:578,y:230},{x:534,y:248}],
+        [{x:152,y:112},{x:120,y:60},{x:180,y:52}]
+      ],
+      fact:{
+        vi:"Ngôi sao đỏ rực giữa mình bọ cạp là <b>Antares</b> — một sao <b>siêu khổng lồ đỏ</b> lớn đến mức nếu thay Mặt Trời bằng nó, nó sẽ trùm qua cả quỹ đạo Sao Hoả. Tên Antares nghĩa là <b>“đối thủ của Sao Hoả”</b>, vì hai thiên thể đỏ giống nhau đến mức dễ nhầm.",
+        en:"The fiery red star at the scorpion’s heart is <b>Antares</b>, a <b>red supergiant</b> so huge that if it replaced the Sun it would swallow the orbit of Mars. Its name means <b>“rival of Mars”</b>, because the two red objects look so alike."
+      }
+    }
+  ];
+
+  /* ===== i18n (thêm khoá phải thêm ở CẢ vi và en) ===== */
+  var TT = "<img class='tt-inline' src='img/tt.png' alt='tt'/>";
+  var I18N = {
+    vi:{
+      tt_name:"Thiên thạch tím",
+      title:"AstroQ — Ghép Chòm Sao", back:"Về Sảnh", home_btn:"Trung Tâm Điều Hướng", to_hub:"Về Sảnh Game",
+      time_lbl:"Thời gian", best_lbl:"Kỷ lục", miss_lbl:"Nối sai", reward_lbl:"Thưởng",
+      start_title:"Ghép Chòm Sao",
+      how1:"✨ <b>Nối</b> các ngôi sao <b>đúng thứ tự số</b>: 1 → 2 → 3 → …",
+      how2:"🖱️ <b>Cách nối</b>: bấm sao đầu rồi bấm sao kế tiếp, hoặc kéo từ sao này sang sao kia (trên điện thoại thì chạm/kéo).",
+      how3:"🔭 Ghép xong cả chòm sao sẽ <b>bừng sáng</b> và mở ra một điều thú vị về nó!",
+      cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Bắt đầu", fact_btn:"Xem kết quả",
+      over_title:"Ghép thành công!",
+      again_btn:"<span class='btn-fee'>Chòm sao khác · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
+      need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
+      start_toast:"−"+CONFIG.COST+" {tt} · Ghép nào!",
+      reward_toast:"+{n} {tt} vào ví!", paid_lbl:"Đã cộng {n} {tt} vào ví",
+      wrong_toast:"Chưa đúng thứ tự — cần nối {a} → {b} nhé!",
+      newbest:"🏆 Kỷ lục mới!",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
+      hint_first:"NỐI SAO 1 → 2 ĐỂ BẮT ĐẦU", hint_next:"TIẾP THEO: NỐI {a} → {b}",
+      done_hint:"CHÒM SAO HOÀN CHỈNH!"
+    },
+    en:{
+      tt_name:"Purple Meteor",
+      title:"AstroQ — Constellation Match", back:"Arcade", home_btn:"Navigation Hub", to_hub:"Back to Arcade",
+      time_lbl:"Time", best_lbl:"Best", miss_lbl:"Misses", reward_lbl:"Reward",
+      start_title:"Constellation Match",
+      how1:"✨ <b>Connect</b> the stars <b>in number order</b>: 1 → 2 → 3 → …",
+      how2:"🖱️ <b>How</b>: click a star then click the next one, or drag from one star to the other (tap and drag on phones).",
+      how3:"🔭 Finish the whole constellation and it <b>lights up</b> — plus you unlock a fun fact about it!",
+      cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Start", fact_btn:"See results",
+      over_title:"Constellation complete!",
+      again_btn:"<span class='btn-fee'>Another one · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
+      need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
+      start_toast:"−"+CONFIG.COST+" {tt} · Let’s draw!",
+      reward_toast:"+{n} {tt} added!", paid_lbl:"Added {n} {tt} to your wallet",
+      wrong_toast:"Wrong order — you need to link {a} → {b}!",
+      newbest:"🏆 New best!",
+      pause_title:"Paused", pause_body:"Continue playing or return to the arcade?",
+      resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
+      hint_first:"LINK STAR 1 → 2 TO BEGIN", hint_next:"NEXT: LINK {a} → {b}",
+      done_hint:"CONSTELLATION COMPLETE!"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+
+  /* ===== SFX — WebAudio synth, có nút tắt ===== */
+  var SFX = (function(){
+    var AC=null, muted=false;
+    try{ muted = localStorage.getItem(SFX_KEY)==="0"; }catch(e){}
+    function ctxA(){
+      if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+      if(AC && AC.state==="suspended"){ try{ AC.resume(); }catch(e){} }
+      return AC;
+    }
+    function beep(f,dur,type,vol,when){
+      if(muted) return; var c=ctxA(); if(!c) return;
+      var o=c.createOscillator(), g=c.createGain();
+      o.type=type||"sine"; o.frequency.value=f;
+      var s=c.currentTime+(when||0);
+      g.gain.setValueAtTime(vol||0.05,s);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+(dur||0.09));
+      o.connect(g); g.connect(c.destination); o.start(s); o.stop(s+(dur||0.09));
+    }
+    return {
+      /* "ping" trong veo khi nối đúng — cao dần theo số đường đã nối để người chơi
+         nghe ra là mình đang tiến lên (thang ngũ cung, nốt nào cũng thuận tai) */
+      ping:function(step){
+        var scale=[0,2,4,7,9,12,14,16,19,21];
+        var semi=scale[Math.min(step||0, scale.length-1)];
+        var f=880*Math.pow(2, semi/12);
+        beep(f,0.1,"triangle",0.05); beep(f*2,0.07,"sine",0.03,0.02);
+      },
+      bad:function(){ beep(190,0.13,"square",0.04); beep(130,0.18,"square",0.035,0.1); },
+      win:function(){
+        [0,4,7,12,16].forEach(function(s,i){ beep(523.25*Math.pow(2,s/12),0.34,"triangle",0.05,i*0.1); });
+      },
+      pick:function(){ beep(660,0.05,"sine",0.03); },
+      start:function(){ beep(440,0.08,"square",0.04); beep(660,0.1,"square",0.04,0.08); },
+      isMuted:function(){ return muted; },
+      toggle:function(){
+        muted=!muted;
+        try{ localStorage.setItem(SFX_KEY, muted?"0":"1"); }catch(e){}
+        if(!muted) beep(660,0.07,"square",0.04);
+        return muted;
+      },
+      unlock:ctxA          // gọi ở lần tương tác đầu để trình duyệt cho phát tiếng
+    };
+  })();
+
+  /* ===== Canvas ===== */
+  var cv=$("cv"), ctx=cv.getContext("2d");
+  var DPR=1, bgGrad=null;
+  /* Canvas lấy đúng số pixel thật của khung rồi scale transform về hệ 800×500,
+     nên nét trên mọi màn hình mà toạ độ chòm sao không đổi. */
+  function fit(){
+    var r=cv.getBoundingClientRect();
+    var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
+    DPR=Math.min(2, window.devicePixelRatio||1);
+    cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
+    ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
+    bgGrad=ctx.createLinearGradient(0,0,0,VH);
+    bgGrad.addColorStop(0,"#0b0f19"); bgGrad.addColorStop(0.58,"#141033"); bgGrad.addColorStop(1,"#1a103c");
+  }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(cv); }
+  else { window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); }
+
+  /* ===== Trạng thái ===== */
+  var state="start";        // start | play | paused | burst | fact | over
+  var cons=null, sts=[];    // chòm sao đang chơi + mảng sao của nó
+  var links=[];             // các đường đã khoá, đúng thứ tự nối
+  var progress=0;           // số đường đã nối = chỉ số sao đang đứng ở
+  var sel=-1, drag=false, hoverIdx=-1, ptr={x:VW/2,y:VH/2};
+  var elapsed=0, misses=0, idleT=0, earned=0, lastPaid=0, newBest=false;
+  var wrong=null;           // {a,b,t} đường nối sai đang nhấp nháy
+  var burstT=0, sketchT=0, factT=0;
+  var bg=[], parts=[], glowT=0;
+  var lastKey=null;         // không cho ra lại đúng chòm sao vừa ghép
+  var bests=readBests();
+
+  function readBests(){
+    try{ return JSON.parse(localStorage.getItem(BEST_KEY)||"{}")||{}; }catch(e){ return {}; }
+  }
+  function saveBest(key, secs){
+    var cur=bests[key];
+    if(cur!=null && cur<=secs) return false;
+    /* CẮT bớt chứ không làm tròn: làm tròn lên thì lượt 4,95s được lưu thành 5,0
+       và bảng kết quả hiện "Thời gian 0:04 · Kỷ lục 0:05" — kỷ lục tệ hơn cả
+       lượt vừa chơi, trông như lỗi tính điểm. */
+    bests[key]=Math.floor(secs*10)/10;
+    try{ localStorage.setItem(BEST_KEY, JSON.stringify(bests)); }catch(e){}
+    return true;
+  }
+
+  /* Sao nền: vị trí cố định, chỉ độ sáng nhấp nháy → không "trôi" gây rối mắt
+     khi người chơi đang phải ngắm các sao mốc. */
+  function initSky(){
+    bg=[];
+    var n = REDUCE ? Math.round(CONFIG.bgStars/2) : CONFIG.bgStars;
+    for(var i=0;i<n;i++){
+      bg.push({ x:Math.random()*VW, y:Math.random()*VH,
+                r:0.5+Math.random()*1.25,
+                a:0.18+Math.random()*0.5,
+                sp:0.6+Math.random()*2.4, ph:Math.random()*TAU });
+    }
+  }
+
+  /* ===== Ví ===== */
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
+
+  /* ===== onFinishGame: CHỖ DUY NHẤT cộng thưởng vào ví chính AstroQ =====
+     Trong lượt chơi, phần thưởng chỉ là con số dự kiến trên HUD (biến earned);
+     ghép xong mới chốt một lần. Khi backend có API ví thì đổi đúng hàm này. */
+  function onFinishGame(rewardMeteors, secs, consKey){
+    var n=Math.max(0, Math.floor(rewardMeteors||0));
+    if(n>0){ Economy.addAsteroids(n); bumpGem(); }
+    paintBalance();
+    /* Ghi vào Hồ sơ + Kho Thành Tích. Fire-and-forget: KHÔNG chờ mạng, vì
+       bảng kết quả phải hiện ngay. Server tự quyết XP + huy hiệu.
+       `score:1` = ĐÃ ghép xong một chòm; kỷ lục chỉ lấy giá trị lớn nhất nên
+       huy hiệu "best:constellation >= 1" mở đúng ngay lượt đầu. */
+    if(window.AstroQProgress) AstroQProgress.game({
+      game:"constellation", score:1, id:consKey,
+      seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
+    return n;
+  }
+
+  /* ===== Thưởng =====
+     Cố tình KHÔNG dùng số ngẫu nhiên: trẻ phải thấy được vì sao mình được 15 hay 8
+     (nhanh + không nối sai = tối đa), không thì phần thưởng thành xổ số. */
+  function rewardNow(){
+    var par=Math.max(1,(sts.length-1))*CONFIG.parPerLink;
+    var fast = elapsed<=par ? 4 : elapsed<=par*1.6 ? 3 : elapsed<=par*2.4 ? 2 : elapsed<=par*3.5 ? 1 : 0;
+    var acc  = misses===0 ? 3 : misses<=2 ? 2 : misses<=4 ? 1 : 0;
+    return Math.max(CONFIG.rewardMin, Math.min(CONFIG.rewardMax, CONFIG.rewardMin+fast+acc));
+  }
+  function fmtTime(s){
+    s=Math.max(0,Math.floor(s));
+    return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2);
+  }
+
+  /* ===== Bắt đầu / kết thúc lượt ===== */
+  function pickConstellation(){
+    var pool=SKY.filter(function(c){ return c.key!==lastKey; });
+    if(!pool.length) pool=SKY;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  function startRound(){
+    /* Chặn trừ phí 2 lần: Enter/Space vừa là "xác nhận" vừa có thể kích hoạt nút đang focus */
+    if(state==="play"||state==="burst") return;
+    if(Economy.getAsteroids() < CONFIG.COST){ showNeed(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    /* Trừ phí qua Economy.spend: SERVER quyết trừ bao nhiêu (tra Wallet.Fees),
+       client chỉ gửi tên game. Hàm vẫn trả ngay true/false theo cache nên logic
+       chặn lượt chơi không đổi. Xem economy.js. */
+    Economy.spend("constellation"); paintBalance(); bumpGem();
+
+    cons=pickConstellation(); lastKey=cons.key;
+    sts=cons.stars.map(function(s){ return {id:s.id, x:s.x, y:s.y, pop:0}; });
+    links=[]; parts=[]; wrong=null;
+    progress=0; sel=-1; drag=false; hoverIdx=-1;
+    elapsed=0; misses=0; idleT=0; earned=rewardNow();
+    burstT=0; sketchT=0; factT=0; glowT=0;
+
+    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause"); hideOv("ov-fact");
+    state="play"; last=0; syncBtns();
+    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+    paintHud();
+  }
+
+  /* Ghép xong: bừng sáng + hiện nét phác thảo, chốt thưởng NGAY (không đợi người
+     chơi bấm tiếp) — đóng tab ở modal thông tin thì công sức vẫn được trả. */
+  function complete(){
+    state="burst"; burstT=0; sketchT=0; factT=0;
+    sel=-1; drag=false; hoverIdx=-1; cv.classList.remove("hot");
+    syncBtns();                       // ẩn nút Pause: ghép xong rồi thì tạm dừng vô nghĩa
+    earned=rewardNow();
+    SFX.win();
+    for(var i=0;i<sts.length;i++) sparkle(sts[i].x, sts[i].y, REDUCE?4:14, 150);
+    newBest=saveBest(cons.key, elapsed);
+    lastPaid=onFinishGame(earned, Math.floor(elapsed), cons.key);
+    paintPaid();
+    toast(t("reward_toast").replace("{n}",lastPaid));
+    paintHud();
+  }
+  /* Dòng "đã cộng n tt vào ví" — do JS sinh nên `applyTexts` không dịch được;
+     đổi ngôn ngữ khi đang ở bảng kết quả thì applyLang gọi lại hàm này. */
+  function paintPaid(){
+    var el=$("paid");
+    el.classList.toggle("none", lastPaid<=0);
+    el.innerHTML = lastPaid>0
+      ? t("paid_lbl").replace("{n}","<b>"+lastPaid+"</b>").replace("{tt}",AstroQ.ttImg())
+      : "";
+  }
+  function showFact(){
+    state="fact"; syncBtns();
+    paintFact();
+    showOv("ov-fact");
+  }
+  function paintFact(){
+    if(!cons) return;
+    $("fact-name").textContent = L(cons.name);
+    $("fact-sub").textContent  = L(cons.sub);
+    $("fact-text").innerHTML   = L(cons.fact);
+  }
+  function showResult(){
+    state="over"; syncBtns();
+    hideOv("ov-fact");
+    $("r-time").textContent   = fmtTime(elapsed);
+    $("r-best").textContent   = bests[cons.key]!=null ? fmtTime(bests[cons.key]) : "—";
+    $("r-miss").textContent   = misses;
+    $("r-reward").textContent = "+"+earned;
+    paintPaid();
+    showOv("ov-over");
+    if(newBest) toast(t("newbest"));   // toast thưởng đã hiện lúc ghép xong nên kỷ lục để dành cho lúc này
+  }
+  function showNeed(){
+    /* Ẩn brief/kết quả trước: 2 overlay cùng hiện = 2 lớp nền tối cộng nhau, thẻ chồng thẻ */
+    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-fact");
+    $("need-body").innerHTML = (LANG==="en"
+      ? "You need <b>"+CONFIG.COST+" "+TT+"</b> to play but only have <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Take a Quiz to earn more!"
+      : "Bạn cần <b>"+CONFIG.COST+" "+TT+"</b> để chơi nhưng chỉ có <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Làm Quiz để kiếm thêm nhé!");
+    showOv("ov-need");
+  }
+  function showOv(id){ $(id).classList.add("show"); }
+  function hideOv(id){ $(id).classList.remove("show"); }
+
+  /* ===== Nút HUD theo trạng thái =====
+     Nút Pause chỉ hiện khi đang chơi/đang dừng; nút Âm thanh luôn hiện. */
+  function syncBtns(){
+    var b=$("btn-pause");
+    b.classList.toggle("is-hidden", !(state==="play"||state==="paused"));
+    b.classList.toggle("off", state==="paused");
+  }
+
+  /* ===== Tạm dừng ===== */
+  function pauseGame(){
+    if(state!=="play") return;
+    state="paused"; sel=-1; drag=false;
+    syncBtns(); showOv("ov-pause");
+  }
+  function resumeGame(){
+    if(state!=="paused") return;
+    hideOv("ov-pause");
+    state="play"; last=0; syncBtns();
+  }
+  function togglePause(){ if(state==="play") pauseGame(); else if(state==="paused") resumeGame(); }
+
+  /* ===== HUD (chỉ ghi DOM khi giá trị thay đổi) ===== */
+  var hudCache={};
+  function paintHud(){
+    var nm = cons ? L(cons.name) : "—", sb = cons ? L(cons.sub) : "—";
+    /* Chip tt = phần thưởng ĐANG chờ nhận: bắt đầu ở mức tối đa rồi tụt dần theo
+       thời gian và số lần nối sai, ghép xong thì chốt bằng `earned`. */
+    var tm = fmtTime(elapsed), rw = (state==="start"||state==="play") ? rewardNow() : earned;
+    if(hudCache.nm!==nm){ $("hb-name").textContent=nm; hudCache.nm=nm; }
+    if(hudCache.sb!==sb){ $("hb-sub").textContent=sb;  hudCache.sb=sb; }
+    if(hudCache.tm!==tm){ $("hb-time").textContent=tm; hudCache.tm=tm; }
+    if(hudCache.rw!==rw){ $("hb-mtr").textContent=rw;  hudCache.rw=rw; }
+  }
+
+  /* ============================================================
+     LOGIC GIẢI ĐỐ
+     ============================================================ */
+  function starAt(p){
+    var best=-1, bd=CONFIG.hitR*CONFIG.hitR;
+    for(var i=0;i<sts.length;i++){
+      var dx=sts[i].x-p.x, dy=sts[i].y-p.y, d=dx*dx+dy*dy;
+      if(d<=bd){ bd=d; best=i; }      // sao gần con trỏ nhất, không phải sao đầu tiên gặp
+    }
+    return best;
+  }
+  /* Đúng = đúng cặp KẾ TIẾP trong thứ tự số. Cho phép nối theo cả 2 chiều
+     (2→1 cũng tính là nối 1–2) — DIFF: Dễ, trẻ nhỏ hay kéo ngược. */
+  function tryLink(i,j){
+    if(state!=="play" || i<0 || j<0 || i===j) return;
+    var need=progress;
+    var ok = (i===need && j===need+1) || (i===need+1 && j===need);
+    if(ok){
+      links.push({a:need, b:need+1});
+      progress++; idleT=0;
+      sts[need].pop=1; sts[need+1].pop=1;
+      SFX.ping(links.length-1);
+      sparkle(sts[need+1].x, sts[need+1].y, REDUCE?3:8, 110);
+      if(progress>=sts.length-1) complete();
+      else paintHud();
+    } else {
+      wrong={a:i, b:j, t:CONFIG.wrongT};
+      misses++; idleT=0; SFX.bad();
+      toast(t("wrong_toast").replace("{a}", sts[need].id).replace("{b}", sts[need+1].id), "bad");
+      paintHud();
+    }
+  }
+
+  /* ===== Hạt sáng ===== */
+  function sparkle(x,y,n,sp0){
+    if(REDUCE && n<=0) return;
+    for(var i=0;i<n;i++){
+      var a=Math.random()*TAU, sp=(sp0||120)*(0.3+Math.random());
+      parts.push({ x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+                   life:0.4+Math.random()*0.5, r:1.2+Math.random()*2, col:Math.random()<0.5?"#7dd3fc":"#e9d5ff" });
+    }
+  }
+
+  /* ============================================================
+     VÒNG LẶP
+     ============================================================ */
+  var last=0;
+  function frame(ts){
+    if(!last) last=ts;
+    var dt=Math.min(0.045,(ts-last)/1000); last=ts;
+    update(dt);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  function update(dt){
+    glowT+=dt;
+    for(var i=0;i<bg.length;i++) bg[i].ph+=dt*bg[i].sp;
+    for(var p=parts.length-1;p>=0;p--){
+      var pt=parts[p]; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=0.96; pt.vy*=0.96; pt.life-=dt;
+      if(pt.life<=0) parts.splice(p,1);
+    }
+    for(var s=0;s<sts.length;s++) if(sts[s].pop>0) sts[s].pop=Math.max(0, sts[s].pop-dt*2.2);
+    if(wrong){ wrong.t-=dt; if(wrong.t<=0) wrong=null; }
+
+    if(state==="play"){
+      elapsed+=dt; idleT+=dt;
+      paintHud();
+    } else if(state==="burst"){
+      burstT+=dt;
+      sketchT=Math.min(1, sketchT+dt*1.1);
+      factT+=dt;
+      if(factT>=CONFIG.factDelay) showFact();
+    }
+  }
+
+  /* ============================================================
+     VẼ
+     ============================================================ */
+  function render(){
+    ctx.fillStyle=bgGrad; ctx.fillRect(0,0,VW,VH);
+    drawNebula();
+    drawSky();
+    if(cons){
+      if(sketchT>0) drawSketch();
+      drawGuide();
+      drawLinks();
+      drawRubber();
+      for(var i=0;i<sts.length;i++) drawStar(i);
+      drawParts();
+      drawHint();
+    }
+  }
+
+  /* Hai vệt tinh vân mờ cho nền có chiều sâu (vẽ 1 lần mỗi khung, rất nhẹ) */
+  function drawNebula(){
+    var g1=ctx.createRadialGradient(VW*0.22,VH*0.78,10,VW*0.22,VH*0.78,300);
+    g1.addColorStop(0,"rgba(124,92,232,.20)"); g1.addColorStop(1,"rgba(124,92,232,0)");
+    ctx.fillStyle=g1; ctx.fillRect(0,VH*0.3,VW*0.7,VH*0.7);
+    var g2=ctx.createRadialGradient(VW*0.82,VH*0.2,10,VW*0.82,VH*0.2,260);
+    g2.addColorStop(0,"rgba(56,189,248,.14)"); g2.addColorStop(1,"rgba(56,189,248,0)");
+    ctx.fillStyle=g2; ctx.fillRect(VW*0.4,0,VW*0.6,VH*0.6);
+  }
+
+  function drawSky(){
+    for(var i=0;i<bg.length;i++){
+      var s=bg[i];
+      var tw = REDUCE ? s.a : s.a*(0.55+0.45*Math.sin(s.ph));
+      ctx.globalAlpha=Math.max(0,tw);
+      ctx.fillStyle="#dce7ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* Đường nối phát sáng: 3 lượt vẽ (quầng rộng mờ → thân → lõi trắng) thay cho
+     shadowBlur — blur trên canvas mỗi khung hình đắt gấp nhiều lần. */
+  function glowLine(x1,y1,x2,y2,rgb,w,alpha){
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    ctx.lineCap="round";
+    ctx.strokeStyle="rgba("+rgb+","+(alpha*0.20).toFixed(3)+")"; ctx.lineWidth=w*3.4;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.strokeStyle="rgba("+rgb+","+(alpha*0.6).toFixed(3)+")";  ctx.lineWidth=w*1.7;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,"+(alpha*0.9).toFixed(3)+")"; ctx.lineWidth=Math.max(1,w*0.55);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLinks(){
+    /* Ghép xong thì cả chòm sao sáng bừng theo nhịp, chưa xong thì sáng đều */
+    var boost = state==="play" ? 1 : 1+Math.min(1,burstT*2)*0.5*(0.7+0.3*Math.sin(glowT*4));
+    for(var i=0;i<links.length;i++){
+      var a=sts[links[i].a], b=sts[links[i].b];
+      glowLine(a.x,a.y,b.x,b.y, "56,189,248", 2.4, Math.min(1,0.85*boost));
+    }
+    if(wrong){
+      /* Nối sai: nhấp nháy đỏ rồi tự huỷ (không khoá lại) */
+      var blink = Math.sin(wrong.t*40)>0 ? 1 : 0.35;
+      var wa=sts[wrong.a], wb=sts[wrong.b];
+      glowLine(wa.x,wa.y,wb.x,wb.y, "239,68,68", 2.2, blink*(wrong.t/CONFIG.wrongT));
+    }
+  }
+
+  /* Dây cao su đang kéo từ sao đã chọn tới con trỏ */
+  function drawRubber(){
+    if(state!=="play" || sel<0) return;
+    var a=sts[sel];
+    var tx=ptr.x, ty=ptr.y;
+    if(hoverIdx>=0 && hoverIdx!==sel){ tx=sts[hoverIdx].x; ty=sts[hoverIdx].y; }  // hít vào sao đang trỏ
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    ctx.setLineDash([9,7]); ctx.lineDashOffset=-glowT*36; ctx.lineCap="round";
+    var g=ctx.createLinearGradient(a.x,a.y,tx,ty);
+    g.addColorStop(0,"rgba(125,211,252,.95)"); g.addColorStop(1,"rgba(192,132,252,.85)");
+    ctx.strokeStyle=g; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(tx,ty); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* Bí quá (không nối được trong guideAfter giây) thì chỉ đường mờ — DIFF: Dễ */
+  function drawGuide(){
+    if(state!=="play" || idleT<CONFIG.guideAfter || progress>=sts.length-1) return;
+    var a=sts[progress], b=sts[progress+1];
+    ctx.save();
+    ctx.setLineDash([4,10]); ctx.lineDashOffset=-glowT*20;
+    ctx.strokeStyle="rgba(233,213,255,"+(0.16+0.1*Math.sin(glowT*3)).toFixed(3)+")"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawStar(i){
+    var s=sts[i];
+    /* progress = số đường đã nối → các sao 0..progress đã nằm trong chuỗi */
+    var linked = links.length>0 && i<=progress;
+    var isNext = state==="play" && (sel<0 ? i===progress : (sel===progress && i===progress+1));
+    var pulse = 1 + (isNext ? 0.16*Math.sin(glowT*4.4) : 0) + s.pop*0.5;
+    var r=CONFIG.starR*pulse;
+    var lit = linked || state!=="play";
+
+    /* hào quang (bán kính vừa phải: rộng quá thì các hào quang chồng nhau thành
+       một mảng sương mù, mất cảm giác "từng ngôi sao") */
+    var hr = r*(state==="burst"?4.8:4.2);
+    var hg=ctx.createRadialGradient(s.x,s.y,r*0.2,s.x,s.y,hr);
+    var halo = state==="burst" ? "rgba(233,213,255,.45)" : (linked? "rgba(125,211,252,.42)" : "rgba(190,205,255,.24)");
+    hg.addColorStop(0,halo); hg.addColorStop(1,"rgba(125,211,252,0)");
+    ctx.fillStyle=hg;
+    ctx.beginPath(); ctx.arc(s.x,s.y,hr,0,TAU); ctx.fill();
+
+    /* vòng nhắc "sao kế tiếp" */
+    if(isNext){
+      ctx.save();
+      ctx.strokeStyle="rgba(192,132,252,"+(0.5+0.3*Math.sin(glowT*4.4)).toFixed(3)+")";
+      ctx.lineWidth=1.6; ctx.setLineDash([5,5]); ctx.lineDashOffset=glowT*-26;
+      ctx.beginPath(); ctx.arc(s.x,s.y,r+11,0,TAU); ctx.stroke();
+      ctx.restore();
+    }
+    /* vòng sáng khi con trỏ đang ở trên sao */
+    if(i===hoverIdx && state==="play"){
+      ctx.strokeStyle="rgba(255,255,255,.75)"; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(s.x,s.y,r+6,0,TAU); ctx.stroke();
+    }
+    /* sao đang được chọn: vòng cyan đặc */
+    if(i===sel && state==="play"){
+      ctx.strokeStyle="rgba(56,189,248,.95)"; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.arc(s.x,s.y,r+8,0,TAU); ctx.stroke();
+    }
+
+    /* 4 tia sáng + lõi */
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    ctx.strokeStyle=lit?"rgba(191,227,255,.9)":"rgba(191,227,255,.5)"; ctx.lineWidth=1.2;
+    var ray=r*2.1;
+    ctx.beginPath();
+    ctx.moveTo(s.x-ray,s.y); ctx.lineTo(s.x+ray,s.y);
+    ctx.moveTo(s.x,s.y-ray); ctx.lineTo(s.x,s.y+ray);
+    ctx.stroke();
+    ctx.restore();
+    var cg=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,r);
+    cg.addColorStop(0,"#ffffff"); cg.addColorStop(0.55,lit?"#dff1ff":"#cfdcf8"); cg.addColorStop(1,"rgba(125,211,252,.15)");
+    ctx.fillStyle=cg;
+    ctx.beginPath(); ctx.arc(s.x,s.y,r,0,TAU); ctx.fill();
+
+    /* nhãn số thứ tự — trắng mờ, đặt chéo trên-phải để không đè lên đường nối */
+    ctx.font="600 12px 'Share Tech Mono', ui-monospace, monospace";
+    ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+    ctx.fillStyle= lit ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.5)";
+    ctx.fillText(String(s.id), s.x+r+5, s.y-r-3);
+  }
+
+  /* Nét phác thảo hình chòm sao — hiện dần sau khi ghép xong.
+     Vẽ qua điểm giữa bằng quadraticCurveTo cho mềm như nét bút chì. */
+  function drawSketch(){
+    if(!cons.sketch) return;
+    ctx.save();
+    ctx.setLineDash([7,6]); ctx.lineDashOffset=-glowT*10;
+    ctx.strokeStyle="rgba(233,213,255,"+(0.52*sketchT).toFixed(3)+")";
+    ctx.lineWidth=2; ctx.lineJoin="round"; ctx.lineCap="round";
+    for(var k=0;k<cons.sketch.length;k++){
+      var pl=cons.sketch[k];
+      if(pl.length<2) continue;
+      var upto=Math.max(2, Math.ceil(pl.length*sketchT));   // vẽ dần từng đoạn
+      ctx.beginPath(); ctx.moveTo(pl[0].x,pl[0].y);
+      for(var i=1;i<upto-1;i++){
+        var mx=(pl[i].x+pl[i+1].x)/2, my=(pl[i].y+pl[i+1].y)/2;
+        ctx.quadraticCurveTo(pl[i].x,pl[i].y,mx,my);
+      }
+      ctx.lineTo(pl[upto-1].x, pl[upto-1].y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawParts(){
+    for(var p=0;p<parts.length;p++){
+      var pt=parts[p];
+      ctx.globalAlpha=Math.max(0,Math.min(1,pt.life*1.7));
+      ctx.fillStyle=pt.col;
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* Dòng nhắc dưới sân: đang cần nối sao nào / đã hoàn thành */
+  function drawHint(){
+    var msg=null;
+    if(state==="play"){
+      msg = progress===0 ? t("hint_first")
+          : t("hint_next").replace("{a}", sts[progress].id).replace("{b}", sts[progress+1].id);
+    } else if(state==="burst"){
+      msg = t("done_hint");
+    }
+    if(!msg) return;
+    ctx.save();
+    ctx.globalAlpha = state==="burst" ? Math.min(1,burstT*3) : 0.75;
+    ctx.font="600 14px 'Space Grotesk', system-ui, sans-serif";
+    ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+    ctx.fillStyle= state==="burst" ? "rgba(233,213,255,.95)" : "rgba(234,241,255,.85)";
+    ctx.fillText(msg, VW/2, VH-22);
+    ctx.restore();
+  }
+
+  /* ============================================================
+     ĐIỀU KHIỂN: bấm chọn 2 sao, hoặc kéo từ sao này sang sao kia
+     ============================================================ */
+  function toVirt(e){
+    var r=cv.getBoundingClientRect();
+    return { x:(e.clientX-r.left)/Math.max(1,r.width)*VW,
+             y:(e.clientY-r.top)/Math.max(1,r.height)*VH };
+  }
+  function onDown(e){
+    if(e.button!=null && e.button!==0) return;
+    SFX.unlock();
+    if(state!=="play") return;
+    if(e.preventDefault) e.preventDefault();
+    ptr=toVirt(e); hoverIdx=starAt(ptr);
+    var i=hoverIdx;
+    if(i<0){ sel=-1; drag=false; return; }          // bấm ra chỗ trống = bỏ chọn
+    if(sel>=0 && sel!==i){ tryLink(sel,i); sel=-1; drag=false; return; }  // chế độ bấm 2 lần
+    sel=i; drag=true; SFX.pick();
+  }
+  function onMove(e){
+    if(state!=="play") return;
+    ptr=toVirt(e); hoverIdx=starAt(ptr);
+    cv.classList.toggle("hot", hoverIdx>=0);
+  }
+  function onUp(e){
+    if(!drag) return;
+    drag=false;
+    if(state!=="play") return;
+    var i=starAt(toVirt(e));
+    /* Nhả tay ngay trên chính sao vừa bấm thì GIỮ lựa chọn (chế độ bấm 2 lần);
+       nhả trên sao khác = kéo-thả xong một đường nối. */
+    if(i>=0 && i!==sel){ tryLink(sel,i); sel=-1; }
+  }
+  cv.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", function(){ drag=false; });
+  window.addEventListener("blur", function(){ drag=false; });
+  /* Trình duyệt cũ không có Pointer Events: dùng chuột/cảm ứng thường */
+  if(!window.PointerEvent){
+    cv.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    cv.addEventListener("touchstart", function(e){ if(e.touches[0]) onDown(e.touches[0]); }, {passive:false});
+    window.addEventListener("touchmove", function(e){ if(e.touches[0]) onMove(e.touches[0]); }, {passive:false});
+    window.addEventListener("touchend", function(e){ if(e.changedTouches[0]) onUp(e.changedTouches[0]); });
+  }
+
+  document.addEventListener("keydown", function(e){
+    var k=(e.key||"").toLowerCase();
+    if(k==="escape"){
+      if(state==="play"||state==="paused") togglePause();
+      else window.location.href="games.html";
+      return;
+    }
+    /* Khi con trỏ bàn phím đang ở một nút thì để Space/Enter bấm nút như bình thường */
+    var tag=(e.target && e.target.tagName)||"";
+    if(tag==="BUTTON"||tag==="A"||tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA") return;
+    if(k==="p"){ togglePause(); return; }
+    if(k==="m"){ toggleSfx(); return; }
+  });
+
+  /* ===== Nút HUD ===== */
+  function toggleSfx(){
+    var muted=SFX.toggle();
+    $("btn-sfx").classList.toggle("off", muted);
+  }
+  /* blur() sau khi bấm: nếu nút còn được focus thì Space sẽ bấm lại nút đó */
+  $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
+  $("btn-sfx").addEventListener("click", function(){ this.blur(); toggleSfx(); });
+
+  /* ===== Ngôn ngữ ===== */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG; document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ "+t("start_title")+" ]";
+    hudCache={}; paintHud();
+    /* Nội dung do JS sinh (tên chòm sao, dòng thưởng, thông tin thiên văn) */
+    if($("ov-need").classList.contains("show")) showNeed();
+    if($("ov-fact").classList.contains("show")) paintFact();
+    if($("ov-over").classList.contains("show")){
+      paintPaid();
+      $("r-time").textContent = fmtTime(elapsed);
+      $("r-best").textContent = (cons && bests[cons.key]!=null) ? fmtTime(bests[cons.key]) : "—";
+    }
+  }
+
+  /* ===== Toast (token {tt} → ảnh Thiên thạch tím) ===== */
+  var toast = AstroQ.makeToast("toast", 1800);
+
+  /* ===== Nút overlay / điều hướng ===== */
+  $("start-btn").addEventListener("click", startRound);
+  $("again-btn").addEventListener("click", startRound);
+  $("fact-btn").addEventListener("click", showResult);
+  $("back").addEventListener("click", function(){ window.location.href="games.html"; });
+  $("hub-btn").addEventListener("click", function(){ window.location.href="games.html"; });
+  $("home-btn").addEventListener("click", function(){ window.location.href="dashboard.html"; });
+  $("need-hub").addEventListener("click", function(){ window.location.href="games.html"; });
+  $("need-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  $("resume-btn").addEventListener("click", resumeGame);
+  $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
+  AstroQ.initLang(applyLang);
+
+  /* Rời tab → tự tạm dừng (đồng hồ không chạy oan khi người chơi đi mất) */
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){ pauseGame(); } else { last=0; }
+  });
+
+  /* ===== Khởi tạo =====
+     Màn brief có sẵn một chòm sao mờ làm hình nền cho đẹp, nhưng CHƯA trừ phí
+     và chưa tính thời gian — lượt chơi chỉ bắt đầu khi bấm "Bắt đầu". */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  fit(); initSky(); syncBtns();
+  cons=pickConstellation();
+  sts=cons.stars.map(function(s){ return {id:s.id, x:s.x, y:s.y, pop:0}; });
+  $("btn-sfx").classList.toggle("off", SFX.isMuted());
+  applyLang(LANG);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

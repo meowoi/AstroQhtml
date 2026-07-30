@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-dodge.css" />
 <script src="js/ui-common.js"></script>
 </head>
@@ -32,15 +33,39 @@
   </div>
 </header>
 
-<!-- ===== Sân chơi ===== -->
+<!-- ===== Sân chơi (khung 800×500 giữ tỉ lệ, canvas + HUD nằm trong .field) ===== -->
 <div class="stage" id="stage">
-  <canvas id="cv"></canvas>
+  <!-- Bảng HUD nằm PHÍA TRÊN canvas (không đè lên sân) — nếu đè thì chip số liệu sẽ
+       che mất chùm thiên thạch ở dải trên, mà hitbox vẫn ở đó = chết oan. -->
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="score_lbl">Điểm</span><span class="v" id="score">0</span></div>
+    <div class="chip"><span class="k" data-i18n="dist_lbl">Quãng đường</span><span class="v"><span id="dist">0</span><small data-i18n="unit_m">m</small></span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="mined">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="hud_best">Kỷ lục</span><span class="v" id="best">0</span></div>
 
-  <div class="hud">
-    <div class="chip"><span class="k" data-i18n="hud_score">Điểm</span><span class="v" id="score">0</span></div>
-    <div class="chip mtr"><img src="img/tt.png" alt="tt" /><span class="v" id="mined">0</span></div>
-    <div class="chip best"><span class="k" data-i18n="hud_best">Kỷ lục</span><span class="v" id="best">0</span></div>
+    <div class="hud-btns">
+      <!-- Pause: icon "⏸" khi đang chơi, "▶" khi đã tạm dừng (class .off) -->
+      <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </button>
+      <!-- Âm thanh: bật (loa) / tắt (loa gạch chéo) -->
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
   </div>
+
+  <!-- .play = vùng chơi: sân + các overlay. Overlay chỉ phủ vùng này nên KHÔNG che
+       bảng HUD phía trên (nút Âm thanh lúc nào cũng bấm được), và trên điện thoại
+       thẻ kết quả vẫn có đủ chiều cao dù sân bị letterbox rất thấp. -->
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <canvas id="cv"></canvas>
+    </div>
 
   <!-- Start -->
   <div class="ov show" id="ov-start">
@@ -49,9 +74,9 @@
       <div class="ov-ic">🪐</div>
       <h2 data-i18n="start_title">Né Thiên Thạch</h2>
       <div class="how">
-        <span data-i18n-html="how1">🕹️ <b>Di chuyển</b>: rê chuột / chạm, hoặc phím ◀ ▶ (A/D).</span>
-        <span data-i18n-html="how2">☄️ <b>Né</b> các thiên thạch lao xuống — chạm là kết thúc!</span>
-        <span data-i18n-html="how3">💎 <b>Thu</b> Thiên thạch tím để cộng ngay vào số dư.</span>
+        <span data-i18n-html="how1">🚀 <b>Bay lên</b>: nhấn <kbd>Space</kbd> hoặc click chuột. Thả ra là rơi xuống.</span>
+        <span data-i18n-html="how2">☄️ <b>Lách</b> qua khe hẹp giữa các cột thiên thạch — đâm vào hoặc chạm mép trên/dưới là hết lượt!</span>
+        <span data-i18n-html="how3">💎 <b>Thu</b> Thiên thạch tím trong khe: +10 điểm mỗi viên.</span>
       </div>
       <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
       <div class="acts">
@@ -67,14 +92,16 @@
       <div class="stars" id="stars"><span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span></div>
       <h2 data-i18n="over_title">Kết thúc lượt!</h2>
       <div class="res">
-        <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="hud_score">Điểm</div></div>
+        <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Điểm</div></div>
+        <div class="cell"><div class="rv"><span id="r-dist">0</span><small data-i18n="unit_m">m</small></div><div class="rl" data-i18n="dist_lbl">Quãng đường</div></div>
         <div class="cell"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="hud_best">Kỷ lục</div></div>
-        <div class="cell mtr"><div class="rv" id="r-mined">0</div><div class="rl" data-i18n="mined_lbl">Đã khai thác</div></div>
+        <div class="cell mtr"><div class="rv" id="r-mined">0</div><div class="rl" data-i18n="mined_lbl">Đã thu</div></div>
       </div>
+      <div class="paid" id="paid"></div>
       <div class="acts">
-        <button class="primary" id="again-btn" data-i18n="again_btn">Chơi lại</button>
-        <button id="hub-btn" data-i18n="back">Về Sảnh</button>
-        <button id="home-btn" data-i18n="home_btn">Khoang Lái</button>
+        <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>5</b></button>
+        <button id="hub-btn" data-i18n="to_hub">Về Sảnh Game</button>
+        <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
       </div>
     </div>
   </div>
@@ -87,16 +114,16 @@
       <p id="need-body"></p>
       <div class="acts">
         <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
-        <button id="need-hub" data-i18n="back">Về Sảnh</button>
+        <button id="need-hub" data-i18n="to_hub">Về Sảnh Game</button>
       </div>
     </div>
   </div>
 
-  <!-- Tạm dừng (ESC) -->
+  <!-- Tạm dừng (ESC / nút ⏸) -->
   <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
     <div class="ov-card">
       <div class="ov-ic">⏸️</div>
-      <h2 data-i18n="pause_title">Kết thúc lượt?</h2>
+      <h2 data-i18n="pause_title">Tạm dừng</h2>
       <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
       <div class="acts">
         <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
@@ -104,246 +131,811 @@
       </div>
     </div>
   </div>
+  </div><!-- /.play -->
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Báo tiến độ lên server (Hồ sơ + Kho Thành Tích).
+     CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB và
+     trang này cần mượt. Không có phiên đăng nhập thì js/progress.js xếp việc
+     vào hàng chờ trong localStorage, dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
+/* ============================================================
+   AstroQ · NÉ THIÊN THẠCH (ARCADE-01) — mini-game 2D Canvas
+   Side-scroller / Flappy style · Vanilla JS · requestAnimationFrame
+
+   Bố cục module để dễ chỉnh về sau:
+     CONFIG   — mọi con số gameplay (trọng lực, tốc độ, khe hẹp, phí lượt…)
+     SFX      — âm thanh WebAudio (có nút tắt/bật)
+     backdrop — nền parallax: gradient + dải ngân hà + 2 lớp sao
+     draw*    — vẽ hình (drawShip / drawTrail / drawColumn / drawGem …)
+     update/render — vòng lặp 60fps
+     onFinishGame(totalMeteorsEarned) — CHỖ DUY NHẤT cộng thưởng vào ví AstroQ
+
+   NHÂN VẬT ĐIỀU KHIỂN = phi thuyền Luna nằm ngang (img/luna-side.png, 8,7 KB):
+   ảnh cắt-thu-nén từ bản gốc "img/luna ngang.png" (1,7 MB) — mũi đã chỉ SANG PHẢI
+   = đúng hướng bay của side-scroller, nên chỉ cần rotate(byte.rot) theo độ chúc.
+   Luồng lửa do drawTrail() vẽ (vệt sáng tím động theo đường bay), không vẽ cứng
+   trong ảnh. Ảnh lỗi → tự lùi về bản vẽ robot vector trong nhánh else.
+   ============================================================ */
 (function(){
   "use strict";
-  var COST = 5;                 // Thiên thạch tím mỗi lượt
-  var BEST_KEY = "astroq-dodge-best";
 
-  /* ===== i18n ===== */
+  /* ===== CONFIG — chỉnh gameplay ở đây ===== */
+  var CONFIG = {
+    COST: 5,                  // Thiên thạch tím trừ mỗi lượt chơi
+    VW: 800, VH: 500,         // hệ toạ độ ảo: mọi thứ vẽ theo 800×500 rồi scale ra màn hình
+
+    /* Vật lý (Diff: Dễ — bay nhẹ, rơi chậm, dễ sửa sai) */
+    gravity: 1500,            // px/s² khi KHÔNG giữ phím
+    holdAccel: 560,           // px/s² khi ĐANG giữ phím/chuột (vẫn rơi nhưng chậm)
+    flapV: -400,              // vận tốc bật lên mỗi lần nhấn
+    maxFall: 540, maxRise: -430,
+
+    /* Cuộn màn hình — tăng rất chậm theo thời gian */
+    scroll0: 190, scrollAcc: 2.2, scrollMax: 300,
+
+    /* Cột chùm thiên thạch + khe hẹp */
+    colGap: 300,              // khoảng cách ngang giữa 2 cột
+    colW: 64,                 // bề rộng cột
+    gapH0: 200,               // khe hẹp lúc đầu
+    gapHMin: 158,             // khe hẹp nhỏ nhất
+    gapShrink: 1.4,           // px khe hẹp bị bóp mỗi giây
+    gapMargin: 52,            // khe không bao giờ sát mép trên/dưới
+    gapStep: 150,             // độ lệch tối đa giữa 2 khe liền nhau (cho công bằng)
+
+    /* Vật phẩm */
+    gemChance: 0.8,           // xác suất mỗi cột có 1 Thiên thạch tím trong khe
+    gemR: 15, gemScore: 10,   // +10 điểm & +1 tt vào ví tạm
+
+    /* Người chơi */
+    byteX: 0.25,              // đứng ở 1/4 bên trái màn hình
+    /* HITBOX — bám theo hình phi thuyền Luna (dài 1,88 : cao 1) chứ không phải
+       khối 46×34 của bản robot cũ: hình vẽ phải BẰNG vùng chết, không thì hoặc
+       "chết oan khi còn hở", hoặc "đâm vào đá mà không chết". */
+    byteW: 50, byteH: 30,
+    hitInset: 6,              // AABB co vào cho dễ chơi
+
+    /* Sprite: "" = vẽ robot vector. spriteH = chiều cao VẼ, bề rộng suy ra từ
+       tỉ lệ ảnh (30 → 56,5 rộng). Chỉ nhô khỏi hitbox ~3px ở mũi và ở ống đẩy,
+       hai chỗ đó đều là chi tiết mảnh. */
+    spritePath: "img/luna-side.png", spriteH: 30,
+
+    /* Vệt sáng tím ở đuôi tàu */
+    trailLife: 0.36,          // giây một điểm vệt còn sống (dài ~70px ở tốc độ 190)
+    trailMax: 30,             // trần số điểm giữ lại (chặn rò rỉ nếu fps cao)
+    trailW: 15,               // bề rộng vệt ngay sau đuôi
+    trailTaper: 1.6,          // số càng lớn vệt càng thót nhanh (xem drawTrail)
+
+    distPerPx: 1/20           // 20px = 1 mét
+  };
+  var VW = CONFIG.VW, VH = CONFIG.VH;
+  var BEST_KEY = "astroq-dodge-best-v2";  // v2: cách tính điểm đổi hẳn so với bản né rơi cũ
+  var SFX_KEY  = "astroq-sfx";            // tuỳ chọn thiết bị (như astroq-lang), không phải dữ liệu game
+  var TAU = Math.PI*2;
+
+  /* Người dùng bật "giảm chuyển động" → bỏ rung màn hình, giảm số hạt */
+  var REDUCE = false;
+  try{ REDUCE = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(e){}
+
+  /* ===== i18n (thêm khoá phải thêm ở CẢ vi và en) ===== */
+  var TT = "<img class='tt-inline' src='img/tt.png' alt='tt'/>";
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Né Thiên Thạch", back:"Về Sảnh", home_btn:"Khoang Lái",
-      hud_score:"Điểm", hud_best:"Kỷ lục", mined_lbl:"Đã khai thác",
+      title:"AstroQ — Né Thiên Thạch", back:"Về Sảnh", home_btn:"Trung Tâm Điều Hướng", to_hub:"Về Sảnh Game",
+      score_lbl:"Điểm", dist_lbl:"Quãng đường", hud_best:"Kỷ lục", mined_lbl:"Đã thu", unit_m:"m",
       start_title:"Né Thiên Thạch",
-      how1:"🕹️ <b>Di chuyển</b>: phím ◀ ▲ ▼ ▶ hoặc A W S D.",
-      how2:"☄️ <b>Né</b> các thiên thạch lao xuống — chạm là kết thúc!",
-      how3:"💎 <b>Thu</b> Thiên thạch tím để cộng ngay vào số dư.",
-      cost_line:"Mỗi lượt: <b>"+COST+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
-      start_btn:"Bắt đầu", over_title:"Kết thúc lượt!", again_btn:"Chơi lại",
+      how1:"🚀 <b>Bay lên</b>: nhấn <kbd>Space</kbd> hoặc click chuột (chạm màn hình). Thả ra là rơi xuống.",
+      how2:"☄️ <b>Lách</b> qua khe hẹp giữa các cột thiên thạch — đâm vào hoặc chạm mép trên/dưới là hết lượt!",
+      how3:"💎 <b>Thu</b> Thiên thạch tím trong khe: +"+CONFIG.gemScore+" điểm và +1 "+TT+" mỗi viên.",
+      cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Bắt đầu", over_title:"Kết thúc lượt!",
+      again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
-      start_toast:"−"+COST+" {tt} · Bay nào!", mine_toast:"+1 {tt}",
+      start_toast:"−"+CONFIG.COST+" {tt} · Bay nào!",
+      reward_toast:"+{n} {tt} vào ví!", paid_lbl:"Đã cộng {n} {tt} vào ví",
+      paid_none:"Lượt này chưa thu được Thiên thạch tím",
       newbest:"🏆 Kỷ lục mới!",
-      pause_title:"Kết thúc lượt?", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
-      resume:"Chơi tiếp", to_hub:"Về Sảnh Game"
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
+      tap_hint:"NHẤN SPACE / CLICK ĐỂ BAY LÊN"
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Asteroid Dodge", back:"Arcade", home_btn:"Cockpit",
-      hud_score:"Score", hud_best:"Best", mined_lbl:"Mined",
+      title:"AstroQ — Asteroid Dodge", back:"Arcade", home_btn:"Navigation Hub", to_hub:"Back to Arcade",
+      score_lbl:"Score", dist_lbl:"Distance", hud_best:"Best", mined_lbl:"Collected", unit_m:"m",
       start_title:"Asteroid Dodge",
-      how1:"🕹️ <b>Move</b>: ◀ ▲ ▼ ▶ arrow keys or A W S D.",
-      how2:"☄️ <b>Dodge</b> the falling asteroids — one hit ends the run!",
-      how3:"💎 <b>Collect</b> Purple Meteors to add them to your balance instantly.",
-      cost_line:"Per run: <b>"+COST+"</b> <img class='tt-inline' src='img/tt.png' alt='tt'/>",
-      start_btn:"Start", over_title:"Run over!", again_btn:"Play again",
+      how1:"🚀 <b>Fly up</b>: press <kbd>Space</kbd> or click (tap the screen). Let go and you fall.",
+      how2:"☄️ <b>Slip</b> through the narrow gaps between asteroid columns — a hit or touching the top/bottom edge ends the run!",
+      how3:"💎 <b>Collect</b> Purple Meteors in the gaps: +"+CONFIG.gemScore+" points and +1 "+TT+" each.",
+      cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
+      start_btn:"Start", over_title:"Run over!",
+      again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
-      start_toast:"−"+COST+" {tt} · Fly!", mine_toast:"+1 {tt}",
+      start_toast:"−"+CONFIG.COST+" {tt} · Fly!",
+      reward_toast:"+{n} {tt} added!", paid_lbl:"Added {n} {tt} to your wallet",
+      paid_none:"No Purple Meteors collected this run",
       newbest:"🏆 New best!",
-      pause_title:"End this run?", pause_body:"Continue playing or return to the arcade?",
-      resume:"Keep playing", to_hub:"Back to Arcade"
+      pause_title:"Paused", pause_body:"Continue playing or return to the arcade?",
+      resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
+      tap_hint:"PRESS SPACE / CLICK TO FLY UP"
     }
   };
   var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
 
-  /* ===== Âm thanh ===== */
-  var AC=null;
-  function actx(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
-  function beep(f,dur,type,vol,when){ var c=actx(); if(!c) return; var o=c.createOscillator(),g=c.createGain();
-    o.type=type||"square"; o.frequency.value=f; var s=c.currentTime+(when||0);
-    g.gain.setValueAtTime(vol||0.05,s); g.gain.exponentialRampToValueAtTime(0.0001,s+(dur||0.09));
-    o.connect(g); g.connect(c.destination); o.start(s); o.stop(s+(dur||0.09)); }
-  function sMine(){ beep(660,0.07,"triangle",0.05); beep(990,0.09,"triangle",0.05,0.06); }
-  function sHit(){ beep(150,0.22,"sawtooth",0.06); beep(90,0.28,"sawtooth",0.06,0.1); }
-  function sStart(){ beep(440,0.08,"square",0.04); beep(620,0.1,"square",0.04,0.08); }
-
-  /* ===== Nhân vật người chơi: cố định dùng Luna (img/luna2.png) ===== */
-  var spritePath = "img/luna2.png";
+  /* ===== SFX — WebAudio synth, có nút tắt ===== */
+  var SFX = (function(){
+    var AC=null, muted=false;
+    try{ muted = localStorage.getItem(SFX_KEY)==="0"; }catch(e){}
+    function ctxA(){
+      if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+      if(AC && AC.state==="suspended"){ try{ AC.resume(); }catch(e){} }
+      return AC;
+    }
+    function beep(f,dur,type,vol,when){
+      if(muted) return; var c=ctxA(); if(!c) return;
+      var o=c.createOscillator(), g=c.createGain();
+      o.type=type||"square"; o.frequency.value=f;
+      var s=c.currentTime+(when||0);
+      g.gain.setValueAtTime(vol||0.05,s);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+(dur||0.09));
+      o.connect(g); g.connect(c.destination); o.start(s); o.stop(s+(dur||0.09));
+    }
+    return {
+      /* "ting" khi thu được Thiên thạch tím */
+      gem:function(){ beep(880,0.06,"triangle",0.05); beep(1320,0.1,"triangle",0.045,0.05); },
+      flap:function(){ beep(300,0.05,"sine",0.035); beep(430,0.05,"sine",0.03,0.035); },
+      hit:function(){ beep(150,0.24,"sawtooth",0.06); beep(85,0.3,"sawtooth",0.055,0.1); },
+      start:function(){ beep(440,0.08,"square",0.04); beep(660,0.1,"square",0.04,0.08); },
+      isMuted:function(){ return muted; },
+      toggle:function(){
+        muted=!muted;
+        try{ localStorage.setItem(SFX_KEY, muted?"0":"1"); }catch(e){}
+        if(!muted) beep(660,0.07,"square",0.04);
+        return muted;
+      },
+      unlock:ctxA          // gọi ở lần tương tác đầu để trình duyệt cho phát tiếng
+    };
+  })();
 
   /* ===== Ảnh ===== */
-  var sprite=new Image(), spriteReady=false, spriteAspect=1;
-  sprite.onload=function(){ spriteReady=true; spriteAspect=(sprite.naturalWidth/sprite.naturalHeight)||1; sizeByte(); };
-  sprite.onerror=function(){ if(sprite.src.indexOf("b1.png")<0) sprite.src="img/b1.png"; };
-  sprite.src=spritePath;
-  var ttImg=new Image(), ttReady=false; ttImg.onload=function(){ ttReady=true; }; ttImg.src="img/tt.png";
+  var ttImg=new Image(), ttReady=false;
+  ttImg.onload=function(){ ttReady=true; }; ttImg.src="img/tt.png";
+  /* Phi thuyền Luna nằm ngang — trống hoặc ảnh lỗi thì vẽ robot vector */
+  var sprite=null, spriteReady=false, SPR={w:CONFIG.byteW, h:CONFIG.byteH};
+  if(CONFIG.spritePath){
+    sprite=new Image();
+    sprite.onload=function(){
+      /* Bề rộng vẽ suy ra từ tỉ lệ ảnh → thay ảnh khác không bị bóp méo */
+      var ar=(sprite.naturalWidth||1)/(sprite.naturalHeight||1);
+      SPR.h=CONFIG.spriteH; SPR.w=CONFIG.spriteH*ar;
+      spriteReady=true;
+    };
+    sprite.onerror=function(){ spriteReady=false; };   // lùi về bản vẽ vector
+    sprite.src=CONFIG.spritePath;
+  }
 
   /* ===== Canvas ===== */
-  var stage=$("stage"), cv=$("cv"), ctx=cv.getContext("2d");
-  var W=800, H=520, DPR=1;
+  var field=$("field"), cv=$("cv"), ctx=cv.getContext("2d");
+  var DPR=1, bgGrad=null;
+  /* Canvas lấy đúng số pixel thật của khung rồi scale transform về hệ 800×500,
+     nên nét trên mọi màn hình mà toạ độ game không đổi. */
   function fit(){
-    var r=stage.getBoundingClientRect();
-    W=Math.max(260,Math.floor(r.width)); H=Math.max(320,Math.floor(r.height));
+    var r=cv.getBoundingClientRect();
+    var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
     DPR=Math.min(2, window.devicePixelRatio||1);
-    cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    sizeByte();
-    byte.x=Math.min(Math.max(byte.x,byte.w/2),W-byte.w/2);
-    byte.y=Math.min(Math.max(byte.y,byte.h/2),H-byte.h/2);
+    cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
+    ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
+    bgGrad=ctx.createLinearGradient(0,0,0,VH);
+    bgGrad.addColorStop(0,"#0b0f19"); bgGrad.addColorStop(0.55,"#141539"); bgGrad.addColorStop(1,"#1e1b4b");
   }
-  // Cỡ nhân vật giữ đúng tỉ lệ ảnh (nằm gọn trong khung ~78×72)
-  function sizeByte(){
-    var maxW=78, maxH=72, a=spriteAspect||1;
-    var w=maxW, h=w/a; if(h>maxH){ h=maxH; w=h*a; }
-    byte.w=Math.round(w); byte.h=Math.round(h);
-    byte.y=H-byte.h*0.5-12;
-  }
-  window.addEventListener("resize", fit);
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(cv); }
+  else { window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); }
 
-  /* ===== Trạng thái game ===== */
-  var state="start"; // start | play | over
-  var byte={x:400,y:460,w:56,h:56};
-  var keyL=false, keyR=false, keyU=false, keyD=false, MOVE=520;
-  var rocks=[], gems=[], parts=[], stars=[];
-  var elapsed=0, score=0, mined=0, spawnT=0, spawnN=0, shake=0;
+  /* ===== Nền parallax: dải ngân hà vẽ 1 lần vào canvas ẩn rồi cuộn lặp ===== */
+  var band=null;
+  function buildBand(){
+    var c=document.createElement("canvas"); c.width=VW; c.height=VH;
+    var g=c.getContext("2d");
+    /* Dải sáng uốn theo sin(2π x/VW) → giá trị ở x=0 và x=VW trùng nhau nên ghép không lộ mối */
+    for(var x=0;x<VW;x+=4){
+      var yc=VH*0.54 + Math.sin(x/VW*TAU)*34;
+      var hh=92 + Math.sin(x/VW*TAU*2)*20;
+      var lg=g.createLinearGradient(0,yc-hh,0,yc+hh);
+      lg.addColorStop(0,   "rgba(76,58,160,0)");
+      lg.addColorStop(0.42,"rgba(124,92,232,.10)");
+      lg.addColorStop(0.5, "rgba(168,132,255,.16)");
+      lg.addColorStop(0.58,"rgba(124,92,232,.10)");
+      lg.addColorStop(1,   "rgba(76,58,160,0)");
+      g.fillStyle=lg; g.fillRect(x,yc-hh,5,hh*2);
+    }
+    /* Bụi sao trong dải — tránh sát mép để không bị cắt nửa khi lặp */
+    for(var i=0;i<170;i++){
+      var bx=6+Math.random()*(VW-12);
+      var by=VH*0.54 + Math.sin(bx/VW*TAU)*34 + (Math.random()-0.5)*150;
+      var rr=0.5+Math.random()*1.3;
+      g.fillStyle="rgba(214,226,255,"+(0.1+Math.random()*0.35).toFixed(2)+")";
+      g.beginPath(); g.arc(bx,by,rr,0,TAU); g.fill();
+    }
+    return c;
+  }
+
+  /* ===== Trạng thái ===== */
+  var state="start";      // start | play | paused | dying | over
+  /* byte = phi thuyền người chơi (tên biến giữ từ bản robot Byte cũ) */
+  var byte={x:VW*CONFIG.byteX, y:VH*0.42, vy:0, rot:0, flapT:0, blink:0};
+  var cols=[], gems=[], parts=[], trail=[], starsFar=[], starsNear=[];
+  var speed=0, elapsed=0, dist=0, gemPts=0, mined=0, shake=0, dieT=0, holding=false;
+  var bandOff=0, hudCache={};
   var best=0; try{ best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0; }catch(e){}
 
-  function initStars(){ stars=[]; for(var i=0;i<60;i++) stars.push({x:Math.random()*W,y:Math.random()*H,z:0.4+Math.random()*1.6}); }
+  function initStars(){
+    starsFar=[]; starsNear=[];
+    for(var i=0;i<80;i++) starsFar.push({x:Math.random()*VW, y:Math.random()*VH, r:0.6+Math.random()*0.7, f:0.16+Math.random()*0.1, tw:Math.random()*TAU});
+    for(var j=0;j<26;j++) starsNear.push({x:Math.random()*VW, y:Math.random()*VH, r:1.1+Math.random()*1.1, f:0.42+Math.random()*0.16, tw:Math.random()*TAU});
+  }
+  function score(){ return Math.floor(dist)+gemPts; }
 
-  /* ===== Số dư ===== */
+  /* ===== Ví ===== */
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
   function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
 
+  /* ===== onFinishGame: CHỖ DUY NHẤT cộng thưởng vào ví chính AstroQ =====
+     Trong lượt chơi, Thiên thạch tím chỉ nằm ở "ví tạm" (biến mined);
+     kết lượt mới chốt một lần. Khi backend có API ví thì đổi đúng hàm này. */
+  function onFinishGame(totalMeteorsEarned, finalScore, secs){
+    var n=Math.max(0, Math.floor(totalMeteorsEarned||0));
+    if(n>0){ Economy.addAsteroids(n); bumpGem(); }
+    paintBalance();
+    /* Ghi vào Hồ sơ + Kho Thành Tích. Fire-and-forget: KHÔNG chờ mạng, vì
+       bảng kết quả phải hiện ngay. Server tự quyết XP + huy hiệu. */
+    if(window.AstroQProgress) AstroQProgress.game({
+      game:"dodge", score:Math.max(0,Math.floor(finalScore||0)),
+      seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
+    return n;
+  }
+
   /* ===== Bắt đầu / kết thúc lượt ===== */
   function startRound(){
-    if(Economy.getAsteroids() < COST){ showNeed(); return; }
-    Economy.useAsteroids(COST); paintBalance(); bumpGem();
-    rocks=[]; gems=[]; parts=[]; elapsed=0; score=0; mined=0; spawnT=0; spawnN=0; shake=0;
-    byte.x=W/2; byte.y=H-byte.h*0.5-16; keyL=keyR=keyU=keyD=false;
-    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need");
-    state="play"; last=0; sStart(); toast(t("start_toast"));
-    paintHud();
+    /* Chặn trừ phí 2 lần: Space/Enter vừa là "bay lên" vừa có thể kích hoạt nút đang focus */
+    if(state==="play" || state==="dying") return;
+    if(Economy.getAsteroids() < CONFIG.COST){ showNeed(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    /* Trừ phí qua Economy.spend: SERVER quyết trừ bao nhiêu (tra Wallet.Fees),
+       client chỉ gửi tên game. Hàm vẫn trả ngay true/false theo cache nên logic
+       chặn lượt chơi không đổi. Xem economy.js. */
+    Economy.spend("dodge"); paintBalance(); bumpGem();
+    cols=[]; gems=[]; parts=[]; trail=[];
+    speed=CONFIG.scroll0; elapsed=0; dist=0; gemPts=0; mined=0; shake=0; dieT=0; holding=false;
+    byte.x=VW*CONFIG.byteX; byte.y=VH*0.42; byte.vy=0; byte.rot=0; byte.flapT=0;
+    lastGapY=VH/2;
+    spawnCol(VW+140); spawnCol(VW+140+CONFIG.colGap);
+    hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause");
+    state="play"; last=0; syncBtns();
+    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+    hudCache={}; paintHud();
+  }
+  /* Chết: nổ + rung, giữ 0.7s cho người chơi thấy rồi mới hiện bảng kết quả */
+  function die(){
+    if(state!=="play") return;
+    state="dying"; dieT=0.7; syncBtns(); SFX.hit();
+    if(!REDUCE) shake=18;
+    burst(byte.x, byte.y, "#ff8a8a", REDUCE?10:26, 260);
+    burst(byte.x, byte.y, "#ffd166", REDUCE?6:14, 190);
+  }
+  /* Dòng "đã cộng n tt vào ví" — tách riêng vì nó do JS sinh, `applyTexts` không dịch được;
+     đổi ngôn ngữ khi đang ở bảng kết quả thì applyLang gọi lại hàm này. */
+  var lastPaid=0;
+  function paintPaid(){
+    var el=$("paid");
+    el.classList.toggle("none", lastPaid<=0);
+    el.innerHTML = lastPaid>0
+      ? t("paid_lbl").replace("{n}","<b>"+lastPaid+"</b>").replace("{tt}",AstroQ.ttImg())
+      : t("paid_none");
   }
   function gameOver(){
-    state="over"; sHit(); shake=16;
-    var s=Math.floor(score);
-    var isBest = s>best; if(isBest){ best=s; try{ localStorage.setItem(BEST_KEY,String(best)); }catch(e){} }
-    $("r-score").textContent=s; $("r-best").textContent=best; $("r-mined").textContent=mined;
-    var stars3 = s>=300?3 : s>=150?2 : (s>=50?1:0);
+    state="over"; syncBtns();
+    var s=score(), d=Math.floor(dist);
+    var isBest = s>best;
+    if(isBest){ best=s; try{ localStorage.setItem(BEST_KEY,String(best)); }catch(e){} }
+
+    $("r-score").textContent=s;
+    $("r-dist").textContent=d;
+    $("r-best").textContent=best;
+    $("r-mined").textContent=mined;
+
+    /* Chốt thưởng vào ví chính */
+    lastPaid=onFinishGame(mined, s, Math.floor(elapsed));
+    paintPaid();
+
+    var nStars = s>=300?3 : s>=150?2 : (s>=50?1:0);
     var stEls=$("stars").children;
-    for(var i=0;i<stEls.length;i++){ stEls[i].classList.remove("on"); (function(el,on,i){ setTimeout(function(){ el.classList.toggle("on",on); },160+i*200); })(stEls[i], i<stars3, i); }
-    if(isBest) toast(t("newbest"));
+    for(var i=0;i<stEls.length;i++){
+      (function(el,on,idx){ el.classList.remove("on"); setTimeout(function(){ el.classList.toggle("on",on); },160+idx*200); })(stEls[i], i<nStars, i);
+    }
+    /* Dùng lastPaid, KHÔNG đặt tên biến trùng id phần tử: `paid` sẽ trỏ vào
+       <div id="paid"> qua window (named access) nên `paid>0` âm thầm luôn sai. */
+    if(lastPaid>0) toast(t("reward_toast").replace("{n}",lastPaid));
+    else if(isBest) toast(t("newbest"));
     showOv("ov-over");
   }
   function showNeed(){
-    var tt="<img class='tt-inline' src='img/tt.png' alt='tt'/>";
+    /* Ẩn brief/kết quả trước: 2 overlay cùng hiện = 2 lớp nền tối cộng nhau, thẻ chồng thẻ */
+    hideOv("ov-start"); hideOv("ov-over");
     $("need-body").innerHTML = (LANG==="en"
-      ? "You need <b>"+COST+" "+tt+"</b> to play but only have <b>"+Economy.getAsteroids()+" "+tt+"</b>.<br/>Take a Quiz to earn more!"
-      : "Bạn cần <b>"+COST+" "+tt+"</b> để chơi nhưng chỉ có <b>"+Economy.getAsteroids()+" "+tt+"</b>.<br/>Làm Quiz để kiếm thêm nhé!");
+      ? "You need <b>"+CONFIG.COST+" "+TT+"</b> to play but only have <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Take a Quiz to earn more!"
+      : "Bạn cần <b>"+CONFIG.COST+" "+TT+"</b> để chơi nhưng chỉ có <b>"+Economy.getAsteroids()+" "+TT+"</b>.<br/>Làm Quiz để kiếm thêm nhé!");
     showOv("ov-need");
   }
   function showOv(id){ $(id).classList.add("show"); }
   function hideOv(id){ $(id).classList.remove("show"); }
 
-  /* ===== Tạm dừng (ESC) ===== */
-  function pauseGame(){ if(state!=="play") return; state="paused"; keyL=keyR=keyU=keyD=false; showOv("ov-pause"); }
-  function resumeGame(){ if(state!=="paused") return; hideOv("ov-pause"); state="play"; last=0; }
+  /* ===== Nút HUD theo trạng thái =====
+     Nút Pause chỉ hiện khi đang chơi/đang dừng (ở màn brief hay bảng kết quả thì
+     bấm nó chẳng có tác dụng gì); nút Âm thanh luôn hiện. */
+  function syncBtns(){
+    var b=$("btn-pause");
+    b.classList.toggle("is-hidden", !(state==="play"||state==="paused"));
+    b.classList.toggle("off", state==="paused");
+  }
 
-  /* ===== HUD ===== */
-  function paintHud(){ $("score").textContent=Math.floor(score); $("mined").textContent=mined; $("best").textContent=best; }
+  /* ===== Tạm dừng ===== */
+  function pauseGame(){
+    if(state!=="play") return;
+    state="paused"; holding=false;
+    syncBtns(); showOv("ov-pause");
+  }
+  function resumeGame(){
+    if(state!=="paused") return;
+    hideOv("ov-pause");
+    state="play"; last=0; syncBtns();
+  }
+  function togglePause(){ if(state==="play") pauseGame(); else if(state==="paused") resumeGame(); }
+
+  /* ===== HUD (chỉ ghi DOM khi số thay đổi) ===== */
+  function paintHud(){
+    var s=score(), d=Math.floor(dist);
+    if(hudCache.s!==s){ $("score").textContent=s; hudCache.s=s; }
+    if(hudCache.d!==d){ $("dist").textContent=d; hudCache.d=d; }
+    if(hudCache.m!==mined){ $("mined").textContent=mined; hudCache.m=mined; }
+    if(hudCache.b!==best){ $("best").textContent=best; hudCache.b=best; }
+  }
+
+  /* ===== Cột chùm thiên thạch ===== */
+  var lastGapY=VH/2;
+  /* Biên dạng đá: số đỉnh 7–10 + bán kính lệch nhiều → nhìn ra khối đá góc cạnh,
+     nếu để đều nhau thì cả cột trông như một chùm bông tròn dính vào nhau. */
+  function rockPts(){
+    var n=7+Math.floor(Math.random()*4), a=[];
+    for(var i=0;i<n;i++) a.push(0.66+Math.random()*0.46);
+    return a;
+  }
+  /* Lấp kín một đoạn cột bằng các khối đá chồng nhau (đá bị cắt gọn theo hitbox khi vẽ) */
+  function fillRocks(x0, yTop, yBot, out){
+    for(var y=yTop; y<=yBot+22; y+=24){
+      out.push({
+        cx: x0 + CONFIG.colW/2 + (Math.random()-0.5)*CONFIG.colW*0.42,
+        cy: Math.min(y, yBot+10),
+        r : CONFIG.colW*0.40 + Math.random()*CONFIG.colW*0.22,
+        rot: Math.random()*TAU,
+        pts: rockPts()
+      });
+    }
+  }
+  function spawnCol(x){
+    var gapH = Math.max(CONFIG.gapHMin, CONFIG.gapH0 - elapsed*CONFIG.gapShrink);
+    var lo = CONFIG.gapMargin + gapH/2, hi = VH - CONFIG.gapMargin - gapH/2;
+    /* Khe mới không lệch quá gapStep so với khe trước → không có cú nhảy bất khả thi */
+    var lo2 = Math.max(lo, lastGapY-CONFIG.gapStep), hi2 = Math.min(hi, lastGapY+CONFIG.gapStep);
+    var gapY = lo2 + Math.random()*Math.max(0, hi2-lo2);
+    lastGapY = gapY;
+
+    var col={ x:x, gapY:gapY, gapH:gapH, rocks:[], scored:false };
+    fillRocks(x, -30, gapY-gapH/2, col.rocks);         // chùm trên
+    fillRocks(x, gapY+gapH/2, VH+30, col.rocks);       // chùm dưới
+    cols.push(col);
+
+    /* Thiên thạch tím nằm trong khe hẹp */
+    if(Math.random() < CONFIG.gemChance){
+      var jitter=(Math.random()-0.5)*Math.max(0, gapH-CONFIG.gemR*4);
+      gems.push({ x:x+CONFIG.colW/2, y:gapY+jitter, r:CONFIG.gemR, ph:Math.random()*TAU });
+    }
+  }
+
+  /* ===== Va chạm AABB ===== */
+  function byteBox(){
+    var i=CONFIG.hitInset;
+    return { x:byte.x-CONFIG.byteW/2+i, y:byte.y-CONFIG.byteH/2+i*0.6,
+             w:CONFIG.byteW-i*2,        h:CONFIG.byteH-i*1.2 };
+  }
+  function hit(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+
+  /* ===== Điều khiển ===== */
+  function flap(){
+    if(state!=="play") return;
+    byte.vy = CONFIG.flapV; byte.flapT = 0.22;
+    var t=tailPoint();
+    burst(t.x, t.y, "#d8b4fe", REDUCE?2:6, 120);   // tia tím bung ra ở ống đẩy
+    SFX.flap();
+  }
+
+  /* ===== Hạt ===== */
+  function burst(x,y,col,n,sp0){
+    for(var i=0;i<n;i++){
+      var a=Math.random()*TAU, sp=(sp0||160)*(0.35+Math.random());
+      parts.push({ x:x, y:y, vx:Math.cos(a)*sp-speed*0.35, vy:Math.sin(a)*sp,
+                   life:0.35+Math.random()*0.45, r:1.6+Math.random()*2.2, col:col });
+    }
+  }
 
   /* ===== Vòng lặp ===== */
-  var last=0, raf=null;
+  var last=0;
   function frame(ts){
     if(!last) last=ts;
     var dt=Math.min(0.045,(ts-last)/1000); last=ts;
-    if(state==="play"){ update(dt); }
+    if(state==="play") update(dt);
+    else if(state==="dying") updateDying(dt);
+    else if(state==="start") updateIdle(dt);   // màn brief: nền vẫn trôi, Byte bồng bềnh
     render();
-    raf=requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
   }
-  function update(dt){
-    elapsed+=dt; score+=dt*12;
-    // điều khiển Byte bằng bàn phím (◀▲▼▶ hoặc A/W/S/D) — di chuyển 2 chiều
-    var mx=0,my=0;
-    if(keyL) mx-=1; if(keyR) mx+=1; if(keyU) my-=1; if(keyD) my+=1;
-    if(mx&&my){ mx*=0.7071; my*=0.7071; }   // chuẩn hoá chéo
-    byte.x += mx*MOVE*dt; byte.y += my*MOVE*dt;
-    byte.x = Math.max(byte.w/2, Math.min(W-byte.w/2, byte.x));
-    byte.y = Math.max(byte.h/2, Math.min(H-byte.h/2, byte.y));
 
-    // sinh thiên thạch + đá quý
-    spawnT-=dt;
-    var interval=Math.max(0.32, 0.92 - elapsed*0.018);
-    if(spawnT<=0){
-      spawnT=interval; spawnN++;
-      var r=15+Math.random()*17;
-      rocks.push({ x:r+Math.random()*(W-2*r), y:-r, r:r, vy:165+elapsed*6.5+Math.random()*70, rot:Math.random()*6.28, spin:(Math.random()-0.5)*3 });
-      if(spawnN%4===0){ var gr=11; gems.push({ x:gr+Math.random()*(W-2*gr), y:-gr, r:gr, vy:150+elapsed*4+Math.random()*40, ph:Math.random()*6.28 }); }
+  function update(dt){
+    elapsed+=dt;
+    speed = Math.min(CONFIG.scrollMax, CONFIG.scroll0 + elapsed*CONFIG.scrollAcc);
+    dist += speed*dt*CONFIG.distPerPx;
+    var dx = speed*dt;
+
+    /* --- Byte: giữ phím thì rơi chậm, thả ra thì rơi theo trọng lực --- */
+    byte.vy += (holding ? CONFIG.holdAccel : CONFIG.gravity)*dt;
+    byte.vy = Math.max(CONFIG.maxRise, Math.min(CONFIG.maxFall, byte.vy));
+    byte.y += byte.vy*dt;
+    byte.rot = Math.max(-0.42, Math.min(0.8, byte.vy/620));
+    if(byte.flapT>0) byte.flapT-=dt;
+    byte.blink+=dt;
+
+    /* --- Chạm mép trên/dưới canvas = hết lượt --- */
+    if(byte.y-CONFIG.byteH/2 <= 0 || byte.y+CONFIG.byteH/2 >= VH){
+      byte.y=Math.max(CONFIG.byteH/2, Math.min(VH-CONFIG.byteH/2, byte.y));
+      die(); return;
     }
-    // hitbox Byte
-    var bR=byte.w*0.30, bx=byte.x, by=byte.y;
-    // đá quý
-    for(var i=gems.length-1;i>=0;i--){ var g=gems[i]; g.y+=g.vy*dt; g.ph+=dt*4;
-      var dx=g.x-bx, dy=g.y-by; if(dx*dx+dy*dy < (g.r+bR+4)*(g.r+bR+4)){ gems.splice(i,1); mined++; Economy.addAsteroids(1); paintBalance(); bumpGem(); sMine(); burst(g.x,g.y,"#c084fc",8); continue; }
-      if(g.y-g.r>H) gems.splice(i,1);
+
+    /* --- Cột: trôi phải → trái, tái sinh khi ra khỏi màn --- */
+    var bb=byteBox(), i, c;
+    for(i=cols.length-1;i>=0;i--){
+      c=cols[i]; c.x-=dx;
+      for(var k=0;k<c.rocks.length;k++) c.rocks[k].cx-=dx;
+      if(hit(bb,{x:c.x,y:0,w:CONFIG.colW,h:c.gapY-c.gapH/2}) ||
+         hit(bb,{x:c.x,y:c.gapY+c.gapH/2,w:CONFIG.colW,h:VH-(c.gapY+c.gapH/2)})){
+        die(); return;
+      }
+      if(c.x+CONFIG.colW < -20) cols.splice(i,1);
     }
-    // thiên thạch
-    for(var j=rocks.length-1;j>=0;j--){ var a=rocks[j]; a.y+=a.vy*dt; a.rot+=a.spin*dt;
-      var ax=a.x-bx, ay=a.y-by; if(ax*ax+ay*ay < (a.r+bR)*(a.r+bR)){ burst(bx,by,"#ff7a7a",22); gameOver(); return; }
-      if(a.y-a.r>H) rocks.splice(j,1);
+    /* Cột mới đặt cách cột cuối đúng colGap, chỉ sinh khi cột cuối đã lọt vào màn hình
+       → cột mới luôn nằm ngoài mép phải, không "hiện ra" giữa sân. */
+    var lastCol=cols[cols.length-1];
+    if(!lastCol || lastCol.x < VW) spawnCol(lastCol ? lastCol.x+CONFIG.colGap : VW+140);
+
+    /* --- Thiên thạch tím: +10 điểm & +1 vào ví tạm --- */
+    for(i=gems.length-1;i>=0;i--){
+      var g=gems[i]; g.x-=dx; g.ph+=dt*4.2;
+      if(hit(bb,{x:g.x-g.r,y:g.y-g.r,w:g.r*2,h:g.r*2})){
+        gems.splice(i,1); mined++; gemPts+=CONFIG.gemScore;
+        SFX.gem(); burst(g.x,g.y,"#c084fc",REDUCE?5:12,170);
+        continue;
+      }
+      if(g.x+g.r < -10) gems.splice(i,1);
     }
-    // sao nền + hạt
-    for(var s=0;s<stars.length;s++){ var st=stars[s]; st.y+=st.z*30*dt* (1+elapsed*0.03); if(st.y>H){ st.y=0; st.x=Math.random()*W; } }
-    for(var p=parts.length-1;p>=0;p--){ var pt=parts[p]; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.life-=dt; if(pt.life<=0) parts.splice(p,1); }
-    if(shake>0) shake=Math.max(0,shake-dt*40);
+
+    stepBackdrop(dt,dx); stepParts(dt); stepTrail(dt,dx,true);
+    if(shake>0) shake=Math.max(0,shake-dt*42);
     paintHud();
   }
-  function burst(x,y,col,n){ for(var i=0;i<n;i++){ var a=Math.random()*6.28,sp=40+Math.random()*160; parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.4+Math.random()*0.4,col:col}); } }
 
-  /* ===== Vẽ ===== */
+  /* Màn brief (chưa bắt đầu): nền trôi chậm, Byte lơ lửng — sân không đứng chết */
+  var idleT=0;
+  function updateIdle(dt){
+    idleT+=dt;
+    byte.y=VH*0.42+Math.sin(idleT*1.6)*9;
+    byte.rot=Math.sin(idleT*1.6+1.2)*0.07;
+    byte.blink+=dt;
+    stepBackdrop(dt, 46*dt);
+    stepParts(dt);
+    stepTrail(dt, 46*dt, true);   // màn brief vẫn có vệt (tàu đang lơ lửng)
+  }
+
+  /* Sau khi chết: Byte rơi xoay tự do cho tới khi hết dieT */
+  function updateDying(dt){
+    dieT-=dt;
+    byte.vy=Math.min(CONFIG.maxFall, byte.vy+CONFIG.gravity*dt);
+    byte.y+=byte.vy*dt; byte.rot+=dt*4.5;
+    /* Đã nổ thì động cơ tắt: vệt cũ vẫn tan dần nhưng không sinh điểm mới */
+    stepBackdrop(dt, speed*dt*0.25); stepParts(dt); stepTrail(dt, speed*dt*0.25, false);
+    if(shake>0) shake=Math.max(0,shake-dt*42);
+    if(dieT<=0) gameOver();
+  }
+
+  function stepBackdrop(dt,dx){
+    bandOff=(bandOff + dx*0.10) % VW;
+    var i,s;
+    for(i=0;i<starsFar.length;i++){ s=starsFar[i]; s.x-=dx*s.f; s.tw+=dt*2.2; if(s.x<-2){ s.x+=VW; s.y=Math.random()*VH; } }
+    for(i=0;i<starsNear.length;i++){ s=starsNear[i]; s.x-=dx*s.f; s.tw+=dt*3.1; if(s.x<-3){ s.x+=VW; s.y=Math.random()*VH; } }
+  }
+  function stepParts(dt){
+    for(var p=parts.length-1;p>=0;p--){
+      var pt=parts[p]; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=420*dt; pt.life-=dt;
+      if(pt.life<=0) parts.splice(p,1);
+    }
+  }
+
+  /* ===== Vệt sáng tím ở đuôi tàu =====
+     Miệng ống đẩy: điểm (-w*0.46, 0) trong hệ toạ độ tàu, quay theo byte.rot →
+     tàu chúc mũi xuống thì vệt thoát ra chếch lên, đúng như luồng đẩy thật. */
+  function tailPoint(){
+    var w=spriteReady?SPR.w:CONFIG.byteW;
+    var c=Math.cos(byte.rot), s=Math.sin(byte.rot), lx=-w*0.43;   // 0,43 = miệng ống đẩy trên ảnh
+    return { x: byte.x + lx*c, y: byte.y + lx*s };
+  }
+  /* Điểm vệt trôi sang trái ĐÚNG bằng dx của màn hình → vệt đứng yên trong không
+     gian như luồng khí thật, chứ không dính cứng vào đuôi tàu. */
+  function stepTrail(dt,dx,alive){
+    for(var i=trail.length-1;i>=0;i--){
+      var p=trail[i]; p.x-=dx; p.life-=dt;
+      if(p.life<=0 || p.x<-30) trail.splice(i,1);
+    }
+    if(!alive) return;
+    var t=tailPoint();
+    trail.push({ x:t.x, y:t.y, life:CONFIG.trailLife, hot: byte.flapT>0?1:0 });
+    /* Mọi điểm có cùng life nên điểm cũ nhất luôn chết trước → mảng luôn đúng
+       thứ tự thời gian, ribbon không bị xoắn. Trần trailMax chỉ để phòng xa. */
+    if(trail.length>CONFIG.trailMax) trail.shift();
+  }
+
+  /* ============================================================
+     VẼ
+     ============================================================ */
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+  }
+
   function render(){
-    ctx.clearRect(0,0,W,H);
-    var ox=0,oy=0; if(shake>0){ ox=(Math.random()-0.5)*shake; oy=(Math.random()-0.5)*shake; }
+    /* --- nền (không rung theo shake để đỡ chóng mặt) --- */
+    ctx.fillStyle=bgGrad; ctx.fillRect(0,0,VW,VH);
+    if(band){ ctx.drawImage(band,-bandOff,0,VW,VH); ctx.drawImage(band,VW-bandOff,0,VW,VH); }
+    drawStars();
+
+    var ox=0,oy=0;
+    if(shake>0){ ox=(Math.random()-0.5)*shake; oy=(Math.random()-0.5)*shake; }
     ctx.save(); ctx.translate(ox,oy);
-    // sao
-    for(var s=0;s<stars.length;s++){ var st=stars[s]; ctx.globalAlpha=0.3+st.z*0.35; ctx.fillStyle="#bcd4ff";
-      ctx.fillRect(st.x, st.y, st.z, st.z*3); }
+
+    for(var i=0;i<cols.length;i++) drawColumn(cols[i]);
+    for(var j=0;j<gems.length;j++) drawGem(gems[j]);
+    if(state!=="over"){ drawTrail(); drawShip(); }
+    drawParts();
+
+    ctx.restore();
+
+    /* Gợi ý điều khiển ở đầu lượt */
+    if(state==="play" && dist<45) drawHint();
+  }
+
+  function drawStars(){
+    var i,s;
+    for(i=0;i<starsFar.length;i++){
+      s=starsFar[i];
+      ctx.globalAlpha=0.3+Math.sin(s.tw)*0.16+0.2;
+      ctx.fillStyle="#c7d6ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
+    for(i=0;i<starsNear.length;i++){
+      s=starsNear[i];
+      ctx.globalAlpha=0.55+Math.sin(s.tw)*0.25;
+      ctx.fillStyle="#eaf1ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
     ctx.globalAlpha=1;
-    // đá quý
-    for(var i=0;i<gems.length;i++){ var g=gems[i]; var pulse=1+Math.sin(g.ph)*0.12;
-      ctx.save(); ctx.translate(g.x,g.y); ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=16;
-      if(ttReady){ var d=g.r*2.1*pulse; ctx.drawImage(ttImg,-d/2,-d/2,d,d); }
-      else { ctx.fillStyle="#c084fc"; ctx.beginPath(); ctx.arc(0,0,g.r*pulse,0,6.28); ctx.fill(); }
-      ctx.restore(); }
-    ctx.shadowBlur=0;
-    // thiên thạch
-    for(var j=0;j<rocks.length;j++){ var a=rocks[j]; drawRock(a); }
-    // Byte
-    drawByte();
-    // hạt
-    for(var p=0;p<parts.length;p++){ var pt=parts[p]; ctx.globalAlpha=Math.max(0,pt.life*1.6); ctx.fillStyle=pt.col;
-      ctx.beginPath(); ctx.arc(pt.x,pt.y,2.4,0,6.28); ctx.fill(); }
-    ctx.globalAlpha=1;
+  }
+
+  /* Cột thiên thạch: đá được CẮT GỌN đúng theo hitbox (clip) nên hình = vùng chết */
+  function drawColumn(c){
+    var topH=c.gapY-c.gapH/2, botY=c.gapY+c.gapH/2;
+    drawRockBlock(c, c.x, 0, CONFIG.colW, topH);
+    drawRockBlock(c, c.x, botY, CONFIG.colW, VH-botY);
+
+    /* Vệt sáng mờ ở 2 mép khe — chỉ để mắt bắt được đường bay, KHÔNG vẽ dày
+       kẻo trông như cái nắp/bậc thang chứ không phải mép đá. */
+    ctx.save();
+    ctx.strokeStyle="rgba(125,211,252,.3)"; ctx.lineWidth=1;
+    ctx.shadowColor="rgba(56,189,248,.55)"; ctx.shadowBlur=7;
+    ctx.beginPath(); ctx.moveTo(c.x+3,topH); ctx.lineTo(c.x+CONFIG.colW-3,topH);
+    ctx.moveTo(c.x+3,botY); ctx.lineTo(c.x+CONFIG.colW-3,botY); ctx.stroke();
+    ctx.restore();
+  }
+  function drawRockBlock(c,x,y,w,h){
+    if(h<=0) return;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+    for(var i=0;i<c.rocks.length;i++){
+      var a=c.rocks[i];
+      if(a.cy+a.r < y || a.cy-a.r > y+h) continue;   // ngoài khối này
+      drawRock(a);
+    }
     ctx.restore();
   }
   function drawRock(a){
-    ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
-    var grd=ctx.createRadialGradient(-a.r*0.3,-a.r*0.3,a.r*0.2,0,0,a.r);
-    grd.addColorStop(0,"#7d8aa8"); grd.addColorStop(0.6,"#43506e"); grd.addColorStop(1,"#232d48");
-    ctx.fillStyle=grd; ctx.shadowColor="rgba(120,160,255,.3)"; ctx.shadowBlur=10;
+    ctx.save(); ctx.translate(a.cx,a.cy); ctx.rotate(a.rot);
+    var grd=ctx.createRadialGradient(-a.r*0.32,-a.r*0.32,a.r*0.18,0,0,a.r);
+    grd.addColorStop(0,"#8291b0"); grd.addColorStop(0.6,"#44516f"); grd.addColorStop(1,"#212b45");
+    ctx.fillStyle=grd;
     ctx.beginPath();
-    var pts=9; for(var k=0;k<=pts;k++){ var ang=k/pts*6.28; var rr=a.r*(0.82+((k*37)%10)/10*0.28); var px=Math.cos(ang)*rr, py=Math.sin(ang)*rr; if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
-    ctx.closePath(); ctx.fill(); ctx.shadowBlur=0;
-    ctx.fillStyle="rgba(0,0,0,.28)"; ctx.beginPath(); ctx.arc(a.r*0.28,a.r*0.2,a.r*0.22,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(-a.r*0.3,a.r*0.34,a.r*0.14,0,6.28); ctx.fill();
+    for(var k=0;k<a.pts.length;k++){
+      var ang=k/a.pts.length*TAU, rr=a.r*a.pts[k];
+      var px=Math.cos(ang)*rr, py=Math.sin(ang)*rr;
+      if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath(); ctx.fill();
+    /* nét viền tối: tách từng khối đá ra khỏi khối kế bên, không thì chúng nhoè thành một mảng */
+    ctx.strokeStyle="rgba(14,19,36,.5)"; ctx.lineWidth=1.3; ctx.stroke();
+    ctx.fillStyle="rgba(0,0,0,.26)";
+    ctx.beginPath(); ctx.arc(a.r*0.26,a.r*0.2,a.r*0.2,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(-a.r*0.3,a.r*0.32,a.r*0.13,0,TAU); ctx.fill();
     ctx.restore();
   }
-  function drawByte(){
-    var x=byte.x,y=byte.y,w=byte.w,h=byte.h;
-    // luồng đẩy
-    var f=6+Math.random()*7;
-    var fg=ctx.createLinearGradient(0,y+h*0.3,0,y+h*0.5+f);
-    fg.addColorStop(0,"rgba(120,220,255,.9)"); fg.addColorStop(1,"rgba(120,220,255,0)");
-    ctx.fillStyle=fg; ctx.beginPath(); ctx.moveTo(x-7,y+h*0.34); ctx.lineTo(x+7,y+h*0.34); ctx.lineTo(x,y+h*0.5+f); ctx.closePath(); ctx.fill();
-    ctx.save(); ctx.shadowColor="rgba(56,189,248,.6)"; ctx.shadowBlur=14;
-    if(spriteReady){ ctx.drawImage(sprite,x-w/2,y-h/2,w,h); }
-    else { ctx.fillStyle="#8fd3ff"; ctx.beginPath(); ctx.arc(x,y,w*0.34,0,6.28); ctx.fill(); }
+
+  /* Thiên thạch tím + hào quang tím */
+  function drawGem(g){
+    var pulse=1+Math.sin(g.ph)*0.12;
+    ctx.save(); ctx.translate(g.x,g.y);
+    /* hào quang */
+    var hg=ctx.createRadialGradient(0,0,g.r*0.3,0,0,g.r*2.5*pulse);
+    hg.addColorStop(0,"rgba(192,132,252,.55)"); hg.addColorStop(1,"rgba(192,132,252,0)");
+    ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,0,g.r*2.5*pulse,0,TAU); ctx.fill();
+    ctx.shadowColor="rgba(192,132,252,.95)"; ctx.shadowBlur=16;
+    if(ttReady){ var d=g.r*2.2*pulse; ctx.drawImage(ttImg,-d/2,-d/2,d,d); }
+    else { ctx.fillStyle="#c084fc"; ctx.beginPath(); ctx.arc(0,0,g.r*pulse,0,TAU); ctx.fill(); }
+    ctx.restore();
+  }
+
+  /* Vệt sáng tím sau đuôi tàu — dải thu nhỏ dần về phía cuối.
+     Vẽ bằng 2 lớp polygon + gradient (KHÔNG dùng shadowBlur: blur trên canvas
+     mỗi khung hình rất đắt, đây là thứ vẽ lại 60 lần/giây). */
+  function drawTrail(){
+    var n=trail.length; if(n<3) return;
+    var a=trail[0], b=trail[n-1];
+    if(Math.abs(b.x-a.x)+Math.abs(b.y-a.y) < 3) return;   // chưa đủ dài để thành dải
+
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";        // cộng sáng → chồng lớp ra hào quang
+    /* Vệt thót nhanh (trailTaper) và mờ dần về cuối: đoạn cũ chính là chỗ đường
+       bay gấp khúc khi tàu đảo chiều — để dày và sáng thì khúc gấp đó trông như
+       tia sét, phải nhạt đi mới ra luồng khí đang tan. */
+    if(!REDUCE) trailLayer(n, 1, "168,85,247", 0.30);    // hào quang tím rộng
+    trailLayer(n, 0.46, "233,213,255", 0.58);            // lõi tím trắng
+    ctx.restore();
+
+    /* Miệng ống đẩy: chấm sáng nhỏ, nở ra mỗi cú bật */
+    var t=tailPoint(), rr=(byte.flapT>0? 11: 7)*(0.9+Math.sin(byte.blink*9)*0.1);
+    var og=ctx.createRadialGradient(t.x,t.y,0,t.x,t.y,rr);
+    og.addColorStop(0,   "rgba(245,232,255,.95)");
+    og.addColorStop(0.45,"rgba(192,132,252,.6)");
+    og.addColorStop(1,   "rgba(147,51,234,0)");
+    ctx.save(); ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle=og; ctx.beginPath(); ctx.arc(t.x,t.y,rr,0,TAU); ctx.fill();
+    ctx.restore();
+  }
+  /* Pháp tuyến tại điểm i (vuông góc đường bay, đã chuẩn hoá).
+     Phải là pháp tuyến chứ không phải khoảng lệch theo trục Y: tàu bổ nhào tới
+     540px/s trong khi màn hình chỉ cuộn 190–300px/s, nên đoạn vệt hay dốc hơn 45°
+     — lệch theo trục Y thì chỗ dốc bị phình ra thành mảng loe. */
+  function trailNormal(i,n,out){
+    var a=trail[Math.max(0,i-1)], b=trail[Math.min(n-1,i+1)];
+    var dx=b.x-a.x, dy=b.y-a.y, L=Math.sqrt(dx*dx+dy*dy);
+    if(L<0.001){ out.x=0; out.y=1; return; }        // 2 điểm trùng nhau
+    out.x=-dy/L; out.y=dx/L;
+  }
+  /* Một lớp của dải: đi hết mép trên rồi quay về theo mép dưới */
+  function trailLayer(n, scale, rgb, alpha){
+    var i,p,hw, half=CONFIG.trailW*0.5*scale, nm={x:0,y:1};
+    ctx.beginPath();
+    for(i=0;i<n;i++){
+      p=trail[i]; hw=half*Math.pow(i/(n-1),CONFIG.trailTaper)*(p.hot?1.18:1); trailNormal(i,n,nm);
+      if(i===0) ctx.moveTo(p.x+nm.x*hw, p.y+nm.y*hw);
+      else      ctx.lineTo(p.x+nm.x*hw, p.y+nm.y*hw);
+    }
+    for(i=n-1;i>=0;i--){
+      p=trail[i]; hw=half*Math.pow(i/(n-1),CONFIG.trailTaper)*(p.hot?1.18:1); trailNormal(i,n,nm);
+      ctx.lineTo(p.x-nm.x*hw, p.y-nm.y*hw);
+    }
+    ctx.closePath();
+    /* Gradient chạy dọc theo đường vệt (không phải theo trục X) — đoạn dốc thì
+       trục X ngắn lại, để theo X là chỗ đó chuyển màu giật cục */
+    var g=ctx.createLinearGradient(trail[0].x,trail[0].y,trail[n-1].x,trail[n-1].y);
+    g.addColorStop(0,   "rgba("+rgb+",0)");
+    g.addColorStop(0.55,"rgba("+rgb+","+(alpha*0.34).toFixed(3)+")");
+    g.addColorStop(1,   "rgba("+rgb+","+alpha+")");
+    ctx.fillStyle=g; ctx.fill();
+  }
+
+  /* Phi thuyền Luna nằm ngang (img/luna-side.png); ảnh lỗi thì vẽ robot vector */
+  function drawShip(){
+    /* Cỡ VẼ: theo ảnh khi có sprite (KHÔNG theo hitbox), nếu không thì lấy hitbox
+       làm cỡ thân robot vector. Lửa đẩy cũng dùng w,h này nên miệng lửa luôn nằm
+       đúng ở đuôi tàu, không thụt vào trong thân. */
+    var w=spriteReady?SPR.w:CONFIG.byteW, h=spriteReady?SPR.h:CONFIG.byteH;
+    ctx.save(); ctx.translate(byte.x, byte.y); ctx.rotate(byte.rot);
+
+    /* --- lửa đẩy khi bay lên: tông tím cho khớp vệt sáng & thân tàu --- */
+    if(byte.flapT>0){
+      var k=byte.flapT/0.22, fl=(24+Math.random()*14)*k;
+      var fg=ctx.createLinearGradient(-w*0.5,0,-w*0.5-fl,0);
+      fg.addColorStop(0,   "rgba(255,250,255,.98)");
+      fg.addColorStop(0.3, "rgba(216,180,254,.92)");
+      fg.addColorStop(0.68,"rgba(168,85,247,.7)");
+      fg.addColorStop(1,   "rgba(147,51,234,0)");
+      ctx.fillStyle=fg;
+      ctx.beginPath();
+      ctx.moveTo(-w*0.46,-h*0.3); ctx.lineTo(-w*0.5-fl,0); ctx.lineTo(-w*0.46,h*0.3);
+      ctx.closePath(); ctx.fill();
+    }
+
+    if(spriteReady){
+      /* Không đặt shadowBlur ở đây: ảnh PNG có alpha nên bóng đổ phải tô theo viền
+         từng pixel — đắt hơn hẳn vẽ vector, mà thân tàu vốn đã tự phát sáng. */
+      ctx.drawImage(sprite,-w/2,-h/2,w,h);
+    } else {
+      ctx.shadowColor="rgba(56,189,248,.65)"; ctx.shadowBlur=14;
+      /* --- thân robot --- */
+      var bg=ctx.createLinearGradient(0,-h/2,0,h/2);
+      bg.addColorStop(0,"#e8f1ff"); bg.addColorStop(0.5,"#b9c8e8"); bg.addColorStop(1,"#7d8cb4");
+      ctx.fillStyle=bg; roundRect(-w/2,-h/2,w,h,11); ctx.fill();
+      ctx.shadowBlur=0;
+      /* viền neon */
+      ctx.strokeStyle="rgba(56,189,248,.85)"; ctx.lineWidth=1.6;
+      roundRect(-w/2,-h/2,w,h,11); ctx.stroke();
+      /* kính che mặt (hướng bay) */
+      var vg=ctx.createLinearGradient(0,-h*0.2,0,h*0.22);
+      vg.addColorStop(0,"#7fe3ff"); vg.addColorStop(1,"#2b8bd8");
+      ctx.fillStyle=vg; roundRect(-w*0.06,-h*0.26,w*0.42,h*0.52,7); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.75)";
+      roundRect(w*0.04,-h*0.18,w*0.1,h*0.2,3); ctx.fill();
+      /* tay đẩy sau + ăng-ten nhấp nháy */
+      ctx.fillStyle="#5d6c94"; roundRect(-w*0.52,-h*0.16,w*0.12,h*0.32,4); ctx.fill();
+      ctx.strokeStyle="#8fa2cc"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(-w*0.16,-h*0.5); ctx.lineTo(-w*0.22,-h*0.86); ctx.stroke();
+      var on=(Math.sin(byte.blink*7)>-0.2);
+      ctx.fillStyle=on?"#ffe066":"#5b5f3a";
+      ctx.shadowColor="rgba(255,224,102,.9)"; ctx.shadowBlur=on?12:0;
+      ctx.beginPath(); ctx.arc(-w*0.22,-h*0.92,2.6,0,TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawParts(){
+    for(var p=0;p<parts.length;p++){
+      var pt=parts[p];
+      ctx.globalAlpha=Math.max(0,Math.min(1,pt.life*1.8));
+      ctx.fillStyle=pt.col;
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function drawHint(){
+    ctx.save();
+    ctx.globalAlpha=Math.max(0, Math.min(1,(45-dist)/18));
+    ctx.font="600 15px 'Space Grotesk', system-ui, sans-serif";
+    ctx.textAlign="center"; ctx.fillStyle="rgba(234,241,255,.9)";
+    ctx.shadowColor="rgba(56,189,248,.9)"; ctx.shadowBlur=12;
+    ctx.fillText(t("tap_hint"), VW/2, VH-34);
     ctx.restore();
   }
 
@@ -353,32 +945,66 @@
     document.documentElement.lang=LANG; document.title=t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
-    if($("gtag")) $("gtag").textContent = "[ "+t("start_title")+" ]";   // tên game theo ngôn ngữ đã chọn
+    $("gtag").textContent = "[ "+t("start_title")+" ]";
+    hudCache={}; paintHud();
     if($("ov-need").classList.contains("show")) showNeed();
+    if($("ov-over").classList.contains("show")) paintPaid();  // dòng thưởng do JS sinh
   }
 
-  /* ===== Toast (icon = ảnh Thiên thạch tím qua token {tt}) ===== */
-  var toast = AstroQ.makeToast("toast", 1600);
+  /* ===== Toast (token {tt} → ảnh Thiên thạch tím) ===== */
+  var toast = AstroQ.makeToast("toast", 1800);
 
-  /* ===== Điều khiển (chỉ bàn phím, không dùng chuột) ===== */
+  /* ============================================================
+     ĐIỀU KHIỂN: Space / click chuột trái / chạm màn hình
+     ============================================================ */
+  function pressStart(e){
+    if(e && e.preventDefault) e.preventDefault();
+    SFX.unlock();
+    if(state==="play"){ holding=true; flap(); }
+    else if(state==="paused"){ resumeGame(); }
+    else if($("ov-start").classList.contains("show") || $("ov-over").classList.contains("show")) startRound();
+  }
+  function pressEnd(){ holding=false; }
+
+  /* Chuột/chạm: chỉ bắt trên canvas — overlay nằm trên nên nút bấm không bị "flap" theo */
+  cv.addEventListener("mousedown", function(e){ if(e.button===0) pressStart(e); });
+  window.addEventListener("mouseup", pressEnd);
+  cv.addEventListener("touchstart", pressStart, {passive:false});
+  window.addEventListener("touchend", pressEnd);
+  window.addEventListener("touchcancel", pressEnd);
+  window.addEventListener("blur", pressEnd);
+
+  function isFlapKey(k){ return k===" "||k==="spacebar"||k==="arrowup"||k==="w"||k==="enter"; }
   document.addEventListener("keydown", function(e){
     var k=(e.key||"").toLowerCase();
-    if(k==="escape"){ if(state==="play"){ pauseGame(); } else if(state==="paused"){ resumeGame(); } else { window.location.href="games.html"; } return; }
-    if(k==="arrowleft"||k==="a"){ keyL=true; }
-    if(k==="arrowright"||k==="d"){ keyR=true; }
-    if(k==="arrowup"||k==="w"){ keyU=true; }
-    if(k==="arrowdown"||k==="s"){ keyD=true; }
-    if(k==="arrowup"||k==="arrowdown"||k===" "){ e.preventDefault(); }   // chặn cuộn trang
-    if((k===" "||k==="enter") && state!=="play"){ if($("ov-start").classList.contains("show")) startRound(); else if($("ov-over").classList.contains("show")) startRound(); }
+    if(k==="escape"){
+      if(state==="play"||state==="paused") togglePause();
+      else window.location.href="games.html";
+      return;
+    }
+    /* Khi con trỏ bàn phím đang ở một nút thì để Space/Enter bấm nút như bình thường
+       (người dùng bàn phím vẫn chọn được "Về Sảnh Game" trên bảng kết quả). */
+    var tag=(e.target && e.target.tagName)||"";
+    if(tag==="BUTTON"||tag==="A"||tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA") return;
+    if(k==="p"){ togglePause(); return; }
+    if(k==="m"){ toggleSfx(); return; }
+    if(isFlapKey(k)){
+      if(e.repeat){ e.preventDefault(); return; }   // giữ phím không lặp lại cú bật
+      pressStart(e);
+    }
   });
-  document.addEventListener("keyup", function(e){
-    var k=(e.key||"").toLowerCase();
-    if(k==="arrowleft"||k==="a"){ keyL=false; }
-    if(k==="arrowright"||k==="d"){ keyR=false; }
-    if(k==="arrowup"||k==="w"){ keyU=false; }
-    if(k==="arrowdown"||k==="s"){ keyD=false; }
-  });
+  document.addEventListener("keyup", function(e){ if(isFlapKey((e.key||"").toLowerCase())) pressEnd(); });
 
+  /* ===== Nút HUD ===== */
+  function toggleSfx(){
+    var muted=SFX.toggle();
+    $("btn-sfx").classList.toggle("off", muted);
+  }
+  /* blur() sau khi bấm: nếu nút còn được focus thì Space sẽ bấm lại nút đó thay vì bay lên */
+  $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
+  $("btn-sfx").addEventListener("click", function(){ this.blur(); toggleSfx(); });
+
+  /* ===== Nút overlay / điều hướng ===== */
   $("start-btn").addEventListener("click", startRound);
   $("again-btn").addEventListener("click", startRound);
   $("back").addEventListener("click", function(){ window.location.href="games.html"; });
@@ -389,16 +1015,19 @@
   $("resume-btn").addEventListener("click", resumeGame);
   $("pause-hub").addEventListener("click", function(){ window.location.href="games.html"; });
   AstroQ.initLang(applyLang);
-  // Tạm dừng khi rời tab để tránh nhảy khung
-  document.addEventListener("visibilitychange", function(){ if(!document.hidden) last=0; });
+
+  /* Rời tab → tự tạm dừng (tránh chết oan khi quay lại) */
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){ pauseGame(); } else { last=0; }
+  });
 
   /* ===== Khởi tạo ===== */
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
-  fit(); initStars();
-  $("best").textContent=best;
+  fit(); band=buildBand(); initStars(); syncBtns();
+  $("btn-sfx").classList.toggle("off", SFX.isMuted());
   applyLang(LANG);
-  raf=requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>

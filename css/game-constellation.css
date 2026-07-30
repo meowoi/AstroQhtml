@@ -1,0 +1,34 @@
+/* game-constellation.css — CHI phan rieng cua game-constellation.html
+   (ARCADE-04, giai do "Ghep Chom Sao").
+   Khung chung (header, HUD, overlay, nut, toast) o css/game-shell.css.
+   Nap: css/common.css -> css/game-shell.css -> css/game-constellation.css */
+
+/* Sân bay ngang 800×500 cố định → toạ độ chòm sao trong dữ liệu luôn rơi đúng chỗ
+   trên mọi màn hình (đổi tỉ lệ là hình chòm sao bị bóp méo, sai cả thiên văn). */
+.field{max-width:800px;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19 0%,#141033 58%,#1a103c 100%);}
+/* Con trỏ đổi thành bàn tay khi ở trên một ngôi sao — JS bật/tắt class .hot */
+canvas.hot{cursor:pointer;}
+
+/* ===== Chip tên chòm sao =====
+   flex:0 1 auto — co theo nội dung; để nó giãn (flex:1) thì trên màn rộng chip
+   thành một hộp trống dài nửa thanh HUD, trông như lỗi bố cục. */
+.chip.cons{flex:0 1 auto;max-width:46%;min-width:0;align-items:flex-start;flex-direction:column;gap:1px;}
+.chip.cons .v{font-size:13.5px;line-height:1.2;white-space:normal;}
+.chip.cons .sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;}
+
+/* ===== Modal thông tin thiên văn (bật ngay khi ghép xong) ===== */
+.ov-fact .ov-card{--card-brd:rgba(192,132,252,.5);--card-glow:rgba(192,132,252,.5);}
+.ov-fact .ov-tag{color:var(--purple);border-color:rgba(192,132,252,.45);}
+.fact-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-faint);
+  text-transform:uppercase;margin-top:5px;}
+.fact-text{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:15px 0 0;text-align:left;
+  padding:13px 15px;border-radius:14px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);}
+.fact-text b{color:#e9d7ff;}
+
+/* ===== Bảng kết quả ===== */
+.res .cell.time .rv{color:#bfe3ff;}
+.res .cell.miss .rv{color:#ffd9a8;}
+/* Nút "Chòm sao khác · 3 🪐" dài hơn nút của các game khác nên cho nó chiếm hẳn
+   một hàng; chia 3 nút một hàng như mặc định thì chữ bị gãy giữa nhãn và số phí. */
+.acts .primary{flex:1 1 100%;}
+.acts .btn-fee{white-space:nowrap;}
