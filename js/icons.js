@@ -27,7 +27,31 @@
     telescope:'<path d="m10.07 12.49-6.18 1.32a.93.93 0 0 1-1.11-.7l-.54-2.15a1.07 1.07 0 0 1 .69-1.27l13.5-4.44"/><path d="m13.56 11.75 4.33-.92"/><path d="m16 21-3.1-6.21"/><path d="M16.49 5.94a2 2 0 0 1 1.45-2.43l1.09-.27a1 1 0 0 1 1.21.73l1.52 6.06a1 1 0 0 1-.73 1.21l-1.09.27a2 2 0 0 1-2.42-1.45z"/><path d="m6.16 8.63 1.11 4.46"/><path d="m8 21 3.1-6.21"/><circle cx="12" cy="13" r="2"/>',
     timer:'<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
     trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
-    zap:'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>'
+    zap:'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+
+    /* ───────────── Sổ Tay Thuật Ngữ (codex.html) ─────────────
+       Tiền tố `cx-` để không đụng 22 icon dùng chung ở trên: `star`/`moon`/`comet`
+       là những cái tên rất dễ có ngày trang khác cần dùng cho việc khác.
+       ⚠️ Nét vẽ theo đúng khuôn `lic()`: viewBox 24×24, `fill="none"` +
+          `stroke="currentColor"` đặt ở thẻ <svg>. Chỗ nào cần TÔ ĐẶC thì ghi
+          `fill="currentColor"` ngay trên phần tử đó (thuộc tính của phần tử thắng
+          thuộc tính của <svg>) — đó là cách duy nhất tô đặc mà vẫn đổi màu được
+          bằng class bên ngoài. */
+    'cx-star':'<circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="1.6"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4"/><path d="M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/>',
+    'cx-planet':'<circle cx="12" cy="11" r="5.6"/><path d="M3.2 14.4c4.6 2.5 12.2 2.5 17.6-.6"/>',
+    'cx-dwarf':'<circle cx="12" cy="12" r="3.4"/><path stroke-dasharray="2.6 2.4" d="M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6Z"/><circle cx="12" cy="3.2" r="1" fill="currentColor" stroke="none"/><circle cx="20.4" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="4.6" cy="9" r="0.9" fill="currentColor" stroke="none"/>',
+    'cx-moon':'<circle cx="10.4" cy="13.4" r="5.2"/><circle cx="19.2" cy="5.6" r="2.2"/><path stroke-dasharray="2.2 2.6" d="M17.4 7.8a9 9 0 0 1-11.2 8.4"/>',
+    'cx-asteroid':'<path d="M9.6 3.6 4.4 7.2l-.6 5.6 3.8 4.9 5.9 1.4 5.1-3.7.8-5.9-4-4.6Z"/><circle cx="10" cy="9.4" r="1.5"/><circle cx="14.8" cy="13.6" r="1.1"/>',
+    'cx-comet':'<circle cx="16.6" cy="7.6" r="3.2"/><path d="M13.9 9.6 4.2 18.4M14.9 12.2 8.6 19M11.5 8.2 3.4 12.6"/>',
+    'cx-meteoroid':'<path d="M13.4 6.6 9.2 8.4l-1 4.2 3.1 3 4.3-1.2 1.2-4.3-3.4-3.5Z"/><circle cx="4.6" cy="5.2" r="0.9" fill="currentColor" stroke="none"/><circle cx="19.4" cy="18.6" r="0.9" fill="currentColor" stroke="none"/>',
+    'cx-meteor':'<path stroke-dasharray="2.4 2.2" d="M2.8 19.6c2.2-5.6 7.4-9.4 13.4-9.6"/><path d="M20.4 3.6 9.8 14.2"/><circle cx="9" cy="15" r="2"/><path d="M17.6 3.2 12.4 8.4M21 7l-5.2 5.2"/>',
+    'cx-meteorite':'<path d="M2.6 19.4h18.8"/><path d="M9.4 10.6 6.4 13l-.4 3.6 2.6 2.8h6l1.8-3.2-.7-4-3.2-1.8Z"/><path stroke-dasharray="1.8 2" d="M12 3.2v3.6"/>',
+    'cx-exoplanet':'<circle cx="7.6" cy="8.6" r="4.6"/><circle cx="10.4" cy="8.6" r="1.7" fill="currentColor" stroke="none"/><path d="M2.6 18.4h4l1-2.6h3.4l1-2.4h1.2l1 2.4h3.4l1 2.6h2.4"/>',
+    'cx-blackhole':'<circle cx="12" cy="12" r="3.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="3.6"/><path d="M3.4 12c0-2.1 3.9-3.8 8.6-3.8s8.6 1.7 8.6 3.8-3.9 3.8-8.6 3.8S3.4 14.1 3.4 12Z"/>',
+    'cx-gravity':'<circle cx="12" cy="15.6" r="4.4"/><path d="M12 2.8v3.2M12 6l-1.5-1.6M12 6l1.5-1.6"/><path d="M5.2 5.4l1.9 2.2M18.8 5.4l-1.9 2.2"/>',
+    'cx-nebula':'<path d="M6.4 16.2a3.4 3.4 0 0 1-.5-6.7 4.6 4.6 0 0 1 8.6-2.2 3.8 3.8 0 0 1 3.6 6.1 3.2 3.2 0 0 1-2.3 2.8Z"/><circle cx="10" cy="12.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="14.4" cy="10.6" r="0.8" fill="currentColor" stroke="none"/>',
+    'cx-supernova':'<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.9v3.4M12 18.7v3.4M1.9 12h3.4M18.7 12h3.4"/><path d="M4.9 4.9l2.4 2.4M16.7 16.7l2.4 2.4M19.1 4.9l-2.4 2.4M7.3 16.7l-2.4 2.4"/><circle cx="12" cy="12" r="6.4" stroke-dasharray="1.8 2.6"/>',
+    'cx-cmb':'<ellipse cx="12" cy="12" rx="9" ry="6.2"/><circle cx="8.2" cy="10.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.8" cy="9.8" r="0.75" fill="currentColor" stroke="none"/><circle cx="11.4" cy="14" r="0.85" fill="currentColor" stroke="none"/><circle cx="16.4" cy="13.6" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.4" cy="13.4" r="0.6" fill="currentColor" stroke="none"/>'
   };
 
   /* Trả về chuỗi SVG của icon; cls: class phụ (tuỳ chọn). */

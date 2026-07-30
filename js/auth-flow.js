@@ -7,20 +7,9 @@
   "use strict";
   var LS_USER = "astroq-user", LS_AST = "astroq-asteroids";   // ngôn ngữ: AstroQ.getLang/setLang
 
-  /* Nhân vật — ghép ảnh 3D (thư mục 3d) với avatar (thư mục ava).
-     role/trait/stats là dữ liệu tạm (sẽ cập nhật sau). */
-  var CHARACTERS = [
-    { id:"m",     name:"Comet", model:"3d/m3d.png",     ava:"ava/avam.png",     role:{vi:"Phi công trưởng",en:"Chief Pilot"},   trait:{vi:"Lanh lợi & tò mò",en:"Quick & curious"},  stats:{pow:78,spd:90,iq:74} },
-    { id:"b",     name:"Byte",  model:"3d/b3d.png",     ava:"ava/avab.png",     role:{vi:"Kỹ sư hệ thống",en:"Systems Engineer"},trait:{vi:"Điềm tĩnh & logic",en:"Calm & logical"}, stats:{pow:70,spd:66,iq:95} },
-    { id:"q",     name:"Quark", model:"3d/q3d.png",     ava:"ava/q2.png",       role:{vi:"Trinh sát",en:"Scout"},               trait:{vi:"Nhanh nhẹn & tinh nghịch",en:"Nimble & playful"}, stats:{pow:60,spd:96,iq:70} },
-    { id:"raica", name:"Castor",   model:"3d/raica3d.png", ava:"ava/avaraica.png", zoom:1.6, role:{vi:"Chỉ huy",en:"Commander"},             trait:{vi:"Quyết đoán & ấm áp",en:"Decisive & warm"}, stats:{pow:88,spd:72,iq:82} },
-    { id:"bao",   name:"Umbra",    model:"3d/bao3D.png",   ava:"ava/avabao.png",   role:{vi:"Đội trưởng tấn công",en:"Strike Leader"},trait:{vi:"Dũng mãnh & nhanh",en:"Fierce & fast"}, stats:{pow:94,spd:92,iq:66} },
-    { id:"chim",  name:"Ignis",    model:"3d/chim3D.png",  ava:"ava/avachim.png",  role:{vi:"Hoa tiêu",en:"Navigator"},            trait:{vi:"Tự do & tinh mắt",en:"Free & sharp-eyed"}, stats:{pow:64,spd:88,iq:80} },
-    { id:"cho",   name:"Sirius",   model:"3d/cho2.png",    ava:"ava/avacho.png",   role:{vi:"Vệ binh",en:"Guardian"},              trait:{vi:"Trung thành & gan dạ",en:"Loyal & brave"}, stats:{pow:82,spd:78,iq:72} },
-    { id:"chuot", name:"Lyrae",    model:"3d/chuot3d.png", ava:"ava/avachuot.png", role:{vi:"Thợ máy",en:"Mechanic"},              trait:{vi:"Khéo léo & lanh",en:"Handy & sharp"}, stats:{pow:58,spd:84,iq:86} },
-    { id:"cu",    name:"Moros",    model:"3d/cu3d.png",    ava:"ava/avacu.png",    role:{vi:"Nhà thiên văn",en:"Astronomer"},      trait:{vi:"Uyên bác & trầm",en:"Wise & quiet"}, stats:{pow:62,spd:60,iq:98} },
-    { id:"cua",   name:"Karkinos", model:"3d/cua3d.png",   ava:"ava/avacua.png",   role:{vi:"Kỹ thuật viên giáp",en:"Armor Tech"}, trait:{vi:"Cứng cỏi & lì",en:"Tough & sturdy"}, stats:{pow:90,spd:54,iq:70} }
-  ];
+  /* Nhân vật — dữ liệu ở js/characters.js (CHỖ DUY NHẤT khai báo), vì
+     profile.html cũng cho đổi trang phục từ cùng danh sách này. */
+  var CHARACTERS = AstroQChars.all();
 
   var I18N = {
     vi:{
@@ -61,8 +50,8 @@
       b.addEventListener("click", function(){ select(c.id); });
       box.appendChild(b);
     });
-    // 2 thẻ nhân vật bí ẩn (khoá) — bóng đen + dấu "?" phát sáng
-    for(var k=0;k<2;k++){
+    // Thẻ nhân vật bí ẩn (khoá) — bóng đen + dấu "?" phát sáng
+    for(var k=0;k<AstroQChars.MYSTERY;k++){
       var mb=document.createElement("button"); mb.type="button"; mb.className="char mystery"; mb.setAttribute("aria-label","???");
       mb.style.setProperty("--d",((CHARACTERS.length+k)*0.15)+"s");
       mb.innerHTML='<span class="char-glow"></span><span class="silhouette"><span class="q">?</span></span><span class="char-nm">???</span>';

@@ -1,0 +1,23 @@
+# ============================================================
+#  Repo này DEPLOY CÔNG KHAI qua GitHub Pages (astroq.org), nên mọi thứ commit
+#  vào đây là thứ người khác phải tải về khi clone. Giữ nó gọn.
+# ============================================================
+
+# ---- Ảnh chụp của bộ kiểm thử ----
+# scratchpad/*.py LÀ bộ kiểm thử của dự án và PHẢI được commit (CLAUDE.md đã ghi
+# một lần mất `gen_wiki_data.py` vì nó chỉ nằm trên máy). Nhưng ảnh chụp thì không:
+# 88 file PNG = 35 MB, chỉ dùng để soi mắt trong một lượt làm việc.
+scratchpad/*.png
+scratchpad/*.log
+
+# ---- Ảnh GỐC chưa tối ưu ----
+# Dự án đã hạ kho ảnh từ 72 MB xuống 2,79 MB; đừng đưa bản gốc trở lại.
+#   · "luna ngang.png" (1,7 MB) — chỉ được NHẮC trong ghi chú ở game-dodge.html,
+#     bản dùng thật là img/luna-side.png (8,7 KB) cắt-thu-nén từ nó.
+#   · "AstroQ logo.png" và "tramvutru.png" (1,1 MB mỗi cái) — hiện KHÔNG trang nào
+#     tham chiếu. Muốn dùng thì tối ưu trước rồi mới commit, như mọi ảnh khác.
+# ⚠️ Ba file này vẫn nằm trong thư mục làm việc — nên chuyển ra ngoài repo để khỏi
+#    lẫn, chứ `.gitignore` chỉ chặn commit, không dọn đĩa.
+img/luna ngang.png
+img/AstroQ logo.png
+img/tramvutru.png

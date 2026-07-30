@@ -23,7 +23,7 @@
    để phía giao diện tự lùi về chế độ demo cũ. Trang không bao giờ vỡ.
    ============================================================ */
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
-import { apiPost, isApiConfigured }     from "./api.js";
+import { apiPost, apiGetAuth, apiPutAuth, apiPostAuth, isApiConfigured } from "./api.js";
 
 const SDK = "https://www.gstatic.com/firebasejs/12.16.0";
 
@@ -31,19 +31,27 @@ let auth = null;
 let fb = null;                 // các hàm của firebase-auth SDK, nạp động
 let pendingName = "";          // tên nhập lúc đăng ký, ghi vào hồ sơ sau khi xác minh xong
 
-/* Chỉ tải SDK khi đã có config — tránh kéo vài trăm KB vô ích. */
+/* Chỉ tải SDK khi đã có config — tránh kéo vài trăm KB vô ích.
+   Mất mạng / gstatic bị chặn → trả null chứ KHÔNG ném lỗi: mọi hàm bên dưới
+   đều bắt đầu bằng `if(!(await boot()))`, ném ra ở đây là làm vỡ cả chuỗi
+   promise của phía gọi (đã gặp: màn giới thiệu không hiện khi mất mạng). */
 async function boot(){
   if(!isConfigured) return null;
   if(auth) return auth;
-  const [{ initializeApp }, mod] = await Promise.all([
-    import(`${SDK}/firebase-app.js`),
-    import(`${SDK}/firebase-auth.js`)
-  ]);
-  fb = mod;
-  auth = mod.getAuth(initializeApp(firebaseConfig));
-  // Giữ phiên sau khi đóng trình duyệt (mặc định đã vậy, khai báo cho rõ ý)
-  try{ await mod.setPersistence(auth, mod.browserLocalPersistence); }catch(e){}
-  return auth;
+  try{
+    const [{ initializeApp }, mod] = await Promise.all([
+      import(`${SDK}/firebase-app.js`),
+      import(`${SDK}/firebase-auth.js`)
+    ]);
+    fb = mod;
+    auth = mod.getAuth(initializeApp(firebaseConfig));
+    // Giữ phiên sau khi đóng trình duyệt (mặc định đã vậy, khai báo cho rõ ý)
+    try{ await mod.setPersistence(auth, mod.browserLocalPersistence); }catch(e){}
+    return auth;
+  }catch(e){
+    console.warn("[AstroQ] Không tải được SDK Firebase:", e && e.message);
+    return null;
+  }
 }
 
 /* ---------------- Thông báo lỗi song ngữ ----------------
@@ -203,6 +211,163 @@ const AstroQAuth = {
   async onChange(cb){
     if(!(await boot())){ cb(null); return () => {}; }
     return fb.onAuthStateChanged(auth, cb);
+  },
+
+  /** ID token của phiên hiện tại (null nếu chưa đăng nhập / chưa cấu hình).
+      SDK tự làm mới khi token gần hết hạn, nên gọi lại mỗi lần cần thay vì cache. */
+  async idToken(){
+    try{
+      const u = await this.currentUser();
+      if(!u) return null;
+      return await u.getIdToken();
+    }catch(e){ return null; }
+  },
+
+  /* ---------------- Onboarding (màn Comet dẫn tham quan tàu Luna) ----------------
+     Cờ nằm trong DynamoDB chứ không phải localStorage: trẻ hay đổi máy/trình duyệt,
+     mà màn giới thiệu chỉ nên chạy ĐÚNG MỘT LẦN cho mỗi tài khoản.
+     Chưa đăng nhập / mất mạng / chưa cấu hình → trả { ok:false } và phía gọi tự lùi
+     về bộ nhớ máy (xem js/onboard-tour.js). Trang không bao giờ vỡ vì việc này.   */
+
+  /** → { ok:true, tourSeen } | { ok:false, reason:"auth"|"net"|"notConfigured"|"http" } */
+  async getOnboarding(){
+    if(!isApiConfigured) return { ok:false, reason:"notConfigured" };
+    const token = await this.idToken();
+    if(!token) return { ok:false, reason:"auth" };
+
+    const r = await apiGetAuth("/me/onboarding", token);
+    if(r.netError)      return { ok:false, reason:"net" };
+    if(r.notConfigured) return { ok:false, reason:"notConfigured" };
+    if(!r.ok)           return { ok:false, reason:"http", status:r.status };
+    return {
+      ok:true,
+      tourSeen:      r.data.tourSeen === true,
+      tourSeenAt:    r.data.tourSeenAt || null,
+      // Màn mở đầu Nhiệm Vụ 01 "Hành Tinh Xanh" — cờ ĐỘC LẬP với tourSeen
+      intro01Seen:   r.data.intro01Seen === true,
+      intro01SeenAt: r.data.intro01SeenAt || null
+    };
+  },
+
+  /**
+   * Ghi cờ đã xem một màn giới thiệu.
+   *
+   *   setOnboarding(true)                  → tourSeen = true   (cách gọi cũ, giữ nguyên)
+   *   setOnboarding(false)                 → tourSeen = false  (để xem lại khi test)
+   *   setOnboarding({ intro01Seen:true })  → CHỈ ghi cờ đó, KHÔNG đụng tourSeen
+   *
+   * Nhận cả boolean lẫn object vì js/onboard-tour.js gọi kiểu cũ và
+   * js/mission-intro.js gọi kiểu mới — đổi hết sang object thì phải sửa 2 chỗ ở
+   * tour, mà cách gọi cũ vẫn đúng nghĩa "đã xem tour xong".
+   */
+  async setOnboarding(patch){
+    if(!isApiConfigured) return { ok:false, reason:"notConfigured" };
+    const token = await this.idToken();
+    if(!token) return { ok:false, reason:"auth" };
+
+    const body = (patch !== null && typeof patch === "object")
+      ? patch
+      : { tourSeen: patch !== false };
+
+    const r = await apiPutAuth("/me/onboarding", body, token);
+    if(r.netError)      return { ok:false, reason:"net" };
+    if(r.notConfigured) return { ok:false, reason:"notConfigured" };
+    if(!r.ok)           return { ok:false, reason:"http", status:r.status, code:r.data.code };
+    return {
+      ok:true,
+      tourSeen:    r.data.tourSeen === true,
+      intro01Seen: r.data.intro01Seen === true
+    };
+  },
+
+  /* ---------------- Hồ sơ Phi Hành Gia + Kho Thành Tích ----------------
+     Ba hàm dưới đây là lớp mỏng quanh /me/*: lấy token, gọi, chuẩn hoá kết quả
+     về đúng MỘT hình dạng { ok, ... } cho phía giao diện. Không hàm nào ném lỗi.
+     Luật chơi (XP, cấp độ, điều kiện huy hiệu) nằm HẾT ở server — xem
+     js/progress.js để biết cách phân công.                                    */
+
+  /** Hồ sơ + ví + cấp độ + tiến độ, một lần gọi. → { ok:true, data } */
+  async getProfile(){
+    const r = await this._authed(t => apiGetAuth("/me/profile", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Đổi tên / nhân vật (trang phục). patch = { name?, character?, avatar? } */
+  async updateProfile(patch){
+    const r = await this._authed(t => apiPutAuth("/me/profile", patch || {}, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Kho thành tích: { summary, badges[] } + cấp độ + tiến độ. */
+  async getAchievements(){
+    const r = await this._authed(t => apiGetAuth("/me/achievements", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Báo MỘT việc đã làm. Server tự quyết XP + huy hiệu + tiền. Xem js/progress.js. */
+  async postProgress(ev){
+    const r = await this._authed(t => apiPostAuth("/me/progress", ev, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Kho Mẫu Vật: { summary, desk, specimens[] } + ví. Trạng thái mở khoá do
+      server SUY RA từ bộ đếm tiến độ — không có route "thu thập mẫu vật". */
+  async getSpecimens(){
+    const r = await this._authed(t => apiGetAuth("/me/specimens", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Đặt mẫu vật lên bàn điều khiển khoang lái. `ids` = mảng id, tối đa 3.
+      Gửi mẫu chưa mở khoá / trùng / quá 3 → { ok:false, code:"bad-specimen", rejected }. */
+  async setSpecimenDesk(ids){
+    const r = await this._authed(t =>
+      apiPutAuth("/me/specimens/desk", { desk: Array.isArray(ids) ? ids : [] }, t));
+    if(r.ok) return { ok:true, data:r.data };
+    return Object.assign({}, r, { rejected: r.data && r.data.rejected });
+  },
+
+  /** Báo xong một bước nhiệm vụ. body = { mission, step, opId }.
+      ⚠️ KHÔNG gửi số thưởng — server tra Services/Missions.cs. */
+  async missionStep(body){
+    const r = await this._authed(t => apiPostAuth("/me/missions/step", body || {}, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Trạng thái nhiệm vụ (bước đã xong, mẫu dữ liệu Codex). */
+  async getMissions(){
+    const r = await this._authed(t => apiGetAuth("/me/missions", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Số dư ví thật. → { ok:true, data:{ meteors } } */
+  async getWallet(){
+    const r = await this._authed(t => apiGetAuth("/me/wallet", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Trừ phí một lượt. body = { reason:"game", game, opId }.
+      ⚠️ KHÔNG gửi số tiền — server tra bảng phí của nó (Services/Wallet.cs).
+      Không đủ tiền → { ok:false, code:"insufficient", meteors, need }. */
+  async spendWallet(body){
+    const r = await this._authed(t => apiPostAuth("/me/wallet/spend", body || {}, t));
+    if(r.ok) return { ok:true, data:r.data };
+    // Kèm số dư server báo về để phía gọi chỉnh lại cache ngay
+    return Object.assign({}, r, { meteors: r.data && r.data.meteors, need: r.data && r.data.need });
+  },
+
+  /** Lấy token rồi gọi `fn(token)`; gói mọi lỗi thành { ok:false, reason }. */
+  async _authed(fn){
+    if(!isApiConfigured) return { ok:false, reason:"notConfigured" };
+    const token = await this.idToken();
+    if(!token) return { ok:false, reason:"auth" };
+    const r = await fn(token);
+    if(r.netError)      return { ok:false, reason:"net" };
+    if(r.notConfigured) return { ok:false, reason:"notConfigured" };
+    // Kèm `data` cả khi lỗi: 409 "insufficient" mang theo số dư thật + số tiền cần,
+    // phía gọi dùng để chỉnh lại cache ngay thay vì phải gọi thêm một vòng nữa.
+    if(!r.ok)           return { ok:false, reason:"http", status:r.status,
+                                 code:r.data.code, data:r.data };
+    return { ok:true, data:r.data };
   }
 };
 

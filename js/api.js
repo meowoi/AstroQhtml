@@ -78,17 +78,24 @@ const TIMEOUT_MS = 20000;
 /**
  * Gọi API, luôn trả về object — KHÔNG bao giờ ném lỗi ra ngoài, để phía giao diện
  * chỉ phải xử lý một hình dạng dữ liệu duy nhất.
+ *
+ * `token` = ID token Firebase cho các route /me/* (server lấy uid TỪ token, nên
+ * client không bao giờ gửi uid lên — gửi uid thì ai cũng đọc được hồ sơ người khác).
  * @returns {Promise<{ok:boolean, status:number, data:object, netError?:boolean}>}
  */
-export async function apiCall(method, path, body){
+export async function apiCall(method, path, body, token){
   if(!isApiConfigured) return NOT_CONFIGURED;
 
   const ctrl  = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try{
+    const headers = {};
+    if(body)  headers["Content-Type"]  = "application/json";
+    if(token) headers["Authorization"] = "Bearer " + token;
+
     const res = await fetch(API_BASE + path, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers: Object.keys(headers).length ? headers : undefined,
       body:    body ? JSON.stringify(body) : undefined,
       signal:  ctrl.signal
     });
@@ -106,3 +113,9 @@ export async function apiCall(method, path, body){
 
 export const apiPost = (path, body) => apiCall("POST", path, body);
 export const apiGet  = (path)       => apiCall("GET",  path);
+
+/* Bản có token — dùng cho /me/*. Tách tên riêng để đọc code là thấy ngay
+   lời gọi nào cần đăng nhập, không phải đếm tham số. */
+export const apiGetAuth  = (path, token)       => apiCall("GET",  path, undefined, token);
+export const apiPutAuth  = (path, body, token) => apiCall("PUT",  path, body, token);
+export const apiPostAuth = (path, body, token) => apiCall("POST", path, body, token);
