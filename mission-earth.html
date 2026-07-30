@@ -194,11 +194,18 @@
       <div class="nextup"><span class="ic" aria-hidden="true">🎯</span><span id="win-next">—</span></div>
     </div>
 
+    <!-- ⚠️ NÚT CHÍNH (vàng) LÀ "VỀ TRUNG TÂM ĐIỀU HƯỚNG", không phải nút sang
+         Trung Tâm Nhiệm Vụ. Vì đường về dashboard là đường ĐƯỢC THIẾT KẾ: về tới đó
+         thì Comet chúc mừng và chiếu sáng thẻ Trung Tâm Nhiệm Vụ để chỉ việc tiếp
+         theo. Để nút vàng đi thẳng sang missions.html thì đa số trẻ bỏ qua lời chào
+         đó — và cũng lệch với đường về TỰ ĐỘNG sau 5 giây (cũng về dashboard).
+         Nút sang Trung Tâm Nhiệm Vụ vẫn còn, làm lối đi nhanh cho ai muốn. -->
     <div class="acts">
-      <button type="button" class="go" id="win-missions">—</button>
+      <button type="button" class="go" id="win-home">—</button>
+      <button type="button" class="ghost" id="win-missions">—</button>
       <button type="button" class="ghost" id="win-awards">—</button>
-      <button type="button" class="ghost" id="win-home">—</button>
     </div>
+    <p class="autoline" id="win-auto" aria-live="polite"></p>
   </div>
 </div>
 
@@ -411,6 +418,7 @@ const I18N = {
     win_missions: '[ 🎯 Tới Trung Tâm Nhiệm Vụ ]',
     win_awards: '[ 🏆 Xem Kho Thành Tích ]',
     win_home: '[ 🚀 Về Trung Tâm Điều Hướng ]',
+    win_auto: 'Tự về sau {n} giây — chạm vào đâu cũng dừng đếm.',
     saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.'
   },
   en: {
@@ -528,6 +536,7 @@ const I18N = {
     win_missions: '[ 🎯 Go to Mission Control ]',
     win_awards: '[ 🏆 Open Trophy Hold ]',
     win_home: '[ 🚀 Back to Navigation Hub ]',
+    win_auto: 'Returning automatically in {n}s — touch anything to stay.',
     saved_off: 'Not signed in — rewards are queued and will sync later.'
   }
 };
@@ -1426,10 +1435,51 @@ async function showWin() {
      nút bấm không được vẫn là một lời hứa về thứ chưa tồn tại. */
   $('win-missions').textContent = t('win_missions');
   $('win-awards').textContent = t('win_awards');
-  $('win-home').textContent = t('win_home');
   $('win').classList.add('show');
   $('win').setAttribute('aria-hidden', 'false');
-  setTimeout(() => $('win-awards').focus(), 300);
+  startAuto();
+  setTimeout(() => $('win-home').focus(), 300);
+}
+
+/* ─────────────── Đường về tự động 5 giây ───────────────
+   ⚠️ CHỈ ĐẾM KHI ĐÃ BÁO XONG LÊN SERVER — bất biến này có sẵn nhờ THỨ TỰ GỌI:
+      `finishStep()` làm `await reportStep(id)` rồi mới tới `showWin()`, nên khi hàm
+      dưới đây chạy thì `reward` đã có số thật. Đếm ngay lúc mở modal (không chờ) thì
+      mạng chậm là trẻ bị kéo đi trước khi con số thưởng kịp về, và thứ duy nhất nó
+      kịp đọc là "+0". Đừng đảo thứ tự hai lời gọi đó.
+
+   ⚠️ BẤT KỲ TƯƠNG TÁC NÀO CŨNG TẮT ĐẾM, KHÔNG PHẢI TẠM DỪNG. Trẻ đọc chậm hơn người
+      lớn nhiều; một màn thưởng tự biến mất sau 5 giây là màn thưởng bị lấy đi giữa
+      lúc đang đọc. Bấm/chạm/di chuột/gõ phím là hết đếm, hẳn.
+
+   ⚠️ CỐ Ý KHÔNG bắt `focus`: nút chính được `focus()` cho người dùng bàn phím, bắt
+      focus là đếm bị tắt ngay lúc mở modal và tính năng thành vô nghĩa. */
+const AUTO_RETURN_SECS = 5;
+let autoLeft = null, autoTimer = null;
+
+function paintAuto() {
+  $('win-home').textContent = t('win_home') + (autoLeft === null ? '' : ' (' + autoLeft + ')');
+  $('win-auto').textContent = autoLeft === null ? '' : t('win_auto').replace('{n}', autoLeft);
+}
+
+function cancelAuto() {
+  if (autoLeft === null) return;
+  autoLeft = null;
+  clearTimeout(autoTimer);
+  autoTimer = null;
+  paintAuto();
+}
+
+function startAuto() {
+  autoLeft = AUTO_RETURN_SECS;
+  paintAuto();
+  const tick = () => {
+    autoLeft--;
+    if (autoLeft <= 0) { autoLeft = null; location.href = 'dashboard.html'; return; }
+    paintAuto();
+    autoTimer = setTimeout(tick, 1000);
+  };
+  autoTimer = setTimeout(tick, 1000);
 }
 
 /* ───────────────────── Âm thanh ─────────────────────
@@ -1526,6 +1576,11 @@ function applyLang(lang) {
 
 /* ───────────────────── Khởi động ───────────────────── */
 $('back').addEventListener('click', () => { location.href = 'dashboard.html'; });
+/* Tắt đường về tự động khi trẻ tương tác. Gắn trên CẢ thẻ modal, không chỉ trên
+   nút — trẻ di chuột vào để đọc cũng là một tín hiệu "tôi đang xem". */
+['pointerdown', 'keydown', 'mouseenter', 'touchstart'].forEach(ev => {
+  $('win').addEventListener(ev, cancelAuto, { passive: true });
+});
 $('win-missions').addEventListener('click', () => { location.href = 'missions.html'; });
 $('win-awards').addEventListener('click', () => { location.href = 'achievements.html'; });
 $('win-home').addEventListener('click', () => { location.href = 'dashboard.html'; });
@@ -1581,6 +1636,12 @@ paintSteps();
     pick: (ev) => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.pick) st.pick(ev); return true; },
     tick: () => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.tick) st.tick(); return true; },
     say: () => { $('say-next').click(); return true; },
+    /** Mở thẳng màn tổng kết — để test đường về tự động khỏi phải chơi hết 8 bước.
+        ⚠️ KHÔNG trả Promise (cùng lý do như `pick`): `showWin` là async, mà
+           `page.evaluate` tự chờ promise được trả về. */
+    win: () => { showWin(); return true; },
+    /** Giây còn lại của đường về tự động; `null` = đã tắt đếm. */
+    get autoLeft() { return autoLeft; },
     fill: (slot) => { steps.core.onFill(slot); return true; },
     /* Ba bước thêm 29/07/2026. Cùng quy tắc với `pick`/`fill`: KHÔNG trả Promise —
        `openEra` có thể chờ thẻ nham thạch (3,4s hoặc tới khi trẻ bấm), `page.evaluate`

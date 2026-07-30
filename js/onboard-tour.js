@@ -38,6 +38,20 @@
   /* Cache của cờ tourSeen. Nguồn thật là DynamoDB (/me/onboarding). */
   var LS_SEEN = "astroq-tour-seen";
 
+  /* ─────────── DÙNG LẠI ENGINE NÀY CHO MÀN CHỈ ĐƯỜNG KHÁC ───────────
+     Thêm 30/07/2026. Comet chúc mừng xong chuỗi nhiệm vụ Trái Đất cần ĐÚNG bộ máy
+     này: ô sáng tự làm tối cả trang, box thoại có nhánh đặt sang bên, lớp chặn bấm,
+     ảnh linh vật to. Viết lại lần thứ hai là bỏ luôn cả 4 bài học đã trả giá ở đây.
+     Nên `start()` nhận thêm:
+       · `steps`   — bộ bước riêng cho lượt này (mặc định: 7 bước dẫn tham quan)
+       · `onSeen`  — hàm ghi cờ "đã xem" của lượt này (mặc định: ghi `tourSeen`)
+       · `pulse`   — true thì ô sáng nhấp nháy để hút mắt vào thẻ đích
+     ⚠️ `steps` và `onSeen` PHẢI đi cùng nhau. Truyền bộ bước khác mà để nguyên
+        `onSeen` mặc định thì lượt chỉ-đường sẽ ghi `tourSeen = true`, và một phi
+        hành gia mới bị MẤT LUÔN màn dẫn tham quan mà không ai hiểu vì sao. */
+  var activeSteps = null;   // null = dùng STEPS mặc định
+  var onSeen = null;        // null = ghi cờ tourSeen như cũ
+
   /* Chờ tối đa bao lâu để server trả lời trước khi quyết định có chạy tour.
      Có hạn vì mạng yếu thì thà chạy tour lần nữa còn hơn để trẻ ngồi nhìn
      màn hình đứng im — nhưng cũng không quá ngắn, kẻo người đã xem ở máy
@@ -126,6 +140,9 @@
   function ui(k) { return (UI[lang] || UI.vi)[k]; }
 
   /* ---------------- Cờ "đã xem" ---------------- */
+  /** Bộ bước của lượt đang chạy. Mọi chỗ đọc `STEPS` phải đi qua đây. */
+  function stepsNow() { return activeSteps || STEPS; }
+
   function localSeen() {
     try { return localStorage.getItem(LS_SEEN) === "1"; } catch (e) { return false; }
   }
@@ -153,6 +170,8 @@
 
   /** Ghi cờ đã xem: cache trước cho nhanh, rồi mới đẩy lên server. */
   function markSeen() {
+    /* Lượt dùng lại engine có cờ RIÊNG — gọi hàm của nó, đừng ghi `tourSeen`. */
+    if (onSeen) { onSeen(); return; }
     setLocalSeen(true);
     waitAuth(SERVER_WAIT_MS).then(function (auth) {
       if (auth && auth.setOnboarding) auth.setOnboarding(true);
@@ -218,28 +237,43 @@
 
   /* ---------------- Vẽ một bước ---------------- */
   function paint() {
-    var s = STEPS[idx], d = txt(s);
+    var ST = stepsNow();
+    var s = ST[idx], d = txt(s);
     els.who.textContent  = ui("who");
     els.role.textContent = ui("role");
     els.title.innerHTML  = (s.icon ? '<span class="ic">' + s.icon + "</span>" : "") +
                            "<span>" + d.title.replace("{name}", esc(pilotName)) + "</span>";
     els.body.innerHTML   = d.body;
     els.next.textContent = idx === 0 ? ui("first")
-                         : idx === STEPS.length - 1 ? ui("go") : ui("next");
-    els.next.classList.toggle("go", idx === STEPS.length - 1);
+                         : idx === ST.length - 1 ? ui("go") : ui("next");
+    els.next.classList.toggle("go", idx === ST.length - 1);
     els.skip.textContent = ui("skip");
-    els.skip.style.display = idx === STEPS.length - 1 ? "none" : "";
+    els.skip.style.display = idx === ST.length - 1 ? "none" : "";
 
     var dots = "";
-    for (var i = 0; i < STEPS.length; i++) dots += '<span class="' + (i === idx ? "on" : "") + '"></span>';
+    /* Một bước duy nhất thì KHÔNG vẽ chấm: một chấm đơn độc đọc ra thành "còn
+       nhiều bước nữa mà bị lỗi", chứ không ra "chỉ có một bước". */
+    for (var i = 0; ST.length > 1 && i < ST.length; i++) dots += '<span class="' + (i === idx ? "on" : "") + '"></span>';
     els.dots.innerHTML = dots;
 
     var el = s.target ? document.querySelector(s.target) : null;
     if (el && typeof el.scrollIntoView === "function") {
       // Cuộn cho khu vực nằm gọn trong màn hình TRƯỚC khi đo, không thì ô sáng
       // trỏ đúng vào chỗ… ngoài khung nhìn.
-      try { el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" }); }
-      catch (e2) { el.scrollIntoView(); }
+      /* ⚠️ THẺ CAO THÌ CUỘN LÊN ĐẦU, KHÔNG CUỘN VÀO GIỮA.
+         `block:"center"` cho thẻ cao là tự tay tạo ra thế bí: thẻ HUD cao 343px
+         nằm giữa màn 844px chỉ để lại ~250px trên và ~250px dưới, mà box thoại
+         cao 254px — không nhánh nào (dưới/trên/phải/trái) vừa, engine rơi về
+         nhánh "giữa" và ĐÈ 74% lên chính thẻ đang được giới thiệu. Đo được trên
+         điện thoại 390×844 với thẻ MOD-04.
+         Cuộn lên đầu thì 343 + 254 + lề = 633px < 844px → nhánh "dưới" vừa chỗ.
+         Ngưỡng 40% chiều cao khung nhìn: dưới mức đó thì cuộn vào giữa vẫn còn
+         chỗ, mà canh giữa dễ nhìn hơn. */
+      var tall = el.getBoundingClientRect().height > global.innerHeight * 0.4;
+      try {
+        el.scrollIntoView({ block: tall ? "start" : "center",
+                            behavior: reduced() ? "auto" : "smooth" });
+      } catch (e2) { el.scrollIntoView(); }
     }
     // Đo sau khi cuộn xong. Cuộn mượt mất ~300ms nên đo 2 lần: ngay và sau đó.
     place();
@@ -258,7 +292,7 @@
   /* Đặt ô sáng + box thoại theo vị trí THẬT của khu vực đang nói tới. */
   function place() {
     if (!open) return;
-    var s = STEPS[idx];
+    var s = stepsNow()[idx];
     var el = s.target ? document.querySelector(s.target) : null;
     var vw = global.innerWidth, vh = global.innerHeight;
 
@@ -330,7 +364,7 @@
 
   function next() {
     if (!open) return;
-    if (idx >= STEPS.length - 1) { finish("done"); return; }
+    if (idx >= stepsNow().length - 1) { finish("done"); return; }
     idx++;
     paint();
   }
@@ -347,13 +381,23 @@
 
   /* ---------------- API công khai ---------------- */
   var AstroQTour = {
-    /** Mở tour ngay, không hỏi cờ đã xem. opts: {name, lang, onFinish(reason)} */
+    /**
+     * Mở tour ngay, không hỏi cờ đã xem.
+     * opts: {name, lang, onFinish(reason), steps, onSeen, pulse}
+     * `steps`/`onSeen`/`pulse` chỉ dùng khi DÙNG LẠI engine cho màn chỉ đường khác
+     * — xem ghi chú ở khai báo `activeSteps` đầu file.
+     */
     start: function (opts) {
       opts = opts || {};
       lang = opts.lang === "en" ? "en" : "vi";
       pilotName = opts.name || "";
       onFinish = typeof opts.onFinish === "function" ? opts.onFinish : null;
+      activeSteps = (opts.steps && opts.steps.length) ? opts.steps : null;
+      onSeen = typeof opts.onSeen === "function" ? opts.onSeen : null;
       build();
+      // Vòng nhấp nháy quanh ô sáng — chỉ bật khi được yêu cầu, vì ở màn dẫn tham
+      // quan 7 bước thì nhấp nháy liên tục 7 lần là quá nhiều kích thích.
+      root.classList.toggle("pulse", opts.pulse === true);
       idx = 0; open = true;
       root.classList.add("show");
       root.setAttribute("aria-hidden", "false");
@@ -411,7 +455,33 @@
       if (open) paint();
     },
 
-    isOpen: function () { return open; }
+    isOpen: function () { return open; },
+
+    /**
+     * MÀN CHỈ ĐƯỜNG MỘT BƯỚC — dùng lại toàn bộ bộ máy của tour.
+     * `AstroQTour.guide({ lang, target, icon, vi:{title,body}, en:{…}, onSeen, onFinish })`
+     *
+     * ⚠️ `onSeen` là BẮT BUỘC (không có thì hàm không chạy). Thiếu nó thì `markSeen()`
+     *    rơi về nhánh mặc định và ghi `tourSeen = true` — một phi hành gia mới sẽ
+     *    MẤT LUÔN màn dẫn tham quan vì một lời chúc mừng.
+     */
+    guide: function (opts) {
+      opts = opts || {};
+      if (typeof opts.onSeen !== "function") return false;
+      return AstroQTour.start({
+        lang: opts.lang,
+        name: opts.name,
+        pulse: opts.pulse !== false,   // màn chỉ đường thì mặc định CÓ nhấp nháy
+        onSeen: opts.onSeen,
+        onFinish: opts.onFinish,
+        steps: [{
+          key: opts.key || "guide",
+          target: opts.target || null,
+          icon: opts.icon || "",
+          vi: opts.vi, en: opts.en
+        }]
+      });
+    }
   };
 
   global.AstroQTour = AstroQTour;

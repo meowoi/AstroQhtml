@@ -242,6 +242,46 @@ def main():
         check("Body rong -> tourSeen=true, KHONG doi intro01Seen",
               d.get("tourSeen") is True and d.get("intro01Seen") is True, str(d))
 
+        # ---- 6c. Cờ earth1Greeted (Comet chúc mừng xong chuỗi Trái Đất) ----
+        # BA cờ phải độc lập với nhau, không chỉ hai.
+        print("")
+        print("[6c] Co earth1Greeted — doc lap voi CA HAI co kia")
+        st, d = call("GET", "/me/onboarding", token=token)
+        check("earth1Greeted mac dinh false", d.get("earth1Greeted") is False, str(d))
+
+        st, d = call("PUT", "/me/onboarding", token=token, body={"earth1Greeted": True})
+        check("Ghi earth1Greeted=true -> 200",
+              st == 200 and d.get("earth1Greeted") is True, f"{st} {d}")
+        check("Co earth1GreetedAt", bool(d.get("earth1GreetedAt")),
+              str(d.get("earth1GreetedAt")))
+        # ⚠️ PHEP KIEM QUAN TRONG NHAT CUA MUC NAY. Dieu kien "body rong -> tourSeen
+        #    true" phai loai TRU ca co moi; thieu no thi goi {earth1Greeted:true} se
+        #    dong thoi bat luon tourSeen, va tre chua xem tour thi mat luon man tour.
+        check("Ghi RIENG earth1Greeted KHONG lam doi tourSeen/intro01Seen",
+              d.get("tourSeen") is True and d.get("intro01Seen") is True, str(d))
+
+        st, d = call("PUT", "/me/onboarding", token=token, body={"tourSeen": False})
+        check("Doi rieng tourSeen -> earth1Greeted GIU NGUYEN",
+              d.get("tourSeen") is False and d.get("earth1Greeted") is True, str(d))
+
+        st, d = call("PUT", "/me/onboarding", token=token, body={"earth1Greeted": False})
+        check("Dat lai earth1Greeted=false (de xem lai loi chao)",
+              d.get("earth1Greeted") is False, str(d))
+        item = read_profile(uid)
+        check("DynamoDB co earth1Greeted (doc that)",
+              bool(item) and "earth1Greeted" in item, str(list(item or {})))
+
+        st, d = call("PUT", "/me/onboarding", token=token,
+                     body={"tourSeen": True, "intro01Seen": True, "earth1Greeted": True})
+        check("Gui ca 3 co mot luot -> ca 3 = true",
+              d.get("tourSeen") is True and d.get("intro01Seen") is True
+              and d.get("earth1Greeted") is True, str(d))
+
+        st, d = call("PUT", "/me/onboarding", token=token, body={})
+        check("Body rong -> tourSeen=true, KHONG doi 2 co kia",
+              d.get("tourSeen") is True and d.get("intro01Seen") is True
+              and d.get("earth1Greeted") is True, str(d))
+
         # ---- 7. Method khác ----
         print("\n[7] Method khong ho tro")
         st, _ = call("DELETE", "/me/onboarding", token=token)

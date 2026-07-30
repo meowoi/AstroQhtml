@@ -855,5 +855,105 @@ check("learn.html KHONG con hua 'doc xong nhan Thien thach tim'",
       "Đọc xong nhận Thiên thạch tím" not in _learn
       and "Earn Purple Meteors when you finish" not in _learn)
 
+# ══════════════════════════════════════════════════════════════
+print("\n=== [13] LUONG HAU-NHIEM-VU: ve 5 giay + Comet chi duong ===")
+_me2 = strip_comments(rd("mission-earth.html"))
+_dash2 = strip_comments(rd("dashboard.html"))
+_tour = strip_comments(rd("js/onboard-tour.js"))
+_tcss = rd("css/onboard-tour.css")
+_dyn2 = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.cs"))
+_ep2 = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/MeEndpoints.cs"))
+
+# --- (1) Duong ve tu dong 5 giay ---
+check("man tong ket co duong ve tu dong 5 giay",
+      re.search(r"AUTO_RETURN_SECS\s*=\s*5\b", _me2) is not None)
+# ⚠️ Dem gio phai bat SAU khi bao xong len server. Bat dam bao bang THU TU GOI:
+#    finishStep() lam `await reportStep(id)` roi moi toi showWin().
+check("`startAuto` goi trong showWin (tuc SAU await reportStep)", "startAuto();" in _me2)
+check("moi tuong tac TAT dem (khong phai tam dung)",
+      all(ev in _me2 for ev in ("pointerdown", "keydown", "mouseenter", "touchstart"))
+      and "cancelAuto" in _me2)
+# ⚠️ KHONG bat `focus`: nut chinh duoc focus() cho nguoi dung ban phim, bat focus la
+#    dem bi tat ngay luc mo modal va tinh nang thanh vo nghia.
+check("KHONG bat su kien focus de tat dem",
+      not re.search(r"addEventListener\(\s*['\"]focus", _me2))
+check("het dem thi ve dashboard (khong phai trang khac)",
+      re.search(r"autoLeft <= 0.*?dashboard\.html", _me2, re.S) is not None)
+_meraw = rd("mission-earth.html")
+check("mission-earth.html: khoa i18n `win_auto` co o CA vi va en",
+      _meraw.count("win_auto:") == 2, f"{_meraw.count('win_auto:')} lan")
+
+# --- (2) DUNG LAI engine tour, khong viet overlay thu hai ---
+check("dashboard DUNG LAI AstroQTour.guide, khong tu ve overlay",
+      "AstroQTour.guide(" in _dash2)
+check("engine tour nhan bo buoc rieng (`steps`) + co rieng (`onSeen`)",
+      "activeSteps" in _tour and "onSeen" in _tour and "stepsNow()" in _tour)
+# ⚠️ Doc le STEPS o bat ky dau la luot dung lai se ve buoc CUA MAN TOUR.
+check("moi cho doc bo buoc di qua stepsNow()", "STEPS[idx]" not in _tour,
+      "con doc STEPS[idx] truc tiep")
+# ⚠️ Thieu onSeen thi markSeen() roi ve nhanh mac dinh va ghi `tourSeen` — mot phi
+#    hanh gia moi MAT LUON man dan tham quan vi mot loi chuc mung.
+check("guide() BAT BUOC co onSeen, khong thi khong chay",
+      'typeof opts.onSeen !== "function"' in _tour)
+check("markSeen ton trong onSeen cua luot dung lai",
+      "if (onSeen) { onSeen(); return; }" in _tour)
+
+# --- (3) Vong nhap nhay: dung gia tri de bai yeu cau ---
+check("co vong nhap nhay `.tour.pulse`", ".tour.pulse .tour-hole" in _tcss)
+check("dung dung gia tri bong do de bai yeu cau",
+      "0 0 20px rgba(56,189,248,.8)" in _tcss)
+# ⚠️ Bong do phai CONG VAO lop toa 9999px; thay the thi mat luon phan lam toi trang.
+# ⚠️ KIEM TRONG CHINH KHOI KEYFRAMES. Ban dau dem "9999px" tren CA FILE, nen khi
+#    keyframes bi doi thanh `box-shadow:0 0 22px …` (thay the thay vi cong vao) thi
+#    ca file van con 9999px o cho khac va phep kiem van "dat" — dat mot cach rong.
+_kf = re.search(r"@keyframes tourPulse\{(.*?)^\}", _tcss, re.S | re.M)
+check("co keyframes tourPulse", bool(_kf))
+check("MOI khung cua tourPulse GIU lop lam toi 9999px",
+      bool(_kf) and _kf.group(1).count("9999px") == 2,
+      f"{_kf.group(1).count('9999px') if _kf else 0} / can 2 khung")
+_rm = _tcss.split("prefers-reduced-motion", 1)[1]
+check("giam chuyen dong: tat animation nhung GIU bong do tinh",
+      "tour.pulse" in _rm and "9999px" in _rm)
+# ⚠️ The cao thi phai cuon LEN DAU, khong cuon vao giua — cuon vao giua thi ca tren
+#    va duoi deu thieu cho va box thoai de len chinh the dang gioi thieu (do duoc
+#    che 74% o man 390x844 truoc khi sua).
+check("the cao thi cuon len dau, khong cuon vao giua",
+      'block: tall ? "start" : "center"' in _tour)
+
+# --- (4) Dieu kien chao: hoi SERVER ca hai, khong doan ---
+check("hoi server chuoi xong chua (/me/missions), khong luu ban sao o may",
+      "AstroQProgress.missions()" in _dash2 and "e.done !== true" in _dash2)
+check("hoi server da chao chua (co earth1Greeted)",
+      "earth1Greeted" in _dash2 and "getOnboarding()" in _dash2)
+# ⚠️ Khac han man dan tham quan: o do "tha chao hai lan hon khong chao lan nao".
+#    O day chao sai la chuc mung mot viec tre CHUA lam.
+# ⚠️ DOI DU CA VE GUARD. Ban dau chi tim "o.earth1Greeted) return" — chuoi do van
+#    con trong ban da bi bo `!o || !o.ok`, nen phep kiem KHONG bat duoc (da thu).
+check("khong doc duoc co -> KHONG chao (du ca ve guard)",
+      "!o || !o.ok || o.earth1Greeted) return" in _dash2)
+check('the MOD-04 co data-tour="missions" (so nhieu, da chot)',
+      'data-tour="missions"' in _dash2)
+# ⚠️ CHI DEM THUOC TINH HTML, khong dem SELECTOR. Ban dau dem chuoi tran nen no
+#    tinh ca `target: '[data-tour="missions"]'` trong JS va bao 2 the — trong khi
+#    chi co dung 1 the. Chan bang cach doi ky tu truoc khong phai `[`.
+_attr = re.findall(r'(?<!\[)data-tour="missions"', _dash2)
+check("chi MOT the mang thuoc tinh data-tour=missions", len(_attr) == 1,
+      f"{len(_attr)} the")
+check("ghi RIENG co earth1Greeted, khong dung tourSeen",
+      "setOnboarding({ earth1Greeted: true })" in _dash2)
+check("khong chao khi man khac dang mo (hai lop toi chong nhau)",
+      "AstroQTour.isOpen()" in _dash2)
+
+# --- (5) Server: co thu ba, doc lap voi hai co kia ---
+check("server: record Onboarding co Earth1Greeted", "Earth1Greeted" in _dyn2)
+check("server: SetOnboardingAsync nhan earth1Greeted", "bool? earth1Greeted" in _dyn2)
+check("server: ghi RIENG co duoc truyen vao (null = khong dung toi)",
+      'sets.Add("earth1Greeted = :g, earth1GreetedAt = :t")' in _dyn2)
+check("server: DTO tra ve earth1Greeted", "earth1Greeted   = o.Earth1Greeted" in _ep2)
+# ⚠️ Dieu kien "body rong -> tourSeen true" phai loai TRU ca co moi; thieu no thi
+#    goi {earth1Greeted:true} se dong thoi bat luon tourSeen.
+check("server: body rong -> tourSeen true, nhung co moi KHONG kich hoat no",
+      "tour is null && intro1 is null && greeted is null) tour = true" in _ep2)
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

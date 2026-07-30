@@ -163,7 +163,12 @@
        bước là phải kiểm lại chỗ đặt box thoại trên màn 390px. -->
   <section class="cards">
     <!-- Trung Tâm Nhiệm Vụ → missions.html (Sảnh Nhiệm Vụ) -->
-    <article class="hud card--mission">
+    <!-- ⚠️ `data-tour="missions"` (SỐ NHIỀU) — chốt 30/07/2026. Ghi chú trong
+         js/onboard-tour.js từng hướng dẫn `data-tour="mission"` số ít; hai tên cho
+         một thẻ thì màn chỉ đường bắt trượt và trẻ chỉ thấy trang tối đi.
+         Thẻ này KHÔNG nằm trong 7 bước dẫn tham quan (lý do ghi trong file đó),
+         nhưng màn Comet chúc mừng xong nhiệm vụ thì chiếu sáng đúng nó. -->
+    <article class="hud card--mission" data-tour="missions">
       <div class="hud-line top"><span><span class="led"></span>MOD-04</span><span class="ok">SYS.ONLINE</span></div>
       <div class="ic">🎯</div>
       <span class="tag" data-i18n="mission_tag">Nhiệm vụ có cốt truyện</span>
@@ -620,15 +625,73 @@
      hoặc tự chạy khi vào dashboard nếu đã xem tour rồi mà chưa xem cutscene
      (đổi máy, hoặc lần trước đóng tab giữa màn loading).
      Xem lại để thử: Console gõ  AstroQMissionIntro.reset()  rồi F5. */
+  /* ⚠️ TRẢ VỀ PROMISE. Trước đây hàm này không trả gì, nên không có cách nào biết
+     cutscene có chạy hay không — mà màn Comet chúc mừng phải đợi biết điều đó, không
+     thì hai overlay cùng mở và hai lớp tối chồng nhau thành đen kịt. */
   function missionIntro(){
-    if(!window.AstroQMissionIntro) return;
-    AstroQMissionIntro.autoStart({
+    if(!window.AstroQMissionIntro) return Promise.resolve(false);
+    return AstroQMissionIntro.autoStart({
       lang: LANG,
       onActivate: function(){
         // Kích hoạt sứ mệnh → trang nhiệm vụ 3D (mission-earth.html)
         window.location.href = "mission-earth.html";
       }
     });
+  }
+
+  /* ============================================================
+     COMET CHÚC MỪNG XONG CHUỖI NHIỆM VỤ TRÁI ĐẤT
+
+     Trẻ vừa xong nhiệm vụ → về đây → Comet chúc mừng và CHIẾU SÁNG thẻ Trung Tâm
+     Nhiệm Vụ để chỉ việc tiếp theo.
+
+     ⚠️ DÙNG LẠI `AstroQTour.guide()`, không viết overlay thứ hai. Engine đó đã có ô
+        sáng tự làm tối cả trang, box thoại có nhánh đặt sang bên, lớp chặn bấm và
+        khung linh vật to — bốn bài học đã trả giá ở màn dẫn tham quan.
+
+     ⚠️ HAI ĐIỀU KIỆN, CẢ HAI ĐỀU HỎI SERVER, KHÔNG ĐOÁN Ở CLIENT:
+        · chuỗi xong chưa → `GET /me/missions` (`earth.done`). Server đã biết, nên
+          KHÔNG lưu bản sao "đã hoàn thành" ở máy — hai nguồn sự thật cho một việc
+          thì sớm muộn lệch nhau.
+        · đã chào chưa    → cờ `earth1Greeted` trên bản ghi PROFILE. Đặt ở server để
+          đổi máy không bị chào lại, cùng khuôn `tourSeen`/`intro01Seen`.
+
+     ⚠️ CHẠY SAU màn dẫn tham quan / cutscene: một phi hành gia mới không thể vừa
+        xong nhiệm vụ, nên hai luồng không bao giờ tranh nhau. Nhưng vẫn kiểm
+        `AstroQTour.isOpen()` cho chắc — hai overlay cùng mở là hai lớp tối chồng nhau.
+
+     Xem lại lời chào để thử: Console gõ
+       AstroQAuth.setOnboarding({ earth1Greeted:false })  rồi F5.
+     ============================================================ */
+  function earthDoneGuide(){
+    if(!window.AstroQTour || !window.AstroQProgress || !AstroQProgress.missions) return;
+    if(AstroQTour.isOpen()) return;
+    if(!window.AstroQAuth || !AstroQAuth.getOnboarding) return;
+
+    AstroQAuth.getOnboarding().then(function(o){
+      // Chưa đọc được cờ (chưa đăng nhập / mất mạng) → KHÔNG chào. Khác hẳn màn dẫn
+      // tham quan: ở đó "thà chào hai lần hơn không chào lần nào" vì đó là lời chào
+      // đầu tiên. Ở đây chào sai là chúc mừng một việc trẻ chưa làm.
+      if(!o || !o.ok || o.earth1Greeted) return;
+      return AstroQProgress.missions().then(function(r){
+        if(!r || !r.ok || !r.data || !r.data.missions) return;
+        var e = r.data.missions.earth;
+        if(!e || e.done !== true) return;
+        AstroQTour.guide({
+          lang: LANG,
+          target: '[data-tour="missions"]',
+          icon: "🎉",
+          vi: { title: "Xuất sắc lắm!",
+                body: "Bạn đã làm rất tốt chuỗi nhiệm vụ đầu tiên tại <b>Trái Đất</b>!<br/>" +
+                      "Hãy truy cập <b>bảng nhiệm vụ</b> để tiếp tục thực hiện các thử thách tiếp theo nhé!" },
+          en: { title: "Outstanding!",
+                body: "You did really well on your first mission chain at <b>Earth</b>!<br/>" +
+                      "Head to the <b>mission board</b> to take on the next challenges!" },
+          // Ghi cờ NGAY khi màn chào đóng, kể cả trẻ bấm "Để sau" — đã chào là đã chào.
+          onSeen: function(){ AstroQAuth.setOnboarding({ earth1Greeted: true }); }
+        });
+      });
+    }).catch(function(){ /* mất mạng thì im lặng, không chào sai */ });
   }
 
   if(window.AstroQTour){
@@ -645,10 +708,15 @@
     }).then(function(ran){
       // Tour không chạy (đã xem rồi) → vẫn phải kiểm màn mở đầu nhiệm vụ,
       // không thì người dùng cũ sẽ không bao giờ thấy nó.
-      if(!ran) missionIntro();
+      if(ran) return;
+      return missionIntro().then(function(intro){
+        /* Chỉ chào khi KHÔNG màn nào khác chạy. Nhánh tour-vừa-chạy cố ý không gọi:
+           một phi hành gia mới không thể vừa xong nhiệm vụ Trái Đất. */
+        if(!intro) earthDoneGuide();
+      });
     });
   } else {
-    missionIntro();
+    missionIntro().then(function(intro){ if(!intro) earthDoneGuide(); });
   }
 
   var logoutBtn=$("logout");

@@ -27,6 +27,19 @@
 /* Bước mở đầu / kết thúc không chỉ vào đâu: thu ô sáng về giữa và tắt viền,
    chỉ còn tác dụng làm tối cả màn hình. */
 .tour-hole.blank{box-shadow:0 0 0 9999px rgba(4,7,22,.86);}
+/* ─────────── Vòng nhấp nháy cho MÀN CHỈ ĐƯỜNG (AstroQTour.guide) ───────────
+   Bật bằng `.tour.pulse` ở gốc, KHÔNG bật ở màn dẫn tham quan 7 bước — nhấp nháy
+   liên tục 7 lần là quá nhiều kích thích cho trẻ.
+   ⚠️ GIÁ TRỊ BÓNG ĐỔ ĐÚNG CHUỖI ĐỀ BÀI YÊU CẦU (`0 0 20px rgba(56,189,248,.8)`),
+      chỉ khác là nó phải CỘNG VÀO lớp toả 9999px làm tối trang — thay thế thì mất
+      luôn phần làm tối và cả trang sáng trở lại. */
+.tour.pulse .tour-hole{animation:tourPulse 1.8s ease-in-out infinite;}
+@keyframes tourPulse{
+  0%,100%{box-shadow:0 0 0 9999px rgba(4,7,22,.8), 0 0 0 2px rgba(95,211,255,.9),
+                     0 0 20px rgba(56,189,248,.8);}
+  50%    {box-shadow:0 0 0 9999px rgba(4,7,22,.8), 0 0 0 2px rgba(95,211,255,.55),
+                     0 0 34px rgba(56,189,248,.34);}
+}
 .tour-hole .ring{position:absolute;inset:-7px;border-radius:inherit;border:1px solid rgba(95,211,255,.5);
   animation:tourRing 1.9s ease-out infinite;}
 .tour-hole.blank .ring{display:none;}
@@ -103,5 +116,10 @@
 /* Bớt chuyển động: ô sáng nhảy thẳng tới vị trí mới, không trượt.
    (common.css đã tắt mọi @keyframes, nhưng transition thì phải tắt riêng.) */
 @media (prefers-reduced-motion:reduce){
+  /* ⚠️ Tắt animation nhưng PHẢI giữ bóng đổ tĩnh `0 0 20px` — để nó chỉ trong
+     keyframes thì lúc tắt animation vòng sáng mất hẳn, và không còn gì chỉ đường. */
+  .tour.pulse .tour-hole{animation:none;
+    box-shadow:0 0 0 9999px rgba(4,7,22,.8), 0 0 0 2px rgba(95,211,255,.9),
+               0 0 20px rgba(56,189,248,.8);}
   .tour-hole,.tour-bubble{transition:none;}
 }
