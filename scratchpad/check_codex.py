@@ -354,7 +354,10 @@ else:
 # ══════════════════════════════════════════════════════════════
 print("\n=== [6] DAY NOI THAT: quizBankTerms <-> term o js/quiz-questions.js ===")
 bank_terms = set(re.findall(r'\bterm:\s*"([^"]+)"', bank))
-check("doc duoc khoa term trong bank cau hoi", len(bank_terms) == 25, f"{len(bank_terms)}")
+# ⚠️ KHONG GAN CUNG. Them cau vao bank la con so doi, ma khong co gi sai.
+check("doc duoc khoa term trong bank cau hoi", len(bank_terms) > 0, f"{len(bank_terms)}")
+check("bank co it nhat 25 khoa (bo goc khong bi xoa bot)", len(bank_terms) >= 25,
+      f"{len(bank_terms)}")
 
 mapped = {}
 dangling = []
@@ -374,8 +377,12 @@ astro_bank = set(re.findall(r'\bterm:\s*"([^"]+)"[\s\S]{0,4000}?src:\s*S\.', ban
 covered = set(mapped)
 space_terms = [t for t in terms if t["category"] == "space"]
 space_keys = {k for t in space_terms for k in t["quizBankTerms"]}
-check("phu dung 20 khoa cau hoi thien van cua bank",
-      len(space_keys) == 20, f"{len(space_keys)} khoa")
+# ⚠️ SUY RA: moi thuat ngu space da noi day thi nhan DUNG 2 khoa, nen tong phai
+#    bang 2 x so thuat ngu da noi. Gan cung 20 thi them thuat ngu la bao hong oan.
+_linked = [t for t in space_terms if t["quizBankTerms"]]
+check("moi khoa thien van duoc phu dung 2 khoa/thuat ngu",
+      len(space_keys) == len(_linked) * 2,
+      f"{len(space_keys)} khoa / {len(_linked)} thuat ngu da noi day")
 
 # ⚠️ CHIA HAI NHOM, VA DAY LA MOT LOI THAT DUOC GHI LAI CHU KHONG PHAI NOI LONG:
 #    `js/quiz-questions.js` chi co cau hoi cho 10 thuat ngu thien van. 5 thuat ngu
@@ -388,13 +395,14 @@ check("phu dung 20 khoa cau hoi thien van cua bank",
 #    Phep kiem vi the DIEM DANH dung 5 id do: them thuat ngu khoa vinh vien thu 6
 #    ma khong khai o day thi bao hong, va noi lai duoc mot mapping cu thi cung
 #    bao hong (danh sach ngan lai).
-PENDING_BANK = {
-    "term_black_hole", "term_gravity", "term_nebula", "term_supernova", "term_cmb",
-}
+# ✅ CAP NHAT 30/07/2026: da them 10 cau cho 5 thuat ngu con lai, nen danh sach
+#    "chua co cau hoi" GIO RONG. Giu phep kiem chu KHONG bo: them thuat ngu moi ma
+#    quen them cau hoi thi no khoa vinh vien, va phep kiem nay la thu duy nhat noi ra.
+PENDING_BANK = set()
 no_bank = {t["id"] for t in space_terms if not t["quizBankTerms"]}
-check("dung 5 thuat ngu space CHUA co cau hoi trong bank (danh sach da biet)",
+check("khong thuat ngu space nao con thieu cau hoi trong bank",
       no_bank == PENDING_BANK,
-      f"them: {sorted(no_bank - PENDING_BANK)} · da noi day: {sorted(PENDING_BANK - no_bank)}")
+      f"thieu cau hoi: {sorted(no_bank)}" if no_bank else "")
 check("thuat ngu space DA noi bank thi nhan dung 2 khoa",
       all(len(t["quizBankTerms"]) == 2 for t in space_terms if t["quizBankTerms"]),
       f"lech: {[(t['id'], len(t['quizBankTerms'])) for t in space_terms if t['quizBankTerms'] and len(t['quizBankTerms']) != 2]}")

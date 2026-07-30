@@ -18,11 +18,14 @@
       vĩnh viễn** mà không ai thấy lỗi. Phép kiểm `check_pages.py` mục [12] đối
       chiếu hai bên.
 
-   ⚠️ `q: []` NGHĨA LÀ "CHƯA CÓ CÂU HỎI NÀO", KHÔNG PHẢI "khoá mãi mãi".
-      5 thuật ngữ (lỗ đen · hấp dẫn · tinh vân · siêu tân tinh · bức xạ nền) hiện
-      chưa có câu hỏi trong bank. Giao diện PHẢI nói thật là "sắp có", KHÔNG được
-      hứa "làm Nhiệm vụ X để giải mã" — đúng bài học đã ghi ở js/specimens.js
-      ("đừng viết 'Mở khoá tại Mission 02', nhiệm vụ ĐÓ chưa tồn tại").
+   ⚠️ `q: []` NGHĨA LÀ "CHƯA CÓ CÂU HỎI NÀO", KHÔNG PHẢI "khoá mãi mãi". Giao diện
+      có trạng thái thứ ba `soon` cho trường hợp đó: nói thật là "sắp có" và KHÔNG
+      dẫn sang Quiz — đúng bài học ở js/specimens.js ("đừng viết 'Mở khoá tại
+      Mission 02', nhiệm vụ ĐÓ chưa tồn tại").
+      ✅ Từ 30/07/2026 **CẢ 15 THUẬT NGỮ ĐỀU CÓ CÂU HỎI** (thêm 10 câu cho lỗ đen ·
+      hấp dẫn · tinh vân · siêu tân tinh · bức xạ nền), nên hiện không thuật ngữ nào
+      ở trạng thái `soon`. Nhánh đó vẫn phải giữ: thuật ngữ thêm sau sẽ lại rơi vào
+      đó cho tới khi có câu hỏi.
 
    ⚠️ SỐ LIỆU DẪN NGUYÊN VĂN TỪ NASA, 12 URL đã kiểm trả 200 ngày 30/07/2026.
       Sửa con số mà không mở lại nguồn là bịa. Cách diễn đạt cho trẻ thì **chưa
@@ -210,7 +213,7 @@
             dg: ["Outside the Solar System", "Confirmed: over 6,000", "Found by star dimming"] }
     },
     {
-      id: "term_black_hole", cat: "space", ic: "cx-blackhole", q: [],
+      id: "term_black_hole", cat: "space", ic: "cx-blackhole", q: ["black-hole", "black-hole-light"],
       src: [SRC.bh],
       vi: { t: "Lỗ đen", an: "Cái giếng sâu đến mức ánh sáng cũng không leo ra được",
             sum: "Đặc đến mức ngay cả ánh sáng cũng không thoát ra nổi.",
@@ -224,7 +227,7 @@
             dg: ["Event horizon: a boundary", "Light does NOT escape", "Smallest known: 3.8 solar masses"] }
     },
     {
-      id: "term_gravity", cat: "space", ic: "cx-gravity", q: [],
+      id: "term_gravity", cat: "space", ic: "cx-gravity", q: ["gravity", "gravity-distance"],
       src: [SRC.gravity],
       vi: { t: "Lực hấp dẫn", an: "Sợi dây vô hình mọi vật đều cầm",
             sum: "Lực kéo mọi vật về phía tâm — càng nặng, càng gần thì càng mạnh.",
@@ -238,7 +241,7 @@
             dg: ["More mass → stronger", "Farther → weaker", "Keeps planets in orbit"] }
     },
     {
-      id: "term_nebula", cat: "space", ic: "cx-nebula", q: [],
+      id: "term_nebula", cat: "space", ic: "cx-nebula", q: ["nebula", "nebula-gas"],
       src: [SRC.stars],
       vi: { t: "Tinh vân", an: "Vườn trẻ của các ngôi sao",
             sum: "Đám mây khí và bụi khổng lồ — nơi các ngôi sao được sinh ra.",
@@ -252,7 +255,7 @@
             dg: ["Gas + dust (mostly hydrogen)", "Dense parts collapse by gravity", "Hot enough → a star is born"] }
     },
     {
-      id: "term_supernova", cat: "space", ic: "cx-supernova", q: [],
+      id: "term_supernova", cat: "space", ic: "cx-supernova", q: ["supernova", "supernova-elements"],
       src: [SRC.stars],
       vi: { t: "Siêu tân tinh", an: "Tiếng nổ chia lại vật liệu cho cả vũ trụ",
             sum: "Vụ nổ khổng lồ khi một ngôi sao rất lớn kết thúc cuộc đời.",
@@ -266,7 +269,7 @@
             dg: ["Massive star runs out of fuel", "Core collapses then REBOUNDS", "Shock wave → explosion"] }
     },
     {
-      id: "term_cmb", cat: "space", ic: "cx-cmb", q: [],
+      id: "term_cmb", cat: "space", ic: "cx-cmb", q: ["cmb", "cmb-when"],
       src: [SRC.cosmos],
       vi: { t: "Bức xạ nền vũ trụ", an: "Bức ảnh sơ sinh của vũ trụ",
             sum: "Ánh sáng cổ nhất ta quan sát được — còn lại từ thuở vũ trụ sơ sinh.",

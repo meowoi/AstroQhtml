@@ -33,7 +33,15 @@ window.AstroQQuestions = (function () {
     aster:  { name: "NASA Science — Asteroid Facts",       url: "https://science.nasa.gov/solar-system/asteroids/facts/" },
     comet:  { name: "NASA Science — Comet Facts",          url: "https://science.nasa.gov/solar-system/comets/facts/" },
     meteor: { name: "NASA Science — Meteors & Meteorites", url: "https://science.nasa.gov/solar-system/meteors-meteorites/facts/" },
-    exo:    { name: "NASA Science — Exoplanets",           url: "https://science.nasa.gov/exoplanets/" }
+    exo:    { name: "NASA Science — Exoplanets",           url: "https://science.nasa.gov/exoplanets/" },
+    /* Ba nguồn thêm 30/07/2026 cho 5 thuật ngữ mới. Cả ba đã kiểm trả 200.
+       ⚠️ `grav` là **NASA Space Place**, không phải science.nasa.gov — cố ý: đó là
+          trang NASA viết CHO TRẺ EM, đúng độ tuổi 8–15, và science.nasa.gov không
+          có trang định nghĩa lực hấp dẫn tương đương. Vẫn là nguồn NASA chính thức;
+          phép kiểm nguồn đã nới đúng hai tên miền này, không mở cho URL bất kỳ. */
+    bh:     { name: "NASA Science — Black Holes",          url: "https://science.nasa.gov/universe/black-holes/" },
+    grav:   { name: "NASA Space Place — What Is Gravity?", url: "https://spaceplace.nasa.gov/what-is-gravity/en/" },
+    cosmos: { name: "NASA Science — Cosmic History",       url: "https://science.nasa.gov/universe/overview/" }
   };
 
   var ALL = [
@@ -447,7 +455,218 @@ window.AstroQQuestions = (function () {
       src: S.exo
     },
 
-    /* ═════════ 11. Bộ câu hỏi lập trình / robot (bài học, không phải số liệu) ═════════ */
+
+    /* ═════════ 11. LỖ ĐEN — Black Hole ═════════ */
+    {
+      term: "black-hole",
+      topic: { vi: "LỖ ĐEN", en: "BLACK HOLE" },
+      q: { vi: "Đường biên của lỗ đen — nơi không gì thoát ra được nữa — gọi là gì?",
+           en: "What is the boundary of a black hole, beyond which nothing can escape, called?" },
+      opts: [
+        { vi: "Vành đai Kuiper", en: "The Kuiper Belt" },
+        { vi: "Chân trời sự kiện", en: "The event horizon" },
+        { vi: "Ranh giới ngày/đêm", en: "The day–night terminator" },
+        { vi: "Quầng khí quyển", en: "The atmospheric halo" }
+      ],
+      a: 1,
+      ok: { vi: "Chính xác! NASA gọi đường biên đó là <b>chân trời sự kiện</b>. Nó <b>không phải một mặt đất</b> — đó là đường biên chứa toàn bộ vật chất làm nên lỗ đen.",
+            en: "Correct! NASA calls that boundary the <b>event horizon</b>. It is <b>not a surface</b> like Earth's — it is a boundary containing all the matter that makes up the black hole." },
+      no: { vi: "Chưa đúng! Đường biên đó là <b>chân trời sự kiện</b>. Qua nó thì không gì thoát ra được, kể cả ánh sáng.",
+            en: "Not quite! That boundary is the <b>event horizon</b>. Past it, nothing escapes — not even light." },
+      hint: { vi: "Nó nghe như một <b>đường chân trời</b>: qua khỏi vạch đó là không quay lại được.",
+              en: "It sounds like a <b>horizon</b>: cross that line and there is no coming back." },
+      src: S.bh
+    },
+    {
+      term: "black-hole-light",
+      topic: { vi: "LỖ ĐEN", en: "BLACK HOLE" },
+      q: { vi: "Thứ gì có thể thoát ra từ bên trong chân trời sự kiện của lỗ đen?",
+           en: "What can escape from inside a black hole's event horizon?" },
+      opts: [
+        { vi: "Ánh sáng thì thoát được, vật chất thì không", en: "Light can escape, but matter cannot" },
+        { vi: "Sóng vô tuyến thì thoát được", en: "Radio waves can escape" },
+        { vi: "Vật gì đi đủ nhanh cũng thoát được", en: "Anything moving fast enough can escape" },
+        { vi: "Không gì cả — kể cả ánh sáng", en: "Nothing at all — not even light" }
+      ],
+      a: 3,
+      ok: { vi: "Đúng rồi! Lỗ đen đặc tới mức lực hấp dẫn ngay dưới chân trời sự kiện mạnh đến mức <b>không gì thoát ra được, kể cả ánh sáng</b>. Vì thế ta không thể nhìn thấy phần bên trong.",
+            en: "Right! A black hole is so dense that gravity just beneath the event horizon is strong enough that <b>nothing can escape — not even light</b>. That's why we cannot see inside." },
+      no: { vi: "Chưa đúng! <b>Không gì</b> thoát ra được, và ánh sáng cũng vậy — đó chính là lý do nó “đen”.",
+            en: "Not quite! <b>Nothing</b> escapes, light included — that is exactly why it looks black." },
+      hint: { vi: "Nghĩ về cái tên: vì sao ta gọi nó là lỗ <b>đen</b>?",
+              en: "Think about the name: why do we call it a <b>black</b> hole?" },
+      src: S.bh
+    },
+
+    /* ═════════ 12. LỰC HẤP DẪN — Gravity ═════════ */
+    {
+      term: "gravity",
+      topic: { vi: "LỰC HẤP DẪN", en: "GRAVITY" },
+      q: { vi: "Lực hấp dẫn của một hành tinh kéo các vật về đâu?",
+           en: "Where does a planet's gravity pull objects toward?" },
+      opts: [
+        { vi: "Về phía tâm của hành tinh", en: "Toward the centre of the planet" },
+        { vi: "Về phía cực Bắc", en: "Toward the North Pole" },
+        { vi: "Ra xa khỏi hành tinh", en: "Away from the planet" },
+        { vi: "Về phía ngôi sao gần nhất", en: "Toward the nearest star" }
+      ],
+      a: 0,
+      ok: { vi: "Chính xác! NASA định nghĩa lực hấp dẫn là lực mà một hành tinh dùng để kéo các vật <b>về phía tâm của nó</b>. Vì thế em nhảy lên rồi lại rơi xuống sân.",
+            en: "Correct! NASA defines gravity as the force by which a planet draws objects <b>toward its centre</b>. That's why you land back on the ground when you jump." },
+      no: { vi: "Chưa đúng! Lực hấp dẫn kéo mọi vật <b>về phía tâm</b> của hành tinh — không phải về một cực, cũng không đẩy ra ngoài.",
+            en: "Not quite! Gravity pulls everything <b>toward the centre</b> of the planet — not toward a pole, and it never pushes away." },
+      hint: { vi: "Ở Việt Nam hay ở Nam Mỹ, thả tay ra là đồ vật đều rơi <b>xuống</b> — “xuống” là về hướng nào?",
+              en: "In Vietnam or in South America, a dropped object always falls <b>down</b> — which direction is “down”?" },
+      src: S.grav
+    },
+    {
+      term: "gravity-distance",
+      topic: { vi: "LỰC HẤP DẪN", en: "GRAVITY" },
+      q: { vi: "Theo NASA, lực hấp dẫn thay đổi thế nào khi hai vật ở xa nhau hơn?",
+           en: "According to NASA, what happens to gravity as two objects get farther apart?" },
+      opts: [
+        { vi: "Mạnh lên", en: "It gets stronger" },
+        { vi: "Không đổi", en: "It stays the same" },
+        { vi: "Yếu đi", en: "It gets weaker" },
+        { vi: "Đổi chiều thành lực đẩy", en: "It flips into a push" }
+      ],
+      a: 2,
+      ok: { vi: "Đúng rồi! Hai điều quyết định lực hấp dẫn mạnh hay yếu: vật càng <b>nhiều khối lượng</b> thì lực càng lớn, và lực <b>yếu dần khi khoảng cách xa ra</b>.",
+            en: "Right! Two things set how strong gravity is: objects with <b>more mass</b> have more gravity, and gravity <b>gets weaker with distance</b>." },
+      no: { vi: "Chưa đúng! Càng xa thì lực hấp dẫn càng <b>yếu</b> — nó không bao giờ đổi thành lực đẩy.",
+            en: "Not quite! The farther apart, the <b>weaker</b> gravity gets — and it never turns into a push." },
+      hint: { vi: "Mặt Trời rất nặng, nhưng ở đây em không bị nó hút bay đi. Vì sao?",
+              en: "The Sun is enormously massive, yet it doesn't yank you off the ground. Why not?" },
+      src: S.grav
+    },
+
+    /* ═════════ 13. TINH VÂN — Nebula ═════════ */
+    {
+      term: "nebula",
+      topic: { vi: "TINH VÂN", en: "NEBULA" },
+      q: { vi: "Các ngôi sao được sinh ra ở đâu?",
+           en: "Where are stars born?" },
+      opts: [
+        { vi: "Trong vành đai tiểu hành tinh", en: "In the asteroid belt" },
+        { vi: "Trong những đám mây khí và bụi khổng lồ", en: "In large clouds of gas and dust" },
+        { vi: "Trong lõi của một hành tinh", en: "Inside a planet's core" },
+        { vi: "Trong đuôi của sao chổi", en: "In the tail of a comet" }
+      ],
+      a: 1,
+      ok: { vi: "Chính xác! NASA cho biết các ngôi sao hình thành trong những <b>đám mây khí và bụi khổng lồ</b> gọi là mây phân tử. Mây đầy cụm sao mới sinh còn được gọi là “vườn trẻ của các ngôi sao”.",
+            en: "Correct! NASA says stars form in <b>large clouds of gas and dust</b> called molecular clouds. Clouds full of newly formed clusters are called stellar nurseries." },
+      no: { vi: "Chưa đúng! Ngôi sao sinh ra trong <b>đám mây khí và bụi</b>, không phải trong đá hay trong lõi hành tinh.",
+            en: "Not quite! Stars are born in <b>clouds of gas and dust</b>, not in rock or inside planets." },
+      hint: { vi: "Muốn nặn một quả cầu khí khổng lồ thì trước hết phải có… rất nhiều <b>khí</b>.",
+              en: "To build a giant ball of gas, you first need a great deal of… <b>gas</b>." },
+      src: S.star
+    },
+    {
+      term: "nebula-gas",
+      topic: { vi: "TINH VÂN", en: "NEBULA" },
+      q: { vi: "Điều gì làm phần giữa một đám mây khí co lại và nóng lên đủ để một ngôi sao ra đời?",
+           en: "What makes the middle of a gas cloud collapse and heat up until a star is born?" },
+      opts: [
+        { vi: "Gió Mặt Trời thổi mây lại", en: "The solar wind squeezing the cloud" },
+        { vi: "Từ trường của thiên hà", en: "The galaxy's magnetic field" },
+        { vi: "Va chạm với một tiểu hành tinh", en: "A collision with an asteroid" },
+        { vi: "Lực hấp dẫn hút thêm vật chất về chỗ đặc", en: "Gravity pulling more matter into the dense clumps" }
+      ],
+      a: 3,
+      ok: { vi: "Đúng rồi! Ở những chỗ mây đặc lại, <b>lực hấp dẫn hút thêm vật chất về</b>; phần giữa bị ép ngày càng chặt và nóng lên — đủ nóng để phản ứng nhiệt hạch khởi động, và một ngôi sao ra đời.",
+            en: "Right! Where the cloud grows denser, <b>gravity attracts additional matter</b>; the middle is squeezed ever tighter and heats up — hot enough for nuclear fusion to start, and a star is born." },
+      no: { vi: "Chưa đúng! Chính <b>lực hấp dẫn</b> làm chỗ đặc co lại và nóng lên, chứ không phải gió hay va chạm.",
+            en: "Not quite! It is <b>gravity</b> that makes the dense clumps collapse and heat up — not wind or collisions." },
+      hint: { vi: "Cùng một lực giữ em không bay khỏi mặt đất, nhưng ở đây nó bóp cả một đám mây.",
+              en: "The same force that keeps you on the ground — here it squeezes an entire cloud." },
+      src: S.star
+    },
+
+    /* ═════════ 14. SIÊU TÂN TINH — Supernova ═════════ */
+    {
+      term: "supernova",
+      topic: { vi: "SIÊU TÂN TINH", en: "SUPERNOVA" },
+      q: { vi: "Siêu tân tinh xảy ra khi nào?",
+           en: "When does a supernova happen?" },
+      opts: [
+        { vi: "Khi hai hành tinh đâm vào nhau", en: "When two planets crash into each other" },
+        { vi: "Khi một sao chổi lao vào Mặt Trời", en: "When a comet dives into the Sun" },
+        { vi: "Khi một ngôi sao khối lượng lớn cạn nhiên liệu và lõi sụp xuống", en: "When a massive star runs out of fuel and its core collapses" },
+        { vi: "Mỗi lần một ngôi sao mọc lên ở chân trời", en: "Every time a star rises over the horizon" }
+      ],
+      a: 2,
+      ok: { vi: "Chính xác! Ngôi sao khối lượng lớn cạn nhiên liệu thì <b>lõi sắt sụp xuống</b> cho tới lúc lực giữa các hạt nhân “đạp phanh”, rồi <b>nảy trở lại</b> — cú nảy đó tạo sóng xung kích và một vụ nổ khổng lồ.",
+            en: "Correct! When a high-mass star runs out of fuel its <b>iron core collapses</b> until forces between the nuclei push the brakes, then it <b>rebounds</b> — creating a shock wave and a huge explosion." },
+      no: { vi: "Chưa đúng! Siêu tân tinh là lúc một <b>ngôi sao rất lớn</b> kết thúc cuộc đời, không phải chuyện hành tinh hay sao chổi.",
+            en: "Not quite! A supernova is how a <b>very massive star</b> ends its life — not a planet or comet event." },
+      hint: { vi: "Nó là <b>cái chết</b> của một ngôi sao rất lớn, không phải một vụ đâm nhau.",
+              en: "It is the <b>death</b> of a very massive star, not a crash." },
+      src: S.star
+    },
+    {
+      term: "supernova-elements",
+      topic: { vi: "SIÊU TÂN TINH", en: "SUPERNOVA" },
+      q: { vi: "Vật chất bị siêu tân tinh bắn vào không gian sẽ đi đâu?",
+           en: "What happens to the material a supernova throws into space?" },
+      opts: [
+        { vi: "Làm giàu cho các mây phân tử, rồi thành thế hệ ngôi sao kế tiếp", en: "It enriches molecular clouds and becomes the next generation of stars" },
+        { vi: "Biến mất hoàn toàn khỏi vũ trụ", en: "It vanishes from the universe completely" },
+        { vi: "Rơi hết trở lại vào lỗ đen ngay lập tức", en: "It falls straight back into a black hole" },
+        { vi: "Đông lại thành một hành tinh duy nhất", en: "It freezes into one single planet" }
+      ],
+      a: 0,
+      ok: { vi: "Đúng rồi! NASA cho biết vật chất bị vụ nổ bắn ra sẽ <b>làm giàu cho các mây phân tử sau này</b>, rồi đi vào thành phần của <b>thế hệ ngôi sao kế tiếp</b>. Gạch của căn nhà cũ được dùng lại để xây nhà mới.",
+            en: "Right! NASA says material cast into the cosmos <b>enriches future molecular clouds</b> and becomes part of the <b>next generation of stars</b>. The old bricks get reused to build new houses." },
+      no: { vi: "Chưa đúng! Vật chất không mất đi — nó <b>làm giàu cho mây phân tử</b> và trở thành nguyên liệu của các ngôi sao sinh sau.",
+            en: "Not quite! The material isn't lost — it <b>enriches molecular clouds</b> and becomes raw material for later stars." },
+      hint: { vi: "Nhớ lại câu hỏi về tinh vân: ngôi sao được sinh ra từ <b>mây khí và bụi</b>.",
+              en: "Recall the nebula question: stars are born from <b>clouds of gas and dust</b>." },
+      src: S.star
+    },
+
+    /* ═════════ 15. BỨC XẠ NỀN VŨ TRỤ — Cosmic Microwave Background ═════════ */
+    {
+      term: "cmb",
+      topic: { vi: "BỨC XẠ NỀN VŨ TRỤ", en: "COSMIC MICROWAVE BACKGROUND" },
+      q: { vi: "Bức xạ nền vũ trụ là gì?",
+           en: "What is the cosmic microwave background?" },
+      opts: [
+        { vi: "Ánh sáng của ngôi sao gần Trái Đất nhất", en: "Light from the star nearest to Earth" },
+        { vi: "Ánh sáng CỔ NHẤT mà ta quan sát được", en: "The OLDEST light we can observe" },
+        { vi: "Sóng vô tuyến do các kính thiên văn phát ra", en: "Radio waves sent out by telescopes" },
+        { vi: "Ánh sáng phản chiếu từ bụi trong Ngân Hà", en: "Light reflected off dust in the Milky Way" }
+      ],
+      a: 1,
+      ok: { vi: "Chính xác! NASA gọi nó là <b>ánh sáng cổ nhất ta quan sát được</b> — vẫn còn đo được tới hôm nay. Bản đồ của nó cho thấy những chênh lệch nhiệt độ <b>13,8 tỉ năm tuổi</b>, chính là mầm mống lớn dần thành các thiên hà.",
+            en: "Correct! NASA calls it the <b>oldest light we can observe</b> — still detectable today. Its map shows <b>13.8-billion-year-old</b> temperature fluctuations: the seeds that grew into galaxies." },
+      no: { vi: "Chưa đúng! Đó là <b>ánh sáng cổ nhất</b> ta quan sát được, còn lại từ thuở vũ trụ sơ sinh — không phải ánh sáng của một ngôi sao nào.",
+            en: "Not quite! It is the <b>oldest light</b> we can observe, left over from the infant universe — not light from any one star." },
+      hint: { vi: "Hãy nghĩ nó như <b>tấm ảnh sơ sinh</b> của cả vũ trụ.",
+              en: "Think of it as the universe's <b>newborn photo</b>." },
+      src: S.cosmos
+    },
+    {
+      term: "cmb-when",
+      topic: { vi: "BỨC XẠ NỀN VŨ TRỤ", en: "COSMIC MICROWAVE BACKGROUND" },
+      q: { vi: "Ánh sáng của bức xạ nền được phát ra vào khoảng bao lâu sau Big Bang?",
+           en: "Roughly how long after the big bang was the background light released?" },
+      opts: [
+        { vi: "Khoảng 1 giây sau", en: "About 1 second after" },
+        { vi: "Khoảng 1 triệu tỉ năm sau", en: "About a quadrillion years after" },
+        { vi: "Đúng vào lúc Big Bang xảy ra", en: "At the very instant of the big bang" },
+        { vi: "Khoảng 380.000 năm sau", en: "About 380,000 years after" }
+      ],
+      a: 3,
+      ok: { vi: "Đúng rồi! Khoảng <b>380.000 năm</b> sau Big Bang, vũ trụ nguội đủ để các hạt nhân bắt được electron — giai đoạn gọi là <b>kỷ nguyên tái kết hợp</b>. Ánh sáng phát ra khi đó chính là bức xạ nền.",
+            en: "Right! About <b>380,000 years</b> after the big bang the universe cooled enough for nuclei to capture electrons — the <b>epoch of recombination</b>. The light released then is the background radiation." },
+      no: { vi: "Chưa đúng! Con số NASA ghi là khoảng <b>380.000 năm</b> sau Big Bang.",
+            en: "Not quite! The figure NASA gives is about <b>380,000 years</b> after the big bang." },
+      hint: { vi: "Không phải ngay lập tức, cũng không phải hàng tỉ năm — mà là <b>vài trăm nghìn</b> năm.",
+              en: "Not instantly, and not billions of years — a few <b>hundred thousand</b> years." },
+      src: S.cosmos
+    },
+
+    /* ═════════ 16. Bộ câu hỏi lập trình / robot (bài học, không phải số liệu) ═════════ */
     {
       term: "algorithm",
       topic: { vi: "TRÍ TUỆ NHÂN TẠO", en: "ARTIFICIAL INTELLIGENCE" },

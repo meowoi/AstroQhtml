@@ -23,7 +23,14 @@ with sync_playwright() as p:
         check(f"[{label}] luoi ve du 15 the", n==15, f"{n}")
         nlock=pg.eval_on_selector_all(".cx-item.lock","e=>e.length")
         nsoon=pg.eval_on_selector_all(".cx-item.soon","e=>e.length")
-        check(f"[{label}] 10 the 'chua giai ma' + 5 the 'sap co'", nlock==10 and nsoon==5, f"lock={nlock} soon={nsoon}")
+        # ⚠️ SUY RA, KHONG GAN CUNG "10 lock + 5 soon". Tu 30/07/2026 ca 15 thuat ngu
+        #    deu co cau hoi nen KHONG con the nao 'soon'. Gan cung con so cu la phep
+        #    kiem khang dinh dung trang thai HONG (5 the khoa vinh vien) — dung loai
+        #    loi da giu nut Mat Trang song o smoke_mission_earth.py.
+        check(f"[{label}] chua dang nhap: moi the o trang thai chua giai ma",
+              nlock + nsoon == n, f"lock={nlock} soon={nsoon} / {n} the")
+        check(f"[{label}] KHONG con the 'sap co' (moi thuat ngu da co cau hoi)",
+              nsoon == 0, f"soon={nsoon}")
         # chua dang nhap -> phai co dai nhac, va KHONG the nao co the 'done'
         ndone=pg.eval_on_selector_all(".cx-item.done","e=>e.length")
         check(f"[{label}] chua dang nhap: 0 the da giai ma (khong bia)", ndone==0, f"{ndone}")
@@ -87,11 +94,40 @@ with sync_playwright() as p:
                  unmapped, opened: opened.length, sample: opened.map(t => t.id).slice(0,3) };
     })()""")
     check("moi cau trong mot luot quiz deu co khoa `term`", r["noTerm"]==0, f"{r['noTerm']} cau thieu")
-    check("so tay dang cho 20 khoa bank", r["keys"]==20, f"{r['keys']}")
+    # ⚠️ SUY RA tu so thuat ngu (2 khoa/thuat ngu), khong gan cung 20.
+    check("so tay cho dung 2 khoa bank cho moi thuat ngu",
+          r["keys"] == 15 * 2, f"{r['keys']} khoa / 15 thuat ngu")
     check("moi khoa bank tra ra dung mot the trong so tay", not r["unmapped"], f"{r['unmapped']}")
     check("tra loi dung ca luot -> giai ma duoc the that",
           r["opened"]>0, f"mo {r['opened']} the: {r['sample']}")
     check("[day noi] 0 loi console", not errs, str(errs[:2]))
+
+    # ─── 5 thuat ngu them 30/07/2026 phai giai ma duoc THAT ───
+    # Truoc do chung o trang thai "sap co" (bank khong co cau nao ve chung), tuc la
+    # 5/15 the khoa vinh vien. Day la phep do chung minh chuyen do da het.
+    r2 = pg.evaluate("""(() => {
+        const NEW = ['term_black_hole','term_gravity','term_nebula',
+                     'term_supernova','term_cmb'];
+        const bankTerms = new Set(AstroQQuestions.ALL.map(q => q.term));
+        const dangling = [];
+        NEW.forEach(id => { const t = AstroQCodex.get(id);
+          t.q.forEach(k => { if (!bankTerms.has(k)) dangling.push(id + ' -> ' + k); }); });
+        const done = new Set(NEW.flatMap(id => AstroQCodex.get(id).q));
+        const opened = NEW.filter(id => AstroQCodex.isDecoded(AstroQCodex.get(id), done));
+        const noPath = AstroQCodex.all().filter(t => !AstroQCodex.hasPath(t)).map(t => t.id);
+        // Dung MOT khoa thi chi mo DUNG the cua no, khong "ro" sang the khac
+        const one = new Set(['black-hole']);
+        const bleed = AstroQCodex.all()
+          .filter(t => AstroQCodex.isDecoded(t, one)).map(t => t.id);
+        return { dangling, opened, noPath, bleed };
+    })()""")
+    check("moi khoa `q` cua 5 the moi tro vao cau CO THAT trong bank",
+          not r2["dangling"], str(r2["dangling"]))
+    check("tra loi dung -> CA 5 the moi giai ma duoc", len(r2["opened"]) == 5,
+          f"{len(r2['opened'])}/5")
+    check("KHONG con the nao o trang thai 'sap co'", not r2["noPath"], str(r2["noPath"]))
+    check("dung MOT khoa chi mo DUNG the cua no (khong ro sang the khac)",
+          r2["bleed"] == ["term_black_hole"], str(r2["bleed"]))
     ctx.close(); b.close()
 print(f"\n===== {ok} dat / {bad} hong =====")
 sys.exit(1 if bad else 0)

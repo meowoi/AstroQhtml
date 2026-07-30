@@ -37,6 +37,13 @@ NEEDED = {
     "meteor":     ["meteor", "meteor-fireball"],
     "meteorite":  ["meteorite", "meteorite-survive"],
     "exoplanet":  ["exoplanet", "exoplanet-transit"],
+    # 5 thuat ngu them 30/07/2026 — de 5 the trong So Tay Thuat Ngu giai ma duoc.
+    # Truoc do chung o trang thai "sap co" vi bank khong co cau nao ve chung.
+    "black-hole": ["black-hole", "black-hole-light"],
+    "gravity":    ["gravity", "gravity-distance"],
+    "nebula":     ["nebula", "nebula-gas"],
+    "supernova":  ["supernova", "supernova-elements"],
+    "cmb":        ["cmb", "cmb-when"],
 }
 
 
@@ -74,7 +81,14 @@ def main():
             print("\nDung som: khong doc duoc bank.")
             sys.exit(1)
 
-        check("bank co 25 cau", len(bank) == 25, f"{len(bank)}")
+        # ⚠️ KHONG GAN CUNG SO CAU. Cho nay tung doi dung 25 va bao hong khi them 10
+        #    cau moi — trong khi khong co gi sai. Dieu muon biet la "moi thuat ngu
+        #    trong NEEDED du 2 cau" (muc [2] lo viec do) va "bo goc khong bi xoa bot".
+        check("bank co it nhat 25 cau (bo goc khong bi xoa bot)", len(bank) >= 25,
+              f"{len(bank)}")
+        check("so cau khop dung so thuat ngu khai o NEEDED (2 cau/thuat ngu) + 5 cau lap trinh",
+              len(bank) == len(NEEDED) * 2 + 5,
+              f"{len(bank)} vs {len(NEEDED) * 2 + 5}")
 
         bad_shape = []
         for i, it in enumerate(bank):
@@ -125,7 +139,15 @@ def main():
               f"cao nhat {max(dist)}/{len(bank)}")
         astro = [it for it in bank if it.get("src")]
         adist = [sum(1 for it in astro if it["a"] == k) for k in range(4)]
-        check("20 cau thien van rai deu 5/5/5/5", adist == [5, 5, 5, 5], f"{adist}")
+        # ⚠️ SUY RA THAY VI GAN CUNG "5/5/5/5". Voi 30 cau thien van thi khong chia
+        #    het cho 4, nen doi phan bo TUYET DOI deu la doi mot dieu bat kha thi.
+        #    Dieu muon biet: khong vi tri nao bi bo qua, va khong vi tri nao bi lam
+        #    dung — tre hoc "cu chon B" thi bai kiem tra mat tac dung.
+        _n = len(astro)
+        _lo, _hi = _n // 4 - 1, _n // 4 + 2
+        check("cau thien van rai deu moi vi tri A/B/C/D",
+              all(_lo <= x <= _hi for x in adist),
+              f"{adist} (moi vi tri phai trong [{_lo},{_hi}] voi {_n} cau)")
 
         print("\n=== [4] Nguon tham chieu ===")
         srcs = {}
@@ -142,8 +164,14 @@ def main():
         check("moi cau thien van deu co src (chi 5 cau lap trinh khong co)",
               sorted(no_src) == ["algorithm", "condition", "loop", "sensor", "sequence"],
               f"khong co src: {sorted(no_src)}")
-        bad_host = sorted(u for u in srcs if not u.startswith("https://science.nasa.gov/"))
-        check("moi URL nguon tro ve science.nasa.gov qua https", not bad_host, f"{bad_host}")
+        # ⚠️ DA NOI RONG SANG "ten mien CUA NASA", va chi noi rong DUNG hai ten mien.
+        #    `gravity` dan NASA Space Place (`spaceplace.nasa.gov`) — trang NASA viet
+        #    CHO TRE EM, dung do tuoi 8-15, va science.nasa.gov khong co trang dinh
+        #    nghia luc hap dan tuong duong. Van la nguon NASA chinh thuc, khong phai
+        #    mo cho URL bat ky.
+        NASA_HOSTS = ("https://science.nasa.gov/", "https://spaceplace.nasa.gov/")
+        bad_host = sorted(u for u in srcs if not u.startswith(NASA_HOSTS))
+        check("moi URL nguon thuoc ten mien NASA qua https", not bad_host, f"{bad_host}")
 
         for url in sorted(srcs):
             code = 0

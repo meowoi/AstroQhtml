@@ -785,9 +785,11 @@ check("mot khoa bank khong bi hai thuat ngu cung nhan",
       f"{ {k: v for k, v in _qmap.items() if len(v) > 1} }")
 # ⚠️ 5 thuat ngu CHUA co cau hoi — giao dien phai noi "sap co", KHONG hua nhiem vu
 #    khong ton tai (bai hoc js/specimens.js). Diem danh dung 5 id do.
-PENDING = {"term_black_hole", "term_gravity", "term_nebula", "term_supernova", "term_cmb"}
-check("dung 5 thuat ngu chua co cau hoi (danh sach da biet)", set(_noq) == PENDING,
-      f"them: {sorted(set(_noq) - PENDING)} · da noi day: {sorted(PENDING - set(_noq))}")
+# ✅ 30/07/2026: da them 10 cau cho 5 thuat ngu con lai -> danh sach nay GIO RONG.
+#    Giu phep kiem: them thuat ngu ma quen them cau hoi thi no khoa vinh vien.
+PENDING = set()
+check("khong thuat ngu nao con thieu cau hoi trong bank", set(_noq) == PENDING,
+      f"thieu cau hoi: {sorted(set(_noq))}" if _noq else "")
 check("codex.html co trang thai thu BA cho thuat ngu chua co cau hoi",
       '"soon"' in _cxp and "soon_hint" in _cxp)
 check("codex.html KHONG dan sang Quiz khi chua co cau hoi",
