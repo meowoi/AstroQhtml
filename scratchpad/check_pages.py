@@ -790,6 +790,15 @@ check("mot khoa bank khong bi hai thuat ngu cung nhan",
 PENDING = set()
 check("khong thuat ngu nao con thieu cau hoi trong bank", set(_noq) == PENDING,
       f"thieu cau hoi: {sorted(set(_noq))}" if _noq else "")
+
+# ⚠️ HAI PHEP KIEM DUOI DAY CHUYEN TU `check_codex.py` SANG (30/07/2026), truoc khi
+#    xoa bo React da bi thay the. Chung canh CODE DANG CHAY nen khong duoc mat.
+# (a) 5 cau lap trinh cua bank la cau KHAI NIEM, khong co `src`, va khong thuoc thuat
+#     ngu thien van nao. Thuat ngu nhan bua mot trong 5 khoa do la giai ma sai bang
+#     mot cau khong lien quan.
+PROG_KEYS = {"algorithm", "loop", "condition", "sensor", "sequence"}
+check("5 cau lap trinh KHONG bi thuat ngu nao nhan bua",
+      not (set(_qmap) & PROG_KEYS), f"{sorted(set(_qmap) & PROG_KEYS)}")
 check("codex.html co trang thai thu BA cho thuat ngu chua co cau hoi",
       '"soon"' in _cxp and "soon_hint" in _cxp)
 check("codex.html KHONG dan sang Quiz khi chua co cau hoi",
@@ -844,6 +853,13 @@ check("moi URL nguon thuoc ten mien NASA",
       all(u.startswith(("https://science.nasa.gov/", "https://spaceplace.nasa.gov/"))
           for u in _cx_urls),
       f"la: {[u for u in _cx_urls if not u.startswith(('https://science.nasa.gov/', 'https://spaceplace.nasa.gov/'))]}")
+# (b) Bo nguon cua so tay phai TRUNG KHOP bo nguon cua bank. Nho vay 12 URL do duoc
+#     `check_quiz_bank.py` kiem 200 THAT tren Chromium cung chinh la bo so tay dung —
+#     khong phai kiem 200 lan thu hai o day.
+_bank_urls = set(re.findall(r'url: "([^"]+)"', _bank))
+check("bo nguon so tay TRUNG KHOP bo nguon bank (de duoc kiem 200 mot lan)",
+      _cx_urls == _bank_urls,
+      f"chi so tay: {sorted(_cx_urls - _bank_urls)} · chi bank: {sorted(_bank_urls - _cx_urls)}")
 
 # --- (7) duong vao tu learn.html + khong con loi hua thuong doc bai ---
 _learn = rd("learn.html")
