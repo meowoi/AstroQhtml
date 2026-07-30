@@ -7,7 +7,7 @@ Liên quan: [`firebase-auth.md`](firebase-auth.md) — phần xác thực đang 
 
 ---
 
-## 0. Tình trạng hiện tại — ĐÃ CHẠY THẬT *(cập nhật 27/07/2026)*
+## 0. Tình trạng hiện tại — ĐÃ CHẠY THẬT *(cập nhật 29/07/2026)*
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -18,9 +18,18 @@ Liên quan: [`firebase-auth.md`](firebase-auth.md) — phần xác thực đang 
 | Lambda `AstroqSV` | ✅ `dotnet10`, arm64, 512 MB |
 | SES gửi email kích hoạt | ✅ từ `no-reply@astroq.org` |
 | Đăng ký 2 giai đoạn | ✅ **34/34 phép kiểm tự động đạt** |
+| `GET\|PUT /me/onboarding` | ✅ route ĐẦU TIÊN đòi ID token — **25/25 đạt ở máy, 25/25 đạt lại trên AWS** (`scratchpad/test_onboarding.py`) |
+| Hồ sơ + Kho Thành Tích | ✅ `/me/profile`, `/me/achievements`, `/me/progress` — **74/74 đạt ở máy, 74/74 đạt lại trên AWS** (`scratchpad/test_profile.py`) |
+| Luật chơi (XP, cấp độ, huy hiệu) | ✅ `Services/Achievements.cs` — **chỉ ở server**, client không tính |
+| Ví Thiên thạch tím | ✅ `Services/Wallet.cs` — **phí do server quyết**, trừ nguyên tử, chống trùng bằng `opId` — **50/50 đạt ở máy, 50/50 đạt lại trên AWS** (`scratchpad/test_wallet.py`) |
 
-Còn thiếu: `POST /auth/login`, `GET /me`, `POST /me/wallet` (đăng nhập hiện chạy
+Còn thiếu: `POST /auth/login`, `GET /me/history`, `/lessons/*` (đăng nhập hiện chạy
 thẳng bằng Firebase Web SDK ở client, chưa cần qua Lambda).
+
+**Đường xác thực token đã chạy thật** kể từ `/me/onboarding`: client lấy ID token bằng
+`AstroQAuth.idToken()`, `js/api.js` gửi kèm `Authorization: Bearer …` (`apiGetAuth`/`apiPutAuth`),
+Lambda xác minh bằng JwtBearer với khoá công khai của Google rồi **lấy uid từ token**. Các route
+`/me/*` còn lại chỉ việc thêm vào nhóm đã có, không phải dựng lại phần này.
 
 ⚠️ Tài khoản AWS đang gắn `AdministratorAccess` để deploy được. **Nên thay bằng bộ
 quyền hẹp** ở mục 7 khi stack đã ổn định.
@@ -286,10 +295,12 @@ DynamoDB, tránh join và giữ mọi truy vấn ở mức một lần đọc.
 
 | Thực thể | PK | SK | Thuộc tính |
 |---|---|---|---|
-| Hồ sơ | `USER#<uid>` | `PROFILE` | `name`, `email`, `character`, `avatar`, `createdAt` |
+| Hồ sơ | `USER#<uid>` | `PROFILE` | `name`, `email`, `character`, `avatar`, `createdAt`, **`tourSeen`, `tourSeenAt`, `intro01Seen`, `intro01SeenAt`, `profileUpdatedAt`** |
+| **Tiến độ** | `USER#<uid>` | **`PROGRESS`** | `xp`, `quizTaken/Answered/Correct/Perfect`, `gamesPlayed`, `lessonsRead`, `flightSeconds`, `meteorsEarned`, `planets` (SS), `bests` (M), `consts` (M), `desk` (L), `badges` (M: id → ngày mở), **`missions` (M: id nhiệm vụ → M: id bước → ngày xong)** |
 | Ví | `USER#<uid>` | `WALLET` | `meteors`, `diamonds`, `updatedAt` |
 | Lịch sử | `USER#<uid>` | `HIST#<ISO8601>` | `type`, `refId`, `delta`, `score` |
-| Bài đã đọc | `USER#<uid>` | `READ#<lessonId>` | `readAt`, `rewarded` |
+| Bài đã đọc | `USER#<uid>` | `READ#<lessonId>` | `readAt` — ghi có điều kiện, chống đọc lại để farm |
+| **Chống trùng** | `USER#<uid>` | **`OP#<opId>`** | `at`, `ttl` (7 ngày) — xem mục 5 |
 | Bài học | `LESSON#<id>` | `META` | `title`, `topic`, `level`, `body`, `reward` |
 
 **Vì sao gộp một bảng:** lấy toàn bộ dữ liệu của một người chỉ cần **một** query
@@ -309,17 +320,73 @@ vì chuỗi ISO 8601 sắp xếp theo thứ tự từ điển trùng với thứ
 
 Tất cả (trừ `/health` và `/lessons`) yêu cầu header `Authorization: Bearer <Firebase ID token>`.
 
+✅ = đã deploy và có bộ test chạy được. Còn lại là thiết kế, chưa viết.
+
 | Method | Đường dẫn | Việc |
 |---|---|---|
-| `GET` | `/health` | Kiểm tra sống — không cần token |
-| `GET` | `/me` | Hồ sơ + ví + tiến độ, gộp trong một lần gọi |
-| `PUT` | `/me` | Cập nhật tên, nhân vật đã chọn |
-| `POST` | `/me/wallet` | Cộng/trừ meteors, diamonds — **server tự tính, không nhận số dư từ client** |
+| `GET` | `/health` | ✅ Kiểm tra sống — không cần token |
+| `GET` | `/me/onboarding` | ✅ Cờ các màn giới thiệu → `{tourSeen, tourSeenAt, intro01Seen, intro01SeenAt}` |
+| `PUT` | `/me/onboarding` | ✅ Ghi cờ. Body `{tourSeen?, intro01Seen?}` — **chỉ ghi cờ được gửi**; body rỗng = `tourSeen:true` (giữ hành vi cũ) |
+| `GET` | `/me/profile` | ✅ Hồ sơ + ví + cấp độ + tiến độ, một lần gọi (`profile.html`) |
+| `GET` | `/me/wallet` | ✅ Số dư Thiên thạch tím |
+| `POST` | `/me/wallet/spend` | ✅ Trừ phí một lượt. Body `{reason:"game", game, opId}` — **KHÔNG nhận số tiền** |
+| `PUT` | `/me/profile` | ✅ Đổi tên / nhân vật / avatar. Body `{name?, character?, avatar?}` |
+| `GET` | `/me/achievements` | ✅ Huy hiệu + tiến độ từng cái + cấp độ (`achievements.html`) |
+| `POST` | `/me/progress` | ✅ Báo **một việc đã làm** → server tự cộng XP + mở huy hiệu |
+| `GET` | `/me/missions` | ✅ Trạng thái nhiệm vụ → `{steps, doneSteps, done, doneAt, codex, codexTotal, unlocks}` |
+| `POST` | `/me/missions/step` | ✅ Báo **xong một bước nhiệm vụ**. Body `{mission, step, opId}` — **KHÔNG nhận con số thưởng nào** |
+| `GET` | `/me/specimens` | ✅ Kho Mẫu Vật (suy ra từ bộ đếm, không có route "đã thu thập") |
+| `PUT` | `/me/specimens/desk` | ✅ Mẫu vật trưng ở khoang lái. Body `{desk:[id,…]}` |
+| `GET` | `/me` | *(gộp vào `/me/profile`)* |
+| `PUT` | `/me` | *(gộp vào `/me/profile`)* |
+| `POST` | `/me/wallet` | *(đã thay bằng `/me/wallet/spend` + phần cộng thưởng trong `/me/progress`)* |
 | `GET` | `/me/history` | Lịch sử hoạt động, phân trang bằng `cursor` |
 | `POST` | `/me/history` | Ghi một sự kiện (làm quiz, đọc bài, chơi game) |
 | `GET` | `/lessons` | Danh sách bài học — công khai, cache được |
 | `GET` | `/lessons/{id}` | Chi tiết một bài |
 | `POST` | `/me/lessons/{id}/complete` | Đánh dấu đã học xong + cộng thưởng |
+
+### Hệ nhiệm vụ — chỗ DUY NHẤT phần thưởng KHÔNG THỂ bịa
+
+`Services/Missions.cs` giữ toàn bộ bảng luật; client **không gửi một con số nào**, chỉ gửi
+`{mission, step}`:
+
+```jsonc
+POST /me/missions/step   { "mission":"earth", "step":"sun", "opId":"…" }
+```
+
+```csharp
+new("earth", "earth", [
+    new("scan",     0,  20, null),
+    new("sun",      20, 30, "sun"),
+    new("rotation", 20, 30, "rotation"),
+    new("life",     20, 40, "water,forest,animal,mountain"),
+    new("core",     20, 40, null)
+], DoneMeteors: 100, DoneXp: 120, Unlocks: "moon");
+```
+
+**Vì sao nhiệm vụ khác hẳn mini-game.** Điểm mini-game là con số client tự khai (server chỉ kẹp
+trần `Wallet.MaxRewardFor`) vì màn chơi chạy ở máy người dùng và server không xem lại được. Nhiệm vụ
+thì mỗi bước có **id cố định**, nên server tra bảng là biết đúng phải cộng bao nhiêu — đây là chỗ
+duy nhất trong app phần thưởng hoàn toàn không bịa được.
+
+**Ba chốt chặn:**
+
+1. **Mỗi bước tính MỘT lần** — `MarkMissionStepAsync` ghi `missions.<mission>.<step>` với
+   `ConditionExpression attribute_not_exists(#m.#q.#s)`. Không phải đọc-rồi-so ở tầng ứng dụng
+   (hai lời gọi song song đều thấy "chưa có").
+2. **Hai map lồng nhau phải tạo bằng HAI lời gọi tường minh** (`missions`, rồi `missions.<mission>`),
+   mỗi lời gọi có `attribute_not_exists` riêng — thứ tự `Dictionary.Keys` trong .NET **không được
+   bảo đảm**, gộp lại thì có lúc ghi map con trước map cha và DynamoDB trả lỗi.
+3. **`opId`** (`SK=OP#<opId>`, TTL 7 ngày) — gửi lại từ hàng chờ khi mất mạng thì không cộng lần hai.
+
+**Xong bước cuối** → server tự ghi thêm `"done"`, cộng bó `DoneMeteors`/`DoneXp`, tính là **đã ghé
+hành tinh** (`BumpProgressAsync` với `m.Planet`) và mở huy hiệu `rookie-astronaut`
+(`metric = "mission:earth"`). Tổng của nhiệm vụ Trái Đất: **180 tt · 280 XP · Codex 6/6**.
+
+⚠️ Cả hai nhánh trả về sớm (`opId` trùng · bước đã xong) **phải trả cùng hình dạng** với nhánh thành
+công — có `missionDone:false, unlocks:null, counted:false`. Thiếu thì client phải tự đoán "không có
+= false", rất dễ sai.
 
 ### Nguyên tắc bảo mật quan trọng nhất
 
@@ -336,8 +403,25 @@ POST /me/lessons/quantum-01/complete   { }  // ✅ server tra bảng, cộng đ�
 POST /me/history  { "type":"quiz", "refId":"ai-l1-q3", "correct":true }
 ```
 
-Hiện `economy.js` đang cho client tự cộng số dư trong localStorage. Khi lên server phải đảo ngược
-hoàn toàn hướng tin cậy này, nếu không thì backend chỉ là chỗ lưu điểm giả.
+**Đã làm được tới đâu (29/07/2026).** `economy.js` giờ chỉ còn là *cache*:
+
+| Việc | Ai quyết | Chốt chặn |
+|---|---|---|
+| **Phí** một lượt chơi | **SERVER hẳn** — client chỉ gửi `game`, server tra `Wallet.Fees` | `UpdateItem` + `ConditionExpression meteors >= :n` (nguyên tử, không âm, không trừ 2 lần) |
+| **Thưởng** tt mỗi lượt | Server **đặt TRẦN** theo loại việc (`Wallet.Award`) | kẹp về `[0, trần]`; `opId` chống cộng 2 lần |
+| **XP / cấp độ / huy hiệu** | **SERVER hẳn** (`Achievements.cs`) | client gửi xp/badges lên thì bị bỏ qua |
+| **Đọc bài / ghé hành tinh** | Server, tính **một lần duy nhất** | `READ#<id>` ghi có điều kiện; `planets` là string set |
+
+⚠️ **Chỗ còn hở, nói rõ để không tự lừa mình:** số tt thu được *trong* một lượt game
+là con số client tự khai — game chạy trên máy người dùng nên server không có cách nào
+tính lại. Trần chặn được mọi con số vô lý nhưng không chặn được người quyết tâm sửa
+DevTools trong khoảng dưới trần. Muốn không thể bịa thì server phải sinh và kiểm câu
+hỏi / màn chơi (server-authoritative gameplay) — việc lớn, chưa làm.
+
+⚠️ **`opId` là bắt buộc, không phải tuỳ chọn.** Client xếp việc vào hàng chờ khi mất
+mạng (`js/progress.js`). Nếu server đã xử lý xong mà phản hồi mất giữa đường thì client
+gửi lại — không có `opId` thì một lượt quiz **cộng tiền hai lần** và một lượt game **bị
+trừ phí hai lần**. Bản ghi `SK=OP#<opId>` ghi có điều kiện, TTL 7 ngày.
 
 ---
 
@@ -421,7 +505,21 @@ app.MapHistoryEndpoints();
 app.Run();
 ```
 
-### `Endpoints/MeEndpoints.cs` — mẫu một nhóm endpoint
+### `Endpoints/MeEndpoints.cs`
+
+> **File này ĐÃ TỒN TẠI thật** (`src/AstroqSV.Api/Endpoints/MeEndpoints.cs`) và hiện chứa
+> `GET|PUT /me/onboarding`. Đoạn mã dưới đây là **bản thiết kế cho các route còn lại** —
+> đọc mã thật để biết cách nhóm `/me` đang được bảo vệ và cách lấy `uid`.
+>
+> Ba điểm đã áp dụng trong mã thật, giữ nguyên khi thêm route:
+> 1. `RequireAuthorization()` gắn ở **cấp group**, không gắn từng route — thêm route mới
+>    là tự có bảo vệ, không phụ thuộc việc người viết có nhớ hay không.
+> 2. **uid lấy từ token**, thử lần lượt `user_id` → `NameIdentifier` → `sub`.
+> 3. Ghi bằng `UpdateItem` + `ConditionExpression attribute_exists(PK)` để **không âm thầm
+>    sinh ra hồ sơ rỗng** khi uid không tồn tại — hồ sơ chỉ được tạo ở `CreateUserAsync`.
+>
+> Bộ test độc lập: `AstroQhtml/scratchpad/test_onboarding.py` (tự tạo tài khoản Firebase tạm
+> để có ID token thật, tự dọn sạch sau khi chạy).
 
 ```csharp
 public static class MeEndpoints
@@ -535,13 +633,50 @@ Outputs:
 
 ```bash
 cd AstroqSV
+rm -rf .aws-sam               # xem cảnh báo bên dưới — bỏ bước này là có ngày deploy gói rỗng
 sam build                     # biên dịch .NET 10 cho arm64
+ls .aws-sam/build/ApiFunction # PHẢI có file, không được rỗng
 sam deploy --guided           # lần đầu: chọn region ap-southeast-1 (Singapore, gần VN nhất)
                               # các lần sau chỉ cần: sam deploy
 ```
 
 `sam deploy` **tự tạo bảng DynamoDB, Lambda, API Gateway, IAM role** theo `template.yaml`.
 Không cần bấm gì trên AWS Console. Kết thúc sẽ in ra `ApiUrl`.
+
+Máy hiện tại chưa có `sam` trong PATH của bash; đường dẫn đầy đủ là
+`C:\Program Files\Amazon\AWSSAMCLI\bin\sam.cmd`. Không có `samconfig.toml` (đã
+`.gitignore`), nên phải truyền tham số:
+
+```powershell
+& "C:\Program Files\Amazon\AWSSAMCLI\bin\sam.cmd" deploy `
+  --stack-name astroqsv --region ap-southeast-1 `
+  --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-jte6tycqojsq `
+  --s3-prefix astroqsv --capabilities CAPABILITY_IAM `
+  --no-fail-on-empty-changeset --no-confirm-changeset
+```
+
+### ⚠️ `sam build` hỏng giữa chừng → `sam deploy` gói thư mục RỖNG
+
+Đã xảy ra thật ngày 29/07/2026. Dự án nằm trong OneDrive nên `sam build` có thể chết
+với `PermissionError: [WinError 5]` khi xoá `.aws-sam/build/ApiFunction` cũ. Lúc đó
+`sam build` **thất bại nhưng để lại thư mục rỗng**, và `sam deploy` chạy tiếp vẫn
+đóng gói đúng cái thư mục đó → Lambda trả:
+
+```
+Uploaded file must be a non-empty zip (Status Code: 400)
+```
+
+CloudFormation tự `UPDATE_ROLLBACK_COMPLETE` nên **bản thật không bị hỏng** — nhưng
+đừng dựa vào đó. Cách xử lý: xoá `.aws-sam` (có thể phải thử vài lần vì OneDrive giữ
+file) rồi `sam build` lại. **Luôn kiểm thư mục artifact không rỗng trước khi deploy**
+— `sam deploy` không tự phát hiện.
+
+Sau khi deploy, chạy lại **cả hai** bộ test API lên bản thật, không chỉ bộ vừa viết:
+
+```powershell
+python scratchpad/test_onboarding.py https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com
+python scratchpad/test_profile.py    https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com
+```
 
 ### Quyền IAM tối thiểu cho người deploy
 
