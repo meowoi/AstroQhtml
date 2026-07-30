@@ -1,0 +1,250 @@
+/* ==========================================================
+   specimen-vault.css — phần RIÊNG của specimen-vault.html.
+
+   Khung chung (nền, .wrap, .hub-top, .hero, .panel, .seg, .banner, .pbtn,
+   .toast, .empty) ở css/page-shell.css — KHÔNG copy lại ở đây.
+
+   Phần riêng của trang này là 3 thứ:
+     1. khoang ngủ đông (.pod) — ống kính tím phát sáng chứa mẫu vật
+     2. màn soi chi tiết (.insp) — kính hiển vi 2 cột
+     3. thanh tiến độ 2 mức + kệ bàn điều khiển
+   ========================================================== */
+
+/* ============ TỔNG QUAN + TIẾN ĐỘ ============ */
+.vault-ov{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-top:26px;}
+@media (max-width:720px){ .vault-ov{grid-template-columns:1fr;} }
+
+.pbar-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.pbar-row .k{font-size:13px;color:var(--ink-soft);}
+.pbar-row .v{font-family:var(--font-mono);font-size:14px;color:var(--purple);}
+.pbar-row .v small{color:var(--ink-faint);}
+
+/* `display:block` BẮT BUỘC — cùng cái bẫy đã gặp ở achievements.css: .pbar và .fill
+   đều là <span>, mà <span> mặc định inline nên `height` bị bỏ qua và thanh tụt về
+   0px, biến mất hẳn khỏi trang dù width vẫn đặt đúng. */
+.pbar{display:block;height:10px;border-radius:999px;overflow:hidden;
+  background:rgba(8,14,38,.75);box-shadow:inset 0 0 0 1px rgba(120,160,255,.18);}
+.pbar .fill{display:block;height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,#8f7bff,var(--purple),var(--cyan));
+  box-shadow:0 0 12px rgba(192,132,252,.7);transition:width .9s var(--ease);}
+
+.vault-side{display:flex;flex-direction:column;gap:9px;min-width:210px;}
+.mini{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 13px;border-radius:14px;border:1px solid var(--brd);background:rgba(15,23,42,.46);}
+.mini .k{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft);}
+.mini .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;}
+.mini.rare{border-color:rgba(255,207,107,.4);background:rgba(38,28,8,.42);}
+.mini.rare .k,.mini.rare .v{color:#ffe9bd;}
+
+/* ============ LƯỚI KHOANG NGỦ ĐÔNG ============
+   Số cột đặt CỐ ĐỊNH theo bề rộng màn, KHÔNG dùng `auto-fill` + `minmax`: trên
+   màn 390px thì `.wrap` còn ~362px, mà `minmax(196px,…)` + gap 14px cần 406px nên
+   auto-fill rơi về **1 cột** — thẻ to bằng cả màn hình, cuộn mãi không hết 20
+   khoang (đo được đúng như vậy trong smoke_vault.py). 2 → 3 → 4 cột. */
+.pods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:16px;}
+@media (min-width:560px){ .pods{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;} }
+@media (min-width:900px){ .pods{grid-template-columns:repeat(4,minmax(0,1fr));} }
+
+.pod{position:relative;display:flex;flex-direction:column;gap:11px;padding:11px 11px 13px;
+  border-radius:18px;border:1px solid var(--brd);background:rgba(15,23,42,.46);
+  text-align:left;font:inherit;color:inherit;
+  transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
+.pod.on{cursor:pointer;border-color:rgba(192,132,252,.5);
+  box-shadow:0 0 15px -2px rgba(192,132,252,.3);}
+.pod.on:hover{transform:translateY(-4px);border-color:rgba(192,132,252,.85);
+  box-shadow:0 0 30px -6px rgba(192,132,252,.6);}
+.pod.on:active{transform:scale(.97);}
+.pod.off{cursor:default;}
+
+/* --- Ống kính chứa mẫu vật --- */
+.pod .glass{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;
+  display:grid;place-items:center;
+  border:1px solid rgba(120,160,255,.2);background:rgba(8,14,38,.72);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.pod.on .glass{border-color:rgba(192,132,252,.5);
+  background:linear-gradient(180deg, rgba(192,132,252,.13), rgba(13,19,34,.8) 55%, rgba(56,189,248,.11));}
+
+/* Nắp trên / đáy khoang — 2 vạch sáng, đủ để nhận ra đây là một cái ống */
+.pod .glass::before,.pod .glass::after{content:"";position:absolute;left:14%;right:14%;height:3px;
+  border-radius:999px;background:rgba(120,160,255,.25);}
+.pod .glass::before{top:6px;}
+.pod .glass::after{bottom:6px;}
+.pod.on .glass::before{background:rgba(192,132,252,.6);box-shadow:0 0 10px rgba(192,132,252,.7);}
+.pod.on .glass::after{background:rgba(56,189,248,.5);box-shadow:0 0 10px rgba(56,189,248,.6);}
+
+/* Hào quang quanh mẫu vật + mẫu vật */
+.pod .halo{position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 44%, rgba(192,132,252,.42), transparent 66%);
+  animation:podBreathe 4.5s ease-in-out infinite;}
+.pod .sp{position:relative;font-size:46px;line-height:1;
+  filter:drop-shadow(0 0 16px rgba(192,132,252,.75));animation:podFloat 5.5s ease-in-out infinite;}
+/* Khoang khoá: mẫu vật còn thấy được BÓNG (đúng "shadowy capsule"), nhưng mờ +
+   nhoè đủ để không đoán ra là gì — tên vẫn là "???" nên hình cũng phải giữ bí mật.
+   Bản đầu để opacity .22 + blur 2px thì trên ảnh chụp KHÔNG còn thấy bóng nào, cái
+   khoang thành một ô đen trơn cạnh ổ khoá. */
+/* Bóng mẫu vật trong khoang chưa mở. HAI thứ bắt buộc, cả hai chỉ phát hiện được
+   bằng cách ĐẾM PIXEL trên ảnh chụp:
+     · cỡ chữ phải LỚN HƠN ổ khoá (46px) — để 42px thì bóng nằm gọn dưới ổ khoá và
+       bị che kín, khoang thành một ô đen trơn;
+     · KHÔNG dùng `grayscale` — trên nền navy tối, một khối xám mờ 50% chỉ chênh nền
+       vài đơn vị sáng, đo được 0 pixel nổi lên. Giữ màu + blur mạnh thì vừa thấy có
+       "cái gì trong đó", vừa không nhận ra là gì (tên vẫn là "???"). */
+.pod.off .sp{font-size:70px;filter:blur(9px);opacity:.5;animation:none;}
+
+@keyframes podBreathe{0%,100%{opacity:.55;transform:scale(.92);}50%{opacity:1;transform:scale(1.05);}}
+@keyframes podFloat{0%,100%{transform:translateY(-4px);}50%{transform:translateY(4px);}}
+
+/* Ổ khoá của khoang chưa mở */
+.pod .lock{position:absolute;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  font-size:19px;border:1px solid rgba(251,146,60,.5);background:rgba(11,15,25,.88);
+  animation:lockPulse 2.6s ease-in-out infinite;}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,.3);}
+  50%{box-shadow:0 0 18px 4px rgba(251,146,60,.22);}}
+
+/* Mã hiệu khoang + huy hiệu "đang trưng trên bàn" */
+.pod .code{position:absolute;top:9px;left:11px;z-index:2;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.14em;color:rgba(125,211,252,.6);}
+.pod .eq{position:absolute;top:8px;right:9px;z-index:2;display:inline-flex;align-items:center;gap:4px;
+  padding:2px 7px;border-radius:999px;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;
+  border:1px solid rgba(74,222,128,.5);background:rgba(10,32,24,.9);color:var(--green);}
+
+/* --- Phần chữ dưới ống kính --- */
+.pod .nm{font-family:var(--font-display);font-weight:700;font-size:14px;line-height:1.28;}
+.pod.off .nm{color:var(--ink-faint);}
+.pod .meta{display:flex;flex-wrap:wrap;gap:5px;}
+.pod .org{font-size:11.5px;color:var(--ink-faint);}
+.pod .cta{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:rgba(125,211,252,.65);
+  margin-top:auto;transition:color .2s;}
+.pod.on:hover .cta{color:var(--cyan);}
+.pod .why{display:flex;gap:6px;font-size:11.5px;line-height:1.45;color:#ffd7a6;}
+.pod .why .ic{flex:none;}
+
+/* Chip độ hiếm — dùng chung cho thẻ và màn soi chi tiết */
+.rr{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+  font-family:var(--font-display);font-weight:600;font-size:10px;letter-spacing:.03em;
+  border:1px solid var(--brd);background:rgba(8,14,38,.6);color:var(--ink-soft);}
+.rr.rare{border-color:rgba(56,189,248,.5);background:rgba(8,30,48,.6);color:#9adcff;}
+.rr.legendary{border-color:rgba(255,207,107,.55);background:rgba(38,28,8,.6);color:#ffe9bd;}
+.cc{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10.5px;
+  border:1px solid var(--brd);background:rgba(15,23,42,.5);color:var(--ink-faint);}
+
+/* ============ MÀN SOI CHI TIẾT (kính hiển vi) ============
+   .modal (định vị + hiện/ẩn) ở css/common.css; đây chỉ là nội dung. */
+.insp{padding:14px;z-index:80;background:rgba(4,7,16,.82);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);overflow:auto;
+  transition:opacity .22s var(--ease),visibility .22s;}
+.insp-card{position:relative;width:100%;max-width:940px;max-height:92vh;overflow:auto;
+  border-radius:20px;border:1px solid rgba(192,132,252,.45);
+  background:linear-gradient(180deg, rgba(17,24,45,.97), rgba(11,15,25,.98));
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.9), 0 0 50px -18px rgba(192,132,252,.45);}
+.modal.show .insp-card{animation:inspPop .3s var(--jelly) both;}
+@keyframes inspPop{from{opacity:0;transform:translateY(14px) scale(.97);}
+  to{opacity:1;transform:none;}}
+
+.insp-top{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid rgba(192,132,252,.22);
+  background:rgba(11,15,25,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+.insp-top .tag{flex:1;min-width:max-content;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.18em;color:var(--cyan);text-transform:uppercase;white-space:nowrap;}
+.insp-x{cursor:pointer;border:1px solid var(--brd);background:rgba(255,255,255,.05);color:var(--ink-soft);
+  border-radius:10px;padding:6px 12px;font-family:var(--font-mono);font-size:11px;
+  transition:border-color .2s,color .2s;}
+.insp-x:hover{border-color:rgba(239,68,68,.6);color:#ffb4b4;}
+
+.insp-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:18px;padding:16px;}
+@media (max-width:820px){ .insp-body{grid-template-columns:1fr;} }
+
+/* --- Cột trái: ống kính hiển vi --- */
+.scope{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(56,189,248,.28);background:#080c16;display:grid;place-items:center;}
+/* Lưới toạ độ + thập tự tâm: vẽ bằng gradient nên không thêm phần tử nào */
+.scope .grid{position:absolute;inset:0;background-image:
+    repeating-linear-gradient(0deg, rgba(56,189,248,.13) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(90deg, rgba(56,189,248,.13) 0 1px, transparent 1px 34px),
+    linear-gradient(rgba(56,189,248,.22),rgba(56,189,248,.22)),
+    linear-gradient(rgba(56,189,248,.22),rgba(56,189,248,.22));
+  background-size:100% 100%,100% 100%,100% 1px,1px 100%;
+  background-position:0 0,0 0,0 50%,50% 0;background-repeat:repeat,repeat,no-repeat,no-repeat;}
+/* Vệt quét dọc. Khoảng sáng phải HẸP (48–52%): để 42–58% thì trên ảnh chụp nó ra
+   một DẢI cyan dày ~60px vắt ngang ống kính, trông như lỗi vẽ chứ không như tia
+   quét đang chạy — cùng bài học với vệt lửa ở ARCADE-01. */
+.scope .scan{position:absolute;left:0;right:0;height:100%;
+  background:linear-gradient(to bottom, transparent 48%, rgba(56,189,248,.62) 50%,
+             transparent 52%);
+  animation:scopeScan 3.2s ease-in-out infinite;}
+@keyframes scopeScan{0%,100%{transform:translateY(-52%);}50%{transform:translateY(52%);}}
+/* Hai vòng ống kính xoay ngược chiều nhau */
+.scope .ring{position:absolute;width:78%;height:78%;border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0deg, rgba(192,132,252,.55) 70deg,
+             transparent 150deg, transparent 210deg, rgba(56,189,248,.5) 285deg, transparent 360deg);
+  -webkit-mask:radial-gradient(circle, transparent 62%, #000 64%);
+  mask:radial-gradient(circle, transparent 62%, #000 64%);
+  animation:scopeSpin 9s linear infinite;}
+.scope .ring2{position:absolute;width:58%;height:58%;border-radius:50%;
+  border:1px dashed rgba(192,132,252,.4);animation:scopeSpin 6s linear infinite reverse;}
+@keyframes scopeSpin{to{transform:rotate(360deg);}}
+
+.scope .sp{position:relative;z-index:2;font-size:96px;line-height:1;
+  filter:drop-shadow(0 0 26px rgba(192,132,252,.8));transition:font-size .45s var(--jelly);}
+.scope.zoom .sp{font-size:170px;}
+.scope .hud{position:absolute;left:11px;bottom:9px;z-index:2;font-family:var(--font-mono);font-size:9px;
+  line-height:1.5;color:rgba(125,211,252,.6);}
+
+.zoom-btn{width:100%;margin-top:11px;cursor:pointer;border-radius:12px;padding:10px 14px;
+  border:1px solid rgba(56,189,248,.35);background:rgba(8,30,48,.5);color:var(--cyan);
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;
+  transition:border-color .2s,background .2s,box-shadow .2s;}
+.zoom-btn:hover{border-color:rgba(56,189,248,.75);background:rgba(8,30,48,.8);}
+.zoom-btn.on{border-color:rgba(56,189,248,.8);box-shadow:0 0 18px -4px rgba(56,189,248,.6);}
+
+/* --- Cột phải: dữ liệu --- */
+.insp-h{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.insp-name{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3.4vw,26px);
+  line-height:1.2;margin:0;}
+.insp-cls{font-family:var(--font-mono);font-size:11.5px;font-style:italic;color:rgba(192,132,252,.85);
+  margin:6px 0 0;}
+.insp-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0;}
+@media (max-width:420px){ .insp-kv{grid-template-columns:1fr;} }
+.insp-kv .cell{padding:9px 12px;border-radius:12px;border:1px solid var(--brd);
+  background:rgba(255,255,255,.035);}
+.insp-kv .k{display:block;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);}
+.insp-kv .v{display:block;margin-top:3px;font-family:var(--font-display);font-weight:600;font-size:13px;}
+
+/* Khối lời linh vật + fun fact */
+.box{position:relative;border-radius:14px;padding:12px 13px;margin-top:13px;}
+.box .lbl{display:flex;align-items:center;gap:7px;margin:0 0 6px;font-family:var(--font-mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;}
+.box p{margin:0;font-size:13.5px;line-height:1.62;color:var(--ink);}
+.box.say{border:1px solid rgba(192,132,252,.35);background:rgba(46,20,72,.32);}
+.box.say .lbl{color:var(--purple);}
+.box.fact{border:1px solid rgba(56,189,248,.26);background:rgba(8,30,48,.34);}
+.box.fact .lbl{color:var(--cyan);}
+.box .src{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:12px;
+  color:var(--cyan);text-decoration:underline;text-underline-offset:3px;}
+
+.insp-acts{display:flex;flex-direction:column;gap:7px;margin-top:14px;}
+.insp-acts .pbtn{width:100%;}
+.desk-btn.eq{background:rgba(10,32,24,.65);border:1px solid rgba(74,222,128,.55);color:#b9f6d0;
+  box-shadow:none;}
+.insp-note{font-size:11.5px;line-height:1.5;color:#ffd7a6;text-align:center;margin:0;}
+
+/* ============ KỆ BÀN ĐIỀU KHIỂN ============ */
+.shelf{display:flex;flex-wrap:wrap;gap:9px;}
+.slot{display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border-radius:14px;
+  border:1px solid var(--brd);background:rgba(15,23,42,.5);font-size:12.8px;color:var(--ink-faint);}
+.slot.full{border-color:rgba(192,132,252,.45);background:rgba(46,20,72,.3);color:var(--ink);}
+.slot .sp{font-size:19px;line-height:1;filter:drop-shadow(0 0 8px rgba(192,132,252,.65));}
+.slot.empty .sp{filter:none;opacity:.35;}
+
+.foot-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;justify-content:center;}
+
+/* ============ prefers-reduced-motion ============
+   Quy ước chung của AstroQ. Bỏ mọi hiệu ứng chạy vô hạn; vệt quét giữ lại ở dạng
+   tĩnh mờ để cột trái không trống trơn. */
+@media (prefers-reduced-motion: reduce){
+  .pod .halo,.pod .sp,.pod .lock,.scope .scan,.scope .ring,.scope .ring2,
+  .modal.show .insp-card{animation:none !important;}
+  .scope .scan{opacity:.25;}
+  .pod.on:hover{transform:none;}
+}

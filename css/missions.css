@@ -1,0 +1,115 @@
+/* ==========================================================
+   missions.css — phần RIÊNG của missions.html (Trung Tâm Nhiệm Vụ).
+
+   Khung chung (tokens, nền, .wrap, header .hub-top, .hero, .panel, .kv,
+   .banner, .currency, .lang-switch, .toast) ở css/page-shell.css — nạp
+   trước file này. ĐỪNG chép khung sang đây.
+
+   Thẻ nhiệm vụ cố ý dựng GIỐNG thẻ trò chơi ở css/games.css (.gcard): hai
+   trang là hai cái sảnh cùng loại, trẻ đi từ sảnh này sang sảnh kia trong vài
+   giây nên chúng phải trông cùng một hệ. Chỉ khác đúng ba thứ, và đó là toàn bộ
+   lý do file này tồn tại:
+     · .mprog   thanh tiến độ "n/8 bước" — nhiệm vụ có tiến độ, trò chơi không
+     · .mcodex  dòng "n/9 mẫu dữ liệu"
+     · .mcard.done  viền xanh khi đã hoàn thành cả nhiệm vụ
+
+   (Chưa gộp .gcard và .mcard thành một class dùng chung: gộp thì phải sửa cả
+   games.html đang chạy tốt, mà hai thẻ mới chỉ giống nhau về hình — chờ tới khi
+   có sảnh thứ ba rồi hãy tách, đủ ba chỗ mới biết phần chung thật sự là gì.)
+   ========================================================== */
+
+/* Cỡ chữ hero to hơn khung chung một chút, y như games.css: đây là trang "chọn
+   nhiệm vụ", tiêu đề là thứ đầu tiên trẻ đọc. */
+.hero h1{font-size:clamp(24px,4.4vw,38px);}
+.hero p{max-width:600px;}
+
+/* ============ LƯỚI NHIỆM VỤ ============ */
+/* minmax 288px (rộng hơn 258px của games.css) vì thẻ nhiệm vụ có thêm thanh tiến
+   độ + dòng mẫu dữ liệu; hẹp hơn thì "n/8 bước" xuống dòng lẻ loi. */
+.missions{display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:22px;margin-top:26px;}
+
+.mcard{position:relative;display:flex;flex-direction:column;border-radius:18px;padding:20px 20px 18px;
+  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.9);
+  border:1px solid var(--neon);
+  background:linear-gradient(180deg,rgba(15,23,42,.62),rgba(15,23,42,.5));
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 22px 50px -24px rgba(0,0,0,.72),0 0 26px -6px var(--neon),
+             inset 0 0 34px -16px var(--neonS);
+  transition:transform .35s var(--jelly),box-shadow .35s var(--ease),border-color .35s var(--ease);}
+.mcard:hover{transform:translateY(-8px) scale(1.02);border-color:var(--neonS);
+  box-shadow:0 34px 66px -22px rgba(0,0,0,.78),0 0 46px -2px var(--neonS),
+             inset 0 0 40px -12px var(--neonS);}
+
+.mcard .hud-line{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-faint);
+  text-transform:uppercase;}
+.mcard .hud-line.top{margin-bottom:14px;}
+.mcard .hud-line.foot{margin-top:12px;border-top:1px dashed rgba(150,180,255,.2);padding-top:10px;}
+.mcard .hud-line .led{width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:blink 1.6s steps(1,end) infinite;margin-right:6px;}
+.mcard .hud-line .soon{color:var(--amber);}
+.mcard .hud-line .online{color:var(--green);}
+
+.mcard .ic{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;
+  background:var(--ic-bg,rgba(56,189,248,.16));border:1px solid var(--neon);
+  box-shadow:inset 0 0 18px -6px var(--neon);margin-bottom:14px;
+  transition:transform .35s var(--jelly);}
+.mcard:hover .ic{transform:scale(1.1) rotate(-6deg);}
+.mcard .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-faint);}
+.mcard h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:4px 0 0;}
+/* `flex:1` đẩy nút xuống đáy thẻ → mọi nút thẳng hàng nhau dù mô tả dài ngắn khác nhau */
+.mcard p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 14px;flex:1;}
+
+/* ---- Thanh tiến độ bước ---- */
+.mprog{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+.mprog .bar{flex:1;display:block;height:7px;border-radius:7px;overflow:hidden;
+  background:rgba(255,255,255,.1);}
+/* Bề rộng do JS đặt theo số bước đã xong (giá trị ĐỘNG — đúng chỗ được phép ghi
+   style inline, y như thanh tiến độ huy hiệu ở achievements.html). */
+.mprog .bar i{display:block;height:100%;width:0;border-radius:7px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .5s var(--ease);}
+.mprog .n{flex:none;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);
+  letter-spacing:.06em;}
+
+/* ---- Dòng mẫu dữ liệu Codex ---- */
+.mcodex{display:flex;align-items:center;gap:7px;margin-bottom:14px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-faint);}
+.mcodex .ic{width:auto;height:auto;margin:0;padding:0;border:none;background:none;
+  box-shadow:none;font-size:13px;line-height:1;}
+/* ⚠️ Bốn thuộc tính "none/0" ở trên KHÔNG phải rác: `.mcard .ic` bên trên là ô
+   emoji 62×62 có viền và hào quang. Dòng Codex cũng dùng class `.ic` (cho khớp lối
+   viết của các trang khác), nên phải trả nó về một emoji trơn — thiếu là ra một ô
+   vuông to đùng nằm giữa thẻ. */
+
+/* ---- Nút mở nhiệm vụ (đồng bộ với .play-btn của games.css) ---- */
+.play-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  border:none;width:100%;padding:13px 18px;border-radius:14px;
+  font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
+  background:linear-gradient(120deg,var(--cyan),#2f80ed);
+  box-shadow:0 12px 26px -12px rgba(56,189,248,.7);
+  transition:transform .3s var(--jelly),filter .2s;}
+.play-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
+.play-btn:active{transform:scale(.93);}
+/* Nút "Sắp ra mắt" — trong suốt, viền nét đứt. KHÔNG dùng `grayscale` trên nền
+   gradient: đo trên ảnh chụp ở màn tổng kết nhiệm vụ thì nó ra một khối sáng HƠN
+   cả nút đang dùng được, tức là hút mắt vào đúng cái bấm không được. */
+.play-btn.locked{background:transparent;color:var(--ink-faint);
+  border:1px dashed rgba(120,160,255,.32);box-shadow:none;cursor:not-allowed;}
+.play-btn.locked:hover{filter:none;transform:none;}
+
+.mcard.soon{opacity:.9;}
+/* Đã hoàn thành: đổi sang tông XANH LÁ, không phải chỉ thêm một cái nhãn — trẻ nhìn
+   cả lưới là thấy ngay nhiệm vụ nào đã xong. */
+.mcard.done{--neon:rgba(74,222,128,.45);--neonS:rgba(74,222,128,.9);}
+.mcard.done .play-btn{background:linear-gradient(120deg,var(--green),#22c55e);
+  box-shadow:0 12px 26px -12px rgba(74,222,128,.7);}
+
+/* Màu nhấn từng nhiệm vụ */
+.card--earth{--neon:rgba(56,189,248,.42);--neonS:rgba(56,189,248,.95);--ic-bg:rgba(56,189,248,.18);}
+.card--moon {--neon:rgba(203,213,225,.34);--neonS:rgba(203,213,225,.8);--ic-bg:rgba(203,213,225,.14);}
+
+@media (max-width:600px){
+  .missions{gap:16px;}
+  .mcard{padding:16px 16px 15px;}
+}

@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Kho Mẫu Vật Vũ Trụ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/specimen-vault.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/specimens.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/constellations.js"></script>
+<script src="js/progress.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ SPECIMEN_VAULT_HUD ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow" data-i18n="eyebrow">📦 Kho Mẫu Vật Vũ Trụ</span>
+    <h1 data-i18n="title_h">Phòng bảo tàng của phi thuyền Luna</h1>
+    <p data-i18n="intro">Drone thăm dò mang mẫu vật về đây, ngủ đông trong các khoang kính tím. Bấm vào một khoang đã mở để soi thật gần.</p>
+  </section>
+
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <!-- ============ TIẾN ĐỘ ============ -->
+  <section class="panel vault-ov">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_ov">TỔNG QUAN</span></span>
+    <div>
+      <div class="pbar-row">
+        <span class="k" data-i18n="prog_k">Mẫu vật đã thu thập</span>
+        <span class="v" id="prog-v">0/20 <small>(0%)</small></span>
+      </div>
+      <span class="pbar" role="progressbar" id="pbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"
+            data-i18n-aria="prog_k" aria-label="Mẫu vật đã thu thập"><span class="fill" id="pfill"></span></span>
+    </div>
+    <div class="vault-side">
+      <div class="mini rare">
+        <span class="k"><span aria-hidden="true">✨</span><span data-i18n="rare_k">Mẫu vật hiếm</span></span>
+        <span class="v" id="rare-v">0/5</span>
+      </div>
+      <div class="mini">
+        <span class="k"><span aria-hidden="true">🛠️</span><span data-i18n="desk_k">Bàn điều khiển</span></span>
+        <span class="v" id="desk-v">0/3</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BỘ LỌC NHÓM ============ -->
+  <div class="filters">
+    <span class="lbl" data-i18n="filter_cat">Nhóm mẫu vật</span>
+    <div class="seg" id="f-cat"></div>
+  </div>
+
+  <section class="pods" id="pods"></section>
+  <div class="empty" id="pods-empty" style="display:none">
+    <span class="ic" aria-hidden="true">🔍</span>
+    <span data-i18n="none_here">Không có mẫu vật nào ở nhóm này.</span>
+  </div>
+
+  <!-- ============ BÀN ĐIỀU KHIỂN KHOANG LÁI ============ -->
+  <section class="panel" id="desk-panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_desk">BÀN ĐIỀU KHIỂN</span></span>
+    <h2><span class="ic" aria-hidden="true">🚀</span><span data-i18n="desk_title">Mẫu vật trưng ở khoang lái</span></h2>
+    <p class="panel-sub" id="desk-intro"></p>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <div class="foot-links">
+    <a class="pbtn" href="library.html" data-i18n="go_notebook">📖 Sổ Tay Khám Phá</a>
+    <a class="pbtn ghost" href="explorer.html" data-i18n="go_map">🗺️ Bản Đồ Thiên Hà</a>
+    <a class="pbtn ghost" href="achievements.html" data-i18n="go_awards">🏆 Kho Thành Tích</a>
+  </div>
+</div>
+
+<!-- ============ MÀN SOI CHI TIẾT (kính hiển vi) ============ -->
+<!-- Bật/tắt bằng class .show như mọi modal khác của AstroQ (.modal ở css/common.css
+     đã có opacity/visibility) — KHÔNG dùng thuộc tính `hidden`, vì `display:flex`
+     của .modal thắng `display:none` mà UA gán cho [hidden], nên nó không có tác dụng. -->
+<div class="modal insp" id="insp" role="dialog" aria-modal="true" aria-labelledby="insp-name">
+  <div class="insp-card" id="insp-card"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     Kho Mẫu Vật Vũ Trụ (Specimen Vault).
+
+     SERVER là nơi DUY NHẤT quyết mẫu vật nào đã thu thập — và nó SUY RA từ bộ
+     đếm tiến độ (AstroqSV/Services/Specimens.cs), không có route "thu thập mẫu
+     vật" nào. Trang này chỉ vẽ: tên/lời linh vật/fun fact lấy ở js/specimens.js,
+     `current`/`goal`/`unlocked` lấy nguyên từ API.
+
+     Thứ DUY NHẤT trang này ghi lên server là **bàn điều khiển** (tối đa 3 mẫu
+     trưng ở khoang lái) qua `PUT /me/specimens/desk`.
+
+     Không gọi được server → KHÔNG tự đoán mẫu nào đã thu thập. Hiện dải nhắc và
+     vẽ toàn bộ 20 khoang ở trạng thái khoá, kèm câu nhắc cách mở — trang vẫn có
+     ích vì trẻ thấy được mình đang hướng tới cái gì.
+     ============================================================ */
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Trung Tâm Điều Hướng",
+      eyebrow:"📦 Kho Mẫu Vật Vũ Trụ",
+      title_h:"Phòng bảo tàng của phi thuyền Luna",
+      intro:"Drone thăm dò mang mẫu vật về đây, ngủ đông trong các khoang kính tím. Bấm vào một khoang đã mở để soi thật gần.",
+      tag_ov:"Tổng quan", prog_k:"Mẫu vật đã thu thập",
+      rare_k:"Mẫu vật hiếm", desk_k:"Bàn điều khiển",
+      filter_cat:"Nhóm mẫu vật", f_all:"Tất cả",
+      none_here:"Không có mẫu vật nào ở nhóm này.",
+      pod_cta:"[ SOI CHI TIẾT ]", pod_unknown:"???",
+      tag_desk:"Bàn điều khiển", desk_title:"Mẫu vật trưng ở khoang lái",
+      desk_intro:"Chọn tối đa {n} mẫu vật để đặt lên bàn điều khiển. Mở một khoang rồi bấm “Đặt lên Bàn Điều Khiển”.",
+      slot_empty:"Chỗ trống",
+      scope_tag:"[ MICROSCOPE SCANNER {x} ]",
+      zoom_in:"[ 🔍 Soi Phóng To (Zoom Mode) ]", zoom_out:"[ 🔍 Thu Nhỏ Lại ]",
+      hud_zoom:"ZOOM: {x}", hud_temp:"STASIS: −80°C · OK", hud_int:"INTEGRITY: 100%",
+      close:"[ ĐÓNG × ]",
+      insp_origin:"Nguồn gốc", insp_state:"Trạng thái",
+      state_on:"Đã thu thập", state_off:"Chưa mở khoá",
+      say_lbl:"[ {who} · NHẬT KÝ THOẠI ]", fact_lbl:"[ FUN FACT · DỮ LIỆU KHOA HỌC ]",
+      src_lbl:"Nguồn tham chiếu: {s}",
+      desk_put:"🚀 Đặt lên Bàn Điều Khiển Khoang Lái",
+      desk_take:"✓ Đang trên bàn — bấm để lấy xuống",
+      desk_full:"Bàn điều khiển đã đầy — lấy bớt một mẫu vật xuống trước nhé.",
+      locked_note:"Khoang này chưa mở. {h}.",
+      go_notebook:"📖 Sổ Tay Khám Phá", go_map:"🗺️ Bản Đồ Thiên Hà", go_awards:"🏆 Kho Thành Tích",
+      off_guest:"Bạn chưa đăng nhập nên chưa có kho mẫu vật. <a href=\"landing-app.html\">Đăng nhập</a> để drone bắt đầu thu thập mẫu cho bạn.",
+      off_net:"Không kết nối được máy chủ nên chưa xem được kho mẫu vật. Các khoang dưới đây đang hiện ở trạng thái khoá. Thử tải lại trang sau nhé.",
+      t_put:"🚀 Đã đặt {n} lên bàn điều khiển!", t_take:"Đã lấy {n} xuống khỏi bàn điều khiển.",
+      t_err:"Chưa lưu được lựa chọn lên máy chủ. Thử lại sau nhé.",
+      title:"AstroQ — Kho Mẫu Vật Vũ Trụ"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Navigation Hub",
+      eyebrow:"📦 Specimen Vault",
+      title_h:"The museum room of starship Luna",
+      intro:"Survey drones bring samples back here, held in stasis inside glowing purple pods. Tap an unlocked pod to take a closer look.",
+      tag_ov:"Overview", prog_k:"Specimens collected",
+      rare_k:"Rare specimens", desk_k:"Cockpit desk",
+      filter_cat:"Specimen group", f_all:"All",
+      none_here:"No specimens in this group.",
+      pod_cta:"[ INSPECT ]", pod_unknown:"???",
+      tag_desk:"Cockpit desk", desk_title:"Specimens on display in the cockpit",
+      desk_intro:"Pick up to {n} specimens to place on the cockpit desk. Open a pod, then press “Place on Cockpit Desk”.",
+      slot_empty:"Empty slot",
+      scope_tag:"[ MICROSCOPE SCANNER {x} ]",
+      zoom_in:"[ 🔍 Zoom Mode ]", zoom_out:"[ 🔍 Zoom Out ]",
+      hud_zoom:"ZOOM: {x}", hud_temp:"STASIS: −80°C · OK", hud_int:"INTEGRITY: 100%",
+      close:"[ CLOSE × ]",
+      insp_origin:"Origin", insp_state:"Status",
+      state_on:"Collected", state_off:"Locked",
+      say_lbl:"[ {who} · VOICE LOG ]", fact_lbl:"[ FUN FACT · SCIENCE DATA ]",
+      src_lbl:"Reference: {s}",
+      desk_put:"🚀 Place on Cockpit Desk",
+      desk_take:"✓ On the desk — tap to take it off",
+      desk_full:"The cockpit desk is full — take one specimen off first.",
+      locked_note:"This pod is still sealed. {h}.",
+      go_notebook:"📖 Discovery Notebook", go_map:"🗺️ Galaxy Map", go_awards:"🏆 Trophy Hold",
+      off_guest:"You are not signed in, so there is no vault yet. <a href=\"landing-app.html\">Sign in</a> and the drones will start collecting for you.",
+      off_net:"Can't reach the server, so the vault is unavailable. The pods below are shown locked. Try reloading later.",
+      t_put:"🚀 {n} is now on the cockpit desk!", t_take:"Took {n} off the cockpit desk.",
+      t_err:"Couldn't save your choice to the server. Try again later.",
+      title:"AstroQ — Specimen Vault"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 3000);
+  var esc = AstroQ.esc;
+
+  var SLOTS_FALLBACK = 3;   // chỉ dùng khi chưa gọi được server; server là nguồn thật
+
+  var VIEW = { ok:false, reason:"", items:[], desk:[],
+               summary:{ collected:0, total:0, rare:0, rareTotal:0, deskSlots:SLOTS_FALLBACK } };
+  var FILTER = "all";
+  var OPEN = null;      // id mẫu vật đang soi
+  var LAST = "";        // khoang vừa mở — để trả tiêu điểm về đó lúc đóng modal
+  var ZOOM = false;
+  var saving = false;   // chặn bấm liên tiếp làm 2 lời gọi chồng nhau
+
+  function slots(){ return VIEW.summary.deskSlots || SLOTS_FALLBACK; }
+  function item(id){
+    for(var i=0;i<VIEW.items.length;i++) if(VIEW.items[i].id===id) return VIEW.items[i];
+    return null;
+  }
+
+  /* ---------------- Nạp ----------------
+     Không gọi được server thì vẫn dựng đủ 20 khoang ở trạng thái KHOÁ, lấy danh
+     mục từ js/specimens.js. Cố ý KHÔNG đoán mẫu nào đã thu thập — nhưng cũng
+     không để trang trắng, vì phần "cách mở khoá" tự nó đã có ích. */
+  function lockedFallback(){
+    return AstroQSpecimens.ids().map(function(id){
+      return { id:id, category:"", rarity:"common", origin:"", metric:"", goal:1,
+               current:0, unlocked:false, equipped:false };
+    });
+  }
+
+  function load(){
+    AstroQProgress.specimens().then(function(r){
+      if(r && r.ok){
+        var s = (r.data && r.data.specimens) || {};
+        VIEW.ok = true;
+        VIEW.items = s.specimens || [];
+        VIEW.desk = s.desk || [];
+        VIEW.summary = s.summary || VIEW.summary;
+      } else {
+        VIEW.ok = false;
+        VIEW.reason = (r && r.reason) || "net";
+        VIEW.items = lockedFallback();
+        VIEW.desk = [];
+        VIEW.summary = { collected:0, total:VIEW.items.length, rare:0, rareTotal:0,
+                         deskSlots:SLOTS_FALLBACK };
+      }
+      render();
+    });
+  }
+
+  /* ---------------- Vẽ: tổng quan ---------------- */
+  function renderOverview(){
+    var s = VIEW.summary;
+    var total = s.total || 0, got = s.collected || 0;
+    var pct = total > 0 ? Math.round(got / total * 100) : 0;
+
+    /* Chưa gọi được server thì KHÔNG có con số nào để hiện — dùng dấu "—".
+       Trước đó chỗ này hiện "0/0" cho mẫu vật hiếm, mà "0/0" đọc ra là "kho này
+       không có mẫu hiếm nào", tức là bịa một điều sai. Còn "—" nói đúng sự thật:
+       chưa biết. Cùng nguyên tắc "không đoán không bịa" của dashboard. */
+    var dash = "—";
+    $("prog-v").innerHTML = VIEW.ok
+      ? got + "/" + total + " <small>(" + pct + "%)</small>"
+      : dash + "/" + total;
+    // width là giá trị ĐỘNG do dữ liệu sinh — đúng ngoại lệ của quy tắc "không style inline"
+    $("pfill").style.width = (VIEW.ok ? pct : 0) + "%";
+    var pb = $("pbar");
+    pb.setAttribute("aria-valuemax", total);
+    pb.setAttribute("aria-valuenow", VIEW.ok ? got : 0);
+
+    $("rare-v").textContent = VIEW.ok ? (s.rare || 0) + "/" + (s.rareTotal || 0) : dash;
+    $("desk-v").textContent = (VIEW.ok ? VIEW.desk.length : dash) + "/" + slots();
+    $("desk-intro").textContent = t("desk_intro").replace("{n}", slots());
+  }
+
+  /* ---------------- Vẽ: bộ lọc nhóm ---------------- */
+  function renderFilter(){
+    var keys = Object.keys(AstroQSpecimens.cats);
+    var html = '<button type="button" data-v="all"'+(FILTER==="all"?' class="on"':'')+'>'+
+               '🧪 '+t("f_all")+'<span class="n">'+VIEW.items.length+'</span></button>';
+    html += keys.map(function(k){
+      var n = VIEW.items.filter(function(x){ return x.category === k; }).length;
+      return '<button type="button" data-v="'+k+'"'+(FILTER===k?' class="on"':'')+
+             ' title="'+esc(AstroQSpecimens.catSub(k, LANG))+'">'+
+             AstroQSpecimens.catIcon(k)+' '+esc(AstroQSpecimens.catName(k, LANG))+
+             '<span class="n">'+n+'</span></button>';
+    }).join("");
+    $("f-cat").innerHTML = html;
+    Array.prototype.forEach.call($("f-cat").querySelectorAll("button"), function(b){
+      b.addEventListener("click", function(){
+        FILTER = b.getAttribute("data-v"); renderFilter(); renderPods();
+      });
+    });
+  }
+
+  /* ---------------- Vẽ: lưới khoang ngủ đông ---------------- */
+  function renderPods(){
+    var list = VIEW.items.filter(function(x){
+      return FILTER === "all" || x.category === FILTER;
+    });
+    // Đã mở lên trước, trong đó cái gần đạt nhất lên đầu — trẻ thấy ngay cái sắp
+    // mở được, giống cách sắp xếp ở achievements.html.
+    list = list.slice().sort(function(a,b){
+      if(a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
+      var pa = a.goal > 0 ? a.current/a.goal : 0, pb = b.goal > 0 ? b.current/b.goal : 0;
+      return pb - pa;
+    });
+
+    $("pods-empty").style.display = list.length === 0 ? "" : "none";
+    $("pods").innerHTML = list.map(function(x){
+      var on = !!x.unlocked;
+      var nm = on ? AstroQSpecimens.name(x.id, LANG) : t("pod_unknown");
+      var code = x.id.replace(/[^a-z]/g, "").slice(0,3).toUpperCase();
+      var body;
+      if(on){
+        body =
+          '<span class="nm">'+esc(nm)+'</span>'+
+          '<span class="meta">'+
+            '<span class="rr '+x.rarity+'">'+AstroQSpecimens.rarityTag(x.rarity)+'</span>'+
+            '<span class="cc">'+AstroQSpecimens.catIcon(x.category)+' '+
+              esc(AstroQSpecimens.catName(x.category, LANG))+'</span>'+
+          '</span>'+
+          '<span class="org">'+AstroQSpecimens.originIcon(x.origin)+' '+
+            esc(AstroQSpecimens.originName(x.origin, LANG))+'</span>'+
+          '<span class="cta">'+t("pod_cta")+'</span>';
+      } else {
+        body =
+          '<span class="nm">'+esc(nm)+'</span>'+
+          '<span class="why"><span class="ic" aria-hidden="true">🔒</span><span>'+
+            esc(AstroQSpecimens.hint(x.metric, x.goal, LANG))+'</span></span>';
+      }
+      return '<button type="button" class="pod '+(on?"on":"off")+'" data-id="'+x.id+'"'+
+             (on ? '' : ' disabled')+' aria-label="'+esc(on ? nm : nm+" — "+
+               AstroQSpecimens.hint(x.metric, x.goal, LANG))+'">'+
+        '<span class="code" aria-hidden="true">POD-'+code+'</span>'+
+        (x.equipped ? '<span class="eq">✓ '+esc(t("desk_k"))+'</span>' : '')+
+        '<span class="glass">'+
+          (on ? '<span class="halo" aria-hidden="true"></span>' : '')+
+          '<span class="sp" aria-hidden="true">'+AstroQSpecimens.icon(x.id)+'</span>'+
+          (on ? '' : '<span class="lock" aria-hidden="true">🔒</span>')+
+        '</span>'+ body +
+      '</button>';
+    }).join("");
+
+    Array.prototype.forEach.call($("pods").querySelectorAll(".pod.on"), function(b){
+      b.addEventListener("click", function(){ openInsp(b.getAttribute("data-id")); });
+    });
+  }
+
+  /* ---------------- Vẽ: kệ bàn điều khiển ---------------- */
+  function renderShelf(){
+    var html = "";
+    for(var i=0;i<slots();i++){
+      var id = VIEW.desk[i];
+      if(id){
+        html += '<span class="slot full"><span class="sp" aria-hidden="true">'+
+                AstroQSpecimens.icon(id)+'</span>'+esc(AstroQSpecimens.name(id, LANG))+'</span>';
+      } else {
+        html += '<span class="slot empty"><span class="sp" aria-hidden="true">➕</span>'+
+                esc(t("slot_empty"))+'</span>';
+      }
+    }
+    $("shelf").innerHTML = html;
+  }
+
+  function renderBanner(){
+    var el = $("offline");
+    if(VIEW.ok){ el.classList.remove("show"); return; }
+    $("offline-msg").innerHTML = VIEW.reason === "auth" ? t("off_guest") : t("off_net");
+    el.classList.add("show");
+  }
+
+  function render(){
+    renderOverview(); renderFilter(); renderPods(); renderShelf(); renderBanner();
+    if(OPEN) renderInsp();
+  }
+
+  /* ---------------- Màn soi chi tiết ---------------- */
+  function openInsp(id){
+    var x = item(id);
+    if(!x || !x.unlocked) return;
+    OPEN = id; LAST = id; ZOOM = false;
+    renderInsp();
+    var m = $("insp");
+    // Bật class ở khung sau để transition opacity của .modal chạy được (từ 0 → 1)
+    requestAnimationFrame(function(){ m.classList.add("show"); });
+    var x0 = $("insp-x"); if(x0) x0.focus();
+  }
+
+  function closeInsp(){
+    OPEN = null; ZOOM = false;
+    $("insp").classList.remove("show");
+    // Trả tiêu điểm về đúng khoang vừa xem để người dùng bàn phím không bị mất chỗ
+    var back = document.querySelector('.pod[data-id="' + CSS.escape(LAST || "") + '"]');
+    if(back) back.focus();
+  }
+
+  function renderInsp(){
+    var x = item(OPEN);
+    if(!x) return;
+    var eq = VIEW.desk.indexOf(x.id) !== -1;
+    var full = VIEW.desk.length >= slots();
+    var say = AstroQSpecimens.mascot(x.id, LANG);
+    var src = AstroQSpecimens.source(x.id);
+    var zx = ZOOM ? "40X" : "10X";
+
+    $("insp-card").innerHTML =
+      '<div class="insp-top">'+
+        '<span class="tag">🔬 '+t("scope_tag").replace("{x}", zx)+'</span>'+
+        '<button class="insp-x" id="insp-x" type="button">'+esc(t("close"))+'</button>'+
+      '</div>'+
+      '<div class="insp-body">'+
+        '<div>'+
+          '<div class="scope'+(ZOOM?" zoom":"")+'" id="scope">'+
+            '<span class="grid" aria-hidden="true"></span>'+
+            '<span class="scan" aria-hidden="true"></span>'+
+            '<span class="ring" aria-hidden="true"></span>'+
+            '<span class="ring2" aria-hidden="true"></span>'+
+            '<span class="sp" aria-hidden="true">'+AstroQSpecimens.icon(x.id)+'</span>'+
+            '<span class="hud" aria-hidden="true">'+
+              t("hud_zoom").replace("{x}", ZOOM?"40.0x":"10.0x")+'<br/>'+
+              t("hud_temp")+'<br/>'+t("hud_int")+
+            '</span>'+
+          '</div>'+
+          '<button class="zoom-btn'+(ZOOM?" on":"")+'" id="zoom" type="button" aria-pressed="'+ZOOM+'">'+
+            esc(ZOOM ? t("zoom_out") : t("zoom_in"))+'</button>'+
+        '</div>'+
+        '<div>'+
+          '<div class="insp-h">'+
+            '<span class="rr '+x.rarity+'">'+AstroQSpecimens.rarityTag(x.rarity)+' · '+
+              esc(AstroQSpecimens.rarityName(x.rarity, LANG))+'</span>'+
+            '<span class="cc">'+AstroQSpecimens.catIcon(x.category)+' '+
+              esc(AstroQSpecimens.catName(x.category, LANG))+'</span>'+
+          '</div>'+
+          '<h2 class="insp-name" id="insp-name">'+AstroQSpecimens.icon(x.id)+' '+
+            esc(AstroQSpecimens.name(x.id, LANG))+'</h2>'+
+          '<p class="insp-cls">'+esc(AstroQSpecimens.classification(x.id))+'</p>'+
+          '<div class="insp-kv">'+
+            '<span class="cell"><span class="k">'+esc(t("insp_origin"))+'</span>'+
+              '<span class="v">'+AstroQSpecimens.originIcon(x.origin)+' '+
+              esc(AstroQSpecimens.originName(x.origin, LANG))+'</span></span>'+
+            '<span class="cell"><span class="k">'+esc(t("insp_state"))+'</span>'+
+              '<span class="v">✓ '+esc(t("state_on"))+'</span></span>'+
+          '</div>'+
+          (say ?
+            '<div class="box say"><p class="lbl">'+say.ic+' '+
+              esc(t("say_lbl").replace("{who}", say.name.toUpperCase()))+'</p>'+
+              '<p>“'+esc(say.line)+'”</p></div>' : '')+
+          '<div class="box fact"><p class="lbl">✨ '+esc(t("fact_lbl"))+'</p>'+
+            '<p>'+esc(AstroQSpecimens.fact(x.id, LANG))+'</p>'+
+            (src ? '<a class="src" href="'+src.url+'" target="_blank" rel="noopener noreferrer">'+
+                   esc(t("src_lbl").replace("{s}", src.label))+' ↗</a>' : '')+
+          '</div>'+
+          '<div class="insp-acts">'+
+            '<button class="pbtn desk-btn'+(eq?" eq":"")+'" id="desk-btn" type="button"'+
+              ((!eq && full) ? ' disabled' : '')+' aria-pressed="'+eq+'">'+
+              esc(eq ? t("desk_take") : t("desk_put"))+'</button>'+
+            ((!eq && full) ? '<p class="insp-note">'+esc(t("desk_full"))+'</p>' : '')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+    $("insp-x").addEventListener("click", closeInsp);
+    $("zoom").addEventListener("click", function(){ ZOOM = !ZOOM; renderInsp(); });
+    $("desk-btn").addEventListener("click", function(){ toggleDesk(x.id); });
+  }
+
+  /* ---------------- Đặt / lấy mẫu vật khỏi bàn điều khiển ----------------
+     Đổi giao diện NGAY rồi mới gọi API (cùng lý do như đổi trang phục ở
+     profile.html: chờ mạng xong mới nhấp nháy thì cảm giác như bấm không ăn).
+     Server từ chối → trả lại đúng trạng thái cũ + toast, không im lặng. */
+  function toggleDesk(id){
+    if(saving) return;
+    var was = VIEW.desk.slice();
+    var i = VIEW.desk.indexOf(id);
+    var adding = i === -1;
+
+    if(adding){
+      if(VIEW.desk.length >= slots()){ toast(t("desk_full"), "bad"); return; }
+      VIEW.desk.push(id);
+    } else {
+      VIEW.desk.splice(i, 1);
+    }
+    // Cờ `equipped` trong VIEW.items phải đi theo, không thì huy hiệu trên thẻ lệch
+    VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+    render();
+
+    var name = AstroQSpecimens.name(id, LANG);
+    saving = true;
+    AstroQProgress.setDesk(VIEW.desk.slice()).then(function(r){
+      saving = false;
+      if(r && r.ok){
+        // Server là nguồn thật: nhận lại đúng danh sách nó đã lưu
+        VIEW.desk = (r.data && r.data.desk) || VIEW.desk;
+        VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+        render();
+        toast(t(adding ? "t_put" : "t_take").replace("{n}", name), "ok");
+      } else {
+        VIEW.desk = was;
+        VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+        render();
+        toast(t("t_err"), "bad");
+      }
+    });
+  }
+
+  /* ---------------- Ngôn ngữ + khởi tạo ---------------- */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    render();
+  }
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  $("back").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
+  $("insp").addEventListener("click", function(e){ if(e.target === $("insp")) closeInsp(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && OPEN) closeInsp(); });
+
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  // Vẽ khung khoá trước để trang không trắng trong lúc chờ mạng
+  VIEW.items = lockedFallback();
+  VIEW.summary.total = VIEW.items.length;
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  load();
+})();
+</script>
+<script type="module" src="js/firebase-auth.js"></script>
+</body>
+</html>

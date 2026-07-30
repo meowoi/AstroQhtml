@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trung Tâm Nhiệm Vụ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/missions.css" />
+<script src="js/ui-common.js"></script>
+<!-- Tên hành tinh song ngữ — CHỖ DUY NHẤT khai báo (js/planets.js) -->
+<script src="js/planets.js"></script>
+<script src="js/progress.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <!-- ============ HEADER ============ -->
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ MISSION_CONTROL ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <span class="eyebrow" data-i18n="eyebrow">🎯 Trung Tâm Nhiệm Vụ</span>
+    <h1 data-i18n="title_h">Chọn một nhiệm vụ để nhận lệnh</h1>
+    <p data-i18n="intro">Mỗi nhiệm vụ là một hành tinh, chia thành nhiều bước. Làm xong bước nào là tiến độ được ghi lại, lần sau vào chơi tiếp từ đó.</p>
+  </section>
+
+  <!-- Dải nhắc khi chưa đăng nhập / mất mạng: các con số hiện dấu "—" chứ không
+       hiện 0, vì "0/8 bước" là một lời khẳng định SAI về tiến độ của người chơi. -->
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <!-- ============ TỔNG QUAN ============ -->
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_ov">TỔNG QUAN</span></span>
+    <h2><span class="ic" aria-hidden="true">🛰️</span><span data-i18n="ov_h">Bảng điều phối</span></h2>
+    <div class="kv" id="ov"></div>
+  </section>
+
+  <!-- ============ LƯỚI NHIỆM VỤ (đổ từ JS) ============ -->
+  <section class="missions" id="missions"></section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var $ = AstroQ.$;
+
+  /* ================= i18n ================= */
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím",
+      title:"AstroQ — Trung Tâm Nhiệm Vụ", back:"Về Trung Tâm Điều Hướng",
+      eyebrow:"🎯 Trung Tâm Nhiệm Vụ", title_h:"Chọn một nhiệm vụ để nhận lệnh",
+      intro:"Mỗi nhiệm vụ là một hành tinh, chia thành nhiều bước. Làm xong bước nào là tiến độ được ghi lại, lần sau vào chơi tiếp từ đó.",
+      tag_ov:"Tổng quan", ov_h:"Bảng điều phối",
+      ov_done:"Nhiệm vụ hoàn thành", ov_steps:"Bước đã xong", ov_codex:"Mẫu dữ liệu",
+      steps_unit:"bước", codex_unit:"mẫu dữ liệu",
+      soon:"Sắp ra mắt", complete:"HOÀN THÀNH",
+      start:"Bắt đầu nhiệm vụ", resume:"Tiếp tục nhiệm vụ", replay:"Chơi lại nhiệm vụ",
+      soon_toast:"🚧 Nhiệm vụ này sắp ra mắt — hoàn thành Nhiệm Vụ 01 trước nhé!",
+      start_toast:"🚀 Đang mở nhiệm vụ…",
+      off_guest:"Bạn chưa đăng nhập nên tiến độ nhiệm vụ đang hiện dấu “—”. <a href=\"landing-app.html\">Đăng nhập</a> để xem tiến độ thật của mình.",
+      off_net:"Không kết nối được máy chủ nên tiến độ nhiệm vụ đang hiện dấu “—”. Kiểm tra mạng rồi tải lại trang nhé.",
+      m_earth_tag:"Nhiệm vụ 01 · Trái Đất", m_earth_name:"Hành Tinh Xanh",
+      m_earth_desc:"Quét hành tinh, lần theo 4,5 tỷ năm lịch sử, thay khói đen bằng năng lượng sạch, thu mẫu sự sống rồi giải mã Trái Đất.",
+      m_moon_tag:"Nhiệm vụ 02 · Mặt Trăng", m_moon_name:"Người Bạn Của Trái Đất",
+      m_moon_desc:"Hạ cánh xuống Mặt Trăng, tìm hiểu vì sao nó luôn quay cùng một mặt về phía chúng ta."
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor",
+      title:"AstroQ — Mission Control", back:"Back to Navigation Hub",
+      eyebrow:"🎯 Mission Control", title_h:"Pick a mission to get your orders",
+      intro:"Each mission is a planet, split into steps. Every step you finish is saved, so next time you pick up where you left off.",
+      tag_ov:"Overview", ov_h:"Dispatch board",
+      ov_done:"Missions complete", ov_steps:"Steps finished", ov_codex:"Data samples",
+      steps_unit:"steps", codex_unit:"data samples",
+      soon:"Coming soon", complete:"COMPLETE",
+      start:"Start mission", resume:"Resume mission", replay:"Replay mission",
+      soon_toast:"🚧 This mission is coming soon — finish Mission 01 first!",
+      start_toast:"🚀 Opening the mission…",
+      off_guest:"You are not signed in, so mission progress shows “—”. <a href=\"landing-app.html\">Sign in</a> to see your real progress.",
+      off_net:"Couldn't reach the server, so mission progress shows “—”. Check your connection and reload.",
+      m_earth_tag:"Mission 01 · Earth", m_earth_name:"The Blue Planet",
+      m_earth_desc:"Scan the planet, walk its 4.5-billion-year story, swap black smoke for clean energy, collect life samples and decode Earth.",
+      m_moon_tag:"Mission 02 · The Moon", m_moon_name:"Earth's Companion",
+      m_moon_desc:"Land on the Moon and find out why it always keeps the same face turned towards us."
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  /* ================= Danh mục nhiệm vụ =================
+     `key` PHẢI khớp id nhiệm vụ ở AstroqSV/Services/Missions.cs — đó là khoá dùng
+     trong `missions.<key>` của DynamoDB và trong `AstroQProgress.missionStep()`.
+
+     `code:"MISSION-nn"` ghi CỐ ĐỊNH, KHÔNG sinh theo vị trí sau khi sort — cùng bài
+     học đã rút ra ở `GAMES` của games.html: mỗi lần một nhiệm vụ "soon" thành
+     "ready" là số hiệu cả dãy nhảy hết, trong khi số hiệu đã đi vào tài liệu và
+     cách gọi của người dùng.
+
+     `steps` chỉ để hiện "n/8" khi CHƯA gọi được server. Có server thì lấy
+     `missions.<key>.steps.length` — số bước là luật của server, gán cứng ở client
+     thì sớm muộn lệch. */
+  var MISSIONS = [
+    { key:"earth", code:"MISSION-01", cls:"card--earth", icon:"🌍",
+      planet:"earth", status:"ready", file:"mission-earth.html", steps:8 },
+    { key:"moon",  code:"MISSION-02", cls:"card--moon",  icon:"🌙",
+      planet:null,    status:"soon",  file:"",                  steps:0 }
+  ];
+
+  /* ================= Trạng thái =================
+     `ok:false` → mọi con số hiện dấu "—". KHÔNG đoán, không bịa: đúng cách
+     achievements.html và specimen-vault.html đang làm. */
+  var VIEW = { ok:false, reason:"net", data:{} };
+  var DASH = "—";
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /** Trạng thái server trả về cho một nhiệm vụ, hoặc null nếu chưa đọc được. */
+  function stateOf(key){
+    if(!VIEW.ok) return null;
+    var m = VIEW.data[key];
+    return m || { steps:[], doneSteps:[], done:false, codex:[], codexTotal:0 };
+  }
+
+  /* ================= Tổng quan ================= */
+  function renderOverview(){
+    var doneN = 0, stepN = 0, stepT = 0, cdxN = 0, cdxT = 0;
+    for(var i=0;i<MISSIONS.length;i++){
+      var s = stateOf(MISSIONS[i].key);
+      if(!s) continue;
+      if(s.done) doneN++;
+      stepN += (s.doneSteps||[]).length;
+      stepT += (s.steps||[]).length;
+      cdxN  += (s.codex||[]).length;
+      cdxT  += s.codexTotal||0;
+    }
+    // Nhiệm vụ chưa có ở server (Mặt Trăng) vẫn phải vào mẫu số "hoàn thành"
+    var totalMissions = MISSIONS.length;
+    var cells = [
+      { ic:"🏁", k:t("ov_done"),  v: VIEW.ok ? doneN + "/" + totalMissions : DASH },
+      { ic:"🧩", k:t("ov_steps"), v: VIEW.ok ? stepN + "/" + stepT : DASH },
+      { ic:"📘", k:t("ov_codex"), v: VIEW.ok ? cdxN + "/" + cdxT : DASH }
+    ];
+    $("ov").innerHTML = cells.map(function(c){
+      return '<div class="cell"><span class="ic" aria-hidden="true">'+c.ic+'</span>'+
+             '<span class="b"><span class="v">'+c.v+'</span>'+
+             '<span class="k">'+AstroQ.esc(c.k)+'</span></span></div>';
+    }).join("");
+  }
+
+  /* ================= Thẻ nhiệm vụ ================= */
+  function render(){
+    // Nhiệm vụ đã có (ready) trước, sắp ra mắt (soon) sau — như games.html
+    var list = MISSIONS.slice().sort(function(a,b){
+      return (a.status==="ready"?0:1) - (b.status==="ready"?0:1);
+    });
+
+    $("missions").innerHTML = list.map(function(m){
+      var soon = m.status!=="ready";
+      var s = soon ? null : stateOf(m.key);
+      var totalSteps = (s && (s.steps||[]).length) || m.steps;
+      var doneSteps  = s ? (s.doneSteps||[]).length : 0;
+      var pct = (s && totalSteps>0) ? Math.round(doneSteps/totalSteps*100) : 0;
+
+      var status = soon ? '<span class="soon">'+t("soon")+'</span>'
+                 : (s && s.done) ? '<span class="online">'+t("complete")+'</span>'
+                 : '<span class="online">SYS.ONLINE</span>';
+
+      /* Nhãn nút theo tiến độ THẬT. Chưa đọc được tiến độ (chưa đăng nhập / mất
+         mạng) thì nói "Bắt đầu" — đó là câu đúng trong mọi trường hợp, còn
+         "Tiếp tục" mà thật ra chưa làm bước nào là hứa sai. */
+      var label = soon ? t("soon")
+                : !s ? t("start")
+                : s.done ? t("replay")
+                : doneSteps > 0 ? t("resume") : t("start");
+      var btn = soon
+        ? '<button class="play-btn locked" data-key="'+m.key+'">'+label+'</button>'
+        : '<button class="play-btn" data-key="'+m.key+'">'+label+'</button>';
+
+      // Thanh tiến độ: chỉ vẽ khi ĐỌC ĐƯỢC tiến độ thật
+      var prog = soon ? '' :
+        '<div class="mprog">'+
+          '<span class="bar"><i style="width:'+(s?pct:0)+'%"></i></span>'+
+          '<span class="n">'+(s ? doneSteps+"/"+totalSteps : DASH+"/"+totalSteps)+' '+
+            AstroQ.esc(t("steps_unit"))+'</span>'+
+        '</div>'+
+        '<div class="mcodex"><span class="ic" aria-hidden="true">📘</span>'+
+          (s ? (s.codex||[]).length+"/"+(s.codexTotal||0) : DASH+"/"+DASH)+' '+
+          AstroQ.esc(t("codex_unit"))+'</div>';
+
+      var planetName = m.planet && window.AstroQPlanets
+        ? AstroQPlanets.name(m.planet, LANG) : "";
+
+      return '<article class="mcard '+m.cls+(soon?' soon':'')+(s&&s.done?' done':'')+'">'+
+        '<div class="hud-line top"><span><span class="led"></span>'+m.code+'</span>'+status+'</div>'+
+        '<div class="ic">'+m.icon+'</div>'+
+        '<span class="tag">'+AstroQ.esc(t("m_"+m.key+"_tag"))+'</span>'+
+        '<h3>'+AstroQ.esc(t("m_"+m.key+"_name"))+'</h3>'+
+        '<p>'+AstroQ.esc(t("m_"+m.key+"_desc"))+'</p>'+
+        prog+
+        btn+
+        '<div class="hud-line foot"><span>'+(planetName?'PLANET: '+AstroQ.esc(planetName.toUpperCase()):'PLANET: —')+
+          '</span><span>'+(soon?'STANDBY':'STEPS: '+totalSteps)+'</span></div>'+
+      '</article>';
+    }).join("");
+  }
+
+  /* ================= Mở một nhiệm vụ ================= */
+  function launch(key){
+    var m=null; for(var i=0;i<MISSIONS.length;i++){ if(MISSIONS[i].key===key) m=MISSIONS[i]; }
+    if(!m) return;
+    if(m.status!=="ready" || !m.file){ toast(t("soon_toast")); return; }
+    /* KHÔNG trừ Thiên thạch tím: nhiệm vụ là phần học, không phải mini-game. Bảng
+       phí ở Services/Wallet.cs cũng không có mục nào cho nhiệm vụ. */
+    toast(t("start_toast"));
+    setTimeout(function(){ window.location.href=m.file; }, 400);
+  }
+
+  /* ================= Dải nhắc mất mạng ================= */
+  function paintBanner(){
+    var el = $("offline");
+    if(VIEW.ok){ el.classList.remove("show"); return; }
+    $("offline-msg").innerHTML = VIEW.reason === "auth" ? t("off_guest") : t("off_net");
+    el.classList.add("show");
+  }
+
+  /* ================= Nạp ================= */
+  function load(){
+    AstroQProgress.missions().then(function(r){
+      if(r && r.ok && r.data){
+        VIEW.ok = true;
+        VIEW.data = r.data.missions || {};
+      } else {
+        VIEW.ok = false;
+        VIEW.reason = (r && r.reason) || "net";
+        VIEW.data = {};
+      }
+      paintAll();
+    });
+  }
+
+  function paintAll(){ renderOverview(); render(); paintBanner(); }
+
+  /* ================= Ngôn ngữ ================= */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG;
+    document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    paintAll();
+  }
+
+  /* ================= Sự kiện ================= */
+  $("missions").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest(".play-btn") : null;
+    if(b) launch(b.getAttribute("data-key"));
+  });
+  $("back").addEventListener("click", function(){ location.href="dashboard.html"; });
+
+  /* ================= Khởi động ================= */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  paintAll();          // vẽ ngay ở trạng thái "—" để trang không trống lúc chờ mạng
+  load();
+})();
+</script>
+<!-- Nạp SAU phần trên: SDK Firebase nặng 233 KB nên để nó không chặn lần vẽ đầu.
+     Trang này BẮT BUỘC cần token (GET /me/missions) nên nằm trong danh sách trang
+     nội dung được phép nạp — xem check_pages.py mục [4]. -->
+<script type="module" src="js/firebase-auth.js"></script>
+</body>
+</html>

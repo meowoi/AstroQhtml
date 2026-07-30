@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Hồ sơ Phi Hành Gia</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/profile.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/progress.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ PILOT_DOSSIER ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow" data-i18n="eyebrow">Hồ sơ Phi Hành Gia</span>
+    <h1 data-i18n="title_h">Hành trình của riêng bạn</h1>
+    <p data-i18n="intro">Theo dõi cấp độ, trang phục và những nơi bạn đã đi qua.</p>
+  </section>
+
+  <!-- Hiện khi đang xem số cũ trong máy vì không gọi được máy chủ -->
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <div class="cols">
+    <!-- ============ CỘT TRÁI: THẺ PHI HÀNH GIA ============ -->
+    <section class="panel dossier">
+      <span class="panel-tag"><span class="led"></span><span data-i18n="tag_id">PILOT ID</span></span>
+      <div class="strip"><span data-i18n="pilot">PHI HÀNH GIA</span><span class="uid" id="pilot-id">AQ-————</span></div>
+
+      <div class="avatar-ring">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <defs>
+            <linearGradient id="lvGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8" /><stop offset="100%" stop-color="#c084fc" />
+            </linearGradient>
+          </defs>
+          <circle class="track" cx="50" cy="50" r="45" />
+          <circle class="fill" id="lv-ring" cx="50" cy="50" r="45" />
+        </svg>
+        <span class="shot"><img id="pilot-model" src="3d/m3d.png" alt="" /></span>
+        <span class="lv-chip"><span data-i18n="lv_word">CẤP</span> <b id="lv-num">1</b></span>
+      </div>
+
+      <div class="pname" id="pilot-name">—</div>
+      <div class="prole" id="pilot-role">—</div>
+      <div class="ptrait" id="pilot-trait">—</div>
+
+      <div class="xp">
+        <div class="bar"><i id="xp-bar"></i></div>
+        <div class="meta">
+          <span><b id="xp-in">0</b> / <span id="xp-span">100</span> XP</span>
+          <span id="xp-next">—</span>
+        </div>
+      </div>
+
+      <div class="rename">
+        <label class="sr-only" for="new-name" data-i18n="rename_label">Tên phi hành gia</label>
+        <input id="new-name" type="text" maxlength="24" autocomplete="off"
+               data-i18n-ph="rename_ph" placeholder="Đổi tên…" />
+        <button class="pbtn" id="save-name" type="button" data-i18n="save">Lưu</button>
+      </div>
+
+      <div class="joined"><span data-i18n="joined">Gia nhập</span>: <span id="joined-at">—</span></div>
+    </section>
+
+    <!-- ============ CỘT PHẢI ============ -->
+    <div class="stack">
+      <!-- Trang phục -->
+      <section class="panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_suit">SUIT</span></span>
+        <h2><span class="ic" aria-hidden="true">🧑‍🚀</span><span data-i18n="suit_h">Trang phục</span></h2>
+        <p class="suits-hint" data-i18n="suit_hint">Chọn nhân vật bạn muốn khoác lên trong mọi chuyến bay. Đổi lúc nào cũng được.</p>
+        <div class="suits" id="suits"></div>
+      </section>
+
+      <!-- Thống kê -->
+      <section class="panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_stats">FLIGHT LOG</span></span>
+        <h2><span class="ic" aria-hidden="true">📊</span><span data-i18n="stats_h">Thống kê hành trình</span></h2>
+        <div class="kv" id="stats"></div>
+      </section>
+
+      <!-- Hành trình khám phá -->
+      <section class="panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_route">ROUTE</span></span>
+        <h2><span class="ic" aria-hidden="true">🗺️</span><span data-i18n="route_h">Hành trình khám phá</span>
+            <span class="prole" style="margin-left:auto" id="route-count">0/8</span></h2>
+        <div class="route" id="route"></div>
+      </section>
+
+      <!-- Kỷ lục -->
+      <section class="panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_rec">RECORDS</span></span>
+        <h2><span class="ic" aria-hidden="true">🥇</span><span data-i18n="rec_h">Kỷ lục Khu Huấn Luyện</span></h2>
+        <div class="recs" id="recs"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot-links">
+    <a class="pbtn" href="achievements.html" data-i18n="go_awards">🏆 Kho Thành Tích</a>
+    <a class="pbtn ghost" href="games.html" data-i18n="go_train">🎮 Khu Huấn Luyện</a>
+    <a class="pbtn ghost" href="learn.html" data-i18n="go_learn">📚 Tri Thức</a>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     Hồ sơ Phi Hành Gia.
+
+     Nguồn dữ liệu: GET /me/profile (qua AstroQProgress.load()). Server là nơi
+     giữ cấp độ, XP và bộ đếm — client KHÔNG tự tính (xem js/progress.js).
+     Không gọi được server → vẽ bằng bản sao trong máy và HIỆN DẢI NHẮC, vì
+     hiện số cũ mà không nói gì là đánh lừa người dùng.
+     ============================================================ */
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Trung Tâm Điều Hướng",
+      eyebrow:"Hồ sơ Phi Hành Gia", title_h:"Hành trình của riêng bạn",
+      intro:"Theo dõi cấp độ, trang phục và những nơi bạn đã đi qua.",
+      tag_id:"Thẻ phi hành gia", pilot:"PHI HÀNH GIA", lv_word:"CẤP",
+      rename_label:"Tên phi hành gia", rename_ph:"Đổi tên…", save:"Lưu",
+      joined:"Gia nhập",
+      tag_suit:"Trang phục", suit_h:"Trang phục",
+      suit_hint:"Chọn nhân vật bạn muốn khoác lên trong mọi chuyến bay. Đổi lúc nào cũng được.",
+      tag_stats:"Nhật ký bay", stats_h:"Thống kê hành trình",
+      tag_route:"Lộ trình", route_h:"Hành trình khám phá",
+      tag_rec:"Kỷ lục", rec_h:"Kỷ lục Khu Huấn Luyện",
+      go_awards:"🏆 Kho Thành Tích", go_train:"🎮 Khu Huấn Luyện", go_learn:"📚 Tri Thức",
+      k_flight:"Thời gian bay", k_quiz:"Lượt Quiz", k_acc:"Độ chính xác Quiz",
+      k_games:"Lượt huấn luyện", k_read:"Bài đã đọc", k_tt:"Thiên thạch đã thu",
+      k_badges:"Huy hiệu", k_planets:"Hành tinh đã ghé",
+      xp_next:"Còn {n} XP nữa lên cấp {lv}", xp_max:"Đã đạt cấp cao nhất!",
+      visited:"ĐÃ GHÉ", locked:"CHƯA TỚI",
+      rec_dodge:"Né Thiên Thạch", rec_defender:"Space Defender", rec_constellation:"Ghép Chòm Sao",
+      rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm",
+      off_guest:"Bạn đang xem dữ liệu tạm trong máy này. <a href=\"landing-app.html\">Đăng nhập</a> để hồ sơ theo bạn sang mọi thiết bị.",
+      off_net:"Không kết nối được máy chủ — đang hiện số liệu lưu trong máy. Thử tải lại trang sau nhé.",
+      saved_name:"Đã đổi tên thành \"{n}\"", saved_suit:"Đã đổi trang phục sang {n}",
+      err_name_empty:"Hãy nhập tên phi hành gia!",
+      err_save:"Chưa lưu được lên máy chủ — đã lưu tạm trong máy này.",
+      role_unknown:"Tân binh", trait_unknown:"Đang chờ khám phá",
+      hours:"giờ", minutes:"phút",
+      title:"AstroQ — Hồ sơ Phi Hành Gia"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Navigation Hub",
+      eyebrow:"Astronaut Profile", title_h:"Your very own journey",
+      intro:"Track your level, your suit and everywhere you have been.",
+      tag_id:"Pilot ID", pilot:"ASTRONAUT", lv_word:"LEVEL",
+      rename_label:"Pilot name", rename_ph:"Change name…", save:"Save",
+      joined:"Joined",
+      tag_suit:"Suit", suit_h:"Suit",
+      suit_hint:"Pick the character you want to wear on every flight. Change it any time.",
+      tag_stats:"Flight log", stats_h:"Voyage stats",
+      tag_route:"Route", route_h:"Exploration route",
+      tag_rec:"Records", rec_h:"Training Simulator records",
+      go_awards:"🏆 Trophy Hold", go_train:"🎮 Training Simulator", go_learn:"📚 Knowledge Station",
+      k_flight:"Flight time", k_quiz:"Quizzes taken", k_acc:"Quiz accuracy",
+      k_games:"Training runs", k_read:"Articles read", k_tt:"Meteors collected",
+      k_badges:"Badges", k_planets:"Planets visited",
+      xp_next:"{n} XP to level {lv}", xp_max:"Top level reached!",
+      visited:"VISITED", locked:"NOT YET",
+      rec_dodge:"Asteroid Dodge", rec_defender:"Space Defender", rec_constellation:"Constellation Match",
+      rec_none:"None yet", rec_pts:"pts", rec_done:"done",
+      off_guest:"You are viewing data saved on this device. <a href=\"landing-app.html\">Sign in</a> so your profile follows you everywhere.",
+      off_net:"Can't reach the server — showing numbers stored on this device. Try reloading later.",
+      saved_name:"Name changed to \"{n}\"", saved_suit:"Suit changed to {n}",
+      err_name_empty:"Please enter a pilot name!",
+      err_save:"Couldn't save to the server — kept on this device for now.",
+      role_unknown:"Rookie", trait_unknown:"Yet to be discovered",
+      hours:"h", minutes:"min",
+      title:"AstroQ — Astronaut Profile"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  /* Trạng thái hiển thị. `source` = "server" | "local" — quyết định có hiện dải nhắc. */
+  var VIEW = {
+    source:"local", reason:"",
+    profile:{ name:"", character:"", avatar:"", createdAt:"", uid:"" },
+    level:{ level:1, xp:0, xpInLevel:0, xpForNext:100, pct:0 },
+    progress:{}
+  };
+
+  /* ---------------- Tiện ích ---------------- */
+  function num(v){ return typeof v === "number" && isFinite(v) ? v : 0; }
+  function fmtDur(sec){
+    sec = num(sec);
+    if(sec < 3600) return Math.max(0, Math.round(sec/60)) + " " + t("minutes");
+    return (Math.round(sec/360)/10) + " " + t("hours");
+  }
+  function fmtDate(iso){
+    if(!iso) return "—";
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "—";
+    // Ngày/tháng/năm theo ngôn ngữ đang chọn, không phụ thuộc locale máy
+    try{ return d.toLocaleDateString(LANG === "en" ? "en-GB" : "vi-VN",
+                                     { day:"2-digit", month:"2-digit", year:"numeric" }); }
+    catch(e){ return iso.slice(0,10); }
+  }
+  /** Mã hồ sơ ngắn cho dễ đọc — lấy từ uid, KHÔNG phải bí mật (uid đã nằm trong token). */
+  function shortId(uid){
+    if(!uid) return "AQ-————";
+    var s = String(uid).replace(/[^A-Za-z0-9]/g,"").toUpperCase();
+    return "AQ-" + (s.slice(0,4) || "0000") + "-" + (s.slice(4,8) || "0000");
+  }
+
+  /* ---------------- Nạp dữ liệu ---------------- */
+  function apply(res){
+    VIEW.source = res.source;
+    VIEW.reason = res.reason || "";
+    var u = AstroQ.getUser() || {};
+
+    if(res.source === "server"){
+      var d = res.data || {};
+      VIEW.profile = d.profile || {};
+      VIEW.level = d.level || VIEW.level;
+      VIEW.progress = d.progress || {};
+      // Hồ sơ trong máy đi theo server (server là nguồn sự thật)
+      var merged = Object.assign({}, u, {
+        name: VIEW.profile.name || u.name || "",
+        pilotName: VIEW.profile.name || u.pilotName || "",
+        character: VIEW.profile.character || u.character || "",
+        selectedCharacter: VIEW.profile.character || u.selectedCharacter || "",
+        avatar: VIEW.profile.avatar || u.avatar || "",
+        email: VIEW.profile.email || u.email || ""
+      });
+      AstroQ.setUser(merged);
+    } else {
+      // Không có server: dựng từ hồ sơ trong máy + bộ đếm cache của js/progress.js
+      var p = res.data || {};
+      VIEW.profile = {
+        uid: u.uid || "", name: u.pilotName || u.name || "",
+        character: u.character || u.selectedCharacter || "",
+        avatar: u.avatar || "", createdAt: ""
+      };
+      VIEW.progress = p;
+      // XP/cấp độ là việc của server — không có server thì KHÔNG bịa ra cấp độ.
+      VIEW.level = { level:1, xp:0, xpInLevel:0, xpForNext:100, pct:0 };
+    }
+    render();
+  }
+
+  function load(){
+    AstroQProgress.load().then(apply);
+  }
+
+  /* ---------------- Vẽ ---------------- */
+  function currentChar(){
+    return AstroQChars.byId(VIEW.profile.character) || AstroQChars.all()[0];
+  }
+
+  function renderIdCard(){
+    var c = currentChar();
+    var name = VIEW.profile.name || (AstroQ.getUser()||{}).name || t("role_unknown");
+    $("pilot-name").textContent = name;
+    $("pilot-id").textContent = shortId(VIEW.profile.uid);
+    $("pilot-model").src = c.model;
+    $("pilot-model").alt = c.name;
+    $("pilot-role").textContent = c.role ? (c.role[LANG]||c.role.vi) : t("role_unknown");
+    $("pilot-trait").textContent = c.trait ? (c.trait[LANG]||c.trait.vi) : t("trait_unknown");
+    $("joined-at").textContent = fmtDate(VIEW.profile.createdAt);
+    if(!$("new-name").value) $("new-name").value = name;
+
+    var lv = VIEW.level;
+    $("lv-num").textContent = lv.level;
+    $("xp-in").textContent = num(lv.xpInLevel);
+    $("xp-span").textContent = num(lv.xpForNext);
+    $("xp-bar").style.width = Math.max(0, Math.min(100, num(lv.pct))) + "%";
+    var left = num(lv.xpForNext) - num(lv.xpInLevel);
+    $("xp-next").textContent = left > 0
+      ? t("xp_next").replace("{n}", left).replace("{lv}", lv.level + 1)
+      : t("xp_max");
+
+    // Vòng cấp độ: chu vi 2πr với r=45 → 282.7. dashoffset chạy theo phần trăm.
+    var ring = $("lv-ring"), C = 2 * Math.PI * 45;
+    ring.setAttribute("stroke-dasharray", C.toFixed(1));
+    ring.setAttribute("stroke-dashoffset", (C * (1 - Math.max(0,Math.min(100,num(lv.pct)))/100)).toFixed(1));
+  }
+
+  function renderSuits(){
+    var cur = VIEW.profile.character || "";
+    $("suits").innerHTML = AstroQChars.all().map(function(c){
+      return '<button type="button" class="suit'+(c.id===cur?" on":"")+'" data-id="'+c.id+'"'+
+             ' style="--z:'+(c.zoom||1)+'" title="'+AstroQ.esc(c.name)+'">'+
+             '<span class="tick" aria-hidden="true">✓</span>'+
+             '<img src="'+c.ava+'" alt="'+AstroQ.esc(c.name)+'" />'+
+             '<span class="nm">'+AstroQ.esc(c.name)+'</span></button>';
+    }).join("");
+    Array.prototype.forEach.call($("suits").querySelectorAll(".suit"), function(b){
+      b.addEventListener("click", function(){ pickSuit(b.getAttribute("data-id")); });
+    });
+  }
+
+  function renderStats(){
+    var p = VIEW.progress || {};
+    var acc = num(p.quizAccuracy);
+    if(!p.quizAccuracy && num(p.quizAnswered) > 0){
+      acc = Math.round(num(p.quizCorrect) / num(p.quizAnswered) * 100);
+    }
+    var planets = (p.planets && p.planets.length) || 0;
+    var cells = [
+      { ic:"⏱️", v:fmtDur(p.flightSeconds),        k:t("k_flight") },
+      { ic:"📝", v:num(p.quizTaken),               k:t("k_quiz") },
+      { ic:"🎯", v:acc + "%",                      k:t("k_acc") },
+      { ic:"🎮", v:num(p.gamesPlayed),             k:t("k_games") },
+      { ic:"📖", v:num(p.lessonsRead),             k:t("k_read") },
+      { ic:"💜", v:num(p.meteorsEarned),           k:t("k_tt") },
+      { ic:"🎖️", v:num(p.badgesEarned),            k:t("k_badges") },
+      { ic:"🪐", v:planets + "/" + AstroQPlanets.count, k:t("k_planets") }
+    ];
+    $("stats").innerHTML = cells.map(function(c){
+      return '<div class="cell"><span class="ic" aria-hidden="true">'+c.ic+'</span>'+
+             '<span class="b"><span class="v">'+c.v+'</span><span class="k">'+c.k+'</span></span></div>';
+    }).join("");
+  }
+
+  function renderRoute(){
+    var visited = (VIEW.progress && VIEW.progress.planets) || [];
+    $("route-count").textContent = visited.length + "/" + AstroQPlanets.count;
+    $("route").innerHTML = AstroQPlanets.all().map(function(pl){
+      var on = visited.indexOf(pl.id) !== -1;
+      return '<div class="stop'+(on?" on":"")+'">'+
+             '<span class="orb" style="--c1:'+pl.c+';--c2:'+pl.c2+'" aria-hidden="true"></span>'+
+             '<span class="nm">'+AstroQPlanets.name(pl.id, LANG)+'</span>'+
+             '<span class="flag">'+(on?t("visited"):t("locked"))+'</span></div>';
+    }).join("");
+  }
+
+  /* Kỷ lục: ưu tiên số của server (đi theo tài khoản), thiếu thì lấy kỷ lục cũ
+     trong máy do từng game ghi — người chơi lâu rồi mới đăng nhập vẫn thấy kỷ lục. */
+  function localBest(key, storeKey){
+    try{
+      var raw = localStorage.getItem(storeKey);
+      if(raw === null) return 0;
+      if(key === "constellation"){
+        // Kỷ lục chòm sao là JSON `{ <id chòm>: giây }` → số chòm ĐÃ ghép
+        var o = JSON.parse(raw);
+        return o && typeof o === "object" ? Object.keys(o).length : 0;
+      }
+      var n = parseInt(raw, 10);
+      return isNaN(n) ? 0 : n;
+    }catch(e){ return 0; }
+  }
+  function renderRecs(){
+    var bests = (VIEW.progress && VIEW.progress.bests) || {};
+    /* Ghép Chòm Sao đếm SỐ CHÒM đã ghép, không phải điểm — server trả sẵn
+       `constsDone`, thiếu thì đếm từ `consts`. */
+    var cDone = (VIEW.progress && VIEW.progress.constsDone);
+    if(cDone == null && VIEW.progress && VIEW.progress.consts){
+      cDone = Object.keys(VIEW.progress.consts).length;
+    }
+    var rows = [
+      { key:"dodge",         ic:"☄️", nm:t("rec_dodge"),         unit:t("rec_pts"), ls:"astroq-dodge-best-v2" },
+      { key:"defender",      ic:"🛡️", nm:t("rec_defender"),      unit:t("rec_pts"), ls:"astroq-defender-best-v2" },
+      { key:"constellation", ic:"✨", nm:t("rec_constellation"), unit:t("rec_done"), ls:"astroq-constellation-best" }
+    ];
+    $("recs").innerHTML = rows.map(function(r){
+      var v = r.key === "constellation" ? num(cDone) : num(bests[r.key]);
+      if(!v) v = localBest(r.key, r.ls);
+      return '<div class="rec"><span class="ic" aria-hidden="true">'+r.ic+'</span>'+
+             '<span class="nm">'+r.nm+'</span>'+
+             (v > 0 ? '<span class="v">'+v+' <span class="k">'+r.unit+'</span></span>'
+                    : '<span class="v none">'+t("rec_none")+'</span>')+
+             '</div>';
+    }).join("");
+  }
+
+  function renderBanner(){
+    var el = $("offline");
+    if(VIEW.source === "server"){ el.classList.remove("show"); return; }
+    $("offline-msg").innerHTML = VIEW.reason === "auth" ? t("off_guest") : t("off_net");
+    el.classList.add("show");
+  }
+
+  function render(){
+    renderIdCard(); renderSuits(); renderStats(); renderRoute(); renderRecs(); renderBanner();
+  }
+
+  /* ---------------- Đổi tên / đổi trang phục ----------------
+     Lưu vào máy TRƯỚC rồi mới gọi API: đổi trang phục phải thấy đổi ngay, chờ
+     mạng xong mới nhấp nháy thì cảm giác như bấm không ăn. Gọi hỏng thì báo rõ
+     là "chỉ lưu trong máy này". */
+  function saveLocalProfile(patch){
+    var u = AstroQ.getUser() || {};
+    if(patch.name != null){ u.name = patch.name; u.pilotName = patch.name; }
+    if(patch.character != null){ u.character = patch.character; u.selectedCharacter = patch.character; }
+    if(patch.avatar != null){ u.avatar = patch.avatar; }
+    if(patch.avatarZoom != null){ u.avatarZoom = patch.avatarZoom; }
+    AstroQ.setUser(u);
+  }
+
+  function pushProfile(patch, okMsg){
+    var auth = window.AstroQAuth;
+    if(!auth || !auth.updateProfile){ toast(t("err_save"), "bad"); return; }
+    auth.updateProfile(patch).then(function(r){
+      if(r && r.ok) toast(okMsg, "ok");
+      else toast(t("err_save"), "bad");
+    });
+  }
+
+  function pickSuit(id){
+    var c = AstroQChars.byId(id);
+    if(!c || VIEW.profile.character === id) return;
+    VIEW.profile.character = id;
+    VIEW.profile.avatar = c.ava;
+    saveLocalProfile({ character:id, avatar:c.ava, avatarZoom:c.zoom||1 });
+    renderIdCard(); renderSuits();
+    pushProfile({ character:id, avatar:c.ava }, t("saved_suit").replace("{n}", c.name));
+  }
+
+  function saveName(){
+    var v = ($("new-name").value || "").trim();
+    if(!v){ $("new-name").focus(); toast(t("err_name_empty"), "bad"); return; }
+    if(v === VIEW.profile.name) return;
+    VIEW.profile.name = v;
+    saveLocalProfile({ name:v });
+    renderIdCard();
+    pushProfile({ name:v }, t("saved_name").replace("{n}", v));
+  }
+
+  /* ---------------- Ngôn ngữ + khởi tạo ---------------- */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    render();      // phần do JS sinh ra không được applyTexts dịch → vẽ lại
+  }
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  $("back").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
+  $("save-name").addEventListener("click", saveName);
+  $("new-name").addEventListener("keydown", function(e){ if(e.key === "Enter") saveName(); });
+
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  load();
+})();
+</script>
+<script type="module" src="js/firebase-auth.js"></script>
+</body>
+</html>
