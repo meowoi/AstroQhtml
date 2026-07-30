@@ -771,10 +771,15 @@ def main():
           tt: document.getElementById('win-rw-tt').textContent,
           codex: document.getElementById('win-rw-codex').textContent,
           xp: document.getElementById('win-rw-xp').textContent,
-          un: document.getElementById('win-un').textContent,
+          nextUp: document.getElementById('win-next').textContent,
           badges: document.getElementById('win-badges').textContent,
           badgesHidden: document.getElementById('win-rw-badges').classList.contains('hide'),
-          moonDisabled: document.getElementById('win-moon').disabled,
+          // ⚠️ ĐẢO CHIỀU 30/07/2026: trước đây đo `win-moon`. Nút/khối Mặt Trăng đã
+          //    bị bỏ hẳn, nên giờ đo là KHÔNG CÒN dấu vết nào.
+          moonGone: !document.getElementById('win-moon') &&
+                    !/🌙|MẶT TRĂNG|THE MOON/i.test(document.getElementById('win').textContent),
+          nextBtn: document.getElementById('win-missions')
+                   ? document.getElementById('win-missions').disabled : null,
           ttImg: document.querySelector('#win .rw img') &&
                  document.querySelector('#win .rw img').getAttribute('src'),
           calls: window.__calls
@@ -798,10 +803,18 @@ def main():
         chk("Tập Sự" not in w["badges"] and "Rookie" not in w["badges"],
             "KHÔNG liệt kê lại Phi Hành Gia Tập Sự (đã có khối huân chương riêng)",
             w["badges"])
-        chk("MẶT TRĂNG" in w["un"].upper() or "MOON" in w["un"].upper(),
-            "mở khoá Mặt Trăng", w["un"])
-        chk(w["moonDisabled"] is True,
-            "nút bay tới Mặt Trăng đang VÔ HIỆU (nhiệm vụ đó chưa có)")
+        # ⚠️ ĐẢO CHIỀU: yêu cầu (chốt 30/07/2026) là BỎ HẲN mọi thứ về Mặt Trăng.
+        #    Nhiệm vụ đó chưa tồn tại, nên một nút bấm không được vẫn là một lời hứa
+        #    về thứ không có. Phép kiểm cũ ở đây chính là thứ đã GIỮ lỗi sống: nó
+        #    khẳng định nút Mặt Trăng phải tồn tại.
+        chk(w["moonGone"] is True,
+            "màn tổng kết KHÔNG còn dấu vết Mặt Trăng nào")
+        # Bỏ trắng thì màn tổng kết thành đường cụt → phải có việc tiếp theo CÓ THẬT.
+        chk(w["nextBtn"] is False,
+            "có nút 'việc tiếp theo' và nó BẤM ĐƯỢC (missions.html có thật)",
+            str(w["nextBtn"]))
+        chk("Nhiệm Vụ" in w["nextUp"] or "Mission" in w["nextUp"],
+            "khối việc tiếp theo chỉ sang Trung Tâm Nhiệm Vụ", w["nextUp"])
 
         steps_called = [c["step"] for c in w["calls"]]
         chk(steps_called == ["scan", "timeline", "sun", "energy",
@@ -883,10 +896,10 @@ def main():
         we = page.evaluate("""() => ({
           h: document.getElementById('win-h').textContent,
           badge: document.getElementById('win-badge').textContent,
-          un: document.getElementById('win-un').textContent
+          nextUp: document.getElementById('win-next').textContent
         })""")
         chk(not any(c in we["h"] for c in "ệộứạảầ"), "EN: tiêu đề tổng kết dịch", we["h"])
-        chk("MOON" in we["un"].upper(), "EN: 'THE MOON' unlocked", we["un"])
+        chk("Mission Control" in we["nextUp"], "EN: khối việc tiếp theo dịch", we["nextUp"])
         chk(len(errs2) == 0, "EN: 0 lỗi console", "; ".join(errs2[:3]))
         ctx.close()
 

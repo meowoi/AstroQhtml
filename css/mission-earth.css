@@ -420,10 +420,16 @@ a{text-decoration:none;color:inherit;}
 .me-win .rw .ic{font-size:16px;line-height:1;flex:none;}
 .me-win .rw b{color:#fff;}
 .me-win .rw.hide{display:none;}
-.me-win .unlock{margin-top:9px;padding:11px 13px;border-radius:10px;
+/* Khối "việc tiếp theo" ở màn tổng kết.
+   ⚠️ TÊN CŨ LÀ `.unlock` — đổi ngày 30/07/2026 cùng lúc bỏ khối "hành tinh mới đã
+      mở khoá 🌙 Mặt Trăng". Giữ tên `.unlock` cho một khối không còn nói về mở khoá
+      gì là để lại một cái bẫy đọc hiểu cho người sửa sau.
+   `align-items:flex-start` vì câu này dài hơn dòng "MẶT TRĂNG" cũ và xuống 2–3
+   dòng trên điện thoại — canh giữa thì icon trôi xuống lưng đoạn văn. */
+.me-win .nextup{margin-top:9px;padding:11px 13px;border-radius:10px;
   border:1px solid rgba(95,211,255,.45);background:rgba(8,20,44,.7);
-  display:flex;align-items:center;gap:10px;font-size:13.6px;color:#cfe8ff;}
-.me-win .unlock .ic{font-size:20px;line-height:1;flex:none;}
+  display:flex;align-items:flex-start;gap:10px;font-size:13.6px;line-height:1.55;color:#cfe8ff;}
+.me-win .nextup .ic{font-size:20px;line-height:1.3;flex:none;}
 .me-win .acts{display:flex;flex-direction:column;gap:9px;margin-top:20px;}
 .me-win .acts button,.me-win .acts a{cursor:pointer;border:none;width:100%;
   padding:13px 16px;border-radius:6px;font-family:var(--font-mono);

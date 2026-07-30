@@ -268,6 +268,29 @@ _mv = _re.search(r"missionStep\(([^)]*)\)", me)
 check("missionStep chi gui {mission, step}", bool(_mv) and "meteors" not in _mv.group(1),
       _mv.group(0) if _mv else "khong thay")
 
+# ⚠️ MAN TONG KET: KHONG CON DAU VET MAT TRANG NAO (chot 30/07/2026).
+#    Truoc do trang co han mot khoi "HANH TINH MOI DA MO KHOA 🌙 MAT TRANG" kem nut
+#    `win-moon` de `disabled`. Nhiem vu do CHUA TON TAI (`Missions.All` chi co
+#    `earth`, khong co mission-moon.html), nen mot nut bam khong duoc van la mot loi
+#    hua ve thu khong co. Server VAN giu `Unlocks: "moon"` — do la du lieu cua
+#    server, khong phai giao dien.
+#    Bo kiem nay tung KHONG TON TAI, va do la ly do loi song sot: yeu cau bo Mat
+#    Trang duoc lam o ban React (khong trang nao nap) trong khi trang THAT con nguyen.
+#    ⚠️ Quet tren code DA BOC COMMENT: ghi chu trong trang GHI LAI lich su "truoc day
+#       o day co nut Mat Trang" — do la thu nen co, khong phai vi pham.
+_me_code = strip_comments(me)
+_moon = _re.findall(r"win-moon|win_moon|🌙|MẶT TRĂNG|Mặt Trăng|THE MOON", _me_code)
+check("man tong ket KHONG con dau vet Mat Trang nao", not _moon, f"{sorted(set(_moon))}")
+# Va phai CO thu thay the: bo trang khong thi man tong ket thanh duong cut.
+check("man tong ket co khoi 'viec tiep theo' dan di duoc THAT",
+      "win-missions" in _me_code and "missions.html" in _me_code)
+check("nut viec tiep theo KHONG bi disabled (missions.html co that)",
+      not _re.search(r"win-missions'\)\.disabled\s*=\s*true", _me_code)
+      and 'id="win-missions"' in me and 'id="win-missions" disabled' not in me)
+for k in ("win_next_k", "win_next", "win_missions"):
+    check(f"mission-earth.html: khoa i18n `{k}` co o CA vi va en",
+          me.count(k + ":") == 2, f"{me.count(k + ':')} lan")
+
 # ══════════════════════════════════════════════════════════════
 print("\n=== [3c] Nhiem Vu 01: 8 buoc khop server + codex + i18n ===")
 # Ba chỗ phải nói cùng một câu chuyện, và không chỗ nào suy ra được từ chỗ kia:

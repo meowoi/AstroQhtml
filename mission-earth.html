@@ -179,13 +179,23 @@
         <span id="win-badges">—</span></div>
     </div>
 
+    <!-- ⚠️ KHỐI NÀY TRƯỚC ĐÂY LÀ "HÀNH TINH MỚI ĐÃ MỞ KHOÁ 🌙 MẶT TRĂNG" kèm một
+         nút `win-moon` để `disabled`. Đã BỎ HẲN ngày 30/07/2026 theo yêu cầu.
+         Vì sao không chỉ xoá mà phải THAY: khối đó là thứ DUY NHẤT trả lời câu
+         "xong rồi thì làm gì tiếp" trên màn tổng kết. Xoá trắng thì trẻ vừa hoàn
+         thành nhiệm vụ lớn nhất của app và nhận lại hai cái nút xám — thành đường
+         cụt, tệ hơn cả lời hứa hão.
+         Thay bằng việc CÓ THẬT: Trung Tâm Nhiệm Vụ. Cố ý KHÔNG hứa nhiệm vụ kế
+         tiếp — `missions.html` cho biết MISSION-02 Mặt Trăng vẫn "sắp ra mắt", nên
+         không có nhiệm vụ nào để dẫn tới. Nhưng nhiệm vụ này MỞ MẪU VẬT THẬT trong
+         Kho Mẫu Vật, nên đó là chỗ đáng chỉ tới. -->
     <div class="sec">
-      <span class="k"><span aria-hidden="true">🔓</span><span id="win-un-k">HÀNH TINH MỚI ĐÃ MỞ KHOÁ</span></span>
-      <div class="unlock"><span class="ic" aria-hidden="true">🌙</span><span id="win-un">—</span></div>
+      <span class="k"><span aria-hidden="true">🧭</span><span id="win-next-k">VIỆC TIẾP THEO</span></span>
+      <div class="nextup"><span class="ic" aria-hidden="true">🎯</span><span id="win-next">—</span></div>
     </div>
 
     <div class="acts">
-      <button type="button" class="go" id="win-moon" disabled>—</button>
+      <button type="button" class="go" id="win-missions">—</button>
       <button type="button" class="ghost" id="win-awards">—</button>
       <button type="button" class="ghost" id="win-home">—</button>
     </div>
@@ -396,9 +406,9 @@ const I18N = {
     win_codex: 'Mở khoá 100% "Hồ Sơ Trái Đất" — {n}/{t} mẫu dữ liệu',
     win_xp: '+{n} XP kinh nghiệm',
     win_badges: 'Huy hiệu mới: {n}',
-    win_un_k: 'HÀNH TINH MỚI ĐÃ MỞ KHOÁ',
-    win_un: 'MẶT TRĂNG (THE MOON) — nhiệm vụ tiếp theo',
-    win_moon: '[ 🌙 Mặt Trăng · Sắp ra mắt ]',
+    win_next_k: 'VIỆC TIẾP THEO',
+    win_next: 'Ghé Trung Tâm Nhiệm Vụ để xem các nhiệm vụ khác, và Kho Mẫu Vật để soi những mẫu vừa mở được.',
+    win_missions: '[ 🎯 Tới Trung Tâm Nhiệm Vụ ]',
     win_awards: '[ 🏆 Xem Kho Thành Tích ]',
     win_home: '[ 🚀 Về Trung Tâm Điều Hướng ]',
     saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.'
@@ -513,9 +523,9 @@ const I18N = {
     win_codex: 'Unlocked 100% of the "Earth File" — {n}/{t} data samples',
     win_xp: '+{n} XP',
     win_badges: 'New badges: {n}',
-    win_un_k: 'NEW PLANET UNLOCKED',
-    win_un: 'THE MOON — next mission',
-    win_moon: '[ 🌙 The Moon · Coming soon ]',
+    win_next_k: 'WHAT IS NEXT',
+    win_next: 'Visit Mission Control for the other missions, and the Specimen Vault to study the samples you just unlocked.',
+    win_missions: '[ 🎯 Go to Mission Control ]',
     win_awards: '[ 🏆 Open Trophy Hold ]',
     win_home: '[ 🚀 Back to Navigation Hub ]',
     saved_off: 'Not signed in — rewards are queued and will sync later.'
@@ -625,7 +635,7 @@ const doneSteps = new Set();             // các bước đã xong TRONG lượt
 /* `codexTotal` chỉ là số tạm cho tới khi server trả số thật (9 = 6 mẫu cũ + 3 mẫu
    của các bước mới). `badges` là huy hiệu SERVER báo vừa mở trong lượt này — client
    không tự thêm vào đây bao giờ. */
-let reward = { meteors: 0, xp: 0, codex: 0, codexTotal: 9, unlocked: false, badges: [] };
+let reward = { meteors: 0, xp: 0, codex: 0, codexTotal: 9, badges: [] };
 let busy = false;                        // đang chạy hiệu ứng → chặn bấm chồng
 let toastTimer = 0;
 
@@ -753,7 +763,9 @@ function reportStep(step) {
       if (m) {
         reward.codex = (m.codex || []).length;
         reward.codexTotal = m.codexTotal || reward.codexTotal;
-        reward.unlocked = m.done === true;
+        /* ⚠️ ĐÃ BỎ `reward.unlocked = m.done`. Nó chỉ tồn tại để bật khối "hành tinh
+           mới đã mở khoá 🌙 Mặt Trăng"; bỏ khối đó rồi thì trường này chỉ còn được
+           GHI mà không ai ĐỌC — mã chết. Server vẫn trả `m.done`, cần thì đọc lại. */
       }
       if (r.data.awarded > 0) toast('+' + r.data.awarded + ' {tt}');
     } else if (r && r.queued) {
@@ -1394,7 +1406,7 @@ async function showWin() {
   $('win-badge').textContent = t('win_badge');
   $('win-badge-sub').textContent = t('win_badge_sub');
   $('win-rw-k').textContent = t('win_rw_k');
-  $('win-un-k').textContent = t('win_un_k');
+  $('win-next-k').textContent = t('win_next_k');
   $('win-rw-tt').textContent = t('win_tt').replace('{n}', reward.meteors);
   $('win-rw-codex').textContent = t('win_codex')
     .replace('{n}', reward.codex).replace('{t}', reward.codexTotal);
@@ -1408,11 +1420,11 @@ async function showWin() {
     $('win-badges').textContent = t('win_badges').replace('{n}',
       extraBadges.map(b => badgeIcon(b) + ' ' + badgeName(b)).join(' · '));
   }
-  $('win-un').textContent = t('win_un');
-  /* Nhiệm vụ Mặt Trăng CHƯA có — nút để `disabled` chứ không dẫn đi đâu.
-     Nút dẫn vào trang không tồn tại còn tệ hơn là nói thẳng "sắp ra mắt". */
-  $('win-moon').textContent = t('win_moon');
-  $('win-moon').disabled = true;
+  $('win-next').textContent = t('win_next');
+  /* ⚠️ Nút chính giờ DẪN ĐI ĐƯỢC THẬT (missions.html tồn tại và đã có nội dung),
+     nên KHÔNG `disabled`. Trước đây chỗ này là nút Mặt Trăng để `disabled` — một
+     nút bấm không được vẫn là một lời hứa về thứ chưa tồn tại. */
+  $('win-missions').textContent = t('win_missions');
   $('win-awards').textContent = t('win_awards');
   $('win-home').textContent = t('win_home');
   $('win').classList.add('show');
@@ -1514,6 +1526,7 @@ function applyLang(lang) {
 
 /* ───────────────────── Khởi động ───────────────────── */
 $('back').addEventListener('click', () => { location.href = 'dashboard.html'; });
+$('win-missions').addEventListener('click', () => { location.href = 'missions.html'; });
 $('win-awards').addEventListener('click', () => { location.href = 'achievements.html'; });
 $('win-home').addEventListener('click', () => { location.href = 'dashboard.html'; });
 
