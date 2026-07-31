@@ -369,12 +369,13 @@
   }
   function doRadar(){                       // 50:50 — loại 2 đáp án sai
     var it=QUESTIONS[idx], opts=$("q-options").children, wrong=[];
-    for(var k=0;k<opts.length;k++){ if(k!==it.a && !opts[k].disabled) wrong.push(k); }
+    // `wrong` chua O HIEN THI; `it.a` la chi so goc nen phai so voi SLOT[it.a]
+    for(var k=0;k<opts.length;k++){ if(k!==SLOT[it.a] && !opts[k].disabled) wrong.push(k); }
     if(wrong.length<=1) return false;      // không còn gì để loại
     for(var j=wrong.length-1;j>0;j--){ var r=Math.floor(Math.random()*(j+1)); var tmp=wrong[j];wrong[j]=wrong[r];wrong[r]=tmp; }
     wrong.slice(0,2).forEach(function(k){
       opts[k].disabled=true; opts[k].classList.add("cut");
-      if(selected===k){ selected=-1; opts[k].classList.remove("sel"); $("engage").disabled=true; }
+      if(selected===ORDER[k]){ selected=-1; opts[k].classList.remove("sel"); $("engage").disabled=true; }
     });
     toast(t("pu_radar_msg")); return true;
   }
@@ -388,6 +389,32 @@
 
   /* ================= Render câu hỏi ================= */
   var KEYS=["A","B","C","D"];
+
+  /* ============================================================
+     TRỘN THỨ TỰ 4 ĐÁP ÁN MỖI LẦN HIỆN CÂU (31/07/2026)
+     Trước đó 4 lựa chọn luôn hiện đúng thứ tự khai báo, nên trẻ chơi lại gặp câu
+     cũ là nhớ được "đáp án nằm ở ô D" mà không cần hiểu gì — bài kiểm tra mất tác
+     dụng đúng theo cách mà luật "rải đều A/B/C/D" của bank sinh ra để tránh.
+
+     HAI BẢNG ÁNH XẠ, vì từ giờ "ô trên màn hình" KHÔNG còn bằng "chỉ số trong
+     it.opts":
+        ORDER[ô hiển thị] = chỉ số GỐC trong it.opts
+        SLOT[chỉ số gốc]  = ô đang hiển thị
+     ⚠️ `selected` vẫn giữ CHỈ SỐ GỐC, không giữ ô. Nhờ vậy `selected===it.a`,
+        `okTerms`, và toàn bộ phần tính điểm không phải sửa một dòng nào — chỉ
+        những chỗ CHẠM VÀO DOM mới cần đổi qua `SLOT[...]`.
+     ⚠️ KHÔNG trộn tại chỗ `it.opts` và KHÔNG sửa `it.a`: `QUESTIONS` trỏ thẳng
+        vào các object của bank `ALL`, trộn tại chỗ là làm bẩn dữ liệu dùng chung
+        (đúng lý do `shuffled()` vốn đã trộn một BẢN SAO).
+     ============================================================ */
+  var ORDER=[], SLOT=[];
+  function shuffleOptions(n){
+    var ix=[], i;
+    for(i=0;i<n;i++) ix.push(i);
+    ORDER = AstroQQuestions.shuffled(ix);      // dùng lại bộ trộn của bank
+    SLOT = [];
+    for(i=0;i<ORDER.length;i++) SLOT[ORDER[i]] = i;
+  }
   function renderQuestion(){
     var it=QUESTIONS[idx];
     selected=-1; status="idle"; locked=false; protectedThisQ=false;
@@ -399,10 +426,13 @@
     setBubble(L(it.hint), true);
     // options
     var box=$("q-options"); box.innerHTML="";
-    it.opts.forEach(function(opt,i){
+    shuffleOptions(it.opts.length);            // đổi vị trí đáp án cho câu này
+    ORDER.forEach(function(orig,slot){
       var b=document.createElement("button"); b.className="opt"; b.type="button";
-      b.innerHTML='<span class="key">'+KEYS[i]+'</span><span class="txt">'+L(opt)+'</span>';
-      b.addEventListener("click", function(){ selectOption(i,b); });
+      b.innerHTML='<span class="key">'+KEYS[slot]+'</span>'+
+                  '<span class="txt">'+L(it.opts[orig])+'</span>';
+      // Truyền CHỈ SỐ GỐC, không truyền ô — xem ghi chú ở `shuffleOptions`.
+      b.addEventListener("click", function(){ selectOption(orig,b); });
       box.appendChild(b);
     });
     var eng=$("engage"); eng.disabled=true;
@@ -415,9 +445,10 @@
 
   function selectOption(i, btn){
     if(locked) return;
-    selected=i;
+    selected=i;                              // CHI SO GOC trong it.opts
     var opts=$("q-options").children;
-    for(var k=0;k<opts.length;k++) opts[k].classList.toggle("sel", k===i);
+    // `k` chay theo O HIEN THI, `i` la chi so goc -> phai bat qua SLOT
+    for(var k=0;k<opts.length;k++) opts[k].classList.toggle("sel", k===SLOT[i]);
     $("engage").disabled=false;
     sndClick();
   }
@@ -442,9 +473,9 @@
       /* ⚠️ GHI KHOÁ Ở ĐÂY, không suy lại ở màn tổng kết: `QUESTIONS` bị `pickRound`
          rút lại mỗi lượt nên ở màn tổng kết không còn biết câu nào đã đúng. */
       if(it.term && okTerms.indexOf(it.term)===-1) okTerms.push(it.term);
-      opts[it.a].classList.add("correct");
+      opts[SLOT[it.a]].classList.add("correct");
       sndOk();
-      flyMeteors(opts[it.a]);
+      flyMeteors(opts[SLOT[it.a]]);
       lastGain = AWARD * (boostOn?2:1);
       if(boostOn){ boostOn=false; }             // tiêu hao Động cơ X2
       earned += lastGain;
@@ -456,8 +487,8 @@
       setBubble(t("correct_bubble"), true);
     } else {
       status="incorrect";
-      if(!timedOut && selected>=0) opts[selected].classList.add("wrong");
-      opts[it.a].classList.add("correct");
+      if(!timedOut && selected>=0) opts[SLOT[selected]].classList.add("wrong");
+      opts[SLOT[it.a]].classList.add("correct");
       sndNo();
       if(shieldOn){ shieldOn=false; protectedThisQ=true;   // Khiên Tím giữ chuỗi
         setBubble(L({vi:"🛡️ Khiên Tím đã bảo vệ chuỗi của bạn!", en:"🛡️ Purple Shield saved your streak!"}), true);
@@ -554,7 +585,9 @@
     $("q-topic").textContent=L(it.topic);
     $("q-text").innerHTML=L(it.q);
     var opts=$("q-options").children;
-    for(var i=0;i<opts.length;i++){ var txt=opts[i].querySelector(".txt"); if(txt) txt.textContent=L(it.opts[i]); }
+    // `i` la O HIEN THI nen phai lay chu theo ORDER, khong theo thu tu it.opts
+    for(var i=0;i<opts.length;i++){ var txt=opts[i].querySelector(".txt");
+      if(txt) txt.textContent=L(it.opts[ORDER[i]]); }
     if($("sheet").classList.contains("show")) openSheet();
     if(!locked) setBubble(L(it.hint), false);
     renderPowerups();   // nhãn vật phẩm đổi theo ngôn ngữ
@@ -594,7 +627,9 @@
     // Phím A/B/C/D chọn nhanh, Enter = KÍCH HOẠT
     if(!locked){
       var map={a:0,b:1,c:2,d:3}; var k=(e.key||"").toLowerCase();
-      if(map[k]!=null){ var btn=$("q-options").children[map[k]]; if(btn && !btn.disabled) selectOption(map[k],btn); }
+      // Phim A/B/C/D chi O HIEN THI; selectOption doi CHI SO GOC -> ORDER[o]
+      if(map[k]!=null){ var btn=$("q-options").children[map[k]];
+        if(btn && !btn.disabled) selectOption(ORDER[map[k]],btn); }
       if(e.key==="Enter" && selected>=0){ engage(); }
     }
   });

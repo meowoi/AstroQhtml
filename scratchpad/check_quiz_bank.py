@@ -214,6 +214,26 @@ def main():
             txt = pg.eval_on_selector("#q-text", "e => e.innerHTML").strip()
             return by_q_vi.get(txt) or by_q_en.get(txt)
 
+        def click_correct(page, item):
+            """Bam vao dap an DUNG bang cach DOC CHU, khong dua vao chi so o.
+
+            ⚠️ Tu 31/07/2026 `quiz.html` TRON thu tu 4 dap an moi lan hien cau, nen
+               `.opt` thu `item["a"]` khong con la dap an dung. Bam theo chi so o thi
+               bo test tra loi SAI ma khong biet: no bao "5/5 dung" thanh "1/5".
+            ⚠️ Bam theo chu cung dung la viec tre THAT SU lam — doc noi dung roi
+               chon, khong ai chon theo vi tri o. Nen cach do nay vua dung hon vua
+               ben hon truoc moi lan doi cach hien thi.
+            """
+            want = {item["opts"][item["a"]]["vi"], item["opts"][item["a"]]["en"]}
+            shown = page.eval_on_selector_all(
+                "#q-options .opt .txt", "es => es.map(e => e.textContent.trim())")
+            hit = [i for i, t in enumerate(shown) if t in want]
+            assert len(hit) == 1, (
+                f"khong tim ra dap an dung tren man: muon={want} co={shown}")
+            page.locator("#q-options .opt").nth(hit[0]).click()
+            return hit[0]
+
+
         check("badge tong so cau = 5", pg.inner_text("#q-total").strip() == "5")
 
         seen_src, seen_nosrc = 0, 0
@@ -233,9 +253,12 @@ def main():
                     wrong_topic.append(it["term"])
                 ui_opts = pg.eval_on_selector_all(
                     "#q-options .opt .txt", "els => els.map(e => e.textContent)")
-                if ui_opts != [o["vi"] for o in it["opts"]]:
+                # ⚠️ So TAP HOP, khong so THU TU: quiz.html tron 4 dap an moi
+                #    lan hien cau (31/07/2026). Doi dung thu tu la khang dinh
+                #    lai dung hanh vi vua sua.
+                if sorted(ui_opts) != sorted(o["vi"] for o in it["opts"]):
                     wrong_opts.append(it["term"])
-                pg.locator("#q-options .opt").nth(it["a"]).click()
+                click_correct(pg, it)
                 pg.click("#engage")
                 pg.wait_for_selector(".sheet.show", timeout=4000)
                 pg.wait_for_timeout(120)
@@ -266,7 +289,7 @@ def main():
         check("nhan ra duoc cau hoi dang hien + popup dung + dong nguon dung",
               not bad_srcline, "; ".join(bad_srcline[:4]))
         check("badge chu de khop du lieu", not wrong_topic, f"lech: {set(wrong_topic)}")
-        check("4 lua chon tren man khop du lieu (dung thu tu)", not wrong_opts,
+        check("4 lua chon tren man khop du lieu (mot phep hoan vi)", not wrong_opts,
               f"lech: {set(wrong_opts)}")
         check("da gap CA cau co nguon VA cau khong co nguon",
               seen_src > 0 and seen_nosrc > 0, f"co nguon={seen_src} khong={seen_nosrc}")
@@ -286,13 +309,51 @@ def main():
               len(seen_terms_ui | set(first_terms)) >= 8,
               f"{len(seen_terms_ui | set(first_terms))} thuat ngu")
 
+        # --- Tron thu tu 4 dap an: PHAI dang xay ra ---
+        # ⚠️ PHEP KIEM NAY BAT BUOC PHAI CO: phep kiem cu ("4 lua chon khop dung
+        #    thu tu du lieu") da doi sang so TAP HOP, ma so tap hop van dat khi
+        #    khong tron gi ca. Bo `shuffleOptions()` di thi phai co cai gi bao.
+        #
+        # ⚠️ BAN DAU TOI DO SAI VA PHEP KIEM DAT RONG: toi ghi lai "o ma dap an
+        #    DUNG roi vao" qua nhieu luot roi doi >=3 o khac nhau. Nhung bank CO Y
+        #    rai dap an dung khap A/B/C/D (co phep kiem rieng cho viec do), nen qua
+        #    CAC CAU KHAC NHAU no von da roi vao ca 4 o du KHONG tron gi. Thu phep
+        #    pha hoai chung minh dieu do: bo tron -> van "66/66 dat".
+        # Cach do DUNG: so THU TU HIEN RA voi THU TU KHAI BAO cua CHINH cau do.
+        #    khong tron -> giong y nguyen 100% cac luot
+        #    co tron    -> mot phep hoan vi ngau nhien cua 4 phan tu chi trung
+        #                  thu tu goc 1/24 lan (~4%)
+        n_meas = n_perm = 0
+        for _ in range(16):
+            pg.reload(wait_until="load")
+            pg.wait_for_timeout(300)
+            cur = find_cur()
+            if not cur:
+                continue
+            decl = [o["vi"] for o in cur["opts"]]
+            shown = pg.eval_on_selector_all(
+                "#q-options .opt .txt", "es => es.map(e => e.textContent.trim())")
+            if sorted(shown) != sorted(decl):
+                continue                      # cau tieng Anh / doc khong khop
+            n_meas += 1
+            if shown != decl:
+                n_perm += 1
+        check("do duoc du so luot (phep kiem khong dat rong)", n_meas >= 10,
+              f"{n_meas}/16 luot doc duoc")
+        # Nguong 50%: neu KHONG tron thi con so nay la 0 tuyet doi, con neu tron
+        # that thi ky vong ~96% — 50% la khoang giua rat rong, khong the "dat oan".
+        check("thu tu 4 dap an KHAC thu tu khai bao o phan lon cac luot (tuc la co tron)",
+              n_meas > 0 and n_perm >= n_meas * 0.5,
+              f"{n_perm}/{n_meas} luot da bi tron")
+
+
         def play_round(page):
             """Tra loi DUNG het luot dang mo, de lai bang tong ket dang hien."""
             for _ in range(20):
                 cur = by_q_vi.get(page.eval_on_selector("#q-text", "e => e.innerHTML").strip())
                 if not cur:
                     return False
-                page.locator("#q-options .opt").nth(cur["a"]).click()
+                click_correct(page, cur)
                 page.click("#engage")
                 page.wait_for_selector(".sheet.show", timeout=4000)
                 page.click("#next-btn")
@@ -323,7 +384,7 @@ def main():
                 it = find_cur()
                 if not it:
                     break
-                pg.locator("#q-options .opt").nth(it["a"]).click()
+                click_correct(pg, it)
                 pg.click("#engage")
                 pg.wait_for_selector(".sheet.show", timeout=4000)
                 pg.click("#next-btn")
@@ -354,16 +415,32 @@ def main():
         pg2 = ctx.new_page()
         pg2.on("console", lambda m: errs.append("EN:" + m.text) if m.type == "error" else None)
         pg2.add_init_script("try{localStorage.setItem('astroq-lang','en');}catch(e){}")
-        pg2.goto(f"{BASE}/quiz.html", wait_until="load")
-        pg2.wait_for_timeout(400)
-        qtxt = pg2.eval_on_selector("#q-text", "e => e.innerHTML").strip()
-        it = by_q_en.get(qtxt)
+        # ⚠️ TAI LAI CHO TOI KHI GAP MOT CAU CO NGUON. Truoc day khoi nay lay
+        #    "cau nao ra thi lay cau do", nen phep kiem nhan nguon 'Source:' ben
+        #    duoi nam trong `if it.get("src")` va CO LUOT KHONG CHAY. Doi de la
+        #    ngau nhien (moi luot 5 cau rut tu 35) thi mot phep kiem co dieu kien
+        #    nhu vay se im lang bien mat ma tong so van "dat het" — dung loai loi
+        #    da ghi trong CLAUDE.md.
+        it = None
+        for _try in range(12):
+            pg2.goto(f"{BASE}/quiz.html", wait_until="load")
+            pg2.wait_for_timeout(400)
+            qtxt = pg2.eval_on_selector("#q-text", "e => e.innerHTML").strip()
+            cand = by_q_en.get(qtxt)
+            if cand and cand.get("src"):
+                it = cand
+                break
+            it = it or cand
         check("cau hoi hien bang tieng Anh", bool(it), f"'{qtxt[:40]}'")
+        check("da gap duoc mot cau EN CO nguon de kiem nhan 'Source:'",
+              bool(it and it.get("src")), f"sau {_try+1} luot tai lai")
         if it:
             en_opts = pg2.eval_on_selector_all(
                 "#q-options .opt .txt", "els => els.map(e => e.textContent)")
-            check("4 lua chon tieng Anh khop du lieu", en_opts == [o["en"] for o in it["opts"]])
-            pg2.locator("#q-options .opt").nth(it["a"]).click()
+            check("4 lua chon tieng Anh khop du lieu (khong ke thu tu)",
+                  sorted(en_opts) == sorted(o["en"] for o in it["opts"]),
+                  f"{en_opts}")
+            click_correct(pg2, it)   # bam theo CHU, xem ghi chu o click_correct
             pg2.click("#engage")
             pg2.wait_for_selector(".sheet.show", timeout=4000)
             pg2.wait_for_timeout(150)
