@@ -503,3 +503,140 @@ a{text-decoration:none;color:inherit;}
   .me-mute{min-width:44px;min-height:44px;}
   .me-top .back{min-height:44px;}
 }
+
+/* ============================================================
+   CẢNH 2D CỦA NHIỆM VỤ 01 — 13 class `e2-*` cho `js/earth2d.js`
+   (bậc 2b của việc bỏ three.js, 31/07/2026)
+
+   Cấu trúc DOM do `earth2d.js` dựng, thứ tự trong DOM = thứ tự vẽ:
+     #stage.e2 > .e2-view > .e2-layer > picture > img.e2-img
+                                      > .e2-grid
+                                      > .e2-markers > button.e2-mk
+                                      > .e2-drone > .e2-beam
+                          > button.e2-sun
+                          > .e2-sat
+                          > .e2-shield
+   Trạng thái: `.e2-flat` (bản đồ phẳng) · `.e2-night` (mất nắng) trên #stage;
+   `.done` trên marker; `.show`/`.ok` trên vệ tinh, drone, khiên.
+
+   ⚠️ `.e2-layer` PHẢI CÓ ĐÚNG TỈ LỆ CỦA ẢNH, không được chỉ `inset:0`.
+      `earth2d.js` đặt marker bằng PHẦN TRĂM của lớp này (`left:96%` = mép đĩa
+      hành tinh). Nếu lớp rộng hơn ảnh (letterbox vì `object-fit:contain`) thì
+      96% của LỚP không còn là mép đĩa — marker rơi ra ngoài hành tinh, đúng loại
+      lỗi "thẻ mẫu vật ghi Amazon mà chỗ đó là đại dương" đã trả giá ở bản 3D.
+      Nên: lớp lấy đúng tỉ lệ ảnh, ảnh phủ kín lớp (`width/height:100%`).
+   ⚠️ Dùng ĐƠN VỊ KHUNG NHÌN (vw/vh) được vì `#stage` là `position:fixed;inset:0`
+      — tức khung nhìn của nó CHÍNH LÀ khung nhìn trình duyệt. Đổi `#stage` sang
+      bố cục khác thì phải sửa lại 4 dòng cỡ ở đây.
+   ============================================================ */
+.e2{overflow:hidden;}
+.e2-view{position:absolute;inset:0;overflow:hidden;touch-action:none;}
+
+/* Lớp BỊ biến hình. `transform` do JS ghi (pan + zoom) — CSS không đặt transform
+   ở đây, và cũng không dùng transform để canh giữa (sẽ bị JS ghi đè). */
+.e2-layer{position:absolute;inset:0;margin:auto;transform-origin:50% 50%;
+  will-change:transform;
+  /* ảnh quả cầu 640×640: hình vuông LỌT trong khung, để thấy trọn đĩa hành tinh */
+  width:min(100vw,100vh);height:min(100vw,100vh);}
+/* bản đồ phẳng 2048×1024 (tỉ lệ 2:1): PHỦ KÍN khung, không để dải trống —
+   width = max(100vw, 200vh) nên height = một nửa = max(50vw, 100vh) */
+.e2.e2-flat .e2-layer{width:max(100vw,200vh);height:max(50vw,100vh);}
+.e2-img{display:block;width:100%;height:100%;
+  transition:filter .8s ease;}
+
+/* ---- Ranh giới ngày/đêm ---- */
+/* Luôn hiện, nhẹ: nửa bên phải tối dần, cho thấy hành tinh được chiếu sáng từ một
+   phía. Đặt trên `.e2-view` chứ không trên `.e2-layer`: ranh giới này thuộc về
+   MẶT TRỜI nên không được pan/zoom theo bề mặt hành tinh. */
+.e2-view::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg, rgba(2,6,20,0) 34%,
+                                     rgba(2,6,20,.5) 64%,
+                                     rgba(2,6,20,.82) 100%);}
+/* Mất nắng: làm tối CHÍNH ẢNH, không phủ thêm một lớp lên trên. Phủ lớp thì
+   marker cũng bị tối và mờ đi đúng lúc trẻ cần chạm vào nó. */
+.e2.e2-night .e2-img{filter:brightness(.26) saturate(.6);}
+
+/* ---- Lưới Chẩn Đoán (bước ①) ---- */
+.e2-grid{position:absolute;inset:0;pointer-events:none;
+  transition:opacity .6s ease;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(95,240,255,.34) 0 1px, transparent 1px 8.5%),
+    repeating-linear-gradient(0deg,  rgba(95,240,255,.34) 0 1px, transparent 1px 8.5%);}
+
+/* ---- Điểm tín hiệu ---- */
+.e2-markers{position:absolute;inset:0;}
+/* ⚠️ KHÔNG đặt `transform` ở đây: JS ghi `translate(-50%,-50%) scale(1/zoom)` để
+   dấu hiệu giữ nguyên cỡ trên màn hình dù ảnh phóng bao nhiêu. */
+.e2-mk{position:absolute;width:34px;height:34px;border-radius:50%;
+  transform-origin:50% 50%;
+  border:2px solid var(--mk,#5ff0ff);background:rgba(2,10,26,.42);
+  box-shadow:0 0 14px var(--mk,#5ff0ff), inset 0 0 10px rgba(255,255,255,.25);
+  cursor:pointer;padding:0;}
+.e2-mk::after{content:"";position:absolute;inset:-9px;border-radius:50%;
+  border:2px solid var(--mk,#5ff0ff);opacity:.85;
+  animation:e2Ping 1.5s ease-out infinite;}
+.e2-mk.done{border-color:var(--good);box-shadow:0 0 16px rgba(99,230,168,.9);}
+.e2-mk.done::after{animation:none;opacity:0;}
+@keyframes e2Ping{
+  0%{transform:scale(.72);opacity:.9;}
+  100%{transform:scale(1.55);opacity:0;}
+}
+
+/* ---- Drone quét mẫu (bước ⑥) ---- */
+.e2-drone{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;
+  border-radius:8px;opacity:0;transition:opacity .3s ease;
+  background:linear-gradient(150deg,#dbe6ff,#8f7bff);
+  box-shadow:0 0 16px rgba(143,123,255,.85);}
+.e2-drone.show{opacity:1;}
+/* Tia laser tím: chiều dài theo biến `--scan` (0 → 1) mà JS tween. */
+.e2-beam{position:absolute;left:50%;top:100%;width:4px;
+  height:calc(var(--scan,0) * 74px);transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(192,132,252,.95), rgba(192,132,252,0));
+  box-shadow:0 0 10px rgba(192,132,252,.9);}
+
+/* ---- Mặt Trời (bước ③) ---- */
+/* CSS quyết chỗ đặt: `earth2d.js` KHÔNG gán left/top cho Mặt Trời (nó không nằm
+   trên bề mặt hành tinh). `--lit` 0 → 1 do `igniteSun`/`dimSun` tween. */
+.e2-sun{position:absolute;top:9%;right:8%;width:74px;height:74px;border-radius:50%;
+  border:none;padding:0;cursor:pointer;z-index:2;
+  background:radial-gradient(circle at 38% 34%, #fff6d8, var(--sun) 44%,
+                             var(--sun-warm) 88%);
+  opacity:calc(.28 + .72 * var(--lit,1));
+  box-shadow:0 0 calc(18px + 46px * var(--lit,1)) rgba(255,180,90,
+             calc(.25 + .5 * var(--lit,1)));}
+.e2-sun:active{transform:scale(.94);}
+
+/* ---- Vệ tinh (bước ⑤) ---- */
+.e2-sat{position:absolute;top:16%;left:12%;width:46px;height:20px;z-index:2;
+  opacity:0;transition:opacity .35s ease;
+  background:linear-gradient(90deg,#7c8db5 0 30%,#cfd9f2 30% 70%,#7c8db5 70%);
+  border-radius:4px;box-shadow:0 0 12px rgba(150,180,255,.5);}
+.e2-sat.show{opacity:1;}
+/* Vành sóng: NÉT MẢNH thôi. Bản 3D từng vẽ vành dày 23–43% bán kính nhân 9 lần và
+   ảnh chụp ra một dải cyan đặc chiếm 1/4 màn hình. */
+.e2-sat::after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;
+  margin:-13px 0 0 -13px;border-radius:50%;
+  border:2px solid rgba(95,240,255,.9);opacity:0;}
+.e2-sat.ok::after{animation:e2Wave 1.6s ease-out infinite;}
+@keyframes e2Wave{
+  0%{transform:scale(.6);opacity:.9;}
+  100%{transform:scale(3.4);opacity:0;}
+}
+
+/* ---- Màng khí quyển (bước ⑧) ---- */
+/* ⚠️ Là VÀNH SÁNG Ở MÉP TRONG hình cầu, không phải một nét stroke dày: bản
+   `warp-screen` đã trả giá cho bài học đó — một cung nét dày trông như cái vòng
+   rời lơ lửng cạnh hành tinh. `--k` 0 → 1 do `shield()` tween. */
+.e2-shield{position:absolute;inset:0;margin:auto;z-index:2;pointer-events:none;
+  width:min(100vw,100vh);height:min(100vw,100vh);
+  border-radius:50%;opacity:var(--k,0);
+  background:radial-gradient(circle at 50% 50%,
+    rgba(95,240,255,0) 44%, rgba(95,240,255,.22) 47%, rgba(95,240,255,0) 50%);}
+.e2-shield.show{}
+
+/* Giảm chuyển động: bỏ mọi animation vô hạn, GIỮ phần đổi tông (đó là nội dung
+   bài học "Trái Đất từng khác hẳn"), đúng như bản 3D. */
+@media (prefers-reduced-motion:reduce){
+  .e2-mk::after,.e2-sat.ok::after{animation:none;}
+  .e2-img,.e2-grid,.e2-drone,.e2-sat{transition:none;}
+}

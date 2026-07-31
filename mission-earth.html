@@ -27,7 +27,10 @@
 <body>
 
 <!-- Cảnh 3D -->
-<canvas id="stage"></canvas>
+<!-- ⚠️ LÀ <div>, KHÔNG phải <canvas>: cảnh 2D dựng các lớp con bên trong
+     (`js/earth2d.js`), mà <canvas> thì không vẽ được phần tử con. Nhánh 3D tự
+     tạo <canvas> bên trong div này — xem `boot()`. -->
+<div id="stage"></div>
 
 <!-- Hai lớp phủ CẢNH (không phải HUD) nên nằm NGOÀI `.me-ui`: `.me-ui` có
      `z-index:10` và tự tạo stacking context, đặt vào trong thì `z-index:5/6` của
@@ -213,6 +216,10 @@
 
 <script src="economy.js"></script>
 
+<!-- Cảnh 2D (19,7 KB, không cần three.js). Nạp sẵn ở cả hai chế độ: nó rẻ, và
+     nhờ vậy `boot()` không phải chờ thêm một lượt tải khi chạy `?scene=2d`. -->
+<script src="js/earth2d.js"></script>
+
 <!-- Three.js: cùng phiên bản với explorer.html -->
 <script type="importmap">
 {
@@ -268,7 +275,9 @@
    Mỗi bước là một object { id, enter(), pick(), tick() } nên thêm/sửa một bước
    không phải đụng vào bước khác.
    ========================================================================== */
-import { createEarthWorld } from './js/earth3d.js';
+/* ⚠️ KHÔNG `import` TĨNH `./js/earth3d.js` nữa. Import tĩnh là three.js (257 KB
+   gzip, từ unpkg.com) bị tải NGAY, kể cả khi đang chạy cảnh 2D — tức mất trắng
+   toàn bộ lợi ích. Nhánh 3D nạp bằng `await import()` trong `boot()`. */
 
 const $ = (id) => document.getElementById(id);
 /* `js/ui-common.js` chỉ đưa `$` ra global, `esc` thì nằm trong `AstroQ` — lấy về một
@@ -1034,6 +1043,12 @@ const steps = {
     got: new Set(),
     async enter() {
       this.got = new Set();
+      /* ⚠️ BƯỚC NÀY PHẢI DÙNG BẢN ĐỒ PHẲNG (chỉ cảnh 2D có `setMap`). Đây là
+         bước DUY NHẤT khẳng định vị trí thật — 4 vùng sinh học neo vào lat/lon
+         thật — mà ảnh quả cầu là ảnh CHỤP tâm Bắc Mỹ: Amazon, Himalaya, Nam
+         Cực đều ở nửa bên kia. Đặt marker lat/lon lên ảnh đó là DẠY SAI ĐỊA LÝ,
+         đúng lỗi đã trả giá ở bản 3D với nhiễu fBm. */
+      if (world.setMap) world.setMap('flat');
       world.setControls({ rotate: true, zoom: true });
       await world.panTo({ dist: 3.1, ms: reduced ? 0 : 1500 });
       objective({ ic: '🛸', h: t('s4_h'), p: t('s4_p'), n: 0, total: 4 });
@@ -1592,9 +1607,35 @@ applyLang(LANG);
 AstroQ.initLang(applyLang);
 paintSteps();
 
+/* ═══ CHỌN CẢNH: 2D hay 3D ═══
+   Hai engine sống song song MỘT VÒNG, đổi bằng `?scene=2d|3d` và nhớ ở
+   `localStorage["astroq-scene"]` — đúng lối `js/api.js` đã dùng cho
+   `?api=prod|local`. Mục đích duy nhất: chạy được CÙNG bộ 141 phép kiểm lên cả
+   hai engine, biến một cuộc di trú rủi ro thành phép so sánh A/B. Khi bản 2D
+   đạt 141/141 thì đổi mặc định thành '2d' rồi xoá hẳn nhánh 3D. */
+const SCENE = (() => {
+  let q = null;
+  try { q = new URLSearchParams(location.search).get('scene'); } catch (e) {}
+  try {
+    if (q === '2d' || q === '3d') { localStorage.setItem('astroq-scene', q); return q; }
+    if (q === 'reset') { localStorage.removeItem('astroq-scene'); return '3d'; }
+    const v = localStorage.getItem('astroq-scene');
+    if (v === '2d' || v === '3d') return v;
+  } catch (e) {}
+  return '3d';                      // mặc định hiện tại; bậc 5 sẽ lật sang '2d'
+})();
+
 (async function boot() {
   try {
-    world = await createEarthWorld($('stage'), { reduced });
+    if (SCENE === '2d') {
+      world = AstroQEarth2D.create($('stage'), { reduced });
+    } else {
+      // Nạp three.js CHỈ khi thật sự dùng cảnh 3D.
+      const { createEarthWorld } = await import('./js/earth3d.js');
+      const cv = document.createElement('canvas');
+      $('stage').appendChild(cv);
+      world = await createEarthWorld(cv, { reduced });
+    }
   } catch (e) {
     $('load-sub').dataset.fail = '1';
     $('load-sub').textContent = t('load_fail');

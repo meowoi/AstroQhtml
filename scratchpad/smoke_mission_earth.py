@@ -24,7 +24,14 @@ import time
 from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8123"
-URL = BASE + "/mission-earth.html"
+# Chon ENGINE CANH: `--scene 2d` hoac `--scene 3d` (mac dinh 3d = hien tai).
+# Muc dich la chay DUNG BO 141 PHEP KIEM NAY len ca hai engine, bien mot cuoc di
+# tru rui ro thanh phep so sanh A/B. Xem `?scene=` trong mission-earth.html.
+SCENE = "3d"
+if "--scene" in sys.argv:
+    SCENE = sys.argv[sys.argv.index("--scene") + 1]
+    assert SCENE in ("2d", "3d"), "--scene chi nhan 2d hoac 3d"
+URL = BASE + "/mission-earth.html?scene=" + SCENE
 
 ok = fail = 0
 FAILS = []
@@ -253,9 +260,65 @@ def drag_to(pg, from_sel, to_sel):
     return True
 
 
+def _has_gl(page):
+    """Canh 3D co WebGL; canh 2D thi khong."""
+    return page.evaluate(
+        "()=>{const w=window.__mission&&window.__mission.world;"
+        "return !!(w&&w.renderer&&w.renderer.getContext);}")
+
+
+def _stage_shot(page, region):
+    """Chup mot vung cua #stage roi tra ve anh PIL.
+
+    ⚠️ LAT TRUC Y. `gl.readPixels` lay goc toa do o DAY-TRAI cua buffer, con anh
+       chup thi o DINH-TRAI. Moi cho goi `pix()` deu viet region theo he cua GL
+       (vi bo test nay sinh ra cho canh 3D), nen nhanh 2D phai lat:
+           y_dinh = 1 - (ry + rh)
+       Bo dong nay thi moi phep do "nua tren / nua duoi" se lang le doi cho nhau
+       ma van ra so — dung loai loi kho thay nhat.
+    """
+    from PIL import Image
+    import io as _io
+    rx, ry, rw, rh = region
+    b = page.evaluate(
+        "()=>{const s=document.getElementById('stage');const r=s.getBoundingClientRect();"
+        "return [r.x,r.y,r.width,r.height];}")
+    x0, y0, W, H = b
+    clip = {"x": x0 + rx * W, "y": y0 + (1 - ry - rh) * H,
+            "width": max(1.0, rw * W), "height": max(1.0, rh * H)}
+    return Image.open(_io.BytesIO(page.screenshot(clip=clip))).convert("RGB")
+
+
+def _stats(im):
+    """Dung 5 con so nhu nhanh WebGL, dung dung nguong mau."""
+    px = list(im.getdata())
+    n = len(px)
+    lit = warm = cyan = 0
+    total = 0
+    for R, G, B in px:
+        l = R + G + B
+        total += l
+        if l > 90:
+            lit += 1
+        if R > 150 and G > 110 and B < 130:
+            warm += 1
+        if B > 120 and G > 110 and R < 130:
+            cyan += 1
+    return {"n": n, "lit": lit, "warm": warm, "cyan": cyan, "avg": total / (n * 3)}
+
+
 def pix(page, region=None):
-    """Đọc pixel của canvas WebGL ngay trong khung vẽ. region = (x0,y0,w,h) tỉ lệ 0..1."""
+    """Doc pixel cua canh — CHAY DUOC TREN CA HAI ENGINE.
+
+    · canh 3D: doc thang buffer WebGL trong chinh khung ve (nhanh, ~0ms) — hieu ung
+      chi song 0,9-1,7s nen `page.screenshot()` (~200ms) qua cham de lay theo tung
+      khung; giu nhanh nay de khong lam yeu di phep do da co.
+    · canh 2D: khong co WebGL, nen chup vung tuong ung cua #stage roi dem pixel.
+      Cung 5 con so, cung nguong, nen moi phep kiem phia sau khong phai sua.
+    """
     r = region or (0, 0, 1, 1)
+    if not _has_gl(page):
+        return _stats(_stage_shot(page, r))
     return page.evaluate(
         """([rx, ry, rw, rh]) => new Promise(res => {
       const w = window.__mission.world;
@@ -278,6 +341,55 @@ def pix(page, region=None):
         res({ n: ww*hh, lit, warm, cyan, avg: sum / (ww*hh*3) });
       });
     })""", [r[0], r[1], r[2], r[3]])
+
+
+def col_profile(page, ncols=32, band=40):
+    """Do sang trung binh theo `ncols` cot, tren mot dai ngang qua TAM canh.
+
+    Dung cho phep do ranh gioi ngay/dem: do 2 diem thi khong phan biet duoc "toi
+    dan deu" voi "co ranh gioi", nen phai co ca mot duong cong.
+    Chay duoc tren ca hai engine, cung ly do nhu `pix()`.
+    """
+    if not _has_gl(page):
+        b = page.evaluate(
+            "()=>{const s=document.getElementById('stage');const r=s.getBoundingClientRect();"
+            "return [r.x,r.y,r.width,r.height];}")
+        x0, y0, W, H = b
+        from PIL import Image
+        import io as _io
+        clip = {"x": x0, "y": y0 + H / 2 - band / 2, "width": W, "height": float(band)}
+        im = Image.open(_io.BytesIO(page.screenshot(clip=clip))).convert("RGB")
+        iw, ih = im.size
+        cw = max(1, iw // ncols)
+        cols = []
+        for c in range(ncols):
+            box = im.crop((c * cw, 0, min(iw, (c + 1) * cw), ih))
+            d = list(box.getdata())
+            cols.append(sum(R + G + B for R, G, B in d) / (len(d) * 3))
+        return cols
+    return page.evaluate(
+        """([NC, hh]) => new Promise(res => {
+      const w = window.__mission.world;
+      const gl = w.renderer.getContext();
+      requestAnimationFrame(() => {
+        const W = gl.drawingBufferWidth, H = gl.drawingBufferHeight;
+        const y = Math.floor(H/2 - hh/2);
+        const buf = new Uint8Array(W * hh * 4);
+        gl.readPixels(0, y, W, hh, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+        const cw = Math.floor(W / NC), cols = [];
+        for (let c = 0; c < NC; c++) {
+          let sum = 0, n = 0;
+          for (let yy = 0; yy < hh; yy++) {
+            for (let xx = c*cw; xx < (c+1)*cw; xx++) {
+              const i = (yy*W + xx) * 4;
+              sum += buf[i] + buf[i+1] + buf[i+2]; n++;
+            }
+          }
+          cols.push(sum / (n*3));
+        }
+        res(cols);
+      });
+    })""", [ncols, band])
 
 
 # Màng khí quyển bảo bọc. Dùng thẳng `world.shieldOn` chứ KHÔNG quét uniform tên
@@ -507,28 +619,7 @@ def main():
           return w.panTo({ pos: { x: perp.x, y: 0.5, z: perp.z }, ms: 900 });
         }""")
         page.wait_for_timeout(1400)
-        prof = page.evaluate("""() => new Promise(res => {
-          const w = window.__mission.world;
-          const gl = w.renderer.getContext();
-          requestAnimationFrame(() => {
-            const W = gl.drawingBufferWidth, H = gl.drawingBufferHeight;
-            const hh = 40, y = Math.floor(H/2 - hh/2);      // dải ngang qua tâm
-            const buf = new Uint8Array(W * hh * 4);
-            gl.readPixels(0, y, W, hh, gl.RGBA, gl.UNSIGNED_BYTE, buf);
-            const NC = 32, cw = Math.floor(W / NC), cols = [];
-            for (let c = 0; c < NC; c++) {
-              let sum = 0, n = 0;
-              for (let yy = 0; yy < hh; yy++) {
-                for (let xx = c*cw; xx < (c+1)*cw; xx++) {
-                  const i = (yy*W + xx) * 4;
-                  sum += buf[i] + buf[i+1] + buf[i+2]; n++;
-                }
-              }
-              cols.push(sum / (n*3));
-            }
-            res(cols);
-          });
-        })""")
+        prof = col_profile(page)
         # Chỉ xét các cột NẰM TRÊN đĩa hành tinh (bỏ nền trời gần như đen)
         on = [c for c in prof if c > 6]
         jump = max((abs(prof[i+1] - prof[i]) for i in range(len(prof)-1)), default=0)
