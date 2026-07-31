@@ -21,3 +21,9 @@ scratchpad/*.log
 img/luna ngang.png
 img/AstroQ logo.png
 img/tramvutru.png
+
+# ---- Ảnh gốc của asset Trái Đất ----
+# `scratchpad/make_earth_assets.py` tải bản gốc NASA vào đây (2,52 MB) rồi hạ cỡ
+# thành img/earth/*.avif|webp (230 KB). Bản gốc chỉ cần khi muốn sinh lại asset;
+# commit nó vào là đưa lại đúng 2,5 MB mà ta vừa cắt đi.
+img/earth/_src/
