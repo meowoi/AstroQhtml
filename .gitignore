@@ -22,6 +22,13 @@ img/luna ngang.png
 img/AstroQ logo.png
 img/tramvutru.png
 
+# ---- Bản gốc của logo thương hiệu ----
+# `img/AstroQ logo1.png` (467 KB, 2162×1080, 68% khung là khoảng trong suốt) là
+# bản người dùng đặt vào ngày 31/07/2026. Bản dùng thật là `img/astroq-logo.png`
+# (392×114, 7 KB) do `scratchpad/make_logo_asset.py` sinh ra — commit bản gốc vào
+# là bắt mọi người clone tải thêm 467 KB cho một thứ vẽ ra 32px.
+img/AstroQ logo1.png
+
 # ---- Ảnh gốc của asset Trái Đất ----
 # `scratchpad/make_earth_assets.py` tải bản gốc NASA vào đây (2,52 MB) rồi hạ cỡ
 # thành img/earth/*.avif|webp (230 KB). Bản gốc chỉ cần khi muốn sinh lại asset;

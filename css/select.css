@@ -14,9 +14,9 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 @keyframes tw{0%,100%{opacity:.4;}50%{opacity:.9;}}
 
 header{position:relative;z-index:5;display:flex;align-items:center;gap:14px;padding:16px clamp(18px,4vw,40px);}
-.brand{display:flex;align-items:center;gap:11px;}
-.brand .mark{width:34px;height:34px;border-radius:11px;background:radial-gradient(circle at 32% 28%,#fff2cf,var(--sun) 45%,var(--sun-warm) 90%);box-shadow:0 0 20px rgba(255,175,80,.6);}
-.brand b{font-family:var(--font-display);font-weight:700;font-size:18px;}
+/* Logo dùng chung ở `css/common.css`; ô vuông gradient + chữ <b>AstroQ</b>
+   đã bỏ vì wordmark có sẵn chữ đó. */
+.brand{display:flex;align-items:center;--logo-h:34px;}
 header .spacer{flex:1;}
 .lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
 .lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;}

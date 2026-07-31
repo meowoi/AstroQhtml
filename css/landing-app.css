@@ -345,11 +345,9 @@ footer a:hover{color:var(--accent);}
 }
 .auth-close:hover{background:rgba(255,255,255,.12);color:var(--ink);}
 .auth-close svg{width:16px;height:16px;}
-.auth-brand{display:flex;align-items:center;gap:11px;margin-bottom:6px;}
-.auth-brand strong{font-family:var(--font-display);font-size:16px;}
-.auth-brand .mark{width:34px;height:34px;border-radius:11px;flex:none;
-  background:radial-gradient(circle at 32% 28%, #fff2cf, var(--sun) 45%, var(--sun-warm) 90%);
-  box-shadow:0 0 18px rgba(255,175,80,.55);}
+/* Logo dùng chung ở `css/common.css`; ô vuông gradient + <strong>AstroQ</strong>
+   đã bỏ vì wordmark có sẵn chữ đó. */
+.auth-brand{display:flex;align-items:center;margin-bottom:6px;--logo-h:30px;}
 .auth-title{font-family:var(--font-display);font-weight:700;font-size:22px;margin:14px 0 4px;color:var(--ink);}
 .auth-sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5;}
 .auth-field{margin-bottom:14px;}

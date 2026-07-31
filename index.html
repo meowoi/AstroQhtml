@@ -132,8 +132,14 @@
   <!-- ============================== TOPBAR ============================== -->
   <header class="top">
     <a class="brand" href="/">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-name">astroQ<span class="dot">.org</span></span>
+      <!-- Logo là wordmark có sẵn chữ "astroQ" (xem `css/common.css`), nên chỉ
+           còn ".org" là chữ. `alt="astroQ"` + ".org" ghép lại thành đúng tên
+           trang cho trình đọc màn hình; đặt alt="astroQ.org" là nó đọc thành
+           "astroQ.org .org". width/height khai sẵn để trang không giật khi ảnh
+           tải xong (trang này đang chạy SEO). -->
+      <img class="brand-logo" src="img/astroq-logo.png" width="110" height="32"
+           alt="astroQ" fetchpriority="high" decoding="async">
+      <span class="brand-name dot">.org</span>
     </a>
     <div class="top-right">
       <span class="status-pill" data-i18n="status">TRẠM ĐANG KHỞI ĐỘNG</span>

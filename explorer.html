@@ -70,8 +70,13 @@
 <!-- ============ LEFT CONTROL DECK ============ -->
 <aside id="deck" class="panel" aria-label="Explorer controls">
   <div class="deck-head">
+    <!-- Logo ĐỨNG RIÊNG MỘT HÀNG, không đứng cạnh tiêu đề như ô vuông cũ: bảng
+         này chỉ rộng 296px sau padding, mà wordmark cao 38px thì rộng 131px —
+         đặt cùng hàng là bóp tiêu đề còn 121px, không đủ cho chữ "Solar System"
+         nên nó xuống 3 dòng. Xem `css/explorer.css`. -->
+    <img class="brand-logo" src="img/astroq-logo.png" width="117" height="34"
+         alt="astroQ" decoding="async">
     <div class="brand">
-      <div class="brand-mark"></div>
       <div class="brand-text">
         <h1 id="deck-title">Solar System<br/>Explorer</h1>
         <div class="brand-sub" data-i18n="exhibit">Interactive Exhibit</div>

@@ -49,12 +49,17 @@ a{text-decoration:none;}
 
 /* ============================== TOPBAR ============================== */
 .top{display:flex;align-items:center;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:18px 0 6px;}
-.brand{display:inline-flex;align-items:center;gap:10px;}
-.brand-mark{width:32px;height:32px;border-radius:11px;flex:none;
-  background:radial-gradient(circle at 34% 28%, #fff7d6, var(--gold) 42%, #ff9d3d 92%);
-  box-shadow:0 0 22px rgba(255,215,0,.55), inset 0 0 10px rgba(255,255,255,.45);}
-.brand-name{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.01em;}
-.brand-name .dot{color:var(--cyan);}
+/* Khoảng cách 2px: ".org" phải dính sát wordmark như một tên miền liền mạch.
+   Giá trị cũ là 10px, dành cho ô vuông gradient đứng cạnh chữ. */
+.brand{display:inline-flex;align-items:center;gap:2px;}
+/* `top:2px` KHÔNG phải con số ướm: đo pixel trên ảnh chụp DPR3 thì đáy dấu '.'
+   của ".org" nằm CAO HƠN đáy chữ 'a' của wordmark đúng 2px, tức hai đường chân
+   chữ không trùng — chữ ".org" trông như bị nhấc lên. Wordmark là ẢNH nên CSS
+   không biết đường chân chữ của nó ở đâu, `align-items:center` chỉ canh giữa
+   khối chứ không canh chân chữ; phải bù bằng tay. */
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.01em;
+  position:relative;top:2px;}
+.brand-name.dot{color:var(--cyan);}
 .top-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
 
 .status-pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);
