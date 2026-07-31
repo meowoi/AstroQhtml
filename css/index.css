@@ -298,3 +298,55 @@ a{text-decoration:none;}
 .faq-more a:hover{background:rgba(0,255,255,.14);transform:translateY(-2px);}
 .foot a{color:var(--ink-soft);}
 .foot a:hover{color:var(--cyan);}
+
+/* ============================================================
+   DẢI KHUYẾN NGHỊ DÙNG MÁY TÍNH (chỉ hiện trên điện thoại / tablet nhỏ)
+   ⚠️ NEO DƯỚI ĐÁY, KHÔNG CHE NỘI DUNG. Trang này đã go-live và Google lập chỉ mục
+      theo mobile-first; một lớp phủ chắn hết nội dung trên điện thoại bị xếp vào
+      "intrusive interstitial". Dải cao ~96px, người dùng vẫn đọc và đăng ký được.
+   ⚠️ `env(safe-area-inset-bottom)` cho iPhone có thanh gesture — thiếu nó thì nút
+      đóng nằm dưới vạch home và bấm không ăn.
+   ============================================================ */
+.mob-note{
+  position:fixed;left:10px;right:10px;z-index:60;
+  bottom:calc(10px + env(safe-area-inset-bottom, 0px));
+  display:flex;align-items:flex-start;gap:11px;
+  padding:13px 13px 14px;border-radius:16px;
+  background:rgba(10,14,30,.96);border:1px solid rgba(0,255,255,.34);
+  box-shadow:0 12px 34px -10px rgba(0,0,0,.8), 0 0 22px -8px rgba(0,255,255,.35);
+  backdrop-filter:blur(8px);
+  /* Bắt đầu ở dưới mép + trong suốt; `.show` mới đưa lên. */
+  transform:translateY(120%);opacity:0;
+  transition:transform .34s cubic-bezier(.34,1.4,.64,1),opacity .28s ease;
+}
+.mob-note.show{transform:translateY(0);opacity:1;}
+.mob-note .mn-ic{font-size:24px;line-height:1.15;flex:none;}
+.mob-note .mn-body{min-width:0;flex:1;}
+.mob-note strong{display:block;font-family:var(--font-display,inherit);
+  font-size:13.5px;color:#fff;margin-bottom:3px;}
+.mob-note p{margin:0;font-size:12px;line-height:1.55;color:var(--ink-soft);}
+.mob-note p b{color:var(--cyan);}
+.mob-note .mn-x{
+  flex:none;width:34px;height:34px;border-radius:10px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);
+  color:var(--ink-soft);font-size:20px;line-height:1;
+}
+.mob-note .mn-x:hover{color:#fff;border-color:rgba(0,255,255,.45);}
+
+@media (prefers-reduced-motion:reduce){
+  /* Giữ dải (nó là thông tin), chỉ bỏ phần trượt lên. */
+  .mob-note{transition:none;transform:none;}
+}
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: link logo về trang chủ cao 32px. */
+@media (pointer: coarse){
+  .brand{min-height:44px;}
+  /* Link "Wiki" ở chân trang là một flex item ĐỨNG RIÊNG (hai dấu · là <span>
+     riêng biệt), nên KHÔNG được miễn theo ngoại lệ "inline trong câu" của WCAG
+     2.5.5 — đo trên iPad ra 25×15px.
+     ⚠️ Phải đổi sang `inline-flex`: <a> mặc định là `inline`, mà phần tử inline
+        BỎ QUA min-height, đặt mỗi min-height thì không có gì thay đổi. */
+  .foot a{display:inline-flex;align-items:center;justify-content:center;
+          min-width:44px;min-height:44px;padding:0 8px;}
+}

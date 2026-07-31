@@ -9,7 +9,7 @@
   "use strict";
 
   /* Ngày mở cửa chính thức (giờ Việt Nam, UTC+7) — dùng cho đồng hồ đếm ngược */
-  var LAUNCH_AT = new Date("2026-08-01T00:00:00+07:00").getTime();
+  var LAUNCH_AT = new Date("2026-08-09T00:00:00+07:00").getTime();
   var LS_WAITLIST = "astroq-waitlist";      // bản sao dự phòng trên máy khách: [{ email, ts, lang, sent }]
   var FORM_ENDPOINT = "https://formspree.io/f/xkodplgp";   // nhận email waitlist
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -23,7 +23,7 @@
       a_crew:"Phi hành đoàn đồng hành",
       a_comet:"Mèo Comet — phi công vũ trụ, linh vật của astroQ.org",
       a_byte:"Robot Byte — trợ lý AI, linh vật của astroQ.org",
-      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 8/2026",
+      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 09/08/2026",
       status:"TRẠM ĐANG KHỞI ĐỘNG",
       eyebrow:"PRE-LAUNCH · MISSION 001",
       h1:"Khám Phá Ngân Hà Tri Thức Cùng astroQ.org",
@@ -40,7 +40,10 @@
       wl_label:"Địa chỉ email", wl_ph:"phihanhgia@astroq.org",
       wl_cta:"Nhận 500 Purple Meteors & Vé Sớm 🚀",
       wl_sending:"Đang gửi...",
-      wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào đầu tháng 8/2026.",
+      wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào ngày 09/08/2026.",
+      mob_title:"Trải nghiệm tốt nhất trên máy tính",
+      mob_body:"astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!",
+      mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
       done_title:"🚀 Đã nhận vé sớm & 500 Purple Meteors thành công!",
       done_body:'Kiểm tra hòm thư của bạn nhé — vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. 500 Purple Meteors sẽ nằm sẵn trong khoang khi astroQ.org mở cửa.',
       done_again:"Đăng ký email khác",
@@ -69,7 +72,7 @@
       q4:"Purple Meteors là gì?",
       a4:"Purple Meteors (Thiên thạch tím) là đơn vị phần thưởng trong astroQ.org. Người học kiếm Purple Meteors khi hoàn thành quiz, đọc bài và chơi mini-game, rồi dùng để nâng cấp phi thuyền và mở khóa hành tinh mới.",
       q5:"Khi nào astroQ.org ra mắt?",
-      a5:"astroQ.org dự kiến ra mắt chính thức vào đầu tháng 8 năm 2026. Người đăng ký waitlist bằng email sẽ nhận vé mời sớm cùng 500 Purple Meteors khởi đầu ngay khi hệ thống mở cửa.",
+      a5:"astroQ.org dự kiến ra mắt chính thức vào ngày 09/08/2026. Người đăng ký waitlist bằng email sẽ nhận vé mời sớm cùng 500 Purple Meteors khởi đầu ngay khi hệ thống mở cửa.",
 
       foot_note:"Nền tảng học STEM tương tác cho nhà khám phá trẻ"
     },
@@ -80,7 +83,7 @@
       a_crew:"Your companion crew",
       a_comet:"Comet the cat — space pilot, astroQ.org mascot",
       a_byte:"Byte the robot — AI assistant, astroQ.org mascot",
-      title:"astroQ.org — Explore the Galaxy of Knowledge | Launching Aug 2026",
+      title:"astroQ.org — Explore the Galaxy of Knowledge | Launching 9 Aug 2026",
       status:"STATION WARMING UP",
       eyebrow:"PRE-LAUNCH · MISSION 001",
       h1:"Explore the Galaxy of Knowledge with astroQ.org",
@@ -97,7 +100,10 @@
       wl_label:"Email address", wl_ph:"astronaut@astroq.org",
       wl_cta:"Claim 500 Purple Meteors & Early Access 🚀",
       wl_sending:"Sending...",
-      wl_hint:"No spam. You'll only hear from us at the official launch in early August 2026.",
+      wl_hint:"No spam. You'll only hear from us at the official launch on 9 August 2026.",
+      mob_title:"Best experienced on a computer",
+      mob_body:"astroQ has a 3D galaxy map and mini-games that need a wide screen. You can still browse this page on a phone, but open it on a <b>laptop or PC</b> for the full ride!",
+      mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
       done_title:"🚀 Early pass & 500 Purple Meteors secured!",
       done_body:'Check your inbox — the early-access pass is reserved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when astroQ.org opens.',
       done_again:"Use another email",
@@ -126,7 +132,7 @@
       q4:"What are Purple Meteors?",
       a4:"Purple Meteors are the reward currency inside astroQ.org. Learners earn them by finishing quizzes, reading articles and playing mini-games, then spend them to upgrade their ship and unlock new planets.",
       q5:"When does astroQ.org launch?",
-      a5:"astroQ.org is scheduled to launch in early August 2026. Everyone on the email waitlist gets an early-access pass plus 500 starter Purple Meteors the moment the system opens.",
+      a5:"astroQ.org is scheduled to launch on 9 August 2026. Everyone on the email waitlist gets an early-access pass plus 500 starter Purple Meteors the moment the system opens.",
 
       foot_note:"Interactive STEM learning for young explorers"
     }
@@ -299,4 +305,54 @@
   /* Nếu máy này đã đăng ký trước đó thì hiện luôn trạng thái thành công */
   var saved = readList();
   if(saved.length) paintDone(saved[saved.length - 1].email);
+
+  /* ============================================================
+     KHUYẾN NGHỊ DÙNG MÁY TÍNH — chỉ trên thiết bị cảm ứng màn hình nhỏ.
+
+     ⚠️ NHẬN DIỆN BẰNG `pointer: coarse` CỘNG BỀ RỘNG, KHÔNG CHỈ BỀ RỘNG.
+        Chỉ xét bề rộng thì một cửa sổ Chrome kéo hẹp trên laptop cũng bị nhắc
+        "hãy dùng laptop" — vô nghĩa và làm người dùng mất tin. Chỉ xét cảm ứng thì
+        laptop màn hình chạm (Windows 2-trong-1) và iPad Pro 12,9" cũng bị nhắc, dù
+        chúng dư sức chạy. Hai điều kiện cùng lúc mới ra đúng "điện thoại / tablet nhỏ".
+
+     ⚠️ CHỈ NHẮC MỘT LẦN MỖI MÁY. Nhắc lại mỗi lần vào là quấy rối, và người dùng sẽ
+        học cách bấm X mà không đọc. Cờ ở localStorage; bị chặn thì im lặng bỏ qua.
+
+     ⚠️ KHÔNG khoá cuộn, KHÔNG bẫy tiêu điểm. Xem ghi chú ở markup: trang này đã
+        go-live và Google lập chỉ mục theo mobile-first — lớp phủ chắn nội dung trên
+        điện thoại bị xếp vào "intrusive interstitial" và ăn phạt xếp hạng.
+     ============================================================ */
+  var MOB_KEY = "astroq-mob-note";
+
+  function mobNoteSeen(){
+    try { return localStorage.getItem(MOB_KEY) === "1"; } catch(e){ return false; }
+  }
+  function markMobNoteSeen(){
+    try { localStorage.setItem(MOB_KEY, "1"); } catch(e){}
+  }
+  function isSmallTouch(){
+    try {
+      return window.matchMedia &&
+             window.matchMedia("(max-width: 860px) and (pointer: coarse)").matches;
+    } catch(e){ return false; }
+  }
+
+  function initMobNote(){
+    var box = document.getElementById("mob-note");
+    if(!box) return;
+    var x = document.getElementById("mob-x");
+    if(x) x.addEventListener("click", function(){
+      box.classList.remove("show");
+      markMobNoteSeen();
+      // Chờ hiệu ứng mờ xong mới ẩn hẳn, không thì nó biến mất cụt ngủn.
+      setTimeout(function(){ box.hidden = true; }, 260);
+    });
+    if(!isSmallTouch() || mobNoteSeen()) return;
+    /* Chờ một nhịp để dải không bật lên giữa lúc trang đang dựng — nó là lời nhắc,
+       không phải thứ đầu tiên người dùng phải xử lý. */
+    setTimeout(function(){ box.hidden = false; box.classList.add("show"); }, 900);
+  }
+
+  initMobNote();
+
 })();
