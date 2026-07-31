@@ -41,6 +41,14 @@ a{text-decoration:none;color:inherit;}
 #stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;
   cursor:grab;}
 #stage:active{cursor:grabbing;}
+/* ⚠️ BẮT BUỘC từ 31/07/2026, khi `#stage` đổi từ <canvas> sang <div>: cảnh 3D tự
+   tạo <canvas> BÊN TRONG div này, và <canvas> không có CSS thì lấy cỡ mặc định
+   của thẻ là **300×150**. Đo được đúng con số đó, và hậu quả không phải "ảnh nhỏ"
+   mà là **toạ độ chiếu sai hoàn toàn**: `world.screenOf()` tính theo khung canvas
+   nên trả về điểm lệch hẳn lên góc trên-trái, cú bấm của bộ test rơi vào nút
+   "Về Trung Tâm Điều Hướng" và trang ĐIỀU HƯỚNG ĐI — biểu hiện là
+   `window.__mission` bỗng thành undefined giữa bài kiểm. */
+#stage > canvas{display:block;width:100%;height:100%;}
 
 /* Mọi lớp phủ nằm trong đây — không chắn chuột */
 .me-ui{position:fixed;inset:0;z-index:10;pointer-events:none;}

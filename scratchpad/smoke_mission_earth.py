@@ -170,9 +170,9 @@ def drag_earth_until_aligned(pg, limit=60):
     for i in range(limit):
         a = pg.evaluate("window.__mission.satAngle")
         if y0 is None:
-            y0 = pg.evaluate("window.__mission.world.earthSpinY")
+            y0 = spin_deg(pg)
         if pg.evaluate("() => window.__mission.done.includes('rotation')"):
-            return True, a, pg.evaluate("window.__mission.world.earthSpinY") - y0
+            return True, a, deg_delta(y0, spin_deg(pg))
         pg.mouse.move(cx - 160, cy)
         pg.mouse.down()
         pg.mouse.move(cx + 160, cy, steps=8)     # kéo sang phải ~320px
@@ -180,7 +180,7 @@ def drag_earth_until_aligned(pg, limit=60):
         pg.wait_for_timeout(180)
     return (pg.evaluate("() => window.__mission.done.includes('rotation')"),
             pg.evaluate("window.__mission.satAngle"),
-            pg.evaluate("window.__mission.world.earthSpinY") - (y0 or 0))
+            deg_delta(y0 or 0, spin_deg(pg)))
 
 
 def read_card(pg, timeout=30000):
@@ -258,6 +258,52 @@ def drag_to(pg, from_sel, to_sel):
     pg.mouse.up()
     pg.wait_for_timeout(300)
     return True
+
+
+def spin_deg(page):
+    """Hành tinh đã quay bao nhiêu ĐỘ — dùng được cho cả hai engine.
+
+    Cảnh 3D trả `earthSpinY` bằng RADIAN, cảnh 2D thì con số tương đương là
+    `facingLatLon().lon` bằng ĐỘ. Quy về độ ở một chỗ để mọi phép so ngưỡng phía
+    sau chỉ phải biết MỘT đơn vị.
+    """
+    return page.evaluate("""() => {
+      const w = window.__mission.world;
+      if (typeof w.earthSpinY === 'number') return w.earthSpinY * 180 / Math.PI;
+      return w.facingLatLon().lon;
+    }""")
+
+
+def deg_delta(a, b):
+    """Chênh lệch góc có xử lý VÒNG QUA ±180.
+
+    Kéo 320px ở 0,42°/px là ~134°, nên phép trừ thẳng rất dễ nhảy qua mốc ±180 và
+    ra một con số vô nghĩa (vd 170 -> -175 thành -345 thay vì +15).
+    """
+    d = (b - a + 180) % 360 - 180
+    return d
+
+
+def grid_hidden(page):
+    """Lưới Chẩn Đoán đã tắt chưa. None = không tìm thấy lưới.
+
+    Hai engine dựng lưới bằng hai cách khác nhau về BẢN CHẤT (Mesh wireframe trong
+    WebGL vs một lớp gradient CSS), nên đây là chỗ buộc phải rẽ nhánh — nhưng câu
+    hỏi thì vẫn là một: người chơi CÒN THẤY lưới không.
+    """
+    return page.evaluate("""() => {
+      const w = window.__mission.world;
+      if (w.scene && w.scene.traverse) {              // cảnh 3D
+        let g = null;
+        w.scene.traverse(o => { if (o.isMesh && o.material && o.material.wireframe) g = o; });
+        if (!g) return null;
+        return g.visible === false || g.material.opacity < 0.02;
+      }
+      const e = document.querySelector('.e2-grid');   // cảnh 2D
+      if (!e) return null;
+      const cs = getComputedStyle(e);
+      return cs.display === 'none' || parseFloat(cs.opacity) < 0.02;
+    }""")
 
 
 def _has_gl(page):
@@ -443,7 +489,10 @@ def main():
 
         # ══════════════════════════════════════════════════════════════════
         head("[2] Bước 1 — lưới quét + 3 điểm tín hiệu (bấm THẬT)")
-        chk(page.evaluate("!!window.__mission.world.scene.children.length"), "scene có vật thể")
+        # Trước đây đếm `world.scene.children.length` — một con số của THREE.js, mà
+        # điều muốn biết chỉ là "cảnh đã vẽ ra cái gì chưa". Đo pixel sáng đúng hơn:
+        # scene có 20 vật thể mà đặt sai chỗ hết thì màn hình vẫn đen.
+        chk(pix(page)["lit"] > 0, "canh da ve ra pixel sang tren man hinh")
         say_through(page)
         page.wait_for_function("() => window.__mission.world.markers.length === 3", timeout=15000)
         chk(True, "3 điểm tín hiệu đã đặt")
@@ -485,15 +534,17 @@ def main():
         chk(bar > 2, "thanh tiến độ có bề rộng THẬT (không phải 0px)", f"{bar:.0f}px")
 
         # Kéo để xoay: chứng minh OrbitControls thật sự hoạt động
-        q0 = page.evaluate("() => window.__mission.world.camera.position.toArray()")
+        # `camera.position` là của three.js. Cả hai engine đều có `facingLatLon()` —
+        # điểm trên bề mặt đang hướng về người xem — nên đó là con số dùng chung.
+        f0 = page.evaluate("() => window.__mission.world.facingLatLon()")
         page.mouse.move(720, 450)
         page.mouse.down()
         page.mouse.move(880, 470, steps=12)
         page.mouse.up()
         page.wait_for_timeout(300)
-        q1 = page.evaluate("() => window.__mission.world.camera.position.toArray()")
-        moved = max(abs(a - b) for a, b in zip(q0, q1))
-        chk(moved > 0.05, "KÉO để xoay đổi được góc camera", f"lệch {moved:.3f}")
+        f1 = page.evaluate("() => window.__mission.world.facingLatLon()")
+        moved = max(abs(deg_delta(f0["lon"], f1["lon"])), abs(f1["lat"] - f0["lat"]))
+        chk(moved > 1.0, "KEO de xoay doi duoc goc nhin", f"lech {moved:.2f} do")
 
         # Nốt 2 điểm còn lại
         for mid in ids:
@@ -507,20 +558,16 @@ def main():
         wait_step(page, "timeline")
         chk(page.evaluate("window.__navMark") == "still-here",
             "KHÔNG tải lại trang khi chuyển bước (biến trong window còn nguyên)")
-        chk(page.evaluate("() => !window.__mission.world.scene.getObjectByName('__none__') && "
-                          "window.__mission.done.includes('scan')"), "bước scan đã ghi xong")
-        # Lưới là `Mesh` có `material.wireframe = true` (KHÔNG phải LineSegments) —
-        # tìm theo đúng thứ nó là, đừng đoán theo tên loại.
-        grid_off = page.evaluate("""() => {
-          let g = null;
-          window.__mission.world.scene.traverse(o => {
-            if (o.isMesh && o.material && o.material.wireframe) g = o;
-          });
-          return g ? { vis: g.visible, op: g.material.opacity } : null;
-        }""")
+        # Bỏ mảnh `!scene.getObjectByName('__none__')`: nó LUÔN đúng (không có vật thể
+        # nào tên như vậy) nên chỉ làm phép kiểm dài ra mà không kiểm thêm gì.
+        chk(page.evaluate("() => window.__mission.done.includes('scan')"),
+            "bước scan đã ghi xong")
+        # `grid_hidden()` trả True/False/None — nó đã gộp cả hai cách dựng lưới (Mesh
+        # wireframe ở cảnh 3D, lớp gradient CSS ở cảnh 2D) về MỘT câu trả lời:
+        # người chơi còn thấy lưới không.
+        grid_off = grid_hidden(page)
         chk(grid_off is not None, "tìm thấy lưới chẩn đoán trong cảnh")
-        chk(bool(grid_off) and (grid_off["vis"] is False or grid_off["op"] < 0.02),
-            "lưới chẩn đoán đã TAN", str(grid_off))
+        chk(grid_off is True, "lưới chẩn đoán đã TAN", str(grid_off))
 
         # ══════════════════════════════════════════════════════════════════
         head("[3b] Bước 2 — dòng thời gian 4,5 tỷ năm + viên nham thạch")
@@ -611,13 +658,19 @@ def main():
         # và báo hỏng oan. Thay vào đó đứng VUÔNG GÓC với hướng nắng rồi quét một
         # dải ngang qua đĩa hành tinh: có ranh giới thì cột sáng nhất phải hơn hẳn
         # cột tối nhất VÀ giữa hai cột liền kề phải có một bước nhảy đột ngột.
-        page.evaluate("""() => {
-          const w = window.__mission.world, THREE = w.THREE;
-          const sd = w.sunDirection().normalize();
-          const up = new THREE.Vector3(0, 1, 0);
-          const perp = new THREE.Vector3().crossVectors(sd, up).normalize().multiplyScalar(3.6);
-          return w.panTo({ pos: { x: perp.x, y: 0.5, z: perp.z }, ms: 900 });
-        }""")
+        # ⚠️ CHỈ cảnh 3D cần bước dời camera này: ở đó ranh giới ngày/đêm do shader
+        #    vẽ trên quả cầu nên phải đứng vuông góc hướng Mặt Trời mới thấy. Cảnh 2D
+        #    không có camera — ranh giới là lớp gradient neo vào KHUNG NHÌN nên đã
+        #    luôn nằm trong tầm mắt. Bỏ hẳn nhánh này ở 2D chứ không gọi `panTo` suông:
+        #    `panTo({pos})` không thuộc hợp đồng của cảnh 2D (nó nhận `dist`).
+        if page.evaluate("() => !!(window.__mission.world.THREE)"):
+            page.evaluate("""() => {
+              const w = window.__mission.world, THREE = w.THREE;
+              const sd = w.sunDirection().normalize();
+              const up = new THREE.Vector3(0, 1, 0);
+              const perp = new THREE.Vector3().crossVectors(sd, up).normalize().multiplyScalar(3.6);
+              return w.panTo({ pos: { x: perp.x, y: 0.5, z: perp.z }, ms: 900 });
+            }""")
         page.wait_for_timeout(1400)
         prof = col_profile(page)
         # Chỉ xét các cột NẰM TRÊN đĩa hành tinh (bỏ nền trời gần như đen)
@@ -682,14 +735,22 @@ def main():
         ang0 = page.evaluate("window.__mission.satAngle")
         # Đo NGAY BÂY GIỜ, trước khi kéo: `outro()` của bước 3 trả cú kéo về cho
         # camera (`enableRotate = true`), nên đo sau khi bước xong là luôn hỏng.
-        chk(page.evaluate("() => window.__mission.world.controls.enableRotate") is False,
+        chk(page.evaluate("""() => {
+              const w = window.__mission.world;
+              // cảnh 3D: phải TẮT quay camera, không thì kéo vừa xoay hành tinh vừa
+              // xoay camera và góc trạm–vệ tinh y nguyên (đúng lỗi đã sửa 29/07).
+              if (w.controls) return w.controls.enableRotate === false;
+              // cảnh 2D: KHÔNG CÓ camera nào để quay — thứ trẻ kéo và thứ được chấm
+              // điểm là CÙNG một con số (`facing.lon`), nên lỗi đó không có cửa.
+              return typeof w.setEarthDrag === 'function' && !w.camera;
+            }"""),
             "trong bước 3, cú kéo KHÔNG đồng thời quay camera")
 
         # KÉO THẬT — đúng thứ trẻ làm được, không dùng `setSpin`
         aligned, ang1, dspin = drag_earth_until_aligned(page)
-        chk(abs(dspin) > 0.5,
+        chk(abs(dspin) > 28,
             "KÉO làm CHÍNH HÀNH TINH xoay (không phải chỉ camera)",
-            f"earth.rotation.y đổi {dspin:+.2f} rad")
+            f"goc hanh tinh doi {dspin:+.0f} do")
         chk(aligned, "kéo tới khi khớp hướng → bước 3 xong",
             f"góc {ang0:.0f}° → {ang1:.0f}°")
         chk(page.eval_on_selector("#sat", "e => e.classList.contains('ok')"),
