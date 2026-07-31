@@ -309,7 +309,7 @@
       "planet":        "Bay tới {name} trong Bản Đồ Thiên Hà",
       "const":         "Ghép xong chòm sao {name} ở Khu Huấn Luyện",
       "planets":       "Ghé thăm {n} hành tinh trong Bản Đồ Thiên Hà",
-      "lessonsRead":   "Đọc xong {n} bài ở khu Tri Thức",
+      "lessonsRead":   "Đọc xong {n} bài ở Trạm Tri Thức",
       "quizTaken":     "Hoàn thành {n} lượt Quiz",
       "quizCorrect":   "Trả lời đúng {n} câu hỏi Quiz",
       "quizPerfect":   "Trả lời đúng toàn bộ một lượt Quiz",

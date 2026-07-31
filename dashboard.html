@@ -178,12 +178,12 @@
       <div class="hud-line bot"><span>OPS: MISSION_01</span><span>PWR: 100%</span></div>
     </article>
 
-    <!-- Tri Thức -->
+    <!-- Trạm Tri Thức -->
     <article class="hud card--quiz" data-tour="learn">
       <div class="hud-line top"><span><span class="led"></span>MOD-01</span><span class="ok">SYS.ONLINE</span></div>
       <div class="ic">🧠</div>
       <span class="tag" data-i18n="quiz_tag">Học &amp; Quiz</span>
-      <h3 data-i18n="quiz_title">Tri Thức</h3>
+      <h3 data-i18n="quiz_title">Trạm Tri Thức</h3>
       <p data-i18n="quiz_desc">Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.</p>
       <button class="jelly-btn" id="btn-quiz" data-i18n="quiz_btn">Vào học &amp; làm Quiz</button>
       <div class="hud-line bot"><span>LOC: EARTH_ORBIT</span><span>PWR: 100%</span></div>
@@ -306,7 +306,7 @@
       galaxy_explore:"Khám phá", planets_unit:"Hành tinh",
       tile_flight:"Thời gian bay", tile_accuracy:"Độ chính xác Quiz", tile_badges:"Huy hiệu",
       radar_sub:"Kỹ năng", log_sub:"Hoạt động gần đây",
-      quiz_tag:"Học & Quiz", quiz_title:"Tri Thức",
+      quiz_tag:"Học & Quiz", quiz_title:"Trạm Tri Thức",
       quiz_desc:"Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.",
       quiz_btn:"Vào học & làm Quiz",
       game_tag:"Game 2D", game_title:"Khu Huấn Luyện",
@@ -324,9 +324,9 @@
       archive_desc:"Tra cứu hành tinh, chòm sao và thuật ngữ thiên văn theo bảng chữ cái.",
       soon_btn:"Sắp ra mắt", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
-      need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>khu Tri Thức</b> làm Quiz để kiếm thêm nhé!",
+      need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
-      quiz_modal_title:"Tri Thức", quiz_close:"Đóng", guest:"Nhà thám hiểm",
+      quiz_modal_title:"Trạm Tri Thức", quiz_close:"Đóng", guest:"Nhà thám hiểm",
       toast_game:"Vào Khu Huấn Luyện! Đã trừ 5 {tt}",
       toast_correct:"Chính xác! +10 {tt}", toast_wrong:"Chưa đúng, thử lại lần sau nhé!",
       title:"AstroQ — Trung Tâm Điều Hướng"
@@ -588,7 +588,7 @@
   $("need-later").addEventListener("click", function(){ closeModal($("need-quiz")); });
   $("need-go").addEventListener("click", function(){ window.location.href="quiz.html"; });
 
-  /* ---- Tri Thức (Learning Hub) → learn.html ---- */
+  /* ---- Trạm Tri Thức (Learning Hub) → learn.html ---- */
   $("btn-quiz").addEventListener("click", function(){ window.location.href="learn.html"; });
   $("need-quiz").addEventListener("click", function(e){ if(e.target===$("need-quiz")) closeModal($("need-quiz")); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal($("need-quiz")); } });

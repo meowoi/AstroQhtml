@@ -168,7 +168,11 @@ def main():
                }))""")
         chk(len(hud) == 6, "co dung 6 card HUD", str(len(hud)))
         names = [h["name"] for h in hud]
-        for want in ("Trung Tâm Nhiệm Vụ", "Tri Thức", "Khu Huấn Luyện",
+        # "Trạm Tri Thức" — tên chốt lại ngày 31/07/2026 (trước đó là "Tri Thức"
+        # trơn). Phép kiểm này từng đòi tên CŨ nên nó báo hỏng đúng lúc trang đã
+        # sửa đúng — cùng loại lỗi "bộ kiểm bảo vệ trạng thái cũ" đã ghi ở nút
+        # Mặt Trăng. So khớp CHÍNH XÁC cả chữ "Trạm" để đổi tên nửa vời cũng bị bắt.
+        for want in ("Trung Tâm Nhiệm Vụ", "Trạm Tri Thức", "Khu Huấn Luyện",
                      "Bản Đồ Thiên Hà", "Phòng Nghiên Cứu", "Thư Viện Thiên Văn"):
             chk(want in names, f"co card '{want}'", "")
         mods = [h["mod"] for h in hud]

@@ -29,7 +29,7 @@
                                   en:{ n:"Galaxy Brain", d:"Answer 50 questions correctly." } },
     "quiz-perfect":    { ic:"🎯", vi:{ n:"Không Trượt Phát Nào", d:"Đúng toàn bộ câu trong một lượt Quiz." },
                                   en:{ n:"Flawless Run", d:"Get every question right in one quiz." } },
-    "reader-5":        { ic:"📖", vi:{ n:"Người Đọc Sao", d:"Đọc xong 5 bài ở khu Tri Thức." },
+    "reader-5":        { ic:"📖", vi:{ n:"Người Đọc Sao", d:"Đọc xong 5 bài ở Trạm Tri Thức." },
                                   en:{ n:"Star Reader", d:"Read 5 articles at the Knowledge Station." } },
     "reader-20":       { ic:"📚", vi:{ n:"Thủ Thư Vũ Trụ", d:"Đọc xong 20 bài." },
                                   en:{ n:"Cosmic Librarian", d:"Read 20 articles." } },

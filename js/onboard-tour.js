@@ -88,7 +88,7 @@
     },
     {
       key: "learn", target: '[data-tour="learn"]', icon: "📚",
-      vi: { title: "Tri Thức",
+      vi: { title: "Trạm Tri Thức",
             body: "Học những điều thú vị về vũ trụ, robot và AI qua các bài học ngắn cùng hình ảnh sinh động." },
       en: { title: "Knowledge Station",
             body: "Learn fascinating things about space, robots and AI through short lessons with lively pictures." }

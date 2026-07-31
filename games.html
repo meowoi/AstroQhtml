@@ -41,7 +41,7 @@
   <section class="hero">
     <span class="eyebrow" data-i18n="eyebrow">Sảnh Trò Chơi</span>
     <h1 data-i18n="title_h">Chọn một trò chơi để bắt đầu</h1>
-    <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở khu Tri Thức nếu chưa đủ nhé!</p>
+    <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!</p>
   </section>
 
   <!-- ============ GAME GRID (đổ từ JS) ============ -->
@@ -74,7 +74,7 @@
       tt_name:"Thiên thạch tím",
       title:"AstroQ — Sảnh Trò Chơi", back:"Về Trung Tâm Điều Hướng",
       eyebrow:"Sảnh Trò Chơi", title_h:"Chọn một trò chơi để bắt đầu",
-      intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở khu Tri Thức nếu chưa đủ nhé!",
+      intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -175,7 +175,7 @@
     var tt = '<img class="tt-inline" src="img/tt.png" alt="tt"/>';
     var body = LANG==="en"
       ? 'You need <b>'+cost+' '+tt+'</b> to play but only have <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!'
-      : 'Bạn cần <b>'+cost+' '+tt+'</b> để chơi nhưng chỉ có <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Hãy ghé <b>khu Tri Thức</b> làm Quiz để kiếm thêm nhé!';
+      : 'Bạn cần <b>'+cost+' '+tt+'</b> để chơi nhưng chỉ có <b>'+Economy.getAsteroids()+' '+tt+'</b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!';
     $("need-body").innerHTML = body;
     $("need").classList.add("show");
   }
