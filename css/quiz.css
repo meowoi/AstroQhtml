@@ -335,3 +335,9 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 .toast{top:74px;transform:translateX(-50%);z-index:80;padding:11px 18px;font-size:13.5px;
   background:rgba(16,22,40,.95);border:1px solid rgba(120,220,255,.5);box-shadow:0 14px 30px -14px rgba(0,0,0,.8);
   transition:opacity .3s var(--ease),transform .3s var(--ease);white-space:nowrap;}
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: nút "Rút lui" cao 34px. */
+@media (pointer: coarse){
+  .exit-btn{min-height:44px;}
+}

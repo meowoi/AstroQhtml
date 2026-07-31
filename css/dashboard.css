@@ -329,3 +329,10 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   transition:opacity .28s var(--ease),transform .28s var(--ease);}
 @media (max-width:560px){ .toast{top:auto;bottom:18px;} }
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: "Đăng xuất" cao 34px, "🏆 Mở Kho Thành Tích" cao 41px. */
+@media (pointer: coarse){
+  .logout-btn{min-height:44px;}
+  .sh-link{min-height:44px;}
+}

@@ -39,3 +39,24 @@ canvas{display:block;}
 .toast .toast-ic.bad{stroke:#ff8a8a;filter:drop-shadow(0 0 6px rgba(255,120,120,.6));}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 @media (prefers-reduced-motion:reduce){ *{animation:none !important;} }
+
+/* ============================================================
+   VÙNG CHẠM TRÊN THIẾT BỊ CẢM ỨNG — mốc 44×44px
+   Đo ngày 31/07/2026 bằng `scratchpad/audit_viewports.py`: trên iPad mini
+   768×1024 nút VI/EN chỉ **26×24px**, nút "Về Trung Tâm Điều Hướng" cao **34px**
+   — dưới mốc 44px của WCAG 2.5.5 và hướng dẫn Apple. Với app cho trẻ 8–15 dùng
+   máy tính bảng, bấm trượt nút Về nghĩa là mắc kẹt trong trang.
+
+   ⚠️ GẮN VÀO `pointer: coarse`, KHÔNG gắn theo BỀ RỘNG màn hình. Bề rộng không
+      cho biết người dùng bấm bằng ngón tay hay bằng chuột: iPad Pro rộng 1024px
+      vẫn là ngón tay, còn cửa sổ Chrome kéo hẹp 700px trên laptop vẫn là chuột.
+      Với chuột thì 44px quá khổ và làm header desktop phình ra vô cớ.
+   ⚠️ Dùng `min-height`/`min-width`, KHÔNG dùng `height`: nhãn tiếng Việt dài hơn
+      tiếng Anh ("Về Trung Tâm Điều Hướng"), khoá cứng chiều cao là cắt chữ.
+   ⚠️ Đây là phần DÙNG CHUNG (.back-btn và .lang-switch khai ở file này nên phủ
+      cả 13 trang). Nút riêng của từng trang sửa trong `css/<trang>.css`.
+   ============================================================ */
+@media (pointer: coarse){
+  .back-btn{min-height:44px;}
+  .lang-switch button{min-width:44px;min-height:44px;}
+}

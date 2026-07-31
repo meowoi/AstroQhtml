@@ -135,3 +135,9 @@ canvas{width:100%;height:100%;}
   .toast{top:auto;bottom:18px;transform:translateX(-50%) translateY(12px);}
   .toast.show{transform:translateX(-50%) translateY(0);}
 }
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: nút Tạm dừng / Âm thanh 34×34px, dùng ở cả 3 mini-game. */
+@media (pointer: coarse){
+  .iconbtn{min-width:44px;min-height:44px;}
+}

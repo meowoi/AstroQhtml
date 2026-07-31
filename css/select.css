@@ -122,3 +122,9 @@ main{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:6px clam
   background:rgba(12,20,50,.85);border:1px solid var(--glass-brd-strong);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
   color:var(--ink);font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;}
 .sel-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: link logo cao 34px. */
+@media (pointer: coarse){
+  .brand{min-height:44px;}
+}

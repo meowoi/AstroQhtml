@@ -491,3 +491,12 @@ a{text-decoration:none;color:inherit;}
   #stage,.me-era{transition:none;}
   .me-stack .puff{opacity:.85;}
 }
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`. Đo trên
+   iPad: nút VI/EN 28×24, nút 🔊 32×28, nút "Về Trung Tâm Điều Hướng" cao 32px.
+   Nhiệm vụ này chính là nội dung hay được chơi trên máy tính bảng nhất. */
+@media (pointer: coarse){
+  .me-lang button{min-width:44px;min-height:44px;}
+  .me-mute{min-width:44px;min-height:44px;}
+  .me-top .back{min-height:44px;}
+}

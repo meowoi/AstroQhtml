@@ -161,3 +161,13 @@
 
 /* Toast cao hơn khung chung vì header trang này thấp hơn. */
 .toast{top:70px;z-index:80;}
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`. Đo trên
+   iPad: ô tìm kiếm cao 18px (chỉ có chữ, `.search` mới là cái khung), nút lọc
+   nguồn cao 25px, nút "Đọc Ngay" cao 42px. Ô tìm kiếm phải nới ở CHÍNH <input>
+   chứ không phải ở `.search`: vùng bấm để hiện bàn phím là cái input. */
+@media (pointer: coarse){
+  .search input{min-height:44px;}
+  .srcfilter button{min-width:44px;min-height:44px;}
+  .read-btn{min-height:44px;}
+}

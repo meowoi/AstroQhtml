@@ -103,3 +103,9 @@
 .foot-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;justify-content:center;}
 
 .stack{display:flex;flex-direction:column;gap:20px;}
+
+/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
+   Đo trên iPad: ô đổi tên cao 40px. Nút "Lưu" là `.pbtn`, đã sửa ở page-shell. */
+@media (pointer: coarse){
+  .rename input{min-height:44px;}
+}

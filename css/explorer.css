@@ -474,6 +474,20 @@ body.theme-light .reg-head:hover{background:rgba(60,90,170,.08);}
 .reg-eyebrow{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;}
 .reg-title{font-family:var(--font-display);font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .reg-group.future .reg-title,.reg-group.future .reg-ic{opacity:.55;font-style:italic;}
+/* TIÊU ĐỀ VÙNG trên màn hẹp: cho XUỐNG DÒNG thay vì cắt bằng "…".
+   Đo trên iPad mini 768×1024 (31/07/2026): ở `--panel-w:300px` cột chữ của
+   `.reg-head` chỉ còn 112px, mà tên vùng tiếng Việt dài hơn bản tiếng Anh
+   ("Vùng lân cận Mặt Trời" cần 136px, "Ngoại hành tinh lân cận" cần 148px)
+   → hiện ra "Vùng lân cận Mặt Trờ…", không còn là một cái tên.
+   ⚠️ PHẢI ĐẶT SAU khai báo `.reg-title` ở ngay trên. `@media` KHÔNG làm tăng độ
+      ưu tiên (specificity), nên bản đầu tôi đặt nó ở mục RESPONSIVE phía trên
+      file và `white-space:nowrap` của dòng trên vẫn thắng — đo lại vẫn thấy cắt.
+   ⚠️ Chỉ nới cho TIÊU ĐỀ. Câu mô tả phụ `.loc-ds` vẫn giữ ellipsis: đó là dòng
+      giới thiệu MỘT dòng, cho xuống dòng thì mỗi mục dài gấp đôi và đúng cái màn
+      hình nhỏ nhất phải cuộn nhiều nhất; chữ đầy đủ vẫn hiện ở bảng thông tin. */
+@media (max-width:900px){
+  .reg-title{white-space:normal;overflow:visible;text-overflow:clip;}
+}
 .reg-status{font-size:12px;flex:none;color:var(--ink-faint);}
 .reg-status.here{filter:drop-shadow(0 0 5px rgba(95,211,255,.8));}
 .reg-go{flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--glass-brd);background:rgba(255,255,255,.06);color:var(--ink-soft);font-size:14px;font-weight:700;line-height:1;display:grid;place-items:center;transition:background .16s,color .16s,transform .1s;}
@@ -569,4 +583,25 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
 @media (max-width:720px){
   .nm-widget{top:14px;left:72px;width:196px;max-height:calc(100vh - 28px);}
   .nm-toast{top:70px;left:72px;}
+}
+
+/* ============================================================
+   VÙNG CHẠM 44px TRÊN THIẾT BỊ CẢM ỨNG — lý do đầy đủ ghi ở `css/common.css`.
+   Trang này là chỗ nhiều nút nhỏ nhất, đo trên iPad mini 768×1024 (31/07/2026):
+   thanh trượt tốc độ CAO 5px, nút `→` của vùng 26×26, nút gập bảng 32×32, nút
+   đóng bảng thông tin 34×34, `‹`/`›` chuyển sao 44×42, nút điều hướng 37px,
+   ô tìm kiếm 39px, dòng chọn địa điểm 33–42px.
+   ⚠️ `min-width`/`min-height` GHI ĐÈ ĐƯỢC `width`/`height` cố định (bề rộng dùng
+      thật là clamp(min, width, max)), nên không phải xoá giá trị cũ.
+   ============================================================ */
+@media (pointer: coarse){
+  .deck-collapse, .info-close, .reg-go{min-width:44px;min-height:44px;}
+  .search input, .btn, .nav-btn, .home-btn, .mid,
+  .loc-item, .reg-head, #star-prev, #star-next{min-height:44px;}
+  #star-prev, #star-next{min-width:44px;}
+  /* Thanh trượt tốc độ: track chỉ 5px nên ngón tay không bắt được. Nới VÙNG BẤM
+     bằng padding dọc (giữ track mảnh cho đẹp) và phóng to núm kéo. */
+  #speed{min-height:44px;padding:19px 0;background:transparent;}
+  #speed::-webkit-slider-thumb{width:22px;height:22px;}
+  #speed::-moz-range-thumb{width:22px;height:22px;}
 }
