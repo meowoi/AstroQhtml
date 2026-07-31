@@ -564,12 +564,24 @@ a{text-decoration:none;color:inherit;}
    marker cũng bị tối và mờ đi đúng lúc trẻ cần chạm vào nó. */
 .e2.e2-night .e2-img{filter:brightness(.26) saturate(.6);}
 
-/* ---- Lưới Chẩn Đoán (bước ①) ---- */
+/* ---- Lưới Chẩn Đoán (bước ①) ----
+   ⚠️⚠️ CHƯA DÙNG `img/earth/graticule.svg` — ĐANG TREO, LÝ DO ĐO ĐƯỢC:
+   Tôi đã vẽ xong lưới kinh–vĩ tuyến theo phép chiếu chính hình (file SVG đó, hình
+   học đúng, đã kiểm bằng ảnh chụp). Nhưng trong cảnh 2D, `paint()` của
+   `js/earth2d.js` để `px = py = 0` khi bản đồ là ẢNH QUẢ CẦU — nghĩa là **kéo
+   KHÔNG làm ảnh quả cầu xoay**, nó chỉ đổi `facing` để marker chiếu lại chỗ khác.
+   Hệ quả: một lưới toạ độ vẽ cố định trên ảnh sẽ ĐỨNG YÊN trong khi các điểm tín
+   hiệu trượt đi — và tệ hơn, xích đạo sẽ nằm sai chỗ so với địa lý thật của bức
+   ảnh (ảnh NASA này chụp lệch tâm về Bắc Mỹ, không phải tâm ở xích đạo).
+   Đó đúng là loại lỗi "dạy sai địa lý" mà dự án đã trả giá một lần với nhiễu fBm.
+   Cách sửa đúng: sinh lưới bằng JS từ `facing`, dùng CHÍNH `project()` của
+   earth2d.js, để nó xoay cùng thứ mà marker đang xoay theo. Chưa làm.
+   Tạm thời để lưới quét TRUNG TÍNH — không tuyên bố nó là kinh/vĩ tuyến. */
 .e2-grid{position:absolute;inset:0;pointer-events:none;
   transition:opacity .6s ease;
   background-image:
-    repeating-linear-gradient(90deg, rgba(95,240,255,.34) 0 1px, transparent 1px 8.5%),
-    repeating-linear-gradient(0deg,  rgba(95,240,255,.34) 0 1px, transparent 1px 8.5%);}
+    repeating-linear-gradient(90deg, rgba(95,240,255,.20) 0 1px, transparent 1px 12.5%),
+    repeating-linear-gradient(0deg,  rgba(95,240,255,.20) 0 1px, transparent 1px 12.5%);}
 
 /* ---- Điểm tín hiệu ---- */
 .e2-markers{position:absolute;inset:0;}

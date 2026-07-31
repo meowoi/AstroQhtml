@@ -476,8 +476,19 @@ def main():
         page.wait_for_timeout(600)
         check("XP tren header = 2340", txt(page, "#xp-val") == "2340", txt(page, "#xp-val"))
         check("Cap do = 7", txt(page, "#planet-level") == "7", txt(page, "#planet-level"))
-        check("Hanh tinh dang dung = Sao Kim (ghe gan nhat)",
-              txt(page, "#planet-name") == "Sao Kim", txt(page, "#planet-name"))
+        # ⚠️ TRUOC 31/07/2026 phep kiem nay doi nhan canh cap do la TEN HANH TINH vua
+        #    ghe ("Sao Kim"). Nhan do da doi thanh TEN BAC huan luyen phi hanh gia,
+        #    nen phep kiem cu dang BAO VE HANH VI CU — cung loai loi da giu nut Mat
+        #    Trang song va da doi ten "Tri Thuc" bao hong. Nay doi dung bat bien moi:
+        #    cap 7 nam trong khoang 6-10 => bac Cadet (js/ranks.js chia 5 cap/bac).
+        check("Nhan canh cap do = TEN BAC, khong phai ten hanh tinh",
+              txt(page, "#planet-name") == "Học Viên (Cadet)", txt(page, "#planet-name"))
+        # Phep kiem thu hai: ten bac phai SUY RA TU CAP DO dang hien, khong phai mot
+        # chuoi gan cung o dau do. Doc lai qua chinh js/ranks.js trong trang.
+        check("ten bac khop dung cap do dang hien tren trang",
+              page.evaluate("() => document.getElementById('planet-name').textContent"
+                            " === AstroQRanks.name(+document.getElementById('planet-level')"
+                            ".textContent, 'vi')"))
         check("Kham pha 3/8", txt(page, "#gx-unlocked") == "3", txt(page, "#gx-unlocked"))
         check("Pip sang dung 3", page.eval_on_selector_all("#gx-pips span.on", "e=>e.length") == 3)
         tiles = txt(page, "#stat-tiles")

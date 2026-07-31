@@ -443,11 +443,59 @@ export async function createEarthWorld(canvas, opt = {}) {
   );
   scene.add(shieldMesh);
 
-  /* ---- Lưới Tín Hiệu Mờ (Diagnostic Grid) ---- */
-  const gridMat = new THREE.MeshBasicMaterial({
-    color: 0x4de2ff, wireframe: true, transparent: true, opacity: 0.34, depthWrite: false
+  /* ---- Lưới Chẩn Đoán = KINH TUYẾN + VĨ TUYẾN + XÍCH ĐẠO ----
+     ⚠️ TRƯỚC 31/07/2026 đây là `SphereGeometry(R*1.035, 24, 16)` với
+        `wireframe:true`. Sai ở chỗ: wireframe của một hình cầu ĐÃ CHIA TAM GIÁC
+        nên nó vẽ luôn cả ĐƯỜNG CHÉO — ảnh chụp ra một lưới tam giác, đọc thành
+        "lưới đa giác 3D" chứ không phải lưới kinh-vĩ tuyến. Với một app dạy thiên
+        văn thì đó là bỏ mất một cơ hội dạy đúng từ vựng (kinh tuyến / vĩ tuyến /
+        xích đạo) để đổi lấy một hoạ tiết trang trí.
+     Nay dựng bằng đường tròn thật:
+        · kinh tuyến mỗi 30°  → 12 đường (nửa vòng, từ cực Bắc xuống cực Nam)
+        · vĩ tuyến  mỗi 30°   → ±30°, ±60° (4 đường)
+        · XÍCH ĐẠO            → đường riêng, sáng hơn hẳn
+     ⚠️ KHÔNG dùng `linewidth` để làm xích đạo dày hơn: WebGL bỏ qua thuộc tính đó
+        trên gần như mọi trình duyệt (luôn vẽ 1px), nên "dày" phải làm bằng MÀU và
+        ĐỘ MỜ. Đây cũng là lý do không vẽ xích đạo bằng một vành `Torus`: vành dày
+        đã ba lần cho ra "một cái vòng rời lơ lửng" trong dự án này. */
+  const GRID_R = R * 1.035;
+  const GRID_OPACITY = 0.34, EQ_OPACITY = 0.85;
+
+  function circlePts(latDeg, lonDeg, seg = 96) {
+    // latDeg != null → vĩ tuyến (vòng ngang). lonDeg != null → kinh tuyến (nửa vòng dọc).
+    const pts = [];
+    if (latDeg != null) {
+      const la = latDeg * Math.PI / 180, r = Math.cos(la) * GRID_R, y = Math.sin(la) * GRID_R;
+      for (let i = 0; i <= seg; i++) {
+        const a = i / seg * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+      }
+    } else {
+      const lo = lonDeg * Math.PI / 180;
+      for (let i = 0; i <= seg; i++) {
+        const a = -Math.PI / 2 + i / seg * Math.PI;       // cực Nam → cực Bắc
+        const r = Math.cos(a) * GRID_R;
+        pts.push(new THREE.Vector3(Math.cos(lo) * r, Math.sin(a) * GRID_R, Math.sin(lo) * r));
+      }
+    }
+    return pts;
+  }
+
+  const gridMat = new THREE.LineBasicMaterial({
+    color: 0x4de2ff, transparent: true, opacity: GRID_OPACITY, depthWrite: false
   });
-  const grid = new THREE.Mesh(new THREE.SphereGeometry(R * 1.035, 24, 16), gridMat);
+  const eqMat = new THREE.LineBasicMaterial({
+    color: 0x9df3ff, transparent: true, opacity: EQ_OPACITY, depthWrite: false
+  });
+
+  const grid = new THREE.Group();
+  for (let lon = 0; lon < 360; lon += 30) {
+    grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circlePts(null, lon)), gridMat));
+  }
+  for (const lat of [-60, -30, 30, 60]) {
+    grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circlePts(lat)), gridMat));
+  }
+  grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circlePts(0)), eqMat));
   scene.add(grid);
 
   /* ---- Mặt Trời ---- */
@@ -862,12 +910,21 @@ export async function createEarthWorld(canvas, opt = {}) {
       });
     },
 
-    /** Lưới chẩn đoán tan đi (xong nhiệm vụ 1). */
+    /** Lưới chẩn đoán tan đi (xong nhiệm vụ 1).
+        ⚠️ Từ 31/07/2026 lưới có HAI material (đường thường + xích đạo sáng hơn).
+           Chỉ hạ `gridMat` thì xích đạo còn nguyên độ mờ 0,85 và ở lại một mình
+           trên hành tinh sau khi lưới "đã tan" — phải hạ CẢ HAI. */
     fadeGrid(ms = 900) {
-      return tween(ms, k => { gridMat.opacity = 0.34 * (1 - k); },
-                   () => { grid.visible = false; });
+      return tween(ms, k => {
+        gridMat.opacity = GRID_OPACITY * (1 - k);
+        eqMat.opacity = EQ_OPACITY * (1 - k);
+      }, () => { grid.visible = false; });
     },
-    showGrid(on) { grid.visible = on !== false; gridMat.opacity = 0.34; },
+    showGrid(on) {
+      grid.visible = on !== false;
+      gridMat.opacity = GRID_OPACITY;
+      eqMat.opacity = EQ_OPACITY;
+    },
 
     /**
      * Bật/tắt Mặt Trời. Một hàm cho cả hai chiều vì hai cảnh đối xứng nhau:

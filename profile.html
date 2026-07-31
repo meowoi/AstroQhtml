@@ -16,6 +16,7 @@
 <script src="js/ui-common.js"></script>
 <script src="js/characters.js"></script>
 <script src="js/planets.js"></script>
+<script src="js/ranks.js"></script>
 <script src="js/progress.js"></script>
 </head>
 <body>
@@ -67,6 +68,7 @@
         </svg>
         <span class="shot"><img id="pilot-model" src="3d/m3d.png" alt="" /></span>
         <span class="lv-chip"><span data-i18n="lv_word">CẤP</span> <b id="lv-num">1</b></span>
+        <span class="lv-rank" id="lv-rank"></span>
       </div>
 
       <div class="pname" id="pilot-name">—</div>
@@ -302,6 +304,9 @@
 
     var lv = VIEW.level;
     $("lv-num").textContent = lv.level;
+    // Tên bậc cạnh con số — cùng nguồn với dashboard (js/ranks.js).
+    if($("lv-rank") && window.AstroQRanks)
+      $("lv-rank").textContent = AstroQRanks.name(lv.level, LANG);
     $("xp-in").textContent = num(lv.xpInLevel);
     $("xp-span").textContent = num(lv.xpForNext);
     $("xp-bar").style.width = Math.max(0, Math.min(100, num(lv.pct))) + "%";

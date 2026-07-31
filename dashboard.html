@@ -22,6 +22,7 @@
 <script src="js/ui-common.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
 <script src="js/badges.js"></script>
+<script src="js/ranks.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
 <script src="js/onboard-tour.js"></script>
@@ -456,10 +457,14 @@
 
   /* Hành tinh đang đứng: lấy hành tinh ghé gần nhất, chưa ghé đâu thì Trái Đất
      (dashboard vốn ghi LOC: EARTH_ORBIT). */
-  function currentPlanet(){
-    var list = (STATS.progress && STATS.progress.planets) || [];
-    var id = list.length ? list[list.length - 1] : "earth";
-    return AstroQPlanets.name(id, LANG);
+  /* ⚠️ TRƯỚC 31/07/2026 nhãn cạnh cấp độ là TÊN HÀNH TINH vừa ghé
+     (`currentPlanet()`). Bỏ vì tên hành tinh không diễn đạt được tiến bộ:
+     "Sao Hoả" không cao hơn "Sao Kim" theo nghĩa nào cả, nên trẻ đọc "Cấp 3 ·
+     Sao Hoả" thì con số và cái tên nói hai chuyện chẳng liên quan. Nay là BẬC
+     huấn luyện phi hành gia — tên ở `js/ranks.js`, mốc do server tính. */
+  function rankLabel(){
+    var lv = (STATS.level && STATS.level.level) || 1;
+    return window.AstroQRanks ? AstroQRanks.name(lv, LANG) : "";
   }
 
   function loadStats(){
@@ -515,7 +520,7 @@
 
     if($("xp-val"))       $("xp-val").textContent = n0(p.xp || lv.xp);
     if($("planet-level")) $("planet-level").textContent = n0(lv.level) || 1;
-    if($("planet-name"))  $("planet-name").textContent = currentPlanet();
+    if($("planet-name"))  $("planet-name").textContent = rankLabel();
     if($("xp-bar"))  $("xp-bar").style.width = Math.max(0,Math.min(100,n0(lv.pct))) + "%";
     if($("xp-pct"))  $("xp-pct").textContent = n0(lv.pct);
     if($("xp-orb"))     $("xp-orb").innerHTML = lic("orbit");

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  graticule.svg — Lưới kinh tuyến / vĩ tuyến / xích đạo cho CẢNH 2D của Nhiệm Vụ 01.
+  Phủ lên ảnh quả cầu (img/earth/globe-640.*), khớp thiết kế của cảnh 3D:
+  kinh tuyến mỗi 30° · vĩ tuyến ±30° và ±60° · xích đạo sáng hơn hẳn.
+
+  HÌNH HỌC — đây là PHÉP CHIẾU CHÍNH HÌNH (orthographic), không phải lưới thẳng.
+  Với tâm nhìn ở xích đạo:  x = 46·cosφ·sinλ ,  y = -46·sinφ   (46 = bán kính đĩa
+  hành tinh theo % chiều rộng ảnh, đo trên ảnh NASA thật — cùng con số `k = 46`
+  trong `project()` của js/earth2d.js).
+    · VĨ TUYẾN: y chỉ phụ thuộc φ → mỗi vĩ tuyến là một ĐOẠN THẲNG NGANG,
+      nửa rộng 46·cosφ. (Không phải ellipse — đó là chỗ dễ vẽ sai nhất.)
+    · KINH TUYẾN: khử φ ra (x / 46·sinλ)² + (y / 46)² = 1 → NỬA ELLIPSE, bán trục
+      ngang 46·|sinλ|, bán trục dọc 46. Vì sin đối xứng nên 12 kinh tuyến chỉ cần
+      4 ellipse (λ = 30·60·90 và bản đối) + 1 đường dọc (λ = 0/180).
+
+  ⚠️ Lưới này CHỈ dùng cho ảnh QUẢ CẦU. Trên bản đồ phẳng (equirectangular) thì
+     kinh/vĩ tuyến ĐÚNG LÀ đường thẳng — nhưng bản đồ phẳng chỉ xuất hiện ở bước
+     ⑥ `life`, lúc đó lưới đã tan từ bước ①, nên không cần bản thứ hai.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"
+     preserveAspectRatio="none" aria-hidden="true">
+  <g fill="none" stroke="#4de2ff" stroke-width="0.35" opacity="0.55">
+    <!-- Kinh tuyến: 4 ellipse (rx = 46·sin30 / sin60 / sin90) + 1 đường dọc -->
+    <line x1="50" y1="4" x2="50" y2="96"/>
+    <ellipse cx="50" cy="50" rx="23"   ry="46"/>
+    <ellipse cx="50" cy="50" rx="39.8" ry="46"/>
+    <ellipse cx="50" cy="50" rx="46"   ry="46"/>
+    <!-- Vĩ tuyến ±30° (y = 50∓23, nửa rộng 39.8) và ±60° (y = 50∓39.8, nửa rộng 23) -->
+    <line x1="10.2" y1="27"   x2="89.8" y2="27"/>
+    <line x1="10.2" y1="73"   x2="89.8" y2="73"/>
+    <line x1="27"   y1="10.2" x2="73"   y2="10.2"/>
+    <line x1="27"   y1="89.8" x2="73"   y2="89.8"/>
+  </g>
+  <!-- XÍCH ĐẠO: đường riêng, sáng hơn. Không tăng stroke-width để "dày" — giữ nét
+       mảnh và nhấn bằng màu/độ mờ, đúng bài học đã ghi ở vành sóng vệ tinh. -->
+  <line x1="4" y1="50" x2="96" y2="50" stroke="#9df3ff" stroke-width="0.45" opacity="0.9"/>
+</svg>

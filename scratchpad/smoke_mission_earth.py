@@ -294,10 +294,18 @@ def grid_hidden(page):
     return page.evaluate("""() => {
       const w = window.__mission.world;
       if (w.scene && w.scene.traverse) {              // cảnh 3D
+        // ⚠️ Từ 31/07/2026 lưới là các `THREE.Line` (kinh tuyến / vĩ tuyến / xích
+        //    đạo) trong một Group, KHÔNG còn là `Mesh` có `material.wireframe`.
+        //    Tìm theo tiêu chí cũ thì trả về null và phép kiểm "tìm thấy lưới" đỏ.
+        //    Nhận diện theo ĐÚNG THỨ NÓ LÀ: mọi con đều là Line và đều mờ dần cùng nhau.
         let g = null;
-        w.scene.traverse(o => { if (o.isMesh && o.material && o.material.wireframe) g = o; });
+        w.scene.traverse(o => {
+          if (o.isGroup && o.children.length >= 8 &&
+              o.children.every(c => c.isLine)) g = o;
+        });
         if (!g) return null;
-        return g.visible === false || g.material.opacity < 0.02;
+        const ops = g.children.map(c => c.material.opacity);
+        return g.visible === false || Math.max.apply(null, ops) < 0.02;
       }
       const e = document.querySelector('.e2-grid');   // cảnh 2D
       if (!e) return null;

@@ -109,3 +109,8 @@
 @media (pointer: coarse){
   .rename input{min-height:44px;}
 }
+
+/* Tên bậc huấn luyện cạnh chip CẤP (js/ranks.js). Bản VI là "Hoa Tiêu (Navigator)"
+   nên chuỗi dài — cho xuống dòng thay vì cắt, và cỡ nhỏ hơn chip số. */
+.lv-rank{display:block;margin-top:6px;font-family:var(--font-display);font-weight:600;
+  font-size:12.5px;line-height:1.3;color:var(--ink-soft);text-wrap:balance;}
