@@ -73,9 +73,17 @@
     <!-- Logo ĐỨNG RIÊNG MỘT HÀNG, không đứng cạnh tiêu đề như ô vuông cũ: bảng
          này chỉ rộng 296px sau padding, mà wordmark cao 38px thì rộng 131px —
          đặt cùng hàng là bóp tiêu đề còn 121px, không đủ cho chữ "Solar System"
-         nên nó xuống 3 dòng. Xem `css/explorer.css`. -->
-    <img class="brand-logo" src="img/astroq-logo.png" width="117" height="34"
-         alt="astroQ" decoding="async">
+         nên nó xuống 3 dòng. Xem `css/explorer.css`.
+         Nút VI/EN đi cùng hàng với logo, giống 15 trang còn lại. Hàng này nằm
+         NGOÀI `.deck-scroll` nên không bị cuộn mất. -->
+    <div class="deck-topline">
+      <img class="brand-logo" src="img/astroq-logo.png" width="117" height="34"
+           alt="astroQ" decoding="async">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang="vi">VI</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
     <div class="brand">
       <div class="brand-text">
         <h1 id="deck-title">Solar System<br/>Explorer</h1>
@@ -2361,7 +2369,7 @@ try{
   function setLbl(id,txt){ var b=$(id); if(!b) return; var s=b.querySelector('.lbl'); if(s) s.textContent=txt; }
   function applyLanguage(lang){
     window.LANG = lang;
-    document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===lang); });
+    AstroQ.markLangButtons(lang);
     AstroQ.applyTexts(T);
     var dt=$('deck-title'); if(dt) dt.innerHTML=T('brand1')+'<br/>'+T('brand2');
     setLbl('nav-prev',T('prev')); setLbl('nav-next',T('next')); setLbl('nav-back',T('navSystem')); setLbl('nav-sun',T('flySun'));
@@ -2387,11 +2395,11 @@ try{
   // Expose a tiny hook so future code can refresh/relocalize the navigation tree.
   window.NM = { render:function(){ renderTree($('search')?$('search').value:''); }, setLanguage:applyLanguage };
 
-  // Đồng bộ ngôn ngữ với lựa chọn đã lưu ở trang index; nút .lang-btn + tab khác
-  // đổi ngôn ngữ đều do AstroQ.initLang lo (js/ui-common.js).
+  // Đồng bộ ngôn ngữ với lựa chọn đã lưu ở trang khác; nút .lang-switch + tab
+  // khác đổi ngôn ngữ đều do AstroQ.initLang lo (js/ui-common.js).
   var savedLang; try{ savedLang=localStorage.getItem('astroq-lang'); }catch(e){}
   applyLanguage((savedLang==='vi'||savedLang==='en') ? savedLang : (window.LANG||'en'));
-  AstroQ.initLang(applyLanguage, '.lang-btn');
+  AstroQ.initLang(applyLanguage);
   setInterval(refresh, 200);
   refresh();
 })();

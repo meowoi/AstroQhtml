@@ -74,11 +74,14 @@ a{text-decoration:none;color:inherit;}
 .me-cur img{width:18px;height:18px;object-fit:contain;
   filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
 .me-cur .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;}
-.me-lang{display:inline-flex;gap:2px;padding:4px;border-radius:999px;
-  background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.me-lang button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+/* Trước 31/07/2026 khối này mang tên riêng `.me-lang` và lặp lại y nguyên 4
+   thuộc tính khung của `.lang-switch` ở `css/common.css`. Cái giá đo được:
+   lượt sửa vùng chạm 44px đã phải viết THÊM một rule riêng cho nó, vì rule
+   dùng chung không với tới được cái tên khác. Nay chỉ giữ phần RIÊNG. */
+.lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
+.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
   font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.me-lang button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
 
 /* Tiến độ 8 bước — chấm nối bằng gạch. Từ 5 lên 8 bước thì dãy này dài thêm ~90px,
    nên trên màn hẹp phải bóp gạch nối lại: để nguyên thì hàng header xuống 3 dòng và
@@ -493,10 +496,10 @@ a{text-decoration:none;color:inherit;}
 }
 
 /* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`. Đo trên
-   iPad: nút VI/EN 28×24, nút 🔊 32×28, nút "Về Trung Tâm Điều Hướng" cao 32px.
-   Nhiệm vụ này chính là nội dung hay được chơi trên máy tính bảng nhất. */
+   iPad: nút 🔊 32×28, nút "Về Trung Tâm Điều Hướng" cao 32px. Nhiệm vụ này
+   chính là nội dung hay được chơi trên máy tính bảng nhất.
+   Nút VI/EN KHÔNG cần rule riêng nữa — nó đã dùng `.lang-switch` dùng chung. */
 @media (pointer: coarse){
-  .me-lang button{min-width:44px;min-height:44px;}
   .me-mute{min-width:44px;min-height:44px;}
   .me-top .back{min-height:44px;}
 }

@@ -64,16 +64,33 @@
     });
   }
 
+  /* Đồng bộ thuộc tính `lang` của <html> với ngôn ngữ đang hiển thị.
+     ⚠️ Thêm 31/07/2026 vì TRƯỚC ĐÓ KHÔNG TRANG NÀO LÀM VIỆC NÀY: `explorer.html`
+        ghi cứng `<html lang="en">` rồi hiển thị toàn bộ nội dung tiếng Việt.
+        Sai `lang` không phải chuyện hình thức — trình đọc màn hình chọn giọng và
+        quy tắc phát âm theo nó (đọc tiếng Việt bằng giọng Anh là không hiểu
+        được), và Google dùng nó để biết trang viết bằng tiếng gì.
+     ⚠️ Đặt ở ĐÂY, trong hàm dùng chung, chứ không sửa 16 trang: `initLang` là
+        thứ mọi trang có nút đổi ngôn ngữ đều gọi. Gọi ngay một lần theo ngôn ngữ
+        đang lưu (vì phần lớn trang gọi `applyLang(LANG)` TRỰC TIẾP chứ không qua
+        đây), rồi bọc `applyLang` để mọi lần đổi sau cũng cập nhật theo. */
+  function setDocLang(lang){
+    try{ document.documentElement.setAttribute("lang", lang==="en" ? "en" : "vi"); }
+    catch(e){}
+  }
+
   /* Gắn nút .lang-switch + đồng bộ khi tab/trang khác đổi ngôn ngữ.
      applyLang do từng trang tự cài (mỗi trang render nội dung khác nhau). */
   function initLang(applyLang, sel){
+    setDocLang(getLang());
+    function apply(l){ setDocLang(l); applyLang(l); }
     document.querySelectorAll(sel||".lang-switch button").forEach(function(b){
       b.addEventListener("click", function(){
-        var l=b.getAttribute("data-lang"); setLang(l); applyLang(l);
+        var l=b.getAttribute("data-lang"); setLang(l); apply(l);
       });
     });
     global.addEventListener("storage", function(e){
-      if(e.key===LS_LANG && (e.newValue==="en"||e.newValue==="vi")) applyLang(e.newValue);
+      if(e.key===LS_LANG && (e.newValue==="en"||e.newValue==="vi")) apply(e.newValue);
     });
   }
 
@@ -106,7 +123,8 @@
 
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
               getLang:getLang, setLang:setLang, markLangButtons:markLangButtons,
-              initLang:initLang, applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
+              initLang:initLang, setDocLang:setDocLang,
+              applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
               LS_USER:LS_USER, LS_LANG:LS_LANG };
 
   global.AstroQ = global.AstroQ || {};

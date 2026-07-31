@@ -534,6 +534,40 @@ for f in sorted(os.listdir(ROOT)):
 check("dashboard.html: tu goi minh la 'Trung Tam Dieu Huong'",
       "Trung Tâm Điều Hướng" in dash)
 check("dashboard.html: co ten EN 'Navigation Hub'", "Navigation Hub" in dash)
+
+# --- Ten khu Tri Thuc: PHAI la "Trạm Tri Thức", khong duoc de "Tri Thức" tron ---
+# ⚠️ Truoc 31/07/2026 KHONG CO phep kiem nao cho ten khu nay, va do la ly do lan
+#    doi ten bo sot mot cho: `learn.html` con chu TINH "TRI THỨC & DỮ LIỆU VŨ TRỤ"
+#    trong markup (JS ghi de nen do tren trinh duyet khong thay).
+# ⚠️ PHAI so bang casefold() CUA PYTHON, khong dung `grep -i`: grep -i KHONG
+#    case-fold duoc ky tu co dau tieng Viet (Ứ vs ứ), nen lan quet dau tien cua
+#    toi bao "khong con cho nao" trong khi con dung mot cho — chu do viet HOA.
+_KNOW_OK_PREFIX = ("trạm ", "ngân hà ")   # "Ngân Hà Tri Thức" la cau van o index
+_know_bad = []
+for _f in sorted(os.listdir(ROOT)):
+    if not (_f.endswith(".html")):
+        continue
+    _s = strip_comments(rd(_f))
+    _lo = _s.casefold()
+    for _m in re.finditer("tri thức", _lo):
+        _ctx = _lo[max(0, _m.start() - 14):_m.start()]
+        if not any(p in _ctx for p in _KNOW_OK_PREFIX):
+            _know_bad.append(f"{_f}:{_s[max(0,_m.start()-24):_m.start()+12].strip()!r}")
+for _f in sorted(os.listdir(os.path.join(ROOT, "js"))):
+    if not _f.endswith(".js"):
+        continue
+    _s = strip_comments(rd(os.path.join("js", _f)))
+    _lo = _s.casefold()
+    for _m in re.finditer("tri thức", _lo):
+        _ctx = _lo[max(0, _m.start() - 14):_m.start()]
+        if not any(p in _ctx for p in _KNOW_OK_PREFIX):
+            _know_bad.append(f"js/{_f}:{_s[max(0,_m.start()-24):_m.start()+12].strip()!r}")
+check("khong con 'Tri Thuc' tron (phai la 'Tram Tri Thuc')", not _know_bad,
+      str(_know_bad[:3]))
+check("dashboard.html: the MOD-01 goi dung 'Tram Tri Thuc'",
+      "Trạm Tri Thức" in dash)
+check("learn.html: tu goi minh la 'Tram Tri Thuc'", "Trạm Tri Thức" in rd("learn.html"))
+
 # Mọi trang có nút quay lại đều phải trỏ về ĐÚNG một cái tên
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
@@ -972,6 +1006,68 @@ check("server: DTO tra ve earth1Greeted", "earth1Greeted   = o.Earth1Greeted" in
 #    goi {earth1Greeted:true} se dong thoi bat luon tourSeen.
 check("server: body rong -> tourSeen true, nhung co moi KHONG kich hoat no",
       "tour is null && intro1 is null && greeted is null) tour = true" in _ep2)
+
+
+# ============================================================
+# [14] QUY UOC TOAN SITE — hai phep kiem chan dung LOAI LOI da xay ra:
+#      "mot trang tu tach khoi quy uoc chung ma khong ai biet".
+# ============================================================
+print("\n=== [14] Quy uoc toan site: nut doi ngon ngu + script ten mien ngoai ===")
+
+_html_pages = sorted(f for f in os.listdir(ROOT)
+                     if f.endswith(".html") and os.path.isfile(os.path.join(ROOT, f)))
+
+# --- (1) Trang nao GOI initLang thi PHAI co markup nut doi ngon ngu ---
+# ⚠️ Phep kiem nay sinh ra tu mot loi that: `explorer.html` goi
+#    `initLang(applyLanguage, '.lang-btn')`, `css/explorer.css` co du 3 rule
+#    `.lang-btn`, nhung MARKUP thi khong co phan tu nao — nen trang do KHONG CO
+#    nut doi ngon ngu suot nhieu thang ma khong gi bao loi. CSS co rule va JS co
+#    lenh deu KHONG chung minh duoc rang nguoi dung BAM DUOC.
+_calls, _missing, _partial = [], [], []
+for _f in _html_pages:
+    _h = rd(_f)
+    if "initLang" not in _h:
+        continue
+    _calls.append(_f)
+    _langs = set(re.findall(r'data-lang="([a-z]{2})"', _h))
+    if not _langs:
+        _missing.append(_f)
+    elif not {"vi", "en"} <= _langs:
+        _partial.append((_f, sorted(_langs)))
+
+check("co trang nao goi initLang (phep kiem khong dat rong)", len(_calls) >= 10,
+      f"{len(_calls)} trang")
+check("MOI trang goi initLang deu co markup data-lang", not _missing, str(_missing))
+check("moi trang do co DU ca 'vi' va 'en'", not _partial, str(_partial))
+
+# Truyen selector RIENG cho initLang la duong quay lai dung cai bay tren: dat ten
+# khac `.lang-switch` thi khung dung chung o css/common.css khong ap vao nua.
+_own_sel = [_f for _f in _calls
+            if re.search(r"initLang\([^)]*,\s*['\"]", rd(_f))]
+check("khong trang nao truyen selector RIENG cho initLang", not _own_sel, str(_own_sel))
+
+# --- (2) Khong trang nao nap script tu TEN MIEN NGOAI ---
+# ⚠️ Du an da tra gia de bo 2 ket noi ngoai (tu host font: 621 KB -> 101 KB) va co
+#    y KHONG nap SDK Firebase o trang can muot. Nhung `explorer.html` va
+#    `mission-earth.html` van keo three.js tu unpkg.com — do duoc 257 KB gzip, tu
+#    mot ten mien khong ai kiem soat, nam tren duong onboarding BAT BUOC.
+#    Phep kiem nay KHONG doi 0 ngay mot: no GHIM danh sach hien tai lai, de them
+#    trang thu ba la biet ngay. Bo three.js xong thi xoa ten khoi _KNOWN_CDN va
+#    phep kiem thu hai se doi danh sach phai RONG.
+_KNOWN_CDN = {"explorer.html", "mission-earth.html"}
+_ext = {}
+for _f in _html_pages:
+    _h = rd(_f)
+    _hosts = set(re.findall(r'"(?:https?:)?//([a-z0-9.-]+)/[^"]*\.m?js"', _h))
+    _hosts |= set(re.findall(r'<script[^>]+src="(?:https?:)?//([a-z0-9.-]+)', _h))
+    if _hosts:
+        _ext[_f] = sorted(_hosts)
+check("khong co trang MOI nao nap script tu ten mien ngoai",
+      set(_ext) <= _KNOWN_CDN,
+      str({k: v for k, v in _ext.items() if k not in _KNOWN_CDN}))
+check("danh sach trang con phu thuoc CDN dung nhu da ghi",
+      set(_ext) == _KNOWN_CDN,
+      f"dang co {sorted(_ext)}, da ghi {sorted(_KNOWN_CDN)}")
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

@@ -56,7 +56,7 @@
     <button type="button" class="me-mute hit" id="mute"
             data-i18n-title="a_sfx" title="Bật/tắt âm thanh"
             data-i18n-aria="a_sfx" aria-label="Bật/tắt âm thanh" aria-pressed="false"></button>
-    <span class="me-lang" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+    <span class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
       <button type="button" class="hit" data-lang="vi">VI</button>
       <button type="button" class="hit" data-lang="en">EN</button>
     </span>
@@ -1508,7 +1508,7 @@ function applyLang(lang) {
   document.documentElement.lang = LANG;
   document.title = t('title');
   AstroQ.applyTexts(t);
-  AstroQ.markLangButtons(LANG, '.me-lang button');
+  AstroQ.markLangButtons(LANG);
   $('tag').textContent = t('tag');
   $('load-txt').textContent = t('load');
   $('load-sub').textContent = $('load-sub').dataset.fail ? t('load_fail') : t('load_sub');
@@ -1589,7 +1589,7 @@ paintBalance();
 paintMute();
 Economy.onAsteroidsChange(paintBalance);
 applyLang(LANG);
-AstroQ.initLang(applyLang, '.me-lang button');
+AstroQ.initLang(applyLang);
 paintSteps();
 
 (async function boot() {

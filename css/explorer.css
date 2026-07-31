@@ -32,7 +32,14 @@ button{color:inherit;cursor:pointer;}
   background:radial-gradient(ellipse at 50% 40%, #1b2a63 0%, #0a1030 55%, #06091c 100%);
   transition:opacity .8s var(--ease), visibility .8s;
 }
-#loader.hidden{opacity:0;visibility:hidden;}
+/* ⚠️ `pointer-events:none` là BẮT BUỘC, không phải trang trí. `#loader` có
+   `transition:opacity .8s, visibility .8s`, nên trong suốt 0,8s cuối nó đã mờ tới
+   `opacity:0,02` mà `visibility` vẫn còn là `visible` — tức là trang trông đã sẵn
+   sàng nhưng MỌI CÚ BẤM BỊ LỚP PHỦ NUỐT. Đo được bằng `elementFromPoint` ở giữa
+   nút EN: mốc 1600ms trả về `div#loader.hidden`, tới 3000ms mới trả về đúng cái
+   nút. Lỗi này có từ trước và im lặng — bấm không ăn thì người dùng chỉ tưởng
+   mình bấm trượt. */
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
 .loader-orb{
   width:74px;height:74px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%, #fff6d8, var(--sun) 40%, var(--sun-warm) 75%);
@@ -83,7 +90,13 @@ body.theme-light .deck-collapse{background:rgba(255,255,255,.5);}
       cạnh chữ). Lý do đo được: bảng chỉ rộng 296px sau padding, wordmark cao
       38px thì rộng 131px, cộng nút gập 44px (cảm ứng) là tiêu đề chỉ còn 121px
       trong khi riêng chữ "Solar System" ở cỡ 20px đã cần ~125px. */
-.deck-head .brand-logo{--logo-h:34px;margin-bottom:14px;}
+/* Hàng trên của bảng: logo bên trái, nút VI/EN bên phải — giống 15 trang còn
+   lại. Đặt trong `.deck-head` (ngoài `.deck-scroll`) nên không cuộn mất; KHÔNG
+   dựng khối `position:fixed` mới vì góc trên-phải đã bị `#info` (rộng 400px)
+   chiếm, hai thứ sẽ đè nhau khi mở bảng thông tin. */
+.deck-topline{display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-bottom:14px;}
+.deck-topline .brand-logo{--logo-h:34px;}
 .brand{display:flex;align-items:center;gap:12px;}
 .brand-text{flex:1;}
 h1{font-family:var(--font-display);font-weight:700;font-size:20px;line-height:1.05;margin:0;letter-spacing:.005em;}
@@ -433,9 +446,18 @@ body.theme-light .nm-node:hover{background:rgba(60,90,170,.08);}
 /* ---- Language selector ---- */
 .lang{display:flex;gap:2px;flex:none;background:rgba(255,255,255,.06);border:1px solid var(--glass-brd);border-radius:20px;padding:2px;height:fit-content;}
 body.theme-light .lang{background:rgba(255,255,255,.5);}
-.lang-btn{border:none;background:transparent;color:var(--ink-soft);font-family:var(--font-display);font-weight:600;font-size:10.5px;letter-spacing:.03em;padding:5px 9px;border-radius:16px;transition:background .18s var(--ease),color .18s;}
-.lang-btn:hover{color:var(--ink);}
-.lang-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#06122b;}
+/* ⚠️ TRƯỚC 31/07/2026 TRANG NÀY DÙNG TÊN RIÊNG `.lang-btn` — và đó chính là lý
+   do nó KHÔNG CÓ nút đổi ngôn ngữ suốt nhiều tháng mà không ai biết: CSS có đủ
+   rule, JS gọi `initLang(applyLanguage, '.lang-btn')`, chỉ MARKUP là không có,
+   nên chẳng có gì báo lỗi. Nay dùng `.lang-switch` như 15 trang còn lại (khung
+   khai ở `css/common.css`) và `check_pages.py` mục [14] canh chuyện này. */
+.lang-switch{flex:none;background:rgba(255,255,255,.06);border:1px solid var(--glass-brd);}
+body.theme-light .lang-switch{background:rgba(255,255,255,.5);}
+.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+  font-family:var(--font-display);font-weight:600;font-size:10.5px;letter-spacing:.03em;
+  padding:5px 9px;border-radius:16px;transition:background .18s var(--ease),color .18s;}
+.lang-switch button:hover{color:var(--ink);}
+.lang-switch button.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#06122b;}
 
 /* ---- Game-style journey trail (Region + Universe maps) ---- */
 .nm-journey{position:relative;width:100%;}
