@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+# ⚠️⚠️ BỘ NÀY ĐÃ NGHỈ HƯU 01/08/2026 — nó đo `js/mission-intro.js`, mà màn cutscene
+#      đó không còn trang nào nạp (docs/decisions/003 bước ⑦). Chạy nó bây giờ sẽ
+#      HỎNG, và hỏng đó KHÔNG phải lỗi sản phẩm.
+#      Màn thay thế có bộ đo riêng: `scratchpad/smoke_map_onboard.py`.
+#      Giữ file để tra lại 4 phép đo đã trả giá (tàu bay ĐÚNG quỹ đạo: khoảng cách
+#      tới tâm 1,47–1,49 R trong khi GÓC đổi; box thoại không đè Trái Đất).
+
 """
 smoke_mission_intro.py — chơi THẬT màn mở đầu Nhiệm Vụ 01 trên Chromium.
 
@@ -202,10 +209,10 @@ def main():
         page.wait_for_selector("#mission-intro.show", timeout=9000)
         check("Da xem tour roi -> cutscene tu chay", page.is_visible("#mission-intro.show"))
         check("Anh Comet hien (img/m1.png)",
-              page.evaluate("() => { const i=document.querySelector('.mi-ava img');"
+              page.evaluate("() => { const i=document.querySelector('.mi-say .aq-ava img');"
                             "return !!i && i.complete && i.naturalWidth>0; }"))
-        check("Ten linh vat la Comet", txt(page, ".mi-who .nm") == "Comet",
-              txt(page, ".mi-who .nm"))
+        check("Ten linh vat la Comet", txt(page, ".mi-who .aq-nm") == "Comet",
+              txt(page, ".mi-who .aq-nm"))
 
         # Chờ gõ xong (câu ~200 ký tự × 26ms ≈ 5,2s + 2,2s chờ)
         page.wait_for_selector(".mi-next:not(.hide)", timeout=15000)

@@ -52,7 +52,7 @@ def stub(earth_done=True, greeted=False, ob_ok=True):
       function load() {{ try {{ return JSON.parse(localStorage.getItem(K)) || null; }}
                          catch (e) {{ return null; }} }}
       function save(o) {{ try {{ localStorage.setItem(K, JSON.stringify(o)); }} catch (e) {{}} }}
-      if (!load()) save({{ tourSeen:true, intro01Seen:true,
+      if (!load()) save({{ tourSeen:true, intro01Seen:true, map01Seen:true,
                            earth1Greeted:{json.dumps(greeted)} }});
       window.__calls = [];
       const auth = {{
@@ -62,7 +62,7 @@ def stub(earth_done=True, greeted=False, ob_ok=True):
           if (!{json.dumps(ob_ok)}) return {{ ok:false, reason:"net" }};
           const o = load();
           return {{ ok:true, tourSeen:o.tourSeen, intro01Seen:o.intro01Seen,
-                    earth1Greeted:o.earth1Greeted }};
+                    earth1Greeted:o.earth1Greeted, map01Seen:o.map01Seen !== false }};
         }},
         setOnboarding: async (p) => {{
           window.__calls.push("setOnboarding:" + JSON.stringify(p));
@@ -72,6 +72,7 @@ def stub(earth_done=True, greeted=False, ob_ok=True):
             if ("tourSeen" in p) o.tourSeen = !!p.tourSeen;
             if ("intro01Seen" in p) o.intro01Seen = !!p.intro01Seen;
             if ("earth1Greeted" in p) o.earth1Greeted = !!p.earth1Greeted;
+            if ("map01Seen" in p) o.map01Seen = !!p.map01Seen;
           }}
           save(o);
           return {{ ok:true, ...o }};
@@ -117,6 +118,11 @@ def dash(browser, earth_done=True, greeted=False, ob_ok=True,
         f"localStorage.setItem('astroq-lang', '{lang}');"
         "localStorage.setItem('astroq-asteroids','41');"
         "localStorage.setItem('astroq-tour-seen','1');"
+        # ⚠️ PHẢI GIEO `astroq-map01-seen`. Từ 01/08/2026 `dashboard.html` đẩy trẻ sang
+        #    `explorer.html?onboard=1` khi chưa đi qua bản đồ (docs/decisions/003) —
+        #    không gieo thì trang ĐIỀU HƯỚNG ĐI, `.tour` không tồn tại và bộ này ném
+        #    "Failed to find element matching selector .tour". Màn bản đồ có bộ riêng.
+        "localStorage.setItem('astroq-map01-seen','1');"
         "localStorage.setItem('astroq-mission01-intro-seen','1');"
     )
     ctx.add_init_script(stub(earth_done, greeted, ob_ok))
@@ -173,9 +179,16 @@ with sync_playwright() as p:
     pg.click(".tour-next")
     pg.wait_for_timeout(600)
     calls = [c for c in pg.evaluate("window.__calls") if c.startswith("setOnboarding")]
-    chk(len(calls) == 1, "ghi co dung MOT lan", str(calls))
-    chk(calls and "earth1Greeted" in calls[0] and "tourSeen" not in calls[0],
-        "ghi RIENG earth1Greeted, KHONG dung tourSeen", str(calls))
+    # ⚠️ LỌC RA ĐÚNG LỜI GỌI CỦA `earth1Greeted`, ĐỪNG ĐẾM TỔNG SỐ LỜI GỌI.
+    #    Từ 01/08/2026 dashboard còn đồng bộ `{map01Seen:true}` lên server khi cache
+    #    trong máy nói đã đi qua bản đồ (docs/decisions/003) — một lời gọi RIÊNG và
+    #    hợp lệ. Bản trước đòi "đúng MỘT lời gọi setOnboarding" nên nó báo hỏng đúng
+    #    lúc sản phẩm làm đúng. Điều cần bảo vệ vẫn nguyên: cờ `earth1Greeted` được
+    #    ghi ĐÚNG MỘT LẦN và ghi RIÊNG, không kèm `tourSeen`.
+    g_calls = [c for c in calls if "earth1Greeted" in c]
+    chk(len(g_calls) == 1, "ghi co earth1Greeted dung MOT lan", str(calls))
+    chk(bool(g_calls) and "tourSeen" not in g_calls[0],
+        "ghi RIENG earth1Greeted, KHONG dung tourSeen", str(g_calls))
     ob = pg.evaluate("JSON.parse(localStorage.getItem('__test-ob'))")
     chk(ob.get("earth1Greeted") is True and ob.get("tourSeen") is True,
         "co earth1Greeted len true, tourSeen GIU NGUYEN", str(ob))
@@ -189,10 +202,17 @@ with sync_playwright() as p:
     chk(pg.eval_on_selector(".tour", "e => !e.classList.contains('show')")
         if pg.query_selector(".tour") else True,
         "da chao roi -> KHONG mo lai")
-    # Và không tốn thêm lời gọi mạng nào để biết điều đó
-    chk("missions" not in str(pg.evaluate("window.__calls")),
-        "da chao roi thi KHONG goi /me/missions (khoi ton mang)",
-        str(pg.evaluate("window.__calls")))
+    # Và không gọi /me/missions LẶP LẠI để biết điều đó.
+    # ⚠️ ĐỔI TỪ "0 lời gọi" SANG "ĐÚNG 1 lời gọi" ngày 01/08/2026, và đây là một
+    #    thay đổi CÓ LÝ DO, không phải nới lỏng cho qua: từ khi có cổng lộ trình
+    #    (docs/decisions/003), dashboard PHẢI hỏi `/me/missions` mỗi lượt tải để làm
+    #    mới cache cho `explorer.html` — trang bản đồ không có token nên tự nó không
+    #    hỏi được. Điều phép kiểm này bảo vệ vẫn nguyên: **không gọi hai lần cho cùng
+    #    một câu trả lời** (hai chỗ dùng chung `missionsShared()` ở dashboard.html).
+    _calls = [c for c in (pg.evaluate("window.__calls") or []) if "missions" in str(c)]
+    chk(len(_calls) == 1,
+        "da chao roi: goi /me/missions DUNG 1 lan (cong lo trinh dung chung, khong goi doi)",
+        f"{len(_calls)} lan: {_calls}")
     ctx.close()
 
     # ══════════════════════════════════════════════════════════════

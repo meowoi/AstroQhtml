@@ -1,7 +1,7 @@
 /* ============================================================
    AstroQ — Màn Cấp Thẻ ID & Chọn Nhân Vật
    Roster nhân vật (ảnh 3D: /3d, avatar: /ava), chọn → đổi avatar thẻ ID,
-   điền tên → "BẮT ĐẦU HÀNH TRÌNH" → lưu localStorage → dashboard.html
+   điền tên → "BẮT ĐẦU HÀNH TRÌNH" → lưu localStorage → explorer.html?onboard=1
    ============================================================ */
 (function () {
   "use strict";
@@ -103,7 +103,14 @@
 
     var stamp=$("stamp"); if(stamp) stamp.classList.add("show");   // đóng dấu APPROVED
     var btn=$("start-journey"); if(btn) btn.disabled=true;
-    setTimeout(function(){ window.location.href="dashboard.html"; }, 1150);
+    /* ⚠️ ĐI THẲNG SANG BẢN ĐỒ, KHÔNG QUA DASHBOARD (docs/decisions/003).
+       Vừa chọn nhân vật xong thì đây định nghĩa là phi hành gia MỚI, nên khỏi phải
+       hỏi server cờ `map01Seen`. Qua dashboard trước thì trẻ thấy dashboard nhấp một
+       cái rồi bị nhảy đi — `mapFirst()` ở đó phải chờ `getOnboarding()` mới quyết được.
+       `mapFirst()` vẫn giữ, làm lưới an toàn cho đường ĐĂNG NHẬP (máy khác). */
+    setTimeout(function(){
+      window.location.href = "explorer.html?onboard=1";
+    }, 1150);
   }
 
   function init(){

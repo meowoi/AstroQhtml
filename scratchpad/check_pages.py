@@ -120,6 +120,19 @@ def css_classes(*rels):
     return set(re.findall(r"\.(-?[_a-zA-Z][\w-]*)", s))
 
 
+def page_css(rel_html):
+    """Danh sach CSS mot trang THUC SU nap, doc tu chinh the <link> cua no.
+
+    ⚠️ Truoc 31/07/2026 phep kiem "moi class deu co CSS" GAN CUNG danh sach file
+       CSS. Tach `.aq-say/.aq-ava/.aq-nm` ra `css/mascot.css` la phep kiem bao
+       thieu CSS ngay, du trang da nap dung file — no khong biet co file moi.
+       Phep kiem gan cung danh sach thi moi lan them stylesheet lai phai sua
+       phep kiem, va nguoi sua se chon cach de hon la them ten vao `skip`.
+       Doc tu <link> thi no tu dung mai mai.
+    """
+    return re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="(css/[^"]+)"', rd(rel_html))
+
+
 def clean_token(c):
     """Chỉ giữ token là TÊN CLASS thật.
 
@@ -243,9 +256,15 @@ WIRED = {
     "explorer.html":            ("AstroQProgress.planet(", "js/progress.js"),
     "mission-earth.html":       ("AstroQProgress.missionStep(", "js/progress.js"),
 }
+# ⚠️ Vai trang da tach logic ra file rieng, nen loi goi khong con nam trong HTML.
+#    Khai RO file phu o day thay vi quet bua moi js/*.js trang nap: `js/progress.js`
+#    co dinh nghia `missionStep` nen quet bua la phep kiem tu dat (trang nao nap
+#    progress.js cung "co goi missionStep").
+EXTRA_SRC = {"mission-earth.html": ["js/mission-engine.js"]}
 for page, (call, dep) in WIRED.items():
     html = rd(page)
-    check(f"{page}: co goi {call}…", call in html)
+    src = html + "".join(rd(f) for f in EXTRA_SRC.get(page, []))
+    check(f"{page}: co goi {call}…", call in src)
     check(f"{page}: co nap {dep}", f'src="{dep}"' in html)
 
 # ══════════════════════════════════════════════════════════════
@@ -257,14 +276,18 @@ check("mission-earth.html KHONG nap firebase-auth.js (SDK 233 KB)",
 # Bảng luật ở AstroqSV/Services/Missions.cs — client chỉ gửi {mission, step}.
 # Bất kỳ con số thưởng nào lọt vào đây là dấu hiệu client tự tính lại.
 import re as _re
-_bad = [k for k in ("addAsteroids", "Economy.add") if k in me]
+# ⚠️ QUET CA `js/mission-engine.js` (tach ra 31/07/2026): phan cong don thuong da
+#    chuyen sang do. Chi quet HTML thi ba phep kiem duoi day tu dat ma khong con
+#    canh gi — dung loai "phep kiem con xanh vi nhin nham cho".
+_me_src = me + rd("js/mission-engine.js")
+_bad = [k for k in ("addAsteroids", "Economy.add") if k in _me_src]
 # `reward.meteors += r.data.awarded` là ĐÚNG — cộng đúng con số SERVER trả về.
-# Chỉ sai khi cộng một số viết cứng trong trang.
-_bad += _re.findall(r"reward\.(?:meteors|xp|codex)\s*\+?=\s*[0-9]", me)
+# Chỉ sai khi cộng một số viết cứng.
+_bad += _re.findall(r"reward\.(?:meteors|xp|codex)\s*\+?=\s*[0-9]", _me_src)
 check("mission-earth.html KHONG tu cong tt/XP bang so viet cung", not _bad, str(_bad))
 check("mission-earth.html chi doc thuong tu phan hoi server",
-      "r.data.awarded" in me and "r.data.xpGained" in me)
-_mv = _re.search(r"missionStep\(([^)]*)\)", me)
+      "r.data.awarded" in _me_src and "r.data.xpGained" in _me_src)
+_mv = _re.search(r"missionStep\(([^)]*)\)", _me_src)
 check("missionStep chi gui {mission, step}", bool(_mv) and "meteors" not in _mv.group(1),
       _mv.group(0) if _mv else "khong thay")
 
@@ -379,7 +402,7 @@ _me_refs = set(_re.findall(r"\$\('([^']+)'\)", _me_js))
 check("mission-earth.html: moi $('id') deu ton tai",
       _me_refs <= _me_ids, f"thieu: {sorted(_me_refs - _me_ids)}")
 # Class dùng trong markup phải có CSS (bốn bảng kéo-thả mới dễ quên khai)
-_me_css = css_classes("css/common.css", "css/mission-earth.css")
+_me_css = css_classes(*page_css("mission-earth.html"))
 _me_used = used_classes(me)
 _me_skip = {"sr-only", "nebula", "starfield", "toast", "modal", "lic", "tt-inline", "hit"}
 check("mission-earth.html: moi class deu co CSS",
@@ -1004,8 +1027,17 @@ check("server: ghi RIENG co duoc truyen vao (null = khong dung toi)",
 check("server: DTO tra ve earth1Greeted", "earth1Greeted   = o.Earth1Greeted" in _ep2)
 # ⚠️ Dieu kien "body rong -> tourSeen true" phai loai TRU ca co moi; thieu no thi
 #    goi {earth1Greeted:true} se dong thoi bat luon tourSeen.
-check("server: body rong -> tourSeen true, nhung co moi KHONG kich hoat no",
-      "tour is null && intro1 is null && greeted is null) tour = true" in _ep2)
+# ⚠️ SUY RA danh sách cờ, KHÔNG GHIM CHUỖI. Bản trước ghim nguyên văn
+#    `"tour is null && intro1 is null && greeted is null) tour = true"`, nên khi thêm
+#    cờ thứ tư (`map01Seen`, 01/08/2026) nó báo hỏng **đúng lúc code làm đúng** — cùng
+#    loại lỗi "gán cứng" đã trả giá 6 lần. Nay: đếm số biến cờ khai trong handler rồi
+#    đòi điều kiện phải liệt kê ĐỦ số đó.
+_put_vars = set(re.findall(r"var (tour|intro1|greeted|map1)\s*=\s*req\?\.", _ep2))
+_put_cond = re.search(r"if \((tour is null(?:[^)]*?))\)\s*\n?\s*tour = true", _ep2)
+check("server: tim thay nhanh 'body rong -> tourSeen true'", bool(_put_cond))
+check("server: nhanh do loai tru DU MOI co (them co moi khong lam vo no)",
+      bool(_put_cond) and all(v + " is null" in _put_cond.group(1) for v in _put_vars),
+      f"co: {sorted(_put_vars)} · dieu kien: {_put_cond.group(1) if _put_cond else '—'}")
 
 
 # ============================================================
@@ -1054,7 +1086,9 @@ check("khong trang nao truyen selector RIENG cho initLang", not _own_sel, str(_o
 #    Phep kiem nay KHONG doi 0 ngay mot: no GHIM danh sach hien tai lai, de them
 #    trang thu ba la biet ngay. Bo three.js xong thi xoa ten khoi _KNOWN_CDN va
 #    phep kiem thu hai se doi danh sach phai RONG.
-_KNOWN_CDN = {"explorer.html", "mission-earth.html"}
+# 31/07/2026: `mission-earth.html` đã bỏ three.js (bậc 5) nên rời khỏi danh sách.
+# Còn đúng `explorer.html`. Khi trang đó cũng bỏ thì đổi thành set() rỗng.
+_KNOWN_CDN = {"explorer.html"}
 _ext = {}
 for _f in _html_pages:
     _h = rd(_f)
@@ -1068,6 +1102,339 @@ check("khong co trang MOI nao nap script tu ten mien ngoai",
 check("danh sach trang con phu thuoc CDN dung nhu da ghi",
       set(_ext) == _KNOWN_CDN,
       f"dang co {sorted(_ext)}, da ghi {sorted(_KNOWN_CDN)}")
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [15] Cong lo trinh: server giu luat, client chi doc"
+      " (docs/decisions/003) ===")
+_mis_cs = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Missions.cs"),
+                  encoding="utf-8").read()
+_gate_js = rd("js/route-gate.js")
+_exp = rd("explorer.html")
+
+# --- Server PHAI co du bo luat ---
+for _sym in ("UnlockRatio", "UnlockGate", "GateMet", "Route", "UnlockedPlaces"):
+    check(f"Missions.cs co {_sym}", _sym in _mis_cs)
+
+_m = re.search(r"UnlockRatio\s*=\s*([\d.]+)", _mis_cs)
+check("UnlockRatio la mot hang so doc duoc", bool(_m), str(_m and _m.group(1)))
+_ratio = float(_m.group(1)) if _m else 0
+check("UnlockRatio nam trong khoang hop ly (0,5..1)", 0.5 <= _ratio <= 1.0,
+      str(_ratio))
+
+_m = re.search(r"Route\s*=\s*\[([^\]]*)\]", _mis_cs)
+_route = re.findall(r'"(\w+)"', _m.group(1)) if _m else []
+check("Missions.Route doc duoc va khong rong", len(_route) >= 1, str(_route))
+
+# --- CLIENT KHONG DUOC TU TINH LUAT ---
+# ⚠️ Day la phep kiem quan trong nhat cua muc nay. Client giu ban sao cua ti le thi
+#    som muon lech, va ben lech se la ben NOI VOI TRE.
+# ⚠️ PHAI BOC CHU THICH TRUOC KHI TIM. Lan chay dau tien phep kiem nay bao hong vi
+#    chinh doan ghi chu GIAI THICH luat co chu "70%" — dung cai bay "dem ca chu trong
+#    ghi chu cua chinh minh" da gap 8 lan trong du an. Ghi chu noi ro luat la thu NEN
+#    co; thu phai kiem la CODE.
+_gate_code = strip_comments(_gate_js)
+_nums = set(re.findall(r"\b0?\.\d+\b|\b\d+\b", _gate_code))
+check("js/route-gate.js KHONG chua ti le cong trong CODE (khong tu tinh)",
+      str(_ratio) not in _nums and f"{_ratio:.2f}" not in _nums
+      and str(int(_ratio * 100)) not in _nums,
+      f"cac so trong code: {sorted(_nums)}")
+check("js/route-gate.js KHONG tu tinh ceil/floor/round cho cong",
+      not re.search(r"Math\.(ceil|floor|round)", _gate_code))
+check("js/route-gate.js doc unlockedPlaces do server tra",
+      "unlockedPlaces" in _gate_js)
+check("explorer.html KHONG gan cung danh sach hanh tinh mo khoa",
+      "unlockedPlaces =" not in _exp and "unlockedPlaces=[" not in _exp)
+
+# --- Diem den dau tien: ban sao duy nhat o client PHAI khop server ---
+# ⚠️ `FIRST_PLACE` la mot con so client giu trong khi server moi la nguon su that —
+#    dung thu du an da tra gia 6 lan. Khong bo duoc (may sach + chua dang nhap thi
+#    khong hoi duoc server), nen PHAI co phep kiem doi chieu.
+_m = re.search(r'FIRST_PLACE\s*=\s*"(\w+)"', _gate_js)
+check("route-gate.js khai FIRST_PLACE", bool(_m), str(_m and _m.group(1)))
+check("FIRST_PLACE khop Missions.Route[0] cua server",
+      bool(_m) and bool(_route) and _m.group(1) == _route[0],
+      f"client={_m and _m.group(1)} server={_route[0] if _route else None}")
+
+# --- Cong phai nam TRONG selectBody, khong o _pick ---
+# 6 duong vao selectBody: raycast, nhan ten, nut Fly to Sun, danh sach bang trai,
+# Prev/Next, dieu huong vung. Chan o mot duong la de ho nam duong.
+_sel = re.search(r"\n  selectBody\(body\)\{(.*?)\n  \}", _exp, re.S)
+check("tim thay than ham selectBody", bool(_sel))
+check("cong nam TRONG selectBody",
+      bool(_sel) and "AstroQGate" in _sel.group(1) and "canVisit" in _sel.group(1))
+_pick = re.search(r"\n  _pick\(e\)\{(.*?)\n  \}", _exp, re.S)
+check("cong KHONG dat o _pick (de khong ho 5 duong con lai)",
+      bool(_pick) and "canVisit" not in _pick.group(1))
+check("bam vao cho khoa thi NOI RO, khong im lang",
+      bool(_sel) and "explain" in _sel.group(1))
+
+# --- Bam vao hanh tinh khoa phai co loi giai thich + duong di tiep ---
+check("explorer dang ky onBlocked de mo modal giai thich",
+      "AstroQGate.onBlocked" in _exp)
+check("modal khoa dan sang mission-earth.html (co viec lam duoc)",
+      "gateGo" in _exp and "mission-earth.html" in _exp)
+# ⚠️ Khong doc duoc tien do thi phai noi DUNG ly do, dung noi "con n buoc nua" —
+#    luc ay con so do la bia (gate = 0 vi chua hoi duoc server).
+check("khong doc duoc tien do -> dung cau rieng theo g.known (KHONG theo g.live)",
+      "gateMsgOffline" in _exp and "g.known" in _exp)
+
+# --- i18n: du ca vi va en ---
+for _k in ("gateTitle", "gateMsg", "gateMsgOffline", "gateGo", "gateStart"):
+    check(f"khoa i18n {_k} co o CA vi va en", _exp.count(_k + ":") == 2,
+          f"{_exp.count(_k + ':')} lan")
+
+# --- Duong ghi/doc cache: explorer khong co token nen phai co trang ghi ho ---
+check("explorer.html VAN khong nap firebase-auth.js (SDK 233 KB)",
+      'src="js/firebase-auth.js"' not in _exp)
+_dash = rd("dashboard.html")
+check("dashboard.html lam moi cache cong lo trinh", "AstroQGate.feed" in _dash)
+# ⚠️ VÀ CHỈ GỌI `/me/missions` MỘT LẦN cho cả trang. Hai chỗ cần cùng câu trả lời
+#    (cổng lộ trình + màn Comet chúc mừng); gọi riêng là hai lượt mạng —
+#    `smoke_earth_done.py` canh con số đó, ở đây canh CÁCH LÀM.
+check("dashboard.html dung CHUNG mot loi goi /me/missions (missionsShared)",
+      "missionsShared" in _dash and _dash.count("AstroQProgress.missions()") == 1,
+      f"{_dash.count('AstroQProgress.missions()')} cho goi truc tiep")
+check("missions.html rot ket qua san co vao cache (khong goi API lan hai)",
+      "AstroQGate.feed" in rd("missions.html"))
+for _f in ("explorer.html", "dashboard.html", "missions.html"):
+    check(f"{_f}: nap js/route-gate.js", 'src="js/route-gate.js"' in rd(_f))
+
+# --- Cong mac dinh TAT: bat vinh vien se khoa vinh vien 7 mau vat + 2 huy hieu ---
+# Xem ghi chu trong explorer.html va docs/decisions/003.
+check("cong mac dinh TAT (setActive khong bat vo dieu kien)",
+      "onboard" in _exp and "AstroQGate.setActive(true)" in _exp)
+_spec_cs = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Specimens.cs"),
+                   encoding="utf-8").read()
+_planet_specs = set(re.findall(r'"planet:(\w+)"', _spec_cs))
+_orphan = sorted(_planet_specs - set(_route))
+check("neu bat cong VINH VIEN thi se co mau vat khoa vinh vien"
+      " -> ghi chu phai noi ro so luong",
+      not _orphan or str(len(_orphan)) in _exp,
+      f"{len(_orphan)} mau vat ngoai Route: {_orphan}")
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [15b] Nhip phim Comet dan duong o ban do (buoc 1-4 cua 003) ===")
+_mo = rd("js/map-onboard.js")
+_mocode = strip_comments(_mo)
+_ecss = rd("css/explorer.css")
+
+check("explorer.html nap js/map-onboard.js", 'src="js/map-onboard.js"' in _exp)
+check("explorer.html nap css/mascot.css (box thoai dung chung)",
+      'href="css/mascot.css"' in _exp)
+check("box thoai dung class chung .aq-say, khong ve lai vo box",
+      'class="aq-say mo-say"' in _exp)
+
+# --- ① Man warp: PHAI buoc nhanh `traveling`, khong di qua travelTo() ---
+# `travelTo` chon chu bang `region.id === currentRegion.id`, ma luc vao trang
+# currentRegion DA LA solar-system -> no se in "Dang toi" chu khong phai "Dang du hanh toi".
+_gw = re.search(r"function gateWarpShow\(\)\{(.*?)\n  \}", _exp, re.S)
+check("co ham rieng dung man warp cho luot vao", bool(_gw))
+check("man warp luot vao buoc nhanh T('traveling')",
+      bool(_gw) and "T('traveling')" in _gw.group(1))
+check("man warp luot vao KHONG goi travelTo (no tu dat transitioning + doi vung)",
+      bool(_gw) and "travelTo" not in _gw.group(1))
+check("dung lai phan VE cua man warp co san (startWarp/stopWarp)",
+      "startWarp()" in (_gw.group(1) if _gw else "") and "stopWarp" in _exp)
+
+# --- Nhip phim phai khoi dong SAU applyLanguage ---
+# ⚠️ Loi that da gap: `T()` doc `window.LANG`, ma bien do chi duoc dat trong
+#    applyLanguage(). Khoi dong som -> tre Viet thay man warp bang tieng Anh.
+_i_start = _exp.find("startMapOnboard();")
+_i_lang = _exp.find("applyLanguage((savedLang")
+check("goi startMapOnboard() SAU applyLanguage (khong thi warp ra tieng Anh)",
+      _i_start > 0 and _i_lang > 0 and _i_start > _i_lang,
+      f"startMapOnboard@{_i_start} applyLanguage@{_i_lang}")
+
+# --- ② Lam noi Trai Dat: dung NHAN da co, khong khoet o sang kieu tour ---
+check("to nhan qua #labels [data-body-id] (nhan bam theo hanh tinh moi khung hinh)",
+      "#labels [data-body-id]" in _exp and "paintGateLabels" in _exp)
+# ⚠️ BỐN PHÉP KIỂM DƯỚI ĐÂY SOI **CODE**, KHÔNG SOI CHỮ. Lần chạy đầu cả ba đều báo
+#    hỏng vì chính đoạn ghi chú GIẢI THÍCH *"không dùng .tour-hole"* / *"không dùng
+#    filter:grayscale"* / *"trước đây nằm inline trong style.cssText"*. Đây là lần thứ
+#    CHÍN dự án gặp lỗi "đếm cả chữ trong ghi chú của mình". Ghi chú nói rõ vì sao
+#    KHÔNG làm một việc là thứ NÊN CÓ; thứ phải kiểm là code.
+_expcode = strip_comments(_exp)
+_ecsscode = re.sub(r"/\*.*?\*/", " ", _ecss, flags=re.S)
+check("KHONG dung .tour-hole cho ban do (o sang tinh, hanh tinh thi dang bay)",
+      "tour-hole" not in _expcode)
+check("KHONG dung filter:grayscale de lam mo nhan khoa",
+      "grayscale" not in _ecsscode)
+check("nhan hanh tinh dung class .body-lbl + co CSS that",
+      "el.className='body-lbl'" in _expcode and ".body-lbl{" in _ecsscode)
+# ⚠️ Chỉ soi TRONG `_makeLabel`, không quét cả file: `style.cssText` còn được dùng
+#    hợp lệ ở chỗ khác (`explorer.html:1712` đặt vị trí cho container của
+#    CSS2DRenderer vùng lân cận). Quét cả file là báo oan một chỗ đúng.
+_mk = re.search(r"_makeLabel\(cfg, onClick\)\{(.*?)\n  \}", _expcode, re.S)
+check("tim thay than ham _makeLabel", bool(_mk))
+check("_makeLabel KHONG con style inline / handler mau inline",
+      bool(_mk) and "cssText" not in _mk.group(1)
+      and "onmouseenter" not in _mk.group(1))
+# Vong sang phai o rule GOC, khong chi trong keyframes — tat animation thi phai con.
+_gs = re.search(r"\.body-lbl\.gate-start\{([^}]*)\}", _ecss)
+check("vong sang cua nhan 'bat dau' nam o rule GOC (con lai khi tat animation)",
+      bool(_gs) and "box-shadow" in _gs.group(1))
+
+# --- ③ Box thoai: neo day, chu to, khong de len bang thong tin ---
+_ms = re.search(r"\.mo-say\{([^}]*)\}", _ecss)
+check("box thoai neo DAY man hinh", bool(_ms) and "bottom:" in _ms.group(1))
+_ml = re.search(r"\.mo-line\{([^}]*)\}", _ecss)
+_fs = re.search(r"font-size:([\d.]+)px", _ml.group(1) if _ml else "")
+check("co chu >= 16,5px (yeu cau 'chu to, ro rang, de doc')",
+      bool(_fs) and float(_fs.group(1)) >= 16.5, str(_fs and _fs.group(1)))
+check("bang thong tin mo thi box doi cho (khong de nhau)",
+      "#info.open ~ .mo-say" in _ecss)
+# ⚠️ Ban dau toi `visibility:hidden` box o man hep — cau hoi + nut OK nam TRONG box,
+#    an no la tre tren dien thoai khong thay duong di tiep va KET CUNG.
+_narrow = re.search(r"@media \(max-width:720px\)\{[^{]*#info\.open ~ \.mo-say\{([^}]*)\}",
+                    _ecss)
+check("man hep: box DOI CHO chu KHONG bi an (an la tre ket cung)",
+      bool(_narrow) and "hidden" not in _narrow.group(1),
+      str(_narrow and _narrow.group(1)))
+# ⚠️ `--info-w` = 400px, nen tren man 390px thi calc() ra AM -> box co ve 0.
+check("rule doi cho gioi han o min-width:721px (khong thi be rong ra so AM)",
+      re.search(r"@media \(min-width:721px\)\{\s*#info\.open ~ \.mo-say", _ecss)
+      is not None)
+
+# --- ④ Moc 10 giay ---
+_rm = re.search(r"READ_MS\s*=\s*(\d+)", _mocode)
+check("moc doc la 10 giay (con so chu du an chot)",
+      bool(_rm) and int(_rm.group(1)) == 10000, str(_rm and _rm.group(1)))
+# 10s la SAN: cau hoi hien ra CANH bang thong tin, khong dong no.
+check("hoi xong KHONG dong bang thong tin (10s la SAN, khong phai han)",
+      "_closeInfo" not in _mocode and "classList.remove('open')" not in _mocode)
+check("dong ho chi chay khi bang thong tin DA MO (khong dem luc camera con bay)",
+      "MutationObserver" in _mocode and "reading" in _mocode)
+check("chi tinh khi mo dung TRAI DAT, khong tinh hanh tinh khac",
+      "selectedId() !== \"earth\"" in _mocode or "selectedId() !== 'earth'" in _mocode)
+check("bam OK thi sang mission-earth.html",
+      "mission-earth.html" in _exp and "onGo" in _mocode)
+
+# --- i18n cua nhip phim: du ca vi va en ---
+for _k in ("l1", "l2", "ask", "next", "ok", "nm", "tag"):
+    check(f"khoa thoai '{_k}' co o CA vi va en",
+          len(re.findall(r"\b" + _k + r":", _mo)) == 2,
+          f"{len(re.findall(chr(92) + 'b' + _k + ':', _mo))} lan")
+check("doi ngon ngu giua chung thi dich lai loi Comet",
+      "AstroQMapOnboard.setLang" in _exp and "setLang:" in _mo)
+
+# --- Nhip phim KHONG chay khi khong co ?onboard=1 ---
+check("nhip phim chi chay khi cong BAT (khong pha lan vao ban do binh thuong)",
+      "AstroQGate.active()" in _exp and "startMapOnboard" in _exp)
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [15c] Doi luong onboarding: ban do TRUOC, tour SAU (buoc 7-8 cua 003) ===")
+_dashcode = strip_comments(_dash)
+_af = rd("js/auth-flow.js")
+_tour = rd("js/onboard-tour.js")
+
+# --- ⑦ Duong vao: select -> ban do, KHONG qua dashboard ---
+check("select.html (auth-flow) dan sang explorer.html?onboard=1",
+      "explorer.html?onboard=1" in _af)
+check("auth-flow KHONG con dan thang sang dashboard sau khi chon nhan vat",
+      'href="dashboard.html"' not in strip_comments(_af))
+check("dashboard co luoi an toan mapFirst() cho duong DANG NHAP",
+      "mapFirst" in _dashcode and "explorer.html?onboard=1" in _dashcode)
+
+# --- Chong vong lap: dashboard PHAI doc cache truoc khi day ---
+# ⚠️ explorer.html khong co token nen khong ghi duoc co len server; thieu cache thi
+#    dashboard -> ban do -> nhiem vu -> dashboard -> ban do -> ... vinh vien.
+check("map-onboard ghi cache 'da di qua ban do'",
+      "astroq-map01-seen" in _mo)
+check("dashboard DOC cache truoc khi day sang ban do (chong vong lap)",
+      "astroq-map01-seen" in _dashcode)
+_mf = re.search(r"function mapFirst\(\)\{(.*?)\n  \}", _dashcode, re.S)
+check("tim thay than ham mapFirst", bool(_mf))
+check("mapFirst doc cache TRUOC khi goi getOnboarding",
+      bool(_mf) and _mf.group(1).index("astroq-map01-seen")
+                   < _mf.group(1).index("getOnboarding"))
+check("mapFirst khong doc duoc co thi KHONG day (khong nem tre da hoc xong ve lai)",
+      bool(_mf) and re.search(r"!o\s*\|\|\s*!o\.ok", _mf.group(1)) is not None)
+check("cache ghi o CA duong OK lan duong lui (khong thi tre ket vong lap khi mang yeu)",
+      strip_comments(_mo).count("markSeen()") >= 2)
+
+# --- ⑦ Tour doi xuong sau nhiem vu 1, xep sau man chuc mung ---
+check("dashboard KHONG con goi AstroQTour.autoStart o luc boot",
+      "tourThen" in _dashcode)
+check("man chuc mung nhan callback va goi tour SAU do",
+      "earthDoneGuide(tourThen)" in _dashcode)
+_edg = re.search(r"function earthDoneGuide\(next\)\{(.*?)\n  \}\n", _dashcode, re.S)
+check("tim thay than ham earthDoneGuide", bool(_edg))
+# ⚠️ Nhanh nao `return` ma quen goi `next()` la TRE MAT LUON MAN DAN THAM QUAN,
+#    va mat im lang. Moi loi ra phai di qua `done()`.
+check("MOI nhanh ra cua earthDoneGuide deu goi done() (khong lam mat tour)",
+      bool(_edg) and "return;" not in _edg.group(1),
+      "con nhanh 'return;' tran khong goi done()")
+check("tourThen kiem AstroQTour.isOpen (hai overlay cung mo = den kit)",
+      "AstroQTour.isOpen()" in _dashcode)
+
+# --- ⑦ mission-intro nghi huu ---
+check("dashboard KHONG con nap js/mission-intro.js",
+      'src="js/mission-intro.js"' not in _dash)
+check("dashboard KHONG con nap css/mission-intro.css",
+      'href="css/mission-intro.css"' not in _dash)
+check("dashboard KHONG con goi AstroQMissionIntro",
+      "AstroQMissionIntro" not in _dashcode)
+
+# --- ⑦ Loi thoai buoc 7 cua tour da viet lai, CA vi va en ---
+# ⚠️ Cau cu "hay khoi dong dong co thoi!" noi mot viec da xay ra tu lau khi tour
+#    chay SAU nhiem vu. Bao gom ca nhan nut.
+_tcode = strip_comments(_tour)
+check("tour: bo loi thoai 'khoi dong dong co' (vo nghia khi tour chay sau nhiem vu)",
+      "khởi động động cơ" not in _tcode.lower())
+check("tour: bo nhan nut 'fire up the engines' o ban EN",
+      "fire up the engines" not in _tcode.lower())
+_ready = re.search(r'key:\s*"ready".*?\n    \}', _tcode, re.S)
+check("tour: buoc cuoi co lo thoai moi o CA vi va en",
+      bool(_ready) and "vi:" in _ready.group(0) and "en:" in _ready.group(0))
+
+# --- ⑧ Duong lui khi three.js khong nap duoc ---
+check("map-onboard co nhanh onSceneFail khi canh 3D khong dung duoc",
+      "onSceneFail" in _mo and "WARP_MAX_MS" in _mo)
+check("explorer khai onSceneFail -> di thang vao nhiem vu (trang 2D, khong can CDN)",
+      "onSceneFail" in _exp and "mission-earth.html" in _exp)
+_wm = re.search(r"WARP_MAX_MS\s*=\s*(\d+)", strip_comments(_mo))
+check("han cho canh 3D nam trong khoang hop ly (8-15s)",
+      bool(_wm) and 8000 <= int(_wm.group(1)) <= 15000, str(_wm and _wm.group(1)))
+
+# --- Bon co onboarding: client PHAI doc lai DU nhung gi server tra ---
+# ⚠️ LOI THAT DA GAP: lop boc bo roi `earth1Greeted`, nen `earthDoneGuide` doc ra
+#    undefined va Comet chuc mung LAI moi lan mo dashboard. Co van duoc GHI len server
+#    day du, chi la khong ai DOC lai. Bo smoke khong bat duoc vi no gia lap chinh
+#    `AstroQAuth`. Phep kiem nay doi chieu hai ben.
+_fa = rd("js/firebase-auth.js")
+_me_cs = io.open(os.path.join(SV, "src/AstroqSV.Api/Endpoints/MeEndpoints.cs"),
+                 encoding="utf-8").read()
+_dto = re.search(r"OnboardingDto\(DynamoContext\.Onboarding o\) => new\s*\{(.*?)\n    \};",
+                 _me_cs, re.S)
+check("tim thay OnboardingDto cua server", bool(_dto))
+_flags = set(re.findall(r"^\s*(\w+)\s*=", _dto.group(1), re.M)) if _dto else set()
+_flags = {f for f in _flags if not f.endswith("At")}     # bỏ mốc thời gian
+# ⚠️ SOI TRONG ĐÚNG KHỐI `return` CỦA `getOnboarding`, KHÔNG QUÉT CẢ FILE. Lần thử phá
+#    hoại cho thấy quét cả file là VÔ DỤNG: bỏ `map01Seen` khỏi `getOnboarding` thì tên
+#    đó vẫn còn ở `setOnboarding` và trong chú thích, nên phép kiểm vẫn "đạt" trong khi
+#    lỗi thật (đọc ra `undefined`) vẫn nguyên — đúng cái đã xảy ra với `earth1Greeted`.
+_go = re.search(r"async getOnboarding\(\)\{(.*?)\n  \},", _fa, re.S)
+_so = re.search(r"async setOnboarding\(patch\)\{(.*?)\n  \},", _fa, re.S)
+check("tim thay than getOnboarding + setOnboarding o client", bool(_go) and bool(_so))
+# ⚠️ KHỚP THEO **KHOÁ THUỘC TÍNH** (`map01Seen:`), KHÔNG KHỚP CHUỖI TRẦN. Lần thử phá
+#    hoại thứ hai vẫn lọt: xoá dòng `map01Seen: …` mà để lại `map01SeenAt: …` thì chuỗi
+#    trần `"map01Seen"` VẪN khớp (nó là tiền tố của `map01SeenAt`). Đúng bài học
+#    `em-spotlight`/`em-spotlightXX` đã ghi ngày 30/07: một phép thử phá hoại không làm
+#    phép kiểm đỏ có thể nghĩa là PHÉP KIỂM mù, không phải sản phẩm đúng.
+for _nm, _blk in (("getOnboarding", _go), ("setOnboarding", _so)):
+    _body = _blk.group(1) if _blk else ""
+    _miss = sorted(f for f in _flags if (f + ":") not in _body)
+    check(f"client {_nm}() DOC LAI du moi co server tra ve",
+          not _miss, f"thieu: {_miss}")
+for _f in ("map01Seen", "earth1Greeted"):
+    check(f"server: SetOnboardingAsync nhan {_f}",
+          _f in io.open(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.cs"),
+                        encoding="utf-8").read())
+# ⚠️ Nhanh "body rong = tourSeen true" phai loai tru DU CA BON co.
+_put = re.search(r"if \(tour is null && intro1 is null[^)]*\)", _me_cs)
+check("nhanh 'body rong = tourSeen true' loai tru DU CA BON co",
+      bool(_put) and "map1 is null" in _put.group(0) and "greeted is null" in _put.group(0),
+      str(_put and _put.group(0)))
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

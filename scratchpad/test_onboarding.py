@@ -282,6 +282,52 @@ def main():
               d.get("tourSeen") is True and d.get("intro01Seen") is True
               and d.get("earth1Greeted") is True, str(d))
 
+        # ---- 6d. Cờ map01Seen (đã đi qua màn Comet dẫn đường ở Bản Đồ Thiên Hà) ----
+        # docs/decisions/003 bước ⑦. `dashboard.html` dựa vào cờ này để biết có phải
+        # đẩy trẻ sang `explorer.html?onboard=1` hay không.
+        print("[6d] Co map01Seen — co thu TU, doc lap voi ca ba co kia")
+        st, d = call("PUT", "/me/onboarding", token=token, body={"map01Seen": False})
+        check("Dat map01Seen=false -> 200", st == 200 and d.get("map01Seen") is False,
+              f"{st} {d}")
+        st, d = call("PUT", "/me/onboarding", token=token, body={"map01Seen": True})
+        check("Ghi map01Seen=true -> 200",
+              st == 200 and d.get("map01Seen") is True, f"{st} {d}")
+        check("Co map01SeenAt", bool(d.get("map01SeenAt")), str(d.get("map01SeenAt")))
+        # ⚠️ PHÉP KIỂM QUAN TRỌNG NHẤT CỦA MỤC NÀY — cùng cái bẫy đã gặp hai lần với
+        #    `intro01Seen` rồi `earth1Greeted`: nhánh "body rỗng → tourSeen true" phải
+        #    loại trừ ĐỦ CẢ BỐN cờ. Thiếu `map01Seen` thì gọi `{map01Seen:true}` sẽ bật
+        #    luôn `tourSeen`, và phi hành gia mới MẤT màn dẫn tham quan.
+        st, d = call("PUT", "/me/onboarding", token=token,
+                     body={"tourSeen": False, "map01Seen": False})
+        check("Reset tourSeen=false de thu bay 'body rong'",
+              d.get("tourSeen") is False and d.get("map01Seen") is False, str(d))
+        st, d = call("PUT", "/me/onboarding", token=token, body={"map01Seen": True})
+        check("Ghi RIENG map01Seen KHONG bat lay tourSeen",
+              d.get("map01Seen") is True and d.get("tourSeen") is False, str(d))
+        check("Ghi RIENG map01Seen KHONG doi intro01Seen/earth1Greeted",
+              d.get("intro01Seen") is True and d.get("earth1Greeted") is True, str(d))
+
+        st, d = call("PUT", "/me/onboarding", token=token, body={"tourSeen": True})
+        check("Doi rieng tourSeen -> map01Seen GIU NGUYEN",
+              d.get("tourSeen") is True and d.get("map01Seen") is True, str(d))
+
+        item = read_profile(uid)
+        check("DynamoDB co map01Seen (doc that)",
+              bool(item) and "map01Seen" in item, str(list(item or {})))
+
+        st, d = call("PUT", "/me/onboarding", token=token,
+                     body={"tourSeen": True, "intro01Seen": True,
+                           "earth1Greeted": True, "map01Seen": True})
+        check("Gui ca 4 co mot luot -> ca 4 = true",
+              all(d.get(k) is True for k in
+                  ("tourSeen", "intro01Seen", "earth1Greeted", "map01Seen")), str(d))
+
+        st, d = call("GET", "/me/onboarding", token=token)
+        check("GET tra ve DU CA 4 co + 4 moc thoi gian",
+              all(k in d for k in ("tourSeen", "intro01Seen", "earth1Greeted",
+                                   "map01Seen", "tourSeenAt", "intro01SeenAt",
+                                   "earth1GreetedAt", "map01SeenAt")), str(sorted(d)))
+
         # ---- 7. Method khác ----
         print("\n[7] Method khong ho tro")
         st, _ = call("DELETE", "/me/onboarding", token=token)

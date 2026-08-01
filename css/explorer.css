@@ -25,6 +25,43 @@ button{color:inherit;cursor:pointer;}
 #scene{position:fixed;inset:0;z-index:0;}
 #labels{position:fixed;inset:0;z-index:1;pointer-events:none;}
 
+/* Nhãn tên thiên thể do `CSS2DRenderer` đặt theo vị trí hành tinh mỗi khung hình.
+   ⚠️ Trước 01/08/2026 cả khối này nằm INLINE trong `_makeLabel()`. Chuyển ra đây vì
+   style inline thắng mọi class — còn để inline thì cổng lộ trình không tô được nhãn
+   mà phải dùng `!important`. */
+.body-lbl{pointer-events:auto;cursor:pointer;
+  font:600 11px/1 var(--font-display,sans-serif);letter-spacing:.06em;color:#eaf1ff;
+  background:rgba(16,24,56,.55);border:1px solid rgba(150,180,255,.25);
+  padding:3px 9px;border-radius:20px;white-space:nowrap;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:background .15s,transform .15s,opacity .3s;}
+.body-lbl:hover{background:rgba(95,211,255,.3);transform:scale(1.06);}
+
+/* ---- Cổng lộ trình: chỉ ra chỗ bắt đầu, làm mờ chỗ chưa mở (js/route-gate.js) ----
+   ⚠️ KHÔNG dùng `filter:grayscale()` để làm mờ — bài học đã ghi 3 lần: trên nền
+   gradient sáng nó cho ra khối xám SÁNG HƠN bình thường, tức hút mắt vào đúng cái
+   không dùng được. Ở đây làm mờ bằng `opacity` + hạ tương phản viền. */
+.body-lbl.gate-locked{opacity:.34;cursor:not-allowed;
+  border-color:rgba(150,180,255,.12);color:#9fb0d0;}
+.body-lbl.gate-locked:hover{background:rgba(16,24,56,.55);transform:none;}
+
+.body-lbl.gate-start{color:#04060f;font-weight:700;
+  background:linear-gradient(120deg,var(--accent,#5fd3ff),var(--accent-2,#8f7bff));
+  border-color:rgba(95,211,255,.9);
+  box-shadow:0 0 20px rgba(56,189,248,.8);
+  animation:gateStartPulse 1.9s ease-in-out infinite;}
+.body-lbl.gate-start:hover{transform:scale(1.08);}
+/* Nhãn "BẮT ĐẦU TỪ ĐÂY" treo bên dưới tên hành tinh. */
+.body-lbl .gate-hint{display:block;margin-top:4px;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:#04060f;opacity:.82;}
+/* ⚠️ Vòng sáng để ở rule GỐC, không chỉ trong keyframes: `prefers-reduced-motion`
+   tắt animation (common.css làm toàn cục), mà tắt rồi thì phải CÒN thứ chỉ đường. */
+@keyframes gateStartPulse{
+  0%,100%{box-shadow:0 0 20px rgba(56,189,248,.8);}
+  50%    {box-shadow:0 0 30px rgba(56,189,248,.95);}
+}
+
 /* ---- Loading intro ---- */
 #loader{
   position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
@@ -627,4 +664,81 @@ body.theme-light .star-foot button{background:rgba(255,255,255,.5);}
   #speed{min-height:44px;padding:19px 0;background:transparent;}
   #speed::-webkit-slider-thumb{width:22px;height:22px;}
   #speed::-moz-range-thumb{width:22px;height:22px;}
+}
+
+/* ============================================================
+   COMET DẪN ĐƯỜNG Ở LƯỢT ONBOARDING (js/map-onboard.js · decisions/003)
+
+   Vỏ box, khung avatar, tên/vai lấy từ `css/mascot.css` (`.aq-say`/`.aq-ava`/
+   `.aq-nm`/`.aq-tag`) — ở đây CHỈ có phần riêng: neo đáy màn, hiện/ẩn, cỡ chữ.
+
+   ⚠️ CHỮ TO HƠN hai màn kia (17px so với 14,5px của `mission-intro` và 14px của
+   `mission-earth`) — chủ dự án chốt "chữ to, rõ ràng, dễ đọc". Đây là lời dẫn ĐẦU
+   TIÊN trẻ đọc trong app, và đọc trong lúc còn đang ngắm một cảnh 3D nhiều chi tiết.
+
+   ⚠️ NEO ĐÁY, KHÔNG NEO GIỮA. Bảng thông tin hành tinh (`#info`) chiếm hẳn mép PHẢI
+   rộng 400px và bảng điều khiển chiếm mép TRÁI ~296px; giữa màn là chỗ duy nhất còn
+   thấy được hành tinh. Cùng lý do `mission-intro` neo đáy.
+   ============================================================ */
+.mo-say{--aq-ava:56px;--aq-ava-r:16px;
+  position:fixed;left:50%;transform:translateX(-50%) translateY(16px);
+  bottom:clamp(18px,4.5vh,48px);z-index:14;
+  width:min(700px,calc(100vw - 28px));
+  display:flex;gap:14px;align-items:flex-start;padding:16px 20px 15px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .42s var(--ease),transform .42s var(--ease),visibility .42s;}
+.mo-say.show{opacity:1;visibility:visible;pointer-events:auto;
+  transform:translateX(-50%) translateY(0);}
+
+/* ⚠️ BẢNG THÔNG TIN MỞ RA THÌ BOX PHẢI DỜI SANG TRÁI. Đo được trên màn 1440px:
+   box rộng 700px canh giữa (370 → 1070) đè lên `#info` (bắt đầu ở 1022) **5.363px²** —
+   đúng lúc trẻ cần đọc cả hai. Sửa bằng cách canh giữa phần màn hình CÒN LẠI bên trái
+   bảng, và hạ bề rộng tối đa theo `--info-w` để không bao giờ chạm vào nó.
+   Dùng `~` được vì `#mo-say` nằm SAU `#info` trong DOM (`explorer.html:194` vs `:256`) —
+   không cần `:has()` hay một class do JS bật, tức là không có đường nào lệch nhau. */
+/* ⚠️ PHẢI GIỚI HẠN Ở `min-width:721px`. `--info-w` là 400px, nên trên màn 390px thì
+   `calc(100vw - 400px - 46px)` ra **−56px**: bề rộng âm bị coi là 0, box co lại còn
+   một cột chữ và cao **623px**, tràn hẳn khỏi khung nhìn. Đo được bằng
+   `smoke_map_onboard.py` mục [8]. Mốc 721px khớp `@media (max-width:720px)` — nơi
+   `#info` đổi sang neo đáy và không còn nằm ở mép phải nữa. */
+@media (min-width:721px){
+  #info.open ~ .mo-say{
+    width:min(700px, calc(100vw - var(--info-w) - 46px));
+    left:calc((100vw - var(--info-w) - 36px) / 2);
+  }
+}
+
+/* ⚠️ MÀN HẸP (≤720px): BẢNG THÔNG TIN NEO ĐÁY VÀ CAO 74vh (xem `#info` trong
+   `@media (max-width:720px)`), tức nó chiếm ĐÚNG chỗ box thoại đang đứng. Dời box
+   LÊN TRÊN bảng — cùng mốc `calc(74vh + 16px)` mà `#nav` đã dùng ở đó, nên hai thứ
+   không tự trôi khỏi nhau khi chiều cao bảng đổi.
+   ⚠️ TUYỆT ĐỐI KHÔNG ẨN BOX ĐI. Bản đầu tôi viết `visibility:hidden` cho ca này và
+      đó là một cái bẫy: câu hỏi "sẵn sàng chưa?" cùng nút OK nằm TRONG box, ẩn nó là
+      trẻ trên điện thoại **không bao giờ thấy đường đi tiếp và kẹt cứng**. */
+@media (max-width:720px){
+  #info.open ~ .mo-say{bottom:calc(74vh + 16px);}
+}
+
+.mo-body{min-width:0;flex:1;}
+.mo-who{display:flex;align-items:baseline;gap:9px;}
+.mo-who .aq-nm{font-size:14px;}
+/* 17px: cỡ chữ chủ dự án yêu cầu. `min-height` giữ box khỏi nhảy khi gõ từng chữ. */
+.mo-line{font-size:17px;line-height:1.58;color:var(--ink);margin:7px 0 0;min-height:2.9em;}
+.mo-line b{color:#a5e4ff;}
+
+.mo-next{align-self:flex-end;flex:none;margin-top:auto;cursor:pointer;border:none;
+  min-height:44px;padding:11px 18px;border-radius:13px;
+  font-family:var(--font-display);font-weight:700;font-size:14px;
+  color:#04060f;background:linear-gradient(120deg,var(--accent,#5fd3ff),var(--accent-2,#8f7bff));
+  box-shadow:0 10px 22px -12px rgba(95,211,255,.85);
+  transition:transform .28s var(--jelly),filter .18s,opacity .25s;}
+.mo-next:hover{filter:brightness(1.08);transform:translateY(-2px);}
+.mo-next:active{transform:scale(.94);}
+.mo-next.hide{opacity:0;pointer-events:none;}
+
+@media (max-width:600px){
+  /* Điện thoại: nút xuống hàng riêng và chiếm cả bề rộng — 44px vùng chạm vẫn giữ. */
+  .mo-say{flex-wrap:wrap;padding:14px 15px 13px;gap:11px;--aq-ava:46px;--aq-ava-r:14px;}
+  .mo-line{font-size:15.5px;}
+  .mo-next{width:100%;}
 }

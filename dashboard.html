@@ -15,9 +15,9 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
+<link rel="stylesheet" href="css/mascot.css" />
 <link rel="stylesheet" href="css/onboard-tour.css" />
 <link rel="stylesheet" href="css/warp-screen.css" />
-<link rel="stylesheet" href="css/mission-intro.css" />
 <script src="js/icons.js"></script>
 <script src="js/ui-common.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
@@ -25,10 +25,24 @@
 <script src="js/ranks.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
+<!-- Cổng lộ trình: trang này CÓ token nên nó là chỗ làm mới cache cho
+     explorer.html (trang đó cố ý không nạp SDK Firebase). Xem js/route-gate.js. -->
+<script src="js/route-gate.js"></script>
 <script src="js/onboard-tour.js"></script>
 <script src="js/space-scene.js"></script>
+<!-- ⚠️ `js/warp-screen.js` + `js/space-scene.js` (625 dòng) HIỆN KHÔNG CÒN AI GỌI
+     trong sản phẩm. Từ 01/08/2026 tour 7 bước dời xuống SAU nhiệm vụ 1
+     (docs/decisions/003) nên `onFinish` của nó không còn dẫn sang màn loading Luna,
+     và `js/mission-intro.js` — người dùng còn lại của `space-scene` — đã nghỉ hưu.
+     CỐ Ý CHƯA XOÁ: đó là quyết định về 625 dòng code đang chạy tốt cùng 18 phép kiểm
+     đã trả giá (vệt sao là VỆT không phải đốm · Trái Đất phần lớn xanh-lam · Luna đậu
+     bên trái · reduced-motion), và về một animation 4,6s trẻ nhìn thấy — chủ dự án
+     quyết, không phải dọn dẹp lặng lẽ. Hai đường: xoá hẳn, hoặc cho nó việc mới
+     (chuyển cảnh dashboard → Bản Đồ Thiên Hà là chỗ khớp nhất — chính tài liệu của nó
+     ghi "đó là lúc con tàu thật sự rời bến").
+     `scratchpad/smoke_onboard.py` gọi `AstroQWarp.play()` THẲNG để module không âm
+     thầm mục đi trong lúc chờ quyết. -->
 <script src="js/warp-screen.js"></script>
-<script src="js/mission-intro.js"></script>
 </head>
 <body>
 
@@ -581,7 +595,6 @@
     // Màn giới thiệu / màn loading đang mở thì dịch theo luôn (chúng tự vẽ lại).
     if(window.AstroQTour){ AstroQTour.setLang(LANG); AstroQTour.setName(name); }
     if(window.AstroQWarp) AstroQWarp.setLang(LANG);
-    if(window.AstroQMissionIntro) AstroQMissionIntro.setLang(LANG);
   }
 
   /* ---- Modal ---- */
@@ -617,6 +630,31 @@
 
   AstroQ.initLang(applyLang);
 
+  /* ⚠️ MỘT LỜI GỌI `GET /me/missions` CHO CẢ TRANG, DÙNG CHUNG.
+     Hai chỗ cần nó: (1) làm mới cache cổng lộ trình cho `explorer.html`, (2) màn
+     Comet chúc mừng xong chuỗi Trái Đất. Gọi riêng mỗi chỗ một lần là hai lượt mạng
+     cho cùng một câu trả lời — `smoke_earth_done.py` bắt đúng lỗi đó khi tôi thêm
+     phần cổng lộ trình. Bọc bằng promise nhớ sẵn thì thứ tự chạy không còn quan trọng. */
+  var _missionsOnce = null;
+  function missionsShared(){
+    if(!_missionsOnce){
+      _missionsOnce = (window.AstroQProgress && AstroQProgress.missions)
+        ? AstroQProgress.missions()
+        : Promise.resolve({ ok:false, reason:"no-progress-js" });
+    }
+    return _missionsOnce;
+  }
+
+  /* Làm mới cache cổng lộ trình cho `explorer.html`. Phải làm ở ĐÂY vì trang bản đồ
+     không có token (cố ý không nạp SDK Firebase 233 KB) nên tự nó không hỏi được
+     server. Lỗi thì im lặng — cổng hỏng không được làm vỡ dashboard, và cổng đã
+     fail-closed sẵn (chỉ mở điểm đến đầu tiên). */
+  if(window.AstroQGate){
+    missionsShared().then(function(r){
+      if(r && r.ok && r.data) AstroQGate.feed(r.data);
+    }).catch(function(){});
+  }
+
   /* ============================================================
      PHI HÀNH GIA MỚI: Comet dẫn tham quan tàu → màn loading bay tới Trái Đất
 
@@ -626,23 +664,12 @@
 
      Xem lại màn giới thiệu để thử: mở Console gõ  AstroQTour.reset()  rồi F5.
      ============================================================ */
-  /* Màn mở đầu Nhiệm Vụ 01 "Hành Tinh Xanh" — chạy NGAY SAU màn loading Luna,
-     hoặc tự chạy khi vào dashboard nếu đã xem tour rồi mà chưa xem cutscene
-     (đổi máy, hoặc lần trước đóng tab giữa màn loading).
-     Xem lại để thử: Console gõ  AstroQMissionIntro.reset()  rồi F5. */
-  /* ⚠️ TRẢ VỀ PROMISE. Trước đây hàm này không trả gì, nên không có cách nào biết
-     cutscene có chạy hay không — mà màn Comet chúc mừng phải đợi biết điều đó, không
-     thì hai overlay cùng mở và hai lớp tối chồng nhau thành đen kịt. */
-  function missionIntro(){
-    if(!window.AstroQMissionIntro) return Promise.resolve(false);
-    return AstroQMissionIntro.autoStart({
-      lang: LANG,
-      onActivate: function(){
-        // Kích hoạt sứ mệnh → trang nhiệm vụ 3D (mission-earth.html)
-        window.location.href = "mission-earth.html";
-      }
-    });
-  }
+  /* ⚠️ `js/mission-intro.js` (~30s cutscene "Luna vòng vào quỹ đạo Trái Đất" + Comet
+     giao nhiệm vụ + pop-up kích hoạt) ĐÃ NGHỈ HƯU ngày 01/08/2026 (docs/decisions/003).
+     Nó làm ĐÚNG CÙNG MỘT NHỊP với `js/map-onboard.js`: Comet giới thiệu rồi hỏi "sẵn
+     sàng chưa?". Giữ cả hai là trẻ nghe Comet giao nhiệm vụ HAI LẦN liền nhau.
+     Cờ `intro01Seen` ở server GIỮ NGUYÊN, cố ý: xoá cờ khỏi bản ghi không mang lại gì,
+     mà giữ thì tài khoản cũ vẫn đọc được lịch sử và không cần migration. */
 
   /* ============================================================
      COMET CHÚC MỪNG XONG CHUỖI NHIỆM VỤ TRÁI ĐẤT
@@ -668,20 +695,27 @@
      Xem lại lời chào để thử: Console gõ
        AstroQAuth.setOnboarding({ earth1Greeted:false })  rồi F5.
      ============================================================ */
-  function earthDoneGuide(){
-    if(!window.AstroQTour || !window.AstroQProgress || !AstroQProgress.missions) return;
-    if(AstroQTour.isOpen()) return;
-    if(!window.AstroQAuth || !AstroQAuth.getOnboarding) return;
+  /* ⚠️ `next` LÀ BẮT BUỘC GỌI Ở MỌI NHÁNH RA. Tour 7 bước nay chạy NGAY SAU màn chào
+     này; nhánh nào `return` mà quên gọi `next()` là **trẻ mất luôn màn dẫn tham quan**
+     — và mất im lặng, vì không có gì báo lỗi. Vì thế mọi lối ra đều đi qua `done()`. */
+  function earthDoneGuide(next){
+    var fired = false;
+    var done = function(){ if(!fired){ fired = true; if(next) next(); } };
+
+    if(!window.AstroQTour || !window.AstroQProgress || !AstroQProgress.missions) return done();
+    if(AstroQTour.isOpen()) return done();
+    if(!window.AstroQAuth || !AstroQAuth.getOnboarding) return done();
 
     AstroQAuth.getOnboarding().then(function(o){
       // Chưa đọc được cờ (chưa đăng nhập / mất mạng) → KHÔNG chào. Khác hẳn màn dẫn
       // tham quan: ở đó "thà chào hai lần hơn không chào lần nào" vì đó là lời chào
       // đầu tiên. Ở đây chào sai là chúc mừng một việc trẻ chưa làm.
-      if(!o || !o.ok || o.earth1Greeted) return;
-      return AstroQProgress.missions().then(function(r){
-        if(!r || !r.ok || !r.data || !r.data.missions) return;
+      if(!o || !o.ok || o.earth1Greeted) return done();
+      // Dùng CHUNG lời gọi với phần cổng lộ trình — xem `missionsShared()` ở trên.
+      return missionsShared().then(function(r){
+        if(!r || !r.ok || !r.data || !r.data.missions) return done();
         var e = r.data.missions.earth;
-        if(!e || e.done !== true) return;
+        if(!e || e.done !== true) return done();
         AstroQTour.guide({
           lang: LANG,
           target: '[data-tour="missions"]',
@@ -693,36 +727,95 @@
                 body: "You did really well on your first mission chain at <b>Earth</b>!<br/>" +
                       "Head to the <b>mission board</b> to take on the next challenges!" },
           // Ghi cờ NGAY khi màn chào đóng, kể cả trẻ bấm "Để sau" — đã chào là đã chào.
-          onSeen: function(){ AstroQAuth.setOnboarding({ earth1Greeted: true }); }
+          // Và CHÀO XONG MỚI TỚI TOUR — thứ tự đã chốt ở 003.
+          onSeen: function(){
+            AstroQAuth.setOnboarding({ earth1Greeted: true });
+            done();
+          }
         });
       });
-    }).catch(function(){ /* mất mạng thì im lặng, không chào sai */ });
+    }).catch(function(){ /* mất mạng thì im lặng, không chào sai */ done(); });
   }
 
-  if(window.AstroQTour){
+  /* ============================================================
+     ĐIỀU PHỐI ONBOARDING — LUỒNG MỚI (docs/decisions/003)
+
+         đăng ký → select.html → explorer.html?onboard=1 → mission-earth.html
+         → dashboard → Comet CHÚC MỪNG → rồi mới AstroQTour 7 bước
+
+     Ba thay đổi so với luồng cũ, đều đã chốt ở `003`:
+       ① **Bản đồ đi TRƯỚC.** Chưa đi qua màn Comet dẫn đường ở bản đồ
+          (`map01Seen`) thì đẩy sang đó ngay — trẻ được chạm vào Hệ Mặt Trời trong
+          vài giây đầu thay vì nghe gần một phút giới thiệu.
+       ② **Tour 7 bước dời xuống SAU nhiệm vụ 1.** Lúc đó dashboard đã có số liệu
+          thật để giới thiệu, và trẻ được chơi sớm hơn.
+       ③ **`js/mission-intro.js` nghỉ hưu** — nó làm đúng cùng một nhịp với bước
+          giới thiệu + câu hỏi "sẵn sàng chưa?" của `js/map-onboard.js`; giữ cả hai
+          là trẻ nghe Comet giao nhiệm vụ HAI LẦN liền nhau.
+
+     ⚠️ THỨ TỰ CHÚC MỪNG → TOUR, KHÔNG ĐẢO. Cả hai màn đều chờ ở ĐÚNG một thời
+        điểm: lượt về dashboard đầu tiên sau nhiệm vụ. Trẻ vừa làm xong thì lời đầu
+        tiên phải là **lời khen**, không phải bài giới thiệu con tàu. Nối tiếp bằng
+        callback; `AstroQTour.isOpen()` chặn hai overlay cùng mở (hai lớp tối chồng
+        nhau thành đen kịt).
+
+     ⚠️ HAI CỜ GHI ĐỘC LẬP (`earth1Greeted`, `tourSeen`) — `PUT /me/onboarding` chỉ
+        ghi cờ nào được gửi lên.
+     ============================================================ */
+  function tourThen(){
+    if(!window.AstroQTour) return;
+    if(AstroQTour.isOpen()) return;      // màn chúc mừng còn mở → để nó xong đã
     AstroQTour.autoStart({
       name: userName(),
-      lang: LANG,
-      onFinish: function(){
-        // Bấm "Khởi động động cơ" hay "Bỏ qua" đều dẫn sang màn loading:
-        // đó là lúc con tàu thật sự rời bến, không phải phần thưởng cho việc
-        // xem hết lời giới thiệu.
-        if(window.AstroQWarp) AstroQWarp.play({ lang: LANG, onDone: missionIntro });
-        else missionIntro();
-      }
-    }).then(function(ran){
-      // Tour không chạy (đã xem rồi) → vẫn phải kiểm màn mở đầu nhiệm vụ,
-      // không thì người dùng cũ sẽ không bao giờ thấy nó.
-      if(ran) return;
-      return missionIntro().then(function(intro){
-        /* Chỉ chào khi KHÔNG màn nào khác chạy. Nhánh tour-vừa-chạy cố ý không gọi:
-           một phi hành gia mới không thể vừa xong nhiệm vụ Trái Đất. */
-        if(!intro) earthDoneGuide();
-      });
+      lang: LANG
+      /* Cố ý KHÔNG có `onFinish`: trước đây nó dẫn sang màn loading rồi cutscene
+         nhiệm vụ, mà giờ tour chạy SAU nhiệm vụ nên không còn gì để dẫn tới. */
     });
-  } else {
-    missionIntro().then(function(intro){ if(!intro) earthDoneGuide(); });
   }
+
+  /* ① Chưa đi qua bản đồ thì đẩy sang đó. Trả về Promise<boolean> "đã điều hướng".
+
+     ⚠️ ĐỌC CACHE TRONG MÁY TRƯỚC — ĐÂY LÀ CHỖ CHỐNG VÒNG LẶP. `explorer.html` cố ý
+        không nạp SDK Firebase nên nó KHÔNG ghi được cờ lên server; nó chỉ đặt
+        `astroq-map01-seen`. Nếu ở đây chỉ tin cờ server thì:
+           dashboard (cờ false) → bản đồ → nhiệm vụ → dashboard (cờ VẪN false) → …
+        tức trẻ bị đẩy lại bản đồ mỗi lần mở dashboard. Đọc cache xong thì ĐẨY CỜ THẬT
+        lên server (fire-and-forget) để máy khác cũng không phải xem lại.
+        Cùng khuôn `astroq-tour-seen` của `js/onboard-tour.js`. */
+  function mapFirst(){
+    var cached = null;
+    try{ cached = localStorage.getItem("astroq-map01-seen"); }catch(e){}
+
+    if(cached === "1"){
+      // Đã đi qua ở máy này → không đẩy, và đồng bộ cờ lên server một lần.
+      if(window.AstroQAuth && AstroQAuth.setOnboarding){
+        AstroQAuth.setOnboarding({ map01Seen: true }).catch(function(){});
+      }
+      return Promise.resolve(false);
+    }
+
+    if(!window.AstroQAuth || !AstroQAuth.getOnboarding) return Promise.resolve(false);
+    return AstroQAuth.getOnboarding().then(function(o){
+      /* ⚠️ KHÔNG ĐỌC ĐƯỢC CỜ → KHÔNG ĐẨY. Đẩy sai là ném một trẻ đã học xong trở
+         lại màn giới thiệu; còn không đẩy thì nó vẫn dùng dashboard bình thường và
+         lần sau có mạng sẽ được đẩy. Cùng nguyên tắc với màn chúc mừng. */
+      if(!o || !o.ok) return false;
+      if(o.map01Seen){
+        // Server nói đã xem (máy khác) → ghi cache để lần sau khỏi hỏi mạng.
+        try{ localStorage.setItem("astroq-map01-seen", "1"); }catch(e){}
+        return false;
+      }
+      window.location.replace("explorer.html?onboard=1");
+      return true;
+    }).catch(function(){ return false; });
+  }
+
+  mapFirst().then(function(went){
+    if(went) return;                     // đang rời trang, đừng mở overlay nào
+    /* ② + ⚠️ thứ tự: chúc mừng trước, tour sau. `earthDoneGuide` tự bỏ qua khi
+       chưa xong chuỗi hoặc đã chào rồi, nên nhánh này đúng cho cả người mới. */
+    earthDoneGuide(tourThen);
+  });
 
   var logoutBtn=$("logout");
   if(logoutBtn) logoutBtn.addEventListener("click", function(){

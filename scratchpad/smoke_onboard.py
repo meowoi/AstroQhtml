@@ -63,9 +63,15 @@ def new_page(browser, lang="vi", mobile=False, reduced=False, seen=False, touch_
         "localStorage.setItem('astroq-user', %r);"
         "localStorage.setItem('astroq-lang', '%s');"
         "localStorage.setItem('astroq-asteroids','0');"
-        # Bộ test NÀY chỉ lo tour + màn loading. Đánh dấu ĐÃ XEM màn mở đầu Nhiệm Vụ
-        # 01 để cutscene đó không che dashboard ở các phép đo bên dưới —
-        # scratchpad/smoke_mission_intro.py lo riêng phần cutscene.
+        # Bộ test NÀY chỉ lo tour + màn loading.
+        # ⚠️ PHẢI GIEO `astroq-map01-seen` = ĐÃ ĐI QUA BẢN ĐỒ. Từ 01/08/2026
+        #    `dashboard.html` đẩy trẻ sang `explorer.html?onboard=1` khi chưa đi qua
+        #    (docs/decisions/003) — không gieo thì trang ĐIỀU HƯỚNG ĐI và mọi phép đo
+        #    tour ở đây hỏng sạch (đã đo: 4 phép kiểm hỏng, `GET /me/onboarding` không
+        #    được gọi vì trang đã rời). Màn bản đồ có bộ riêng: smoke_map_onboard.py.
+        # ⚠️ `astroq-mission01-intro-seen` giữ lại dù `js/mission-intro.js` đã nghỉ hưu:
+        #    khoá cũ nằm trong máy người dùng thật, gieo nó là mô phỏng đúng hiện trạng.
+        "localStorage.setItem('astroq-map01-seen','1');"
         "localStorage.setItem('astroq-mission01-intro-seen','1');"
         "%s"
         % (
@@ -143,6 +149,31 @@ def box(page, sel):
     )
 
 
+def play_warp(page):
+    """Bật màn loading Luna BẰNG CÁCH GỌI THẲNG `AstroQWarp.play()`.
+
+    ⚠️ Trước 01/08/2026 màn này tự hiện khi tour kết thúc (`onFinish` của
+       `AstroQTour.autoStart`). Từ khi tour **dời xuống sau nhiệm vụ 1**
+       (docs/decisions/003) thì `onFinish` không còn dẫn đi đâu — và `AstroQWarp`
+       **hiện không còn nơi nào trong sản phẩm gọi tới**.
+       Bộ đo vẫn giữ đủ 18 phép kiểm cho nó (vệt sao là VỆT không phải đốm, Trái Đất
+       phần lớn xanh-lam, Luna đậu bên trái, thanh tiến trình, nút Bỏ qua, bản EN,
+       `prefers-reduced-motion`) để module không âm thầm mục đi trong lúc chờ chủ dự án
+       quyết: **xoá nó, hay cho nó việc làm mới** (ví dụ chuyển cảnh dashboard → bản đồ).
+       Đo bằng cách gọi thẳng là trung thực hơn giả vờ tour vẫn dẫn tới nó.
+    """
+    # ⚠️ ĐỌC NGÔN NGỮ TỪ localStorage, KHÔNG DÙNG `window.LANG`. `dashboard.html` giữ
+    #    `LANG` trong một IIFE nên `window.LANG` là `undefined` → `AstroQWarp` rơi về
+    #    tiếng Việt và phép kiểm bản EN báo hỏng oan (đã đo: "ĐANG KHỞI ĐỘNG ĐỘNG CƠ…").
+    page.evaluate("""() => {
+      if (!window.AstroQWarp) return;
+      var l = null;
+      try { l = localStorage.getItem('astroq-lang'); } catch (e) {}
+      AstroQWarp.play({ lang: l === 'en' ? 'en' : 'vi' });
+    }""")
+    page.wait_for_selector("#warp.show", timeout=4000)
+
+
 def main():
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
@@ -154,7 +185,7 @@ def main():
         page.wait_for_selector("#tour.show", timeout=8000)
         check("Box thoai Comet tu hien", page.is_visible("#tour.show"))
         check("Anh Comet hien (img/m1.png)",
-              page.evaluate("() => { const i=document.querySelector('.tour-ava img');"
+              page.evaluate("() => { const i=document.querySelector('.tour-bubble .aq-ava img');"
                             "return !!i && i.complete && i.naturalWidth>0; }"))
 
         title = page.inner_text(".tour-title")
@@ -231,20 +262,30 @@ def main():
         # ---- Bước cuối ----
         page.click(".tour-next")
         page.wait_for_timeout(400)
-        check("Buoc cuoi: nut 'Khoi dong dong co'",
-              "Khởi động động cơ" in page.inner_text(".tour-next"),
+        # ⚠️ Nhãn nút đổi 01/08/2026 cùng lúc lời thoại bước cuối đổi (docs/decisions/003).
+        check("Buoc cuoi: nut huong ve viec TIEP THEO",
+              "Khám phá" in page.inner_text(".tour-next")
+              and "động cơ" not in page.inner_text(".tour-next"),
               page.inner_text(".tour-next"))
         check("Buoc cuoi: an nut Bo qua",
               page.evaluate("() => getComputedStyle(document.querySelector('.tour-skip')).display === 'none'"))
-        check("Buoc cuoi: noi dung 'khoi dong dong co'",
-              "khởi động động cơ" in page.inner_text(".tour-body").lower())
+        # ⚠️ ĐỔI 01/08/2026 cùng lúc tour dời xuống SAU nhiệm vụ 1: câu cũ
+        #    "hãy khởi động động cơ thôi!" nói một việc đã xảy ra từ lâu.
+        check("Buoc cuoi: huong ve viec TIEP THEO (khong con 'khoi dong dong co')",
+              "khám phá" in page.inner_text(".tour-body").lower()
+              and "khởi động động cơ" not in page.inner_text(".tour-body").lower(),
+              page.inner_text(".tour-body").replace("\n", " ")[:70])
 
         # ══════════════ 2. Màn loading Luna → Trái Đất ══════════════
         print("\n[2] Man loading Luna bay vao khong gian, dung o Trai Dat")
         page.click(".tour-next")
-        page.wait_for_selector("#warp.show", timeout=4000)
-        check("Man loading hien ra", page.is_visible("#warp.show"))
+        page.wait_for_timeout(700)
         check("Tour da dong", not page.is_visible("#tour.show"))
+        # ⚠️ Tour KHÔNG còn tự dẫn sang màn loading — nó đã dời xuống sau nhiệm vụ 1.
+        check("Xong tour thi O LAI dashboard (khong tu bay di dau)",
+              not page.is_visible("#warp.show"))
+        play_warp(page)
+        check("Man loading hien ra khi duoc goi", page.is_visible("#warp.show"))
         check("Da ghi cache 'da xem'",
               page.evaluate("() => localStorage.getItem('astroq-tour-seen') === '1'"))
 
@@ -391,8 +432,9 @@ def main():
         tab2.close()
         # Bỏ qua giữa tour → vẫn sang màn loading, và chữ màn loading là EN
         page.click(".tour-skip")
-        page.wait_for_selector("#warp.show", timeout=4000)
-        check("Bo qua giua tour van sang man loading", page.is_visible("#warp.show"))
+        page.wait_for_timeout(600)
+        check("Bo qua giua tour thi dong tour", not page.is_visible("#tour.show"))
+        play_warp(page)
         check("EN: chu man loading dich",
               "engines" in page.inner_text(".warp-cap .lead").lower(),
               page.inner_text(".warp-cap .lead"))
@@ -427,7 +469,8 @@ def main():
               str(page.evaluate("() => document.documentElement.scrollWidth")))
         page.screenshot(path="scratchpad/w03-mobile.png")
         page.click(".tour-next"); page.click(".tour-next")
-        page.wait_for_selector("#warp.show", timeout=4000)
+        page.wait_for_timeout(400)
+        play_warp(page)          # tour không còn tự dẫn sang màn loading — xem play_warp()
         page.wait_for_timeout(4200)
         m = page.evaluate("""() => {
             const cv = document.querySelector('#warp canvas');
@@ -458,8 +501,8 @@ def main():
         for _ in range(len(ORDER)):
             page.click(".tour-next")
             page.wait_for_timeout(220)
-        page.wait_for_selector("#warp.show", timeout=4000)
-        check("[rm] Van di het tour va sang duoc man loading", page.is_visible("#warp.show"))
+        play_warp(page)
+        check("[rm] Van di het tour va bat duoc man loading", page.is_visible("#warp.show"))
         page.wait_for_timeout(400)
         rm = page.evaluate("""() => {
             const cv = document.querySelector('#warp canvas');
@@ -524,9 +567,19 @@ def main():
                 # module ở strict mode không bị ném TypeError.
                 "localStorage.removeItem('astroq-tour-seen');"
                 "window.__calls = [];"
+                # ⚠️ BẢN GIẢ PHẢI ĐỦ `postProgress` VÀ `getMissions`. Từ 01/08/2026
+                #    dashboard đi qua `earthDoneGuide()` trước khi mở tour, mà hàm đó gọi
+                #    `AstroQProgress.missions()` → `waitAuth(2500)` tìm
+                #    `AstroQAuth.postProgress`. Bản giả thiếu nó thì waitAuth **chờ hết
+                #    2,5 giây** rồi mới trả null, tour hiện ra SAU mốc đo 2,2s và phép
+                #    kiểm báo hỏng oan. Đây là lỗi của BẢN GIẢ, không phải của sản phẩm —
+                #    cùng loại bẫy đã ghi 3 lần với bản giả `AstroQAuth`/`AstroQProgress`.
+                # ⚠️ `map01Seen:true` để `mapFirst()` không đẩy sang bản đồ; bộ này đo tour.
                 "const __stub = {"
+                "  postProgress: async () => ({ ok:false, reason:'stub' }),"
+                "  getMissions: async () => ({ ok:false, reason:'stub' }),"
                 "  getOnboarding: async () => { window.__calls.push('get');"
-                "    return { ok:true, tourSeen:%s }; },"
+                "    return { ok:true, tourSeen:%s, map01Seen:true, earth1Greeted:true }; },"
                 "  setOnboarding: async (v) => { window.__calls.push('set:'+v);"
                 "    return { ok:true, tourSeen:v }; }"
                 "};"

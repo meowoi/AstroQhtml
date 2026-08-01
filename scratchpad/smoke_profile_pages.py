@@ -86,7 +86,8 @@ def stub(mode="ok"):
       const OK = {json.dumps(mode == "ok")};
       const stub = {{
         idToken: async () => OK ? "tok" : null,
-        getOnboarding: async () => ({{ ok:true, tourSeen:true }}),
+        getOnboarding: async () => ({{ ok:true, tourSeen:true, map01Seen:true,
+                                       earth1Greeted:true }}),
         setOnboarding: async () => ({{ ok:true, tourSeen:true }}),
         getProfile: async () => {{ window.__calls.push("getProfile");
           return OK ? {{ ok:true, data:{json.dumps(SERVER)} }} : {fail}; }},
@@ -116,6 +117,10 @@ def new_page(browser, lang="vi", mode="ok", mobile=False, reduced=False, extra="
         f"localStorage.setItem('astroq-lang', '{lang}');"
         "localStorage.setItem('astroq-asteroids','41');"
         "localStorage.setItem('astroq-tour-seen','1');"
+        # ⚠️ Từ 01/08/2026 dashboard đẩy trẻ sang `explorer.html?onboard=1` khi chưa đi
+        #    qua bản đồ (docs/decisions/003) — không gieo thì trang điều hướng đi và các
+        #    phép đo dashboard ở mục [10] hết hạn chờ.
+        "localStorage.setItem('astroq-map01-seen','1');"
         "localStorage.removeItem('astroq-progress');"
         "localStorage.removeItem('astroq-progress-queue');"
         + extra + stub(mode)
@@ -350,7 +355,8 @@ def main():
           d.progress.consts = { 'orion':21, 'scorpius':45, 'cassiopeia':60 };
           d.progress.constsDone = 3;
           const s = { idToken: async()=>"t",
-            getOnboarding: async()=>({ok:true,tourSeen:true}), setOnboarding: async()=>({ok:true}),
+            getOnboarding: async()=>({ok:true,tourSeen:true,map01Seen:true,earth1Greeted:true}),
+            setOnboarding: async()=>({ok:true}),
             getAchievements: async()=>({ok:true,data:d}),
             getProfile: async()=>({ok:true,data:d}),
             getWallet: async()=>({ok:true,data:{meteors:41}}),
@@ -521,7 +527,8 @@ def main():
             progress:{xp:0,quizAccuracy:0,gamesPlayed:0,lessonsRead:0,flightSeconds:0,
                       meteorsEarned:0,planets:[],bests:{},badgesEarned:0},
             newBadges:[], achievements:{ summary:{earned:0,total:20}, badges:[] } };
-          const s = { idToken: async()=>"t", getOnboarding: async()=>({ok:true,tourSeen:true}),
+          const s = { idToken: async()=>"t",
+            getOnboarding: async()=>({ok:true,tourSeen:true,map01Seen:true,earth1Greeted:true}),
             setOnboarding: async()=>({ok:true}),
             getAchievements: async()=>({ok:true,data:empty}),
             getProfile: async()=>({ok:true,data:{profile:{name:"Bi Bo"},level:empty.level,

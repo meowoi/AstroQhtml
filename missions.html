@@ -17,6 +17,9 @@
 <!-- Tên hành tinh song ngữ — CHỖ DUY NHẤT khai báo (js/planets.js) -->
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
+<!-- Cổng lộ trình: trang này đã gọi GET /me/missions, nên nó rót thẳng kết quả vào
+     cache qua AstroQGate.feed() thay vì gọi API lần hai. Xem js/route-gate.js. -->
+<script src="js/route-gate.js"></script>
 </head>
 <body>
 
@@ -259,6 +262,9 @@
       if(r && r.ok && r.data){
         VIEW.ok = true;
         VIEW.data = r.data.missions || {};
+        /* Rót luôn vào cache cổng lộ trình — cùng một câu trả lời, khỏi gọi API lần
+           hai. `explorer.html` không có token nên nó dựa vào cache này. */
+        if(window.AstroQGate) AstroQGate.feed(r.data);
       } else {
         VIEW.ok = false;
         VIEW.reason = (r && r.reason) || "net";

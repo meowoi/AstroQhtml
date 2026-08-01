@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<!-- Box thoại Comet dùng chung — nạp GIỮA common.css và css/<trang>.css. -->
+<link rel="stylesheet" href="css/mascot.css" />
 <link rel="stylesheet" href="css/explorer.css" />
 <script src="js/ui-common.js"></script>
 <!-- Ghi "đã ghé hành tinh" vào Hồ sơ + Kho Thành Tích. CỐ Ý KHÔNG nạp
@@ -23,6 +25,35 @@
      thì vào chậm. Chưa đăng nhập → js/progress.js xếp hàng chờ, dashboard gửi nốt. -->
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
+<!-- Cổng lộ trình (docs/decisions/003). Đọc cache do dashboard/missions ghi; ở đây
+     không gọi API vì không có token — xem ghi chú trong chính file đó. -->
+<script src="js/route-gate.js"></script>
+<!-- Nhịp phim Comet dẫn đường ở lượt onboarding (chỉ chạy khi cổng BẬT). -->
+<script src="js/map-onboard.js"></script>
+<script>
+/* ⚠️ CỔNG MẶC ĐỊNH TẮT, chỉ bật khi có `?onboard=1`.
+
+   Vì sao KHÔNG bật vĩnh viễn cho mọi lượt vào bản đồ: `Missions.Route` hiện chỉ có
+   `earth` + `moon`, nên khoá vĩnh viễn 6 hành tinh còn lại sẽ làm **7 mẫu vật KHÔNG
+   BAO GIỜ thu được** (`planet:mercury` · `planet:venus` · `planet:mars` ·
+   `planet:jupiter` · `planet:saturn` · `planet:uranus` · `planet:neptune` trong
+   `Services/Specimens.cs`) và **2 huy hiệu bất khả thi** (`planet-3` cần 3 hành
+   tinh, `planet-8` cần 8 — mà Mặt Trăng không nằm trong 8 hành tinh của
+   `js/planets.js`). Đúng bài học đã ghi: đừng đặt điều kiện mở khoá vào thứ app
+   chưa có, không thì nó khoá vĩnh viễn.
+
+   Nên: cổng là **lời dẫn đường cho lượt đầu tiên**, không phải hàng rào vĩnh viễn.
+   Khi Sao Hoả/Sao Mộc… có nhiệm vụ thật thì thêm vào `Missions.Route` rồi bàn lại
+   việc bật vĩnh viễn — lúc đó 7 mẫu vật kia mới có đường tới.
+   Thử tay: mở `explorer.html?onboard=1`. */
+(function(){
+  try{
+    var on = new URLSearchParams(location.search).get('onboard') === '1';
+    if(on && window.AstroQGate) AstroQGate.setActive(true);
+    if(window.AstroQGate) AstroQGate.load();
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 
@@ -218,6 +249,22 @@
   </div>
 </div>
 
+<!-- Comet dẫn đường ở lượt onboarding (js/map-onboard.js · docs/decisions/003).
+     Vỏ box + avatar + tên/vai lấy từ css/mascot.css; phần riêng ở css/explorer.css.
+     `aria-live="polite"` chứ KHÔNG `assertive`: lời Comet không được cắt ngang
+     thứ trình đọc màn hình đang đọc trên bảng thông tin hành tinh. -->
+<section class="aq-say mo-say" id="mo-say" aria-hidden="true" aria-live="polite">
+  <span class="aq-ava float glow"><img src="img/m1.png" alt="Comet" /></span>
+  <div class="mo-body">
+    <div class="mo-who">
+      <span class="aq-nm" id="mo-nm">Comet</span>
+      <span class="aq-tag" id="mo-tag">HOA TIÊU</span>
+    </div>
+    <p class="mo-line" id="mo-line"></p>
+  </div>
+  <button class="mo-next hide" id="mo-next" type="button"></button>
+</section>
+
 <!-- Space-travel transition overlay -->
 <div class="nm-warp" id="nm-warp" aria-hidden="true">
   <canvas id="nm-warp-cv"></canvas>
@@ -281,7 +328,13 @@ window.I18N = {
     secExplore:'Exploration ideas', backRegion:'Back to region',
     tapStar:'Tap a star to explore it', scale10:'10 light-years',
     goThereTitle:'Do you want to go there?', yesBtn:'Yes', noBtn:'No',
-    unlockTitle:'Unlock the mission to travel there', missionNow:'Start the mission now', later:'Later', missionSoon:'Missions are coming soon!'
+    unlockTitle:'Unlock the mission to travel there', missionNow:'Start the mission now', later:'Later', missionSoon:'Missions are coming soon!',
+    /* Cổng lộ trình (docs/decisions/003). {done}/{gate}/{total}/{place} do JS thay. */
+    gateTitle:'This destination is still locked',
+    gateMsg:'Finish {gate} of {total} steps on the Earth mission to open the next destination. You have finished {done}.',
+    gateMsgOffline:'We could not read your progress (you may be offline or not signed in), so only Earth is open for now.',
+    gateGo:'Go to the Earth mission',
+    gateStart:'Start here'
   },
   vi:{
     aOpenDeck:'Mở bảng điều khiển',
@@ -317,7 +370,13 @@ window.I18N = {
     secExplore:'Ý tưởng thám hiểm', backRegion:'Về vùng',
     tapStar:'Chạm vào một ngôi sao để khám phá', scale10:'10 năm ánh sáng',
     goThereTitle:'Bạn muốn đến đó chứ?', yesBtn:'Yes', noBtn:'No',
-    unlockTitle:'Hãy mở khóa nhiệm vụ để đi tới', missionNow:'Làm nhiệm vụ ngay', later:'Để sau', missionSoon:'Nhiệm vụ sắp ra mắt!'
+    unlockTitle:'Hãy mở khóa nhiệm vụ để đi tới', missionNow:'Làm nhiệm vụ ngay', later:'Để sau', missionSoon:'Nhiệm vụ sắp ra mắt!',
+    /* Cổng lộ trình (docs/decisions/003). {done}/{gate}/{total}/{place} do JS thay. */
+    gateTitle:'Điểm đến này chưa mở khoá',
+    gateMsg:'Hãy hoàn thành {gate}/{total} bước ở nhiệm vụ Trái Đất để mở điểm đến tiếp theo. Bạn đã xong {done} bước.',
+    gateMsgOffline:'Chưa đọc được tiến độ của bạn (có thể mất mạng hoặc chưa đăng nhập), nên hiện chỉ mở Trái Đất.',
+    gateGo:'Tới nhiệm vụ Trái Đất',
+    gateStart:'Bắt đầu từ đây'
   },
   t:function(k){ var d=this[window.LANG]||this.en; return (d && d[k]!=null)?d[k]:(this.en[k]!=null?this.en[k]:k); }
 };
@@ -1421,11 +1480,14 @@ class App {
 
   _makeLabel(cfg, onClick){
     const el=document.createElement('div');
+    /* ⚠️ TRƯỚC ĐÂY CẢ KHỐI STYLE NẰM INLINE trong `style.cssText` (kèm hai handler
+       `onmouseenter`/`onmouseleave` chỉ để đổi màu). Đã chuyển sang `.body-lbl` ở
+       `css/explorer.css` — đúng quy tắc 1 mục 2 của CLAUDE.md, và **bắt buộc** để
+       cổng lộ trình làm nổi/làm mờ được nhãn: style inline thắng mọi class, nên còn
+       để inline thì muốn tô nhãn Trái Đất phải viết `!important`. Hover giờ là `:hover`. */
+    el.className='body-lbl';
     el.dataset.bodyId=cfg.id;
     el.textContent=(window.bodyName?window.bodyName(cfg.id):cfg.name);
-    el.style.cssText='pointer-events:auto;cursor:pointer;font:600 11px/1 var(--font-display,sans-serif);letter-spacing:.06em;color:#eaf1ff;background:rgba(16,24,56,.55);border:1px solid rgba(150,180,255,.25);padding:3px 9px;border-radius:20px;white-space:nowrap;backdrop-filter:blur(8px);transition:background .15s,transform .15s;';
-    el.onmouseenter=()=>{ el.style.background='rgba(95,211,255,.3)'; el.style.transform='scale(1.06)'; };
-    el.onmouseleave=()=>{ el.style.background='rgba(16,24,56,.55)'; el.style.transform='none'; };
     el.onclick=onClick;
     (this._labels ||= []).push(el);
     return el;
@@ -1559,6 +1621,20 @@ class App {
 
   selectBody(body){
     if(!body) return;
+
+    /* ═════ CỔNG LỘ TRÌNH (js/route-gate.js · docs/decisions/003) ═════
+       ⚠️ ĐẶT Ở ĐÂY, KHÔNG Ở `_pick`. `selectBody` có SÁU đường vào: raycast
+          (`_pick`) · bấm nhãn tên (`onLabelClick`) · nút "Fly to Sun" · danh sách
+          hành tinh ở bảng trái · Prev/Next (`_cycle`) · điều hướng vùng (`goTo`).
+          Chặn ở một đường là để hở năm đường còn lại — đúng bài học của
+          `js/pick-place.js`: chuột và bàn phím phải đi qua CÙNG một hàm.
+       Nhờ vậy đường BÀN PHÍM tự đúng luật: danh sách ở bảng trái vốn đã là
+       `<button>`, nó cũng gọi `selectBody` nên cũng bị cổng chặn. */
+    if(window.AstroQGate && !AstroQGate.canVisit(body.cfg.id)){
+      AstroQGate.explain(body.cfg.id);   // nói rõ cần gì — KHÔNG im lặng
+      return;
+    }
+
     if(this.selected) this.selected.setSelected(false);
     this.selected=body; body.setSelected(true);
     this.director.dur=1.6; this.director.flyTo(body);
@@ -2021,6 +2097,31 @@ try{
     modal.addEventListener('click', function(e){ if(e.target===modal) hideModal(); });   // click backdrop = dismiss
     addEventListener('keydown', function(e){ if(e.key==='Escape' && modal.classList.contains('show')) hideModal(); });
   }
+  /* ─────── CỔNG LỘ TRÌNH: nói rõ cần gì, đừng im lặng (docs/decisions/003) ───────
+     Bấm vào hành tinh đang khoá mà không có gì xảy ra thì trẻ chỉ tưởng mình bấm
+     trượt. Dùng lại `#nm-modal` có sẵn — không dựng hộp thoại thứ hai.
+
+     ⚠️ CÂU NHẮC ĐẾM BẰNG BƯỚC, KHÔNG BẰNG "70%". "Còn 3 bước nữa" là thứ trẻ 8 tuổi
+        đối chiếu được với dãy chấm trên trang nhiệm vụ; "70%" thì không.
+     ⚠️ KHÔNG ĐỌC ĐƯỢC TIẾN ĐỘ thì phải nói ĐÚNG lý do đó, đừng nói "còn 6 bước nữa"
+        — lúc ấy con số 6 là bịa (`gate` mới là 0 vì chưa hỏi được server). */
+  if(window.AstroQGate){
+    AstroQGate.onBlocked(function(id, g){
+      /* ⚠️ CHỌN CÂU THEO `g.known`, KHÔNG THEO `g.live`. Trang này không có token nên
+         `live` luôn false; dùng nó thì mọi trẻ đều bị nói "chưa đọc được tiến độ"
+         dù cache có số thật. `known` = có số dùng được (server HOẶC cache). */
+      var msg = g.known
+        ? T('gateMsg').replace('{gate}', g.gate).replace('{total}', g.total)
+                      .replace('{done}', g.done)
+        : T('gateMsgOffline');
+      openModal({
+        icon:'🔒', title:T('gateTitle'), msg:msg,
+        yes:T('gateGo'), no:T('later'),
+        onYes:function(){ window.location.href = 'mission-earth.html'; }
+      });
+    });
+  }
+
   // A region is "unlocked" if it has a real, explorable scene.
   function regionUnlocked(r){ return !!(r && (r.live || r.unlocked)); }
 
@@ -2357,6 +2458,85 @@ try{
   function stopWarp(){ cancelAnimationFrame(wraf); if(wctx) wctx.clearRect(0,0,wW,wH); }
   addEventListener('resize', function(){ if(warp.classList.contains('show')) warpResize(); });
 
+  /* ═══════ ①–④ COMET DẪN ĐƯỜNG Ở LƯỢT ONBOARDING (docs/decisions/003) ═══════
+     Nhịp phim ở `js/map-onboard.js`; ở đây chỉ đưa cho nó bốn thứ nó cần.
+
+     ⚠️ MÀN WARP DÙNG LẠI `#nm-warp` + `startWarp()`, KHÔNG DỰNG MỚI. Đó đúng là màn
+        trong ảnh chủ dự án gửi: 420 vệt sao toả từ tâm + ba dòng chữ.
+
+     ⚠️ PHẢI BUỘC NHÁNH `traveling`, KHÔNG ĐI QUA `travelTo()`. Hai lý do:
+        (1) `travelTo` chọn chữ bằng `region.id === currentRegion.id`, mà lúc trang vừa
+            nạp `currentRegion` ĐÃ LÀ solar-system → nó sẽ in "Đang tới" trong khi ảnh
+            yêu cầu là **"ĐANG DU HÀNH TỚI"**;
+        (2) `travelTo` còn làm cả việc đổi vùng (renderTree · overview · hidePlace) —
+            ở lượt vào trang thì không có vùng nào để đổi, gọi nó là làm việc vô ích và
+            nó tự đặt `transitioning = true` chặn cú du hành thật ngay sau đó.
+        Nên ở đây chỉ dùng phần VẼ (`startWarp`/`stopWarp`) + ba dòng chữ. */
+  function gateWarpShow(){
+    warpK.textContent = T('traveling');          // luôn "Đang du hành tới" ở lượt vào
+    warpN.textContent = RT(currentRegion);
+    warpSub.textContent = T('enterRegion');
+    warp.classList.add('show'); warp.setAttribute('aria-hidden','false');
+    startWarp();
+  }
+  function gateWarpHide(){
+    warp.classList.remove('show'); warp.setAttribute('aria-hidden','true');
+    setTimeout(stopWarp, 700);                   // khớp transition mờ dần của lớp phủ
+  }
+
+  /* ② Làm nổi điểm đến đang mở, làm mờ chỗ chưa mở — gắn class vào NHÃN ĐÃ CÓ.
+     ⚠️ Dùng nhãn `#labels [data-body-id]` chứ không khoét ô sáng kiểu `.tour-hole`:
+        nhãn do `CSS2DRenderer` đặt lại theo vị trí hành tinh MỖI KHUNG HÌNH, còn ô
+        sáng của engine tour tính theo `getBoundingClientRect` của một phần tử DOM
+        tĩnh — hành tinh đang bay thì ô sáng đứng sai chỗ ngay khung sau. */
+  function paintGateLabels(){
+    if(!window.AstroQGate || !AstroQGate.active()) return;
+    var g = AstroQGate.info();
+    document.querySelectorAll('#labels [data-body-id]').forEach(function(el){
+      var id = el.dataset.bodyId;
+      var open = AstroQGate.canVisit(id);
+      el.classList.toggle('gate-locked', !open);
+      // Chỉ hành tinh KHỞI ĐẦU được tô sáng; mở thêm rồi thì không còn chỉ đường nữa.
+      var start = open && id === g.first && g.open.length === 1;
+      el.classList.toggle('gate-start', start);
+      var hint = el.querySelector('.gate-hint');
+      if(start && !hint){
+        hint = document.createElement('span'); hint.className = 'gate-hint';
+        hint.textContent = T('gateStart');
+        el.appendChild(hint);
+      } else if(!start && hint){ hint.remove(); }
+      else if(hint){ hint.textContent = T('gateStart'); }
+    });
+  }
+
+  /* ⚠️ GỌI SAU `applyLanguage()`, KHÔNG GỌI Ở ĐÂY. `T()` đọc `window.LANG`, mà biến đó
+     chỉ được đặt khi `applyLanguage()` chạy ở CUỐI khối này. Khởi động sớm thì `T()`
+     rơi về nhánh mặc định tiếng Anh và **trẻ Việt thấy màn warp ghi "Traveling to /
+     Solar System / Entering the region"** — bộ `smoke_map_onboard.py` bắt đúng lỗi này.
+     Không chữa được bằng `setLang()` vì lúc đó ba dòng chữ đã vẽ xong rồi. */
+  function startMapOnboard(){
+    if(!(window.AstroQGate && AstroQGate.active() && window.AstroQMapOnboard)) return;
+    AstroQMapOnboard.init({
+      lang: window.LANG === 'en' ? 'en' : 'vi',
+      warpShow: gateWarpShow,
+      warpHide: function(){ gateWarpHide(); paintGateLabels(); },
+      // Cảnh 3D đã dựng xong chưa. `__solarReady` do vòng vẽ đặt ở khung đầu tiên.
+      ready: function(){ return window.__solarReady === true; },
+      selectedId: function(){
+        var a = window.solarApp;
+        return (a && a.selected && a.selected.cfg) ? a.selected.cfg.id : null;
+      },
+      onGo: function(){ window.location.href = 'mission-earth.html'; },
+      /* ⑧ Cảnh 3D không dựng được (mất mạng / unpkg lỗi) → ĐI THẲNG vào nhiệm vụ.
+         Trang nhiệm vụ đã là 2D nên không cần tên miền ngoài nào. Trẻ mất màn phim,
+         không mất nhiệm vụ — xem ghi chú trong js/map-onboard.js. */
+      onSceneFail: function(){ window.location.replace('mission-earth.html'); }
+    });
+    // Nhãn được dựng lại khi đổi ngôn ngữ → tô lại; và tô định kỳ vì hành tinh
+    // vào/ra khung nhìn thì `CSS2DRenderer` bật/tắt nhãn.
+    setInterval(paintGateLabels, 1200);
+  }
+
   /* ---- Keep the tree in sync + auto-close star panel when a planet is picked ---- */
   function refresh(){
     if(openStarId && currentId()){ closeStar(); return; }   // a planet was selected
@@ -2390,6 +2570,9 @@ try{
     renderTree($('search')?$('search').value:'');
     if(place.classList.contains('show') && !currentRegion.live) showPlace(currentRegion);
     if(openStarId) showStarInfo(openStarId);   // re-render the star panel in the new language
+    // Lời Comet của lượt onboarding + nhãn "BẮT ĐẦU TỪ ĐÂY" cũng phải dịch theo.
+    if(window.AstroQMapOnboard) AstroQMapOnboard.setLang(lang);
+    if(typeof paintGateLabels === 'function') paintGateLabels();
   }
 
   // Expose a tiny hook so future code can refresh/relocalize the navigation tree.
@@ -2400,6 +2583,7 @@ try{
   var savedLang; try{ savedLang=localStorage.getItem('astroq-lang'); }catch(e){}
   applyLanguage((savedLang==='vi'||savedLang==='en') ? savedLang : (window.LANG||'en'));
   AstroQ.initLang(applyLanguage);
+  startMapOnboard();          // SAU applyLanguage — xem ghi chú ở chính hàm đó
   setInterval(refresh, 200);
   refresh();
 })();

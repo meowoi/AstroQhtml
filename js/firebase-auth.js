@@ -239,13 +239,28 @@ const AstroQAuth = {
     if(r.netError)      return { ok:false, reason:"net" };
     if(r.notConfigured) return { ok:false, reason:"notConfigured" };
     if(!r.ok)           return { ok:false, reason:"http", status:r.status };
+    /* ⚠️ PHẢI TRẢ VỀ **ĐỦ BỐN CỜ**. Lớp bọc này từng bỏ rơi `earth1Greeted`, và đó là
+       một lỗi THẬT chạy im lặng: `earthDoneGuide()` ở `dashboard.html` đọc
+       `o.earth1Greeted` ra `undefined` → điều kiện "đã chào rồi thì thôi" không bao giờ
+       đúng → **Comet chúc mừng lại MỖI LẦN trẻ mở dashboard**, kể cả hai tuần sau. Cờ
+       vẫn được GHI lên server đầy đủ, chỉ là không ai ĐỌC lại.
+       Bộ `smoke_earth_done.py` không bắt được vì nó **giả lập chính `AstroQAuth`** —
+       bản giả trả cờ đầy đủ nên nó đo một lớp không phải lớp đang chạy thật.
+       `check_pages.py` mục [16] nay đối chiếu danh sách cờ ở đây với `OnboardingDto`
+       của server, để cờ thứ năm không lặp lại chuyện này. */
     return {
       ok:true,
-      tourSeen:      r.data.tourSeen === true,
-      tourSeenAt:    r.data.tourSeenAt || null,
+      tourSeen:        r.data.tourSeen === true,
+      tourSeenAt:      r.data.tourSeenAt || null,
       // Màn mở đầu Nhiệm Vụ 01 "Hành Tinh Xanh" — cờ ĐỘC LẬP với tourSeen
-      intro01Seen:   r.data.intro01Seen === true,
-      intro01SeenAt: r.data.intro01SeenAt || null
+      intro01Seen:     r.data.intro01Seen === true,
+      intro01SeenAt:   r.data.intro01SeenAt || null,
+      // Comet đã chúc mừng xong chuỗi Trái Đất chưa
+      earth1Greeted:   r.data.earth1Greeted === true,
+      earth1GreetedAt: r.data.earth1GreetedAt || null,
+      // Đã đi qua màn Comet dẫn đường ở Bản Đồ Thiên Hà chưa (docs/decisions/003)
+      map01Seen:       r.data.map01Seen === true,
+      map01SeenAt:     r.data.map01SeenAt || null
     };
   },
 
@@ -273,10 +288,13 @@ const AstroQAuth = {
     if(r.netError)      return { ok:false, reason:"net" };
     if(r.notConfigured) return { ok:false, reason:"notConfigured" };
     if(!r.ok)           return { ok:false, reason:"http", status:r.status, code:r.data.code };
+    // ⚠️ Trả về ĐỦ BỐN CỜ, cùng lý do đã ghi ở `getOnboarding` ngay trên.
     return {
       ok:true,
-      tourSeen:    r.data.tourSeen === true,
-      intro01Seen: r.data.intro01Seen === true
+      tourSeen:      r.data.tourSeen === true,
+      intro01Seen:   r.data.intro01Seen === true,
+      earth1Greeted: r.data.earth1Greeted === true,
+      map01Seen:     r.data.map01Seen === true
     };
   },
 
