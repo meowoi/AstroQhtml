@@ -593,6 +593,22 @@ a{text-decoration:none;color:inherit;}
   border:2px solid var(--mk,#5ff0ff);opacity:.85;
   animation:e2Ping 1.5s ease-out infinite;}
 .e2-mk.done{border-color:var(--good);box-shadow:0 0 16px rgba(99,230,168,.9);}
+
+/* VÒNG NGẮM của bước `rotation` — đích nhìn thấy được của `stationAngleTo(...) → 0`.
+   ⚠️ Vị trí do `js/earth2d.js` chiếu bằng ĐÚNG `project()` của marker, KHÔNG gán ở đây:
+   điểm ở `facing` rơi vào (62,5%, 50%) của khung chứ không phải tâm, và con số đó đổi
+   theo `zoom`. Gán `left:50%` là vẽ vòng ngắm lệch khỏi chính cái đích nó chỉ.
+   Dạng KHÁC hẳn marker (chữ thập rỗng, hổ phách) — hai thứ cùng hình tròn cyan thì trẻ
+   không biết cái nào phải kéo tới cái nào. */
+.e2-aim{position:absolute;width:76px;height:76px;transform-origin:50% 50%;
+  pointer-events:none;border-radius:50%;
+  border:2px dashed rgba(255,207,107,.85);
+  box-shadow:0 0 18px rgba(255,207,107,.45), inset 0 0 16px rgba(255,207,107,.16);}
+/* Chữ thập ở tâm: nói rõ "đưa TRẠM vào đúng đây", không chỉ "vào vùng này". */
+.e2-aim::before,.e2-aim::after{content:"";position:absolute;left:50%;top:50%;
+  background:rgba(255,207,107,.9);}
+.e2-aim::before{width:2px;height:22px;transform:translate(-50%,-50%);}
+.e2-aim::after{width:22px;height:2px;transform:translate(-50%,-50%);}
 .e2-mk.done::after{animation:none;opacity:0;}
 @keyframes e2Ping{
   0%{transform:scale(.72);opacity:.9;}

@@ -304,11 +304,12 @@ const I18N = {
 
     /* Bước 1 (scan) — Khởi động hệ thống quét */
     s1_h: 'Khởi động hệ thống quét',
-    s1_p: 'Kéo để xoay Trái Đất, chụm/cuộn để phóng to. Rồi chạm 3 điểm tín hiệu đang nhấp nháy.',
-    s1_say1: 'Trước tiên mình dạy bạn cách điều khiển màn hình quét nhé! <b>Kéo</b> để xoay quả cầu, <b>cuộn chuột</b> (hoặc chụm hai ngón) để phóng to.',
+    s1_p: 'Kéo bản đồ để đi khắp Trái Đất, chụm/cuộn để phóng to. Rồi chạm 3 điểm tín hiệu đang nhấp nháy.',
+    s1_say1: 'Đây là Trái Đất — hành tinh của chúng ta! Giờ mình mở <b>chế độ bản đồ</b> để đi khắp bề mặt nhé: <b>kéo</b> để đi tới vùng khác, <b>cuộn chuột</b> (hoặc chụm hai ngón) để phóng to.',
     s1_say2: 'Giờ hãy tìm và <b>chạm vào 3 điểm tín hiệu</b> đang nhấp nháy trên bề mặt để căn chỉnh camera!',
     s1_n: 'Điểm tín hiệu',
     s1_hit: 'Píp! Đã căn chỉnh {n}/3',
+    s1_hint: 'Còn điểm tín hiệu ở vùng khác nữa — kéo bản đồ sang hai bên để tìm nhé!',
     s1_done: 'Màn hình điều khiển đã sẵn sàng! Tất cả hệ thống quét: <b>SYS.ONLINE</b>!',
 
     /* Bước 2 (timeline) — Lịch sử 4,5 tỷ năm hình thành Trái Đất */
@@ -333,9 +334,9 @@ const I18N = {
 
     /* Bước 3 (sun) — Tìm nguồn năng lượng */
     s2_h: 'Tìm nguồn năng lượng',
-    s2_p: 'Xoay góc nhìn ra phía xa để tìm ngôi sao đang chiếu sáng Trái Đất, rồi chạm vào nó.',
+    s2_p: 'Tìm ngôi sao đang chiếu sáng Trái Đất trên màn hình quét, rồi chạm vào nó.',
     s2_say1: 'Ồ! Không có năng lượng thì tàu không thể hoạt động. Bạn có tìm thấy <b>ngôi sao</b> đang chiếu sáng Trái Đất ở phía xa không?',
-    s2_hint: 'Kéo sang phải để nhìn ra xa hơn nhé!',
+    s2_hint: 'Nhìn ra rìa màn hình quét — ngôi sao đang ở đó, hãy chạm vào nó nhé!',
     s2_say2: 'Đó là <b>Mặt Trời</b> — ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất!',
     s2_n: 'Mặt Trời',
 
@@ -365,8 +366,8 @@ const I18N = {
 
     /* Bước 5 (rotation) — Khôi phục tín hiệu vệ tinh */
     s3_h: 'Khôi phục tín hiệu vệ tinh',
-    s3_p: 'Xoay Trái Đất để đưa trạm phát sóng (điểm sáng) về phía vệ tinh.',
-    s3_say1: 'Tín hiệu vệ tinh ở phía mặt tối rồi! Hãy <b>xoay Trái Đất</b> để đưa vùng trạm phát sóng quay về phía Vệ tinh nào!',
+    s3_p: 'Kéo bản đồ để đưa trạm phát sóng (điểm vàng) vào vòng ngắm.',
+    s3_say1: 'Vệ tinh đang quét ở chỗ khác rồi! Hãy <b>kéo bản đồ</b> để đưa trạm phát sóng vào <b>vòng ngắm</b> — thanh tín hiệu càng gần thì càng lên cao nhé!',
     s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
     s3_n: 'Cường độ tín hiệu',
     s3_say2: 'Chính <b>sự tự quay</b> của Trái Đất đã tạo ra <b>Ban Ngày và Ban Đêm</b> đấy!',
@@ -441,11 +442,12 @@ const I18N = {
     comet: 'Comet', byte: 'Byte',
 
     s1_h: 'Boot the scan system',
-    s1_p: 'Drag to spin Earth, pinch/scroll to zoom. Then tap the 3 blinking signal points.',
-    s1_say1: "First let me teach you the scan display! <b>Drag</b> to spin the globe, <b>scroll</b> (or pinch) to zoom in.",
+    s1_p: 'Drag the map to travel across Earth, pinch/scroll to zoom. Then tap the 3 blinking signal points.',
+    s1_say1: "This is Earth — our home planet! Now let me open <b>map mode</b> so we can travel across the surface: <b>drag</b> to move somewhere else, <b>scroll</b> (or pinch) to zoom in.",
     s1_say2: 'Now find and <b>tap the 3 signal points</b> blinking on the surface to align the camera!',
     s1_n: 'Signal points',
     s1_hit: 'Beep! Aligned {n}/3',
+    s1_hint: 'There are more signal points elsewhere — drag the map sideways to find them!',
     s1_done: 'Control display ready! All scan systems: <b>SYS.ONLINE</b>!',
 
     tl_h: 'Follow the timeline',
@@ -468,9 +470,9 @@ const I18N = {
     rock_got: 'SAVED TO THE SPECIMEN VAULT',
 
     s2_h: 'Find the power source',
-    s2_p: 'Turn the view outward to find the star lighting up Earth, then tap it.',
+    s2_p: 'Find the star lighting up Earth on the scan display, then tap it.',
     s2_say1: "Oh no! Without power the ship can't run. Can you find the <b>star</b> lighting up Earth far away?",
-    s2_hint: 'Drag to the right to look further out!',
+    s2_hint: 'Look towards the edge of the scan display — the star is right there, tap it!',
     s2_say2: 'That is the <b>Sun</b> — the star that brings light and warmth to Earth!',
     s2_n: 'The Sun',
 
@@ -492,8 +494,8 @@ const I18N = {
     ce_stack: 'CHIMNEY',
 
     s3_h: 'Restore the satellite link',
-    s3_p: 'Spin Earth to bring the broadcast station (bright dot) around to the satellite.',
-    s3_say1: 'The satellite link is on the dark side! <b>Spin Earth</b> to bring the broadcast station around to the satellite!',
+    s3_p: 'Drag the map to bring the broadcast station (amber dot) into the crosshair.',
+    s3_say1: 'The satellite is scanning somewhere else! <b>Drag the map</b> to bring the broadcast station into the <b>crosshair</b> — the closer you get, the higher the signal bar climbs!',
     s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
     s3_n: 'Signal strength',
     s3_say2: "Earth's own <b>rotation</b> is what makes <b>day and night</b>!",
@@ -565,10 +567,20 @@ const t = (k) => { const d = I18N[LANG] || I18N.vi; return d[k] != null ? d[k] :
    bước HƯỚNG DẪN, phải thấy ngay. Đặt cứng kiểu nào cũng không chắc, vì hành
    tinh tự xoay: tuỳ lúc mở trang mà nửa nào đang hướng ra là khác nhau.
    Lệch ±26° kinh độ → cả 3 nằm gọn trong khung, vẫn phải kéo nhẹ để chạm hết. */
+/* Ba điểm tín hiệu của bước hướng dẫn — TOẠ ĐỘ THẬT, TUYỆT ĐỐI.
+   ⚠️ Trước 01/08/2026 chúng là `dlat/dlon` ĐỘ LỆCH so với chỗ đang nhìn, vì ảnh quả
+      cầu không cho đặt lat/lon tuyệt đối (nó chỉ thấy một nửa hành tinh, tâm Bắc Mỹ).
+      Bước này nay chạy trên BẢN ĐỒ PHẲNG nên lat/lon đúng tuyệt đối — một phép chia.
+   ⚠️ CỐ Ý KHÔNG ĐẶT TÊN ĐỊA DANH cho ba điểm này. Bước 1 dạy CÁCH ĐIỀU KHIỂN, không
+      dạy địa lý; gắn tên vào là mở ra đúng cái bẫy dự án đã trả giá một lần (thẻ
+      "🌳 Rừng Amazon" rơi giữa đại dương). Bước `life` mới là bước khẳng định vị trí,
+      và nó có `BIOMES` với tên + nguồn riêng.
+   Rải rộng theo kinh tuyến (−100° → +134°) là CÓ CHỦ Ý: ở mức phóng to của bước này
+   không thể thấy cả ba cùng lúc, nên trẻ BẮT BUỘC phải kéo — đó chính là bài học. */
 const SCAN_POINTS = [
-  { id: 'p1', dlat:  14, dlon: -26 },
-  { id: 'p2', dlat: -18, dlon:   4 },
-  { id: 'p3', dlat:   9, dlon:  27 }
+  { id: 'p1', lat:  38, lon: -100 },
+  { id: 'p2', lat:   4, lon:  -20 },
+  { id: 'p3', lat: -24, lon:  134 }
 ];
 const BIOMES = [
   { id: 'water',    lat:  12, lon: -42, ic: '🌊', rgb: '110,200,255', color: 0x8fe0ff,
@@ -764,11 +776,24 @@ const steps = {
     hits: 0,
     async enter() {
       this.hits = 0;
+      /* ⚠️ HAI CHẾ ĐỘ TRONG MỘT BƯỚC, CÓ CHỦ Ý — mở màn QUẢ CẦU, rồi mới sang BẢN ĐỒ.
+         · Vì sao phải sang bản đồ: trên ảnh quả cầu, `paint()` đặt `translate` bằng 0.
+           Đo được — kéo 300px thì `transform` và khung ảnh Y NGUYÊN, chỉ ba cái đốm
+           trượt đi (một cái ra khỏi khung). Tức lời "Kéo để xoay Trái Đất" mô tả một
+           việc KHÔNG HỀ XẢY RA, và thứ trẻ thấy là mục tiêu chạy khỏi con trỏ — đọc ra
+           như lỗi, không như điều khiển.
+         · Vì sao KHÔNG sang bản đồ ngay từ đầu: đo được ảnh quả cầu sáng trung bình
+           **113,9** ở vùng giữa, bản đồ phẳng chỉ **24,3** — tối hơn 4,7 lần. Đây là
+           cảnh ĐẦU TIÊN trẻ thấy trong nhiệm vụ; mở màn bằng một hình chữ nhật gần đen
+           là mất đúng cái khoảnh khắc "mình đã tới Trái Đất".
+         Nên: quả cầu cho lúc chào, chuyển sang bản đồ NGAY SAU câu Comet giải thích —
+         và chính câu đó nói ra việc chuyển chế độ, để cú đổi hình không từ trên trời rơi
+         xuống. Chỗ đổi nằm dưới, sau `await say(... s1_say1)`. */
+      if (world.setMap) world.setMap('globe');
       world.showGrid(true);
       world.setControls({ rotate: true, zoom: true });
-      /* Hành tinh ĐỨNG YÊN trong bước hướng dẫn: đây là bước dạy "kéo để xoay",
-         chuyển động duy nhất trên màn hình nên là chuyển động do trẻ tạo ra. Nó
-         cũng giữ 3 đốm nhấp nháy nằm trong khung cho tới khi trẻ chạm hết. */
+      /* Hành tinh ĐỨNG YÊN trong bước hướng dẫn: chuyển động duy nhất trên màn hình
+         nên là chuyển động do TRẺ tạo ra. */
       world.setSpin(0);
       await world.panTo({ dist: 4.0, ms: reduced ? 0 : 1400 });
       objective({ ic: '🎯', h: t('s1_h'), p: t('s1_p'), n: 0, total: 3 });
@@ -776,24 +801,36 @@ const steps = {
       // Bàn tay hướng dẫn: kéo → phóng to → chạm
       hand('drag');
       await say('comet', t('s1_say1'));
+      // Đổi sang chế độ BẢN ĐỒ — xem lý do ở đầu `enter()`. Comet vừa nói ra việc này.
+      if (world.setMap) world.setMap('flat');
       hand('zoom');
       await world.panTo({ dist: 2.5, ms: reduced ? 0 : 1200 });
       hand('tap');
-      // Đặt quanh CHỖ ĐANG NHÌN, đo ngay lúc này (camera vừa zoom xong)
-      const c = world.facingLatLon();
+      // Toạ độ THẬT, tuyệt đối — bản đồ phẳng cho phép (xem SCAN_POINTS)
       world.addMarkers(SCAN_POINTS.map(p => ({
-        id: p.id,
-        lat: Math.max(-68, Math.min(68, c.lat + p.dlat)),
-        lon: c.lon + p.dlon,
+        id: p.id, lat: p.lat, lon: p.lon,
         rgb: '95,240,255', color: 0xbdf5ff
       })));
       await say('comet', t('s1_say2'));
       handOff();
       hideSay();
+      /* ⚠️ LỜI NHẮC KHI BÍ — BẮT BUỘC TỪ 01/08/2026, không phải trang trí.
+         Ba điểm nay ở TOẠ ĐỘ THẬT rải khắp kinh tuyến (−100° → +134°), nên ở mức
+         phóng của bước này khung nhìn chỉ phủ ~6,6%–49,7% bề rộng bản đồ: trẻ THẤY
+         ĐÚNG 1 TRONG 3 điểm lúc đầu (đo được). Trước đây cả ba được đặt quanh chỗ
+         đang nhìn nên luôn trong khung — đổi sang toạ độ thật là tự tay tạo ra khả
+         năng trẻ kẹt ở 1/3 mà không biết vì sao. Không phạt, chỉ nhắc, đúng khuôn
+         lời nhắc 9 giây của bước `sun`. */
+      if (!reduced) {
+        this._tid = setTimeout(() => {
+          if (this.hits < 3 && RUN.done.indexOf('scan') < 0) toast(t('s1_hint'));
+        }, 9000);
+      }
     },
     async pick(ev) {
       if (ev.type !== 'marker') return;
       if (!world.markDone(ev.id)) return;
+      clearTimeout(this._tid);
       this.hits++;
       // Cao dần theo số điểm đã quét — trẻ nghe là biết mình đang tiến tới
       sfx('beep', 980 + this.hits * 140);
@@ -819,6 +856,12 @@ const steps = {
     seen: 0,
     async enter() {
       this.seen = 0;
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG — từ 01/08/2026
+         bước 1 và bước `rotation` dùng bản đồ phẳng, nên bước nào cần quả cầu phải
+         tự nói ra. Không nói thì nó nhận map của bước trước, mà bước trước có thể
+         đổi bất cứ lúc nào. Quả cầu đúng cho bước này: cả hành tinh là MỘT vật thể
+         (đổi tông theo thời đại · ranh giới ngày/đêm · khói phủ khí quyển). */
+      if (world.setMap) world.setMap('globe');
       world.setControls({ rotate: true, zoom: true });
       world.setSpin(1);
       await world.panTo({ dist: 3.4, ms: reduced ? 0 : 1300 });
@@ -875,8 +918,14 @@ const steps = {
     hinted: false,
     async enter() {
       this.hinted = false;
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG — từ 01/08/2026
+         bước 1 và bước `rotation` dùng bản đồ phẳng, nên bước nào cần quả cầu phải
+         tự nói ra. Không nói thì nó nhận map của bước trước, và bước trước có thể
+         đổi bất cứ lúc nào. Quả cầu đúng cho bước này: cả hành tinh là MỘT vật thể
+         (đổi tông theo thời đại · ranh giới ngày/đêm · khói phủ khí quyển). */
+      if (world.setMap) world.setMap('globe');
       world.setControls({ rotate: true, zoom: true });
-      // Lùi camera ra để Mặt Trời vào được khung khi trẻ xoay
+      // Lùi camera ra để cả hành tinh + Mặt Trời cùng vào khung
       await world.panTo({ dist: 5.2, ms: reduced ? 0 : 1500 });
       /* MẤT NĂNG LƯỢNG: cả hành tinh chìm vào bóng tối TRƯỚC, rồi Comet mới hỏi
          "ngôi sao đâu?". Đúng thứ tự trong bản mô tả — và chỉ khi vừa thấy sáng ở
@@ -914,6 +963,12 @@ const steps = {
     placed: new Set(),
     async enter() {
       this.placed = new Set();
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG — từ 01/08/2026
+         bước 1 và bước `rotation` dùng bản đồ phẳng, nên bước nào cần quả cầu phải
+         tự nói ra. Không nói thì nó nhận map của bước trước, mà bước trước có thể
+         đổi bất cứ lúc nào. Quả cầu đúng cho bước này: cả hành tinh là MỘT vật thể
+         (đổi tông theo thời đại · ranh giới ngày/đêm · khói phủ khí quyển). */
+      if (world.setMap) world.setMap('globe');
       world.setControls({ rotate: true, zoom: true });
       world.setSpin(1);
       await world.panTo({ dist: 3.8, ms: reduced ? 0 : 1300 });
@@ -951,20 +1006,30 @@ const steps = {
     locked: false,
     async enter() {
       this.locked = false;
+      /* ⚠️ BẢN ĐỒ PHẲNG (đổi 01/08/2026), cùng lý do như bước 1: trên ảnh quả cầu
+         `paint()` đặt `translate` bằng 0, nên cú kéo KHÔNG làm hành tinh quay — chỉ
+         cái đốm trạm trượt đi. Lời "xoay Trái Đất" mô tả một việc không xảy ra.
+         Trên bản đồ phẳng thì kéo = đi khắp bề mặt, và việc phải làm trở thành một
+         câu đọc được: **đưa trạm phát sóng vào vòng ngắm**.
+         ⚠️ Điều kiện thắng KHÔNG ĐỔI (`stationAngleTo < 20°`) — nó là góc giữa `facing`
+            và trạm, đúng nghĩa trên cả hai loại map. Đổi map không đụng tới luật. */
+      if (world.setMap) world.setMap('flat');
       world.setControls({ zoom: true });
-      world.setSpin(0);                    // để TRẺ tự xoay, hành tinh không tự chạy
-      /* Ở bước NÀY cú kéo xoay CHÍNH HÀNH TINH, không phải camera.
-         Bản đầu để OrbitControls quay camera: nhìn thì giống nhau nhưng
-         `earth.quaternion` không đổi, nên góc giữa trạm phát sóng và vệ tinh y
-         nguyên — bước này TRẺ KHÔNG THỂ HOÀN THÀNH, nó chỉ tự xong vì hành tinh
-         tự quay (tức là ngồi chờ, không phải giải), và ở `reduced-motion` (không
-         tự quay) thì treo vĩnh viễn. Đo trên trang mới lộ ra. */
+      world.setSpin(0);                    // để TRẺ tự kéo, hành tinh không tự chạy
       world.setEarthDrag(true);
       world.setSatelliteVisible(true);
       world.setSatelliteSignal(false);
       await world.panTo({ dist: 4.4, ms: reduced ? 0 : 1400 });
       objective({ ic: '🛰️', h: t('s3_h'), p: t('s3_p'), n: 0, total: 1 });
-      // Đánh dấu trạm phát sóng để trẻ biết phải xoay cái gì tới đâu
+      /* VÒNG NGẮM = đích NHÌN THẤY ĐƯỢC của `stationAngleTo(...) → 0`.
+         ⚠️ Không có nó thì trẻ kéo mù, chỉ nhìn một thanh đo — đo được: trên bản đồ
+            phẳng, điểm ở `facing` rơi vào **(62,5%, 50%)** của khung, còn biểu tượng
+            vệ tinh nằm ở (13,6%, 17,1%). Không chỗ nào là "giữa", nên bảo trẻ "đưa
+            trạm về phía vệ tinh" hay "vào giữa khung" đều là chỉ sai chỗ.
+            Vòng ngắm do `js/earth2d.js` chiếu bằng ĐÚNG `project()` của marker nên
+            nó không thể lệch khỏi đích, ở mọi mức phóng. */
+      if (world.showAim) world.showAim(true);
+      // Đánh dấu trạm phát sóng: thứ trẻ phải kéo tới vòng ngắm
       world.addMarkers([{ id: 'station', lat: STATION.lat, lon: STATION.lon,
                           rgb: '255,225,140', color: 0xffe8a0 }]);
       $('sat-st').textContent = t('s3_lost');
@@ -987,6 +1052,7 @@ const steps = {
       sfx('ready');
       $('sat').classList.add('ok');
       world.setSatelliteSignal(true);
+      if (world.showAim) world.showAim(false);
       world.setEarthDrag(false);           // trả cú kéo về cho camera
       world.clearMarkers();
       await say('comet', t('s3_say2'));

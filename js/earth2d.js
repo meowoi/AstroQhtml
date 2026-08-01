@@ -135,6 +135,18 @@
     var markerBox = el("div", "e2-markers", layer);
     var drone = el("div", "e2-drone", layer);
     var beam = el("div", "e2-beam", drone);
+    /* VÒNG NGẮM = chỗ mà `facing` rơi vào trên màn hình.
+       ⚠️ ĐẶT TRONG `layer` VÀ CHIẾU BẰNG ĐÚNG `project()` CỦA MARKER — không gán
+          `left:50%` cho xong. Đo được trên bản đồ phẳng: điểm ở `facing` rơi vào
+          **(62,5%, 50%)** của khung, KHÔNG phải tâm; và con số đó đổi theo `zoom`.
+          Gán cứng một vị trí là vẽ vòng ngắm lệch khỏi chính cái đích nó chỉ, tức
+          trẻ kéo trạm vào vòng mà thanh tín hiệu không lên — lỗi im lặng, và là
+          loại lỗi đã làm bước `rotation` bản 3D KHÔNG THỂ hoàn thành.
+       Bước `rotation` thắng khi `stationAngleTo(...) < 20°`, tức khi trạm về gần
+       `facing` — nên vòng này là đích nhìn thấy được của đúng điều kiện đó. */
+    var aim = el("div", "e2-aim", layer);
+    aim.hidden = true;
+
     var sun = el("button", "e2-sun", view);
     sun.type = "button";
     sun.setAttribute("aria-label", "Mặt Trời");
@@ -211,6 +223,16 @@
         mk.node.hidden = !p.visible;
         /* CHỐNG-PHÓNG: dấu hiệu giữ nguyên cỡ trên màn hình dù ảnh phóng bao nhiêu. */
         mk.node.style.transform =
+          "translate(-50%,-50%) scale(" + (1 / zoom).toFixed(3) + ")";
+      }
+
+      /* Vòng ngắm: chiếu CHÍNH `facing` bằng cùng một hàm `project()` — nên nó luôn
+         nằm đúng chỗ mà điều kiện `stationAngleTo(...) = 0` quy về, ở mọi zoom. */
+      if (!aim.hidden) {
+        var ap = project(facing.lat, facing.lon);
+        aim.style.left = ap.x + "%";
+        aim.style.top = ap.y + "%";
+        aim.style.transform =
           "translate(-50%,-50%) scale(" + (1 / zoom).toFixed(3) + ")";
       }
     }
@@ -446,6 +468,9 @@
 
       /** Kéo xoay CHÍNH hành tinh (bước 5) thay vì xoay camera. */
       setEarthDrag: function (on) { earthDrag = on !== false; },
+
+      /** Bật/tắt vòng ngắm — đích NHÌN THẤY ĐƯỢC của `stationAngleTo(...) → 0`. */
+      showAim: function (on) { aim.hidden = on === false; paint(); },
 
       facingLatLon: function () {
         return { lat: facing.lat, lon: facing.lon };

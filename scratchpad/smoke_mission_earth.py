@@ -524,6 +524,13 @@ def main():
         # Trái Đất phải ĐANG SÁNG ở bước 1 (theo bản mô tả, tối đi là ở bước 2)
         p_lit = pix(page, (0.3, 0.3, 0.4, 0.4))
         chk(p_lit["avg"] > 22, "bước 1: Trái Đất đang SÁNG", f"độ sáng TB {p_lit['avg']:.1f}")
+        # ⚠️ MỞ MÀN PHẢI LÀ ẢNH QUẢ CẦU, chưa phải bản đồ phẳng (đổi 01/08/2026).
+        #    Đo được: quả cầu sáng TB 113,9 ở vùng giữa, bản đồ phẳng chỉ 24,3 — tối hơn
+        #    4,7 lần. Đây là cảnh ĐẦU TIÊN trẻ thấy trong nhiệm vụ; mở màn bằng một hình
+        #    chữ nhật gần đen là mất đúng khoảnh khắc "mình đã tới Trái Đất".
+        chk(page.evaluate("() => window.__mission.world.map") == "globe",
+            "mở màn bằng ẢNH QUẢ CẦU (sáng), chưa phải bản đồ phẳng",
+            page.evaluate("() => window.__mission.world.map"))
 
         # ══════════════════════════════════════════════════════════════════
         head("[2] Bước 1 — lưới quét + 3 điểm tín hiệu (bấm THẬT)")
@@ -534,6 +541,7 @@ def main():
         say_through(page)
         page.wait_for_function("() => window.__mission.world.markers.length === 3", timeout=15000)
         chk(True, "3 điểm tín hiệu đã đặt")
+
 
         # Bàn tay hướng dẫn phải đã xuất hiện trong bước này
         chk(page.evaluate(
@@ -547,6 +555,50 @@ def main():
             ".filter(m => window.__mission.world.screenOf('marker', m.id).visible).length")
         chk(vis >= 2, "ở góc mở màn trẻ thấy được ít nhất 2/3 điểm tín hiệu",
             f"{vis}/3 thấy được")
+        # ⚠️ KHỐI KÉO PHẢI ĐỨNG SAU PHÉP KIỂM "≥2/3 ĐIỂM" NGAY TRÊN. Lượt đầu tôi đặt
+        #    nó lên trước, nên phép kiểm kia đo SAU khi bản đồ đã bị kéo đi 300px và
+        #    báo 1/3 — hỏng oan, lỗi THỨ TỰ trong bộ đo chứ không phải lỗi sản phẩm.
+        # ══ KỊCH BẢN MỚI 01/08/2026: kéo phải làm ẢNH ĐỔI, không phải làm ĐỐM TRƯỢT ══
+        # ⚠️ Đây là phép kiểm quan trọng nhất của bước 1. Trên ảnh quả cầu, `paint()`
+        #    đặt `translate` bằng 0 — đo được: kéo 300px thì transform và khung ảnh Y
+        #    NGUYÊN, chỉ ba cái đốm trượt đi (một cái ra khỏi khung). Tức lời "Kéo để
+        #    xoay Trái Đất" mô tả một việc KHÔNG HỀ XẢY RA, và thứ trẻ thấy là mục tiêu
+        #    chạy khỏi con trỏ. Đọc code không thấy — phải kéo rồi so hai số đo.
+        chk(page.evaluate("() => window.__mission.world.map") == "flat",
+            "sau lời Comet: đã chuyển sang CHẾ ĐỘ BẢN ĐỒ",
+            page.evaluate("() => window.__mission.world.map"))
+
+        def _snap():
+            return page.evaluate("""() => {
+              const layer = document.querySelector('.e2-layer');
+              const img = document.querySelector('.e2-img');
+              return {
+                tf: layer ? layer.style.transform : null,
+                x: img ? Math.round(img.getBoundingClientRect().x) : null,
+                mks: [...document.querySelectorAll('.e2-mk')].map(m => m.style.left)
+              };
+            }""")
+
+        _a = _snap()
+        _box = page.evaluate("""() => { const r = document.getElementById('stage')
+            .getBoundingClientRect();
+            return { cx: r.left + r.width/2, cy: r.top + r.height/2 }; }""")
+        page.mouse.move(_box["cx"], _box["cy"])
+        page.mouse.down()
+        for _i in range(1, 11):
+            page.mouse.move(_box["cx"] + 30 * _i, _box["cy"])
+            page.wait_for_timeout(20)
+        page.mouse.up()
+        page.wait_for_timeout(500)
+        _b = _snap()
+        chk(_a["x"] is not None and _b["x"] is not None and abs(_b["x"] - _a["x"]) > 100,
+            "KÉO làm ẢNH BẢN ĐỒ dịch thật (không phải đứng yên)",
+            f"x {_a['x']} -> {_b['x']}")
+        # Và điểm tín hiệu PHẢI đứng yên tại chỗ của nó trên Trái Đất — nó là một ĐỊA
+        # ĐIỂM, không phải một thứ bám theo con trỏ.
+        chk(_a["mks"] == _b["mks"],
+            "3 điểm tín hiệu ĐỨNG YÊN tại toạ độ thật (đi cùng bản đồ)",
+            f"{_a['mks']} -> {_b['mks']}")
         clicked_real = False
         tried = []
         for mid in ids:
@@ -770,6 +822,24 @@ def main():
         st_lost = page.eval_on_selector("#sat-st", "e => e.textContent.trim()")
         chk("LOST" in st_lost.upper() or "MẤT" in st_lost.upper(),
             "vệ tinh báo SIGNAL LOST", st_lost)
+        # ══ VÒNG NGẮM (thêm 01/08/2026) ══
+        # ⚠️ Không có nó thì trẻ kéo mù, chỉ nhìn một thanh đo. Đo được: trên bản đồ
+        #    phẳng, điểm ở `facing` — chỗ mà `stationAngleTo(...) = 0` quy về — rơi vào
+        #    (62,5%, 50%) của khung, còn biểu tượng vệ tinh nằm ở (13,6%, 17,1%). KHÔNG
+        #    chỗ nào là "giữa", nên bảo trẻ "đưa trạm về phía vệ tinh" hay "vào giữa
+        #    khung" đều là chỉ SAI CHỖ.
+        chk(page.evaluate("() => window.__mission.world.map") == "flat",
+            "bước 5 chạy trên BẢN ĐỒ PHẲNG (kéo mới có nghĩa)",
+            page.evaluate("() => window.__mission.world.map"))
+        chk(page.evaluate("() => { const a = document.querySelector('.e2-aim');"
+                          " return !!a && !a.hidden; }"),
+            "vòng ngắm HIỆN ra")
+        # ⚠️ PHÉP KIỂM "vòng ngắm trùng đích" KHÔNG ĐO ĐƯỢC Ở ĐÂY, đã chuyển xuống mục
+        #    [8b]. Lý do: nó phải kéo `facing` về đúng toạ độ trạm, mà đó CHÍNH LÀ điều
+        #    kiện thắng — `tick()` thấy góc < 20° là gọi `finishStep('rotation')`, `outro()`
+        #    tắt vòng ngắm và xoá marker, nên phép đo rơi vào trạng thái đã sang bước sau
+        #    (đo được: góc `nan`, lệch 53%). Bộ đo tự làm hỏng thứ nó đang đo.
+
         ang0 = page.evaluate("window.__mission.satAngle")
         # Đo NGAY BÂY GIỜ, trước khi kéo: `outro()` của bước 3 trả cú kéo về cho
         # camera (`enableRotate = true`), nên đo sau khi bước xong là luôn hỏng.
@@ -1017,6 +1087,48 @@ def main():
             str(shielded_live))
 
         chk(len(errs) == 0, "0 lỗi console", "; ".join(errs[:3]))
+        ctx.close()
+
+        # ══════════════════════════════════════════════════════════════════
+        head("[8b] Vòng ngắm TRÙNG đích của điều kiện thắng (ở mọi mức phóng)")
+        # ⚠️ CONTEXT RIÊNG, TRANG MỚI. Mục [8] đóng context sau màn tổng kết nên đo tiếp
+        #    ở đó là `TargetClosedError` (đã dính). Và trang mới đang ở bước `scan` nên
+        #    `RUN.tick()` KHÔNG chuyển cho `steps.rotation.tick` — không có gì gọi
+        #    `finishStep` giữa lúc đo, đúng điều kiện phép đo này cần.
+        ctx = br.new_context(viewport={"width": 1440, "height": 900})
+        page = ctx.new_page()
+        stub(page)
+        boot(page)
+        # ⚠️ ĐO Ở ĐÂY, SAU KHI NHIỆM VỤ ĐÃ XONG: bước `rotation` không còn chạy nên
+        #    `tick()` không thể gọi `finishStep` giữa lúc đo. Điều cần chứng minh: vòng
+        #    ngắm và marker đi qua CÙNG một `project()`, nên khi `facing` = toạ độ marker
+        #    thì hai thứ trùng nhau — ở MỌI zoom. Gán cứng `left:50%` cho vòng ngắm là vẽ
+        #    nó lệch khỏi chính cái đích nó chỉ, và đó là lỗi im lặng: trẻ kéo trạm vào
+        #    vòng mà thanh tín hiệu không lên.
+        for _z in (2.0, 4.4):
+            _r = page.evaluate("""async (dist) => {
+              const w = window.__mission.world;
+              w.setMap('flat'); w.showAim(true);
+              w.clearMarkers();
+              w.addMarkers([{ id: 'probe', lat: -33, lon: 151, rgb: '255,225,140' }]);
+              await w.panTo({ lat: -33, lon: 151, dist: dist, ms: 0 });
+              await new Promise(r => setTimeout(r, 250));
+              const v = document.querySelector('.e2-view').getBoundingClientRect();
+              const pct = e => { const r = e.getBoundingClientRect(); return [
+                (r.left + r.width/2 - v.left) / v.width * 100,
+                (r.top + r.height/2 - v.top) / v.height * 100 ]; };
+              const a = document.querySelector('.e2-aim');
+              const m = document.querySelector('.e2-mk');
+              if (!a || a.hidden || !m) return { d: 999, ang: 999 };
+              const pa = pct(a), pm = pct(m);
+              return { d: Math.hypot(pa[0]-pm[0], pa[1]-pm[1]),
+                       ang: w.stationAngleTo(-33, 151) };
+            }""", _z)
+            chk(_r["ang"] < 1, f"dist={_z}: facing = toạ độ trạm -> góc ~0",
+                f"{_r['ang']:.2f}°")
+            chk(_r["d"] < 1.5, f"dist={_z}: vòng ngắm TRÙNG chỗ trạm (không lệch đích)",
+                f"lệch {_r['d']:.2f}% khung")
+        page.evaluate("() => window.__mission.world.showAim(false)")
         ctx.close()
 
         # ══════════════════════════════════════════════════════════════════
