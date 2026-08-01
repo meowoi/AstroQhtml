@@ -31,29 +31,22 @@
    Neo ở ĐÁY màn hình: Trái Đất chiếm phần trên-phải, thoại nằm giữa là che mất
    đúng cái đang được giới thiệu. z-index 3 để tàu (vẽ trên canvas, z-index 0)
    không chờm lên chữ — trên ảnh chụp mũi tàu đè vào góc box. */
-.mi-say{position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
+/* Vỏ box · khung avatar · chữ tên/vai nằm ở `css/mascot.css`
+   (`.aq-say` · `.aq-ava.glow.float` · `.aq-nm` · `.aq-tag`). Ở đây chỉ
+   còn phần RIÊNG: neo đáy màn, z-index, hiện/ẩn. Avatar to hơn bản ở
+   `mission-earth` (56 vs 50) vì màn giới thiệu không có gì tranh chỗ. */
+.mi-say{--aq-ava:56px;--aq-ava-r:16px;
+  position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
   bottom:clamp(20px,5vh,54px);z-index:3;
   width:min(680px,calc(100vw - 28px));display:flex;gap:14px;align-items:flex-start;
-  padding:16px 20px 15px;border-radius:20px;
-  border:1px solid rgba(95,211,255,.5);
-  background:linear-gradient(180deg, rgba(13,20,48,.94), rgba(10,16,40,.96));
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  box-shadow:0 26px 60px -22px rgba(0,0,0,.9), 0 0 40px -12px rgba(95,211,255,.45);
+  padding:16px 20px 15px;
   opacity:0;transition:opacity .45s var(--ease),transform .45s var(--ease);}
 .mi-say.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-.mi-ava{width:56px;height:56px;flex:none;border-radius:16px;overflow:hidden;display:grid;place-items:center;
-  background:radial-gradient(circle at 42% 32%, rgba(143,123,255,.5), rgba(56,189,248,.16) 70%, transparent);
-  border:1px solid rgba(143,123,255,.5);box-shadow:0 0 20px -4px rgba(143,123,255,.75);}
-.mi-ava img{width:100%;height:100%;object-fit:contain;display:block;
-  animation:miFloat 3.4s ease-in-out infinite;}
-@keyframes miFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
-
 .mi-body{min-width:0;flex:1;}
 .mi-who{display:flex;align-items:baseline;gap:9px;}
-.mi-who .nm{font-family:var(--font-display);font-weight:700;font-size:14px;color:#cfe3ff;}
-.mi-who .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--accent,#5fd3ff);}
+/* 14px thay cho 13px mặc định — tên ở màn giới thiệu đọc từ xa hơn. */
+.mi-who .aq-nm{font-size:14px;}
 .mi-line{font-size:14.5px;line-height:1.62;color:var(--ink);margin:7px 0 0;min-height:3.2em;}
 .mi-line b{color:#a5e4ff;}
 /* Con trỏ nhấp nháy ở cuối câu đang gõ — dấu hiệu "còn đang nói" */
@@ -70,8 +63,7 @@
 .mi-next.hide{opacity:0;pointer-events:none;}
 
 @media (max-width:560px){
-  .mi-say{flex-wrap:wrap;padding:14px 15px 13px;gap:11px;}
-  .mi-ava{width:46px;height:46px;border-radius:14px;}
+  .mi-say{flex-wrap:wrap;padding:14px 15px 13px;gap:11px;--aq-ava:46px;--aq-ava-r:14px;}
   .mi-line{font-size:13.6px;}
   .mi-next{width:100%;}
 }

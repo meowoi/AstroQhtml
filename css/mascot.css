@@ -1,0 +1,116 @@
+/* ============================================================
+   css/mascot.css — BOX THOẠI COMET / BYTE dùng chung.
+
+   Nạp GIỮA `css/common.css` và `css/<trang>.css`:
+     common.css → mascot.css → <trang>.css
+   (giống cách `css/game-shell.css` làm cho mini-game.)
+
+   ⚠️ VÌ SAO CÓ FILE NÀY (31/07/2026)
+   ─────────────────────────────────────────────────────────────
+   Trước đó BA trang tự vẽ lại cùng một cái box thoại — `.me-say`
+   (mission-earth), `.mi-say` (mission-intro), `.tour-bubble`
+   (onboard-tour). Ba bản chép tay, và đã trôi khỏi nhau đúng như
+   copy-paste luôn trôi:
+
+     · nền     rgba(13,20,48,**.94**) ở hai bản, **.96** ở bản thứ ba
+     · bóng    24/56/-22 · 26/60/-22 · 26/60/-22 với 3 độ mờ khác nhau
+     · quầng   .4 · .45 · .45
+     · nhũn    `@keyframes miFloat` và `@keyframes tourFloat` GIỐNG
+               HỆT NHAU từng ký tự, chỉ khác tên
+
+   Không ai cố ý làm chúng khác nhau — chúng khác nhau vì không có
+   chỗ chung nào để sửa một lần. Đó chính là bài học đã ghi ở
+   `explorer.html` (nút đổi ngôn ngữ): **trang tự đặt tên riêng thì
+   trượt khỏi mọi thứ dùng chung.**
+
+   CÁCH DÙNG — gắn KÈM class riêng của trang, không thay thế nó:
+     <section class="aq-say me-say">        ← chrome chung + vị trí riêng
+       <span class="aq-ava"><img …></span>
+       <div class="body">
+         <span class="aq-nm">Comet</span>
+         <span class="aq-tag">HOA TIÊU</span>
+         <p class="line">…</p>
+       </div>
+     </section>
+
+   FILE NÀY GIỮ: vỏ box · khung avatar · nhịp nhũn · chữ tên/vai.
+   TRANG GIỮ:    vị trí (absolute/fixed/ở đâu) · hiệu ứng hiện/ẩn ·
+                 mũi nhọn chỉ hướng · con trỏ gõ chữ · breakpoint riêng.
+
+   ⚠️ NÚT "TIẾP" CỐ Ý KHÔNG GOM VÀO ĐÂY. Nhìn thì giống nhau (cùng
+   padding, cùng bo góc, cùng transition), nhưng **hai trang dùng hai
+   bảng màu khác nhau**: `mission-earth` lấy `--cyan/--purple`
+   (#38bdf8 → #c084fc), còn `mission-intro`/`onboard-tour` lấy
+   `--accent/--accent-2` (#5fd3ff → #8f7bff) của `dashboard.css`.
+   Gom lại là đổi màu nút của một trong hai trang — một thay đổi
+   THẤY ĐƯỢC, không phải dọn dẹp. Muốn gom thì phải chốt một bảng màu
+   trước; đó là việc riêng, không phải việc của lượt tách này.
+
+   Lý do chia vậy: ba trang neo box ở ba chỗ khác nhau (đáy màn ·
+   đáy màn cao hơn · bám theo ô đang sáng), và hai trang canh giữa
+   bằng `translateX(-50%)` nên `.show` của chúng PHẢI tự viết lại
+   transform — gom vào đây là gom nhầm.
+
+   ⚠️ Ba kích thước dưới đây CỐ Ý để trang tự chỉnh bằng biến, KHÔNG
+   phải để trang khai lại cả khối: avatar 46–56px và bo góc 18–20px là
+   khác biệt THẬT theo bối cảnh (box bám ô nhỏ hơn box giữa màn).
+   ============================================================ */
+
+.aq-say {
+  /* Trang chỉnh 3 biến này là đủ, không cần chép lại vỏ box. */
+  --aq-r: 20px;      /* bo góc box     */
+  --aq-ava: 52px;    /* cạnh avatar    */
+  --aq-ava-r: 15px;  /* bo góc avatar  */
+
+  border-radius: var(--aq-r);
+  border: 1px solid rgba(95, 211, 255, .5);
+  background: linear-gradient(180deg, rgba(13, 20, 48, .94), rgba(10, 16, 40, .96));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 26px 60px -22px rgba(0, 0, 0, .9),
+              0 0 40px -12px rgba(95, 211, 255, .45);
+}
+
+/* Byte nói thì viền/quầng đổi sang tím — cùng bảng màu với `js/characters.js`. */
+.aq-say.byte {
+  border-color: rgba(143, 123, 255, .55);
+  box-shadow: 0 26px 60px -22px rgba(0, 0, 0, .9),
+              0 0 40px -12px rgba(143, 123, 255, .45);
+}
+
+/* ---------------- Khung avatar ---------------- */
+.aq-ava {
+  width: var(--aq-ava);
+  height: var(--aq-ava);
+  flex: none;
+  border-radius: var(--aq-ava-r);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 42% 32%,
+              rgba(143, 123, 255, .5), rgba(56, 189, 248, .16) 70%, transparent);
+  border: 1px solid rgba(143, 123, 255, .5);
+}
+.aq-ava img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* Quầng sáng quanh avatar — CÓ THÌ THÊM class, không bật mặc định:
+   box thoại trong nhiệm vụ nằm đè lên hành tinh đang sáng, thêm quầng
+   nữa là hai nguồn sáng chồng nhau. */
+.aq-ava.glow { box-shadow: 0 0 20px -4px rgba(143, 123, 255, .75); }
+
+/* Nhịp nhũn nhẹ — TRƯỚC ĐÂY LÀ HAI KEYFRAMES GIỐNG HỆT NHAU khác tên
+   (`miFloat`, `tourFloat`). Cũng là opt-in: `mission-earth` cố ý không
+   có, vì ở đó avatar nhỏ và cảnh đã nhiều chuyển động. */
+.aq-ava.float img { animation: aqFloat 3.4s ease-in-out infinite; }
+@keyframes aqFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+/* ---------------- Tên + vai ---------------- */
+.aq-nm  { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #cfe3ff; }
+.aq-tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: .16em;
+          text-transform: uppercase; color: var(--accent, #5fd3ff); }
+
+/* ⚠️ KHÔNG có khối `prefers-reduced-motion` ở đây, và đó là CỐ Ý:
+   `css/common.css:53` đã tắt toàn cục `*{animation:none !important;}`.
+   Thêm một khối nữa chỉ là mã chết trông như đang gánh việc — người đọc
+   sau sẽ tưởng bỏ nó đi là hỏng accessibility. Ba trang đang dùng file
+   này đều nạp `common.css` trước, nên `.aq-ava.float` tự đứng yên. */

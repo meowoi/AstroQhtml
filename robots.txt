@@ -25,6 +25,18 @@ Allow: /llms.txt
 Disallow: /docs/
 
 # ---------- OpenAI ----------
+# OAI-SearchBot: bot của CHATGPT SEARCH — KHÁC GPTBot.
+# ⚠️ Thiếu bot này (tình trạng trước 31/07/2026) thì astroq.org vắng mặt trong phần
+#    trả lời có trích nguồn của ChatGPT, dù GPTBot vẫn được phép: GPTBot chỉ lo dữ
+#    liệu HUẤN LUYỆN, còn việc lập chỉ mục để TRÍCH DẪN là của OAI-SearchBot. Toàn
+#    bộ `wiki/` + `llms.txt` sinh ra để được trích dẫn, nên đây đúng là cái bot cần
+#    mời vào nhất.
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /wiki/
+Allow: /wiki/en/
+Disallow: /docs/
+
 # GPTBot: thu thập dữ liệu huấn luyện
 User-agent: GPTBot
 Allow: /

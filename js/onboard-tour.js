@@ -115,11 +115,19 @@
             body: "Track your level, your outfit and your very own journey of discovery." }
     },
     {
+      /* ⚠️ LỜI THOẠI ĐỔI 01/08/2026 CÙNG LÚC TOUR DỜI XUỐNG SAU NHIỆM VỤ 1
+         (docs/decisions/003). Câu cũ là *"Nếu đã sẵn sàng, hãy khởi động động cơ
+         thôi!"* + nút *"Khởi động động cơ 🚀"* — nó đúng khi tour chạy TRƯỚC nhiệm vụ
+         và dẫn thẳng sang màn loading Luna rời bến. Giờ tour chạy SAU khi trẻ đã bay
+         tới Trái Đất và làm xong 8 bước, nên bảo nó "khởi động động cơ" là nói một
+         việc đã xảy ra từ lâu. Câu mới hướng về việc TIẾP THEO. */
       key: "ready", target: null,
-      vi: { title: "Sẵn sàng chưa? 🚀",
-            body: "Nếu đã sẵn sàng, hãy <b>khởi động động cơ</b> thôi!" },
-      en: { title: "All set? 🚀",
-            body: "If you're ready, let's <b>fire up the engines</b>!" }
+      vi: { title: "Con tàu là của bạn! 🚀",
+            body: "Giờ bạn đã biết đường trong tàu rồi. " +
+                  "Hãy <b>chọn khu tiếp theo</b> để khám phá nhé!" },
+      en: { title: "The ship is yours! 🚀",
+            body: "Now you know your way around. " +
+                  "<b>Pick your next area</b> and keep exploring!" }
     }
   ];
 
@@ -127,9 +135,9 @@
      390px và bóp méo cả hàng chân box (đã thấy trên ảnh chụp). */
   var UI = {
     vi: { who: "Comet", role: "Bạn đồng hành", skip: "Bỏ qua",
-          next: "Tiếp tục", first: "Bắt đầu tham quan", go: "Khởi động động cơ 🚀" },
+          next: "Tiếp tục", first: "Bắt đầu tham quan", go: "Khám phá thôi! 🚀" },
     en: { who: "Comet", role: "Your companion", skip: "Skip",
-          next: "Next", first: "Start the tour", go: "Fire up the engines 🚀" }
+          next: "Next", first: "Start the tour", go: "Let's explore! 🚀" }
   };
 
   /* ------------------------------------------------------------ */
@@ -190,10 +198,10 @@
     root.innerHTML =
       '<div class="tour-block"></div>' +
       '<div class="tour-hole"><span class="ring"></span></div>' +
-      '<div class="tour-bubble none">' +
+      '<div class="aq-say tour-bubble none">' +
         '<div class="tour-who">' +
-          '<span class="tour-ava"><img src="img/m1.png" alt="Comet" /></span>' +
-          '<span><span class="nm"></span><span class="tag"></span></span>' +
+          '<span class="aq-ava glow float"><img src="img/m1.png" alt="Comet" /></span>' +
+          '<span><span class="aq-nm"></span><span class="aq-tag"></span></span>' +
         '</div>' +
         '<h2 class="tour-title"></h2>' +
         '<p class="tour-body"></p>' +
@@ -208,8 +216,8 @@
     hole   = root.querySelector(".tour-hole");
     bubble = root.querySelector(".tour-bubble");
     els = {
-      who:   root.querySelector(".tour-who .nm"),
-      role:  root.querySelector(".tour-who .tag"),
+      who:   root.querySelector(".tour-who .aq-nm"),
+      role:  root.querySelector(".tour-who .aq-tag"),
       title: root.querySelector(".tour-title"),
       body:  root.querySelector(".tour-body"),
       dots:  root.querySelector(".tour-dots"),
@@ -303,7 +311,7 @@
       hole.style.left = (vw / 2) + "px";
       hole.style.width = "0px";
       hole.style.height = "0px";
-      bubble.className = "tour-bubble none";
+      bubble.className = "aq-say tour-bubble none";
       var bw0 = bubble.offsetWidth, bh0 = bubble.offsetHeight;
       bubble.style.left = Math.round((vw - bw0) / 2) + "px";
       bubble.style.top = Math.round(Math.max(12, (vh - bh0) / 2)) + "px";
@@ -352,7 +360,7 @@
     left = Math.max(m, Math.min(left, vw - bw - m));
     top  = Math.max(m, Math.min(top,  vh - bh - m));
 
-    bubble.className = "tour-bubble " + dir;
+    bubble.className = "aq-say tour-bubble " + dir;
     bubble.style.left = Math.round(left) + "px";
     bubble.style.top = Math.round(top) + "px";
     // Mũi nhọn bám tâm khu vực, kể cả khi box đã bị kẹp lệch đi

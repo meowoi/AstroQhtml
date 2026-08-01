@@ -17,9 +17,21 @@
    viết một con số không có nguồn là bịa. Năm câu về lập trình (không có `src`)
    là câu khái niệm của bài học, không phải số liệu khoa học.
 
-   ⚠️ ĐÁP ÁN ĐÚNG PHẢI RẢI ĐỀU A/B/C/D — trẻ học "cứ chọn B" thì bài kiểm tra
-   mất tác dụng. Phân bố hiện tại: A=8 · B=6 · C=6 · D=5 (25 câu); riêng 20 câu
-   thiên văn thêm ngày 30/07/2026 rải đúng 5/5/5/5. Thêm câu thì đếm lại. */
+   ⚠️ KHÔNG CẦN ĐẾM PHÂN BỐ A/B/C/D NỮA (sửa 31/07/2026). Luật cũ ở đây bắt rải
+   đều đáp án đúng để trẻ không học mẹo "cứ chọn B". Từ 31/07/2026 `quiz.html`
+   gọi `shuffleOptions()` trong `renderQuestion()` — **4 lựa chọn được trộn lại
+   mỗi lần hiện câu**, nên THỨ TỰ KHAI BÁO Ở FILE NÀY KHÔNG BAO GIỜ TỚI NGƯỜI
+   CHƠI. Đếm phân bố ở đây là đo một thứ không ai nhìn thấy.
+   Chú thích cũ còn ghi "A=8·B=6·C=6·D=5 (25 câu)" trong khi bank đã 35 câu —
+   đúng cái bẫy của việc chép một con số vào chú thích rồi phải nhớ cập nhật.
+
+   ⚠️ NHƯNG luật chỉ chết CHỪNG NÀO MỌI trang dùng bank đều trộn. Hiện **chỉ
+   `quiz.html` dùng bank này** (library.html chưa nối vào dù nói ở trên là để
+   dùng chung). Trang mới nào vẽ thẳng `opts` theo thứ tự khai báo thì luật rải
+   đều SỐNG LẠI với riêng trang đó — hoặc tốt hơn, dùng lại `shuffled()` của bank.
+
+   ⚠️ `a` LUÔN là chỉ số trong `opts` GỐC, không phải ô trên màn hình. Đừng trộn
+   tại chỗ `opts` và đừng sửa `a` — xem chú thích ở `quiz.html` chỗ ORDER/SLOT. */
 window.AstroQQuestions = (function () {
   "use strict";
 

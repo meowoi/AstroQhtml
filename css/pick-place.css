@@ -1,0 +1,63 @@
+/* ============================================================
+   css/pick-place.css — TRẠNG THÁI NHÌN THẤY của khuôn "thẻ → ô"
+   khi chơi bằng BÀN PHÍM. Đi kèm `js/pick-place.js`.
+
+   Nạp sau `css/common.css`, trước CSS riêng của trang.
+
+   ⚠️ Vì sao cần CSS riêng cho đường bàn phím: chuột có con trỏ và thẻ
+   bay theo tay, nên lúc nào cũng thấy "đang cầm cái gì, sắp thả vào
+   đâu". Bàn phím KHÔNG có hai thứ đó — nếu không vẽ trạng thái ra thì
+   trẻ bấm Enter xong không biết mình đang cầm gì. Ba trạng thái dưới
+   đây là phần thay cho con trỏ.
+
+   Màu dùng `--accent`/`--cyan` với giá trị lùi, để khuôn chạy được trên
+   trang chưa khai token nào (xem `mission-earth.css` vs `dashboard.css`
+   — hai trang dùng hai bộ tên token khác nhau).
+   ============================================================ */
+
+/* Thẻ ĐANG CẦM — thay cho "thẻ dính vào con trỏ" của đường chuột. */
+.aq-holding {
+  outline: 2px solid var(--cyan, var(--accent, #5fd3ff));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(95, 211, 255, .18), 0 10px 24px -12px rgba(0, 0, 0, .8);
+  transform: translateY(-3px);
+}
+
+/* Ô CÓ THỂ ĐẶT VÀO — thay cho "rê tới đâu ô sáng tới đó" của đường chuột.
+   Viền đứt để phân biệt rõ với ô đã xong (`.ok`, viền liền). */
+.aq-target {
+  outline: 2px dashed rgba(95, 211, 255, .55);
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Ô ĐANG CHỌN. Phải đậm hơn hẳn `.aq-target` — đây là thứ duy nhất cho
+   biết Enter bây giờ sẽ thả vào đâu, nên nó không được chỉ "hơi khác". */
+.aq-target:focus,
+.aq-target:focus-visible {
+  outline: 3px solid var(--cyan, var(--accent, #5fd3ff));
+  outline-offset: 3px;
+  box-shadow: 0 0 22px -4px rgba(95, 211, 255, .85);
+}
+
+/* Vùng đọc cho trình đọc màn hình. Không dùng `display:none` hay
+   `visibility:hidden` — hai cái đó làm trình đọc BỎ QUA nội dung, tức là
+   mất đúng thứ đang cần. Cách dưới đây giấu khỏi mắt nhưng vẫn đọc được. */
+.aq-live {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Giảm chuyển động: bỏ cú nhấc thẻ, GIỮ nguyên viền và quầng sáng.
+   `css/common.css` chỉ tắt `animation`, không tắt `transform` — mà cú
+   nhấc ở đây là transform tĩnh. Bỏ chuyển động nhưng vẫn phải nhìn thấy
+   mình đang cầm gì, nên chỉ bỏ đúng phần dịch chuyển. */
+@media (prefers-reduced-motion: reduce) {
+  .aq-holding { transform: none; }
+}

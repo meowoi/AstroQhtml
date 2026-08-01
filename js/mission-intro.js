@@ -1,3 +1,11 @@
+/* ⚠️⚠️ ĐÃ NGHỈ HƯU 01/08/2026 — KHÔNG TRANG NÀO NẠP FILE NÀY NỮA.
+   Lý do (docs/decisions/003 bước ⑦): màn này làm ĐÚNG CÙNG MỘT NHỊP với
+   `js/map-onboard.js` — Comet giới thiệu rồi hỏi "sẵn sàng chưa?". Giữ cả hai là
+   trẻ nghe Comet giao nhiệm vụ HAI LẦN liền nhau.
+   CHƯA XOÁ vì file còn thay đổi chưa commit (đợt gom `css/mascot.css`) — xoá là
+   mất vĩnh viễn. Xoá được sau khi đã commit; đó là việc riêng, chủ dự án quyết.
+   Cờ `intro01Seen` ở server GIỮ NGUYÊN, cố ý: không cần migration. */
+
 /* ============================================================
    mission-intro.js — MÀN MỞ ĐẦU NHIỆM VỤ 01 "HÀNH TINH XANH".
 
@@ -207,10 +215,10 @@
     root.innerHTML =
       '<canvas></canvas>' +
       '<button type="button" class="mi-skip"></button>' +
-      '<div class="mi-say" role="status" aria-live="polite">' +
-        '<span class="mi-ava"><img src="img/m1.png" alt="Comet" /></span>' +
+      '<div class="aq-say mi-say" role="status" aria-live="polite">' +
+        '<span class="aq-ava glow float"><img src="img/m1.png" alt="Comet" /></span>' +
         '<span class="mi-body">' +
-          '<span class="mi-who"><span class="nm"></span><span class="tag"></span></span>' +
+          '<span class="mi-who"><span class="aq-nm"></span><span class="aq-tag"></span></span>' +
           '<p class="mi-line"></p>' +
         '</span>' +
         '<button type="button" class="mi-next hide"></button>' +
@@ -229,8 +237,8 @@
     els = {
       skip: root.querySelector(".mi-skip"),
       say:  root.querySelector(".mi-say"),
-      who:  root.querySelector(".mi-who .nm"),
-      role: root.querySelector(".mi-who .tag"),
+      who:  root.querySelector(".mi-who .aq-nm"),
+      role: root.querySelector(".mi-who .aq-tag"),
       line: root.querySelector(".mi-line"),
       next: root.querySelector(".mi-next"),
       pop:  root.querySelector(".mi-pop"),

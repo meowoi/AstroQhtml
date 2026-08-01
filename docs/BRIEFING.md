@@ -1,0 +1,175 @@
+# AstroQ — Bản tóm tắt bối cảnh (dán vào ChatGPT / Gemini)
+
+> **Cách dùng:** dán TOÀN BỘ file này vào đầu mỗi cuộc trò chuyện mới với ChatGPT hoặc Gemini,
+> trước khi hỏi bất cứ điều gì về AstroQ. Kèm theo phần "Quyết định đã chốt" ở `docs/decisions/`
+> nếu chủ đề đã từng bàn.
+>
+> **Số liệu trong file này là số ĐẾM THẬT từ mã nguồn**, cập nhật 31/07/2026. Nếu đề xuất của bạn
+> dựa trên giả định khác với các con số dưới đây, hãy nói rõ giả định đó ra để được kiểm lại.
+
+---
+
+## 1. Dự án là gì
+
+Web **giáo dục về Hệ Mặt Trời cho trẻ em**, song ngữ Việt–Anh, phong cách giao diện
+glassmorphism + sci-fi khoang lái phi thuyền. Người chơi tạo thẻ ID phi hành gia, học qua
+quiz và nhiệm vụ, chơi mini-game, khám phá bản đồ thiên hà 3D, thu thập mẫu vật và huy hiệu.
+
+Đơn vị tiền trong game: **Thiên thạch tím (Purple Meteors)** — dùng để trả phí chơi mini-game.
+Hai linh vật: **Comet** (bạn đồng hành nhiệt tình) và **Byte** (robot phân tích).
+
+Trang chủ `astroq.org` đã go-live ở dạng landing "sắp ra mắt"; phần ứng dụng chưa mở cửa.
+
+---
+
+## 2. Công nghệ — và những gì KHÔNG được đề xuất đổi
+
+**Client:** HTML + CSS + JavaScript **thuần**. Không framework, không npm, không build step,
+không TypeScript. Thư viện ngoài duy nhất là **three.js** (nạp qua CDN, **chỉ còn ở bản đồ
+thiên hà 3D**). Nhiệm vụ Trái Đất đã bỏ three.js ngày 31/07/2026 — cảnh của nó nay là 2D
+(`js/earth2d.js`), đo được đường tải đầu **308 KB → 71 KB**.
+
+**Backend:** AWS Lambda + **.NET 10** + **DynamoDB single-table** (`astroq-main`) + SES gửi email,
+qua API Gateway HTTP API, vùng `ap-southeast-1`. Mã nguồn nằm **ngoài repo client**.
+
+**Đăng nhập:** Firebase Authentication (Email/Password). Chia vai rõ: **đăng ký đi qua backend**
+(2 giai đoạn, có email kích hoạt), **đăng nhập đi thẳng Firebase**.
+
+> ❌ **Đừng đề xuất:** chuyển sang React/Vue/Next, thêm bundler, thêm npm dependency,
+> viết CSS trong `<style>` hoặc `style="..."` inline, đổi nhà cung cấp cloud,
+> đổi tên 6 khu vực đã chốt, đánh số lại các mã `MOD-nn` / `ARCADE-nn` / `MISSION-nn`.
+
+---
+
+## 3. Quy mô thật — dùng những con số này để ước lượng
+
+| Hạng mục | Con số thật (31/07/2026) |
+|---|---|
+| Trang HTML chính | 17 |
+| Bài wiki SEO | 10 bài × 2 ngôn ngữ (trang tĩnh, không nạp JS) |
+| File CSS / file JS | 26 / 23 |
+| Tổng dòng (JS + HTML chính) | **~19.600** |
+| **Nhiệm vụ (Mission)** | **1 chạy được** — Trái Đất, 8 bước. Mặt Trăng: "sắp ra mắt" |
+| Mini-game | 6 khai báo, **3 chạy được** (né tiểu hành tinh · phòng thủ 360° · ghép chòm sao) |
+| Câu hỏi quiz | **35** |
+| Thuật ngữ codex | 17 |
+| Mẫu vật | **21** (server là nguồn sự thật) |
+| Huy hiệu | **22**, chia 5 nhóm (học · huấn luyện · khám phá · nhiệm vụ · cấp độ) |
+| Hành tinh trong dữ liệu | **8** (`js/planets.js`). Bản đồ 3D có thêm Mặt Trời + Mặt Trăng |
+| Kho nội dung học (`learningdata/`) | **Rất mỏng** — 1 file codex Trái Đất + vài bài NASA |
+| Endpoint API | 15 |
+
+### ⚠️ Chi phí đơn vị — con số quan trọng nhất khi bạn đề xuất thêm nội dung
+
+**Nhiệm vụ Trái Đất = 8 bước = 2.088 dòng mã viết tay** (`mission-earth.html` 1.601 dòng
++ `js/earth2d.js` 487), tức **~261 dòng cho mỗi bước**, vì mỗi bước hiện là một màn tương tác
+riêng viết thủ công. *(Con số cũ ~410 dòng/bước tính cả `js/earth3d.js` 1.114 dòng — file đó đã
+bỏ hẳn ngày 31/07/2026 cùng three.js.)*
+
+Nghĩa là: mọi đề xuất kiểu "mỗi hành tinh có N nhiệm vụ" phải nhân với **~261 dòng**, **trừ khi**
+đề xuất đó kèm theo một bộ khuôn tương tác dùng lại được. Hãy nói rõ bạn chọn hướng nào.
+
+Tám bước hiện có, xét theo *loại tương tác*, thực ra chỉ là mấy khuôn lặp lại:
+quét điểm nóng · sắp thứ tự mốc thời gian · kéo-thả phân loại · thu thập thẻ · giải đố ghép.
+
+### Nút thắt thật
+
+**Nội dung, không phải mã.** 35 câu quiz và 1 file dữ liệu học là quá ít cho quy mô 8 hành tinh.
+Đề xuất giúp *sản xuất nội dung nhanh hơn* có giá trị hơn đề xuất thêm tính năng.
+
+---
+
+## 4. Kiến trúc đang có (để không đề xuất lại thứ đã có)
+
+**6 khu vực** ở Trung Tâm Điều Hướng (`dashboard.html`) — **tên đã chốt, dùng đúng nguyên văn**:
+
+| Mã | Tiếng Việt | English | Trạng thái |
+|---|---|---|---|
+| MOD-04 | Trung Tâm Nhiệm Vụ | Mission Control | có trang |
+| MOD-01 | Trạm Tri Thức | Knowledge Station | có trang |
+| MOD-02 | Khu Huấn Luyện | Training Simulator | có trang |
+| MOD-03 | Bản Đồ Thiên Hà | Galaxy Map | có trang (3D) |
+| MOD-05 | Phòng Nghiên Cứu | Research Lab | **chưa có trang** |
+| MOD-06 | Thư Viện Thiên Văn | Star Archive | **chưa có trang** |
+
+Ngoài ra đã có: Hồ sơ phi hành gia · Kho Thành Tích · Kho Mẫu Vật · Codex · màn Comet dẫn
+tham quan cho người mới.
+
+**Luồng hiện tại (đổi 01/08/2026, `docs/decisions/003`):** landing → đăng ký/đăng nhập →
+cấp thẻ ID & chọn nhân vật → **Bản Đồ Thiên Hà** (chỉ Trái Đất bấm được, Comet dẫn đường) →
+**Nhiệm vụ 01 "Hành Tinh Xanh"** → Trung Tâm Điều Hướng (Comet chúc mừng → tour 7 bước) →
+chọn 1 trong 6 khu. Xem luật 12 ở mục 5.
+
+**Bản đồ thiên hà** đã có dữ liệu khoa học đầy đủ song ngữ cho cả 8 hành tinh + Mặt Trời +
+Mặt Trăng (đường kính, khối lượng, trọng lực, khí quyển, khả năng có sự sống, khám phá mới…).
+Đây là tài sản lớn đang bị dùng chưa hết — hiện chỉ là bách khoa toàn thư để xem.
+
+---
+
+## 5. Luật bất di bất dịch (vi phạm là đề xuất bị bác)
+
+1. **Server quyết mọi phần thưởng.** Client chỉ báo "đã làm gì", không tự tính XP, không tự mở
+   huy hiệu, không tự trừ tiền. Đề xuất nào để client quyết điểm số sẽ bị bác.
+2. **Chưa đăng nhập hoặc mất mạng → hiện dấu `—`, KHÔNG hiện `0`.** "0/8 bước" là một lời khẳng
+   định sai về tiến độ của người chơi.
+3. **Mọi chữ mới phải có cả tiếng Việt và tiếng Anh**, không có ngoại lệ.
+4. **CSS nằm ở file `.css` riêng.** Không `<style>` trong HTML, không `style="..."` inline
+   (trừ giá trị động do JS sinh).
+5. **Thứ dùng chung thì tách ra dùng lại**, không copy-paste giữa các trang.
+6. **Tôn trọng `prefers-reduced-motion`** — có trẻ nhạy cảm với chuyển động.
+7. **Đổi id của bước nhiệm vụ đã phát hành là phá dữ liệu người chơi cũ** (id được dùng làm khoá
+   trong DynamoDB). Thêm bước mới thì an toàn, đổi tên bước cũ thì không.
+8. **Tính năng nào cũng làm cả client lẫn backend** — không có tính năng chỉ sống ở localStorage.
+9. Nguồn khoa học phải dẫn được về **NASA / ESA / NOAA** hoặc tương đương, và URL phải sống thật.
+10. **Cổng lộ trình 70% đã chốt và luật nằm ở SERVER** (`docs/decisions/003`): xong **6/8 bước**
+    Trái Đất mới mở điểm đến kế tiếp; `GET /me/missions` trả sẵn `unlockedPlaces`, client không
+    tự tính tỉ lệ. ⚠️ Cổng chỉ bật trong **lượt onboarding đầu tiên**, KHÔNG bật vĩnh viễn —
+    khoá vĩnh viễn 6 hành tinh chưa có nhiệm vụ sẽ làm **7 mẫu vật không bao giờ thu được** và
+    **2 huy hiệu bất khả thi**. Đề xuất nào mở rộng lộ trình phải kèm nhiệm vụ cho hành tinh đó.
+11. **Nhiệm vụ Trái Đất chạy trên cảnh 2D, và đã BÁC BỎ việc chạy nó trên quả cầu 3D của bản đồ
+    thiên hà** (`docs/decisions/003`) — quả cầu đó là texture nhiễu fBm không có lục địa thật, và
+    nhiệm vụ cần 21 hàm cảnh mà nó không có hàm nào. Đừng đề xuất lại.
+12. **LUỒNG ONBOARDING ĐÃ CHỐT (`003`), đừng đề xuất lại thứ tự khác:**
+    `select.html` → `explorer.html?onboard=1` (bản đồ 3D, chỉ Trái Đất bấm được) →
+    `mission-earth.html` → dashboard → Comet chúc mừng → **rồi mới** tour 7 bước.
+    Nguyên tắc: **trẻ phải chạm được vào thứ gì đó trong vài giây đầu**; mọi đề xuất thêm
+    màn giới thiệu vào TRƯỚC lúc đó sẽ bị bác. Cutscene 30s cũ (`js/mission-intro.js`) đã
+    nghỉ hưu vì trùng nhịp với màn dẫn đường ở bản đồ.
+13. **Bốn cờ onboarding ở server, ĐỘC LẬP nhau** (`tourSeen` · `intro01Seen` ·
+    `earth1Greeted` · `map01Seen`). Thêm màn giới thiệu mới thì thêm cờ RIÊNG, đừng dùng
+    lại cờ có sẵn — gộp là xem màn này sẽ xoá dấu màn kia.
+
+---
+
+## 6. Bạn được giao gì (và không được giao gì)
+
+Dự án này hỏi ý **ba model, mỗi bên một vai không chồng lấn**. Đề bài cụ thể của bạn nằm ở
+phần gửi kèm bên dưới bản tóm tắt này — hãy làm **đúng phần được giao**, đừng lấn sang phần
+của bên kia, kể cả khi bạn thấy mình làm được.
+
+| Vai | Ai | Sở hữu |
+|---|---|---|
+| **Sáng tác** | ChatGPT | cơ chế chơi · cấu trúc quest · lời thoại Comet/Byte · chữ hiển thị cho trẻ |
+| **Tra nguồn & kiểm chứng** | Gemini | câu hỏi quiz · kho dữ liệu học · kiểm chính xác khoa học · kiểm URL sống · chất lượng bản EN |
+| **Mã nguồn** | Claude | đối chiếu mã · ước lượng chi phí · kiến trúc & backend · viết code & tự kiểm |
+
+**Không phù hợp để giao cho bạn** (vì cần đọc và chạy được mã nguồn):
+- Ước lượng chi phí thực hiện, hay bất kỳ câu nào dạng "chỗ này sửa nhẹ thôi"
+- Quyết định kiến trúc và thiết kế cơ sở dữ liệu
+
+**Nếu bạn ở vai Sáng tác:** đừng khẳng định số liệu khoa học nào. Cần một con số hay dữ kiện
+thiên văn thì viết `[CẦN KIỂM: …]` rồi đi tiếp — sẽ có bên khác tra.
+
+**Nếu bạn ở vai Tra nguồn:** đừng sửa giọng văn dành cho trẻ và đừng thiết kế cơ chế chơi.
+URL nào không xác minh được là còn sống thì ghi rõ *"chưa xác minh được"*, đừng đoán.
+
+**Khi trả lời, hãy dùng đúng khuôn ở `docs/proposals/_TEMPLATE.md`**, đặc biệt là hai mục
+*"Giả định tôi đang dựa vào"* và *"Cái tôi KHÔNG chắc"* — đó là phần được kiểm lại bằng mã nguồn.
+
+---
+
+## 7. Chưa chốt — đang cần bàn
+
+- **Độ tuổi mục tiêu cụ thể** chưa ghi trong tài liệu dự án. Hỏi lại chủ dự án thay vì tự giả định.
+- **Cấu trúc World / Quest cho 8 hành tinh** — xem `docs/decisions/001-cau-truc-world-quest.md`.
+- Hai khu **Phòng Nghiên Cứu** và **Thư Viện Thiên Văn** chưa có nội dung.
