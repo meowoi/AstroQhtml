@@ -1,7 +1,8 @@
 /* ==========================================================
    mission-earth.css — Nhiệm Vụ 01 "Hành Tinh Xanh" (mission-earth.html).
 
-   Cảnh 3D vẽ trên <canvas> (js/earth3d.js). Ở đây là toàn bộ lớp HUD phủ lên:
+   Cảnh 2D dựng bằng DOM (js/earth2d.js, các lớp `e2-*` ở cuối file). Ở đây là
+   toàn bộ lớp HUD phủ lên:
      .me-top     thanh trên: nút về · tên nhiệm vụ · tiến độ 8 bước · ví tt · VI/EN
      .me-obj     bảng mục tiêu bước hiện tại (góc trên-trái)
      .me-sat     bảng tín hiệu vệ tinh (chỉ bước 5 `rotation`)
@@ -37,18 +38,10 @@ body{font-family:var(--font-body);color:var(--ink);-webkit-font-smoothing:antial
 a{text-decoration:none;color:inherit;}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
 
-/* Canvas 3D: nằm dưới cùng và NHẬN chuột (kéo xoay, zoom, chạm marker) */
+/* Sân khấu cảnh: nằm dưới cùng và NHẬN chuột/chạm (kéo xoay, zoom, chạm marker) */
 #stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;
   cursor:grab;}
 #stage:active{cursor:grabbing;}
-/* ⚠️ BẮT BUỘC từ 31/07/2026, khi `#stage` đổi từ <canvas> sang <div>: cảnh 3D tự
-   tạo <canvas> BÊN TRONG div này, và <canvas> không có CSS thì lấy cỡ mặc định
-   của thẻ là **300×150**. Đo được đúng con số đó, và hậu quả không phải "ảnh nhỏ"
-   mà là **toạ độ chiếu sai hoàn toàn**: `world.screenOf()` tính theo khung canvas
-   nên trả về điểm lệch hẳn lên góc trên-trái, cú bấm của bộ test rơi vào nút
-   "Về Trung Tâm Điều Hướng" và trang ĐIỀU HƯỚNG ĐI — biểu hiện là
-   `window.__mission` bỗng thành undefined giữa bài kiểm. */
-#stage > canvas{display:block;width:100%;height:100%;}
 
 /* Mọi lớp phủ nằm trong đây — không chắn chuột */
 .me-ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
@@ -154,23 +147,18 @@ a{text-decoration:none;color:inherit;}
   background:linear-gradient(90deg,#ff8a8a,#ffcf6b,#5fffd0);transition:width .2s linear;}
 
 /* ============ BOX THOẠI MASCOT ============ */
-.me-say{position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
+/* Vỏ box · khung avatar · chữ tên nằm ở `css/mascot.css` (`.aq-say` ·
+   `.aq-ava` · `.aq-nm`) — markup gắn KÈM hai class. Ở đây chỉ còn phần
+   RIÊNG của nhiệm vụ: neo đáy màn, canh giữa, hiện/ẩn. Ba biến `--aq-*`
+   giữ đúng kích thước cũ (bo 18px, avatar 50px) — nhỏ hơn box của
+   `mission-intro` vì ở đây còn hành tinh phải nhường chỗ. */
+.me-say{--aq-r:18px;--aq-ava:50px;--aq-ava-r:14px;
+  position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
   bottom:clamp(14px,4vh,40px);width:min(660px,calc(100vw - 24px));
-  display:flex;gap:13px;align-items:flex-start;padding:14px 18px 13px;border-radius:18px;
-  border:1px solid rgba(95,211,255,.5);
-  background:linear-gradient(180deg,rgba(13,20,48,.94),rgba(10,16,40,.96));
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  box-shadow:0 24px 56px -22px rgba(0,0,0,.9),0 0 36px -12px rgba(95,211,255,.4);
+  display:flex;gap:13px;align-items:flex-start;padding:14px 18px 13px;
   opacity:0;transition:opacity .4s,transform .4s;}
 .me-say.show{opacity:1;transform:translateX(-50%);}
-.me-say.byte{border-color:rgba(143,123,255,.55);
-  box-shadow:0 24px 56px -22px rgba(0,0,0,.9),0 0 36px -12px rgba(143,123,255,.45);}
-.me-ava{width:50px;height:50px;flex:none;border-radius:14px;overflow:hidden;display:grid;place-items:center;
-  background:radial-gradient(circle at 42% 32%,rgba(143,123,255,.5),rgba(56,189,248,.16) 70%,transparent);
-  border:1px solid rgba(143,123,255,.5);}
-.me-ava img{width:100%;height:100%;object-fit:contain;display:block;}
 .me-say .body{flex:1;min-width:0;}
-.me-say .who{font-family:var(--font-display);font-weight:700;font-size:13px;color:#cfe3ff;}
 .me-say .line{font-size:14px;line-height:1.6;margin:5px 0 0;}
 .me-say .line b{color:#a5e4ff;}
 .me-say .next{align-self:flex-end;flex:none;cursor:pointer;border:none;
@@ -180,8 +168,7 @@ a{text-decoration:none;color:inherit;}
 .me-say .next:hover{filter:brightness(1.08);transform:translateY(-2px);}
 .me-say .next.hide{opacity:0;pointer-events:none;}
 @media (max-width:600px){
-  .me-say{flex-wrap:wrap;padding:12px 14px;gap:10px;}
-  .me-ava{width:42px;height:42px;border-radius:12px;}
+  .me-say{flex-wrap:wrap;padding:12px 14px;gap:10px;--aq-ava:42px;--aq-ava-r:12px;}
   .me-say .line{font-size:13.4px;}
   .me-say .next{width:100%;}
 }

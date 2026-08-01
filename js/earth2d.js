@@ -151,6 +151,7 @@
     var markers = [];                    // {id, lat, lon, done, node}
     var pickCbs = [];
     var running = false, raf = 0, last = 0;
+    var shieldK = 0;                     // 0 → 1 khi màng khí quyển bọc dần
 
     setMap("globe");
 
@@ -229,15 +230,32 @@
 
     /* ---------------- Kéo / phóng ---------------- */
     var down = null;
+    /* ⚠️ KHÔNG `setPointerCapture` NGAY Ở `pointerdown` — đó là lỗi làm cả cảnh 2D
+       KHÔNG CHƠI ĐƯỢC, và nó im lặng tuyệt đối.
+       Bắt con trỏ lên `.e2-view` khiến MỌI sự kiện con trỏ sau đó bị chuyển hướng
+       về chính `view`, nên `click` KHÔNG BAO GIỜ tới được `.e2-mk` hay `.e2-sun`
+       nằm bên trong. Hậu quả: chạm điểm tín hiệu không ăn, chạm Mặt Trời không ăn
+       → nhiệm vụ tắc ở bước 1.
+       Nham hiểm ở chỗ `document.elementFromPoint()` vẫn trả về đúng cái nút (việc
+       dò trúng đích vẫn đúng, chỉ có việc GIAO sự kiện là hỏng), nên soi bằng
+       elementFromPoint sẽ kết luận "nút bấm được" — đo được đúng như vậy.
+       Cách đúng: chỉ bắt con trỏ KHI ĐÃ THẬT SỰ KÉO (vượt DRAG_SLOP). Lúc đó
+       trình duyệt cũng đã tự huỷ `click`, nên không mất gì; còn cú chạm không kéo
+       thì đi thẳng tới nút như thường. */
     view.addEventListener("pointerdown", function (e) {
       if (!dragRotate && !earthDrag) return;
-      down = { x: e.clientX, y: e.clientY, lon: facing.lon, lat: facing.lat, moved: 0 };
-      view.setPointerCapture && view.setPointerCapture(e.pointerId);
+      down = { x: e.clientX, y: e.clientY, lon: facing.lon, lat: facing.lat,
+               moved: 0, id: e.pointerId, captured: false };
     });
     view.addEventListener("pointermove", function (e) {
       if (!down) return;
       var dx = e.clientX - down.x, dy = e.clientY - down.y;
       down.moved = Math.max(down.moved, Math.abs(dx) + Math.abs(dy));
+      // Vượt ngưỡng kéo mới bắt con trỏ, để còn kéo tiếp được ra ngoài khung.
+      if (!down.captured && down.moved > DRAG_SLOP) {
+        down.captured = true;
+        if (view.setPointerCapture) { try { view.setPointerCapture(down.id); } catch (err) {} }
+      }
       facing.lon = wrapLon(down.lon - dx * DEG_PER_PX / zoom);
       facing.lat = clamp(down.lat + dy * DEG_PER_PX / zoom, -LAT_LIMIT, LAT_LIMIT);
       paint();
@@ -448,9 +466,18 @@
       shield: function (ms) {
         shieldEl.classList.add("show");
         return tween(ms == null ? 1600 : ms, function (k) {
+          shieldK = k;
           shieldEl.style.setProperty("--k", k.toFixed(3));
         });
-      }
+      },
+
+      /* ⚠️ `shieldOn` LÀ MỘT PHẦN CỦA HỢP ĐỒNG, đừng bỏ sót như bản đầu của tôi.
+         Bản 3D có `get shieldOn() { return shieldU.strength.value > 0.1; }` và
+         `mission-earth.html` cùng bộ kiểm thử đều đọc nó để biết màng đã bọc chưa.
+         Thiếu nó thì `world.shieldOn` là `undefined` — KHÔNG ném lỗi, chỉ lặng lẽ
+         khác `true`, nên bước cuối trông như chạy đúng mà phép kiểm thì đỏ.
+         Ngưỡng 0,1 lấy đúng theo bản 3D để hai engine trả lời giống nhau. */
+      get shieldOn() { return shieldK > 0.1; }
     };
 
     return world;

@@ -10,6 +10,8 @@
 
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/mascot.css" />
+<link rel="stylesheet" href="css/pick-place.css" />
 <link rel="stylesheet" href="css/mission-earth.css" />
 <script src="js/ui-common.js"></script>
 <!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js: trang này đã kéo
@@ -23,13 +25,16 @@
      huy hiệu mà SERVER vừa mở — gõ lại tên ở trang này là hai chỗ sớm muộn lệch
      nhau, mà `js/badges.js` đã là chỗ duy nhất khai báo tên. -->
 <script src="js/badges.js"></script>
+<!-- Trình điều phối bước dùng chung cho mọi nhiệm vụ: vào bước, chốt bước, báo
+     server, sang bước kế, vẽ dãy chấm tiến độ. Trang này chỉ còn khai NỘI DUNG
+     của 8 bước và cảnh Trái Đất. Xem `docs/decisions/002`. -->
+<script src="js/mission-engine.js"></script>
+<!-- Khuon "the -> o": keo-tha bang chuot VA choi duoc bang ban phim. -->
+<script src="js/pick-place.js"></script>
 </head>
 <body>
 
-<!-- Cảnh 3D -->
-<!-- ⚠️ LÀ <div>, KHÔNG phải <canvas>: cảnh 2D dựng các lớp con bên trong
-     (`js/earth2d.js`), mà <canvas> thì không vẽ được phần tử con. Nhánh 3D tự
-     tạo <canvas> bên trong div này — xem `boot()`. -->
+<!-- Sân khấu cảnh 2D: `js/earth2d.js` dựng các lớp con bên trong div này. -->
 <div id="stage"></div>
 
 <!-- Hai lớp phủ CẢNH (không phải HUD) nên nằm NGOÀI `.me-ui`: `.me-ui` có
@@ -39,7 +44,7 @@
 <div class="me-era" id="era" aria-hidden="true"></div>
 <div class="me-smog" id="smog" aria-hidden="true"></div>
 
-<!-- Màn chờ nạp three.js + sinh texture -->
+<!-- Màn chờ nạp ảnh Trái Đất -->
 <div class="me-load" id="load">
   <span class="ring" aria-hidden="true"></span>
   <span class="txt" id="load-txt">ĐANG NẠP HỆ THỐNG QUÉT…</span>
@@ -87,10 +92,10 @@
   <span class="me-hand" id="hand" aria-hidden="true">👆</span>
 
   <!-- Box thoại mascot -->
-  <section class="me-say" id="say" role="status" aria-live="polite">
-    <span class="me-ava"><img id="say-ava" src="img/m1.png" alt="" /></span>
+  <section class="aq-say me-say" id="say" role="status" aria-live="polite">
+    <span class="aq-ava"><img id="say-ava" src="img/m1.png" alt="" /></span>
     <span class="body">
-      <span class="who" id="say-who">Comet</span>
+      <span class="aq-nm" id="say-who">Comet</span>
       <p class="line" id="say-line"></p>
     </span>
     <button type="button" class="next hide hit" id="say-next">Tiếp tục</button>
@@ -216,19 +221,8 @@
 
 <script src="economy.js"></script>
 
-<!-- Cảnh 2D (19,7 KB, không cần three.js). Nạp sẵn ở cả hai chế độ: nó rẻ, và
-     nhờ vậy `boot()` không phải chờ thêm một lượt tải khi chạy `?scene=2d`. -->
+<!-- Cảnh 2D (20 KB, không thư viện ngoài). -->
 <script src="js/earth2d.js"></script>
-
-<!-- Three.js: cùng phiên bản với explorer.html -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
 
 <script>
 /* CANH GIỜ NẠP CẢNH 3D — đặt ở script CỔ ĐIỂN, cố ý không nằm trong module.
@@ -238,7 +232,7 @@
      · mở trang bằng `file://` — trình duyệt chặn ES module vì CORS (origin `null`),
        trang này BẮT BUỘC phải chạy qua http (`python -m http.server`), y như
        explorer.html;
-     · mất mạng / unpkg.com bị chặn — three.js nạp qua importmap từ CDN.
+     · ảnh Trái Đất (`img/earth/*`) không tải được.
    Thà nói thẳng "không nạp được" còn hơn để trẻ ngồi nhìn vòng xoay. */
 (function () {
   var WAIT_MS = 12000;
@@ -265,20 +259,16 @@
 /* ============================================================================
    NHIỆM VỤ 01 "HÀNH TINH XANH" — 5 bước, MỘT trang, KHÔNG tải lại.
 
-   Chuyển giữa các bước bằng `world.panTo()` (camera pan/zoom của Three.js),
-   đúng yêu cầu: không load lại trang.
+   Chuyển giữa các bước bằng `world.panTo()` (pan/zoom khung ảnh), đúng yêu cầu:
+   không load lại trang.
 
-   Cảnh 3D ở js/earth3d.js. File này chỉ lo LUỒNG: bước nào, mục tiêu gì, xong thì
+   Cảnh ở js/earth2d.js. File này chỉ lo LUỒNG: bước nào, mục tiêu gì, xong thì
    báo lên server. **Phần thưởng do SERVER quyết** — client chỉ gửi {mission, step}
    (xem Services/Missions.cs); không có con số thưởng nào nằm trong file này.
 
    Mỗi bước là một object { id, enter(), pick(), tick() } nên thêm/sửa một bước
    không phải đụng vào bước khác.
    ========================================================================== */
-/* ⚠️ KHÔNG `import` TĨNH `./js/earth3d.js` nữa. Import tĩnh là three.js (257 KB
-   gzip, từ unpkg.com) bị tải NGAY, kể cả khi đang chạy cảnh 2D — tức mất trắng
-   toàn bộ lợi ích. Nhánh 3D nạp bằng `await import()` trong `boot()`. */
-
 const $ = (id) => document.getElementById(id);
 /* `js/ui-common.js` chỉ đưa `$` ra global, `esc` thì nằm trong `AstroQ` — lấy về một
    biến cục bộ vì các hàm dựng markup dưới đây gọi nó rất nhiều lần. */
@@ -348,6 +338,14 @@ const I18N = {
     s2_hint: 'Kéo sang phải để nhìn ra xa hơn nhé!',
     s2_say2: 'Đó là <b>Mặt Trời</b> — ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất!',
     s2_n: 'Mặt Trời',
+
+    /* Lời đọc cho trẻ chơi bằng BÀN PHÍM (js/pick-place.js). Không hiện trên
+       màn hình — chỉ trình đọc màn hình đọc lên, nên viết như đang NÓI với trẻ
+       chứ không viết như nhãn nút. `{item}` thẻ · `{zone}` ô · `{n}` số ô. */
+    kb_hold:  'Đang cầm {item}. Có {n} chỗ đặt — dùng phím mũi tên để chọn, Enter để đặt, Esc để bỏ xuống.',
+    kb_place: 'Đúng rồi! Đã đặt {item} vào {zone}.',
+    kb_wrong: 'Chưa đúng — {zone} không phải chỗ của {item}. Thử chỗ khác nhé.',
+    kb_drop:  'Đã bỏ thẻ xuống.',
 
     /* Bước 4 (energy) — Kích hoạt năng lượng sạch */
     ce_h: 'Kích hoạt năng lượng sạch',
@@ -475,6 +473,11 @@ const I18N = {
     s2_hint: 'Drag to the right to look further out!',
     s2_say2: 'That is the <b>Sun</b> — the star that brings light and warmth to Earth!',
     s2_n: 'The Sun',
+
+    kb_hold:  'Holding {item}. {n} spots available — use the arrow keys to choose, Enter to place, Esc to put it down.',
+    kb_place: 'Exactly! {item} is now in {zone}.',
+    kb_wrong: 'Not quite — {zone} is not where {item} goes. Try another spot.',
+    kb_drop:  'Put the card back down.',
 
     ce_h: 'Switch on clean energy',
     ce_p: 'Drag the 3 clean energy sources onto the 3 smoking chimneys.',
@@ -642,18 +645,16 @@ const SLOTS = ['heat', 'water', 'air'];
 
 /* ───────────────────── Trạng thái ───────────────────── */
 let world = null;
-let stepIdx = 0;                         // 0..7
 /* THỨ TỰ NÀY PHẢI KHỚP `Missions.All` ở AstroqSV/Services/Missions.cs — server tra
    bảng theo id bước, còn thứ tự thì quyết bước nào chạy trước. Ba bước giáo dục
    (timeline · energy · eco) xen vào giữa để mỗi bài học nối vào cảnh vừa xảy ra:
    lịch sử ngay sau khi quét xong hành tinh, năng lượng sạch ngay sau khi thấy Mặt
    Trời, thói quen bảo vệ môi trường ngay sau khi thu mẫu sự sống. */
 const STEP_IDS = ['scan', 'timeline', 'sun', 'energy', 'rotation', 'life', 'eco', 'core'];
-const doneSteps = new Set();             // các bước đã xong TRONG lượt này
-/* `codexTotal` chỉ là số tạm cho tới khi server trả số thật (9 = 6 mẫu cũ + 3 mẫu
-   của các bước mới). `badges` là huy hiệu SERVER báo vừa mở trong lượt này — client
-   không tự thêm vào đây bao giờ. */
-let reward = { meteors: 0, xp: 0, codex: 0, codexTotal: 9, badges: [] };
+/* Trình điều phối — dựng SAU sổ đăng ký `steps` (xem chỗ gọi `AstroQMission.create`).
+   Bước nào đã xong, thưởng server đã trả, đang ở bước mấy: tất cả nằm trong `RUN`,
+   trang này không giữ bản sao nào — hai bản sao là hai thứ sớm muộn lệch nhau. */
+let RUN = null;
 let busy = false;                        // đang chạy hiệu ứng → chặn bấm chồng
 let toastTimer = 0;
 
@@ -718,22 +719,13 @@ function progress(n, total) {
   $('obj-bar').style.width = Math.round(n / total * 100) + '%';
   $('obj-n').textContent = n + '/' + total;
 }
-function paintSteps() {
-  let html = '';
-  for (let i = 0; i < STEP_IDS.length; i++) {
-    if (i) html += '<span class="l' + (doneSteps.has(STEP_IDS[i - 1]) ? ' ok' : '') + '"></span>';
-    const cls = doneSteps.has(STEP_IDS[i]) ? 'ok' : (i === stepIdx ? 'now' : '');
-    html += '<span class="s ' + cls + '"></span>';
-  }
-  $('steps').innerHTML = html;
-}
+/* Dãy chấm tiến độ do `js/mission-engine.js` vẽ — xem `RUN.paint()`. */
 
 /* ───────────────────── Lớp phủ cảnh (mốc thời gian & khói) ─────────────────────
-   Trái Đất là canvas WebGL vẽ bằng shader trong js/earth3d.js — CSS không sửa được
-   màu lục địa/đại dương. Hai hàm dưới đây đổi CẢM GIÁC của cảnh mà không phải chạm
-   vào shader: `filter` trên chính #stage (đổi tông quả cầu) + một lớp gradient phủ
-   (đổi tông bầu trời). Đủ để trẻ thấy hành tinh khác hẳn qua từng mốc, và bản đồ bờ
-   biển thật (`COASTS`) vẫn nguyên. */
+   Trái Đất là ẢNH CHỤP của NASA — không sửa được màu lục địa/đại dương từng vùng.
+   Hai hàm dưới đây đổi CẢM GIÁC của cảnh: `filter` trên chính #stage (đổi tông quả
+   cầu) + một lớp gradient phủ (đổi tông bầu trời). Đủ để trẻ thấy hành tinh khác
+   hẳn qua từng mốc, mà địa lý trong ảnh vẫn nguyên. */
 const ERA_CLASSES = ERAS.map(e => e.era).filter(Boolean).map(e => 'era-' + e);
 function setEra(era) {
   const st = $('stage'), ov = $('era');
@@ -758,41 +750,8 @@ function hand(kind) {
 }
 function handOff() { $('hand').className = 'me-hand'; }
 
-/* ───────────────────── Báo bước xong lên server ─────────────────────
-   Client CHỈ gửi {mission, step}. Server tra Services/Missions.cs rồi cộng
-   thưởng — không có con số thưởng nào ở đây. */
-function reportStep(step) {
-  if (!window.AstroQProgress || !AstroQProgress.missionStep) {
-    return Promise.resolve({ ok: false, reason: 'no-module' });
-  }
-  return AstroQProgress.missionStep('earth', step).then(r => {
-    if (r && r.ok && r.data) {
-      if (typeof r.data.awarded === 'number') reward.meteors += r.data.awarded;
-      if (typeof r.data.xpGained === 'number') reward.xp += r.data.xpGained;
-      /* Huy hiệu do SERVER mở (`Achievements.NewlyEarned`) — client chỉ GHI LẠI để
-         hiện thẻ chúc mừng, không bao giờ tự thêm id vào đây. Chưa đăng nhập / mất
-         mạng thì danh sách rỗng và trang không nhận là đã mở được cái nào. */
-      if (Array.isArray(r.data.newBadges)) {
-        r.data.newBadges.forEach(b => {
-          if (typeof b === 'string' && reward.badges.indexOf(b) < 0) reward.badges.push(b);
-        });
-      }
-      const m = r.data.missions && r.data.missions.earth;
-      if (m) {
-        reward.codex = (m.codex || []).length;
-        reward.codexTotal = m.codexTotal || reward.codexTotal;
-        /* ⚠️ ĐÃ BỎ `reward.unlocked = m.done`. Nó chỉ tồn tại để bật khối "hành tinh
-           mới đã mở khoá 🌙 Mặt Trăng"; bỏ khối đó rồi thì trường này chỉ còn được
-           GHI mà không ai ĐỌC — mã chết. Server vẫn trả `m.done`, cần thì đọc lại. */
-      }
-      if (r.data.awarded > 0) toast('+' + r.data.awarded + ' {tt}');
-    } else if (r && r.queued) {
-      toast(t('saved_off'));
-    }
-    paintBalance();
-    return r;
-  });
-}
+/* Báo bước xong lên server: `js/mission-engine.js` lo (`RUN.finish` tự gọi).
+   Client CHỈ gửi {mission, step} — không có con số thưởng nào ở client. */
 
 /* ══════════════════════════ CÁC BƯỚC ══════════════════════════
    Mỗi bước là một object độc lập: enter() dựng cảnh + mục tiêu, pick() nhận cú
@@ -929,7 +888,7 @@ const steps = {
       if (!reduced) {
         // Gợi ý sau 9 giây nếu trẻ chưa tìm ra — không phạt, chỉ nhắc
         this._tid = setTimeout(() => {
-          if (!doneSteps.has('sun')) { this.hinted = true; toast(t('s2_hint')); }
+          if (RUN.done.indexOf('sun') < 0) { this.hinted = true; toast(t('s2_hint')); }
         }, 9000);
       }
     },
@@ -1118,11 +1077,12 @@ const steps = {
       await say('comet', t('ec_say2'));
       hideSay();
     },
-    /* Thẻ huy hiệu chỉ hiện khi SERVER báo vừa mở `eco-warrior` (chạy sau
-       `reportStep`). Chưa đăng nhập / mất mạng thì bỏ qua — nói "đã mở huy hiệu"
-       trong lúc việc còn nằm trong hàng chờ là bịa, đúng nguyên tắc của trang này. */
+    /* Thẻ huy hiệu chỉ hiện khi SERVER báo vừa mở `eco-warrior`. `afterReport()`
+       là móc chạy SAU khi máy chủ đã trả lời (xem `js/mission-engine.js`) — gộp vào
+       `outro()` thì lúc đó `RUN.reward.badges` còn rỗng. Chưa đăng nhập / mất mạng
+       thì bỏ qua: nói "đã mở huy hiệu" trong lúc việc còn nằm trong hàng chờ là bịa. */
     async afterReport() {
-      if (reward.badges.indexOf('eco-warrior') < 0) return;
+      if (RUN.reward.badges.indexOf('eco-warrior') < 0) return;
       sfx('fanfare');
       await showCard({
         ic: badgeIcon('eco-warrior'), nm: badgeName('eco-warrior'),
@@ -1158,6 +1118,23 @@ const steps = {
     }
   }
 };
+
+/* ───────────────────── Dựng trình điều phối ─────────────────────
+   Phải đặt SAU `const steps` (nó là giá trị truyền vào, không hoisting được).
+   `showWin` thì hoisting được vì là khai báo hàm, nên truyền thẳng ở đây được.
+   `codexTotal: 9` chỉ là số TẠM cho tới khi server trả số thật (6 mẫu cũ + 3 mẫu
+   của ba bước thêm 29/07/2026) — hiện màn tổng kết khi mất mạng. */
+RUN = AstroQMission.create({
+  mission: 'earth',
+  stepIds: STEP_IDS,
+  steps: steps,
+  stepsEl: $('steps'),
+  codexTotal: 9,
+  t: t,
+  toast: toast,
+  onBalance: paintBalance,
+  onWin: showWin
+});
 
 /* ───────────────────── Thẻ "vừa nhận được" ─────────────────────
    MỘT thẻ cho cả ba thứ trẻ nhận trong nhiệm vụ: mẫu sự sống (bước `life`), viên
@@ -1208,61 +1185,21 @@ function showCard(c) {
      canDrop(z) : vùng này còn nhận được không (mặc định: chưa có class 'ok')
      onHit(el,z), onMiss(el,z)
    } */
+/* Kéo-thả: `js/pick-place.js` lo cả đường chuột lẫn đường bàn phím.
+   Ở đây chỉ nối thêm âm thanh của trang và bộ nhãn đọc song ngữ.
+   ⚠️ Nhãn khai bằng GETTER, không phải chuỗi tính sẵn: trẻ đổi VI/EN giữa
+      chừng thì lời đọc phải đổi theo, mà bảng này chỉ dựng MỘT LẦN lúc mở bước. */
 function dragDrop(opt) {
-  const zones = opt.zones;
-  const keyOf = (el) => el.getAttribute('data-zone');
-  const wantOf = (el) => el.getAttribute('data-want');
-  const canDrop = opt.canDrop || ((z) => !z.classList.contains('ok'));
-  let fly = null, dragEl = null;
-
-  function zoneUnder(x, y) {
-    return zones.find(z => {
-      const r = z.getBoundingClientRect();
-      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-    }) || null;
-  }
-  function paintOver(z) {
-    zones.forEach(x => x.classList.toggle('over', x === z && canDrop(x)));
-  }
-  function move(e) {
-    if (!fly) return;
-    fly.style.left = e.clientX + 'px';
-    fly.style.top = e.clientY + 'px';
-    paintOver(zoneUnder(e.clientX, e.clientY));
-  }
-  function drop(e) {
-    if (!fly || !dragEl) return;
-    const z = zoneUnder(e.clientX, e.clientY);
-    fly.remove(); fly = null;
-    paintOver(null);
-    dragEl.classList.remove('dragging');
-    const el = dragEl; dragEl = null;
-    /* Thả ra chỗ trống thì IM LẶNG. Bản đầu coi mọi cú thả không trúng vùng là "thả
-       sai" và bật lời khích lệ — nhưng nhấc thẻ lên rồi đổi ý bỏ xuống là chuyện
-       bình thường, báo "chưa đúng rồi" lúc đó là mắng oan. */
-    if (!z) return;
-    if (keyOf(z) === wantOf(el) && canDrop(z)) { sfx('beep', 920); opt.onHit(el, z); }
-    else { sfx('nope'); opt.onMiss(el, z); }
-  }
-
-  opt.items.forEach(el => {
-    el.addEventListener('pointerdown', (e) => {
-      if (el.classList.contains('used')) return;
-      e.preventDefault();
-      dragEl = el;
-      el.classList.add('dragging');
-      fly = document.createElement('span');
-      fly.className = 'me-fly' + (opt.wide ? ' wide' : '');
-      if (opt.wide) fly.innerHTML = el.innerHTML; else fly.textContent = el.textContent;
-      document.body.appendChild(fly);
-      move(e);
-      /* Bắt con trỏ vào chính thẻ: không có dòng này thì ngón tay/chuột đi ra khỏi
-         thẻ là mất luôn `pointermove` và thẻ đứng chết giữa đường. */
-      el.setPointerCapture(e.pointerId);
-    });
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', drop);
-    el.addEventListener('pointercancel', drop);
+  AstroQPickPlace.wire({
+    items: opt.items, zones: opt.zones, wide: opt.wide,
+    canDrop: opt.canDrop, onHit: opt.onHit, onMiss: opt.onMiss,
+    sfx: sfx,
+    labels: {
+      get hold()  { return t('kb_hold'); },
+      get place() { return t('kb_place'); },
+      get wrong() { return t('kb_wrong'); },
+      get drop()  { return t('kb_drop'); }
+    }
   });
 }
 
@@ -1398,28 +1335,10 @@ function buildCore() {
 
 /* ══════════════════════════ LUỒNG NHIỆM VỤ ══════════════════════════ */
 
-async function finishStep(id) {
-  if (doneSteps.has(id)) return;
-  doneSteps.add(id);
-  paintSteps();
-  const st = steps[id];
-  if (st && st.outro) await st.outro();
-  // Báo lên server SAU khi diễn xong: thưởng hiện ra lúc trẻ đang xem hiệu ứng
-  await reportStep(id);
-  /* Việc chỉ làm được KHI ĐÃ BIẾT server trả gì (bước `eco` khoe huy hiệu vừa mở).
-     Không gộp vào `outro()` vì lúc đó `reward.badges` còn rỗng — và không đảo thứ tự
-     `outro` ↔ `reportStep` vì hiệu ứng phải chạy ngay, không chờ mạng. */
-  if (st && st.afterReport) await st.afterReport();
-  await nextStep();
-}
-
-async function nextStep() {
-  if (stepIdx >= STEP_IDS.length - 1) { await showWin(); return; }
-  stepIdx++;
-  paintSteps();
-  const st = steps[STEP_IDS[stepIdx]];
-  if (st && st.enter) await st.enter();
-}
+/* Tên ngắn cho `RUN.finish` — 8 bước bên trên đều gọi `finishStep('id')`.
+   Toàn bộ trình tự (outro → báo server → afterReport → bước kế) và lý do KHÔNG
+   được đảo thứ tự ấy nằm ở `js/mission-engine.js`. */
+async function finishStep(id) { return RUN.finish(id); }
 
 /* ───────────────────── Màn tổng kết ───────────────────── */
 async function showWin() {
@@ -1431,14 +1350,15 @@ async function showWin() {
   $('win-badge-sub').textContent = t('win_badge_sub');
   $('win-rw-k').textContent = t('win_rw_k');
   $('win-next-k').textContent = t('win_next_k');
-  $('win-rw-tt').textContent = t('win_tt').replace('{n}', reward.meteors);
+  const RW = RUN.reward;
+  $('win-rw-tt').textContent = t('win_tt').replace('{n}', RW.meteors);
   $('win-rw-codex').textContent = t('win_codex')
-    .replace('{n}', reward.codex).replace('{t}', reward.codexTotal);
-  $('win-rw-xp').textContent = t('win_xp').replace('{n}', reward.xp);
+    .replace('{n}', RW.codex).replace('{t}', RW.codexTotal);
+  $('win-rw-xp').textContent = t('win_xp').replace('{n}', RW.xp);
   /* Huy hiệu mở THÊM trong lượt (🌱 Chiến Binh Xanh…). Bỏ `rookie-astronaut` ra vì nó
      đã có khối huân chương riêng ở trên — liệt kê hai lần thì trẻ tưởng được hai cái.
      Rỗng thì ẩn cả dòng, không hiện "Huy hiệu mới: " trống. */
-  const extraBadges = reward.badges.filter(b => b !== 'rookie-astronaut');
+  const extraBadges = RW.badges.filter(b => b !== 'rookie-astronaut');
   $('win-rw-badges').classList.toggle('hide', extraBadges.length === 0);
   if (extraBadges.length) {
     $('win-badges').textContent = t('win_badges').replace('{n}',
@@ -1458,8 +1378,8 @@ async function showWin() {
 
 /* ─────────────── Đường về tự động 5 giây ───────────────
    ⚠️ CHỈ ĐẾM KHI ĐÃ BÁO XONG LÊN SERVER — bất biến này có sẵn nhờ THỨ TỰ GỌI:
-      `finishStep()` làm `await reportStep(id)` rồi mới tới `showWin()`, nên khi hàm
-      dưới đây chạy thì `reward` đã có số thật. Đếm ngay lúc mở modal (không chờ) thì
+      `RUN.finish()` báo xong server rồi mới gọi `onWin` (tức `showWin`) — xem thứ tự
+      trong `js/mission-engine.js` — nên khi hàm dưới đây chạy thì `RUN.reward` đã có số thật. Đếm ngay lúc mở modal (không chờ) thì
       mạng chậm là trẻ bị kéo đi trước khi con số thưởng kịp về, và thứ duy nhất nó
       kịp đọc là "+0". Đừng đảo thứ tự hai lời gọi đó.
 
@@ -1605,55 +1525,29 @@ paintMute();
 Economy.onAsteroidsChange(paintBalance);
 applyLang(LANG);
 AstroQ.initLang(applyLang);
-paintSteps();
+RUN.paint();
 
-/* ═══ CHỌN CẢNH: 2D hay 3D ═══
-   Hai engine sống song song MỘT VÒNG, đổi bằng `?scene=2d|3d` và nhớ ở
-   `localStorage["astroq-scene"]` — đúng lối `js/api.js` đã dùng cho
-   `?api=prod|local`. Mục đích duy nhất: chạy được CÙNG bộ 141 phép kiểm lên cả
-   hai engine, biến một cuộc di trú rủi ro thành phép so sánh A/B. Khi bản 2D
-   đạt 141/141 thì đổi mặc định thành '2d' rồi xoá hẳn nhánh 3D. */
-const SCENE = (() => {
-  let q = null;
-  try { q = new URLSearchParams(location.search).get('scene'); } catch (e) {}
-  try {
-    if (q === '2d' || q === '3d') { localStorage.setItem('astroq-scene', q); return q; }
-    if (q === 'reset') { localStorage.removeItem('astroq-scene'); return '3d'; }
-    const v = localStorage.getItem('astroq-scene');
-    if (v === '2d' || v === '3d') return v;
-  } catch (e) {}
-  return '3d';                      // mặc định hiện tại; bậc 5 sẽ lật sang '2d'
-})();
-
+/* ⚠️ CHỈ CÒN MỘT CẢNH: 2D. three.js và `js/earth3d.js` đã bỏ hẳn ngày 31/07/2026,
+   sau khi bản 2D đạt 154/154 trên ĐÚNG bộ kiểm thử của bản 3D — và so cả danh sách
+   nhãn: không phép kiểm nào chỉ có ở một bên. Cờ `?scene=2d|3d` là giàn giáo của
+   giai đoạn hai-engine-song-song, tháo cùng lúc.
+   Đo được: đường tải đầu 308 KB → 71 KB, và `unpkg.com` biến mất khỏi luồng
+   onboarding mà MỌI phi hành gia mới bắt buộc đi qua. */
 (async function boot() {
   try {
-    if (SCENE === '2d') {
-      world = AstroQEarth2D.create($('stage'), { reduced });
-    } else {
-      // Nạp three.js CHỈ khi thật sự dùng cảnh 3D.
-      const { createEarthWorld } = await import('./js/earth3d.js');
-      const cv = document.createElement('canvas');
-      $('stage').appendChild(cv);
-      world = await createEarthWorld(cv, { reduced });
-    }
+    world = AstroQEarth2D.create($('stage'), { reduced });
   } catch (e) {
     $('load-sub').dataset.fail = '1';
     $('load-sub').textContent = t('load_fail');
     $('load').querySelector('.ring').style.display = 'none';
-    console.warn('[AstroQ] Không dựng được cảnh 3D:', e && e.message);
+    console.warn('[AstroQ] Không dựng được cảnh:', e && e.message);
     return;
   }
-  world.onPick(ev => {
-    const st = steps[STEP_IDS[stepIdx]];
-    if (st && st.pick) st.pick(ev);
-  });
+  world.onPick(ev => RUN.pick(ev));
   world.start();
 
   // Vòng theo dõi liên tục cho bước cần đo góc (bước 3)
-  setInterval(() => {
-    const st = steps[STEP_IDS[stepIdx]];
-    if (st && st.tick) st.tick();
-  }, 120);
+  setInterval(() => RUN.tick(), 120);
 
   $('load').classList.add('gone');
 
@@ -1662,9 +1556,9 @@ const SCENE = (() => {
      ⚠️ Gán TRƯỚC `await steps.scan.enter()`: bước 1 chờ trẻ bấm "Tiếp tục" nên
      nếu gán sau thì `window.__mission` không tồn tại cho tới khi có người bấm. */
   window.__mission = {
-    get step() { return STEP_IDS[stepIdx]; },
-    get done() { return Array.from(doneSteps); },
-    get reward() { return { ...reward }; },
+    get step() { return RUN.step; },
+    get done() { return RUN.done; },
+    get reward() { return RUN.reward; },
     /* Bước 4 chặn cú chạm mới trong lúc drone đang bay (`busy`). Test phải đọc
        được cờ này, không thì nó bấm mẫu thứ hai lúc còn bị chặn rồi báo hỏng oan. */
     get busy() { return busy; },
@@ -1674,8 +1568,8 @@ const SCENE = (() => {
        promise nào được trả về, mà `pick()` bên trong lại chờ trẻ bấm "Tiếp tục" →
        script test treo vĩnh viễn thay vì báo hỏng. Gọi rồi thôi; test tự chờ
        trạng thái nó cần bằng `wait_for_function`. */
-    pick: (ev) => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.pick) st.pick(ev); return true; },
-    tick: () => { const st = steps[STEP_IDS[stepIdx]]; if (st && st.tick) st.tick(); return true; },
+    pick: (ev) => { RUN.pick(ev); return true; },
+    tick: () => { RUN.tick(); return true; },
     say: () => { $('say-next').click(); return true; },
     /** Mở thẳng màn tổng kết — để test đường về tự động khỏi phải chơi hết 8 bước.
         ⚠️ KHÔNG trả Promise (cùng lý do như `pick`): `showWin` là async, mà
@@ -1696,7 +1590,7 @@ const SCENE = (() => {
     sort: () => { steps.eco.onSort(); return true; },
     get sorted() { return steps.eco.sorted; },
     /** Huy hiệu SERVER báo vừa mở trong lượt này — test đối chiếu với Missions.cs. */
-    get badges() { return reward.badges.slice(); },
+    get badges() { return RUN.reward.badges; },
     world
   };
 

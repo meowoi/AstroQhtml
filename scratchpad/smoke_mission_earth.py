@@ -24,14 +24,10 @@ import time
 from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8123"
-# Chon ENGINE CANH: `--scene 2d` hoac `--scene 3d` (mac dinh 3d = hien tai).
-# Muc dich la chay DUNG BO 141 PHEP KIEM NAY len ca hai engine, bien mot cuoc di
-# tru rui ro thanh phep so sanh A/B. Xem `?scene=` trong mission-earth.html.
-SCENE = "3d"
-if "--scene" in sys.argv:
-    SCENE = sys.argv[sys.argv.index("--scene") + 1]
-    assert SCENE in ("2d", "3d"), "--scene chi nhan 2d hoac 3d"
-URL = BASE + "/mission-earth.html?scene=" + SCENE
+# ⚠️ Co `--scene 2d|3d` da BO ngay 31/07/2026, cung luc three.js bi xoa. Giu lai
+#    mot cai co chi con MOT lua chon thi `--scene 3d` se am tham chay 2D — mot cai
+#    co noi doi con te hon khong co co nao.
+URL = BASE + "/mission-earth.html"
 
 ok = fail = 0
 FAILS = []
@@ -136,7 +132,33 @@ def boot(page, lang="vi", reduced=False):
 
 
 def wait_step(page, sid, timeout=30000):
-    page.wait_for_function(f"() => window.__mission.step === '{sid}'", timeout=timeout)
+    """Cho toi khi nhiem vu sang buoc `sid`.
+
+    ⚠️ IN RA TRANG THAI KHI HET HAN. Mot phep cho that bai ma khong noi gi thi chi
+       bao "co cai gi do treo" — con treo o dau thi phai doan, ma moi luot chay lai
+       mat ~10 phut. Ban dau ham nay im lang va da dot mat hai luot vi the; chinh
+       ban chan doan nay moi chi ra `finish('sun')` chua tung duoc goi.
+    """
+    try:
+        page.wait_for_function(f"() => window.__mission.step === '{sid}'", timeout=timeout)
+    except Exception:
+        st = page.evaluate("""() => {
+          const m = window.__mission || {};
+          const say = document.getElementById('say');
+          const nx  = document.getElementById('say-next');
+          return {
+            step: m.step, done: m.done, busy: m.busy,
+            sunOn: m.world && m.world.sunOn,
+            sayCls: say && say.className, nextCls: nx && nx.className,
+            objH: (document.getElementById('obj-h') || {}).textContent,
+            openOverlays: [...document.querySelectorAll('.show')]
+                            .map(e => e.id || e.className).slice(0, 6)
+          };
+        }""")
+        print(f"  [!] wait_step('{sid}') het han. Trang thai luc do:")
+        for k, v in st.items():
+            print(f"        {k} = {v!r}")
+        raise
 
 
 def say_through(page, limit=6):
@@ -315,6 +337,14 @@ def grid_hidden(page):
 
 
 def _has_gl(page):
+    """LUON tra False tu 31/07/2026 — canh 3D da bi xoa.
+
+    ⚠️ CO Y GIU nhanh WebGL trong `pix()`/`col_profile()` thay vi cat bo: no duoc
+       canh bang chinh ham nay (`w.renderer && ...`), nen khong bao gio chay va
+       khong the hong. Mot lan toi thu cat no bang tay da xoa nham ca
+       `col_profile()` va lam mat 842 dong — cai gia cua viec don dep khong can
+       thiet cao hon cai gia cua vai chuc dong ma chet co ghi chu ro rang.
+    """
     """Canh 3D co WebGL; canh 2D thi khong."""
     return page.evaluate(
         "()=>{const w=window.__mission&&window.__mission.world;"
