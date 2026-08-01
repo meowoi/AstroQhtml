@@ -1,11 +1,13 @@
 /* ============================================================
    sfx.js — ÂM THANH DỰNG BẰNG WEBAUDIO, dùng chung.
 
-   Vì sao tách ra: `js/mission-intro.js` đã dựng tiếng động cơ + bip radar bằng
-   WebAudio, rồi `mission-earth.html` lại cần bip khi chạm điểm quét, tiếng "quét
-   xong", tiếng thu được mẫu vật và nhạc khải hoàn. Chép lại đoạn `AudioContext`
-   + `sfxOn()` sang trang thứ hai là chắc chắn có ngày hai bên lệch nhau — nhất
-   là chỗ tôn trọng lựa chọn TẮT TIẾNG.
+   Vì sao tách ra: `js/mission-intro.js` (**đã xoá 01/08/2026**) đã dựng tiếng động
+   cơ + bip radar bằng WebAudio, rồi `mission-earth.html` lại cần bip khi chạm điểm
+   quét, tiếng "quét xong", tiếng thu được mẫu vật và nhạc khải hoàn. Chép lại đoạn
+   `AudioContext` + `sfxOn()` sang trang thứ hai là chắc chắn có ngày hai bên lệch
+   nhau — nhất là chỗ tôn trọng lựa chọn TẮT TIẾNG.
+   Lý do đó KHÔNG mất theo file đã xoá: 3 mini-game + `mission-earth.html` vẫn dùng
+   chung file này, và MỘT lựa chọn tắt tiếng cho cả app vẫn là điều phải giữ.
 
    MỘT lựa chọn tắt tiếng cho cả app: `localStorage["astroq-sfx"] === "off"`
    (đúng khoá 3 mini-game đang dùng, nút Âm thanh ở css/game-shell.css).

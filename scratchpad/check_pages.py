@@ -1372,6 +1372,14 @@ check("dashboard KHONG con nap js/mission-intro.js",
       'src="js/mission-intro.js"' not in _dash)
 check("dashboard KHONG con nap css/mission-intro.css",
       'href="css/mission-intro.css"' not in _dash)
+# ⚠️ VÀ BA FILE ĐÓ ĐÃ XOÁ HẲN (01/08/2026, sau khi commit nên tra lại được:
+#    `git show 1515e9c:js/mission-intro.js`). Phép kiểm này chặn đúng một kiểu tai nạn:
+#    một lượt làm việc sau tạo lại file mà KHÔNG nối vào trang nào — lúc đó dự án có
+#    thêm một nhánh chết, và nhánh chết là thứ đã bắt dự án sửa `termsData.ts` HAI LẦN.
+for _f in ("js/mission-intro.js", "css/mission-intro.css",
+           "scratchpad/smoke_mission_intro.py"):
+    check(f"{_f} da xoa han (khong de lai nhanh chet)",
+          not os.path.exists(os.path.join(ROOT, _f)))
 check("dashboard KHONG con goi AstroQMissionIntro",
       "AstroQMissionIntro" not in _dashcode)
 

@@ -269,11 +269,12 @@ const AstroQAuth = {
    *
    *   setOnboarding(true)                  → tourSeen = true   (cách gọi cũ, giữ nguyên)
    *   setOnboarding(false)                 → tourSeen = false  (để xem lại khi test)
-   *   setOnboarding({ intro01Seen:true })  → CHỈ ghi cờ đó, KHÔNG đụng tourSeen
+   *   setOnboarding({ map01Seen:true })    → CHỈ ghi cờ đó, KHÔNG đụng tourSeen
    *
-   * Nhận cả boolean lẫn object vì js/onboard-tour.js gọi kiểu cũ và
-   * js/mission-intro.js gọi kiểu mới — đổi hết sang object thì phải sửa 2 chỗ ở
-   * tour, mà cách gọi cũ vẫn đúng nghĩa "đã xem tour xong".
+   * Nhận cả boolean lẫn object vì `js/onboard-tour.js` gọi kiểu cũ, còn `dashboard.html`
+   * (cờ `map01Seen`, `earth1Greeted`) gọi kiểu mới — đổi hết sang object thì phải sửa
+   * 2 chỗ ở tour, mà cách gọi cũ vẫn đúng nghĩa "đã xem tour xong".
+   * *(Người gọi kiểu mới đầu tiên là `js/mission-intro.js`, đã xoá 01/08/2026.)*
    */
   async setOnboarding(patch){
     if(!isApiConfigured) return { ok:false, reason:"notConfigured" };

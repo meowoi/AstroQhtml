@@ -497,6 +497,16 @@ a{text-decoration:none;color:inherit;}
 @media (pointer: coarse){
   .me-mute{min-width:44px;min-height:44px;}
   .me-top .back{min-height:44px;}
+  /* ⚠️ SÓT CỦA LƯỢT SỬA VÙNG CHẠM 31/07/2026, `audit_viewports` bắt được: nút
+     "Tiếp tục" của box thoại Comet đo được **82×35px** trên iPad mini (dọc và
+     ngang) — dưới mốc WCAG 2.5.5 / hướng dẫn Apple là 44px. Và đây không phải một
+     nút phụ: nó là nút DUY NHẤT đưa trẻ qua từng lời Comet, tức bấm trượt là kẹt
+     lại ở bước đang xem.
+     Vì sao sót: lượt đó sửa `.me-mute` + `.me-top .back` (hai nút ở header) và
+     không ai đi hết các nút TRONG cảnh.
+     ⚠️ `min-height` ghi đè được `padding` sẵn có nên không phải xoá giá trị cũ —
+     bề rộng dùng thật là `clamp(min, height, max)`. */
+  .me-say .next{min-height:44px;}
 }
 
 /* ============================================================

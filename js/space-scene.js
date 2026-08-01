@@ -2,13 +2,21 @@
    space-scene.js — BỘ VẼ CẢNH KHÔNG GIAN dùng chung: sao, Trái Đất, phi thuyền Luna.
 
    Trước 29/07/2026 toàn bộ phần này nằm trong js/warp-screen.js. Tách ra vì màn
-   mở đầu Nhiệm Vụ 01 (js/mission-intro.js) cũng cần đúng Trái Đất và đúng con tàu
+   mở đầu Nhiệm Vụ 01 (`js/mission-intro.js`) cũng cần đúng Trái Đất và đúng con tàu
    đó — vẽ lần thứ hai là chắc chắn có ngày hai cảnh trông khác nhau, mà người chơi
    đi từ cảnh này sang cảnh kia chỉ trong vài giây.
 
    Ở đây CHỈ có phần VẼ. **Nhịp phim (cái gì xảy ra ở giây thứ mấy) thuộc về từng
    màn**, không để chung: warp-screen là "tăng tốc rồi dừng", mission-intro là "vòng
    vào quỹ đạo" — nhồi cả hai vào một file thì mỗi lần sửa một màn lại sợ hỏng màn kia.
+
+   ⚠️ TÌNH TRẠNG TỪ 01/08/2026: `js/mission-intro.js` **đã xoá** (docs/decisions/003 —
+      nó trùng nhịp với `js/map-onboard.js`), nên hiện file này chỉ còn MỘT người dùng:
+      `js/warp-screen.js`. Giữ tách riêng vẫn đúng — hai lý do:
+        · gộp lại là hoàn tác một lượt tách đã trả giá, để rồi phải tách lần nữa khi
+          có màn thứ hai cần đúng Trái Đất và đúng con tàu này;
+        · ranh giới "phần VẼ ≠ nhịp phim" tự nó đáng giữ, không phụ thuộc số người dùng.
+      Muốn tra lại màn đã xoá: `git show 1515e9c:js/mission-intro.js`.
 
      <script src="js/space-scene.js"></script>
 

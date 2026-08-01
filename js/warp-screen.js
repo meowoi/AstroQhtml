@@ -2,8 +2,11 @@
    warp-screen.js — màn loading: phi thuyền Luna tăng tốc vào không gian
    rồi GIẢM TỐC và dừng lại ở Trái Đất.
 
-   Chạy ngay sau khi Comet dẫn tham quan xong (js/onboard-tour.js), lúc trẻ
-   bấm "Khởi động động cơ".
+   ⚠️ VIỆC HIỆN TẠI (đổi 01/08/2026, docs/decisions/003): **chuyển cảnh dashboard →
+   Bản Đồ Thiên Hà** — bấm "Mở bản đồ" ở thẻ MOD-03. Trước đó nó chạy ngay sau khi
+   Comet dẫn tham quan xong, lúc trẻ bấm "Khởi động động cơ"; tour đã dời xuống sau
+   nhiệm vụ 1 nên `onFinish` không còn dẫn tới đây. Xem khối "CHUYỂN CẢNH" ở cuối
+   script của `dashboard.html`.
 
      <link rel="stylesheet" href="css/warp-screen.css" />
      <script src="js/warp-screen.js"></script>
@@ -11,11 +14,11 @@
      AstroQWarp.play({ lang:"vi", onDone:function(){ … } });
 
    ⚠️ PHẦN VẼ (sao, Trái Đất, tàu Luna) nằm ở **js/space-scene.js** — nạp TRƯỚC
-   file này. Tách ra từ 29/07/2026 vì màn mở đầu Nhiệm Vụ 01 (js/mission-intro.js)
-   dùng đúng Trái Đất và đúng con tàu đó; vẽ lần thứ hai là chắc chắn có ngày hai
-   cảnh trông khác nhau, mà người chơi đi từ cảnh này sang cảnh kia chỉ trong vài
-   giây. File này chỉ còn **NHỊP PHIM**: giây thứ mấy thì tàu ở đâu, sao chạy nhanh
-   bao nhiêu, chữ nào hiện.
+   file này. Tách ra từ 29/07/2026 vì màn mở đầu Nhiệm Vụ 01 (`js/mission-intro.js`,
+   **đã xoá 01/08/2026**) dùng đúng Trái Đất và đúng con tàu đó; vẽ lần thứ hai là
+   chắc chắn có ngày hai cảnh trông khác nhau, mà người chơi đi từ cảnh này sang cảnh
+   kia chỉ trong vài giây. File này chỉ còn **NHỊP PHIM**: giây thứ mấy thì tàu ở đâu,
+   sao chạy nhanh bao nhiêu, chữ nào hiện.
 
    ĐIỂM ĐÁNG BIẾT: vệt sao toả ra TỪ CHÍNH TÂM TRÁI ĐẤT (điểm tụ), không phải trôi
    ngang — Luna đang lao về phía Trái Đất, nên phối cảnh đúng là mọi ngôi sao chạy
