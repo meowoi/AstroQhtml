@@ -30,18 +30,13 @@
 <script src="js/route-gate.js"></script>
 <script src="js/onboard-tour.js"></script>
 <script src="js/space-scene.js"></script>
-<!-- ⚠️ `js/warp-screen.js` + `js/space-scene.js` (625 dòng) HIỆN KHÔNG CÒN AI GỌI
-     trong sản phẩm. Từ 01/08/2026 tour 7 bước dời xuống SAU nhiệm vụ 1
-     (docs/decisions/003) nên `onFinish` của nó không còn dẫn sang màn loading Luna,
-     và `js/mission-intro.js` — người dùng còn lại của `space-scene` — đã nghỉ hưu.
-     CỐ Ý CHƯA XOÁ: đó là quyết định về 625 dòng code đang chạy tốt cùng 18 phép kiểm
-     đã trả giá (vệt sao là VỆT không phải đốm · Trái Đất phần lớn xanh-lam · Luna đậu
-     bên trái · reduced-motion), và về một animation 4,6s trẻ nhìn thấy — chủ dự án
-     quyết, không phải dọn dẹp lặng lẽ. Hai đường: xoá hẳn, hoặc cho nó việc mới
-     (chuyển cảnh dashboard → Bản Đồ Thiên Hà là chỗ khớp nhất — chính tài liệu của nó
-     ghi "đó là lúc con tàu thật sự rời bến").
-     `scratchpad/smoke_onboard.py` gọi `AstroQWarp.play()` THẲNG để module không âm
-     thầm mục đi trong lúc chờ quyết. -->
+<!-- `js/warp-screen.js` + `js/space-scene.js` — màn loading Luna, dùng làm CHUYỂN
+     CẢNH dashboard → Bản Đồ Thiên Hà (thẻ MOD-03). Xem khối "CHUYỂN CẢNH" ở cuối
+     script của trang này.
+     ⚠️ Từ 01/08/2026 module này SUÝT mất hết người gọi: tour 7 bước dời xuống sau
+        nhiệm vụ 1 nên `onFinish` không còn dẫn sang đây, và `js/mission-intro.js`
+        — người dùng còn lại của `space-scene` — đã nghỉ hưu. Chủ dự án chốt **cho nó
+        việc mới** thay vì xoá 625 dòng đang chạy tốt. `docs/decisions/003`. -->
 <script src="js/warp-screen.js"></script>
 </head>
 <body>
@@ -815,6 +810,55 @@
     /* ② + ⚠️ thứ tự: chúc mừng trước, tour sau. `earthDoneGuide` tự bỏ qua khi
        chưa xong chuỗi hoặc đã chào rồi, nên nhánh này đúng cho cả người mới. */
     earthDoneGuide(tourThen);
+  });
+
+  /* ============================================================
+     CHUYỂN CẢNH DASHBOARD → BẢN ĐỒ THIÊN HÀ (màn loading Luna)
+
+     Đây là VIỆC MỚI của `js/warp-screen.js` + `js/space-scene.js`. Từ 01/08/2026
+     tour 7 bước dời xuống sau nhiệm vụ 1 (docs/decisions/003) nên `onFinish` của nó
+     không còn dẫn sang màn loading, và `js/mission-intro.js` — người dùng còn lại của
+     `space-scene` — đã nghỉ hưu; 625 dòng đó mất hết người gọi. Chủ dự án chốt: cho nó
+     việc mới thay vì xoá.
+
+     Đây là chỗ khớp nhất, và chính tài liệu của module ghi ra lý do: *"đó là lúc con
+     tàu thật sự rời bến"*. Trước đây bấm "Mở bản đồ" là trang nhảy khô sang một cảnh
+     3D; giờ là một cú rời bến có chủ ý.
+
+     ⚠️ KHÔNG dùng cho đường vào NHIỆM VỤ. Ở luồng onboarding trẻ đã đi qua `#nm-warp`
+        của `explorer.html` rồi mới sang nhiệm vụ — chèn thêm màn Luna vào đó là HAI
+        màn chuyển cảnh liên tiếp, đúng cái `003` đặt ra để bỏ. Thẻ MOD-03 không nằm
+        trên luồng onboarding (người mới đi select → explorer, không qua dashboard),
+        nên ở đây không bao giờ có hai màn chồng nhau.
+
+     ⚠️ LỜI PHỦ RIÊNG. Bộ mặc định ("Đã vào quỹ đạo Trái Đất · Chuyến phiêu lưu của
+        bạn bắt đầu từ đây") là lời của lượt ĐẦU TIÊN đi tới Trái Đất — dùng lại nguyên
+        văn cho cú mở bản đồ là nói sai đích VÀ nói sai lần thứ mấy.
+     ============================================================ */
+  var mapLink = document.querySelector('.card--map a[href="explorer.html"]');
+  if(mapLink) mapLink.addEventListener("click", function(e){
+    /* ⚠️ TÔN TRỌNG MỌI CÁCH MỞ KHÁC. Ctrl/Cmd-click (tab mới), Shift-click (cửa sổ
+       mới), chuột giữa — chặn hết là lấy đi một hành vi trình duyệt mà người dùng
+       KHÔNG hiểu vì sao mất. `button !== 0` là lớp phòng thêm cho chuột giữa. */
+    if(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    // Module không nạp được (mất mạng ở lần tải trước) → để link chạy như thường.
+    if(!window.AstroQWarp || AstroQWarp.isPlaying()) return;
+    e.preventDefault();
+    AstroQWarp.play({
+      lang: LANG,
+      texts: {
+        vi: { lead1: "Đang rời Trung Tâm Điều Hướng…",
+              sub1:  "Luna đang tăng tốc vào không gian",
+              lead2: "Đã ra tới không gian mở",
+              sub2:  "Bản đồ Hệ Mặt Trời đang mở ra" },
+        en: { lead1: "Leaving the Navigation Hub…",
+              sub1:  "Luna is accelerating into space",
+              lead2: "Open space reached",
+              sub2:  "The Solar System map is opening" }
+      },
+      // Bấm "Bỏ qua ›" cũng đi qua đây — bỏ qua là bỏ màn phim, không phải bỏ chuyến đi.
+      onDone: function(){ window.location.href = "explorer.html"; }
+    });
   });
 
   var logoutBtn=$("logout");

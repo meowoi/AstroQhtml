@@ -60,7 +60,22 @@
   var lang = "vi", onDone = null, reduced = false, tEnd = 0;
   var W = 0, H = 0;
 
-  function txt(k) { return (TXT[lang] || TXT.vi)[k]; }
+  /* Lời phủ do phía gọi truyền vào cho MỘT lượt chạy (`play({texts:…})`).
+     ⚠️ Vì sao cần: cùng một màn phim nhưng ĐÍCH ĐẾN khác nhau thì câu chữ khác nhau.
+        Bộ mặc định ("Đã vào quỹ đạo Trái Đất · Chuyến phiêu lưu của bạn bắt đầu từ
+        đây") là lời của lượt ĐẦU TIÊN đi tới Trái Đất; đem nguyên nó ra dùng cho cú
+        chuyển cảnh sang Bản Đồ Thiên Hà là nói sai đích và nói sai lần thứ mấy.
+     ⚠️ Phủ THEO TỪNG KHOÁ, không thay cả bảng: phía gọi chỉ muốn đổi `lead2/sub2`
+        thì `skip` vẫn phải có, không thì nút "Bỏ qua ›" hiện ra rỗng. */
+  var over = null;
+
+  function txt(k) {
+    if (over) {
+      var o = over[lang] || over.vi;
+      if (o && o[k] != null) return o[k];
+    }
+    return (TXT[lang] || TXT.vi)[k];
+  }
 
   function build() {
     if (root) return;
@@ -203,11 +218,18 @@
   var AstroQWarp = {
     CONFIG: CONFIG,
 
-    /** Chạy màn loading. opts: { lang, onDone } */
+    /**
+     * Chạy màn loading.
+     * opts: { lang, onDone, texts }
+     *   texts — tuỳ chọn, phủ lời cho lượt này: `{ vi:{lead1,sub1,lead2,sub2}, en:{…} }`.
+     *           Khoá nào không khai thì lấy bộ mặc định. Xem ghi chú ở `over`.
+     */
     play: function (opts) {
       opts = opts || {};
       lang = opts.lang === "en" ? "en" : "vi";
       onDone = typeof opts.onDone === "function" ? opts.onDone : null;
+      // Đặt lại MỖI lượt: không đặt lại thì lời phủ của lượt trước dính sang lượt sau.
+      over = (opts.texts && typeof opts.texts === "object") ? opts.texts : null;
       reduced = AstroQSpace.isReduced();
       build();
       resize();

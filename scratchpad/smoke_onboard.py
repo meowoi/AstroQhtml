@@ -154,12 +154,13 @@ def play_warp(page):
 
     ⚠️ Trước 01/08/2026 màn này tự hiện khi tour kết thúc (`onFinish` của
        `AstroQTour.autoStart`). Từ khi tour **dời xuống sau nhiệm vụ 1**
-       (docs/decisions/003) thì `onFinish` không còn dẫn đi đâu — và `AstroQWarp`
-       **hiện không còn nơi nào trong sản phẩm gọi tới**.
-       Bộ đo vẫn giữ đủ 18 phép kiểm cho nó (vệt sao là VỆT không phải đốm, Trái Đất
-       phần lớn xanh-lam, Luna đậu bên trái, thanh tiến trình, nút Bỏ qua, bản EN,
-       `prefers-reduced-motion`) để module không âm thầm mục đi trong lúc chờ chủ dự án
-       quyết: **xoá nó, hay cho nó việc làm mới** (ví dụ chuyển cảnh dashboard → bản đồ).
+       (docs/decisions/003) thì `onFinish` không còn dẫn đi đâu.
+       **Việc MỚI của `AstroQWarp` là chuyển cảnh dashboard → Bản Đồ Thiên Hà** (thẻ
+       MOD-03), có bộ đo riêng ở `scratchpad/smoke_map_warp.py`.
+       Bộ này vẫn giữ đủ 18 phép kiểm cho bản thân màn phim (vệt sao là VỆT không phải
+       đốm, Trái Đất phần lớn xanh-lam, Luna đậu bên trái, thanh tiến trình, nút Bỏ qua,
+       bản EN, `prefers-reduced-motion`), và gọi thẳng `play()` để đo **bộ lời MẶC
+       ĐỊNH** — `smoke_map_warp.py` đo bộ lời PHỦ. Hai bộ đo hai thứ khác nhau.
        Đo bằng cách gọi thẳng là trung thực hơn giả vờ tour vẫn dẫn tới nó.
     """
     # ⚠️ ĐỌC NGÔN NGỮ TỪ localStorage, KHÔNG DÙNG `window.LANG`. `dashboard.html` giữ

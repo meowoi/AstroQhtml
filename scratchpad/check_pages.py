@@ -1436,5 +1436,43 @@ check("nhanh 'body rong = tourSeen true' loai tru DU CA BON co",
       bool(_put) and "map1 is null" in _put.group(0) and "greeted is null" in _put.group(0),
       str(_put and _put.group(0)))
 
+# ══════════════════════════════════════════════════════════════
+print("\n=== [15d] Man loading Luna: chuyen canh dashboard -> Ban Do Thien Ha ===")
+# Việc MỚI của js/warp-screen.js (chốt 01/08/2026). Nó SUÝT mất hết người gọi khi tour
+# dời xuống sau nhiệm vụ 1 và mission-intro nghỉ hưu; chủ dự án chốt cho việc mới.
+_ws = rd("js/warp-screen.js")
+check("dashboard VAN nap warp-screen + space-scene",
+      'src="js/warp-screen.js"' in _dash and 'src="js/space-scene.js"' in _dash)
+check("dashboard CO goi AstroQWarp.play (module khong con mo coi)",
+      "AstroQWarp.play(" in _dashcode)
+_mw = re.search(r"mapLink\.addEventListener\(\"click\", function\(e\)\{(.*?)\n  \}\);",
+                _dashcode, re.S)
+check("tim thay handler chuyen canh o the MOD-03", bool(_mw))
+# ⚠️ Chặn hết cách mở của trình duyệt là lấy đi một hành vi người dùng KHÔNG hiểu vì
+#    sao mất. Ctrl/Cmd-click = tab mới, Shift = cửa sổ mới, chuột giữa = tab mới.
+for _k in ("metaKey", "ctrlKey", "shiftKey", "altKey", "e.button"):
+    check(f"ton trong {_k} (khong chan cach mo khac cua trinh duyet)",
+          bool(_mw) and _k in _mw.group(1))
+check("module khong nap duoc -> de link chay nhu thuong (khong preventDefault)",
+      bool(_mw) and "!window.AstroQWarp" in _mw.group(1)
+      and _mw.group(1).index("!window.AstroQWarp") < _mw.group(1).index("preventDefault"))
+check("man loading xong thi DI TOI explorer.html",
+      bool(_mw) and "explorer.html" in _mw.group(1) and "onDone" in _mw.group(1))
+# ⚠️ Không kèm ?onboard=1: đây là lượt vào bản đồ BÌNH THƯỜNG, cổng phải TẮT.
+check("KHONG bat cong lo trinh o luot vao binh thuong",
+      bool(_mw) and "onboard=1" not in _mw.group(1))
+
+# --- Lời phủ riêng: bộ mặc định nói sai đích cho cú mở bản đồ ---
+check("warp-screen nhan loi phu qua play({texts})", "texts" in _ws and "over" in _ws)
+check("loi phu dat lai MOI luot (khong dinh sang luot sau)",
+      re.search(r"over\s*=\s*\(opts\.texts", _ws) is not None)
+# Phủ THEO TỪNG KHOÁ — phủ cả bảng thì nút "Bỏ qua ›" hiện ra rỗng.
+check("phu THEO TUNG KHOA, khong thay ca bang (nut 'Bo qua' khong rong)",
+      re.search(r"if \(o && o\[k\] != null\) return o\[k\];", _ws) is not None)
+check("loi phu cua dashboard co DU ca vi va en",
+      bool(_mw) and "vi:" in _mw.group(1) and "en:" in _mw.group(1))
+check("loi phu KHONG dung lai 'quy dao Trai Dat' (sai dich cho cu mo ban do)",
+      bool(_mw) and "quỹ đạo Trái Đất" not in _mw.group(1))
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

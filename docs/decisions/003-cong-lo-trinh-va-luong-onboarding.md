@@ -143,7 +143,27 @@ thì để hai cảnh, nối bằng màn warp — đúng ngôn ngữ hình ảnh
 8. ✅ **Đường lùi khi three.js không nạp được** — cảnh 3D không dựng xong trong 12s thì
    `location.replace('mission-earth.html')`. Trẻ mất màn phim, không mất nhiệm vụ.
 
-**Toàn bộ 8 bước của quyết định này đã xong.** Còn lại: **push client** lên GitHub Pages.
+9. ✅ **Việc mới cho `js/warp-screen.js` + `js/space-scene.js`.** Tám bước trên làm module
+   này mất hết người gọi (tour không còn dẫn tới, `mission-intro` nghỉ hưu). Chủ dự án chốt
+   **cho nó việc mới thay vì xoá 625 dòng đang chạy tốt**: nó là **chuyển cảnh dashboard →
+   Bản Đồ Thiên Hà** (thẻ MOD-03). Chỗ khớp nhất, và chính tài liệu của module ghi ra lý do —
+   *"đó là lúc con tàu thật sự rời bến"*. Trước đây bấm "Mở bản đồ" là trang nhảy khô sang
+   một cảnh 3D; giờ là một cú rời bến có chủ ý.
+   - ⚠️ **KHÔNG dùng cho đường vào NHIỆM VỤ.** Ở luồng onboarding trẻ đã đi qua `#nm-warp`
+     của `explorer.html` rồi mới sang nhiệm vụ; chèn thêm màn Luna vào đó là **hai màn
+     chuyển cảnh liên tiếp** — đúng cái quyết định này đặt ra để bỏ. Thẻ MOD-03 **không**
+     nằm trên luồng onboarding (người mới đi `select` → `explorer`, không qua dashboard),
+     nên ở đây không bao giờ có hai màn chồng nhau.
+   - ⚠️ **Lời phủ riêng, phủ THEO TỪNG KHOÁ.** Bộ mặc định (*"Đã vào quỹ đạo Trái Đất ·
+     Chuyến phiêu lưu của bạn bắt đầu từ đây"*) là lời của lượt ĐẦU TIÊN đi tới Trái Đất —
+     dùng lại nguyên văn cho cú mở bản đồ là nói **sai đích** và nói **sai lần thứ mấy**.
+     Phủ cả bảng thì nút *"Bỏ qua ›"* hiện ra rỗng, nên `txt()` tra khoá-theo-khoá; và `over`
+     đặt lại **mỗi lượt** để lời của lượt trước không dính sang lượt sau.
+   - ⚠️ **Tôn trọng mọi cách mở của trình duyệt.** Ctrl/Cmd-click (tab mới), Shift-click
+     (cửa sổ mới), chuột giữa — chặn hết là lấy đi một hành vi mà người dùng **không hiểu
+     vì sao mất**. Module không nạp được → để `<a href>` chạy như thường, không `preventDefault`.
+
+**Toàn bộ quyết định này đã xong và đã push** (`f300a4e` · `772e8eb` · `b4abe6b` + lượt việc mới).
 
 **Ràng buộc từ nay:**
 
