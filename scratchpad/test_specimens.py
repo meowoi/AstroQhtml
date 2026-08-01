@@ -21,6 +21,8 @@ import urllib.error
 import urllib.request
 import uuid
 
+import _fbtest  # token ĐÃ xác minh email — /me/* nay đòi email_verified
+
 # Console Windows mặc định cp1252 nên in thông báo lỗi tiếng Việt do server trả về
 # là UnicodeEncodeError giữa bài test — mất luôn phần dọn dữ liệu ở `finally`.
 try:
@@ -145,9 +147,9 @@ def main():
 
     email = f"vault-test-{uuid.uuid4().hex[:10]}@astroq-test.invalid"
     print(f"\n[2] Tao tai khoan tam: {email}")
-    acc = idp("signUp", {"email": email, "password": "Test" + uuid.uuid4().hex[:8],
-                         "returnSecureToken": True})
-    uid, token = acc["localId"], acc["idToken"]
+    # ⚠️ TOKEN ĐÃ XÁC MINH EMAIL. /me/* nay đòi email_verified=true (chặn tự-đăng-ký);
+    #    token từ signUp trơn mang email_verified=false nên sẽ 403. Xem scratchpad/_fbtest.py.
+    uid, token, _pw = _fbtest.make_verified(email)
     check("Co idToken + uid", bool(uid and token), f"uid={uid}")
 
     try:

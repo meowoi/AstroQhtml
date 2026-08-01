@@ -21,6 +21,8 @@ import urllib.error
 import urllib.request
 import uuid
 
+import _fbtest  # token ĐÃ xác minh email — /me/* nay đòi email_verified
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5080").rstrip("/")
 API_KEY = "AIzaSyDljo-O_8S6D8l4KP8YHxutLjO9LqLNx-A"
 IDP = "https://identitytoolkit.googleapis.com/v1/accounts"
@@ -128,9 +130,9 @@ def main():
 
     email = f"wallet-test-{uuid.uuid4().hex[:10]}@astroq-test.invalid"
     print(f"\n[2] Tao tai khoan tam: {email}")
-    acc = idp("signUp", {"email": email, "password": "Test" + uuid.uuid4().hex[:8],
-                         "returnSecureToken": True})
-    uid, token = acc["localId"], acc["idToken"]
+    # ⚠️ TOKEN ĐÃ XÁC MINH EMAIL. /me/* nay đòi email_verified=true (chặn tự-đăng-ký);
+    #    token từ signUp trơn mang email_verified=false nên sẽ 403. Xem scratchpad/_fbtest.py.
+    uid, token, _pw = _fbtest.make_verified(email)
     check("Co idToken + uid", bool(uid and token), f"uid={uid}")
 
     try:

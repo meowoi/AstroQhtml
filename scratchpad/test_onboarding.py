@@ -23,6 +23,8 @@ import urllib.error
 import urllib.request
 import uuid
 
+import _fbtest  # token ĐÃ xác minh email — /me/* nay đòi email_verified
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5080").rstrip("/")
 
 # apiKey web của Firebase — công khai theo thiết kế (xem js/firebase-config.js)
@@ -136,12 +138,29 @@ def main():
     st, _ = call("GET", "/me/onboarding", token="khong-phai-jwt")
     check("GET token rac -> 401", st == 401, f"status={st}")
 
+    # ---- 2b. Token HỢP LỆ nhưng EMAIL CHƯA XÁC MINH -> 403 (bảo mật, 01/08/2026) ----
+    # ⚠️ Đây là chốt chặn tự-đăng-ký: Firebase cho client `signUp` bằng apiKey công khai,
+    #    luồng đăng ký 2 giai đoạn của astroQ đi vòng qua được. Tài khoản kiểu đó mang
+    #    email_verified=false; policy "verified" ở nhóm /me phải chặn nó.
+    print("\n[2b] Token hop le nhung email CHUA xac minh -> 403")
+    unv_email = f"unverified-{uuid.uuid4().hex[:10]}@astroq-test.invalid"
+    unv_uid, unv_tok, _ = _fbtest.web_signup(unv_email)
+    try:
+        st, _ = call("GET", "/me/onboarding", token=unv_tok)
+        check("Token CHUA xac minh -> GET /me/onboarding = 403", st == 403,
+              f"status={st}")
+        st, _ = call("PUT", "/me/onboarding", token=unv_tok, body={"tourSeen": True})
+        check("Token CHUA xac minh -> PUT /me/onboarding = 403", st == 403,
+              f"status={st}")
+    finally:
+        _fbtest.delete(unv_tok)
+
     # ---- 3. Tài khoản Firebase tạm ----
     email = f"onboard-test-{uuid.uuid4().hex[:10]}@astroq-test.invalid"
     print(f"\n[3] Tao tai khoan Firebase tam: {email}")
-    acc = idp("signUp", {"email": email, "password": "Test" + uuid.uuid4().hex[:8],
-                         "returnSecureToken": True})
-    uid, token = acc["localId"], acc["idToken"]
+    # ⚠️ TOKEN ĐÃ XÁC MINH EMAIL. /me/* nay đòi email_verified=true (chặn tự-đăng-ký);
+    #    token từ signUp trơn mang email_verified=false nên sẽ 403. Xem scratchpad/_fbtest.py.
+    uid, token, _pw = _fbtest.make_verified(email)
     check("Firebase cap idToken + uid", bool(uid and token), f"uid={uid}")
 
     try:

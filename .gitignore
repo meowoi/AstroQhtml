@@ -34,3 +34,4 @@ img/AstroQ logo1.png
 # thành img/earth/*.avif|webp (230 KB). Bản gốc chỉ cần khi muốn sinh lại asset;
 # commit nó vào là đưa lại đúng 2,5 MB mà ta vừa cắt đi.
 img/earth/_src/
+scratchpad/__pycache__/
