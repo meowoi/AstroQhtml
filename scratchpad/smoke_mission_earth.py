@@ -119,6 +119,23 @@ def stub(page, lang="vi"):
     # kiểm chữ Việt đều vô nghĩa. Đây là hành vi ĐÚNG của sản phẩm, không phải lỗi.
     page.add_init_script(
         "localStorage.setItem('astroq-lang', %r);" % lang)
+    # ⚠️ GHI LAI TUNG TRANG THAI CUA BAN TAY HUONG DAN KEM CHE DO BAN DO.
+    #    Ban tay 'drag' chi song ~1,4s roi bi 'tap' ghi de, nen doc mot lan bang
+    #    `evaluate` la do mot khoanh khac ngau nhien. Muon biet "co bao gio day tre
+    #    KEO trong luc con o anh qua cau khong" thi phai theo doi lien tuc.
+    #    Chi push khi mau DOI, khong thi mot luot ~10 phut sinh hang chuc nghin dong.
+    page.add_init_script("""
+      window.__handLog = [];
+      setInterval(function () {
+        var h = document.getElementById('hand');
+        if (!h) return;
+        var m = (window.__mission && window.__mission.world
+                 && window.__mission.world.map) || '?';
+        var s = h.className + '|' + m;
+        var L = window.__handLog;
+        if (L[L.length - 1] !== s) L.push(s);
+      }, 40);
+    """)
 
 
 def boot(page, lang="vi", reduced=False):
@@ -523,13 +540,20 @@ def main():
 
         # Trái Đất phải ĐANG SÁNG ở bước 1 (theo bản mô tả, tối đi là ở bước 2)
         p_lit = pix(page, (0.3, 0.3, 0.4, 0.4))
-        chk(p_lit["avg"] > 22, "bước 1: Trái Đất đang SÁNG", f"độ sáng TB {p_lit['avg']:.1f}")
-        # ⚠️ MỞ MÀN PHẢI LÀ ẢNH QUẢ CẦU, chưa phải bản đồ phẳng (đổi 01/08/2026).
-        #    Đo được: quả cầu sáng TB 113,9 ở vùng giữa, bản đồ phẳng chỉ 24,3 — tối hơn
-        #    4,7 lần. Đây là cảnh ĐẦU TIÊN trẻ thấy trong nhiệm vụ; mở màn bằng một hình
-        #    chữ nhật gần đen là mất đúng khoảnh khắc "mình đã tới Trái Đất".
-        chk(page.evaluate("() => window.__mission.world.map") == "globe",
-            "mở màn bằng ẢNH QUẢ CẦU (sáng), chưa phải bản đồ phẳng",
+        # ⚠️ NGƯỠNG SIẾT TỪ 22 LÊN 70 (02/08/2026, `docs/decisions/004`).
+        #    Mốc 22 sinh ra khi bước 1 mở màn bằng ảnh quả cầu rồi mới đổi sang bản đồ,
+        #    và nó lỏng tới mức vô nghĩa. Nay cả nhiệm vụ chạy một hình duy nhất, độ sáng
+        #    do KHUNG NHÌN quyết (`FACE_OPEN`): đo được 82,7 so với 87,0 của ảnh quả cầu
+        #    như nó từng chạy. Đặt sàn 70 để lùi khung nhìn về vùng đại dương (26,8) là
+        #    báo hỏng ngay — đó chính là lỗi mà 004 sinh ra để chặn.
+        chk(p_lit["avg"] > 70, "bước 1: Trái Đất đang SÁNG", f"độ sáng TB {p_lit['avg']:.1f}")
+        # ⚠️ ĐẢO CHIỀU 02/08/2026 — trước đây phép kiểm này ĐÒI ảnh quả cầu.
+        #    Nó bảo vệ đúng cái hành vi mà chủ dự án báo là lỗi ("hình lúc tròn lúc méo"):
+        #    3 lần đổi hình, tệ nhất là cú đổi NGAY GIỮA bước 1. Lý do cũ ("phẳng tối hơn
+        #    4,7 lần") đã đo lại và sai địa chỉ — xem `FACE_OPEN` trong mission-earth.html.
+        #    Điều phép kiểm này bảo vệ (cảnh mở màn không được tối) nay do mốc 70 ở trên lo.
+        chk(page.evaluate("() => window.__mission.world.map") == "flat",
+            "mở màn ĐÃ LÀ bản đồ phẳng (0 lần đổi hình trong cả nhiệm vụ)",
             page.evaluate("() => window.__mission.world.map"))
 
         # ══════════════════════════════════════════════════════════════════
@@ -553,7 +577,10 @@ def main():
         vis = page.evaluate(
             "() => window.__mission.world.markers"
             ".filter(m => window.__mission.world.screenOf('marker', m.id).visible).length")
-        chk(vis >= 2, "ở góc mở màn trẻ thấy được ít nhất 2/3 điểm tín hiệu",
+        # ⚠️ SIẾT TỪ ">= 2" LÊN "== 3" (02/08/2026, `004`). Mốc 2/3 hợp lý khi trẻ còn
+        #    KÉO được đi tìm đốm thứ ba — đó chính là bài học của bước 1 lúc đó. Nay
+        #    không còn cú kéo nào, nên một đốm ngoài khung là trẻ KẸT CỨNG VĨNH VIỄN.
+        chk(vis == 3, "CẢ BA điểm tín hiệu trong khung (không còn cách nào đi tìm)",
             f"{vis}/3 thấy được")
         # ⚠️ KHỐI KÉO PHẢI ĐỨNG SAU PHÉP KIỂM "≥2/3 ĐIỂM" NGAY TRÊN. Lượt đầu tôi đặt
         #    nó lên trước, nên phép kiểm kia đo SAU khi bản đồ đã bị kéo đi 300px và
@@ -564,9 +591,24 @@ def main():
         #    NGUYÊN, chỉ ba cái đốm trượt đi (một cái ra khỏi khung). Tức lời "Kéo để
         #    xoay Trái Đất" mô tả một việc KHÔNG HỀ XẢY RA, và thứ trẻ thấy là mục tiêu
         #    chạy khỏi con trỏ. Đọc code không thấy — phải kéo rồi so hai số đo.
-        chk(page.evaluate("() => window.__mission.world.map") == "flat",
-            "sau lời Comet: đã chuyển sang CHẾ ĐỘ BẢN ĐỒ",
-            page.evaluate("() => window.__mission.world.map"))
+        # ⚠️ BA PHÉP KIỂM CŨ ĐÃ BỎ Ở ĐÂY (02/08/2026, `004`) — ghi lại để lần sau
+        #    không ai tưởng bộ kiểm bị nới:
+        #      · "sau lời Comet: đã chuyển sang CHẾ ĐỘ BẢN ĐỒ" — không còn cú đổi nào
+        #        để mà kiểm; phép kiểm ở mục [1] nay đòi 'flat' NGAY TỪ ĐẦU, chặt hơn.
+        #      · "KHÔNG dạy KÉO trong lúc còn ở ảnh quả cầu" — bước 1 không dạy kéo nữa,
+        #        nên điều nó bảo vệ được bảo vệ TỐT HƠN bằng cách không có cú kéo nào.
+        #      · "bàn tay KÉO CÓ hiện sau khi đã sang bản đồ" — bàn tay giờ chỉ CHỈ TRỎ.
+        #    Thay bằng ba phép kiểm dưới, đòi đúng thứ `004` hứa.
+        hlog = page.evaluate("() => window.__handLog || []")
+        chk(not any("drag" in x for x in hlog),
+            "KHONG con ban tay KEO o bat ky luc nao",
+            str([x for x in hlog if "drag" in x][:3]))
+        chk(not any("zoom" in x for x in hlog),
+            "KHONG con ban tay ZOOM o bat ky luc nao",
+            str([x for x in hlog if "zoom" in x][:3]))
+        chk(any("tap" in x for x in hlog),
+            "CO ban tay CHI TRO vao dom (khong mat phan chi duong)",
+            str([x for x in hlog if "tap" in x][:2]))
 
         def _snap():
             return page.evaluate("""() => {
@@ -591,13 +633,16 @@ def main():
         page.mouse.up()
         page.wait_for_timeout(500)
         _b = _snap()
-        chk(_a["x"] is not None and _b["x"] is not None and abs(_b["x"] - _a["x"]) > 100,
-            "KÉO làm ẢNH BẢN ĐỒ dịch thật (không phải đứng yên)",
+        # ⚠️ ĐẢO CHIỀU 02/08/2026 (`004`). Trước đây khối này đòi "KÉO làm ảnh dịch
+        #    thật" — nó sinh ra ngày 01/08 để bắt lỗi ngược lại (kéo trên ảnh quả cầu
+        #    không dịch được gì). Nay chủ dự án chốt "không có hành động hay hướng dẫn
+        #    co kéo gì hết", nên điều đúng phải kiểm là: kéo KHÔNG làm gì cả, ở cả ảnh
+        #    lẫn vị trí đốm. Giữ nguyên phép đo, chỉ đổi điều nó khẳng định.
+        chk(_a["x"] == _b["x"] and _a["tf"] == _b["tf"],
+            "KÉO 300px KHÔNG làm ảnh dịch (bước 1 đã tắt hẳn dragRotate)",
             f"x {_a['x']} -> {_b['x']}")
-        # Và điểm tín hiệu PHẢI đứng yên tại chỗ của nó trên Trái Đất — nó là một ĐỊA
-        # ĐIỂM, không phải một thứ bám theo con trỏ.
         chk(_a["mks"] == _b["mks"],
-            "3 điểm tín hiệu ĐỨNG YÊN tại toạ độ thật (đi cùng bản đồ)",
+            "3 điểm tín hiệu ĐỨNG YÊN tại toạ độ thật",
             f"{_a['mks']} -> {_b['mks']}")
         clicked_real = False
         tried = []
@@ -623,9 +668,9 @@ def main():
         bar = page.eval_on_selector("#obj-bar", "e => e.getBoundingClientRect().width")
         chk(bar > 2, "thanh tiến độ có bề rộng THẬT (không phải 0px)", f"{bar:.0f}px")
 
-        # Kéo để xoay: chứng minh OrbitControls thật sự hoạt động
-        # `camera.position` là của three.js. Cả hai engine đều có `facingLatLon()` —
-        # điểm trên bề mặt đang hướng về người xem — nên đó là con số dùng chung.
+        # ⚠️ ĐẢO CHIỀU 02/08/2026 (`004`): trước đây đòi "KÉO đổi được góc nhìn".
+        #    Phép đo giữ nguyên (`facingLatLon()` dùng chung cho cả hai engine), chỉ
+        #    đổi điều khẳng định — bước 1 nay không nhận cú kéo nào.
         f0 = page.evaluate("() => window.__mission.world.facingLatLon()")
         page.mouse.move(720, 450)
         page.mouse.down()
@@ -634,7 +679,7 @@ def main():
         page.wait_for_timeout(300)
         f1 = page.evaluate("() => window.__mission.world.facingLatLon()")
         moved = max(abs(deg_delta(f0["lon"], f1["lon"])), abs(f1["lat"] - f0["lat"]))
-        chk(moved > 1.0, "KEO de xoay doi duoc goc nhin", f"lech {moved:.2f} do")
+        chk(moved < 0.01, "KEO KHONG doi duoc goc nhin o buoc 1", f"lech {moved:.3f} do")
 
         # Nốt 2 điểm còn lại
         for mid in ids:
@@ -901,7 +946,15 @@ def main():
             facts = [c[2] for c in cards]
             chk(all(len(f) > 12 for f in facts) and len(set(facts)) == 4,
                 "4 thẻ có 4 câu kiến thức KHÁC nhau")
-            chk(any("70" in f for f in facts), "thẻ Nước nói 'Nước bao phủ 70% Trái Đất'")
+            # ⚠️ 70% → 71% (02/08/2026). Không phải nới phép kiểm mà là SỬA MỘT XUNG
+            #    ĐỘT SỐ LIỆU: đốm 🌊 của bước 1 dẫn NASA `science.nasa.gov/earth/facts/`
+            #    ("the global ocean … covers about 71% of the planet's surface"), trong
+            #    khi thẻ mẫu vật này vẫn ghi 70% — hai chỗ trong CÙNG một nhiệm vụ nói
+            #    hai con số cho cùng một sự thật. Đã thống nhất 71% ở cả `mission-earth.html`
+            #    lẫn `learningdata/astronomy/earth_codex.json`.
+            chk(any("71" in f for f in facts),
+                "thẻ Nước nói 'Nước bao phủ 71% Trái Đất' (khớp nguồn NASA của bước 1)",
+                str([f[:40] for f in facts]))
             chk(any("Oxy" in f or "oxy" in f.lower() for f in facts),
                 "thẻ Rừng nói về Oxy để hít thở")
 

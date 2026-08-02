@@ -486,7 +486,9 @@ a{text-decoration:none;color:inherit;}
   .me-win.show .me-win-card{transform:none;}
   /* Đổi tông hành tinh vẫn GIỮ (nó là nội dung bài học "Trái Đất từng khác hẳn",
      không phải hiệu ứng trang trí) nhưng bỏ phần chuyển màu dần. */
-  #stage,.me-era{transition:none;}
+  /* Ranh giới ngày/đêm GIỮ hai mức (nó là nội dung bài học của bước ③), chỉ bỏ
+     phần chuyển màu dần — cùng nguyên tắc với đổi tông thời đại ngay trên. */
+  #stage,.me-era,.e2-view::after{transition:none;}
   .me-stack .puff{opacity:.85;}
 }
 
@@ -550,10 +552,26 @@ a{text-decoration:none;color:inherit;}
   transition:filter .8s ease;}
 
 /* ---- Ranh giới ngày/đêm ---- */
-/* Luôn hiện, nhẹ: nửa bên phải tối dần, cho thấy hành tinh được chiếu sáng từ một
-   phía. Đặt trên `.e2-view` chứ không trên `.e2-layer`: ranh giới này thuộc về
-   MẶT TRỜI nên không được pan/zoom theo bề mặt hành tinh. */
+/* Đặt trên `.e2-view` chứ không trên `.e2-layer`: ranh giới này thuộc về MẶT TRỜI
+   nên không được pan/zoom theo bề mặt hành tinh.
+
+   ⚠️ HAI MỨC, ĐỔI 02/08/2026 (`docs/decisions/004` mục A2). Trước đó nó chạy HẾT CỠ
+   (`.82` ở mép phải) **từ bước ① và không bao giờ đổi** — `igniteSun` chỉ sửa `--lit`
+   của Mặt Trời và cờ `.e2-night`, không hề đụng gradient này. Hai hậu quả đo được:
+     · ăn mất 29,6 điểm sáng của MỌI bước (đo trên ảnh quả cầu: 116,7 → 87,0), mà từ
+       `004` cả nhiệm vụ chạy trên bản đồ phẳng vốn đã tối hơn;
+     · **phần thưởng của bước ③ bị tiêu trước** — bước đó định "hiện ra ranh giới
+       ngày/đêm", nhưng trẻ đã nhìn đúng cái gradient ấy từ cảnh đầu tiên, nên nó
+       không hiện ra gì cả.
+   Nên: mặc định NHẸ (chỉ đủ nói "ánh sáng đến từ một phía"), và bước ③ bật
+   `.e2-terminator` để dâng lên mức cũ — lúc đó cú hiện ra mới thật sự hiện ra.
+   Đo được sau khi hạ: khung mở màn 69,3 → 84,0. */
 .e2-view::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  transition:background 1.2s ease;
+  background:linear-gradient(100deg, rgba(2,6,20,0) 40%,
+                                     rgba(2,6,20,.16) 70%,
+                                     rgba(2,6,20,.30) 100%);}
+.e2.e2-terminator .e2-view::after{
   background:linear-gradient(100deg, rgba(2,6,20,0) 34%,
                                      rgba(2,6,20,.5) 64%,
                                      rgba(2,6,20,.82) 100%);}
