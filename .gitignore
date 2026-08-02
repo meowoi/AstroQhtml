@@ -9,6 +9,10 @@
 # 88 file PNG = 35 MB, chỉ dùng để soi mắt trong một lượt làm việc.
 scratchpad/*.png
 scratchpad/*.log
+# Bản đổ log của một lượt chạy, đặt tên `_…txt` theo cách làm ghi ở nhật ký
+# 01/08/2026 (`python … | Out-File` chỉ ghi khi pipeline kết thúc, nên script
+# phải tự ghi thẳng ra file mới theo dõi được tiến độ). Dùng xong là bỏ.
+scratchpad/_*.txt
 
 # ---- Ảnh GỐC chưa tối ưu ----
 # Dự án đã hạ kho ảnh từ 72 MB xuống 2,79 MB; đừng đưa bản gốc trở lại.

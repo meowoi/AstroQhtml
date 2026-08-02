@@ -226,22 +226,28 @@
         <span class="reward-unit">PURPLE METEORS</span>
       </div>
 
-      <!-- Form waitlist -->
-      <!-- action/method để form vẫn gửi được nếu JS lỗi; bình thường JS chặn và gửi bằng fetch -->
-      <form class="wl-form" id="wl-form" action="https://formspree.io/f/xkodplgp" method="POST" novalidate>
+      <!-- Form waitlist — gửi bằng fetch tới POST /waitlist của AstroqSV (AWS Lambda + SES).
+           KHÔNG có action/method: không còn dịch vụ form bên thứ ba nào để gửi tới, mà để
+           lại một action trỏ sai còn tệ hơn không có (form sẽ rời trang rồi báo lỗi lạ). -->
+      <form class="wl-form" id="wl-form" novalidate>
         <label class="sr-only" for="wl-email" data-i18n="wl_label">Địa chỉ email</label>
         <div class="field">
           <input type="email" id="wl-email" name="email" autocomplete="email" required
                  placeholder="phihanhgia@astroq.org" data-i18n-ph="wl_ph" aria-describedby="wl-hint" />
-          <!-- Bẫy bot: người thật không bao giờ điền. Tên "_gotcha" để Formspree cũng tự lọc ở server -->
-          <input type="text" id="wl-gotcha" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <!-- Tiêu đề email thông báo trong hộp thư Formspree -->
-          <input type="hidden" name="_subject" value="[astroQ.org] Đăng ký waitlist mới" />
+          <!-- ⚠️ BẪY BOT: người thật không bao giờ điền (ô nằm ngoài khung nhìn).
+               id `wl-gotcha` phải khớp js/index.js — sai id ở đây từng giết cả hàm gửi
+               form (xem nhật ký 02/08/2026). Server cũng tự lọc lại qua trường `hp`. -->
+          <input type="text" id="wl-gotcha" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
         </div>
         <button class="btn-primary wl-submit" id="wl-submit" type="submit" data-i18n="wl_cta">
           Nhận 500 Purple Meteors &amp; Vé Sớm 🚀
         </button>
       </form>
+
+      <!-- Lời báo lỗi đặt NGAY DƯỚI ô nhập. Toast neo ở đỉnh khung nhìn nên khi
+           người dùng đang ở cuối trang thì nó nằm ngoài tầm mắt; đây mới là chỗ
+           họ đang nhìn lúc bấm nút. Nội dung do js/index.js đổ vào theo ngôn ngữ. -->
+      <p class="wl-err" id="wl-err" role="alert" hidden></p>
 
       <p class="wl-hint" id="wl-hint" data-i18n="wl_hint">
         Không spam. Nhận thông báo ra mắt chính thức vào ngày 09/08/2026.

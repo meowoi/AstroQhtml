@@ -816,7 +816,7 @@ hiện sớm nếu có vòng lặp gọi API bất thường.
 
 HTML + vanilla JS gọi REST API bằng `fetch` là chuyện hoàn toàn bình thường — React/Vue không hề
 có lợi thế nào ở khâu này, chúng chỉ khác ở cách quản lý giao diện. Dự án đã dùng `fetch` sẵn ở
-`js/index.js` (gửi form waitlist lên Formspree) và nó chạy tốt.
+`js/index.js` (gửi form waitlist lên `POST /waitlist` của chính backend này) và nó chạy tốt.
 
 ### Việc thật sự phải làm ở client
 

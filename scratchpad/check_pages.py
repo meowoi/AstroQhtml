@@ -1482,5 +1482,132 @@ check("loi phu cua dashboard co DU ca vi va en",
 check("loi phu KHONG dung lai 'quy dao Trai Dat' (sai dich cho cu mo ban do)",
       bool(_mw) and "quỹ đạo Trái Đất" not in _mw.group(1))
 
+# ══════════════════════════════════════════════════════════════════════════
+# [16] WAITLIST TRANG CHU — day noi client -> POST /waitlist -> SES
+#
+# Ba loai loi that da xay ra, moi phep kiem chan dung mot loai:
+#   a) id honeypot o markup va o JS lech nhau -> ném TypeError ngay sau
+#      preventDefault, GIET ca ham gui form. Im lang hoan toan voi nguoi dung.
+#   b) sot lai dau vet dich vu form ben thu ba sau khi chu du an chot dung SES.
+#   c) ngay ra mat o backend lech voi LAUNCH_AT o client -> thu chao mung hen
+#      mot ngay, trang hen mot ngay khac.
+# ══════════════════════════════════════════════════════════════════════════
+print("\n=== [16] Waitlist: client -> POST /waitlist -> SES ===")
+
+_wl_html = rd("index.html")
+_wl_js   = rd("js/index.js")
+
+
+def _no_comments(js):
+    """Bỏ comment nhưng GIỮ chuỗi.
+
+    ⚠️ `strip_js()` có sẵn thì bỏ cả chuỗi — đúng cho việc đếm ngoặc, nhưng ở đây
+    mọi thứ cần tìm (`$("wl-gotcha")`, `"/waitlist"`, `import("./api.js")`) đều
+    NẰM TRONG chuỗi, dùng nó là phép kiểm nào cũng báo hỏng oan. Vẫn phải bỏ
+    comment: dự án đã 9 lần dính lỗi "đếm cả chữ trong ghi chú của chính mình".
+    """
+    out, i, n = [], 0, len(js)
+    while i < n:
+        c = js[i]
+        if c == "/" and i + 1 < n and js[i + 1] == "*":
+            j = js.find("*/", i + 2); i = (j + 2) if j >= 0 else n; continue
+        if c == "/" and i + 1 < n and js[i + 1] == "/":
+            j = js.find("\n", i); i = j if j >= 0 else n; continue
+        if c in "\"'`":
+            q = c; out.append(c); i += 1
+            while i < n and js[i] != q:
+                if js[i] == "\\":
+                    out.append(js[i]); i += 1
+                if i < n:
+                    out.append(js[i]); i += 1
+            if i < n:
+                out.append(js[i]); i += 1
+            continue
+        out.append(c); i += 1
+    return "".join(out)
+
+
+_wl_code = _no_comments(_wl_js)
+_wl_ep   = rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
+                               "Endpoints", "WaitlistEndpoints.cs"))
+_wl_em   = rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
+                               "Services", "EmailService.cs"))
+_wl_prog = rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api", "Program.cs"))
+
+# --- (a) id honeypot phai khop hai ben, va JS phai doc an toan ---
+_hp_ids = set(re.findall(r'id="(wl-[a-z-]+)"[^>]*class="hp"', _wl_html))
+_hp_ids |= set(re.findall(r'class="hp"[^>]*id="(wl-[a-z-]+)"', _wl_html))
+check("markup co dung 1 o bay bot", len(_hp_ids) == 1, _hp_ids)
+_hp_id = next(iter(_hp_ids), "")
+check("JS doc dung id bay bot cua markup",
+      bool(_hp_id) and f'$("{_hp_id}")' in _wl_code, _hp_id)
+check("JS KHONG goi thang .value tren ket qua $() cua bay bot "
+      "(null la giet ca ham gui form)",
+      re.search(r'\$\("wl-[a-z-]+"\)\.value', _wl_code) is None,
+      re.findall(r'\$\("wl-[a-z-]+"\)\.value', _wl_code))
+# moi id ma JS tra cuu deu phai co that trong markup
+_page_ids = ids_in(_wl_html)
+_miss = sorted({i for i in re.findall(r'\$\("([a-z0-9-]+)"\)', _wl_code)} - _page_ids)
+check("moi $(\"id\") cua js/index.js deu ton tai trong index.html", not _miss, _miss)
+
+# --- (b) khong con dau vet dich vu form ben thu ba ---
+for _rel in ("index.html", "js/index.js", "css/index.css"):
+    check(f"{_rel} khong con dau vet dich vu form ben thu ba",
+          "formspree" not in rd(_rel).lower())
+check("form KHONG con action tro ra ngoai",
+      re.search(r'<form[^>]*id="wl-form"[^>]*action=', _wl_html) is None)
+check("khong con truong an kieu _subject/_gotcha cua dich vu cu",
+      not re.search(r'name="_(subject|gotcha|replyto|next)"', _wl_html))
+
+# --- day noi client ---
+check("client goi POST /waitlist", '"/waitlist"' in _wl_code)
+check("client nap js/api.js bang import DONG (trang chu dang toi uu SEO)",
+      'import("./api.js")' in _wl_code)
+check("index.html KHONG dat the <script> cho api.js",
+      "js/api.js" not in _wl_html)
+check("payload gui du email + lang + bay bot",
+      all(k in _wl_code for k in ("email:", "lang:", "hp:")))
+
+# --- server ---
+check("Program.cs co dang ky MapWaitlistEndpoints", "MapWaitlistEndpoints()" in _wl_prog)
+check("route /waitlist ton tai o backend", 'MapPost("/waitlist"' in _wl_ep)
+check("server gui thu qua SES", "SendWaitlistWelcomeAsync" in _wl_ep and
+                                "SendWaitlistWelcomeAsync" in _wl_em)
+check("route /waitlist KHONG doi token (khach chua co tai khoan)",
+      "RequireAuthorization" not in _wl_ep)
+check("co cooldown chan bom thu theo dich", "SendCooldownSeconds" in _wl_ep)
+check("server loc lai bay bot", "req.Hp" in _wl_ep or "Hp)" in _wl_ep)
+check("ban ghi waitlist KHONG dat ttl (phai song toi ngay ra mat)",
+      re.search(r'PutWaitlistAsync.*?\["ttl"\]',
+                rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
+                                    "Data", "DynamoContext.cs")), re.S | re.M) is None
+      or '["ttl"]' not in re.search(
+          r'public async Task PutWaitlistAsync.*?\n    \}',
+          rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
+                              "Data", "DynamoContext.cs")), re.S).group(0))
+
+# --- SES hong thi KHONG hua "kiem tra hom thu" ---
+_vi, _en = i18n_dicts(_wl_js)          # tra ve TAP KHOA, khong phai gia tri
+check("co khoa done_body_nomail o CA vi va en",
+      "done_body_nomail" in (_vi or set()) and "done_body_nomail" in (_en or set()))
+_nomail = re.findall(r"done_body_nomail\s*:\s*(['\"])(.*?)\1", _wl_code, re.S)
+check("doc duoc ca hai ban cua done_body_nomail", len(_nomail) == 2, len(_nomail))
+check("cau 'chua gui duoc thu' KHONG bao kiem tra hom thu",
+      all("Kiểm tra hòm thư" not in v and "Check your inbox" not in v for _q, v in _nomail),
+      [v[:40] for _q, v in _nomail])
+check("cau do van giu o dien ten email", all('id="wl-done-mail"' in v for _q, v in _nomail))
+check("client chon cau theo mailSent cua server", "mailSent" in _wl_code)
+
+# --- (c) ngay ra mat o backend khop client ---
+_m_at = re.search(r'LAUNCH_AT\s*=\s*new Date\("(\d{4})-(\d{2})-(\d{2})', _wl_js)
+_m_vi = re.search(r'LaunchDateVi\s*=\s*"(\d{2})/(\d{2})/(\d{4})"', _wl_ep)
+check("doc duoc ngay ra mat o ca hai ben", bool(_m_at) and bool(_m_vi),
+      (_m_at and _m_at.group(0), _m_vi and _m_vi.group(0)))
+if _m_at and _m_vi:
+    _cli = (_m_at.group(3), _m_at.group(2), _m_at.group(1))       # dd, mm, yyyy
+    _srv = (_m_vi.group(1), _m_vi.group(2), _m_vi.group(3))
+    check("ngay ra mat trong thu SES khop LAUNCH_AT cua trang chu",
+          _cli == _srv, f"client {_cli} vs server {_srv}")
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

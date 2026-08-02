@@ -2,8 +2,8 @@
    index.js — Trang chủ astroQ.org: landing "Sắp ra mắt" + waitlist
    Dùng lại: js/ui-common.js ($, getLang/setLang/initLang/markLangButtons,
    makeToast, esc) và js/icons.js (lic).
-   Không backend: email lưu vào localStorage["astroq-waitlist"] và
-   submitWaitlist() mô phỏng một lời gọi API (đổi sang fetch thật ở 1 chỗ).
+   Waitlist đi qua backend AstroqSV: POST /waitlist → DynamoDB + thư chào mừng
+   bằng SES. localStorage["astroq-waitlist"] CHỈ là bản sao dự phòng khi mất mạng.
    ============================================================ */
 (function(){
   "use strict";
@@ -11,7 +11,6 @@
   /* Ngày mở cửa chính thức (giờ Việt Nam, UTC+7) — dùng cho đồng hồ đếm ngược */
   var LAUNCH_AT = new Date("2026-08-09T00:00:00+07:00").getTime();
   var LS_WAITLIST = "astroq-waitlist";      // bản sao dự phòng trên máy khách: [{ email, ts, lang, sent }]
-  var FORM_ENDPOINT = "https://formspree.io/f/xkodplgp";   // nhận email waitlist
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   /* ============================ i18n ============================ */
@@ -46,6 +45,9 @@
       mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
       done_title:"🚀 Đã nhận vé sớm & 500 Purple Meteors thành công!",
       done_body:'Kiểm tra hòm thư của bạn nhé — vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. 500 Purple Meteors sẽ nằm sẵn trong khoang khi astroQ.org mở cửa.',
+      // Dùng khi server nhận được đăng ký nhưng SES chưa gửi được thư. Đừng bảo
+      // "kiểm tra hòm thư" về một lá thư chưa đi.
+      done_body_nomail:'Vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. Thư xác nhận đang gặp trục trặc nên có thể chưa tới, nhưng chỗ của bạn vẫn được giữ — chúng mình sẽ báo khi astroQ.org mở cửa.',
       done_again:"Đăng ký email khác",
 
       err_empty:"Nhập email của bạn để nhận vé mời sớm nhé!",
@@ -106,6 +108,7 @@
       mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
       done_title:"🚀 Early pass & 500 Purple Meteors secured!",
       done_body:'Check your inbox — the early-access pass is reserved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when astroQ.org opens.',
+      done_body_nomail:'Your early-access pass is reserved for <b id="wl-done-mail">you</b>. The confirmation email hit a snag and may not arrive, but your spot is held — we\'ll write when astroQ.org opens.',
       done_again:"Use another email",
 
       err_empty:"Enter your email to grab an early-access pass!",
@@ -155,7 +158,8 @@
     });
     AstroQ.markLangButtons(LANG);
     renderCountdown();
-    if(joined) paintDone(joined);      // giữ nguyên trạng thái đã đăng ký khi đổi ngôn ngữ
+    paintErr();                        // lời báo lỗi đang hiện phải dịch theo, không đứng lại ở tiếng cũ
+    if(joined) paintDone(joined, joinedMailed);  // giữ nguyên trạng thái đã đăng ký khi đổi ngôn ngữ
   }
 
   /* ============================ Icon 4 trụ kiến thức ============================ */
@@ -195,7 +199,7 @@
     try{ localStorage.setItem(LS_WAITLIST, JSON.stringify(list)); }catch(e){}
   }
 
-  /* Lưu bản sao vào máy khách. Luôn chạy dù Formspree thành công hay không, để
+  /* Lưu bản sao vào máy khách. Luôn chạy dù server nhận được hay không, để
      không mất lead khi mạng hỏng — cờ "sent" cho biết đã lên server hay chưa. */
   function backup(email, sent){
     var list = readList();
@@ -208,36 +212,88 @@
     return dup;                                      // true = email này đã đăng ký trước đó
   }
 
-  /* Gửi lên Formspree bằng fetch (AJAX) — không rời trang.
-     Formspree trả JSON khi có header Accept: application/json:
-       thành công -> 200 { ok: true }
-       lỗi        -> 4xx { errors: [{ field, message }] }                        */
+  /* ============================ Gửi lên backend ============================
+     POST /waitlist của AstroqSV: lưu vào DynamoDB rồi gửi thư chào mừng qua SES.
+     Trả { ok, dup, mailSent }.
+
+     ⚠️ NẠP `js/api.js` BẰNG IMPORT ĐỘNG, không đặt thẻ <script> ở index.html.
+     Trang chủ là trang DUY NHẤT được lập chỉ mục và đang tối ưu SEO/AEO — nó cố ý
+     không nạp SDK Firebase (233 KB) vì lý do đó. `js/api.js` chỉ ~4 KB nhưng vẫn là
+     một lượt tải mà 99% khách ghé qua không cần: chỉ người thật sự bấm gửi mới cần.
+     Cùng lối `js/firebase-auth.js` đã dùng. Nhớ module lại để bấm lần hai không tải lại. */
+  var apiMod = null;
+  function api(){
+    if(apiMod) return apiMod;
+    apiMod = import("./api.js");
+    return apiMod;
+  }
+
   function submitWaitlist(email){
-    var data = new FormData();
-    data.append("email", email);
-    data.append("_subject", "[astroQ.org] Đăng ký waitlist mới");
-    data.append("lang", LANG);                       // để biết người đăng ký xem bản VI hay EN
-    return fetch(FORM_ENDPOINT, {
-      method: "POST",
-      body: data,
-      headers: { "Accept": "application/json" }
-    }).then(function(res){
-      return res.json().catch(function(){ return {}; }).then(function(body){
-        if(res.ok) return { ok: true };
-        var msg = body && body.errors && body.errors.length ? body.errors[0].message : "";
-        return { ok: false, status: res.status, message: msg };
+    return api().then(function(m){
+      return m.apiPost("/waitlist", {
+        email: email,
+        lang:  LANG,                                 // để biết gửi thư bản VI hay EN
+        hp:    ($("wl-gotcha") || {}).value || ""    // bẫy bot, server lọc lại lần nữa
       });
+    }).then(function(r){
+      // apiPost không bao giờ ném lỗi — luôn trả { ok, status, data, netError? }.
+      if(r.netError || r.notConfigured) return { ok:false, net:true };
+      if(!r.ok) return { ok:false, status:r.status, code:(r.data && r.data.code) || "" };
+      return { ok:true, dup:!!(r.data && r.data.dup), mailSent:(r.data && r.data.mailSent) !== false };
     });
   }
 
   /* ============================ Form ============================ */
   var form = $("wl-form"), input = $("wl-email"), submitBtn = $("wl-submit"),
-      doneBox = $("wl-done"), joined = null;
+      doneBox = $("wl-done"), errBox = $("wl-err"), joined = null, joinedMailed = true;
 
-  function paintDone(email){
+  /* ---------- Lời báo lỗi NGAY DƯỚI ô nhập ----------
+     Không chỉ dựa vào toast: toast neo ở đỉnh khung nhìn (`.toast{top:22px}` trong
+     css/index.css) nên khi người dùng đang ở khối waitlist cuối trang thì nó cách
+     ô email ~465px — đo ngày 02/08/2026 — tức nằm ngoài chỗ họ đang nhìn đúng lúc
+     cần đọc nhất. Bấm nút mà chỉ có viền đỏ thì không ai biết mình thiếu gì.
+     Giữ KHOÁ i18n chứ không giữ chuỗi, để đổi VI/EN giữa chừng thì câu dịch theo. */
+  var errKey = null;
+  var ERR_IC = '<svg class="lic" viewBox="0 0 24 24" aria-hidden="true">' +
+               '<circle cx="12" cy="12" r="9"/><path d="M12 7.4v5.2"/><path d="M12 16.3h.01"/></svg>';
+
+  function paintErr(){
+    if(!errBox) return;
+    if(!errKey){ errBox.hidden = true; errBox.textContent = ""; return; }
+    errBox.innerHTML = ERR_IC + "<span>" + AstroQ.esc(t(errKey)) + "</span>";
+    errBox.hidden = false;
+  }
+  function showErr(key){
+    errKey = key;
+    input.classList.add("invalid");
+    input.setAttribute("aria-invalid", "true");
+    paintErr();
+    input.focus();
+    toast(t(key), "bad");
+  }
+  function clearErr(){
+    errKey = null;
+    input.classList.remove("invalid");
+    input.removeAttribute("aria-invalid");
+    paintErr();
+  }
+
+  /* ⚠️ `mailed` KHÔNG phải chi tiết thừa. Thẻ thành công mặc định viết "Kiểm tra hòm
+     thư của bạn nhé" — câu đó chỉ đúng khi SES đã nhận thư. SES hỏng mà vẫn nói vậy là
+     bắt trẻ ngồi chờ một lá thư không bao giờ tới; khi đó dùng câu `done_body_nomail`
+     nói thật rằng chỗ đã giữ nhưng thư đang trục trặc.
+     Đổi luôn `data-i18n-html` để lần đổi VI/EN sau vẫn ra đúng câu. */
+  function paintDone(email, mailed){
     joined = email;
+    joinedMailed = (mailed !== false);
     form.hidden = true;
     doneBox.hidden = false;
+    var msgEl = $("wl-done-msg");
+    if(msgEl){
+      var key = joinedMailed ? "done_body" : "done_body_nomail";
+      msgEl.setAttribute("data-i18n-html", key);
+      msgEl.innerHTML = t(key);
+    }
     var slot = $("wl-done-mail");                     // do data-i18n-html render lại nên tìm mỗi lần
     if(slot) slot.textContent = email;
   }
@@ -247,7 +303,7 @@
     doneBox.hidden = true;
     form.hidden = false;
     input.value = "";
-    input.classList.remove("invalid");
+    clearErr();
     input.focus();
   }
 
@@ -258,38 +314,44 @@
 
   form.addEventListener("submit", function(e){
     e.preventDefault();
-    if($("wl-company").value) return;                 // bot điền bẫy → bỏ qua im lặng
+    /* ⚠️ BẪY BOT: id PHẢI khớp markup (`wl-gotcha`), và phải đọc ra biến rồi mới
+       kiểm. Trước 02/08/2026 dòng này gọi thẳng `$("wl-company").value` — không có
+       id đó trong index.html nên nó ném TypeError NGAY SAU `preventDefault()` và
+       giết cả hàm gửi form: không lời nhắc khi bỏ trống, không gọi server,
+       không thẻ "đã đăng ký". Trang trông như còn sống vì lỗi chỉ nằm ở console. */
+    var hp = $("wl-gotcha");
+    if(hp && hp.value) return;                        // bot điền bẫy → bỏ qua im lặng
 
     var email = input.value.trim().toLowerCase();
-    if(!email){ input.classList.add("invalid"); input.focus(); return toast(t("err_empty"), "bad"); }
-    if(!EMAIL_RE.test(email)){ input.classList.add("invalid"); input.focus(); return toast(t("err_format"), "bad"); }
-    input.classList.remove("invalid");
+    if(!email)                return showErr("err_empty");
+    if(!EMAIL_RE.test(email)) return showErr("err_format");
+    clearErr();
 
     setLoading(true);
     submitWaitlist(email).then(function(res){
       setLoading(false);
-      if(!res.ok){                                   // Formspree từ chối (email sai, hết quota…)
+      if(!res.ok){
         backup(email, false);                        // vẫn giữ lead trên máy khách
-        input.classList.add("invalid");
-        // Formspree trả lỗi bằng tiếng Anh ("should be an email") — không hiển thị
-        // thẳng cho người dùng, chỉ ghi console để lập trình viên xem.
-        if(window.console) console.warn("[waitlist] Formspree", res.status, res.message);
-        return toast(t("err_send"), "bad");
+        if(window.console) console.warn("[waitlist] /waitlist", res.status || 0, res.code || "");
+        // Mất mạng thì nói mất mạng (thử lại là được); server từ chối thì bảo xem lại email.
+        return showErr(res.net ? "err_net" : "err_send");
       }
-      var dup = backup(email, true);
+      // Server mới là nơi biết email này đã có trong danh sách chưa — bản sao trong
+      // máy chỉ biết chuyện của MÁY NÀY, nên đổi máy là nó báo "mới" cho một địa chỉ cũ.
+      backup(email, true);
       input.value = "";                              // reset ô nhập
-      input.classList.remove("invalid");
-      paintDone(email);
-      toast(dup ? t("ok_dup") : t("ok_short"), "ok");
+      clearErr();
+      paintDone(email, res.mailSent);
+      toast(res.dup ? t("ok_dup") : t("ok_short"), "ok");
       doneBox.scrollIntoView({ behavior:"smooth", block:"center" });
-    }).catch(function(){                             // mất mạng / bị chặn
+    }).catch(function(){                             // import("./api.js") hỏng, hoặc lỗi bất ngờ
       setLoading(false);
       backup(email, false);
-      toast(t("err_net"), "bad");
+      showErr("err_net");
     });
   });
 
-  input.addEventListener("input", function(){ input.classList.remove("invalid"); });
+  input.addEventListener("input", clearErr);
   $("wl-again").addEventListener("click", resetForm);
 
   /* ============================ Khởi tạo ============================ */
@@ -302,9 +364,12 @@
     if(!renderCountdown()) clearInterval(ticker);
   }, 1000);
 
-  /* Nếu máy này đã đăng ký trước đó thì hiện luôn trạng thái thành công */
-  var saved = readList();
-  if(saved.length) paintDone(saved[saved.length - 1].email);
+  /* Nếu máy này đã đăng ký trước đó thì hiện luôn trạng thái thành công.
+     Chỉ tính bản ghi đã LÊN ĐƯỢC server (`sent`): bản ghi `sent:false` là lượt gửi
+     hỏng, hiện thẻ "đã đăng ký" cho nó là nói với người ta rằng họ đã có chỗ trong
+     khi server chưa biết gì — và họ sẽ không thử lại nữa. */
+  var saved = readList().filter(function(r){ return r && r.sent; });
+  if(saved.length) paintDone(saved[saved.length - 1].email, true);
 
   /* ============================================================
      KHUYẾN NGHỊ DÙNG MÁY TÍNH — chỉ trên thiết bị cảm ứng màn hình nhỏ.
