@@ -82,12 +82,6 @@
   </section>
 
   <!-- Bảng tín hiệu vệ tinh (bước 3) -->
-  <section class="me-sat" id="sat">
-    <span class="ic" aria-hidden="true">🛰️</span>
-    <div class="st" id="sat-st">SIGNAL LOST</div>
-    <span class="meter"><i id="sat-meter"></i></span>
-  </section>
-
   <!-- Bàn tay hướng dẫn (bước 1) -->
   <span class="me-hand" id="hand" aria-hidden="true">👆</span>
 
@@ -98,7 +92,7 @@
       <span class="aq-nm" id="say-who">Comet</span>
       <p class="line" id="say-line"></p>
     </span>
-    <button type="button" class="next hide hit" id="say-next">Tiếp tục</button>
+    <button type="button" class="next hide hit" id="say-next">OK</button>
   </section>
 
   <!-- Thẻ "vừa nhận được" — dùng chung cho mẫu sự sống (bước 6), viên nham thạch
@@ -108,16 +102,72 @@
     <div class="top" id="card-ic">🌊</div>
     <div class="nm" id="card-nm">—</div>
     <p class="fact" id="card-fact"></p>
+    <!-- Dòng phụ, chỉ bước ⑤ dùng: câu hé lộ độ cao. CỐ Ý đặt TRONG thẻ chứ không ở
+         dòng nhắc dưới bảng — dòng nhắc bị chính thẻ này che, và tới lúc thẻ đóng thì
+         câu hỏi kế tiếp đã ghi đè lên nó. Bước nào không dùng thì `showCard` tự ẩn. -->
+    <p class="sub" id="card-sub" hidden></p>
     <span class="got" id="card-got">ĐÃ THU THẬP</span>
+    <!-- ⚠️ NÚT NÀY LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ. Thẻ từng TỰ ĐÓNG sau 3,4 giây;
+         chủ dự án chơi thật và báo là không đủ thời gian đọc. Thẻ mang bài học (tên
+         châu lục + một câu kiến thức) nên phải để trẻ tự quyết lúc nào đọc xong.
+         Cả thẻ vẫn bấm được (`el.addEventListener('click', close)`) — nút chỉ là chỗ
+         NÓI RA rằng phải bấm, và là thứ bàn phím Tab tới được. -->
+    <button type="button" class="ok hit" id="card-ok">Đã hiểu!</button>
   </article>
+
+  <!-- Bước 1 · Câu đố "nước hay đất nhiều hơn?" (nhịp (b) của bước `scan`).
+       Dùng lại `.me-board` như 4 bảng kia — trẻ nhận ra ngay đây là "một bảng của
+       tàu", không phải một hộp thoại lạ. -->
+  <section class="me-board me-ask" id="ask">
+    <span class="k" id="ask-k">DỰ ĐOÁN CỦA PHI HÀNH GIA</span>
+    <p class="q" id="ask-q"></p>
+    <div class="opts" id="ask-opts"></div>
+  </section>
 
   <!-- Bước 2 · Mốc thời gian 4,5 tỷ năm -->
   <section class="me-board me-time" id="time">
     <span class="k" id="time-k">DÒNG THỜI GIAN TRÁI ĐẤT</span>
     <div class="rail" id="time-rail"></div>
     <div class="era-body">
+      <!-- Ảnh minh hoạ mốc đang xem (`docs/decisions/005` mục ⑩, làm 02/08/2026).
+           ⚠️ NHÃN "MINH HOẠ" LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ: không tồn tại ảnh chụp
+              Trái Đất 4,5 tỷ / 4,4 tỷ / 3,8 tỷ / 233 triệu năm trước, nên đây là TRANH
+              DỰNG. Để trẻ tưởng đó là ảnh thật là dạy một điều sai. Mốc "ngày nay" thì
+              không có tranh — nó dùng chính bức ảnh vệ tinh THẬT đang làm nền.
+           ⚠️ `loading="lazy"` + `decoding="async"`: mỗi lượt chơi chỉ tải ảnh của mốc
+              trẻ thật sự mở. Mạng yếu thì bài học vẫn chạy, chỉ thiếu tranh.
+           ⚠️ Hai cỡ qua `srcset` — máy thường lấy bản 700 (26–50 KB), màn DPR2 lấy bản
+              1120. `sizes` khai đúng bề rộng thật của bảng, không thì trình duyệt đoán
+              100vw và luôn kéo bản to. -->
+      <figure class="era-fig" id="time-fig" hidden>
+        <!-- ⚠️⚠️ `sizes` PHẢI ĐẶT TRÊN TỪNG `<source>`, KHÔNG CHỈ TRÊN `<img>`.
+             Trong `<picture>`, `sizes` của `<img>` chỉ áp cho `srcset` của chính nó;
+             mỗi `<source>` có `sizes` riêng, thiếu thì mặc định **100vw**. Lỗi này đo
+             được ngay lần chụp đầu: `currentSrc` ra `magma-1120.avif` trên khung
+             1440×900 DPR1 (đáng lẽ phải là bản 700), và `naturalWidth` báo **1440**
+             cho một file 1120×747 — con số đó chính là bằng chứng, vì Chrome quy
+             kích thước theo tỉ trọng `1120 / sizes`. Hậu quả: mạng yếu tải bản nặng
+             **gấp đôi** (67 KB thay vì 33 KB), tức hỏng đúng thứ việc này sinh ra để làm. -->
+        <picture>
+          <source id="time-avif" type="image/avif"
+                  sizes="(max-width: 784px) calc(100vw - 24px), 700px" />
+          <source id="time-webp" type="image/webp"
+                  sizes="(max-width: 784px) calc(100vw - 24px), 700px" />
+          <img id="time-img" alt="" loading="lazy" decoding="async" width="700" height="467" />
+        </picture>
+        <figcaption class="era-illus" id="time-illus">MINH HOẠ</figcaption>
+      </figure>
       <h3 id="time-h">—</h3>
       <p id="time-p"></p>
+      <!-- ⚠️ NÚT NÀY CHỈ HIỆN Ở MỐC CUỐI, VÀ NÓ SỬA MỘT LỖI THẬT (02/08/2026).
+           Bốn mốc đầu không cần nút: trẻ tự bấm chấm kế tiếp theo nhịp của mình. Mốc
+           cuối thì KHÔNG CÒN CHẤM NÀO ĐỂ BẤM, nên `openEra` gọi `finishStep` ngay sau
+           khi vừa ghi chữ ra → `outro()` gỡ luôn cả bảng → **trẻ không đọc được một chữ
+           nào của mốc cuối**, và cú cắt đó đọc ra như trang bị giật. Chủ dự án chơi thật
+           và báo đúng như vậy.
+           Cùng nguyên tắc đã áp cho thẻ nội dung: thứ MANG BÀI HỌC thì để trẻ tự quyết
+           lúc nào đọc xong, đừng để hệ thống quyết bằng đồng hồ hay bằng một cú nhảy. -->
+      <button type="button" class="me-stamp hit" id="time-ok" hidden></button>
     </div>
   </section>
 
@@ -127,6 +177,21 @@
     <div class="slots" id="energy-slots"></div>
     <div class="tray" id="energy-tray"></div>
     <p class="hint" id="energy-hint"></p>
+  </section>
+
+  <!-- Bước ⑤ · LÁT CẮT TRÁI ĐẤT — đoán độ cao rồi hé lộ.
+       ⛔ Trước 02/08/2026 bước này là "chạm 4 marker, drone bay xuống quét". Đã bỏ hai
+          lần: bỏ drone (lặp bước ①) rồi bỏ luôn cả việc chạm marker. Lý do lần hai là
+          NGÂN SÁCH KHUÔN — `docs/decisions/002` cấm dùng một khuôn quá 2 lần, mà "chạm
+          dấu hiệu trên bản đồ" đã dùng ở ① và ③.
+       ⚠️ MARKER VẪN CÒN NHƯNG KHÔNG CÒN BẤM ĐƯỢC. Camera vẫn lướt tới đúng toạ độ thật
+          và đốm vẫn nhấp nháy — trẻ phải THẤY nơi đó nằm đâu trên ảnh vệ tinh thì câu
+          hỏi độ cao mới có nghĩa. Chỉ có điều cú bấm nay rơi vào cột bên dưới. -->
+  <section class="me-board me-xsec" id="xsec">
+    <span class="k" id="xsec-k">LÁT CẮT TRÁI ĐẤT</span>
+    <p class="xsec-q" id="xsec-q"></p>
+    <div class="xsec-col" id="xsec-col" role="group"></div>
+    <p class="hint" id="xsec-hint"></p>
   </section>
 
   <!-- Bước 7 · Eco-Hero: phân loại NÊN / KHÔNG NÊN (kéo-thả) -->
@@ -150,9 +215,14 @@
     <p class="hint" id="eco-hint"></p>
   </section>
 
-  <!-- Bước 8 · Bảng 3 ô ngọc (kéo-thả) -->
+  <!-- Bước ⑦ · HỒ SƠ TRÁI ĐẤT — ba dòng đã học + một cú đóng dấu.
+       ⛔ Trước 02/08/2026 đây là bảng kéo 3 viên ngọc vào 3 ô. Đã bỏ: ba "viên ngọc"
+          là vật thể bịa, không có trong bất cứ thứ gì nhiệm vụ dạy, trong khi cả
+          nhiệm vụ đứng trên một bức ảnh vệ tinh THẬT với toạ độ THẬT.
+       ⚠️ Giữ id `core` và `#core-slots`/`#core-tray` — id bước là khoá DynamoDB, còn
+          hai id kia là chỗ `buildFile()` đổ nội dung vào. -->
   <section class="me-board me-core" id="core">
-    <span class="k" id="core-k">MẠCH NĂNG LƯỢNG SỰ SỐNG</span>
+    <span class="k" id="core-k">HỒ SƠ TRÁI ĐẤT</span>
     <div class="slots" id="core-slots"></div>
     <div class="tray" id="core-tray"></div>
     <p class="hint" id="core-hint"></p>
@@ -292,7 +362,17 @@ const I18N = {
     load_sub: 'Đang dựng bản đồ Trái Đất 3D. Lần đầu có thể mất vài giây.',
     load_fail: 'Không nạp được thư viện 3D. Kiểm tra kết nối mạng rồi tải lại trang nhé. ' +
                'Lưu ý: trang này phải mở qua http, không mở trực tiếp từ file.',
-    obj_k: 'MỤC TIÊU', next: 'Tiếp tục',
+    obj_k: 'MỤC TIÊU',
+    /* ⚠️ NÚT NÀY GHI "OK", KHÔNG GHI "Tiếp tục" (đổi 02/08/2026). Chủ dự án chơi
+       thật và gửi ảnh: ở bước ① box thoại Comet neo ĐÁY màn hình, đúng chỗ marker
+       **Nam Cực** (lat −72) chiếu xuống — nên trong lúc box còn mở thì châu lục đó
+       bị che. Bấm nút là box đóng và Nam Cực hiện ra.
+       "Tiếp tục" nói sai việc: nó hứa CHUYỂN SANG PHẦN KHÁC, trong khi thứ thật sự
+       xảy ra là ĐÓNG LỜI THOẠI ĐỂ TRẺ LÀM VIỆC TRÊN CHÍNH MÀN HÌNH NÀY. "OK" =
+       "em đọc xong rồi", đúng thứ cú bấm đó có nghĩa, và ngắn nên nút không nuốt
+       mất chiều rộng của dòng chữ trên màn hẹp. */
+    next: 'OK',
+    card_ok: 'Đã hiểu!',
     comet: 'Comet', byte: 'Byte',
 
     /* ⚠️ TIỀN TỐ KHOÁ = ID BƯỚC, KHÔNG PHẢI SỐ THỨ TỰ BƯỚC.
@@ -302,54 +382,123 @@ const I18N = {
        energy · `ec_` eco. Thêm bước nữa thì theo lối này, đừng theo số — chèn một
        bước vào giữa là toàn bộ số sau nó sai hết. */
 
-    /* Bước 1 (scan) — Khởi động hệ thống quét */
-    s1_h: 'Khởi động hệ thống quét',
-    /* ⚠️ HÀNH ĐỘNG CHÍNH PHẢI LÀ "CHẠM", KÉO CHỈ LÀ CÂU PHỤ (sửa 01/08/2026).
-       Bảng mục tiêu hiện ra NGAY lúc mở bước, tức lúc màn hình còn là ảnh QUẢ CẦU,
-       nơi kéo không dịch được ảnh. Câu cũ mở đầu bằng "Kéo bản đồ để đi khắp Trái
-       Đất" nên nó mô tả một việc chưa có tác dụng, và trẻ làm đúng lời hướng dẫn
-       thì không có gì xảy ra. Câu mới đúng ở CẢ HAI chế độ vì việc phải làm là chạm. */
-    s1_p: 'Chạm vào 3 điểm tín hiệu đang nhấp nháy để đọc dữ liệu.',
+    /* Bước 1 (scan) — Bề mặt Trái Đất: 7 châu lục, rồi biển hay đất nhiều hơn?
+       ⚠️ HÀNH ĐỘNG CHÍNH LÀ "CHẠM". Bảng mục tiêu hiện ra NGAY lúc mở bước, nên câu
+          `s1_p` phải đúng ngay từ khung hình đầu tiên. Câu của bản trước nữa mở đầu
+          bằng "Kéo bản đồ…" và nó mô tả một việc KHÔNG HỀ XẢY RA. */
+    s1_h: 'Bề mặt hành tinh xanh',
+    s1_p: 'Chạm vào 7 châu lục đang nhấp nháy, rồi trả lời một câu hỏi.',
     s1_card: 'ĐÃ GIẢI MÃ',
-    s1_say1: 'Đây là Trái Đất — hành tinh của chúng ta! Máy quét vừa bắt được <b>3 tín hiệu</b> trên bề mặt.',
-    s1_say2: 'Hãy <b>chạm vào từng điểm đang phát sáng</b> để xem đó là gì nhé!',
-    s1_n: 'Điểm tín hiệu',
-    /* Ba câu KHÁC NHAU theo lượt chạm, không phải một câu đếm số: trẻ đang vận hành
-       một thiết bị khoa học, mỗi cú chạm nên báo một việc đã xong. Giữ token {n} để
-       vẫn đối chiếu được với dãy tiến độ trên bảng mục tiêu. */
-    s1_hit1: '✅ Đã xác nhận tín hiệu — {n}/3',
-    s1_hit2: '📡 Đã thu dữ liệu — {n}/3',
-    s1_hit3: '🌍 Đã khoá vị trí — {n}/3',
-    s1_hint: 'Vẫn còn điểm tín hiệu chưa chạm — bàn tay đang chỉ vào nó đấy!',
-    s1_done: 'Màn hình điều khiển đã sẵn sàng! Tất cả hệ thống quét: <b>SYS.ONLINE</b>!',
+    /* ⚠️ Câu này NÓI RA CÚ ĐỔI HÌNH giữa hai trang: trẻ vừa rời quả cầu 3D ở Bản Đồ
+       Thiên Hà (nhịp 0 của `005`) và giờ đang nhìn một hình chữ nhật. Không nói thì
+       cú đổi từ trên trời rơi xuống — đúng lỗi `004` đã phải đi sửa một lần. */
+    s1_say1: 'Đây là Trái Đất — hành tinh của chúng ta! Mình <b>trải phẳng</b> nó ra thành bản đồ để đi khắp bề mặt nhé.',
+    s1_say2: 'Trên đó có <b>7 châu lục</b>. Hãy chạm vào từng chỗ đang phát sáng để xem đó là châu lục nào!',
+    s1_n: 'Châu lục đã quét',
+    s1_hint: 'Vẫn còn châu lục chưa chạm — bàn tay đang chỉ vào nó đấy!',
+    /* ⚠️ CÂU KẾT PHẢI NÓI VỀ VIỆC TRẺ VỪA LÀM (sửa 02/08/2026). Câu cũ là *"Tất cả
+       hệ thống quét: SYS.ONLINE!"* — chủ dự án chơi thật và báo là **không có lời dẫn
+       nào giải thích vì sao phải quét**, nên trẻ không hiểu chuyện gì vừa xảy ra.
+       Gốc vấn đề: ẩn dụ "quét" là di sản của bản cũ, khi bước ① là ba đốm tín hiệu.
+       Bước ① nay là ĐI KHẮP BỀ MẶT — không có gì để quét cả. Giữ một câu kỹ thuật
+       không ai giải thích chỉ làm trẻ tưởng mình bỏ lỡ mất đoạn nào đó. */
+    s1_done: 'Vậy là bạn đã đi hết bề mặt Trái Đất hôm nay: <b>7 châu lục</b>, và nước thì nhiều hơn đất. Nhưng hành tinh này <b>không phải lúc nào cũng như thế</b> đâu…',
+    /* Câu đố cuối bước — nguồn và hai cái bẫy ghi ở khối `ASK_ANSWER` trong mã. */
+    s1_ask_say: 'Bạn vừa đi hết 7 châu lục rồi đấy! Giờ Comet đố nhé — nhìn cả bản đồ xem: <b>nước hay đất nhiều hơn?</b>',
+    s1_ask_k: 'DỰ ĐOÁN CỦA PHI HÀNH GIA',
+    s1_ask_q: 'Trên bề mặt Trái Đất, thứ nào chiếm nhiều diện tích hơn?',
+    s1_ask_water: 'Nước — biển và đại dương',
+    s1_ask_land: 'Đất liền — các châu lục',
+    s1_ans_nm: 'Nước nhiều hơn hẳn!',
+    /* ⚠️ "29%" là PHÉP TRỪ 100 − 71, không phải con số NASA viết — nên câu này luôn
+       gọi nó là "phần còn lại". Và là 71%, KHÔNG phải 70% (thẻ mẫu vật `water` ở
+       bước ⑤ cũng 71%; `004` đã phải đi sửa 5 chỗ vì đúng chuyện này). */
+    /* ⚠️ "bảy châu lục VÀ CÁC HÒN ĐẢO" chứ không chỉ "bảy châu lục": đất liền không
+       đúng bằng bảy châu lục, và bước ① vừa nói tới "vô số hòn đảo" ở châu Đại Dương. */
+    s1_ans_fact: 'Đại dương phủ khoảng 71% bề mặt Trái Đất. Toàn bộ đất liền — bảy châu lục và các hòn đảo — chỉ là phần còn lại, khoảng 29%. Vì thế nhìn từ vũ trụ, hành tinh của chúng ta có màu xanh nước biển.',
+    s1_ans_right: 'ĐOÁN ĐÚNG RỒI!',
+    s1_ans_wrong: 'CÙNG XEM ĐÁP ÁN NHÉ',
 
-    /* Bước 2 (timeline) — Lịch sử 4,5 tỷ năm hình thành Trái Đất */
+    /* Bước 2 (timeline) — Lịch sử 4,54 tỷ năm hình thành Trái Đất
+       ⚠️ MỌI CON SỐ Ở ĐÂY ĐỀU CÓ NGUỒN, và có BỐN cái bẫy khiến người sửa sau rất dễ
+          "sửa" chúng thành sai. Danh sách nguồn + bốn cái bẫy ghi ở khối chú thích
+          của `const ERAS` trong mã. Đọc nó TRƯỚC KHI đổi bất kỳ con số nào. */
     tl_h: 'Lần theo dòng thời gian',
-    tl_p: 'Chạm lần lượt vào 4 mốc để xem Trái Đất đổi thay qua 4,5 tỷ năm.',
-    tl_say1: 'Trước khi đi xa hơn, mình cho bạn xem Trái Đất hồi còn <b>rất trẻ</b> nhé! Chạm vào từng mốc trên dòng thời gian, theo thứ tự từ trái sang phải.',
+    tl_p: 'Chạm lần lượt vào 5 mốc để xem Trái Đất đổi thay qua 4,54 tỷ năm.',
+    tl_say1: 'Trái Đất không biến đổi chỉ trong vài bước. Từ một hành tinh <b>nóng bỏng</b> đến thế giới xanh hôm nay là hành trình dài hơn <b>4,5 tỷ năm</b>. Chạm vào từng mốc, theo thứ tự từ trái sang phải nhé.',
     tl_k: 'DÒNG THỜI GIAN TRÁI ĐẤT',
+    /* ⚠️ BỐN MỐC ĐẦU LÀ TRANH DỰNG, KHÔNG PHẢI ẢNH CHỤP — không tồn tại ảnh chụp
+       Trái Đất 4,5 tỷ / 4,4 tỷ / 3,8 tỷ / 233 triệu năm trước. Nhãn này bắt buộc,
+       và `era_alt` nhắc lại điều đó cho trình đọc màn hình (nhãn ở góc ảnh là thứ
+       trình đọc không với tới được). */
+    era_illus: 'MINH HOẠ',
+    era_alt: 'Tranh minh hoạ: {n}',
     tl_n: 'Mốc đã xem',
     tl_locked: 'Đi theo thứ tự nhé — chạm vào mốc đang sáng!',
-    tl_say2: 'Từ một quả cầu dung nham thành hành tinh xanh — Trái Đất mất <b>4,5 tỷ năm</b> đấy!',
-    era_magma_y: '4,5 tỷ năm trước', era_magma_n: 'Trái Đất dung nham',
+    /* ⚠️ CÂU KẾT KHẲNG ĐỊNH VIỆC VỪA LÀM, KHÔNG NHỒI THÊM Ý MỚI (sửa 02/08/2026).
+       Câu cũ là *"phần lớn quãng thời gian đó Trái Đất chưa hề có khủng long"* — chủ
+       dự án chơi thật và bắt đúng chỗ: vừa cho trẻ xem một mốc CÓ khủng long, rồi
+       câu chốt lại nói **chưa hề có**, nghe như phủ nhận chính thứ vừa xem.
+       Ý đó (92% lịch sử Trái Đất không có khủng long) vẫn ĐÚNG và vẫn được giữ —
+       nhưng ở mốc ③ `era_life_p` (*"riêng khoảng này đã dài hơn 3 tỷ năm"*), nơi có
+       chỗ để giải thích. Câu kết là chỗ để trẻ thấy mình vừa làm được gì. */
+    tl_say2: 'Bạn vừa chứng kiến cả quá trình <b>trưởng thành của Trái Đất</b> rồi đó — từ một hành tinh nóng bỏng thành thế giới xanh hôm nay!',
+    era_magma_y: '4,54 tỷ năm trước', era_magma_n: 'Trái Đất nóng bỏng',
     era_magma_p: 'Lực hấp dẫn kéo khí và bụi quanh Mặt Trời tụ lại thành hành tinh thứ ba. Bề mặt lúc này gần như nóng chảy — chưa có nước ở dạng lỏng, cũng chưa có không khí để thở.',
-    era_ocean_y: '3,8 tỷ năm trước', era_ocean_n: 'Đại dương đầu tiên',
-    era_ocean_p: 'Vỏ Trái Đất nguội và cứng lại. Hơi nước ngưng tụ, mưa xuống suốt thời gian rất dài rồi đọng thành những đại dương đầu tiên — và trong nước xuất hiện những sinh vật đơn bào cổ nhất.',
-    era_dino_y: '66 triệu năm trước', era_dino_n: 'Khủng long & rừng xanh',
-    era_dino_p: 'Cây xanh phủ kín đất liền và nhả oxy vào khí quyển. Đây là thời của khủng long, kéo dài từ khoảng 252 đến 66 triệu năm trước.',
+    era_ocean_y: '4,4 tỷ năm trước', era_ocean_n: 'Đại dương đầu tiên',
+    era_ocean_p: 'Vỏ Trái Đất nguội và cứng lại. Các nhà khoa học tìm được những tinh thể zircon 4,4 tỷ năm tuổi, và thành phần của chúng cho thấy lúc đó đã có nước ở dạng lỏng — rất có thể là cả một đại dương.',
+    era_life_y: '3,8 tỷ → 419 triệu', era_life_n: 'Sự sống, rồi lên cạn',
+    /* ⛔ BỐN CÁI BẪY, hai cái nằm trong đúng câu này: 3,8 (KHÔNG phải 3,7), và cây
+       lên cạn TRƯỚC — con vật theo sau, cách nhau một kỷ (Silur → Devon). */
+    era_life_p: 'Sự sống bắt đầu trong đại dương khoảng 3,8 tỷ năm trước, và suốt một thời gian rất dài nó chỉ ở dưới nước. Mãi tới kỷ Silur cây cối mới lên cạn, rồi sang kỷ Devon những con vật đầu tiên mới theo sau. Riêng khoảng này đã dài hơn 3 tỷ năm.',
+    era_dino_y: '233 → 66 triệu', era_dino_n: 'Thời của khủng long',
+    /* ⛔ BẪY: 233 (KHÔNG phải 230 — cùng nguồn NPS với mốc 66), và THÚ XUẤT HIỆN
+       CÙNG THỜI với khủng long, không phải sau. */
+    era_dino_p: 'Khủng long xuất hiện khoảng 233 triệu năm trước, vào kỷ Trias — và những loài thú đầu tiên cũng xuất hiện đúng thời đó. Rừng xanh đã phủ kín đất liền từ rất lâu trước rồi. Khủng long biến mất trong đợt tuyệt chủng lớn cách đây 66 triệu năm.',
     era_now_y: 'Ngày nay', era_now_n: 'Hành tinh xanh',
-    era_now_p: 'Nước phủ khoảng 71% bề mặt, không khí có oxy để thở, hàng triệu loài cùng sinh sống. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.',
+    era_now_p: 'Sau khi khủng long biến mất, các loài thú phát triển mạnh. Nước phủ khoảng 71% bề mặt, không khí có oxy để thở, hàng triệu loài cùng sinh sống. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.',
     rock_nm: 'Nham Thạch Cổ Đại',
     rock_fact: 'Một mảnh vỏ Trái Đất từ thời nó còn là dung nham đỏ rực!',
     rock_got: 'ĐÃ LƯU VÀO KHO MẪU VẬT',
 
-    /* Bước 3 (sun) — Tìm nguồn năng lượng */
-    s2_h: 'Tìm nguồn năng lượng',
-    s2_p: 'Tìm ngôi sao đang chiếu sáng Trái Đất trên màn hình quét, rồi chạm vào nó.',
-    s2_say1: 'Ồ! Không có năng lượng thì tàu không thể hoạt động. Bạn có tìm thấy <b>ngôi sao</b> đang chiếu sáng Trái Đất ở phía xa không?',
-    s2_hint: 'Nhìn ra rìa màn hình quét — ngôi sao đang ở đó, hãy chạm vào nó nhé!',
-    s2_say2: 'Đó là <b>Mặt Trời</b> — ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất!',
+    /* Bước 3 (sun) — Mặt Trời tự cháy, rồi ba vùng khí hậu
+       ⚠️ KHÔNG CÒN KHOÁ `s2_h` · `s2_p` · `s2_hint`: chúng thuộc nhịp "đi tìm ngôi
+          sao", đã bỏ 02/08/2026 vì nút Mặt Trời nằm lẫn vào chính bức ảnh Trái Đất
+          sau khi bản đồ lùi hết cỡ — trẻ không tìm được. Xem `steps.sun.enter()`. */
+    /* ⚠️ LỜI THOẠI PHẢI MÔ TẢ ĐÚNG THỨ TRẺ NHÌN THẤY. Bản trước viết *"ngôi sao của
+       chúng ta đang lên kìa"* rồi *"Đó là Mặt Trời"* — nhưng trên màn hình chỉ có tấm
+       bản đồ phẳng, KHÔNG có vật thể Mặt Trời nào hiện ra (nút `.e2-sun` đã bỏ cùng
+       nhịp đi tìm). Chủ dự án chơi thật và chỉ ra hệ quả: **trẻ hiểu rằng Mặt Trời
+       nằm trên Trái Đất**. Đây đúng cùng một họ với lỗi *"kéo để xoay Trái Đất"* mà
+       `004` đã phải đi sửa: chữ nói một việc, màn hình làm một việc khác.
+       Nay hai câu chỉ nói về thứ THẬT SỰ xảy ra (tối đi → sáng lại), và câu sau nói
+       thẳng rằng Mặt Trời ở NGOÀI KHÔNG GIAN, không nằm trên bản đồ. */
+    s2_say1: 'Trái Đất đang được <b>Mặt Trời</b> chiếu sáng đấy — ngôi sao ở ngoài không gian, cách chúng ta tới <b>150 triệu ki-lô-mét</b>, nên nó không nằm trên tấm bản đồ này. Thử đoán xem: <b>nếu Mặt Trời tắt đi thì chuyện gì xảy ra?</b>',
+    s2_ask_k: 'DỰ ĐOÁN CỦA PHI HÀNH GIA',
+    s2_ask_q: 'Nếu Mặt Trời tắt đi, Trái Đất sẽ thế nào?',
+    s2_opt_cold: 'Lạnh cóng hết',
+    s2_opt_plant: 'Cây cối không sống nổi',
+    s2_opt_rain: 'Không còn mưa gió',
+    /* ⚠️ CẢ BA LỰA CHỌN ĐỀU ĐÚNG — không có nhánh "đoán sai". Mặt Trời làm cả ba việc
+       cùng lúc, và chính điều đó là bài học. Đừng thêm một lựa chọn SAI vào đây: nó
+       biến một câu mời suy nghĩ thành một cái bẫy, ở đúng bước mà trẻ đang học. */
+    s2_ans: 'Đúng rồi đấy! Mà đáng sợ hơn cơ: <b>cả ba đều xảy ra cùng một lúc</b>. Mặt Trời làm cho Trái Đất tận ba việc lận…',
+    s2_role_heat: '🔥 <b>Mang lại hơi ấm.</b> Mặt Trời giữ cho Trái Đất đủ ấm để nước ở <b>thể lỏng</b>. Không có nó, hành tinh sẽ lạnh cóng và sự sống như bây giờ không tồn tại được — đây là điều quan trọng nhất với sự sống.',
+    s2_role_plant: '🌱 <b>Nuôi cây cối.</b> Cây dùng ánh nắng để tự làm ra thức ăn, và nhả ra oxy cho muôn loài. Gần như <b>mọi chuỗi thức ăn</b> trên Trái Đất đều bắt đầu từ năng lượng Mặt Trời.',
+    s2_role_rain: '🌦️ <b>Tạo ra mưa gió.</b> Mặt Trời làm nước bốc hơi, tụ thành mây rồi rơi xuống thành mưa, và làm nên những cơn gió. Không có nó thì <b>vòng tuần hoàn của nước</b> cũng dừng lại.',
+    s2_say2: 'May quá — Mặt Trời vẫn ở đó, và cả hành tinh sáng bừng trở lại!',
     s2_n: 'Mặt Trời',
+    /* Nhịp (b) — ba vùng khí hậu.
+       ⛔ KHÔNG BAO GIỜ VIẾT "vì gần Mặt Trời hơn". Nguyên nhân là GÓC CHIẾU; nguồn
+          NASA nguyên văn ghi ở khối chú thích `const ZONES`. */
+    s2b_h: 'Ba vùng khí hậu',
+    /* ⚠️ Bảng mục tiêu hiện NGAY lúc mở bước, tức lúc CHƯA có vùng nào nhấp nháy —
+       nên câu này không được mở đầu bằng "Chạm vào 3 vùng đang nhấp nháy". Cùng
+       bài học với `s1_p` mà `004` đã đi sửa: câu mô tả một việc chưa làm được. */
+    s2b_p: 'Xem cùng một Mặt Trời sưởi ấm ba vùng trên Trái Đất khác nhau thế nào.',
+    s2b_say1: 'Cùng một Mặt Trời, nhưng mỗi nơi trên Trái Đất lại nhận nắng <b>một kiểu khác nhau</b>. Chạm vào 3 vùng đang sáng để xem nhé!',
+    s2b_card: 'ĐÃ GIẢI MÃ',
+    s2b_say2: 'Bí mật nằm ở <b>góc chiếu</b>: càng đi từ xích đạo về hai cực, tia nắng càng chiếu xiên và bị trải ra một diện tích lớn hơn. <b>Không phải</b> vì vùng cực ở xa Mặt Trời hơn đâu — chênh lệch đó nhỏ xíu so với quãng đường 150 triệu ki-lô-mét!',
 
     /* Lời đọc cho trẻ chơi bằng BÀN PHÍM (js/pick-place.js). Không hiện trên
        màn hình — chỉ trình đọc màn hình đọc lên, nên viết như đang NÓI với trẻ
@@ -362,7 +511,7 @@ const I18N = {
     /* Bước 4 (energy) — Kích hoạt năng lượng sạch */
     ce_h: 'Kích hoạt năng lượng sạch',
     ce_p: 'Kéo 3 nguồn năng lượng sạch vào 3 ống khói đang nhả khói đen.',
-    ce_say1: 'Báo động! Ba ống khói dưới kia đang <b>đốt nhiên liệu hoá thạch</b> — khói đen phủ kín khí quyển Trái Đất rồi. Giúp Byte thay bằng <b>năng lượng sạch</b> nhé!',
+    ce_say1: 'Báo động! Nhìn <b>ba nhà máy</b> trên bản đồ kìa — chúng đang <b>đốt nhiên liệu hoá thạch</b>, khói đen làm cả vùng quanh đó tối sầm. Kéo <b>năng lượng sạch</b> vào từng nhà máy giúp Byte nhé!',
     ce_k: 'THAY NGUỒN NĂNG LƯỢNG',
     ce_hint: 'Kéo mỗi nguồn sạch vào một ống khói.',
     /* Câu này phải đúng cho CẢ HAI kiểu thả sai (sai ống · ống đã có nguồn rồi) — một
@@ -371,31 +520,49 @@ const I18N = {
     ce_wrong: 'Chưa phải ống đó — thử ống bên cạnh xem nào!',
     ce_n: 'Ống khói đã thay',
     ce_swap: 'Khói đang tan… {n}/3',
-    ce_say2: 'Khói đen tan hết rồi! <b>Năng lượng sạch</b> lấy từ nắng, gió và nước chảy — thiên nhiên cấp lại hoài không hết, mà lúc chạy thì không nhả khói.',
+    ce_say2: 'Khói tan hết, ba vùng sáng trở lại! <b>Năng lượng sạch</b> lấy từ nắng, gió và nước chảy — thiên nhiên cấp lại hoài không hết, mà lúc chạy thì không nhả khói.',
     ce_solar: 'Pin Mặt Trời', ce_wind: 'Cối Xoay Gió', ce_hydro: 'Thuỷ Điện',
     ce_stack: 'ỐNG KHÓI',
 
     /* Bước 5 (rotation) — Khôi phục tín hiệu vệ tinh */
-    s3_h: 'Khôi phục tín hiệu vệ tinh',
-    s3_p: 'Kéo bản đồ để đưa trạm phát sóng (điểm vàng) vào vòng ngắm.',
-    s3_say1: 'Vệ tinh đang quét ở chỗ khác rồi! Hãy <b>kéo bản đồ</b> để đưa trạm phát sóng vào <b>vòng ngắm</b> — thanh tín hiệu càng gần thì càng lên cao nhé!',
-    s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
-    s3_n: 'Cường độ tín hiệu',
-    s3_say2: 'Chính <b>sự tự quay</b> của Trái Đất đã tạo ra <b>Ban Ngày và Ban Đêm</b> đấy!',
 
-    /* Bước 6 (life) — Thu thập mẫu sự sống */
-    s4_h: 'Thu thập mẫu sự sống',
-    s4_p: 'Chạm vào 4 vùng đang nhấp nháy để thả drone xuống quét mẫu.',
-    s4_say1: 'Byte đã chuẩn bị drone quét mẫu! Hãy chạm vào <b>4 vùng</b> đang nhấp nháy trên Trái Đất nhé.',
-    s4_n: 'Mẫu đã thu',
-    s4_scan: 'Drone đang quét… SCANNING',
+    /* Bước 6 (life) — Lát cắt Trái Đất: đoán độ cao rồi hé lộ */
+    /* ⛔ KHÔNG CÒN DRONE, VÀ TỪ 02/08/2026 CŨNG KHÔNG CÒN CHẠM MARKER. Khoá `s4_scan`
+       ("Drone đang quét…") bỏ theo: giữ một câu nói về cỗ máy không còn tồn tại là để
+       lại đúng loại chú thích lạc hậu dự án đã trả giá. */
+    s4_h: 'Sự sống ở khắp nơi',
+    s4_p: 'Đoán xem mỗi nơi nằm ở đâu trên lát cắt Trái Đất.',
+    s4_say1: 'Trái Đất sạch hơn rồi! Giờ mình thử một việc khác: Byte dựng sẵn một <b>lát cắt</b> từ đáy biển lên tới đỉnh núi. Mình sẽ bay tới bốn nơi — bạn <b>đoán</b> xem mỗi nơi nằm ở nấc nào nhé!',
+    s4_n: 'Đã xếp',
     s4_card: 'ĐÃ THU THẬP',
-    s4_say2: 'Tuyệt vời! 4 mẫu đã vào bình chứa của tàu.',
+    /* ⚠️ CÂU KẾT PHẢI NÓI RA ĐIỀU CỘT VỪA CHỨNG MINH. Câu cũ ("4 mẫu đã vào bình chứa")
+       chỉ báo là xong việc — nhưng thứ trẻ vừa dựng nên là bằng chứng cho chính tiêu đề
+       bước, `s4_h` "Sự sống ở khắp nơi". Nói ra thì bước mới có kết luận. */
+    s4_say2: 'Nhìn lát cắt mà xem: từ <b>đáy đại dương</b> lên tới <b>đỉnh núi cao nhất</b>, nấc nào cũng có sinh vật sống. Đó là ý mình muốn nói — sự sống ở <b>khắp nơi</b>.',
+    /* ── Lát cắt ── */
+    xsec_k: 'LÁT CẮT TRÁI ĐẤT',
+    xsec_q: '{nm} nằm ở nấc nào?',
+    xsec_sea: 'mực nước biển',
+    /* Nhãn 4 nấc — xem lý do KHÔNG gọi tên địa hình ở khối `RUNGS`. */
+    rung_1: 'Rất cao trên mực nước biển',
+    rung_2: 'Cao trên mực nước biển',
+    rung_3: 'Ngay trên mực nước biển',
+    rung_4: 'Dưới mực nước biển',
+    /* ⚠️ ĐOÁN SAI KHÔNG PHẠT — hai câu này là HAI NHÁNH CỦA CÙNG MỘT KẾT QUẢ, không
+       phải "đúng" và "sai". Đoán kiểu gì thì nơi đó cũng về đúng nấc của nó và bước
+       cũng đi tiếp; khác nhau đúng một câu chữ. Ở một bước đang DẠY độ cao thì bắt
+       đoán đúng mới cho qua là dựng cái bẫy, không phải mời suy nghĩ. */
+    xsec_ok: 'Chuẩn luôn!',
+    xsec_near: 'Suýt rồi! Chỗ của nó là đây.',
 
     /* Bước 7 (eco) — Eco-Hero: NÊN / KHÔNG NÊN làm */
     ec_h: 'Eco-Hero: nên hay không nên?',
     ec_p: 'Kéo từng thẻ vào rổ 🟢 NÊN LÀM hoặc 🔴 KHÔNG NÊN LÀM.',
-    ec_say1: 'Bài cuối trước khi giải mã hành tinh! Bạn đã biết cách <b>bảo vệ Trái Đất ngoài đời thật</b> chưa? Phân loại 7 hành động này giúp Byte nhé.',
+    /* ⚠️ CÂU NỐI TỪ BƯỚC ④, không phải một lời mở màn độc lập. Chủ dự án đưa
+       nguyên ý: *"đã dùng năng lượng xanh để thay thế nhưng chưa đủ, quan trọng hơn là
+       Trái Đất đang ngày càng ô nhiễm, phải thay đổi thói quen"*. Không có nó thì bước
+       này rơi xuống như một bài đạo đức gắn thêm vào cuối nhiệm vụ. */
+    ec_say1: 'Nhưng đổi được ba nhà máy thôi thì <b>chưa đủ</b> đâu. Trái Đất vẫn đang ô nhiễm thêm mỗi ngày, và thứ thay đổi được nhiều nhất lại là <b>thói quen của chính chúng ta</b>. Thử phân loại 7 việc này xem — việc nào nên, việc nào không?',
     ec_k: 'PHÂN LOẠI HÀNH ĐỘNG',
     ec_good: 'NÊN LÀM', ec_bad: 'KHÔNG NÊN LÀM',
     ec_hint: 'Kéo thẻ vào rổ bạn cho là đúng.',
@@ -412,17 +579,22 @@ const I18N = {
     eco_water: 'Xả lãng phí nước sạch',
     eco_bag: 'Dùng quá nhiều túi nilon 1 lần',
 
-    /* Bước 8 (core) — Giải mã hành tinh */
-    s5_h: 'Giải mã hành tinh',
-    s5_p: 'Kéo 3 viên ngọc vào đúng 3 ô trên bảng điều khiển.',
-    s5_say1: 'Hãy giúp Byte kích hoạt <b>Mạch Năng Lượng Sự Sống</b> cho Trái Đất!',
-    s5_k: 'MẠCH NĂNG LƯỢNG SỰ SỐNG',
-    s5_hint: 'Kéo viên ngọc vào ô có nhãn tương ứng.',
-    s5_wrong: 'Gần đúng rồi, thử lại xem nào!',
-    s5_n: 'Ô đã kích hoạt',
-    s5_say2: 'Bảng điều khiển sáng rực! Màng khí quyển đã bảo bọc Trái Đất!',
-    slot_heat: 'Nhiệt độ', slot_water: 'Nước', slot_air: 'Khí thở',
-    gem_sun: 'Ngọc Mặt Trời', gem_water: 'Ngọc Giọt Nước', gem_air: 'Ngọc Khí Quyển',
+    /* Bước 7 (core) — Giải mã hành tinh, và ÔN LẠI cả nhiệm vụ
+       ⚠️ CƠ CHẾ KHÔNG ĐỔI (`005`: "chỉ đổi LỜI"). Ba viên ngọc ☀️ nhiệt độ · 💧 nước ·
+          🌬️ khí thở đúng bằng ba thứ nhiệm vụ vừa dạy: nhiệt độ ở bước ③ (ba vùng khí
+          hậu), nước ở bước ① (câu đố 71%), khí quyển ở nhịp 0 trên quả cầu 3D. Lời
+          thoại vì thế phải đọc ra như một câu ÔN LẠI, không như một việc mới. */
+    s5_h: 'Đóng dấu Hồ Sơ Trái Đất',
+    s5_p: 'Đọc lại ba điều bạn vừa khám phá, rồi đóng dấu hoàn thành.',
+    s5_say1: 'Xong hết rồi! Hồ sơ Trái Đất của bạn đã ghi được <b>ba điều</b> khiến hành tinh này nuôi được sự sống. Đọc lại một lượt rồi đóng dấu nhé.',
+    s5_k: 'HỒ SƠ TRÁI ĐẤT',
+    s5_n: 'Hồ sơ',
+    /* Ba dòng = ba thứ nhiệm vụ ĐÃ dạy. Đừng thêm dòng thứ tư nếu không có bước nào dạy nó. */
+    file_water: 'Nước phủ khoảng 71% bề mặt — nhiều hơn hẳn đất liền.',
+    file_heat: 'Nhiệt độ vừa phải, và khác nhau theo vùng vì góc chiếu của nắng.',
+    file_air: 'Khí quyển có oxy để thở, bọc quanh cả hành tinh.',
+    s5_stamp: '🗂️ ĐÓNG DẤU HOÀN THÀNH',
+    s5_say2: 'Đã đóng dấu! Phải có <b>đủ cả ba</b> cùng một lúc — và tới giờ Trái Đất vẫn là nơi duy nhất chúng ta biết là có sự sống.',
 
     /* Tổng kết */
     win_h: 'SỨ MỆNH TRÁI ĐẤT HOÀN THÀNH!',
@@ -449,46 +621,68 @@ const I18N = {
     load_sub: 'Building the 3D Earth map. The first load may take a few seconds.',
     load_fail: "Couldn't load the 3D library. Check your connection and reload. " +
                "Note: this page must be served over http, not opened as a file.",
-    obj_k: 'OBJECTIVE', next: 'Continue',
+    obj_k: 'OBJECTIVE', next: 'OK',
+    card_ok: 'Got it!',
     comet: 'Comet', byte: 'Byte',
 
-    s1_h: 'Boot the scan system',
-    s1_p: 'Tap the 3 blinking signal points to read their data.',
+    s1_h: 'The surface of the blue planet',
+    s1_p: 'Tap the 7 blinking continents, then answer one question.',
     s1_card: 'DECODED',
-    s1_say1: "This is Earth — our home planet! The scanner just picked up <b>3 signals</b> on the surface.",
-    s1_say2: 'Now <b>tap each glowing point</b> to see what it is!',
-    s1_n: 'Signal points',
-    s1_hit1: '✅ Signal confirmed — {n}/3',
-    s1_hit2: '📡 Data collected — {n}/3',
-    s1_hit3: '🌍 Position locked — {n}/3',
-    s1_hint: 'There is still a signal point you have not tapped — the hand is pointing at it!',
-    s1_done: 'Control display ready! All scan systems: <b>SYS.ONLINE</b>!',
+    s1_say1: 'This is Earth — our home planet! Let me <b>flatten</b> it into a map so we can travel across the whole surface.',
+    s1_say2: 'There are <b>7 continents</b> down there. Tap each glowing spot to see which one it is!',
+    s1_n: 'Continents scanned',
+    s1_hint: 'There is still a continent you have not tapped — the hand is pointing at it!',
+    s1_done: 'So that is Earth’s surface today: <b>7 continents</b>, and far more water than land. But this planet <b>has not always looked like this</b>…',
+    s1_ask_say: 'You just visited all 7 continents! Now here is a riddle — look at the whole map: <b>is there more water or more land?</b>',
+    s1_ask_k: 'ASTRONAUT’S PREDICTION',
+    s1_ask_q: 'Which one covers more of Earth’s surface?',
+    s1_ask_water: 'Water — seas and oceans',
+    s1_ask_land: 'Land — the continents',
+    s1_ans_nm: 'Water wins, by a lot!',
+    s1_ans_fact: 'The ocean covers about 71% of Earth’s surface. All the land — seven continents plus every island — is only the rest, about 29%. That is why our planet looks blue from space.',
+    s1_ans_right: 'GREAT GUESS!',
+    s1_ans_wrong: 'LET’S SEE THE ANSWER',
 
     tl_h: 'Follow the timeline',
-    tl_p: 'Tap the 4 milestones in order to watch Earth change across 4.5 billion years.',
-    tl_say1: "Before we go further, let me show you Earth when it was <b>very young</b>! Tap each milestone on the timeline, left to right.",
+    tl_p: 'Tap the 5 milestones in order to watch Earth change across 4.54 billion years.',
+    tl_say1: 'Earth did not change in just a few steps. Going from a <b>molten</b> planet to today’s green world took more than <b>4.5 billion years</b>. Tap each milestone in order, left to right.',
     tl_k: 'EARTH TIMELINE',
+    era_illus: 'ARTIST’S IMPRESSION',
+    era_alt: 'Artist’s impression: {n}',
     tl_n: 'Milestones seen',
     tl_locked: 'One at a time — tap the milestone that is glowing!',
-    tl_say2: 'From a ball of magma to a blue planet — that took Earth <b>4.5 billion years</b>!',
-    era_magma_y: '4.5 billion years ago', era_magma_n: 'The magma Earth',
+    tl_say2: 'You just watched Earth <b>grow up</b> — from a molten planet into the green world we live on today!',
+    era_magma_y: '4.54 billion years ago', era_magma_n: 'A molten Earth',
     era_magma_p: 'Gravity pulled gas and dust circling the Sun together into the third planet. Its surface was largely molten — no liquid water yet, and no air to breathe.',
-    era_ocean_y: '3.8 billion years ago', era_ocean_n: 'The first oceans',
-    era_ocean_p: "Earth's crust cooled and hardened. Water vapour condensed and rained down for a very long time, filling the first oceans — and in that water appeared the oldest single-celled life.",
-    era_dino_y: '66 million years ago', era_dino_n: 'Dinosaurs & green forests',
-    era_dino_p: 'Green plants covered the land and released oxygen into the air. This was the age of the dinosaurs, running from about 252 to 66 million years ago.',
+    era_ocean_y: '4.4 billion years ago', era_ocean_n: 'The first ocean',
+    era_ocean_p: "Earth's crust cooled and hardened. Scientists have found zircon crystals 4.4 billion years old, and their chemistry shows liquid water was already here — very likely a whole ocean.",
+    era_life_y: '3.8 billion → 419 million', era_life_n: 'Life begins, then moves ashore',
+    era_life_p: 'Life began in the ocean about 3.8 billion years ago, and for an enormously long time it stayed underwater. Only in the Silurian did the first land plants appear, and animals followed in the Devonian. This one stretch alone lasted over 3 billion years.',
+    era_dino_y: '233 → 66 million', era_dino_n: 'The age of dinosaurs',
+    era_dino_p: 'True dinosaurs evolved about 233 million years ago in the Triassic — and the first mammals appeared in that same period. Green forests had already covered the land long before. The dinosaurs vanished in the mass extinction 66 million years ago.',
     era_now_y: 'Today', era_now_n: 'The blue planet',
-    era_now_p: 'Water covers about 71% of the surface, the air holds oxygen, and millions of species live here. So far this is the only planet we know of that has life.',
+    era_now_p: 'After the dinosaurs disappeared, mammals flourished. Water covers about 71% of the surface, the air holds oxygen, and millions of species live here. So far this is the only planet we know of that has life.',
     rock_nm: 'Ancient Lava Rock',
     rock_fact: "A piece of Earth's crust from back when it was glowing molten rock!",
     rock_got: 'SAVED TO THE SPECIMEN VAULT',
 
-    s2_h: 'Find the power source',
-    s2_p: 'Find the star lighting up Earth on the scan display, then tap it.',
-    s2_say1: "Oh no! Without power the ship can't run. Can you find the <b>star</b> lighting up Earth far away?",
-    s2_hint: 'Look towards the edge of the scan display — the star is right there, tap it!',
-    s2_say2: 'That is the <b>Sun</b> — the star that brings light and warmth to Earth!',
+    s2_say1: 'Earth is bathed in <b>sunlight</b> right now — from a star out in space, <b>150 million kilometres</b> away, so it is not on this map at all. Have a guess: <b>what would happen if the Sun switched off?</b>',
+    s2_ask_k: 'ASTRONAUT’S PREDICTION',
+    s2_ask_q: 'If the Sun switched off, what would happen to Earth?',
+    s2_opt_cold: 'Everything freezes',
+    s2_opt_plant: 'Plants could not live',
+    s2_opt_rain: 'No more rain or wind',
+    s2_ans: 'Exactly! And here is the scary part: <b>all three happen at once</b>. The Sun does three jobs for Earth…',
+    s2_role_heat: '🔥 <b>It brings warmth.</b> The Sun keeps Earth warm enough for water to stay <b>liquid</b>. Without it the planet would freeze and life as we know it could not exist — this is the one that matters most for life.',
+    s2_role_plant: '🌱 <b>It feeds the plants.</b> Plants use sunlight to make their own food and release oxygen for everyone else. Almost <b>every food chain</b> on Earth starts with the Sun’s energy.',
+    s2_role_rain: '🌦️ <b>It makes the weather.</b> The Sun lifts water into the air, gathers it into clouds, drops it back as rain, and stirs up the wind. Without it the <b>water cycle</b> would stop.',
+    s2_say2: 'Phew — the Sun is still there, and the whole planet lights up again!',
     s2_n: 'The Sun',
+    s2b_h: 'Three climate zones',
+    s2b_p: 'See how one Sun warms three different parts of Earth so differently.',
+    s2b_say1: 'One Sun — but every part of Earth gets its light <b>in a different way</b>. Tap the 3 glowing zones to find out!',
+    s2b_card: 'DECODED',
+    s2b_say2: 'The secret is the <b>angle</b>: from the equator towards the poles, the Sun’s rays meet Earth at smaller and smaller angles and get spread over larger and larger areas. It is <b>not</b> because the poles are farther from the Sun — that difference is tiny next to 150 million kilometres!',
 
     kb_hold:  'Holding {item}. {n} spots available — use the arrow keys to choose, Enter to place, Esc to put it down.',
     kb_place: 'Exactly! {item} is now in {zone}.',
@@ -497,34 +691,36 @@ const I18N = {
 
     ce_h: 'Switch on clean energy',
     ce_p: 'Drag the 3 clean energy sources onto the 3 smoking chimneys.',
-    ce_say1: 'Alert! Those three chimneys are <b>burning fossil fuels</b> — black smoke has covered Earth\'s atmosphere. Help Byte swap them for <b>clean energy</b>!',
+    ce_say1: 'Alert! Look at the <b>three factories</b> on the map — they are <b>burning fossil fuels</b>, and the smoke has darkened the land all around them. Drag <b>clean energy</b> onto each one to help Byte!',
     ce_k: 'SWAP THE POWER SOURCE',
     ce_hint: 'Drag one clean source onto each chimney.',
     ce_wrong: 'Not that chimney — try the one next to it!',
     ce_n: 'Chimneys swapped',
     ce_swap: 'The smoke is clearing… {n}/3',
-    ce_say2: 'All the black smoke is gone! <b>Clean energy</b> comes from sunlight, wind and moving water — nature keeps refilling it, and it makes no smoke while it runs.',
+    ce_say2: 'The smoke is gone and all three regions are bright again! <b>Clean energy</b> comes from sunlight, wind and moving water — nature keeps refilling it, and it makes no smoke while it runs.',
     ce_solar: 'Solar Panel', ce_wind: 'Wind Turbine', ce_hydro: 'Hydro Power',
     ce_stack: 'CHIMNEY',
 
-    s3_h: 'Restore the satellite link',
-    s3_p: 'Drag the map to bring the broadcast station (amber dot) into the crosshair.',
-    s3_say1: 'The satellite is scanning somewhere else! <b>Drag the map</b> to bring the broadcast station into the <b>crosshair</b> — the closer you get, the higher the signal bar climbs!',
-    s3_lost: 'SIGNAL LOST', s3_ok: 'SIGNAL OK',
-    s3_n: 'Signal strength',
-    s3_say2: "Earth's own <b>rotation</b> is what makes <b>day and night</b>!",
 
-    s4_h: 'Collect life samples',
-    s4_p: 'Tap the 4 blinking regions to drop a scan drone.',
-    s4_say1: 'Byte prepared the scan drone! Tap the <b>4 blinking regions</b> on Earth.',
-    s4_n: 'Samples',
-    s4_scan: 'Drone scanning… SCANNING',
+    s4_h: 'Life is everywhere',
+    s4_p: 'Guess where each place sits on the slice through Earth.',
+    s4_say1: 'Earth is cleaner now! Let us try something different: Byte has built a <b>slice</b> through Earth, from the ocean floor up to the mountain tops. We will fly to four places — you <b>guess</b> which step each one belongs on!',
+    s4_n: 'Placed',
     s4_card: 'COLLECTED',
-    s4_say2: 'Brilliant! All 4 samples are in the ship’s container.',
+    s4_say2: 'Look at the slice: from the <b>ocean floor</b> up to the <b>highest peaks</b>, every single step has living things on it. That is what I meant — life is <b>everywhere</b>.',
+    xsec_k: 'A SLICE THROUGH EARTH',
+    xsec_q: 'Which step does {nm} belong on?',
+    xsec_sea: 'sea level',
+    rung_1: 'Very high above sea level',
+    rung_2: 'High above sea level',
+    rung_3: 'Just above sea level',
+    rung_4: 'Below sea level',
+    xsec_ok: 'Spot on!',
+    xsec_near: 'So close! Here is where it goes.',
 
     ec_h: 'Eco-Hero: should you, or shouldn\'t you?',
     ec_p: 'Drag each card into the 🟢 SHOULD DO or 🔴 SHOULD NOT DO basket.',
-    ec_say1: 'Last lesson before we decode the planet! Do you know how to <b>protect Earth in real life</b>? Sort these 7 actions for Byte.',
+    ec_say1: 'But swapping three factories is <b>not enough</b>. Earth keeps getting more polluted every day, and the thing that changes the most is <b>our own habits</b>. Try sorting these 7 actions — which should we do, which should we not?',
     ec_k: 'SORT THE ACTIONS',
     ec_good: 'SHOULD DO', ec_bad: 'SHOULD NOT DO',
     ec_hint: 'Drag a card into the basket you think is right.',
@@ -541,16 +737,16 @@ const I18N = {
     eco_water: 'Let clean water run to waste',
     eco_bag: 'Use lots of single-use plastic bags',
 
-    s5_h: 'Decode the planet',
-    s5_p: 'Drag the 3 gems into the 3 slots on the control board.',
-    s5_say1: 'Help Byte switch on the <b>Life Energy Circuit</b> for Earth!',
-    s5_k: 'LIFE ENERGY CIRCUIT',
-    s5_hint: 'Drag each gem onto the slot with the matching label.',
-    s5_wrong: 'So close — give it another try!',
-    s5_n: 'Slots powered',
-    s5_say2: 'The board lights up! An atmosphere shield now wraps around Earth!',
-    slot_heat: 'Heat', slot_water: 'Water', slot_air: 'Air',
-    gem_sun: 'Sun Gem', gem_water: 'Water Gem', gem_air: 'Atmosphere Gem',
+    s5_h: 'Stamp the Earth File',
+    s5_p: 'Read back the three things you discovered, then stamp it complete.',
+    s5_say1: 'All done! Your Earth File now records the <b>three things</b> that let this planet hold life. Read them once more, then stamp it.',
+    s5_k: 'THE EARTH FILE',
+    s5_n: 'File',
+    file_water: 'Water covers about 71% of the surface — far more than land.',
+    file_heat: 'A mild temperature, different by region because of the angle of sunlight.',
+    file_air: 'An atmosphere with oxygen to breathe, wrapped around the whole planet.',
+    s5_stamp: '🗂️ STAMP AS COMPLETE',
+    s5_say2: 'Stamped! You need <b>all three at once</b> — and so far Earth is the only place we know of that has life.',
 
     win_h: 'EARTH MISSION COMPLETE!',
     win_badge: 'ROOKIE ASTRONAUT', win_badge_sub: 'Rookie Astronaut badge',
@@ -588,92 +784,261 @@ const t = (k) => { const d = I18N[LANG] || I18N.vi; return d[k] != null ? d[k] :
    ⚠️ Khung này còn được chọn vì NỘI DUNG, không chỉ vì sáng: nó cho thấy Đại Tây Dương ·
    châu Phi · Ả Rập · Ấn Độ Dương · Himalaya · dải mây phía bắc — tức CẢ NƯỚC, CẢ ĐẤT,
    CẢ MÂY, đúng ba thứ mà ba đốm dưới đây nói tới. Đổi số này thì phải đo lại cả hai. */
-const FACE_OPEN = { lat: 30, lon: 95 };
+/* ⚠️ NGHĨA CỦA `lon` ĐÃ ĐỔI 02/08/2026: nay là **kinh độ ở TÂM khung**, dùng qua
+   `world.centerOn`, không phải giá trị `facing.lon` thô truyền vào `panTo`.
+   Vì sao: `.e2-layer` ở chế độ phẳng vốn bị **neo mép trái** (CSS quá ràng buộc),
+   nên `facing.lon` cũ rơi vào 62,5% bề rộng khung chứ không vào giữa. Sau khi CSS
+   căn giữa lớp, `facing.lon = zoom × lon_tâm`. Giá trị cũ `lon: 95` ở `dist:2,6`
+   (zoom 1,692) tương ứng tâm ≈ **35°Đ** — nên đây là **cùng một khung nhìn**, chỉ
+   viết bằng đơn vị đọc được. Đổi số này thì phải đo lại CẢ độ sáng lẫn nội dung. */
+const FACE_OPEN = { lat: 30, lon: 35 };
 
-/* ══ BA ĐỐM TÍN HIỆU — MANG NỘI DUNG THẬT ══ (đổi 02/08/2026, `004`)
-   Trước đó là ba đốm TRỐNG (`p1/p2/p3`, không tên, không nội dung) và bước 1 dạy KÉO.
-   Nay bước 1 không còn cú kéo nào, nên ba đốm phải tự mang bài học.
+/* ══ BƯỚC ① — BẢY CHÂU LỤC, RỒI CÂU ĐỐ "BIỂN HAY ĐẤT NHIỀU HƠN?" ══
+   (viết lại 02/08/2026, `docs/decisions/005`. Trước đó là BA đốm `air/sea/land`.)
 
-   NGUỒN — cả ba con số từ MỘT trang NASA, đã kiểm trả 200 ngày 02/08/2026:
-     https://science.nasa.gov/earth/facts/
-       · "Earth has an atmosphere that consists of 78% nitrogen, 21% oxygen,
-          and 1% other gases"
-       · "Earth's global ocean, which covers about 71% of the planet's surface …
-          contains 97% of Earth's water"
-       · "the North American plate moves west over the Pacific Ocean basin,
-          roughly at a rate equal to the growth of our fingernails"
-   Phần "khí quyển làm gì cho ta" lấy ở trang NASA viết CHO TRẺ EM (cũng kiểm 200):
-     https://spaceplace.nasa.gov/atmosphere/en/
-       · "It keeps us warm, it gives us oxygen to breathe, and it's where our
-          weather happens."
+   VÌ SAO CHÂU LỤC VỀ BƯỚC ① CHỨ KHÔNG THÀNH MỘT BƯỚC RIÊNG: nó là bài học về **bề
+   mặt Trái Đất**, cùng nhà với câu "biển hay đất nhiều hơn" — một arc, một bước.
+   Và nó lấp đúng lỗ hổng `004` để mở: *bước ① sau khi sửa có nội dung học rất mỏng*.
 
-   ⚠️ HAI CHỖ DỄ BỊA, ĐỪNG SỬA THÀNH KHÁC:
-     · "29%" là PHÉP TRỪ 100 − 71 từ chính câu NASA trên — KHÔNG phải con số NASA viết.
-     · NASA nói về MẢNG BẮC MỸ. Viết "các lục địa đều trôi nhanh cỡ móng tay" là bịa
-       một câu nguồn không có — đúng loại lỗi đã ghi 30/07 (tự quy mph sang km/h).
+   ⚠️ KHÔNG CÓ CON SỐ NÀO TRONG `fact` CỦA BẢY CHÂU LỤC — CỐ Ý.
+   Quy tắc mục 6 CLAUDE.md: số liệu khoa học phải trỏ đúng trang đã đối chiếu. Tôi
+   chưa tra được URL 200 cho "châu Á rộng bao nhiêu km²", "Amazon lớn nhất", v.v.,
+   nên tất cả viết ĐỊNH TÍNH. Muốn thêm số thì phải mở nguồn trước — đúng cái bẫy
+   "móng tay" và "3,7 vs 3,8" mà `004`/`005` đã phải đi sửa.
+   Con số DUY NHẤT của bước này là 71% / 29% ở câu đố dưới, và nó có nguồn.
 
-   ⚠️ VỊ TRÍ: ba đốm CỐ Ý không khẳng định địa danh (chúng nói về khí quyển / đại dương /
-   đất liền NÓI CHUNG), nhưng vẫn đặt ở toạ độ khớp với thứ chúng nói — đốm đại dương
-   giữa Ấn Độ Dương, đốm lục địa giữa châu Phi. Vì nền là ẢNH CHỤP THẬT: đặt đốm "đại
-   dương" lên đất liền thì bức ảnh tự tố cáo. Trên bản đồ phẳng việc đặt đúng chỉ tốn
-   HAI PHÉP CHIA (`project()` ở js/earth2d.js), nên không có lý do gì đặt sai.
-   ⚠️ CẢ BA phải nằm trong khung ở FACE_OPEN — không còn cú kéo nào để đi tìm đốm thứ ba.
-   Có phép kiểm đòi 3/3 nhìn thấy được (trước đây chỉ đòi 2/3). */
-const SCAN_POINTS = [
-  { id: 'air',  lat:  44, lon:  58, ic: '🌫️', cc: '#a5b4fc', cbg: 'rgba(165,180,252,.28)',
-    nm: { vi: 'Khí quyển', en: 'The atmosphere' },
-    fact: { vi: 'Lớp không khí bọc quanh hành tinh: 78% nitơ, 21% oxy. Nó giữ ấm Trái Đất, cho ta oxy để thở, và là nơi thời tiết xảy ra.',
-            en: 'The blanket of air around the planet: 78% nitrogen, 21% oxygen. It keeps Earth warm, gives us oxygen to breathe, and is where our weather happens.' } },
-  { id: 'sea',  lat: -12, lon:  72, ic: '🌊', cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)',
-    nm: { vi: 'Đại dương', en: 'The ocean' },
-    fact: { vi: 'Đại dương phủ khoảng 71% bề mặt Trái Đất và chứa 97% toàn bộ nước của hành tinh. Sâu trung bình 3,6 km.',
-            en: 'The ocean covers about 71% of Earth’s surface and holds 97% of all the planet’s water. Its average depth is 3.6 km.' } },
-  { id: 'land', lat:   6, lon:  22, ic: '🏔️', cc: '#fbbf24', cbg: 'rgba(251,191,36,.28)',
-    nm: { vi: 'Lục địa', en: 'The continents' },
-    fact: { vi: 'Đất liền chiếm phần còn lại — khoảng 29%. Và nó ĐANG DI CHUYỂN: mảng Bắc Mỹ trôi về phía tây nhanh cỡ tốc độ móng tay em dài ra.',
-            en: 'Land makes up the rest — about 29%. And it is MOVING: the North American plate drifts west about as fast as your fingernails grow.' } }
+   ⚠️ TOẠ ĐỘ LÀ TOẠ ĐỘ THẬT, đặt vào giữa khối đất của từng châu lục. Nền là ẢNH
+   CHỤP VỆ TINH THẬT: đặt đốm "châu Phi" xuống Đại Tây Dương thì chính bức ảnh tố
+   cáo. Trên bản đồ phẳng việc đặt đúng chỉ tốn HAI PHÉP CHIA (`project()`).
+   ⚠️ THỨ TỰ TRONG MẢNG = HƯỚNG QUÉT TÂY → ĐÔNG, kết ở Nam Cực. Nó chỉ là thứ tự
+   GỢI Ý (bàn tay chỉ theo nó, và `focusNext()` lướt theo nó) — trẻ chạm châu nào
+   trước cũng được, y như luật đã chốt ở `004`: ép thứ tự là tạo ra cú chạm SAI ở
+   một bước mà cả thiết kế đang cố làm cho không thể sai. */
+const CONTINENTS = [
+  { id: 'namerica',   lat:  45, lon: -100, ic: '🌎',
+    nm: { vi: 'Bắc Mỹ', en: 'North America' },
+    fact: { vi: 'Trải từ rừng lá kim lạnh giá ở phía bắc xuống tới vùng biển ấm Ca-ri-bê ở phía nam.',
+            en: 'It stretches from cold northern conifer forests all the way down to the warm Caribbean sea.' } },
+  { id: 'samerica',   lat: -12, lon:  -58, ic: '🌳',
+    nm: { vi: 'Nam Mỹ', en: 'South America' },
+    fact: { vi: 'Nơi có rừng mưa Amazon, và dãy núi Andes chạy dọc suốt bờ tây của châu lục.',
+            en: 'Home to the Amazon rainforest, with the Andes running down its entire western edge.' } },
+  { id: 'europe',     lat:  50, lon:   15, ic: '🏰',
+    nm: { vi: 'Châu Âu', en: 'Europe' },
+    fact: { vi: 'Rất nhiều bán đảo và biển ăn sâu vào đất liền, nên gần như chỗ nào cũng gần biển.',
+            en: 'So many peninsulas and inland seas that almost nowhere is far from the coast.' } },
+  { id: 'africa',     lat:   2, lon:   20, ic: '🦁',
+    nm: { vi: 'Châu Phi', en: 'Africa' },
+    fact: { vi: 'Đường xích đạo chạy ngang qua đây — có cả sa mạc mênh mông lẫn rừng rậm nhiệt đới.',
+            en: 'The equator runs right across it — it has vast deserts and dense rainforest alike.' } },
+  { id: 'asia',       lat:  45, lon:   90, ic: '🏔️',
+    nm: { vi: 'Châu Á', en: 'Asia' },
+    fact: { vi: 'Châu lục rộng nhất hành tinh. Dãy Himalaya với những đỉnh núi cao nhất nằm ở đây.',
+            en: 'The largest continent on the planet. The Himalayas, with the highest peaks, are here.' } },
+  { id: 'oceania',    lat: -25, lon:  134, ic: '🦘',
+    nm: { vi: 'Châu Đại Dương', en: 'Oceania' },
+    fact: { vi: 'Nước Úc cùng vô số hòn đảo nằm rải rác giữa mênh mông Thái Bình Dương.',
+            en: 'Australia plus countless islands scattered across the vast Pacific Ocean.' } },
+  { id: 'antarctica', lat: -72, lon:   20, ic: '🐧',
+    nm: { vi: 'Nam Cực', en: 'Antarctica' },
+    fact: { vi: 'Gần như toàn bộ châu lục phủ băng. Không ai sống lâu dài ở đây ngoài các nhà khoa học.',
+            en: 'Almost the whole continent is covered in ice. Nobody lives here permanently except scientists.' } }
 ];
+
+/* ══ CÂU ĐỐ CUỐI BƯỚC ① — "NƯỚC HAY ĐẤT NHIỀU HƠN?" ══
+   NGUỒN, đã kiểm trả 200 ngày 02/08/2026 — https://science.nasa.gov/earth/facts/
+     · "Earth's global ocean, which covers about 71% of the planet's surface …"
+   ⚠️ "29%" LÀ PHÉP TRỪ 100 − 71, KHÔNG PHẢI CON SỐ NASA VIẾT. Vì thế chữ hiển thị
+      luôn nói "phần còn lại — khoảng 29%", không bao giờ nói "NASA cho biết 29%".
+   ⚠️ 71%, KHÔNG PHẢI 70% — cùng một nhiệm vụ từng nói hai con số cho một sự thật
+      (`004` phải đi sửa 5 chỗ). Thẻ mẫu vật `water` ở bước ⑤ cũng là 71%.
+   ⚠️ ĐOÁN SAI KHÔNG PHẠT. Không có trạng thái thua ở bước này: đoán xong là hé lộ,
+      cả hai nhánh đều đi tiếp. Đây là câu hỏi để trẻ DỰ ĐOÁN rồi đối chiếu, không
+      phải bài kiểm tra — và ở bước đầu tiên của cả nhiệm vụ thì càng không. */
+const ASK_ANSWER = 'water';
+/* ⚠️⚠️ THỨ TỰ KHAI BÁO = THỨ TỰ `Step.Codex` Ở SERVER (`"water,forest,animal,mountain"`
+      trong `Missions.cs`). Giữ nguyên thứ tự này để hai bên còn đọc đối chiếu được —
+      thứ tự TRẺ ĐI THĂM nằm ở `LIFE_ORDER` bên dưới, cố ý tách ra.
+
+   ── `rank` = nấc trên lát cắt độ cao, 1 = cao nhất, 4 = dưới mặt nước ──
+   ⚠️ `alt` LÀ CÂU HÉ LỘ, KHÔNG PHẢI CÂU ĐỐ. Hai con số duy nhất ở đây đều đã tra nguồn
+      và đều được viết ĐÚNG BẰNG CÂU NGUỒN NÓI, không nới rộng:
+      · Nam Cực "cao tới 4.000 mét" — NASA Earth Observatory, nguyên văn *"Red shows the
+        highest elevations (up to 4,000 meters above sea level)"*
+        (`science.nasa.gov/earth/earth-observatory/antarcticas-land-and-ice-elevation-5081/`,
+        kiểm 200 ngày 02/08/2026).
+        ⚠️ ĐỪNG viết "Nam Cực là châu lục cao nhất" — nghe rất hợp lý và các trang phổ
+           thông đều nói thế, nhưng TRANG NASA NÀY KHÔNG NÓI CÂU ĐÓ; tôi đã đọc lại toàn
+           trang. Con số trung bình thì mỗi nguồn một khác (2.200 · 2.300 · 2.500 m) —
+           đó chính là lý do chỉ dùng con số NASA phát biểu được.
+      · Đáy đại dương "sâu trung bình khoảng 3.682 mét" — NOAA Ocean Service, nguyên văn
+        *"The average depth of the ocean is about 3,682 meters (12,080 feet)"*
+        (`oceanservice.noaa.gov/facts/oceandepth.html`, kiểm 200 ngày 02/08/2026).
+        ⚠️ Câu đó nói về ĐẠI DƯƠNG NÓI CHUNG, không phải riêng Đại Tây Dương — nên câu
+           tiếng Việt cũng phải viết "đáy đại dương", đừng gán con số cho Đại Tây Dương.
+      Hai nơi còn lại viết ĐỊNH TÍNH, không con số: an toàn tuyệt đối và đủ dùng, vì cột
+      chỉ cần thứ tự tương đối. */
 const BIOMES = [
-  { id: 'water',    lat:  12, lon: -42, ic: '🌊', rgb: '110,200,255', color: 0x8fe0ff,
+  { id: 'water',    lat:  12, lon: -42, ic: '🌊', rgb: '110,200,255', color: 0x8fe0ff, rank: 4,
     nm: { vi: 'Đại Tây Dương', en: 'Atlantic Ocean' },
     fact: { vi: 'Nước bao phủ khoảng 71% bề mặt Trái Đất!',
             en: 'Water covers about 71% of Earth’s surface!' },
+    alt: { vi: 'Mặt nước thì ở ngay mực nước biển — nhưng ĐÁY thì sâu hun hút. Đáy đại dương sâu trung bình khoảng 3.682 mét.',
+           en: 'The surface sits at sea level — but the floor is far below. The ocean averages about 3,682 metres deep.' },
     cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)' },
-  { id: 'forest',   lat:  -4, lon: -62, ic: '🌳', rgb: '120,240,150', color: 0x8fffb0,
+  { id: 'forest',   lat:  -4, lon: -62, ic: '🌳', rgb: '120,240,150', color: 0x8fffb0, rank: 3,
     nm: { vi: 'Rừng Amazon', en: 'Amazon Rainforest' },
     fact: { vi: 'Rừng cung cấp Oxy cho chúng ta hít thở!',
             en: 'Forests provide the oxygen we breathe!' },
+    alt: { vi: 'Rừng Amazon trải trên vùng đất thấp, chỉ nhỉnh hơn mặt biển một chút.',
+           en: 'The Amazon spreads across lowland, only a little above the sea.' },
     cc: '#4ade80', cbg: 'rgba(74,222,128,.28)' },
-  { id: 'animal',   lat: -75, lon:  20, ic: '🐧', rgb: '255,225,140', color: 0xffe8a0,
+  { id: 'animal',   lat: -75, lon:  20, ic: '🐧', rgb: '255,225,140', color: 0xffe8a0, rank: 2,
     nm: { vi: 'Nam Cực', en: 'Antarctica' },
     fact: { vi: 'Hàng triệu loài sinh vật cùng sinh sống trên Trái Đất!',
             en: 'Millions of species share our planet!' },
+    alt: { vi: 'Bất ngờ chưa? Nam Cực không hề phẳng: lớp băng dày tới mức có nơi cao 4.000 mét trên mực nước biển.',
+           en: 'Surprised? Antarctica is not flat: its ice is so thick that some places reach 4,000 metres above sea level.' },
     cc: '#ffcf6b', cbg: 'rgba(255,207,107,.28)' },
-  { id: 'mountain', lat:  28, lon:  87, ic: '🏔️', rgb: '225,232,255', color: 0xe8eeff,
+  { id: 'mountain', lat:  28, lon:  87, ic: '🏔️', rgb: '225,232,255', color: 0xe8eeff, rank: 1,
     nm: { vi: 'Dãy Himalaya', en: 'The Himalayas' },
     fact: { vi: 'Những rặng núi cao che chắn và giữ nước cho hành tinh!',
             en: 'High mountain ranges shelter the planet and store its water!' },
+    alt: { vi: 'Cao hơn tất cả những nơi vừa xem — đây là nóc nhà của Trái Đất.',
+           en: 'Higher than everywhere else you have just seen — this is Earth’s rooftop.' },
     cc: '#dbe7ff', cbg: 'rgba(219,231,255,.24)' }
 ];
-/* Trạm phát sóng cho bước `rotation` — đặt ở Việt Nam cho gần trẻ. */
-const STATION = { lat: 16, lon: 108 };
 
-/* ── Bước `timeline`: 4 mốc lịch sử hình thành Trái Đất ──────────────────────
+/* ⚠️ THỨ TỰ ĐI THĂM CỐ Ý KHÔNG ĐƠN ĐIỆU — đây là thứ giữ cho bước còn đáng chơi.
+   Rank theo thứ tự này là **3 → 4 → 2 → 1**: xuống rồi mới bật lên. Nếu đi theo thứ tự
+   độ cao tăng dần (4→3→2→1) thì sau hai nơi đầu trẻ đoán được nốt bằng quy luật "cái sau
+   cao hơn cái trước", và cú bất ngờ ở Nam Cực mất sạch.
+   Chọn Amazon mở màn vì nó dễ đoán nhất — cú đầu tiên nên là một cú thắng để trẻ hiểu
+   luật chơi; Nam Cực (cú bất ngờ) để thứ ba; Himalaya chốt ở đỉnh.
+   ⚠️ Cũng cân nhắc cả quãng lướt bản đồ: −62 → −42 → 20 → 87 tức 20° · 62° · 67°. Thứ tự
+      "bất ngờ" khác từng thử cho ra một cú lướt 149°, dài gấp đôi mọi cú lướt trong cả
+      nhiệm vụ. */
+const LIFE_ORDER = ['forest', 'water', 'animal', 'mountain'];
+
+/* Bốn nấc của lát cắt, TRÊN xuống DƯỚI. Đường mực nước biển vẽ giữa nấc 3 và 4.
+   ⚠️ NHÃN CỐ Ý KHÔNG GỌI TÊN ĐỊA HÌNH ("đỉnh núi", "đáy biển", "cao nguyên băng"). Bản
+      nháp đầu dùng tên địa hình và nó **tự trả lời hộ trẻ**: "Himalaya → đỉnh núi" thì
+      không còn gì để nghĩ. Nhãn theo DẢI ĐỘ CAO thì trẻ buộc phải hình dung từng nơi cao
+      bao nhiêu — và Nam Cực trở thành câu hỏi thật sự. */
+const RUNGS = [1, 2, 3, 4];
+/* ── Bước `timeline`: NĂM mốc lịch sử hình thành Trái Đất ────────────────────
    `era` là hậu tố class CSS đổi tông cả hành tinh (`#stage.era-magma`…). Mốc "ngày
    nay" để `era:null` — đó chính là Trái Đất bình thường, thêm filter vào là sai.
 
    `card` = thẻ mẫu vật trao ở mốc đó. Chỉ mốc dung nham có: viên nham thạch phải
    xuất hiện ĐÚNG lúc trẻ đang xem hành tinh đỏ rực, không phải cuối bước.
 
-   ⚠️ Nội dung 4 mốc PHẢI khớp `learningdata/astronomy/earth_codex.json` mục
+   ══ 4 → 5 MỐC (02/08/2026, `docs/decisions/005`) — SỬA MỘT LỖI NỘI DUNG ══
+   Bản 4 mốc (dung nham → đại dương → khủng long → ngày nay) dạy sai: nó đọc ra như
+   thể khủng long xuất hiện ngay sau khi đại dương hình thành. Đo từ nguồn: đại dương
+   (~4,4 tỷ) → khủng long (233 triệu) là khoảng **4,2 tỷ năm ≈ 92% lịch sử Trái Đất**,
+   nằm gọn trong đúng cái khoảng trống mà bản 4 mốc nhảy qua. Và Trái Đất **đã xanh
+   ~370 triệu năm** trước khi khủng long biến mất. Mốc `life` lấp chỗ đó.
+
+   ⚠️ SỐ MỐC KHÔNG PHẢI SỐ BƯỚC. Cả bước `timeline` chỉ có MỘT codex id
+   (`earth-formation` ở `Services/Missions.cs`), nên thêm/bớt mốc là **0 đồng
+   backend** — thuần client. Đừng lẫn hai thứ.
+
+   ══ NGUỒN — mọi URL đã kiểm trả 200 ngày 02/08/2026 ══
+     https://science.nasa.gov/earth/facts/
+       · sự sống bắt đầu "about 3.8 billion years ago"
+     https://science.nasa.gov/earth/earth-observatory/ancient-crystals-suggest-earlier-ocean/
+       · "Individual crystals of zircon … are 4.4 billion years old" · chúng
+         "formed in the presence of liquid water, likely even an ocean"
+     https://www.nps.gov/articles/000/the-precambrian.htm     · 4.540 triệu năm
+     https://www.nps.gov/subjects/geology/time-scale.htm      · các kỷ · 66,0
+     https://www.nps.gov/subjects/fossils/triassic-dinosaurs.htm · 233 triệu
+
+   ⛔ BỐN CÁI BẪY — người sửa sau rất dễ "sửa" chúng thành SAI:
+     1. **3,8 tỷ, KHÔNG phải 3,7.** `science.nasa.gov/earth/facts/` — chính trang mà
+        câu đố 71% của bước ① đang dẫn — viết **3.8 billion**. Ghi 3,7 là tái tạo
+        đúng lỗi 70%/71% mà `004` đã phải đi sửa 5 chỗ.
+     2. **233 triệu, KHÔNG phải 230.** 230 phổ biến hơn, nhưng trang NPS đọc được
+        viết 233 — và dùng 233 thì cùng MỘT nguồn với mốc 66 ở đầu kia cùng cảnh.
+     3. **THÚ XUẤT HIỆN CÙNG THỜI VỚI KHỦNG LONG, KHÔNG PHẢI SAU.** NPS: *"first
+        dinosaurs and first mammals (Triassic)"*. Mốc `now` vì thế viết "phát triển
+        mạnh", không viết "rồi thú mới xuất hiện".
+     4. **CÂY LÊN CẠN TRƯỚC, CON VẬT THEO SAU — cách nhau một kỷ** (Silur → Devon).
+        Gộp thành "thực vật và động vật tiến lên đất liền" là gộp ~60 triệu năm.
+   ⚠️ Số **4,3 tỷ đã BỎ**: trang NASA đọc được không phát biểu 4,3, nó chỉ có 4,4.
+      Một con số có nguồn chắc còn dễ cho trẻ hơn một khoảng.
+
+   ⚠️ Nội dung 5 mốc PHẢI khớp `learningdata/astronomy/earth_codex.json` mục
    `earth-formation` — đó là bài đọc mở khoá sau khi xong bước này, hai bên lệch
-   nhau thì trẻ đọc lại thấy khác cái vừa xem. Con số 66 (không phải 65) triệu năm
-   theo NPS Geologic Time Scale: ranh giới cuối kỷ Phấn Trắng ở 66,0 triệu năm. */
+   nhau thì trẻ đọc lại thấy khác cái vừa xem.
+
+   ⚠️ TÔNG MÀU `era-life` PHẢI KHÁC RÕ `era-ocean`: hai cảnh liền nhau mà trông
+   giống nhau thì trẻ tưởng bấm không ăn. Xem `css/mission-earth.css`. */
+/* `img` = tên file gốc trong `img/era/`; `paintEraImg()` ghép ra 4 asset
+   `<id>-{700,1120}.{avif,webp}` do `scratchpad/make_era_assets.py` sinh (script đó QUÉT
+   THƯ MỤC, không gán cứng danh sách — thêm bức thứ sáu thì không phải sửa nó).
+   ⚠️⚠️ MỐC `now` GIỜ CŨNG CÓ TRANH — ĐẢO LẠI QUYẾT ĐỊNH CỦA `005` mục ⑩ (02/08/2026,
+      xem `docs/decisions/006` điểm 11). Lý do cũ: bốn mốc kia là TRANH DỰNG (không tồn
+      tại ảnh chụp Trái Đất thời đó) nên phải dán nhãn MINH HOẠ, còn "ngày nay" thì thứ
+      trung thực nhất đang nằm ngay sau lưng bảng — chính bức ảnh vệ tinh THẬT của cảnh.
+      Lý do đó **vẫn đúng về nội dung**, nhưng chủ dự án chơi thật và chỉ ra thứ nó bỏ
+      qua: bốn mốc có tranh rồi mốc thứ năm trống thì trẻ đọc ra như **một chỗ bị thiếu**,
+      không như một quyết định. Sự bất nhất nhìn thấy được thắng một lập luận đúng.
+   ⚠️ Bức `now` VẪN mang nhãn MINH HOẠ như bốn bức kia — nó là tranh vẽ, và nhãn đó nói
+      đúng sự thật. Đừng bỏ nhãn chỉ vì mốc này "là hiện tại". */
 const ERAS = [
-  { id: 'magma', era: 'magma', ic: '🌋', card: 'rock' },
-  { id: 'ocean', era: 'ocean', ic: '🌊' },
-  { id: 'dino',  era: 'dino',  ic: '🦕' },
-  { id: 'now',   era: null,    ic: '🌍' }
+  { id: 'magma', era: 'magma', ic: '🌋', card: 'rock', img: 'magma' },
+  { id: 'ocean', era: 'ocean', ic: '🌊', img: 'ocean' },
+  { id: 'life',  era: 'life',  ic: '🦠', img: 'life' },
+  { id: 'dino',  era: 'dino',  ic: '🦕', img: 'dino' },
+  { id: 'now',   era: null,    ic: '🌍', img: 'now' }
+];
+
+/* ── Bước `sun`: BA VÙNG KHÍ HẬU ────────────────────────────────────────────
+   (viết lại 02/08/2026, `docs/decisions/005`. Trước đó bước này chỉ có MỘT việc:
+   tìm rồi chạm vào Mặt Trời.)
+
+   Nhịp giữ nguyên phần hay nhất của bản cũ — hành tinh chìm vào bóng tối, trẻ tìm
+   ngôi sao rồi tự tay bật nó lên — nhưng đó nay là MỞ MÀN, không phải cả bước.
+   Bài học thật nằm ở ba vùng dưới đây: cùng một Mặt Trời, ba nơi ba kiểu khí hậu.
+
+   ⛔ TUYỆT ĐỐI KHÔNG VIẾT "VÌ GẦN MẶT TRỜI HƠN". Đây là quan niệm sai phổ biến
+      nhất về chủ đề này. Chênh lệch khoảng cách xích đạo ↔ cực chỉ khoảng 6.400 km
+      trên tổng ~150 triệu km. Nguyên nhân là **GÓC CHIẾU**.
+
+   ══ NGUỒN — đã kiểm trả 200 ngày 02/08/2026 ══
+     https://science.nasa.gov/earth/earth-observatory/climate-and-earths-energy-budget/
+       · nguyên văn: "From the equator to the poles, the Sun's rays meet Earth at
+         smaller and smaller angles, and the light gets spread over larger and
+         larger surface areas."
+     https://spaceplace.nasa.gov/seasons/en/   (trang NASA viết CHO TRẺ EM)
+       · mùa KHÔNG do khoảng cách: "That just goes to prove that Earth's distance
+         from the Sun is not the cause of the seasons."
+       · "Earth has seasons because its axis doesn't stand up straight."
+
+   ⚠️ MỘT CHỖ RẤT DỄ BỊA: đừng viết "vùng cực lúc nào cũng nhận ít nắng hơn". Chính
+      trang NASA trên viết rằng lượng năng lượng NHẬN TRONG MỘT NGÀY cao nhất lại ở
+      **vĩ độ cao vào mùa hè**, vì ngày dài. Ba thẻ dưới vì thế chỉ nói về GÓC CHIẾU
+      và việc ánh sáng bị TRẢI RỘNG — không phát biểu gì về tổng năng lượng cả năm.
+
+   ⚠️ TOẠ ĐỘ CHỌN ĐỂ CẢ BA NẰM TRONG KHUNG Ở MỌI CỠ MÀN. Cả ba cùng kinh độ ~15–20°
+      nên bề ngang chỉ tốn ~10°, trong khi màn hẹp nhất (điện thoại dọc 390×844) ở
+      sàn phóng `ZOOM_MIN` = 1 vẫn thấy ~83° kinh độ. Bề dọc thì ở zoom 1 luôn thấy
+      trọn 180° vĩ độ trên màn dọc, và ~152° trên màn siêu rộng với `facing.lat = 0`
+      → −76…+76 vẫn ôm đủ cả ba. Đổi toạ độ thì phải đo lại cả hai trục. */
+const ZONES = [
+  { id: 'equator',  lat:   2, lon: 20, ic: '🔥', cc: '#fb923c', cbg: 'rgba(251,146,60,.28)',
+    nm: { vi: 'Vùng xích đạo', en: 'The tropics' },
+    fact: { vi: 'Tia nắng chiếu gần như thẳng đứng nên dồn vào một vùng nhỏ — nóng và ẩm gần như quanh năm.',
+            en: 'Sunlight arrives almost straight down, packed into a small area — hot and humid nearly all year.' } },
+  { id: 'temperate', lat: 48, lon: 16, ic: '🍂', cc: '#4ade80', cbg: 'rgba(74,222,128,.28)',
+    nm: { vi: 'Vùng ôn đới', en: 'The temperate zone' },
+    fact: { vi: 'Nắng chiếu xiên hơn, và trục Trái Đất lại nghiêng — nên nơi đây có bốn mùa rõ rệt.',
+            en: 'Sunlight arrives at more of an angle, and Earth’s axis is tilted — so here you get four clear seasons.' } },
+  { id: 'polar',    lat: -72, lon: 20, ic: '❄️', cc: '#a5b4fc', cbg: 'rgba(165,180,252,.28)',
+    nm: { vi: 'Vùng cực', en: 'The polar zone' },
+    fact: { vi: 'Càng về hai cực, tia nắng càng chiếu xiên và bị trải ra một diện tích lớn hơn — nên lạnh giá, băng phủ quanh năm.',
+            en: 'Toward the poles the Sun’s rays come in at ever smaller angles and spread over ever larger areas — so it stays frozen.' } }
 ];
 
 /* ── Bước `energy`: 3 nguồn năng lượng sạch thay cho 3 ống khói ──────────────
@@ -684,7 +1049,28 @@ const ENERGY = [
   { id: 'wind',  ic: '🌬️', slot: 'st2' },
   { id: 'hydro', ic: '🌊', slot: 'st3' }
 ];
-const STACKS = ['st1', 'st2', 'st3'];
+
+/* ── Ba nhà máy, NEO TRÊN BẢN ĐỒ THẬT (đổi 02/08/2026 theo chủ dự án) ────────
+   Trước đó ba ống khói là ba ô trong một bảng ở đáy màn hình — tức ô nhiễm xảy ra
+   "ở đâu đó", không ở trên chính hành tinh trẻ vừa đi khắp. Nay chúng nằm trên bản
+   đồ, vùng quanh chúng bị **mờ đi**, và sáng lại khi trẻ kéo năng lượng sạch vào.
+
+   ⚠️ BA TOẠ ĐỘ PHẢI Ở BA CHÂU LỤC LIỀN KỀ, KHÔNG RẢI KHẮP THẾ GIỚI. Kéo-thả đòi
+      **khay thẻ và ô đích cùng nằm trên màn hình một lúc**, mà màn dọc 390×844 ở sàn
+      phóng chỉ thấy **83° kinh độ** (số đo ở khối `focusMarker`). Đặt nhà máy ở Bắc Mỹ
+      (−100) · châu Âu (15) · Đông Á (110) là trải 210° → trẻ KHÔNG BAO GIỜ kéo được.
+      Ba toạ độ dưới trải 45°, đủ lọt mọi cỡ màn, và vẫn là ba châu lục khác nhau —
+      đúng ý "ba vùng khác nhau" mà không hy sinh việc chơi được.
+   ⚠️ CỐ Ý KHÔNG GẮN TÊN NƯỚC NÀO. Chỉ ba chấm "nhà máy" trên ba châu lục. Nói "chỗ
+      này ô nhiễm" là một phát biểu về thế giới thật mà dự án không có nguồn để đứng
+      sau, và là loại câu không nên đặt vào miệng một nhân vật cho trẻ em.
+   ⚠️ Cả ba nằm trên ĐẤT LIỀN của bức ảnh vệ tinh (Trung Âu · Trung Phi · Tây/Trung Á)
+      — đặt nhà máy giữa đại dương thì chính bức ảnh tố cáo, đúng bài học của bước ⑤. */
+const STACKS = [
+  { id: 'st1', lat: 50, lon: 15 },   // Trung Âu
+  { id: 'st2', lat:  5, lon: 20 },   // Trung Phi
+  { id: 'st3', lat: 40, lon: 60 }    // Tây/Trung Á
+];
 
 /* ── Bước `eco`: 7 thẻ hành động, phân vào 2 rổ ──────────────────────────────
    `b` = rổ đúng ('good' NÊN LÀM · 'bad' KHÔNG NÊN LÀM). 4 việc nên làm + 3 việc
@@ -699,12 +1085,8 @@ const ECO = [
   { id: 'water',  ic: '💧', b: 'bad'  },
   { id: 'bag',    ic: '🛍️', b: 'bad'  }
 ];
-const GEMS = [
-  { id: 'sun',   ic: '☀️', slot: 'heat'  },
-  { id: 'water', ic: '💧', slot: 'water' },
-  { id: 'air',   ic: '🌬️', slot: 'air'   }
-];
-const SLOTS = ['heat', 'water', 'air'];
+/* ⛔ `GEMS` + `SLOTS` ĐÃ BỎ 02/08/2026 cùng bảng kéo viên ngọc — xem `steps.core`.
+   Ba "viên ngọc" là vật thể bịa, không có trong bất cứ thứ gì nhiệm vụ dạy. */
 
 /* ───────────────────── Trạng thái ───────────────────── */
 let world = null;
@@ -713,7 +1095,7 @@ let world = null;
    (timeline · energy · eco) xen vào giữa để mỗi bài học nối vào cảnh vừa xảy ra:
    lịch sử ngay sau khi quét xong hành tinh, năng lượng sạch ngay sau khi thấy Mặt
    Trời, thói quen bảo vệ môi trường ngay sau khi thu mẫu sự sống. */
-const STEP_IDS = ['scan', 'timeline', 'sun', 'energy', 'rotation', 'life', 'eco', 'core'];
+const STEP_IDS = ['scan', 'timeline', 'sun', 'energy', 'life', 'eco', 'core'];
 /* Trình điều phối — dựng SAU sổ đăng ký `steps` (xem chỗ gọi `AstroQMission.create`).
    Bước nào đã xong, thưởng server đã trả, đang ở bước mấy: tất cả nằm trong `RUN`,
    trang này không giữ bản sao nào — hai bản sao là hai thứ sớm muộn lệch nhau. */
@@ -813,25 +1195,68 @@ function hand(kind) {
 }
 function handOff() { $('hand').className = 'me-hand'; }
 
-/* Chỉ bàn tay 👆 vào ĐỐM CHƯA CHẠM tiếp theo của bước 1 (thêm 02/08/2026, `004`).
-   ⚠️ Đây là thứ THAY CHO `hand('drag')`/`hand('zoom')` đã bỏ: bước 1 không dạy thao
+/* Chỉ bàn tay 👆 vào MỘT marker cụ thể (thêm 02/08/2026, `004`).
+   ⚠️ Đây là thứ THAY CHO `hand('drag')`/`hand('zoom')` đã bỏ: bước ① không dạy thao
       tác nào nữa, bàn tay chỉ nói "chỗ này".
-   ⚠️ Thứ tự đi theo SCAN_POINTS (khí quyển → đại dương → lục địa, tức trời xuống đất)
-      nhưng KHÔNG ép trẻ chạm đúng thứ tự — chạm đốm nào trước cũng được, bàn tay chỉ
-      nhảy sang đốm chưa xong gần nhất trong danh sách. Ép thứ tự là tạo ra cú chạm
-      SAI ở một bước mà cả thiết kế đang cố làm cho không thể sai.
    ⚠️ Dùng `world.screenOf` chứ không tự chiếu lại lat/lon: `#stage` là
       `position:fixed;inset:0` nên toạ độ khung nhìn CHÍNH LÀ toạ độ của nó, và nhờ đi
-      qua đúng hàm cảnh đang dùng thì bàn tay không bao giờ lệch khỏi đốm thật. */
-function handNext(step) {
-  const left = SCAN_POINTS.filter(p => !step.gotIds.has(p.id));
-  if (!left.length) return handOff();
-  const at = world.screenOf('marker', left[0].id);
+      qua đúng hàm cảnh đang dùng thì bàn tay không bao giờ lệch khỏi marker thật.
+      Marker ngoài khung → `visible:false` → tắt bàn tay, không chỉ ra ngoài màn hình. */
+function handAt(id) {
+  const at = world.screenOf('marker', id);
   if (!at || !at.visible) return handOff();
   const el = $('hand');
   el.style.left = (at.x - 19) + 'px';
   el.style.top = (at.y + 16) + 'px';   // dưới đốm — ngón tay 👆 chỉ NGƯỢC LÊN vào nó
   el.className = 'me-hand show tap';
+}
+
+/* Marker chưa chạm tiếp theo, theo thứ tự khai báo. `null` = xong hết. */
+function nextLeft(list, gotIds) {
+  return list.find(p => !gotIds.has(p.id)) || null;
+}
+
+/* ĐƯA MARKER KẾ TIẾP VÀO KHUNG — chỉ khi nó ĐANG Ở NGOÀI KHUNG (02/08/2026, `005`).
+   ⚠️ VÌ SAO CẦN: bảy châu lục trải ~234° kinh độ. Đo được ở sàn phóng `ZOOM_MIN` = 1
+      — bề ngang nhìn thấy = 360 × vpW / max(vpW, 2·vpH):
+        · 1440×900   → 288°  (cả 7 châu lục nằm trong khung, KHÔNG lướt lần nào)
+        · 2560×1080  → 360°  (toàn bộ bản đồ)
+        · 390×844    → **83°** — không đời nào đủ cho 7 châu lục.
+      Tức là trên điện thoại dọc, "mọi marker phải trong khung ngay lúc `enter()`"
+      là điều KHÔNG THỂ đạt được bằng cách chọn khung nhìn. Mà `004` đã bỏ hết cú
+      kéo, nên trẻ không có cách nào tự đi tìm → **kẹt cứng vĩnh viễn**, đúng cái
+      bẫy dự án đã trả giá một lần ở bản 3D.
+   ⚠️ VÌ SAO "CHỈ KHI Ở NGOÀI KHUNG": trên máy tính cả 7 đã thấy hết, lướt bản đồ ở
+      đó là chuyển động trẻ không yêu cầu và không hiểu vì sao xảy ra.
+   ⚠️ ĐÂY KHÔNG PHẢI CÚ KÉO QUAY LẠI. Trẻ không kéo gì cả — máy quét của tàu tự dời
+      tầm nhìn sang mục tiêu kế tiếp, y như `panTo` giữa các bước. Luật "0 cú kéo"
+      của `004`/`005` nói về THAO TÁC CỦA TRẺ, không cấm cảnh tự dịch chuyển.
+   ⚠️⚠️ DÙNG `world.centerOn`, KHÔNG DÙNG `world.panTo`. `panTo` nhận thẳng
+      `facing.lon`, mà nó chỉ trùng tâm khung khi `zoom = 1`; `centerOn` nhận kinh độ
+      muốn đặt vào GIỮA rồi tự quy đổi. Xem `centerOn` trong `js/earth2d.js`.
+   ⚠️ `dist` PHẢI TRUYỀN VÀO, đừng gán cứng 4.4: mỗi bước có mức phóng riêng
+      (`scan` 4,4 · `life` 3,1) và lướt bản đồ mà đồng thời đổi mức phóng là hai
+      chuyển động chồng lên nhau ở đúng lúc trẻ đang dõi theo một mục tiêu. */
+/* Marker có THẬT SỰ bấm được không — không chỉ "có nằm trong khung".
+   ⚠️ SINH RA TỪ MỘT LỖI CHỦ DỰ ÁN GẶP KHI CHƠI THẬT (02/08/2026): *"Nam Cực bị đè
+      sau popup hội thoại của Comet, trẻ không thể tự tìm."* Nam Cực ở lat −72 nên
+      chiếu xuống gần ĐÁY khung, mà box thoại `.me-say` và các bảng `.me-board` cũng
+      neo ở đáy — marker nằm trong khung nhưng **nằm DƯỚI một lớp khác**.
+      `screenOf().visible` chỉ biết chuyện giao với khung, không biết chuyện bị che.
+   ⚠️ `document.elementFromPoint` là phép đo THẬT: nó trả về đúng phần tử sẽ nhận cú
+      bấm. Dự án đã trả giá một lần cho bài học này ở `explorer.html` — `#loader` mờ
+      tới `opacity:0,02` mà vẫn NUỐT mọi cú bấm trong 0,8 giây, và "có CSS" hay "có
+      focus" đều không chứng minh được người dùng thao tác được. */
+function markerHittable(id) {
+  const at = world.screenOf('marker', id);
+  if (!at || !at.visible) return false;
+  const top = document.elementFromPoint(Math.round(at.x), Math.round(at.y));
+  return !!(top && (top.dataset.id === id || top.closest('.e2-mk[data-id="' + id + '"]')));
+}
+
+async function focusMarker(id, lat, lon, dist) {
+  if (markerHittable(id)) return;
+  await world.centerOn({ lat: lat, lon: lon, dist: dist, ms: reduced ? 0 : 850 });
 }
 
 /* Báo bước xong lên server: `js/mission-engine.js` lo (`RUN.finish` tự gọi).
@@ -843,13 +1268,19 @@ function handNext(step) {
 
 const steps = {
 
-  /* ── 1. Khởi động hệ thống quét ─────────────────────────────── */
+  /* ── 1. Bề mặt Trái Đất: bảy châu lục, rồi biển hay đất nhiều hơn? ──────────
+     Hai nhịp trong MỘT bước, cùng một arc "bề mặt hành tinh này có gì":
+       (a) chạm 7 châu lục  → mỗi cái sáng lên + hiện tên + một câu
+       (b) đoán nước/đất    → hé lộ 71% / 29%
+     Tiến độ đếm 7 + 1 = 8 để dãy chấm không nhảy hụt ở nhịp cuối. */
   scan: {
     hits: 0,
     gotIds: new Set(),
+    asked: false,
     async enter() {
       this.hits = 0;
       this.gotIds = new Set();
+      this.asked = false;
       /* ⚠️ MỘT HÌNH DUY NHẤT CHO CẢ NHIỆM VỤ — bản đồ phẳng, không đổi lần nào (`004`).
          Trước 02/08/2026 bước này mở màn bằng ảnh QUẢ CẦU rồi ĐỔI sang bản đồ phẳng
          ngay giữa bước, sau câu thoại đầu. Đó là cú đổi hình tệ nhất của cả nhiệm vụ:
@@ -858,9 +1289,7 @@ const steps = {
          Lý do cũ ("phẳng tối hơn quả cầu 4,7 lần") đã ĐO LẠI VÀ SAI ĐỊA CHỈ — xem khối
          chú thích ở `FACE_OPEN`. Tóm tắt: thủ phạm là KHUNG NHÌN, không phải loại bản
          đồ; đặt khung vào FACE_OPEN đưa 26,8 → 69,3 mà không đụng một byte asset nào.
-         ⚠️ Không có cú kéo nào trong bước này nữa, nên `setControls` tắt CẢ zoom: không
-         còn gì nằm ngoài khung để phải phóng tới. Việc dạy KÉO chuyển sang bước 5, nơi
-         thanh tín hiệu liên tục tự dạy luật mà không cần một dòng chữ nào. */
+         ⚠️ Không có cú kéo nào trong bước này, nên `setControls` tắt CẢ zoom. */
       world.setMap('flat');
       world.showGrid(true);
       world.setControls({ rotate: false, zoom: false });
@@ -868,63 +1297,127 @@ const steps = {
          TRẺ tạo ra. Trên bản đồ phẳng `setSpin` còn kéo cả khung ảnh trượt ngang
          (`paint()` lấy `px` từ `facing.lon`), tức là bản đồ tự bò đi trong lúc trẻ đọc. */
       world.setSpin(0);
-      await world.panTo({ ...FACE_OPEN, dist: 2.6, ms: reduced ? 0 : 1400 });
-      objective({ ic: '🎯', h: t('s1_h'), p: t('s1_p'), n: 0, total: 3 });
+      /* ⚠️ MỞ MÀN VẪN LÀ `FACE_OPEN` PHÓNG GẦN — GIỮ NGUYÊN, VÀ ĐÂY LÀ CHỖ ĐÃ ĐO.
+         `FACE_OPEN` (tâm 30, 35) ở `dist:2,6` được `004` chọn VÌ NỘI DUNG (Đại Tây Dương ·
+         châu Phi · Ả Rập · Ấn Độ Dương · Himalaya · dải mây) VÀ vì độ sáng: 82,7 so
+         với 87,0 của ảnh quả cầu như nó từng chạy.
+         ⚠️ Bản đầu của lượt `005` mở thẳng ở sàn phóng `dist:4,4` cho đủ 7 châu lục —
+            và `smoke_mission_earth` bắt ngay: độ sáng cảnh MỞ MÀN tụt còn **47,7**
+            (ngưỡng 70). Lùi hết cỡ là thấy trọn bản đồ, mà bản đồ thì phần lớn là đại
+            dương — đo được nước 13,8 vs đất 101,1 TRÊN CÙNG BỨC ẢNH. Tức "thấy đủ 7
+            châu lục" và "cảnh đầu tiên phải sáng" là hai yêu cầu chống nhau nếu ép
+            vào MỘT khung nhìn.
+         Cách thoát: **hai nhịp**. Mở màn gần và sáng, Comet nói "mình trải phẳng nó
+         ra thành bản đồ", RỒI camera mới lùi ra — cú lùi trở thành phần thưởng của
+         câu thoại chứ không phải một khung nhìn tối om từ giây đầu. */
+      await world.centerOn({ ...FACE_OPEN, dist: 2.6, ms: reduced ? 0 : 1400 });
+      objective({ ic: '🗺️', h: t('s1_h'), p: t('s1_p'), n: 0, total: CONTINENTS.length + 1 });
 
       /* ⚠️ KHÔNG CÒN `hand('zoom')` VÀ `hand('drag')` (bỏ 02/08/2026, `004`).
          Chủ dự án chốt: "không có hành động hay hướng dẫn co kéo gì hết". Bàn tay giờ
-         chỉ làm MỘT việc — chỉ vào đốm kế tiếp. Không dạy thao tác, chỉ chỉ chỗ.
-         Cũng bỏ luôn khoảng chờ 1,4s vốn chỉ tồn tại để bàn tay KÉO kịp nhìn thấy. */
+         chỉ làm MỘT việc — chỉ vào châu lục kế tiếp. Không dạy thao tác, chỉ chỉ chỗ.
+         ⚠️ Câu mở đầu nói ra việc "trải phẳng Trái Đất thành bản đồ" vì trẻ vừa rời
+         QUẢ CẦU 3D ở `explorer.html` (nhịp 0 của `005`). Không nói thì cú đổi hình
+         giữa hai trang từ trên trời rơi xuống — đúng lỗi mà `004` đã đi sửa. */
       await say('comet', t('s1_say1'));
-      world.addMarkers(SCAN_POINTS.map(p => ({
+      /* CÚ LÙI RA — nhịp thứ hai của cảnh mở màn (xem khối chú thích ngay trên).
+         ⚠️ `centerOn` chứ không `panTo`: trên bản đồ phẳng `facing.lon` KHÔNG rơi vào
+            tâm khung (lệch 36° ở 1440×900). Đo được với `centerOn({lon:17})`: cả 7
+            châu lục nằm trong khung ở 1440×900 · 1900×985 · 2560×1080. Riêng điện
+            thoại dọc thì bất khả thi (chỉ thấy 83° kinh độ) — `focusMarker` lo. */
+      await world.centerOn({ lat: 0, lon: 17, dist: 4.4, ms: reduced ? 0 : 1100 });
+      world.addMarkers(CONTINENTS.map(p => ({
         id: p.id, lat: p.lat, lon: p.lon,
         rgb: '95,240,255', color: 0xbdf5ff
       })));
       await say('comet', t('s1_say2'));
       hideSay();
-      handNext(this);
-      /* ⚠️ LỜI NHẮC 9 GIÂY GIỮ LẠI LÀM BẢO HIỂM, dù cả ba đốm nay đều trong khung.
-         Bỏ nó đi là đặt cược rằng khung nhìn sẽ không bao giờ đổi nữa. Câu chữ đã
-         viết lại: nó không còn bảo trẻ kéo, chỉ nhắc còn đốm chưa chạm. */
+      /* ⚠️ PHẢI `focusMarker` NGAY LÚC VÀO BƯỚC, không chỉ sau mỗi cú chạm. Trên điện
+         thoại dọc châu lục đầu tiên (Bắc Mỹ, lon −100) nằm NGOÀI khung ở khung nhìn
+         mở màn, nên `handAt` không có gì để chỉ và trẻ mở bước ra thấy một tấm bản đồ
+         không có dấu hiệu nào. `smoke_mission_earth` mục [10] bắt đúng chuyện này. */
+      await focusMarker(CONTINENTS[0].id, 0, CONTINENTS[0].lon, 4.4);
+      handAt(CONTINENTS[0].id);
+      /* ⚠️ LỜI NHẮC 9 GIÂY GIỮ LẠI LÀM BẢO HIỂM. Bỏ nó đi là đặt cược rằng khung
+         nhìn sẽ không bao giờ đổi nữa. Câu chữ không bảo trẻ kéo, chỉ nhắc còn chỗ
+         chưa chạm và bàn tay đang chỉ vào đó. */
       if (!reduced) {
         this._tid = setTimeout(() => {
-          if (this.hits < 3 && RUN.done.indexOf('scan') < 0) toast(t('s1_hint'));
+          if (this.hits < CONTINENTS.length && RUN.done.indexOf('scan') < 0) toast(t('s1_hint'));
         }, 9000);
       }
     },
     async pick(ev) {
-      if (ev.type !== 'marker') return;
-      const p = SCAN_POINTS.find(x => x.id === ev.id);
+      if (ev.type !== 'marker' || busy) return;
+      const p = CONTINENTS.find(x => x.id === ev.id);
       if (!p || !world.markDone(ev.id)) return;
       clearTimeout(this._tid);
       handOff();
       this.gotIds.add(p.id);
       this.hits++;
-      // Cao dần theo số điểm đã quét — trẻ nghe là biết mình đang tiến tới
-      sfx('beep', 980 + this.hits * 140);
-      progress(this.hits, 3);
-      /* Ba câu literal, KHÔNG ghép `t('s1_hit' + hits)`: phép kiểm i18n của
-         `check_pages` quét `t("khoá")` dạng chữ, ghép động là ba khoá này bị báo
-         "khai mà không dùng" — và lỗi đó im lặng. */
-      const hitMsg = this.hits === 1 ? t('s1_hit1')
-                   : this.hits === 2 ? t('s1_hit2')
-                   : t('s1_hit3');
-      toast(hitMsg.replace('{n}', this.hits));
-      /* Thẻ nội dung — ĐÂY mới là bài học của bước 1 (`004`). Trước 02/08/2026 ba đốm
-         không mang gì cả, chúng chỉ tồn tại để dạy thao tác kéo/zoom. Dùng lại đúng
-         `showCard` của bước `life`/`timeline`, không dựng hộp thoại thứ hai. */
+      // Cao dần theo số châu lục đã quét — trẻ nghe là biết mình đang tiến tới
+      sfx('beep', 900 + this.hits * 70);
+      progress(this.hits, CONTINENTS.length + 1);
+      /* Thẻ nội dung — dùng lại đúng `showCard` của bước `life`/`timeline`, không
+         dựng hộp thoại thứ hai. Tên châu lục là phần trẻ phải đọc được rõ nhất. */
       busy = true;
       await showCard({
         ic: p.ic, nm: p.nm[LANG] || p.nm.vi, fact: p.fact[LANG] || p.fact.vi,
-        tag: t('s1_card'), cc: p.cc, cbg: p.cbg
+        tag: t('s1_card'), cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)'
+      });
+      const nx = nextLeft(CONTINENTS, this.gotIds);
+      if (nx) {
+        /* ⚠️ `busy` PHẢI CÒN BẬT SUỐT CÚ LƯỚT BẢN ĐỒ, đừng hạ ngay sau `showCard`.
+           Hai lý do, và lý do đầu mới là lý do thật:
+             · một cú chạm rơi vào giữa lúc bản đồ đang trượt là chạm vào chỗ khác với
+               chỗ trẻ nhìn thấy — đúng loại lỗi "mục tiêu chạy khỏi con trỏ" mà `004`
+               đã đi sửa một lần;
+             · `busy` cũng là thứ bộ smoke chờ. Hạ sớm thì nó đo vị trí marker GIỮA
+               LÚC cú lướt còn đang chạy và báo "ngoài khung" — bản đầu của tôi làm
+               đúng như vậy và mục [10] báo hỏng 4 châu lục. */
+        await focusMarker(nx.id, 0, nx.lon, 4.4);
+        handAt(nx.id);
+        busy = false;
+        return;
+      }
+      busy = false;
+      await this.ask();
+    },
+    /* NHỊP (b): câu đố "biển hay đất nhiều hơn?".
+       ⚠️ KHÔNG có trạng thái thua — cả hai nhánh đều hé lộ rồi đi tiếp. Xem lý do
+          đầy đủ ở khối chú thích `ASK_ANSWER`. */
+    async ask() {
+      if (this.asked) return;
+      this.asked = true;
+      world.clearMarkers();
+      await say('comet', t('s1_ask_say'));
+      hideSay();
+      buildAsk({
+        k: t('s1_ask_k'), q: t('s1_ask_q'),
+        opts: [{ id: 'water', ic: '🌊', tx: t('s1_ask_water') },
+               { id: 'land',  ic: '🏔️', tx: t('s1_ask_land') }],
+        onPick: (p) => steps.scan.onAnswer(p)
+      });
+      $('ask').classList.add('show');
+    },
+    async onAnswer(pick) {
+      $('ask').classList.remove('show');
+      const right = pick === ASK_ANSWER;
+      sfx(right ? 'ready' : 'beep', right ? undefined : 640);
+      progress(CONTINENTS.length + 1, CONTINENTS.length + 1);
+      busy = true;
+      await showCard({
+        ic: '🌊', nm: t('s1_ans_nm'), fact: t('s1_ans_fact'),
+        tag: right ? t('s1_ans_right') : t('s1_ans_wrong'),
+        cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)'
       });
       busy = false;
-      if (this.hits >= 3) { await finishStep('scan'); return; }
-      handNext(this);
+      await finishStep('scan');
     },
     async outro() {
       sfx('ready');                       // "Scan Complete!"
       handOff();
+      $('ask').classList.remove('show');
       await world.fadeGrid(reduced ? 0 : 900);
       world.clearMarkers();
       await say('byte', t('s1_done'));
@@ -932,7 +1425,7 @@ const steps = {
     }
   },
 
-  /* ── 2. Lịch sử 4,5 tỷ năm hình thành Trái Đất ───────────────
+  /* ── 2. Lịch sử 4,54 tỷ năm hình thành Trái Đất ──────────────
      Bước ĐỌC-XEM, không phải bước đố: không có cách nào làm sai, chỉ có đi đúng thứ
      tự. Cố ý đặt ngay sau bước quét — trẻ vừa nhìn kỹ bề mặt hành tinh xong thì câu
      "hành tinh này ngày xưa trông khác hẳn" mới có chỗ bám. */
@@ -940,16 +1433,24 @@ const steps = {
     seen: 0,
     async enter() {
       this.seen = 0;
-      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG — từ 01/08/2026
-         bước 1 và bước `rotation` dùng bản đồ phẳng, nên bước nào cần quả cầu phải
-         tự nói ra. Không nói thì nó nhận map của bước trước, mà bước trước có thể
-         đổi bất cứ lúc nào. Quả cầu đúng cho bước này: cả hành tinh là MỘT vật thể
-         (đổi tông theo thời đại · ranh giới ngày/đêm · khói phủ khí quyển). */
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG: không khai thì
+         bước này nhận map của bước trước, mà bước trước đổi lúc nào cũng được.
+         ⚠️ CHÚ THÍCH CŨ Ở ĐÂY NÓI "quả cầu đúng cho bước này" — ĐÃ SAI TỪ `004`
+            (một hình cho cả nhiệm vụ) và sai hẳn từ `005` (0 lần `setMap('globe')`).
+            Chú thích lạc hậu là thứ dự án đã trả giá thật, nên sửa chứ không để. */
       world.setMap('flat');
       world.setControls({ rotate: false, zoom: false });
       world.setSpin(0);
-      await world.panTo({ dist: 3.4, ms: reduced ? 0 : 1300 });
+      /* ⚠️ KHÔNG PHÓNG TO Ở BƯỚC NÀY (bỏ `panTo({dist:3.4})` ngày 02/08/2026).
+         Chủ dự án chơi thật và hỏi đúng câu phải hỏi: *"sao hình ảnh Trái Đất lại cần
+         zoom trước nhiệm vụ dòng thời gian? không zoom có vấn đề gì không?"* — Không.
+         Bước này KHÔNG có gì trên bản đồ để nhìn gần: mọi thứ nó dạy nằm ở thanh mốc
+         và bảng chữ dưới đáy, còn hành tinh chỉ đổi TÔNG MÀU (`setEra`) — mà đổi tông
+         thì nhìn xa còn rõ hơn nhìn gần. Cú phóng ấy vì thế là chuyển động không mang
+         thông tin, đúng loại "cảnh tự dịch chuyển mà trẻ không hiểu vì sao" mà `004`
+         đã đi bỏ ở bước ①. Giữ nguyên khung của bước trước là cảnh liền mạch. */
       objective({ ic: '🕰️', h: t('tl_h'), p: t('tl_p'), n: 0, total: ERAS.length });
+      $('time-fig').hidden = true;          // chưa mở mốc nào thì chưa có tranh nào
       buildTimeline();
       await say('comet', t('tl_say1'));
       hideSay();
@@ -987,9 +1488,25 @@ const steps = {
         });
       }
       busy = false;
-      if (this.seen >= ERAS.length) await finishStep('timeline');
+      /* ⚠️ MỐC CUỐI PHẢI CHỜ TRẺ BẤM, ĐỪNG GỌI `finishStep` Ở ĐÂY. Gọi thẳng là bảng bị
+         `outro()` gỡ đi ngay khi chữ vừa hiện ra — xem ghi chú ở `#time-ok`. */
+      if (this.seen >= ERAS.length) {
+        const ok = $('time-ok');
+        ok.textContent = t('card_ok');
+        ok.hidden = false;
+        ok.focus();                        // để đường bàn phím không phải Tab đi tìm
+      }
+    },
+    /** Trẻ đã đọc xong mốc cuối và tự bấm. Đây là đường DUY NHẤT ra khỏi bước ②. */
+    async onDone() {
+      if (busy || this.seen < ERAS.length) return;
+      busy = true;
+      $('time-ok').hidden = true;
+      busy = false;
+      await finishStep('timeline');
     },
     async outro() {
+      $('time-ok').hidden = true;
       setEra(null);                        // trả hành tinh về màu thật
       $('time').classList.remove('show');
       await say('comet', t('tl_say2'));
@@ -997,53 +1514,125 @@ const steps = {
     }
   },
 
-  /* ── 3. Tìm nguồn năng lượng ────────────────────────────────── */
+  /* ── 3. Mặt Trời và ba vùng khí hậu ─────────────────────────────────────────
+     HAI NHỊP, viết lại 02/08/2026 (`docs/decisions/005`):
+       (a) hành tinh chìm vào bóng tối → trẻ tìm và chạm ngôi sao → nó bùng cháy
+       (b) ba vùng khí hậu: xích đạo · ôn đới · cực — và VÌ SAO chúng khác nhau
+     Nhịp (a) là bản cũ của cả bước, giữ nguyên vì đó là khoảnh khắc mạnh nhất và là
+     lý do bước này mang id `sun`. Nhịp (b) là bài học mới.
+
+     ⛔ KHÔNG CÒN `.e2-terminator` (bỏ hẳn, `005` mục 2). Bản trước bật gradient vùng
+        tối ở đúng đây rồi tắt lại ở cuối `outro()`. Chủ dự án chơi thật và bác bằng
+        ảnh chụp: nó trông như một BỨC TƯỜNG ĐEN, không như ranh giới ngày/đêm. Bài
+        học ngày/đêm đã chuyển sang quả cầu 3D ở `explorer.html` — nơi ánh sáng là
+        `PointLight` gắn vào Mặt Trời THẬT trong cảnh. Đừng dựng lại ở đây. */
   sun: {
-    hinted: false,
+    got: new Set(),
     async enter() {
-      this.hinted = false;
-      /* ⚠️ KHAI MAP TƯỜNG MINH dù cả 8 bước nay đều `flat` (`004`) — `setMap` là
+      this.got = new Set();
+      /* ⚠️ KHAI MAP TƯỜNG MINH dù cả 7 bước nay đều `flat` (`004`) — `setMap` là
          trạng thái THỪA HƯỞNG, không khai thì bước này nhận map của bước trước và
-         bước trước đổi lúc nào cũng được. Đây đúng là chỗ bước ⑦ ⑧ từng để hở. */
+         bước trước đổi lúc nào cũng được. Đây đúng là chỗ bước ⑥ ⑦ từng để hở. */
       world.setMap('flat');
       world.setControls({ rotate: false, zoom: false });
-      // Lùi ra để thấy CẢ HAI NỬA bản đồ — bài học của bước này là "cùng một lúc,
-      // nửa này ngày nửa kia đêm", nên nửa kia phải nằm trong khung.
-      await world.panTo({ ...FACE_OPEN, dist: 5.2, ms: reduced ? 0 : 1500 });
+      /* ⚠️ `dist:4,4` (sàn phóng) CHỨ KHÔNG PHẢI 5,2 NHƯ TRƯỚC. `probe_map_cover.py`
+         đo được `dist:5,2` là cấu hình HỞ NHIỀU NHẤT của cả nhiệm vụ (zoom 0,846 < 1
+         → lớp nhỏ hơn khung → dải đen ở cả hai trục, 602px bên phải trên khung
+         1900×985). `ZOOM_MIN` nay là 1 nên 5,2 chỉ còn là 4,4 viết vòng — khai thẳng
+         4,4 để con số trong mã đúng bằng thứ đang chạy.
+         `lat:0` + `lon:18` để cả ba vùng khí hậu (lat 48 · 2 · −72, lon ~16–20) nằm
+         trong khung ở MỌI cỡ màn — xem khối chú thích của `ZONES`.
+         ⚠️ `centerOn` chứ không `panTo`: trên bản đồ phẳng `facing.lon` không rơi vào
+            tâm khung (lệch 36° ở 1440×900). Xem `centerOn` trong `js/earth2d.js`. */
+      await world.centerOn({ lat: 0, lon: 18, dist: 4.4, ms: reduced ? 0 : 1500 });
       /* MẤT NĂNG LƯỢNG: cả hành tinh chìm vào bóng tối TRƯỚC, rồi Comet mới hỏi
-         "ngôi sao đâu?". Đúng thứ tự trong bản mô tả — và chỉ khi vừa thấy sáng ở
-         nhiệm vụ 1 thì lúc tối đi mới thành một khoảnh khắc. */
-      await world.dimSun(reduced ? 0 : 1200);
-      objective({ ic: '☀️', h: t('s2_h'), p: t('s2_p'), n: 0, total: 1 });
+         "ngôi sao đâu?". Chỉ khi vừa thấy sáng ở bước trước thì lúc tối đi mới thành
+         một khoảnh khắc. Đây là `.e2-night` (tối CẢ ảnh) — khác hẳn vùng tối vắt
+         ngang bản đồ đã bị bác. */
+      /* ══ NHỊP (a): TRẺ TỰ ĐOÁN → RỒI MỚI TẮT MẶT TRỜI ══════════════════════════
+         Viết lại 02/08/2026 theo chủ dự án. Hai bản trước đều hỏng ở cùng một chỗ:
+           · bản 1 — bắt trẻ ĐI TÌM và chạm nút Mặt Trời. Nút `.e2-sun` neo `top:9%;
+             right:8%` của khung, mà bản đồ đã lùi hết cỡ và phủ kín, nên ngôi sao
+             nằm lẫn vào chính bức ảnh Trái Đất → **không tìm được**, đúng cái bẫy
+             bước `rotation` bản 3D đã mắc.
+           · bản 2 — bỏ việc đi tìm, Mặt Trời tự cháy. Nhưng lời thoại nói *"ngôi sao
+             của chúng ta đang lên kìa"* trong khi **không có vật thể nào hiện ra** →
+             trẻ hiểu Mặt Trời nằm trên Trái Đất.
+         ⚠️ GỐC CỦA CẢ HAI LÀ MỘT: cú tối/sáng **không có nguyên nhân nào trong tay
+            trẻ**, nên lời thoại buộc phải bịa ra một nguyên nhân nhìn thấy được.
+         Cách chữa: cho trẻ TỰ TẠO RA nguyên nhân. Bản đồ đang sáng → Comet hỏi *"nếu
+         Mặt Trời tắt đi thì sao?"* → trẻ đoán → **cú đoán đó chính là thứ làm màn hình
+         tối đi**. Từ đó tối/sáng là hệ quả của một câu hỏi, không phải hiệu ứng rơi
+         từ trên trời xuống.
+         ⚠️ CẢ BA LỰA CHỌN ĐỀU ĐÚNG — cố ý. Mặt Trời làm cả ba việc cùng lúc, nên
+            không có đáp án sai, và chính điều đó là bài học. */
+      objective({ ic: '☀️', h: t('s2b_h'), p: t('s2b_p'), n: 0, total: ZONES.length });
       await say('comet', t('s2_say1'));
       hideSay();
-      if (!reduced) {
-        // Gợi ý sau 9 giây nếu trẻ chưa tìm ra — không phạt, chỉ nhắc
-        this._tid = setTimeout(() => {
-          if (RUN.done.indexOf('sun') < 0) { this.hinted = true; toast(t('s2_hint')); }
-        }, 9000);
-      }
+      buildAsk({
+        k: t('s2_ask_k'), q: t('s2_ask_q'),
+        opts: [{ id: 'cold',  ic: '🥶', tx: t('s2_opt_cold') },
+               { id: 'plant', ic: '🌱', tx: t('s2_opt_plant') },
+               { id: 'rain',  ic: '🌧️', tx: t('s2_opt_rain') }],
+        onPick: (p) => steps.sun.onAnswer(p)
+      });
+      $('ask').classList.add('show');
     },
-    async pick(ev) {
-      if (ev.type !== 'sun' || world.sunOn) return;
-      clearTimeout(this._tid);
-      await finishStep('sun');
-    },
-    async outro() {
-      progress(1, 1);
+    /* Trẻ đã đoán → TẮT Mặt Trời cho thấy hậu quả, kể ba vai trò, rồi bật lại. */
+    async onAnswer() {
+      $('ask').classList.remove('show');
+      busy = true;
+      await world.dimSun(reduced ? 0 : 1200);
+      await say('comet', t('s2_ans'));
+      /* Ba vai trò — nội dung chủ dự án đưa. Cố ý là LỜI THOẠI chứ không phải ba thẻ:
+         bước này còn ba thẻ vùng khí hậu ở nhịp (b), sáu thẻ liên tiếp là quá dài. */
+      await say('comet', t('s2_role_heat'));
+      await say('comet', t('s2_role_plant'));
+      await say('comet', t('s2_role_rain'));
+      hideSay();
       sfx('ignite');
       await world.igniteSun(reduced ? 0 : 1700);
-      /* ⚠️ ĐÂY LÀ CHỖ RANH GIỚI NGÀY/ĐÊM THẬT SỰ HIỆN RA (`004` mục A2).
-         Trước 02/08/2026 gradient `.e2-view::after` chạy hết cỡ từ bước ①, nên câu
-         "nhìn kìa, ranh giới ngày và đêm!" nói về một thứ trẻ đã nhìn suốt từ đầu —
-         phần thưởng của bước này bị tiêu trước khi tới. Nay nó chỉ dâng lên ở đây.
-         Tắt lại ở cuối: để nguyên mức đậm cho 5 bước sau là làm tối cả phần còn lại
-         của nhiệm vụ, mà bài học thì đã dạy xong. */
-      $('stage').classList.add('e2-terminator');
-      if (!reduced) await new Promise(r => setTimeout(r, 900));
       await say('comet', t('s2_say2'));
       hideSay();
-      $('stage').classList.remove('e2-terminator');
+      world.addMarkers(ZONES.map(z => ({
+        id: z.id, lat: z.lat, lon: z.lon, rgb: '255,207,107', color: 0xffcf6b
+      })));
+      await say('comet', t('s2b_say1'));
+      hideSay();
+      busy = false;
+      await focusMarker(ZONES[0].id, ZONES[0].lat, ZONES[0].lon, 4.4);
+      handAt(ZONES[0].id);
+    },
+    async pick(ev) {
+      if (busy) return;
+      if (ev.type !== 'marker') return;
+      const z = ZONES.find(x => x.id === ev.id);
+      if (!z || !world.markDone(ev.id)) return;
+      handOff();
+      this.got.add(z.id);
+      sfx('beep', 900 + this.got.size * 110);
+      progress(this.got.size, ZONES.length);
+      busy = true;
+      await showCard({
+        ic: z.ic, nm: z.nm[LANG] || z.nm.vi, fact: z.fact[LANG] || z.fact.vi,
+        tag: t('s2b_card'), cc: z.cc, cbg: z.cbg
+      });
+      if (this.got.size >= ZONES.length) { busy = false; await finishStep('sun'); return; }
+      const nx = nextLeft(ZONES, this.got);
+      if (nx) {
+        // `busy` còn bật suốt cú lướt — lý do ghi ở bước ①.
+        await focusMarker(nx.id, nx.lat, nx.lon, 4.4);
+        handAt(nx.id);
+      }
+      busy = false;
+    },
+    async outro() {
+      handOff();
+      world.clearMarkers();
+      /* ⛔ CÂU KẾT KHÔNG ĐƯỢC NÓI "VÌ GẦN MẶT TRỜI HƠN" — xem khối chú thích `ZONES`.
+         Nguyên nhân là GÓC CHIẾU, và đó chính là câu NASA đã đối chiếu. */
+      await say('comet', t('s2b_say2'));
+      hideSay();
     }
   },
 
@@ -1055,22 +1644,24 @@ const steps = {
     placed: new Set(),
     async enter() {
       this.placed = new Set();
-      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG — từ 01/08/2026
-         bước 1 và bước `rotation` dùng bản đồ phẳng, nên bước nào cần quả cầu phải
-         tự nói ra. Không nói thì nó nhận map của bước trước, mà bước trước có thể
-         đổi bất cứ lúc nào. Quả cầu đúng cho bước này: cả hành tinh là MỘT vật thể
-         (đổi tông theo thời đại · ranh giới ngày/đêm · khói phủ khí quyển). */
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG: không khai thì
+         bước này nhận map của bước trước, mà bước trước đổi lúc nào cũng được.
+         ⚠️ CHÚ THÍCH CŨ Ở ĐÂY NÓI "quả cầu đúng cho bước này" — ĐÃ SAI TỪ `004`
+            (một hình cho cả nhiệm vụ) và sai hẳn từ `005` (0 lần `setMap('globe')`).
+            Chú thích lạc hậu là thứ dự án đã trả giá thật, nên sửa chứ không để. */
       world.setMap('flat');
       world.setControls({ rotate: false, zoom: false });
       world.setSpin(0);
-      await world.panTo({ dist: 3.8, ms: reduced ? 0 : 1300 });
+      /* Lùi về sàn phóng và căn giữa ba nhà máy (lon 15 · 20 · 60 → tâm ~32): cả ba
+         phải cùng nằm trên màn hình VỚI khay thẻ, không thì không kéo-thả được. */
+      await world.centerOn({ lat: 20, lon: 32, dist: 4.4, ms: reduced ? 0 : 1300 });
       /* Khói xuất hiện TRƯỚC khi Byte nói, y như bước Mặt Trời tắt đèn trước khi
          Comet hỏi: thấy vấn đề rồi mới nghe kể về vấn đề. */
       setSmog(1);
       objective({ ic: '🔋', h: t('ce_h'), p: t('ce_p'), n: 0, total: ENERGY.length });
+      buildEnergy();                       // dựng nhà máy TRƯỚC để Byte có cái mà chỉ
       await say('byte', t('ce_say1'));
       hideSay();
-      buildEnergy();
       $('energy').classList.add('show');
     },
     async onPlace(id) {
@@ -1087,102 +1678,22 @@ const steps = {
     async outro() {
       $('energy').classList.remove('show');
       setSmog(0);
+      world.clearMarkers();                // dọn ba nhà máy khỏi bản đồ
       sfx('ready');
       await say('byte', t('ce_say2'));
       hideSay();
     }
   },
 
-  /* ── 5. Khôi phục tín hiệu vệ tinh ──────────────────────────── */
-  rotation: {
-    locked: false,
-    /* ⚠️ `armed` LÀ CHỐT CHẶN, KHÔNG PHẢI CỜ TIỆN TAY (thêm 02/08/2026).
-       `tick()` chạy MỖI KHUNG HÌNH ngay khi bước này thành bước hiện tại — tức là
-       TRƯỚC khi `enter()` kịp đặt `facing` về chỗ xuất phát. Nên nếu bước trước để
-       lại một góc tình cờ nằm trong dung sai 20°, bước này TỰ THẮNG ở khung đầu tiên
-       và trẻ chưa làm gì. Đó là lỗi thật đã xảy ra: `FACE_OPEN` (30, 95) cách trạm
-       (16, 108) đúng **18,4°**. Đặt lại `facing` trong `enter()` KHÔNG đủ vì `tick`
-       chạy trước; phải khoá `tick` cho tới khi cảnh dựng xong. */
-    armed: false,
-    async enter() {
-      this.locked = false;
-      this.armed = false;
-      /* ⚠️ BẢN ĐỒ PHẲNG (đổi 01/08/2026), cùng lý do như bước 1: trên ảnh quả cầu
-         `paint()` đặt `translate` bằng 0, nên cú kéo KHÔNG làm hành tinh quay — chỉ
-         cái đốm trạm trượt đi. Lời "xoay Trái Đất" mô tả một việc không xảy ra.
-         Trên bản đồ phẳng thì kéo = đi khắp bề mặt, và việc phải làm trở thành một
-         câu đọc được: **đưa trạm phát sóng vào vòng ngắm**.
-         ⚠️ Điều kiện thắng KHÔNG ĐỔI (`stationAngleTo < 20°`) — nó là góc giữa `facing`
-            và trạm, đúng nghĩa trên cả hai loại map. Đổi map không đụng tới luật. */
-      world.setMap('flat');
-      world.setControls({ zoom: false });
-      world.setSpin(0);                    // để TRẺ tự kéo, hành tinh không tự chạy
-      world.setEarthDrag(true);
-      world.setSatelliteVisible(true);
-      world.setSatelliteSignal(false);
-      /* ⚠️ PHẢI KHAI `facing` MỞ ĐẦU TƯỜNG MINH — ĐÂY LÀ LỖI THẬT ĐÃ XẢY RA 02/08/2026.
-         Trước đó `panTo` chỉ đặt `dist`, nên `facing` được THỪA HƯỞNG từ bước trước.
-         Khi bước 1 chuyển sang khung nhìn `FACE_OPEN` (30, 95) thì cả chuỗi bước
-         2→4 để lại đúng góc đó, mà góc từ (30, 95) tới trạm (16, 108) đo được
-         **18,4°** — dưới đúng dung sai 20° của điều kiện thắng. Hậu quả: **bước 5 TỰ
-         THẮNG ngay khi vào**, trẻ chưa làm gì. `smoke_mission_earth` bắt được vì nó
-         chờ `wait_step('rotation')` mà nhiệm vụ đã nhảy sang `life`.
-         Bài học chung: bước nào có điều kiện thắng ĐO THEO `facing` thì tuyệt đối
-         không được để `facing` thừa hưởng. (10, 20) cách trạm **85,4°** — xa đủ để
-         cú kéo là một việc thật, và vẫn là một khung nhìn hợp lý (châu Phi). */
-      // Đặt góc xuất phát NGAY LẬP TỨC trước, rồi mới lùi camera ra — để không có
-      // khung hình nào tồn tại ở góc thừa hưởng của bước trước.
-      await world.panTo({ lat: 10, lon: 20, ms: 0 });
-      await world.panTo({ dist: 4.4, ms: reduced ? 0 : 1400 });
-      objective({ ic: '🛰️', h: t('s3_h'), p: t('s3_p'), n: 0, total: 1 });
-      /* VÒNG NGẮM = đích NHÌN THẤY ĐƯỢC của `stationAngleTo(...) → 0`.
-         ⚠️ Không có nó thì trẻ kéo mù, chỉ nhìn một thanh đo — đo được: trên bản đồ
-            phẳng, điểm ở `facing` rơi vào **(62,5%, 50%)** của khung, còn biểu tượng
-            vệ tinh nằm ở (13,6%, 17,1%). Không chỗ nào là "giữa", nên bảo trẻ "đưa
-            trạm về phía vệ tinh" hay "vào giữa khung" đều là chỉ sai chỗ.
-            Vòng ngắm do `js/earth2d.js` chiếu bằng ĐÚNG `project()` của marker nên
-            nó không thể lệch khỏi đích, ở mọi mức phóng. */
-      if (world.showAim) world.showAim(true);
-      // Đánh dấu trạm phát sóng: thứ trẻ phải kéo tới vòng ngắm
-      world.addMarkers([{ id: 'station', lat: STATION.lat, lon: STATION.lon,
-                          rgb: '255,225,140', color: 0xffe8a0 }]);
-      $('sat-st').textContent = t('s3_lost');
-      $('sat').classList.remove('ok');
-      $('sat').classList.add('show');
-      await say('byte', t('s3_say1'));
-      hideSay();
-      this.armed = true;                  // xem ghi chú ở `armed`
-    },
-    tick() {
-      if (this.locked || !this.armed) return;
-      const ang = world.stationAngleTo(STATION.lat, STATION.lon);
-      // 0° = trạm chỉ thẳng vào vệ tinh. Coi như bắt được tín hiệu dưới 20°.
-      const strength = Math.max(0, Math.min(1, 1 - ang / 90));
-      $('sat-meter').style.width = Math.round(strength * 100) + '%';
-      progress(ang < 20 ? 1 : 0, 1);
-      if (ang < 20) { this.locked = true; finishStep('rotation'); }
-    },
-    async outro() {
-      $('sat-st').textContent = t('s3_ok');
-      sfx('ready');
-      $('sat').classList.add('ok');
-      world.setSatelliteSignal(true);
-      if (world.showAim) world.showAim(false);
-      world.setEarthDrag(false);           // trả cú kéo về cho camera
-      world.clearMarkers();
-      await say('comet', t('s3_say2'));
-      hideSay();
-      $('sat').classList.remove('show');
-      world.setSatelliteVisible(false);
-      world.setSpin(0);
-    }
-  },
-
-  /* ── 6. Thu thập mẫu sự sống ────────────────────────────────── */
+  /* ── 5. Thu thập mẫu sự sống ────────────────────────────────── */
   life: {
     got: new Set(),
+    cur: null,           // nơi đang được hỏi; `null` = đang hé lộ hoặc đã xong
+    lastHit: null,       // cú đoán vừa rồi đúng chưa; `null` = chưa đoán lần nào
     async enter() {
       this.got = new Set();
+      this.cur = null;
+      this.lastHit = null;
       /* ⚠️ BƯỚC NÀY PHẢI DÙNG BẢN ĐỒ PHẲNG (chỉ cảnh 2D có `setMap`). Đây là
          bước DUY NHẤT khẳng định vị trí thật — 4 vùng sinh học neo vào lat/lon
          thật — mà ảnh quả cầu là ảnh CHỤP tâm Bắc Mỹ: Amazon, Himalaya, Nam
@@ -1196,40 +1707,80 @@ const steps = {
                                           rgb: b.rgb, color: b.color })));
       await say('byte', t('s4_say1'));
       hideSay();
+      /* ⚠️ CÙNG CƠ CHẾ VỚI BƯỚC ① — VÀ Ở ĐÂY NÓ CHỮA MỘT LỖI CÓ SẴN (02/08/2026).
+         4 vùng nằm ở lon −62 · −42 · 20 · 87 (trải 149°) và lat −75 … 28, trong khi
+         màn dọc 390×844 ở `dist:3,1` chỉ thấy ~59° kinh độ. Trước lượt này lớp bản đồ
+         còn bị NEO MÉP TRÁI nên **dãy Himalaya (lon 87) không tài nào đưa vào khung**
+         — tức bước này KHÔNG CHƠI ĐƯỢC trên máy tính bảng dọc, mà không phép kiểm nào
+         hỏi câu đó. `004` mục ⑤ đã nêu chuyện này thành việc còn treo; nay làm được vì
+         CSS đã căn giữa lớp. `smoke_mission_earth` mục [10b] canh nó. */
+      buildXsec(r => this.onRung(r));
+      $('xsec').classList.add('show');
+      await this.askNext();
     },
-    async pick(ev) {
-      if (ev.type !== 'marker' || busy) return;
-      const b = BIOMES.find(x => x.id === ev.id);
-      if (!b || this.got.has(b.id)) return;
+
+    /** Bay tới nơi kế tiếp trong `LIFE_ORDER` rồi mở bốn nấc cho trẻ đoán. */
+    async askNext() {
+      const b = BIOMES.find(x => x.id === LIFE_ORDER[this.got.size]);
+      if (!b) return;
+      this.cur = b;
       busy = true;
-      toast(t('s4_scan'));
-      /* Dừng hành tinh + đưa camera tới đúng vùng trước khi thả drone.
-         Không làm thì hai chuyện xảy ra: hành tinh xoay tiếp nên drone quét lệch
-         khỏi chỗ trẻ vừa chạm, và vùng đó thường nằm ở MÉP quả cầu — tia laser
-         chiếu xuống tâm hành tinh nhưng trên màn hình lại trông như chiếu ngang. */
-      // Hành tinh dừng lại để drone quét đúng chỗ trẻ vừa chạm; góc camera do
-      // chính `sendDrone` đặt (nó biết cần chếch bao nhiêu độ mới thấy tia laser).
+      await focusMarker(b.id, b.lat, b.lon, 3.1);
+      $('xsec-q').textContent = t('xsec_q').replace('{nm}', b.nm[LANG] || b.nm.vi);
+      $('xsec-hint').textContent = '';
+      this.lastHit = null;
+      setRungs(true);
+      busy = false;
+    },
+
+    /** Trẻ chọn một nấc. ⚠️ ĐOÁN SAI KHÔNG PHẠT: cả hai nhánh đều thả chip vào ĐÚNG nấc
+        của nơi đó rồi đi tiếp — khác nhau đúng một câu chữ. Xem `xsec_ok`/`xsec_near`. */
+    async onRung(rank) {
+      if (busy || !this.cur) return;
+      const b = this.cur;
+      this.cur = null;
+      busy = true;
+      setRungs(false);
+      placeChip(b);
+      const hit = rank === b.rank;
+      this.lastHit = hit;
+      $('xsec-hint').textContent = hit ? t('xsec_ok') : t('xsec_near');
+      sfx(hit ? 'ready' : 'pickup');
+      /* ⛔ HAI THỨ ĐÃ BỎ Ở BƯỚC NÀY, ĐỪNG DỰNG LẠI CÁI NÀO.
+         ① DRONE QUÉT (bỏ 02/08/2026) — chủ dự án chơi thật và hỏi đúng câu phải hỏi:
+            *"tự dưng đến nhiệm vụ drone quét mẫu làm gì? nếu để khám phá các vùng thì
+            đã có 7 châu lục rồi."* Bước ① nay đã là một chuyến đi khắp bề mặt, nên một
+            chuyến thứ hai kèm hoạt cảnh 1,5 giây là lặp lại cùng việc bằng cỗ máy to hơn.
+         ② CHẠM MARKER ĐỂ MỞ THẺ (bỏ cùng ngày, sau khi đếm ngân sách khuôn) — "chạm dấu
+            hiệu trên bản đồ" đã dùng ở ① và ③, nên ở đây là lần thứ 3, vượt luật `002`.
+            ⚠️ Marker VẪN GIỮ và camera VẪN BAY TỚI: trẻ phải nhìn thấy nơi đó nằm đâu
+               trên ảnh vệ tinh thì câu hỏi độ cao mới có căn cứ. Chỉ có cú BẤM là dời
+               xuống cột. Đây cũng là lý do bước này không còn hàm `pick()`. */
       world.setSpin(0);
-      await world.sendDrone(b.lat, b.lon);
       world.markDone(b.id);
       this.got.add(b.id);
       progress(this.got.size, 4);
       await showCard({
         ic: b.ic, nm: b.nm[LANG] || b.nm.vi, fact: b.fact[LANG] || b.fact.vi,
+        sub: b.alt[LANG] || b.alt.vi,
         tag: t('s4_card'), cc: b.cc, cbg: b.cbg
       });
+      if (this.got.size >= 4) { busy = false; await finishStep('life'); return; }
+      /* `busy` còn bật suốt cú lướt — cùng lý do đã ghi ở bước ①: một cú bấm rơi vào
+         giữa lúc bản đồ đang trượt là bấm vào chỗ khác với chỗ trẻ nhìn thấy. */
       busy = false;
-      if (this.got.size >= 4) await finishStep('life');
+      await this.askNext();
     },
     async outro() {
       world.setSpin(0);
+      $('xsec').classList.remove('show');
       world.clearMarkers();
       await say('byte', t('s4_say2'));
       hideSay();
     }
   },
 
-  /* ── 7. Eco-Hero: NÊN / KHÔNG NÊN làm ────────────────────────
+  /* ── 6. Eco-Hero: NÊN / KHÔNG NÊN làm ────────────────────────
      Bước DUY NHẤT của nhiệm vụ nói về việc trẻ làm ngoài đời, không phải trong tàu.
      Đặt ngay sau khi thu 4 mẫu sự sống: vừa cầm trên tay bằng chứng "hành tinh này
      có sự sống" thì câu "vậy mình giữ nó thế nào?" mới là kết luận, không phải bài
@@ -1274,24 +1825,36 @@ const steps = {
     }
   },
 
-  /* ── 8. Giải mã hành tinh ───────────────────────────────────── */
+  /* ── 7. Đóng dấu Hồ Sơ Trái Đất ──────────────────────────────────────────────
+     ⛔ KHÔNG CÒN KÉO 3 VIÊN NGỌC (bỏ 02/08/2026). Chủ dự án chơi thật: *"bỏ nhiệm vụ
+        kéo viên ngọc đi, không logic."* — Đúng. "Ngọc Mặt Trời · Ngọc Giọt Nước ·
+        Ngọc Khí Quyển" là ba vật thể **bịa ra**, không có trong bất cứ thứ gì nhiệm
+        vụ vừa dạy; và "Mạch Năng Lượng Sự Sống" cũng vậy. Cả nhiệm vụ đứng trên một
+        bức ảnh vệ tinh THẬT với toạ độ THẬT, rồi bước cuối lại bắt trẻ lắp đồ chơi
+        khoa học viễn tưởng — đó là chỗ duy nhất câu chuyện tự phản bội chính nó.
+     Thay bằng thứ có nghĩa và trẻ đã có sẵn: **hồ sơ** mà nó vừa điền đầy suốt 6 bước.
+     ⚠️ ID BƯỚC GIỮ NGUYÊN `core` — đó là khoá trong DynamoDB. Đổi id là người chơi cũ
+        mất tiến độ, và `check_pages` [3c] đòi `STEP_IDS` khớp `Missions.All`. Bước này
+        không mang mẫu codex nào và không móc huy hiệu nào (đã grep `mission:earth`
+        trong `Services/`), nên đổi VIỆC bên trong là an toàn tuyệt đối, 0 đồng backend. */
   core: {
-    filled: new Set(),
+    stamped: false,
     async enter() {
-      this.filled = new Set();
+      this.stamped = false;
       world.setMap('flat');
       world.setControls({ rotate: false, zoom: false });
-      await world.panTo({ dist: 3.6, ms: reduced ? 0 : 1400 });
-      objective({ ic: '🧩', h: t('s5_h'), p: t('s5_p'), n: 0, total: 3 });
-      buildCore();
-      await say('byte', t('s5_say1'));
+      objective({ ic: '🗂️', h: t('s5_h'), p: t('s5_p'), n: 0, total: 1 });
+      buildFile();
+      await say('comet', t('s5_say1'));
       hideSay();
       $('core').classList.add('show');
     },
-    async onFill(slot) {
-      this.filled.add(slot);
-      progress(this.filled.size, 3);
-      if (this.filled.size >= 3) await finishStep('core');
+    async onStamp() {
+      if (this.stamped) return;
+      this.stamped = true;
+      progress(1, 1);
+      sfx('ready');
+      await finishStep('core');
     },
     async outro() {
       $('core').classList.remove('show');
@@ -1305,14 +1868,19 @@ const steps = {
 /* ───────────────────── Dựng trình điều phối ─────────────────────
    Phải đặt SAU `const steps` (nó là giá trị truyền vào, không hoisting được).
    `showWin` thì hoisting được vì là khai báo hàm, nên truyền thẳng ở đây được.
-   `codexTotal: 9` chỉ là số TẠM cho tới khi server trả số thật (6 mẫu cũ + 3 mẫu
-   của ba bước thêm 29/07/2026) — hiện màn tổng kết khi mất mạng. */
+   `codexTotal` chỉ là số DỰ PHÒNG cho tới khi server trả số thật — nó hiện màn tổng
+   kết khi mất mạng.
+   ⚠️ PHẢI KHỚP SỐ ENTRY TRONG `learningdata/astronomy/earth_codex.json`. Ngày
+      02/08/2026 bỏ bước `rotation` làm entry đó mất, số này còn 9 và màn tổng kết
+      ghi **"8/9 mẫu dữ liệu"** — tức nói với trẻ rằng nó bỏ sót một mẫu KHÔNG TỒN
+      TẠI, ở đúng màn khen thưởng. `check_pages` [3c] không bắt được (nó soi văn bản);
+      chỉ `smoke_mission_earth` chơi thật tới màn tổng kết mới thấy. */
 RUN = AstroQMission.create({
   mission: 'earth',
   stepIds: STEP_IDS,
   steps: steps,
   stepsEl: $('steps'),
-  codexTotal: 9,
+  codexTotal: 8,
   t: t,
   toast: toast,
   onBalance: paintBalance,
@@ -1334,7 +1902,10 @@ function showCard(c) {
   $('card-ic').textContent = c.ic;
   $('card-nm').textContent = c.nm;
   $('card-fact').textContent = c.fact;
+  $('card-sub').textContent = c.sub || '';
+  $('card-sub').hidden = !c.sub;      // bước nào không truyền `sub` thì không để lại ô trống
   $('card-got').textContent = c.tag;
+  $('card-ok').textContent = t('card_ok');
   el.classList.add('show');
   el.setAttribute('aria-hidden', 'false');
   return new Promise(res => {
@@ -1345,8 +1916,17 @@ function showCard(c) {
       setTimeout(res, 260);
     };
     el.addEventListener('click', close);
-    // Tự đóng sau 3,4s để trẻ không phải bấm nếu đang mải nhìn
-    setTimeout(() => { if (el.classList.contains('show')) close(); }, reduced ? 600 : 3400);
+    /* ⚠️ KHÔNG CÒN TỰ ĐÓNG SAU 3,4 GIÂY (bỏ 02/08/2026 — chủ dự án chơi thật và báo:
+       *"bảng chú thích hiện ra không đủ thời gian đọc cho trẻ"*).
+       Mốc 3,4s được đặt với lý lẽ "để trẻ không phải bấm nếu đang mải nhìn" — nhưng
+       thẻ này MANG BÀI HỌC (tên châu lục + một câu kiến thức), nên nó là thứ để ĐỌC
+       chứ không phải hiệu ứng để ngắm. Đây đúng bài học đã ghi cho đường về tự động
+       5 giây: *một màn thưởng tự biến mất sau vài giây là màn thưởng bị lấy đi giữa
+       lúc đang đọc*, và trẻ đọc chậm hơn người lớn nhiều.
+       ⚠️ `prefers-reduced-motion` CŨNG không tự đóng: giảm chuyển động là bớt hoạt
+       cảnh, KHÔNG phải bớt thời gian đọc — nhầm hai thứ đó là phạt đúng nhóm trẻ
+       nhạy cảm với chuyển động. */
+    $('card-ok').focus();
   });
 }
 
@@ -1356,7 +1936,7 @@ function showCard(c) {
    một bản sao "bay theo ngón tay", vùng dưới con trỏ sáng lên, thả đúng thì khoá lại,
    thả sai thì KHÔNG trừ điểm — chỉ khích lệ.
 
-   Trước 29/07/2026 phần này nằm cứng trong `buildCore`. Chép sang bước thứ hai và
+   Trước 29/07/2026 phần này nằm cứng trong bảng ngọc của bước ⑦. Chép sang bước thứ hai và
    thứ ba là ba bản `pointerdown/move/drop` gần-giống-nhau: sửa một lỗi kéo-thả (ví dụ
    `setPointerCapture` để ngón tay ra khỏi thẻ vẫn kéo được) sẽ phải nhớ sửa cả ba,
    mà không ai nhớ. Nay chỉ còn phần KHÁC NHAU nằm ở opt.
@@ -1397,6 +1977,36 @@ function nudge(boardId, hintId, wrongKey, hintKey) {
   }, 2200);
 }
 
+/* ───────────────────── Bước 1: câu đố biển/đất ─────────────────────
+   ⚠️ HAI NÚT, KHÔNG PHẢI KÉO-THẢ. `js/pick-place.js` là khuôn "thẻ → ô" cho các
+      bước có nhiều thẻ nhiều ô; ở đây chỉ có MỘT câu hỏi và HAI lựa chọn, dựng nó
+      bằng khuôn kéo-thả là bắt trẻ làm một thao tác khó hơn cho một việc dễ hơn.
+   ⚠️ CẢ HAI NÚT ĐỀU LÀ `<button>` nên bàn phím đi qua bằng Tab + Enter mà không
+      cần một dòng nào — đúng ràng buộc "mỗi khuôn phải chơi được bằng bàn phím"
+      của `002`, và đây là ca duy nhất thoả nó miễn phí.
+   ⚠️ Nút bị VÔ HIỆU ngay khi bấm: `onAnswer` có `await`, nên không khoá thì cú bấm
+      thứ hai chạy chồng và `showCard` mở hai lần. */
+/* Bảng "dự đoán của phi hành gia" — DÙNG CHUNG cho bước ① (nước hay đất) và bước ③
+   (nếu Mặt Trời tắt thì sao). Nhận cấu hình thay vì gắn cứng vào một bước: bản đầu
+   hàm này gọi thẳng `steps.scan.onAnswer`, nên bước thứ hai muốn dùng lại thì phải
+   chép cả hàm — đúng thứ quy tắc 2 mục 2 của CLAUDE.md cấm.
+   @param cfg {k, q, opts:[{id, ic, tx}], onPick} */
+function buildAsk(cfg) {
+  $('ask-k').textContent = cfg.k;
+  $('ask-q').textContent = cfg.q;
+  $('ask-opts').innerHTML = cfg.opts.map(o =>
+    `<button type="button" class="me-ask-opt hit" data-pick="${esc(o.id)}">` +
+    `<span class="ic" aria-hidden="true">${o.ic}</span>` +
+    `<span class="tx">${esc(o.tx)}</span></button>`).join('');
+  $('ask-opts').querySelectorAll('.me-ask-opt').forEach(b => {
+    b.addEventListener('click', () => {
+      // `onPick` có await → khoá cả dãy ngay, không thì bấm chồng chạy hai lần.
+      $('ask-opts').querySelectorAll('.me-ask-opt').forEach(o => { o.disabled = true; });
+      cfg.onPick(b.getAttribute('data-pick'));
+    });
+  });
+}
+
 /* ───────────────────── Bước 2: dòng thời gian ───────────────────── */
 function buildTimeline() {
   $('time-k').textContent = t('tl_k');
@@ -1409,6 +2019,9 @@ function buildTimeline() {
   $('time-rail').querySelectorAll('.me-era-node').forEach(b => {
     b.addEventListener('click', () => steps.timeline.openEra(Number(b.getAttribute('data-era'))));
   });
+  /* Gắn MỘT LẦN ở đây chứ không trong `openEra` — gắn trong đó là mỗi lần mở mốc lại
+     thêm một listener, và tới mốc cuối thì một cú bấm chạy `onDone` năm lần. */
+  $('time-ok').onclick = () => steps.timeline.onDone();
   paintTimeline(0, -1);
   $('time-h').textContent = '—';
   $('time-p').textContent = '';
@@ -1426,17 +2039,45 @@ function paintTimeline(seen, cur) {
 function paintEraBody(e) {
   $('time-h').textContent = e.ic + '  ' + t('era_' + e.id + '_n');
   $('time-p').textContent = t('era_' + e.id + '_p');
+  paintEraImg(e);
+}
+
+/* Ảnh minh hoạ của mốc đang xem. `img` = tên file gốc; mốc nào không khai `img` thì
+   KHÔNG có tranh — xem lý do ở `const ERAS`.
+   ⚠️ `alt` PHẢI đổi theo ngôn ngữ và phải nói rõ đây là TRANH DỰNG: trình đọc màn hình
+      là chỗ duy nhất nhãn "MINH HOẠ" ở góc ảnh không với tới được.
+   ⚠️ Đặt `srcset` TRƯỚC `img.src`: gán `src` trước thì trình duyệt có thể bắt đầu tải
+      bản mặc định rồi mới thấy `<source>`, tức tải hai lần trên đúng nhóm mạng yếu mà
+      cả việc này sinh ra để phục vụ. */
+function paintEraImg(e) {
+  const fig = $('time-fig');
+  if (!e.img) { fig.hidden = true; return; }
+  const base = 'img/era/' + e.img;
+  $('time-avif').srcset = base + '-700.avif 700w, ' + base + '-1120.avif 1120w';
+  $('time-webp').srcset = base + '-700.webp 700w, ' + base + '-1120.webp 1120w';
+  const im = $('time-img');
+  im.sizes = '(max-width: 784px) calc(100vw - 24px), 700px';
+  im.src = base + '-700.webp';        // nhánh cuối cho trình duyệt không đọc <source>
+  im.alt = t('era_alt').replace('{n}', t('era_' + e.id + '_n'));
+  $('time-illus').textContent = t('era_illus');
+  fig.hidden = false;
 }
 
 /* ───────────────────── Bước 4: năng lượng sạch ───────────────────── */
+/* ⚠️ BA Ô THẢ NẰM TRÊN BẢN ĐỒ, KHÔNG NẰM TRONG BẢNG. Chúng là marker của cảnh
+   (`world.addMarkers` với `zone`), nên `paint()` lo vị trí + chống-phóng cho chúng —
+   xem cảnh báo ở `addMarkers` trong `js/earth2d.js`. `#energy-slots` vì thế bỏ trống;
+   bảng ở đáy chỉ còn khay thẻ và dòng nhắc. */
 function buildEnergy() {
   $('energy-k').textContent = t('ce_k');
   $('energy-hint').textContent = t('ce_hint');
-  $('energy-slots').innerHTML = STACKS.map(s =>
-    `<div class="me-stack" data-zone="${s}">` +
-    `<span class="puff" aria-hidden="true">💨</span>` +
-    `<span class="ic" aria-hidden="true">🏭</span>` +
-    `<span class="lb">${t('ce_stack')}</span></div>`).join('');
+  $('energy-slots').innerHTML = '';
+  world.addMarkers(STACKS.map(st => ({
+    id: st.id, zone: st.id, lat: st.lat, lon: st.lon,
+    cls: 'e2-stack', label: t('ce_stack'),
+    html: '<span class="puff" aria-hidden="true">💨</span>' +
+          '<span class="ic" aria-hidden="true">🏭</span>'
+  })));
   $('energy-tray').innerHTML = ENERGY.map(g =>
     `<button type="button" class="me-gem wide hit" data-want="${g.slot}">` +
     `<span class="ic" aria-hidden="true">${g.ic}</span>` +
@@ -1444,13 +2085,12 @@ function buildEnergy() {
 
   dragDrop({
     items: Array.from($('energy-tray').querySelectorAll('.me-gem')),
-    zones: Array.from($('energy-slots').querySelectorAll('.me-stack')),
+    zones: Array.from(document.querySelectorAll('.e2-stack')),
     wide: true,
     onHit(el, z) {
       z.classList.add('ok');
-      // Ống khói thành trạm phát điện: đổi luôn cái emoji, không chỉ đổi màu viền
+      // Nhà máy thành trạm điện sạch: đổi luôn cái emoji, không chỉ đổi màu viền
       z.querySelector('.ic').textContent = el.querySelector('.ic').textContent;
-      z.querySelector('.lb').textContent = el.querySelector('.tx').textContent;
       el.classList.add('used');
       steps.energy.onPlace(el.getAttribute('data-want'));
     },
@@ -1493,26 +2133,89 @@ function buildEco() {
 }
 
 /* ───────────────────── Bước 8: bảng 3 ô ngọc ───────────────────── */
-function buildCore() {
-  $('core-k').textContent = t('s5_k');
-  $('core-hint').textContent = t('s5_hint');
-  $('core-slots').innerHTML = SLOTS.map(s =>
-    `<div class="me-slot" data-zone="${s}"><span class="gem"></span>` +
-    `<span class="lb">${t('slot_' + s)}</span></div>`).join('');
-  $('core-tray').innerHTML = GEMS.map(g =>
-    `<button type="button" class="me-gem hit" data-gem="${g.id}" data-want="${g.slot}" ` +
-    `title="${esc(t('gem_' + g.id))}" aria-label="${esc(t('gem_' + g.id))}">${g.ic}</button>`).join('');
+/* ───────────────────── Bước 7: đóng dấu Hồ Sơ Trái Đất ─────────────────────
+   ⚠️ BA DÒNG HỒ SƠ PHẢI LÀ BA THỨ NHIỆM VỤ ĐÃ THẬT SỰ DẠY, không phải ba câu hay ho.
+      Đối chiếu: nước 71% ← bước ① (câu đố, nguồn NASA) · nhiệt độ theo góc chiếu ←
+      bước ③ (ba vùng khí hậu, nguồn NASA) · khí quyển có oxy ← nhịp 0 ở `explorer.html`
+      + mốc "ngày nay" của bước ②. Thêm một dòng không có bước nào dạy là biến màn tổng
+      kết thành chỗ nhồi kiến thức mới — đúng lúc trẻ tưởng đã xong.
+   ⚠️ MỘT CÚ BẤM, KHÔNG PHẢI MỘT CÂU ĐỐ. Đây là chỗ CHỐT, không phải chỗ kiểm tra: bắt
+      trẻ trả lời đúng mới cho về là dựng một cửa chặn ngay trước màn thưởng. */
+/* ══ BƯỚC ⑤ · LÁT CẮT TRÁI ĐẤT ══════════════════════════════════════════════
+   ⚠️⚠️ ĐÂY LÀ KHUÔN TƯƠNG TÁC THỨ SÁU, VÀ NÓ CỐ Ý KHÔNG DÙNG LẠI HAI ENGINE CÓ SẴN.
+      `docs/decisions/002` cấm dùng một khuôn quá 2 lần trong một nhiệm vụ. Đếm được
+      bằng `grep` trên chính file này: `dragDrop(` **2 lần** (④ energy · ⑥ eco) và
+      `buildAsk(` **2 lần** (① scan · ③ sun). Cả hai ĐÃ ĐẦY.
+      · Cài bằng `dragDrop()` → `profile_builder` lần thứ 3.
+      · Cài bằng `buildAsk()` → câu đố lần thứ 3.
+      Nên phải là mã riêng. Cái giá là ~90 dòng không dùng lại được; cái được là bước
+      này không đọc ra như bước thứ ba của cùng một trò.
+   ⚠️ VÌ SAO NÓ KHÔNG PHẢI LÀ MỘT CÂU ĐỐ 4 LỰA CHỌN TRÁ HÌNH: câu đố hỏi xong là vứt
+      câu hỏi đi. Ở đây mỗi lượt để lại một con chip trên cột, và **cái cột dựng dần
+      lên mới là thứ mang bài học** — xong 4 lượt thì chính nó là bằng chứng cho tiêu
+      đề bước ("Sự sống ở khắp nơi"). Thứ trẻ tạo ra là một biểu đồ, không phải điểm số.
+   ⚠️ `RUNGS` vẽ TRÊN xuống DƯỚI (nấc 1 cao nhất). Đường mực nước biển chèn giữa nấc 3
+      và 4 — đó là mốc DUY NHẤT trên cột có ý nghĩa vật lý, và nó là thứ làm cho nấc 4
+      ("dưới mặt nước") đọc ra được. */
+function buildXsec(onPick) {
+  $('xsec-k').textContent = t('xsec_k');
+  $('xsec-q').textContent = '';
+  $('xsec-hint').textContent = '';
+  $('xsec-col').innerHTML = RUNGS.map(r =>
+    `<button type="button" class="xsec-rung hit" data-rank="${r}" disabled>` +
+      `<span class="lb">${esc(t('rung_' + r))}</span>` +
+      `<span class="chips" data-chips="${r}"></span>` +
+    `</button>` +
+    (r === 3 ? `<div class="xsec-sea" aria-hidden="true"><span>${esc(t('xsec_sea'))}</span></div>` : '')
+  ).join('');
 
-  dragDrop({
-    items: Array.from($('core-tray').querySelectorAll('.me-gem')),
-    zones: Array.from($('core-slots').querySelectorAll('.me-slot')),
-    onHit(el, z) {
-      z.classList.add('ok');
-      z.querySelector('.gem').textContent = el.textContent;
-      el.classList.add('used');
-      steps.core.onFill(z.getAttribute('data-zone'));
-    },
-    onMiss() { nudge('core', 'core-hint', 's5_wrong', 's5_hint'); }
+  const col = $('xsec-col');
+  col.onclick = ev => {
+    const b = ev.target.closest('.xsec-rung');
+    if (b && !b.disabled) onPick(Number(b.dataset.rank));
+  };
+  /* Mũi tên đi giữa các nấc. Tab vẫn vào được từng nút (chúng là `<button>` thật), nhưng
+     một cái cột thì mũi tên mới là thứ tay tự tìm tới — và bốn nút cùng một nhóm mà bắt
+     Tab bốn lần là đang bắt bàn phím trả giá cho một bố cục vốn dành cho chuột. */
+  col.onkeydown = ev => {
+    if (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+    const list = Array.from(col.querySelectorAll('.xsec-rung:not([disabled])'));
+    const i = list.indexOf(document.activeElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    const nx = list[(i + (ev.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length];
+    if (nx) nx.focus();
+  };
+}
+
+/** Mở/khoá cả bốn nấc. Khoá trong lúc đang hé lộ để một cú bấm lỡ tay không rơi vào
+    câu hỏi kế tiếp — cùng lý do với cờ `busy` ở các bước chạm marker. */
+function setRungs(on) {
+  $('xsec-col').querySelectorAll('.xsec-rung').forEach(b => { b.disabled = !on; });
+}
+
+/** Thả con chip của một nơi vào ĐÚNG nấc của nó — dù trẻ đoán nấc nào. */
+function placeChip(b) {
+  const box = $('xsec-col').querySelector('[data-chips="' + b.rank + '"]');
+  if (!box) return;
+  const c = document.createElement('span');
+  c.className = 'xsec-chip';
+  c.style.setProperty('--cc', b.cc);
+  c.innerHTML = `<span aria-hidden="true">${b.ic}</span> ${esc(b.nm[LANG] || b.nm.vi)}`;
+  box.appendChild(c);
+}
+
+function buildFile() {
+  $('core-k').textContent = t('s5_k');
+  $('core-hint').textContent = '';
+  $('core-slots').innerHTML = ['water', 'heat', 'air'].map(k =>
+    `<div class="me-fileline"><span class="tick" aria-hidden="true">✓</span>` +
+    `<span class="tx">${esc(t('file_' + k))}</span></div>`).join('');
+  $('core-tray').innerHTML =
+    `<button type="button" class="me-stamp hit" id="core-stamp">${esc(t('s5_stamp'))}</button>`;
+  $('core-stamp').addEventListener('click', () => {
+    $('core-stamp').disabled = true;      // `onStamp` có await → khoá ngay, không bấm chồng
+    steps.core.onStamp();
   });
 }
 
@@ -1638,15 +2341,12 @@ function applyLang(lang) {
      phải làm lại từ đầu chỉ vì bấm EN. Vì thế mỗi bảng có một nhánh riêng ở đây, và
      mỗi lần thêm chữ vào bảng thì phải thêm vào đúng nhánh của nó. */
   if ($('core').classList.contains('show')) {
-    $('core-k').textContent = t('s5_k');
-    $('core-hint').textContent = t('s5_hint');
-    $('core-slots').querySelectorAll('.me-slot').forEach(s => {
-      s.querySelector('.lb').textContent = t('slot_' + s.getAttribute('data-zone'));
-    });
-    $('core-tray').querySelectorAll('.me-gem').forEach(g => {
-      const nm = t('gem_' + g.getAttribute('data-gem'));
-      g.title = nm; g.setAttribute('aria-label', nm);
-    });
+    /* Bước ⑦ nay chỉ có chữ tĩnh + một cái nút, không có ô nào đã kích hoạt để mất —
+       nên ở đây dựng lại được cả bảng. Nhưng phải GIỮ trạng thái đã đóng dấu, không
+       thì đổi ngôn ngữ giữa chừng là nút sống lại và trẻ đóng dấu được hai lần. */
+    const done = steps.core.stamped;
+    buildFile();
+    if (done) $('core-stamp').disabled = true;
   }
   if ($('time').classList.contains('show')) {
     $('time-k').textContent = t('tl_k');
@@ -1656,18 +2356,64 @@ function applyLang(lang) {
       b.querySelector('.nm').textContent = t('era_' + e.id + '_n');
       b.setAttribute('aria-label', t('era_' + e.id + '_y') + ' — ' + t('era_' + e.id + '_n'));
     });
+    // Nhãn MINH HOẠ + `alt` cũng phải dịch theo, không thì đổi EN xong nhãn đứng
+    // nguyên tiếng Việt ngay giữa một bức tranh.
+    if (!$('time-fig').hidden) {
+      const _e = ERAS[Math.max(0, steps.timeline.seen - 1)];
+      if (_e) paintEraImg(_e);
+    }
     // Mốc đang mở: dịch lại đúng cái đó, không nhảy về mốc đầu
     const cur = ERAS[Math.max(0, steps.timeline.seen - 1)];
     if (steps.timeline.seen > 0) paintEraBody(cur);
   }
+  /* ⚠️⚠️ BƯỚC ⑤ PHẢI CÓ NHÁNH NÀY — VÀ NÓ ĐƯỢC THÊM VÌ VỪA BẮT ĐÚNG LỖI CÙNG HỌ Ở
+     BƯỚC ④ (nhãn ống khói không đổi theo ngôn ngữ). Cột lát cắt **sống suốt cả bước**
+     (khác cái thẻ, vốn tạm thời và phải bấm OK mới đóng), nên thiếu nhánh này thì đổi
+     VI/EN giữa bước ⑤ để lại một cột tiếng Việt trong một trang tiếng Anh.
+     ⚠️ DỊCH TẠI CHỖ, ĐỪNG DỰNG LẠI `innerHTML`: dựng lại là mất trạng thái `disabled`
+        của bốn nấc và mất cả tiêu điểm bàn phím — trẻ đang dùng bàn phím thì cú Enter
+        kế tiếp rơi vào `<body>`. */
+  if ($('xsec').classList.contains('show')) {
+    $('xsec-k').textContent = t('xsec_k');
+    $('xsec-col').querySelectorAll('.xsec-rung').forEach(b => {
+      b.querySelector('.lb').textContent = t('rung_' + b.dataset.rank);
+    });
+    const _sea = $('xsec-col').querySelector('.xsec-sea span');
+    if (_sea) _sea.textContent = t('xsec_sea');
+    /* Chip đã thả: tên nơi cũng phải dịch. Đọc lại từ `got` chứ không từ DOM — tên cũ
+       nằm trong DOM chính là thứ đang cần thay. */
+    BIOMES.forEach(b => {
+      if (!steps.life.got.has(b.id)) return;
+      const c = $('xsec-col').querySelector('[data-chips="' + b.rank + '"] .xsec-chip');
+      if (c) c.innerHTML = `<span aria-hidden="true">${b.ic}</span> ` +
+                           esc(b.nm[LANG] || b.nm.vi);
+    });
+    const _cur = steps.life.cur;
+    $('xsec-q').textContent = _cur
+      ? t('xsec_q').replace('{nm}', _cur.nm[LANG] || _cur.nm.vi) : '';
+    /* Câu phản hồi cũng giữ bằng CỜ chứ không bằng chuỗi — giữ chuỗi thì đổi ngôn ngữ
+       giữa lúc nó đang hiện là nó đứng lại ở tiếng cũ. Cùng bài học với `errKey` của
+       form waitlist ở trang chủ. */
+    if (steps.life.lastHit !== null) {
+      $('xsec-hint').textContent = steps.life.lastHit ? t('xsec_ok') : t('xsec_near');
+    }
+  }
   if ($('energy').classList.contains('show')) {
     $('energy-k').textContent = t('ce_k');
     $('energy-hint').textContent = t('ce_hint');
-    $('energy-slots').querySelectorAll('.me-stack').forEach(z => {
+    /* ⚠️ DÒ `.e2-stack`, KHÔNG PHẢI `#energy-slots .me-stack` — LỖI THẬT ĐÃ SỬA
+       02/08/2026. Ba ống khói đã dời lên BẢN ĐỒ thành marker của cảnh, `#energy-slots`
+       nay luôn rỗng (xem `buildEnergy`), nên vòng lặp cũ chạy 0 lần và **đổi VI/EN
+       giữa bước ④ không đổi được nhãn ống khói nào**. Lỗi im lặng tuyệt đối: không
+       ngoại lệ, không console, chỉ là một việc lặng lẽ không xảy ra.
+       ⚠️ Ống khói mang nhãn ở `aria-label` chứ không có phần tử `.lb` — bên trong nó
+          chỉ có emoji `aria-hidden`. Gọi `.querySelector('.lb').textContent` ở đây là
+          `TypeError` ngay lần đổi ngôn ngữ đầu tiên. */
+    document.querySelectorAll('.e2-mk.e2-stack').forEach(z => {
       // Ống khói ĐÃ thay thì nhãn là tên nguồn sạch, chưa thay thì là "ỐNG KHÓI"
-      if (!z.classList.contains('ok')) { z.querySelector('.lb').textContent = t('ce_stack'); return; }
-      const g = ENERGY.find(x => x.slot === z.getAttribute('data-zone'));
-      if (g) z.querySelector('.lb').textContent = t('ce_' + g.id);
+      const g = z.classList.contains('ok')
+        ? ENERGY.find(x => x.slot === z.getAttribute('data-zone')) : null;
+      z.setAttribute('aria-label', g ? t('ce_' + g.id) : t('ce_stack'));
     });
     $('energy-tray').querySelectorAll('.me-gem').forEach(el => {
       const g = ENERGY.find(x => x.slot === el.getAttribute('data-want'));
@@ -1745,8 +2491,6 @@ RUN.paint();
     /* Bước 4 chặn cú chạm mới trong lúc drone đang bay (`busy`). Test phải đọc
        được cờ này, không thì nó bấm mẫu thứ hai lúc còn bị chặn rồi báo hỏng oan. */
     get busy() { return busy; },
-    /** Góc trạm phát sóng ↔ vệ tinh (độ) — bước 3 xong khi dưới 20°. */
-    get satAngle() { return world.stationAngleTo(STATION.lat, STATION.lon); },
     /* ⚠️ Cố ý KHÔNG trả Promise ra ngoài. `page.evaluate` của Playwright TỰ CHỜ
        promise nào được trả về, mà `pick()` bên trong lại chờ trẻ bấm "Tiếp tục" →
        script test treo vĩnh viễn thay vì báo hỏng. Gọi rồi thôi; test tự chờ
@@ -1754,19 +2498,54 @@ RUN.paint();
     pick: (ev) => { RUN.pick(ev); return true; },
     tick: () => { RUN.tick(); return true; },
     say: () => { $('say-next').click(); return true; },
-    /** Mở thẳng màn tổng kết — để test đường về tự động khỏi phải chơi hết 8 bước.
+    /** Mở thẳng màn tổng kết — để test đường về tự động khỏi phải chơi hết 7 bước.
         ⚠️ KHÔNG trả Promise (cùng lý do như `pick`): `showWin` là async, mà
            `page.evaluate` tự chờ promise được trả về. */
     win: () => { showWin(); return true; },
+    /* Bảng "dự đoán của phi hành gia" — nay có ở HAI bước: ① (nước hay đất) và
+       ③ (nếu Mặt Trời tắt thì sao). Định tuyến theo bước ĐANG chạy thay vì gắn cứng
+       `steps.scan`: gắn cứng thì bộ test gọi ở bước ③ sẽ âm thầm bấm vào bước ①.
+       Cùng quy tắc KHÔNG trả Promise.
+       ⚠️ Ở bước ① test phải gọi được cả nhánh ĐOÁN SAI — "đoán sai không phạt" là một
+          luật của thiết kế, mà luật nào không có phép kiểm thì sớm muộn có người
+          "sửa" nó đi. Ở bước ③ thì không có nhánh sai: cả ba lựa chọn đều đúng. */
+    answer: (pick) => {
+      const st = steps[RUN.step];
+      if (st && st.onAnswer) st.onAnswer(pick);
+      return true;
+    },
+    /** Số châu lục đã chạm ở bước ① — test chờ số này thay vì đoán theo thời gian. */
+    get scanned() { return steps.scan.hits; },
+    /** Số vùng khí hậu đã chạm ở bước ③ (nhịp b). */
+    get zones() { return steps.sun.got.size; },
+    /* ⚠️ BƯỚC ⑤ KHÔNG CÒN LÁI ĐƯỢC BẰNG `pick()` — nó không còn nhận cú chạm marker
+       nào (xem `steps.life.onRung`). Test phải chọn NẤC. Cùng quy tắc: KHÔNG trả Promise.
+       ⚠️ Phải gọi được CẢ nhánh đoán sai: "đoán sai không phạt" là một luật của thiết
+          kế, mà luật nào không có phép kiểm thì sớm muộn có người "sửa" nó đi. */
+    rung: (rank) => { steps.life.onRung(rank); return true; },
+    /** Nấc ĐÚNG của nơi đang được hỏi — test đoán sai bằng cách chọn nấc khác số này. */
+    get rungWanted() { return steps.life.cur ? steps.life.cur.rank : null; },
+    /** Số nơi đã xếp lên lát cắt ở bước ⑤. */
+    get placed() { return steps.life.got.size; },
     /** Giây còn lại của đường về tự động; `null` = đã tắt đếm. */
     get autoLeft() { return autoLeft; },
-    fill: (slot) => { steps.core.onFill(slot); return true; },
+    /* ⚠️ ĐỔI TỪ `fill(slot)` SANG `stamp()` 02/08/2026 — bước ⑦ không còn kéo ngọc
+       vào ô mà chỉ còn MỘT cú đóng dấu. Giữ tên cũ là để lại một bề mặt test nói
+       về cơ chế không còn tồn tại. Cùng quy tắc: KHÔNG trả Promise. */
+    stamp: () => { steps.core.onStamp(); return true; },
     /* Ba bước thêm 29/07/2026. Cùng quy tắc với `pick`/`fill`: KHÔNG trả Promise —
        `openEra` có thể chờ thẻ nham thạch (3,4s hoặc tới khi trẻ bấm), `page.evaluate`
        tự chờ promise được trả về nên script test sẽ treo thay vì báo hỏng. */
     era: (i) => { steps.timeline.openEra(i); return true; },
-    /** Số mốc đã xem — test chờ `era === 4` thay vì đoán theo thời gian. */
+    /* ⚠️ MỐC CUỐI KHÔNG CÒN TỰ CHỐT BƯỚC — test phải bấm nút như trẻ. Cùng quy tắc:
+       KHÔNG trả Promise (`onDone` có await `finishStep`). */
+    eraDone: () => { steps.timeline.onDone(); return true; },
+    /** Số mốc đã xem — test chờ `eras === 5` thay vì đoán theo thời gian.
+        ⚠️ ĐỌC TỪ `ERAS.length`, ĐỪNG GÁN CỨNG số 5 trong script test: bước này đã
+           đi từ 4 lên 5 mốc một lần rồi (`005`), và bài học "gán cứng con số mà nơi
+           khác mới là nguồn sự thật" đã lặp lại đủ nhiều lần trong dự án này. */
     get eras() { return steps.timeline.seen; },
+    get eraTotal() { return ERAS.length; },
     place: (id) => { steps.energy.onPlace(id); return true; },
     /** Độ dày khói còn lại (1 → 0). Bằng 0 là bước năng lượng sạch đã xong. */
     get smog() { return Number($('smog').style.getPropertyValue('--smog') || 0); },

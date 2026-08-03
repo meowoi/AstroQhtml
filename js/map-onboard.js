@@ -3,21 +3,23 @@
    (bước ①–④ của `docs/decisions/003`)
 
    Nhịp: màn warp "ĐANG DU HÀNH TỚI · Hệ Mặt Trời" → Comet giới thiệu ở ĐÁY màn
-   hình → trẻ chạm Trái Đất → bảng thông tin mở → **sau ít nhất 10 giây** Comet hỏi
-   "sẵn sàng chưa?" → nút OK → `mission-earth.html`.
+   hình → trẻ chạm Trái Đất → bảng thông tin mở → **NHỊP 0** (Comet chỉ bầu khí
+   quyển → nói thật rằng vành đang vẽ dày quá → mời trẻ XOAY để ngắm nửa ngày /
+   nửa đêm) → **sau ít nhất 15 giây** Comet hỏi "sẵn sàng chưa?" → nút OK →
+   `mission-earth.html`.
+
+   ⚠️ NHỊP 0 THÊM 02/08/2026 (`docs/decisions/005`). Bài học ngày/đêm được CHUYỂN
+      từ bản đồ phẳng của `mission-earth.html` sang đây, vì ở đây ranh giới là THẬT
+      (`PointLight` gắn vào Mặt Trời của cảnh) còn ở đó nó là một gradient trông như
+      bức tường đen. Chi tiết + số đo ghi ngay trên hàm `reading()`.
 
    ⚠️ FILE NÀY KHÔNG BIẾT GÌ VỀ three.js. Nó nhận đúng những gì cần qua `init()`
       (`warpShow` · `warpHide` · `ready` · `t` · `regionName` · `onGo`), nên `explorer.html`
       không phình thêm và bộ test lái được bằng cách gọi thẳng vào đây.
 
-   ⚠️ 10 GIÂY LÀ **SÀN**, KHÔNG PHẢI HẠN. Câu hỏi của Comet hiện ra *cạnh* bảng thông
-      tin và **không đóng nó**; trẻ tự đóng khi đọc xong. Dự án đã trả giá đúng chỗ này
-      với đường về tự động 5 giây: *"trẻ đọc chậm hơn người lớn nhiều, một màn thưởng tự
-      biến mất sau 5 giây là màn thưởng bị lấy đi giữa lúc đang đọc."* Vì là SÀN nên
-      tương tác KHÔNG huỷ đồng hồ — ngược với đường về tự động, nơi tương tác phải tắt nó.
-
-   ⚠️ ĐỒNG HỒ CHỈ CHẠY KHI BẢNG THÔNG TIN ĐÃ MỞ THẬT. Bấm vào hành tinh thì camera
-      bay 1,6s rồi bảng mới mở; đếm từ lúc bấm là trẻ mất gần 2 giây đọc.
+   ⛔ KHÔNG CÒN MỐC CHỜ NÀO. `READ_MS` (mốc SÀN 10 rồi 15 giây trước khi Comet hỏi
+      "sẵn sàng chưa?") đã BỎ HẲN 02/08/2026 — trẻ bấm "Tiếp tục" là sang ngay. Lý do
+      đầy đủ ghi ở chỗ khai `WARP_MIN_MS` và trong `reading()`. Đừng dựng lại.
 
    Xem lại để thử: mở `explorer.html?onboard=1`.
    ============================================================================ */
@@ -30,20 +32,55 @@
       l1: "Đây là <b>Hệ Mặt Trời</b> của chúng ta — nơi có rất nhiều thứ để khám phá!",
       l2: "Hãy bắt đầu từ <b>Trái Đất</b>, hành tinh xanh của chúng ta nhé. " +
           "Chạm vào Trái Đất để xem thông tin!",
+      /* NHỊP 0 — xem khối chú thích "NHỊP 0" ở đầu file.
+         ⚠️ ĐỪNG VIẾT "nitơ và oxy — thứ mình đang thở". Chủ dự án chơi thật và bắt
+            đúng chỗ này: câu đó đọc ra như thể cơ thể dùng CẢ HAI khí. Sự thật là
+            không khí phần lớn là nitơ, nhưng thứ cơ thể LẤY khi hít vào là oxy —
+            nitơ đi vào rồi lại đi ra. Tỉ lệ 78/21 lấy từ `science.nasa.gov/earth/facts/`. */
+      l3: "Thấy lớp sáng mờ bọc quanh Trái Đất không? Đó là <b>bầu khí quyển</b>, làm bằng " +
+          "nitơ và oxy. Không khí phần lớn là <b>nitơ</b>, nhưng thứ cơ thể mình thật sự " +
+          "dùng khi hít vào lại là <b>oxy</b>.",
+      l3b: "Thật ra khí quyển <b>mỏng hơn thế rất nhiều</b> — mỏng như lớp vỏ táo so với " +
+           "quả táo. Mình đã <b>cố tình mô phỏng to hơn</b> cho bạn dễ nhìn thôi.",
+      /* ⚠️ PHẢI NÓI RÕ BẤM GÌ ĐỂ ĐI TIẾP. Chủ dự án báo hai lần ở đúng chỗ này: lần
+         đầu *"sau đó không hiện gì tiếp để biết là chờ hay làm gì?"*, lần sau *"ấn nút
+         Tiếp tục sẽ phải chuyển sang ngay, không chờ"*. Nên câu này vừa mời ngắm
+         thoải mái, vừa chỉ đúng cái nút sẽ đưa trẻ đi tiếp NGAY khi bấm. */
+      l4: "Giờ thử <b>kéo để xoay quanh Trái Đất</b> xem: một nửa đang là <b>ban ngày</b>, " +
+          "nửa kia là <b>ban đêm</b> — vì ánh sáng Mặt Trời chỉ chiếu tới được một phía. " +
+          "Ngắm thoải mái nhé, xong thì bấm <b>Tiếp tục</b> là mình đi ngay!",
       ask: "Bạn đã sẵn sàng bắt đầu hành trình với <b>nhiệm vụ đầu tiên</b> tại Trái Đất chưa?",
-      next: "Tiếp tục ›", ok: "OK, bắt đầu! 🚀"
+      /* ⚠️ CHỈ CHỮ, KHÔNG CÓ DẤU "›" (bỏ 02/08/2026 theo chủ dự án). Mũi tên đó nói
+         "sang trang/sang phần khác", trong khi cú bấm chỉ đưa sang câu thoại kế tiếp
+         của cùng một nhân vật ở cùng một màn hình. Nó cũng là một ký tự trình đọc
+         màn hình đọc thành tên riêng của dấu, thừa với người dùng khiếm thị. */
+      next: "Tiếp tục", ok: "OK, bắt đầu! 🚀"
     },
     en: {
       nm: "Comet", tag: "NAVIGATOR",
       l1: "This is our <b>Solar System</b> — there is so much to explore here!",
       l2: "Let's start with <b>Earth</b>, our blue planet. Tap Earth to read about it!",
+      l3: "See the soft glow wrapped around Earth? That is the <b>atmosphere</b>, made of " +
+          "nitrogen and oxygen. Air is mostly <b>nitrogen</b>, but the part your body " +
+          "actually uses when you breathe in is the <b>oxygen</b>.",
+      l3b: "In reality the atmosphere is <b>far thinner</b> than that — thin like the skin on " +
+           "an apple. We <b>deliberately show it larger</b> so it is easier for you to see.",
+      l4: "Now <b>drag to spin around Earth</b>: one half is in <b>daylight</b> and the other " +
+          "half is in <b>night</b> — sunlight can only reach one side at a time. Take all the " +
+          "time you want, then hit <b>Next</b> and off we go!",
       ask: "Are you ready to begin your <b>first mission</b> here on Earth?",
-      next: "Next ›", ok: "OK, let's go! 🚀"
+      next: "Next", ok: "OK, let's go! 🚀"
     }
   };
 
-  /* Mốc thời gian. `READ_MS` là con số chủ dự án chốt (10 giây). */
-  var READ_MS = 10000;
+  /* Mốc thời gian.
+     ⛔ `READ_MS` ĐÃ BỎ HẲN 02/08/2026 — đừng dựng lại. Nó là mốc SÀN chờ trước khi
+        Comet hỏi "sẵn sàng chưa?" (`003` chốt 10 giây, `005` nới lên 15). Cái sàn ấy
+        sinh ra khi nhịp phim CHƯA có nhịp 0: Comet nói xong là box tự ẩn, không có
+        nút nào, nên phải có đồng hồ mới biết khi nào hỏi tiếp. Nay nhịp 0 kết bằng
+        một NÚT do trẻ chủ động bấm — bắt đợi thêm sau cú bấm đó là biến nút "Tiếp
+        tục" thành nút không tiếp tục. Xem `reading()`.
+     Trẻ vẫn ngắm bao lâu tuỳ ý: box thoại KHÔNG tự ẩn, nút cứ nằm đó chờ. */
   var WARP_MIN_MS = 1800;      // màn warp phải sống đủ lâu để đọc được tên vùng
   var WARP_MAX_MS = 12000;     // cảnh 3D không dựng được thì cũng phải nhả ra
   var TYPE_MS = 22;            // ms mỗi ký tự
@@ -66,8 +103,9 @@
   var lang = "vi";
   var el = {};
   var reduced = false;
-  var timer = null, typing = null;
-  var state = "idle";          // idle · warp · intro · waitEarth · reading · ask · done
+  var typing = null;
+  // idle · warp · intro · waitEarth · atmo · spin · reading · ask · done · fallback
+  var state = "idle";
 
   function t(k) { return (TXT[lang] || TXT.vi)[k]; }
 
@@ -177,22 +215,80 @@
       if (!info.classList.contains("open")) return;
       if (A.selectedId() !== "earth") return;      // mở hành tinh khác thì chưa tính
       mo.disconnect();
+      touched();
       reading();
     });
     mo.observe(info, { attributes: true, attributeFilter: ["class"] });
 
     // Đã mở sẵn từ trước (trẻ bấm nhanh hơn lời thoại) thì tính luôn.
     if (info.classList.contains("open") && A.selectedId() === "earth") {
-      mo.disconnect(); reading();
+      mo.disconnect(); touched(); reading();
     }
   }
 
-  /* Bảng thông tin đã mở → đếm SÀN 10 giây rồi mới hỏi. */
+  /* Trẻ ĐÃ chạm Trái Đất → tắt nhãn "Bắt đầu từ đây" (`explorer.html` đọc cờ này
+     trong `paintGateLabels`). Nhãn đó là một LỜI MỜI; để nguyên sau khi trẻ đã làm
+     theo thì nó đọc ra thành "em làm chưa đúng, làm lại đi". */
+  function touched() {
+    global._gateTouched = true;
+    if (A && A.repaintLabels) A.repaintLabels();
+  }
+
+  /* ─────────────────── NHỊP 0: khí quyển → mời xoay → ngày/đêm ───────────────────
+     Thêm 02/08/2026 (`docs/decisions/005` mục 1). Đây là **PHẦN THÊM, không phải bài
+     học bắt buộc** (mục 5 của `005`): mọi thứ BẮT BUỘC phải nằm trong 7 bước của
+     `mission-earth.html`, vì mạng kém thì đường lùi 12 giây bỏ qua hẳn cảnh 3D này.
+
+     ⚠️ VÌ SAO DẠY NGÀY/ĐÊM Ở ĐÂY CHỨ KHÔNG Ở BẢN ĐỒ PHẲNG. `004` định dạy nó bằng
+        gradient `.e2-terminator` trên bản đồ phẳng, với lý lẽ "chỗ phẳng tốt hơn quả
+        cầu vì thấy cả hai nửa". Lý lẽ đó đúng về NỘI DUNG nhưng sai về HÌNH ẢNH: chủ
+        dự án chơi thật và gửi ảnh chụp — nó trông như một bức tường đen. Quả cầu ở
+        đây thì có ranh giới THẬT: `MeshStandardMaterial` + `PointLight` gắn vào chính
+        Mặt Trời của cảnh. Đo được (`scratchpad/probe_globe_daynight.py`) hai nửa chênh
+        **106,5 điểm độ sáng, tỉ số 2,94×** → KHÔNG cần chỉnh đèn.
+
+     ⚠️ QUẢ CẦU KHÔNG BAO GIỜ ĐƯỢC MANG ĐIỀU KIỆN THẮNG. Đây là chỗ *quan sát*, không
+        phải chỗ *giải*. Điều kiện thắng đo trên camera-orbit chính là lỗi đã làm bước
+        `rotation` của bản 3D **không thể hoàn thành** và **treo vĩnh viễn** ở chế độ
+        giảm chuyển động. Ở đây không có gì để đo sai, nên không có gì để treo.
+
+     ⚠️ `l3b` NÓI THẲNG RẰNG VÀNH KHÍ QUYỂN ĐANG BỊ VẼ DÀY QUÁ. Đo trên ảnh chụp: vành
+        to gấp ~2 lần bán kính hành tinh và trông đặc như bi thuỷ tinh, trong khi khí
+        quyển thật là một lớp da rất mỏng. Chỉ vào đó mà không nói gì là **dạy sai mô
+        hình tư duy** — đúng loại lỗi mà bước ③ đang cố tránh ("không phải vì gần Mặt
+        Trời"). Nói thật rẻ hơn và trung thực hơn là đi sửa hình. */
   function reading() {
-    state = "reading";
-    show(false);                                   // nhường chỗ cho trẻ đọc bảng
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(ask, reduced ? 1200 : READ_MS);
+    state = "atmo";
+    if (!cache()) { ask(); return; }
+    show(true);
+    button(null);
+    say(t("l3"), function () {
+      button(t("next"), function () {
+        button(null);
+        say(t("l3b"), function () {
+          button(t("next"), function () {
+            button(null);
+            state = "spin";
+            say(t("l4"), function () {
+              /* ⚠️⚠️ BẤM "TIẾP TỤC" LÀ SANG NGAY — KHÔNG CÒN MỐC CHỜ (đổi 02/08/2026).
+                 Chủ dự án chơi thật: *"sau khi trẻ ngắm Trái Đất, ấn nút Tiếp tục sẽ
+                 phải chuyển sang ngay phần tiếp, không chờ."*
+                 ⛔ ĐÂY LÀ ĐẢO MỘT QUYẾT ĐỊNH CŨ, ĐỪNG KHÔI PHỤC. `003` chốt "10 giây
+                    là SÀN, không phải hạn" và `005` nới lên 15 — nhưng cái SÀN đó
+                    sinh ra khi nhịp phim CHƯA có nhịp 0: lúc ấy Comet nói xong là
+                    box tự ẩn, không có nút nào, nên phải có đồng hồ mới biết khi nào
+                    hỏi tiếp. Nay nhịp 0 kết bằng một NÚT do trẻ chủ động bấm, mà một
+                    cái nút tên "Tiếp tục" rồi bắt ngồi đợi thêm 15 giây trong im lặng
+                    thì chính nó là lỗi — trẻ sẽ tưởng trang treo và bấm loạn.
+                 Trẻ muốn ngắm bao lâu tuỳ ý: box thoại nay KHÔNG tự ẩn, nút cứ nằm
+                 đó chờ. Quyền quyết định lúc nào đi tiếp trả về cho trẻ, đúng tinh
+                 thần "SÀN chứ không phải HẠN" — chỉ là bỏ luôn cái đồng hồ. */
+              button(t("next"), function () { button(null); ask(); });
+            });
+          });
+        });
+      });
+    });
   }
 
   function ask() {
@@ -229,15 +325,15 @@
       if (!cache() || state === "idle" || state === "done") return;
       el.nm.textContent = t("nm"); el.tag.textContent = t("tag");
       if (state === "ask") { el.line.innerHTML = t("ask"); button(t("ok"), el.next.onclick); }
+      else if (state === "atmo") { el.line.innerHTML = t("l3"); if (el.next && !el.next.classList.contains("hide")) el.next.textContent = t("next"); }
+      else if (state === "spin") { el.line.innerHTML = t("l4"); if (el.next && !el.next.classList.contains("hide")) el.next.textContent = t("next"); }
       else if (state === "intro" || state === "waitEarth") { el.line.innerHTML = t("l2"); }
     },
 
     /** Bề mặt cho bộ test: đọc trạng thái + rút ngắn mốc chờ. */
     _state: function () { return state; },
-    _setReadMs: function (ms) { READ_MS = Math.max(0, ms | 0); },
     /** Rút hạn chờ cảnh 3D — để test đo được đường lùi mà không phải ngồi 12 giây. */
     _setWarpMaxMs: function (ms) { WARP_MAX_MS = Math.max(0, ms | 0); },
-    READ_MS: READ_MS,
     WARP_MAX_MS: WARP_MAX_MS,
 
     /** Xem lại nhịp phim: Console gõ `AstroQMapOnboard.reset()` rồi mở

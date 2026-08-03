@@ -54,6 +54,16 @@
   var SPIN_DEG_S = 3.2;       // hành tinh tự quay (độ/giây) khi setSpin(1)
   var LAT_LIMIT = 62;         // chặn kéo lên/xuống quá mức (ảnh hết đất để nhìn)
 
+  /* SÀN PHÓNG = 1, KHÔNG PHẢI 0,8 (sửa 02/08/2026, `docs/decisions/005`).
+     ⚠️ Dưới 1 là lớp ảnh NHỎ HƠN KHUNG, tức chắc chắn có dải đen trên và dưới —
+        `.e2-layer` cao `max(50vw,100vh)` nên ở zoom 1 nó vừa đủ phủ, còn zoom 0,846
+        (bước ③ gọi `dist:5.2`) đo được hở **76px trên + 76px dưới** trên khung
+        1900×985. Đây là dải đen ĐỐI XỨNG, khác dải đen do `facing.lat` gây ra.
+     Mất gì: `dist > 4.4` không lùi ra xa thêm được nữa. Không mất bài học nào —
+     ở zoom 1 bản đồ đã phủ trọn bề rộng khung, tức "thấy cả hai nửa cùng lúc"
+     (mục đích của `dist:5.2` ở bước ③) vẫn đạt. */
+  var ZOOM_MIN = 1;
+
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function reduced() {
     try {
@@ -121,36 +131,48 @@
 
     var view = el("div", "e2-view", stage);          // khung cắt
     var layer = el("div", "e2-layer", view);         // lớp BỊ biến hình
-    var pic = el("picture", "", layer);
-    var srcA = el("source", "", pic);
-    srcA.type = "image/avif";
-    var srcW = el("source", "", pic);
-    srcW.type = "image/webp";
-    var img = el("img", "e2-img", pic);
-    img.alt = "";
-    img.decoding = "async";
-    img.setAttribute("aria-hidden", "true");
+    /* ẢNH BỀ MẶT — BA BẢN, LÁT THEO KINH TUYẾN (sửa 02/08/2026, `docs/decisions/005`).
+       ⚠️ LỖI ĐÃ CHỮA: `paint()` dịch lớp này theo `facing` tới ±50% bề rộng, nhưng
+          lớp chỉ được cỡ để phủ khung KHI phép dịch = 0 (`css:550`). Không có chỗ nào
+          kẹp phép dịch lại → mọi `facing.lon != 0` đều đẩy ảnh ra khỏi khung và để lại
+          một dải ĐEN. Đo được (`scratchpad/probe_map_cover.py`): **5/9 cấu hình bước
+          thật hở, trên MỌI cỡ màn**; tệ nhất bước ③ `sun` hở **602px bên phải** trên
+          khung 1900×985. Chủ dự án gặp đúng lỗi này khi chơi thật.
+       ⚠️ KHÔNG chữa bằng cách kẹp `px`: ở zoom 1 thì kẹp chỉ cho phép |lon| ≤ 6,4°,
+          tức ném bỏ khung nhìn `FACE_OPEN` (30, 95) mà `004` đã chọn VÌ NỘI DUNG.
+       Chữa đúng: bản đồ equirectangular **lặp liền mạch theo kinh độ** — kinh tuyến
+       180°Đ và 180°T là cùng một đường. Nên đặt thêm một bản phía tây và một bản phía
+       đông; ba bản phủ 3× bề rộng lớp, mà phép dịch tối đa chỉ 0,5× → không bao giờ hở.
+       (Kiểm được: cần `zoom ≥ 2/3`, mà sàn phóng là `ZOOM_MIN` = 1.)
+       ⚠️⚠️ HAI BẢN SAO PHẢI Ở NGOÀI HỘP CỦA LỚP (`left:±100%`) VÀ KHÔNG ĐƯỢC ĐỔI CỠ
+          LỚP. Marker định vị bằng PHẦN TRĂM của `.e2-layer` (`project()` trả `x =
+          (lon+180)/360*100`), nên đổi cỡ hay tỉ lệ lớp là dời toàn bộ toạ độ địa lý —
+          đúng lỗi "thẻ Amazon rơi giữa đại dương" của bản 3D. Bản sao chỉ để LẤP MẮT.
+       Bản sao chỉ hiện ở chế độ bản đồ phẳng: ảnh quả cầu là ảnh CHỤP một hình cầu,
+       lát nó ra cạnh nhau là vô nghĩa (xem `.e2-wrap` trong CSS). */
+    function mkPic(cls) {
+      var pc = el("picture", cls, layer);
+      var a = el("source", "", pc); a.type = "image/avif";
+      var w = el("source", "", pc); w.type = "image/webp";
+      var im = el("img", "e2-img", pc);
+      im.alt = "";
+      im.decoding = "async";
+      im.setAttribute("aria-hidden", "true");
+      return { a: a, w: w, img: im };
+    }
+    var pics = [
+      mkPic(""),                  // bản THẬT — cái mà marker neo vào
+      mkPic("e2-wrap e2-wrap-w"), // bản sao phía TÂY  (left:-100%)
+      mkPic("e2-wrap e2-wrap-e")  // bản sao phía ĐÔNG (left:+100%)
+    ];
 
     var grid = el("div", "e2-grid", layer);
     var markerBox = el("div", "e2-markers", layer);
     var drone = el("div", "e2-drone", layer);
     var beam = el("div", "e2-beam", drone);
-    /* VÒNG NGẮM = chỗ mà `facing` rơi vào trên màn hình.
-       ⚠️ ĐẶT TRONG `layer` VÀ CHIẾU BẰNG ĐÚNG `project()` CỦA MARKER — không gán
-          `left:50%` cho xong. Đo được trên bản đồ phẳng: điểm ở `facing` rơi vào
-          **(62,5%, 50%)** của khung, KHÔNG phải tâm; và con số đó đổi theo `zoom`.
-          Gán cứng một vị trí là vẽ vòng ngắm lệch khỏi chính cái đích nó chỉ, tức
-          trẻ kéo trạm vào vòng mà thanh tín hiệu không lên — lỗi im lặng, và là
-          loại lỗi đã làm bước `rotation` bản 3D KHÔNG THỂ hoàn thành.
-       Bước `rotation` thắng khi `stationAngleTo(...) < 20°`, tức khi trạm về gần
-       `facing` — nên vòng này là đích nhìn thấy được của đúng điều kiện đó. */
-    var aim = el("div", "e2-aim", layer);
-    aim.hidden = true;
-
     var sun = el("button", "e2-sun", view);
     sun.type = "button";
     sun.setAttribute("aria-label", "Mặt Trời");
-    var sat = el("div", "e2-sat", view);
     var shieldEl = el("div", "e2-shield", view);
 
     /* ---------------- Trạng thái ---------------- */
@@ -159,7 +181,7 @@
     var zoom = 1;
     var spinScale = 0;
     var sunLit = 1;
-    var dragRotate = true, dragZoom = true, earthDrag = false;
+    var dragRotate = true, dragZoom = true;
     var markers = [];                    // {id, lat, lon, done, node}
     var pickCbs = [];
     var running = false, raf = 0, last = 0;
@@ -171,11 +193,30 @@
     function setMap(kind) {
       var m = MAPS[kind] || MAPS.globe;
       map = MAPS[kind] ? kind : "globe";
-      srcA.srcset = m.avif;
-      srcW.srcset = m.webp;
-      img.src = m.webp;                  // nhánh cuối, trình duyệt tự chọn source
-      img.width = m.w; img.height = m.h; // khai cỡ để chặn CLS
+      for (var pi = 0; pi < pics.length; pi++) {
+        var P = pics[pi];
+        P.a.srcset = m.avif;
+        P.w.srcset = m.webp;
+        P.img.src = m.webp;                    // nhánh cuối, trình duyệt tự chọn source
+        P.img.width = m.w; P.img.height = m.h; // khai cỡ để chặn CLS
+      }
+      // Ba bản dùng CÙNG một URL nên trình duyệt giải mã một lần rồi dùng lại.
       stage.classList.toggle("e2-flat", !!m.flat);
+      /* ⚠️⚠️ PHẢI ĐO LẠI BỐ CỤC Ở ĐÂY — LỖI CÓ SẴN, sửa 02/08/2026.
+         `.e2-layer` đổi CỠ theo chế độ bản đồ: quả cầu `min(100vw,100vh)` (vuông),
+         bản đồ phẳng `max(50vw,100vh)`. Nhưng `measure()` chỉ chạy MỘT LẦN lúc dựng
+         (khi map còn là `globe`) và khi `resize` — nên `lyH` giữ mãi chiều cao của
+         ảnh QUẢ CẦU. Trên khung 1440×900 hai con số trùng nhau (900) nên không ai
+         thấy; trên **điện thoại dọc 390×844 thì lệch 390 vs 844**, và hậu quả là
+         `maxPyPct()` ra **0** → `paint()` kẹp phép dịch DỌC về 0 → **không tài nào
+         đưa được vĩ độ cao vào khung**. Đo được: Nam Cực (lat −75) ở `dist:3,1` rơi
+         xuống y = 921 trên khung cao 844, tức nằm ngoài — bước ⑤ `life` không chơi
+         được trên máy tính bảng dọc.
+         ⚠️ `probe_map_cover.py` KHÔNG bắt được (203/203 vẫn xanh): kẹp py về 0 làm
+            MẤT khả năng dịch dọc chứ không làm HỞ khung, mà nó chỉ hỏi chuyện hở.
+         Đọc `offsetHeight` ép trình duyệt tính lại bố cục, nên chỉ gọi ở đây —
+         KHÔNG gọi trong `paint()` (nó chạy mỗi khung hình khi hành tinh tự quay). */
+      measure();
       paint();
     }
 
@@ -207,11 +248,36 @@
       };
     }
 
+    /* ---------------- Trần dịch DỌC ----------------
+       ⚠️ VĨ TUYẾN KHÔNG LÁT ĐƯỢC — hai cực là MÉP THẬT của thế giới, không có gì
+          phía trên Bắc Cực để ghép vào. Nên trục dọc phải KẸP, khác trục ngang.
+       Đo được trước khi sửa: `.e2-layer` cao `max(50vw,100vh)`, mà trên khung
+       1900×985 thì `max(950,985) = 985` — ĐÚNG BẰNG chiều cao khung, tức phần dư
+       dọc bằng **0**. Vì thế mọi `facing.lat != 0` đều hở một dải đen trên hoặc
+       dưới: bước ③ `sun` (lat 30, zoom 0,846) hở **240px phía trên**.
+       Kẹp chỉ đổi KHUNG NHÌN, không đổi địa lý: marker là con của `.e2-layer` nên
+       chúng dịch CÙNG lớp — toạ độ thật giữ nguyên tuyệt đối. */
+    var vpW = 0, vpH = 0, lyH = 0;
+    function measure() {
+      vpW = view.clientWidth; vpH = view.clientHeight; lyH = layer.offsetHeight;
+    }
+    // Đọc bố cục MỘT LẦN rồi nhớ lại; `paint()` chạy mỗi khung hình khi hành tinh
+    // tự quay, đọc `clientHeight` ở đó là ép trình duyệt tính lại bố cục 60 lần/giây.
+    window.addEventListener("resize", measure);
+    measure();
+
+    function maxPyPct() {
+      if (!lyH) measure();
+      if (!lyH) return 0;
+      return Math.max(0, (lyH * zoom - vpH) / 2) / lyH * 100;
+    }
+
     function paint() {
       var m = MAPS[map];
       // Ảnh quả cầu: "xoay" = dịch ảnh theo kinh/vĩ tuyến. Bản đồ phẳng: dịch thật.
+      // px KHÔNG cần kẹp — ba bản ảnh lát theo kinh tuyến đã lo (xem `mkPic`).
       var px = m.flat ? -wrapLon(facing.lon) / 360 * 100 : 0;
-      var py = m.flat ? (facing.lat) / 180 * 100 : 0;
+      var py = m.flat ? clamp((facing.lat) / 180 * 100, -maxPyPct(), maxPyPct()) : 0;
       layer.style.transform =
         "translate(" + px.toFixed(3) + "%," + py.toFixed(3) + "%) scale(" + zoom.toFixed(3) + ")";
       stage.classList.toggle("e2-night", !sunLit);
@@ -223,16 +289,6 @@
         mk.node.hidden = !p.visible;
         /* CHỐNG-PHÓNG: dấu hiệu giữ nguyên cỡ trên màn hình dù ảnh phóng bao nhiêu. */
         mk.node.style.transform =
-          "translate(-50%,-50%) scale(" + (1 / zoom).toFixed(3) + ")";
-      }
-
-      /* Vòng ngắm: chiếu CHÍNH `facing` bằng cùng một hàm `project()` — nên nó luôn
-         nằm đúng chỗ mà điều kiện `stationAngleTo(...) = 0` quy về, ở mọi zoom. */
-      if (!aim.hidden) {
-        var ap = project(facing.lat, facing.lon);
-        aim.style.left = ap.x + "%";
-        aim.style.top = ap.y + "%";
-        aim.style.transform =
           "translate(-50%,-50%) scale(" + (1 / zoom).toFixed(3) + ")";
       }
     }
@@ -265,7 +321,7 @@
        trình duyệt cũng đã tự huỷ `click`, nên không mất gì; còn cú chạm không kéo
        thì đi thẳng tới nút như thường. */
     view.addEventListener("pointerdown", function (e) {
-      if (!dragRotate && !earthDrag) return;
+      if (!dragRotate) return;
       down = { x: e.clientX, y: e.clientY, lon: facing.lon, lat: facing.lat,
                moved: 0, id: e.pointerId, captured: false };
     });
@@ -288,7 +344,7 @@
     view.addEventListener("wheel", function (e) {
       if (!dragZoom) return;
       e.preventDefault();
-      zoom = clamp(zoom * (e.deltaY > 0 ? 0.92 : 1.08), 0.8, 3);
+      zoom = clamp(zoom * (e.deltaY > 0 ? 0.92 : 1.08), ZOOM_MIN, 3);
       paint();
     }, { passive: false });
 
@@ -302,12 +358,24 @@
       markerBox.innerHTML = "";
     }
 
+    /**
+     * @param list [{id, lat, lon, rgb, label, cls?, html?}]
+     *   `cls`  — class PHỤ thêm vào `.e2-mk`, để một bước dựng dấu hiệu kiểu khác
+     *            (bước ④ dùng nó cho ba nhà máy trên bản đồ).
+     *   `html` — nội dung bên trong. Mặc định rỗng (chấm tròn thuần CSS).
+     * ⚠️ MỌI DẤU HIỆU NEO THEO lat/lon PHẢI ĐI QUA ĐÂY, đừng tự chèn phần tử vào
+     *    `.e2-layer`: `paint()` chỉ cập nhật vị trí + chống-phóng cho những gì nằm
+     *    trong `markers`. Chèn tay là dấu hiệu đứng yên trong khi bản đồ trượt đi —
+     *    đúng lỗi "mục tiêu chạy khỏi con trỏ" mà `004` đã đi sửa.
+     */
     function addMarkers(list) {
       clearMarkers();
       (list || []).forEach(function (m) {
-        var b = el("button", "e2-mk", markerBox);
+        var b = el("button", "e2-mk" + (m.cls ? " " + m.cls : ""), markerBox);
         b.type = "button";
+        if (m.html) b.innerHTML = m.html;
         b.dataset.id = m.id;
+        if (m.zone) b.dataset.zone = m.zone;   // để `pick-place.js` nhận làm ô thả
         b.style.setProperty("--mk", "rgb(" + (m.rgb || "95,240,255") + ")");
         b.setAttribute("aria-label", m.label || m.id);
         b.addEventListener("click", function () {
@@ -374,7 +442,9 @@
             if (markers[i].id === id) { node = markers[i].node; break; }
           }
         } else if (kind === "sun") node = sun;
-        else if (kind === "sat") node = sat;
+        /* ⚠️ NHÁNH `"sat"` ĐÃ BỎ 02/08/2026 cùng bước `rotation` (`docs/decisions/005`).
+           Nó còn sót lại sau khi biến `sat` bị xoá, tức là một `ReferenceError` nằm
+           chờ đúng người gọi đầu tiên — im lặng tuyệt đối cho tới lúc đó. */
         if (!node) return null;
         var r = node.getBoundingClientRect();
         var vr = view.getBoundingClientRect();
@@ -403,7 +473,7 @@
         o = o || {};
         var ms = o.ms != null ? o.ms : 1500;
         var z0 = zoom;
-        var z1 = o.dist != null ? clamp(4.4 / o.dist, 0.8, 3) : zoom;
+        var z1 = o.dist != null ? clamp(4.4 / o.dist, ZOOM_MIN, 3) : zoom;
         var l0 = facing.lon, l1 = o.lon != null ? o.lon : facing.lon;
         var a0 = facing.lat, a1 = o.lat != null ? o.lat : facing.lat;
         var dl = wrapLon(l1 - l0);
@@ -413,6 +483,40 @@
           facing.lat = a0 + (a1 - a0) * k;
           paint();
         });
+      },
+
+      /**
+       * ĐƯA MỘT ĐIỂM ĐỊA LÝ VÀO ĐÚNG TÂM KHUNG NHÌN — rồi mới gọi `panTo`.
+       *
+       * ⚠️ VÌ SAO KHÔNG PHẢI LÀ `panTo({lon})`: `panTo` nhận thẳng `facing.lon`, mà
+       *    `facing.lon` chỉ TRÙNG tâm khung khi `zoom = 1`. Phóng to thì lệch đi.
+       *    Công thức (z = zoom đích): **facing.lon = z · lon**.
+       *
+       * ⚠️ TRƯỚC 02/08/2026 CÔNG THỨC NÀY CÒN CÓ MỘT SỐ HẠNG BÙ `180 − 180·V/W`, vì
+       *    `.e2-layer` ở chế độ phẳng bị **neo mép trái** (CSS quá ràng buộc — xem
+       *    `css/mission-earth.css`). Số hạng đó nay đã BỎ vì CSS đã căn giữa lớp.
+       *    Đừng thêm lại: khi lớp còn neo trái, dải kinh độ với tới được bị cắt mất
+       *    một đầu và **mọi kinh độ đông hơn ~83° không thể đưa vào khung trên điện
+       *    thoại dọc** — marker chỉ vẽ trên bản ảnh THẬT, hai bản sao lát chỉ lấp mắt.
+       *
+       * ⚠️ ẢNH QUẢ CẦU thì `project()` đã lấy `facing` làm TÂM phép chiếu, nên ở đó
+       *    hàm này chuyển thẳng xuống `panTo` — đừng "sửa" nó thành áp công thức cho
+       *    cả hai chế độ.
+       */
+      centerOn: function (o) {
+        o = o || {};
+        var m = MAPS[map];
+        if (!m.flat) return world.panTo(o);
+        var z = o.dist != null ? clamp(4.4 / o.dist, ZOOM_MIN, 3) : zoom;
+        var out = {};
+        for (var k in o) if (o.hasOwnProperty(k)) out[k] = o[k];
+        if (o.lon != null) out.lon = wrapLon(z * o.lon);
+        /* Trục DỌC cùng công thức, nhưng `paint()` còn KẸP `py` theo phần dư dọc
+           (`maxPyPct`) vì hai cực là mép thật của thế giới — nên vĩ độ cao có thể
+           không vào được đúng tâm. Không sao: điều cần là marker NẰM TRONG khung,
+           và phép kẹp chỉ kéo khung về phía cực gần nhất, tức vẫn đi đúng hướng. */
+        if (o.lat != null) out.lat = z * o.lat;
+        return world.panTo(out);
       },
 
       showGrid: function (on) {
@@ -443,34 +547,7 @@
         }, function () { sunLit = 0; stage.classList.add("e2-night"); });
       },
 
-      setSatelliteVisible: function (on) {
-        sat.classList.toggle("show", on !== false);
-      },
-      setSatelliteSignal: function (on) {
-        sat.classList.toggle("ok", on !== false);
-      },
-
-      /**
-       * Góc giữa TRẠM PHÁT SÓNG và hướng đang nhìn, theo độ. Bước `rotation` xong
-       * khi dưới 20°.
-       * ⚠️ ĐÂY LÀ CHỖ BẢN 3D CÓ MỘT LỖI THIẾT KẾ THẬT: ở đó kéo là quay CAMERA nên
-       *    `earth.quaternion` không đổi và góc trạm–vệ tinh **y nguyên** — bước đó
-       *    chỉ tự xong vì hành tinh tự quay (tức là trẻ ngồi chờ, không phải giải),
-       *    và ở `prefers-reduced-motion` (không tự quay) thì **treo vĩnh viễn**.
-       *    Bản 2D không còn cửa cho lỗi đó: thứ trẻ kéo và thứ được chấm điểm là
-       *    CÙNG MỘT con số (`facing.lon`).
-       */
-      stationAngleTo: function (lat, lon) {
-        return angleBetween(facing.lat, facing.lon, lat, lon);
-      },
-
       setSpin: function (scale) { spinScale = Number(scale) || 0; },
-
-      /** Kéo xoay CHÍNH hành tinh (bước 5) thay vì xoay camera. */
-      setEarthDrag: function (on) { earthDrag = on !== false; },
-
-      /** Bật/tắt vòng ngắm — đích NHÌN THẤY ĐƯỢC của `stationAngleTo(...) → 0`. */
-      showAim: function (on) { aim.hidden = on === false; paint(); },
 
       facingLatLon: function () {
         return { lat: facing.lat, lon: facing.lon };

@@ -88,6 +88,20 @@
 })();
 </script>
 
+<!-- DẢI NHẮC MẠNG KÉM (`docs/decisions/005` mục 6).
+     ⚠️ LÀ DẢI ĐÓNG ĐƯỢC, KHÔNG PHẢI HỘP THOẠI CHẶN — cùng bài học với dải khuyến
+        nghị dùng laptop ở `index.html`: chặn nội dung là làm hỏng đúng cái trang
+        tồn tại để làm. `role="status"`, không khoá cuộn, có nút ✕, đóng rồi thì
+        không nhắc lại (`astroq-perf-note`).
+     ⚠️ CHỈ LÀ LỚP (a). Network Information API [Chưa kiểm chứng] Safari/iOS không
+        hỗ trợ, mà iPad là thiết bị hay dùng nhất ở đây — lớp chắc chắn hơn là mốc
+        chờ 12 giây của `js/map-onboard.js`. -->
+<div id="perf-note" class="panel" role="status" hidden>
+  <span class="txt" id="perf-note-txt"></span>
+  <button type="button" class="go" id="perf-note-go"></button>
+  <button type="button" class="x" id="perf-note-x" aria-label="Đóng">✕</button>
+</div>
+
 <!-- Mobile menu toggle -->
 <button id="menu-btn" class="panel" aria-label="Open controls">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -306,6 +320,10 @@ window.I18N = {
     searchPh:'Search a planet…', worlds:'Worlds', explore:'Explore', go:'Travel here', simulation:'Simulation', display:'Display', camera:'Camera',
     play:'Play', pause:'Pause', simSpeed:'Simulation speed',
     orbits:'Orbit lines', labels:'Labels', perfMode:'Reduce quality',
+    perfNote:'Your connection looks slow. Turning on reduced quality makes the map smoother.',
+    perfNoteGo:'Turn it on', perfNoteX:'Dismiss',
+    sceneFailNote:'The 3D map could not load — your connection may be weak. Taking you straight to the mission; it does not need the 3D map.',
+    sceneFailGo:'Go to the mission',
     resetCam:'Reset camera', wholeSystem:'Whole Solar System', home:'Back',
     hint:'Drag to orbit · Scroll to zoom · Right-drag to pan',
     prev:'Previous', next:'Next', navSystem:'Solar System', flySun:'Fly to Sun',
@@ -348,6 +366,10 @@ window.I18N = {
     searchPh:'Tìm một hành tinh…', worlds:'Các thế giới', explore:'Khám phá', go:'Du hành tới đây', simulation:'Mô phỏng', display:'Hiển thị', camera:'Máy quay',
     play:'Phát', pause:'Tạm dừng', simSpeed:'Tốc độ mô phỏng',
     orbits:'Đường quỹ đạo', labels:'Nhãn tên', perfMode:'Giảm cấu hình',
+    perfNote:'Đường truyền của bạn có vẻ yếu. Bật chế độ giảm cấu hình sẽ giúp bản đồ chạy mượt hơn.',
+    perfNoteGo:'Bật giúp mình', perfNoteX:'Bỏ qua',
+    sceneFailNote:'Không dựng được bản đồ 3D — có thể mạng đang yếu. Mình đưa bạn vào thẳng nhiệm vụ nhé, nhiệm vụ không cần bản đồ 3D đâu.',
+    sceneFailGo:'Vào nhiệm vụ',
     resetCam:'Đặt lại máy quay', wholeSystem:'Toàn Hệ Mặt Trời', home:'Quay lại',
     hint:'Kéo để xoay · Cuộn để phóng · Chuột phải để di chuyển',
     prev:'Trước', next:'Tiếp', navSystem:'Hệ Mặt Trời', flySun:'Bay tới Mặt Trời',
@@ -1553,7 +1575,27 @@ class App {
     // Toggles
     document.getElementById('t-orbits').addEventListener('change', e=>{ this.system.setOrbitsVisible(e.target.checked); this.setNeighborhoodOrbits(e.target.checked); });
     document.getElementById('t-labels').addEventListener('change', e=>{ document.getElementById('labels').style.display=e.target.checked?'block':'none'; this.setNeighborhoodLabels(e.target.checked); });
-    document.getElementById('t-perf').addEventListener('change', e=>this.setLowQuality(e.target.checked));
+    /* "Giảm cấu hình" — MỘT khoá dùng chung cho cả app (`docs/decisions/005` mục 6).
+       ⚠️ Trước 02/08/2026 công tắc này KHÔNG được lưu: tải lại trang là mất, và
+          trang khác không biết gì. Nay đọc/ghi qua `AstroQ.getPerf/setPerf`
+          (`localStorage["astroq-perf"]`), đúng khuôn `astroq-sfx`.
+       ⚠️ Đặt trạng thái ban đầu TRƯỚC khi gắn listener và gọi `setLowQuality`
+          THẲNG chứ không phát sự kiện `change` giả — phát sự kiện giả thì mọi
+          listener khác gắn sau này cũng nổ theo, và đó là loại lỗi im lặng. */
+    var perfBox = document.getElementById('t-perf');
+    if(window.AstroQ && AstroQ.getPerf()){ perfBox.checked = true; this.setLowQuality(true); }
+    perfBox.addEventListener('change', e=>{
+      this.setLowQuality(e.target.checked);
+      if(window.AstroQ) AstroQ.setPerf(e.target.checked);
+    });
+    // Đổi ở tab khác thì tab này theo ngay — cùng lối `astroq-lang` đã dùng.
+    window.addEventListener('storage', e=>{
+      if(!window.AstroQ || e.key !== AstroQ.LS_PERF) return;
+      var on = AstroQ.getPerf();
+      if(perfBox.checked === on) return;
+      perfBox.checked = on;
+      this.setLowQuality(on);
+    });
 
     // Camera buttons
     document.getElementById('reset-cam').addEventListener('click', ()=>this._deselectToOverview());
@@ -2496,8 +2538,14 @@ try{
       var id = el.dataset.bodyId;
       var open = AstroQGate.canVisit(id);
       el.classList.toggle('gate-locked', !open);
-      // Chỉ hành tinh KHỞI ĐẦU được tô sáng; mở thêm rồi thì không còn chỉ đường nữa.
-      var start = open && id === g.first && g.open.length === 1;
+      /* Chỉ hành tinh KHỞI ĐẦU được tô sáng; mở thêm rồi thì không còn chỉ đường nữa.
+         ⚠️ VÀ TẮT NGAY KHI TRẺ ĐÃ CHẠM VÀO NÓ (thêm 02/08/2026 — chủ dự án chơi thật:
+            *"sau khi đã click vào Trái Đất 3D như hướng dẫn, hãy bỏ nhãn Bắt đầu từ
+            đây"*). Nhãn đó là một LỜI MỜI; mời tiếp một việc trẻ vừa làm xong thì nó
+            đọc ra thành "em làm chưa đúng, làm lại đi". Dấu hiệu chỉ đường phải biến
+            mất đúng lúc nó hết việc — cùng nguyên tắc với bàn tay 👆 ở bước ①, tắt
+            ngay sau cú chạm. `_gateTouched` do chính chỗ mở bảng thông tin đặt. */
+      var start = open && id === g.first && g.open.length === 1 && !window._gateTouched;
       el.classList.toggle('gate-start', start);
       var hint = el.querySelector('.gate-hint');
       if(start && !hint){
@@ -2527,10 +2575,25 @@ try{
         return (a && a.selected && a.selected.cfg) ? a.selected.cfg.id : null;
       },
       onGo: function(){ window.location.href = 'mission-earth.html'; },
-      /* ⑧ Cảnh 3D không dựng được (mất mạng / unpkg lỗi) → ĐI THẲNG vào nhiệm vụ.
+      // Vẽ lại nhãn ngay khi trẻ chạm Trái Đất — để chữ "Bắt đầu từ đây" tắt đúng
+      // lúc nó hết việc, không phải đợi tới nhịp `setInterval` 1,2 giây sau.
+      repaintLabels: paintGateLabels,
+      /* ⑧ Cảnh 3D không dựng được (mất mạng / unpkg lỗi) → đi thẳng vào nhiệm vụ.
          Trang nhiệm vụ đã là 2D nên không cần tên miền ngoài nào. Trẻ mất màn phim,
-         không mất nhiệm vụ — xem ghi chú trong js/map-onboard.js. */
-      onSceneFail: function(){ window.location.replace('mission-earth.html'); }
+         không mất nhiệm vụ — xem ghi chú trong js/map-onboard.js.
+         ⚠️ NÓI MỘT CÂU RỒI HÃY ĐI (`005` mục 5). Trước 02/08/2026 nó `location.replace`
+            IM LẶNG: trẻ đang nhìn màn loading thì đột nhiên rơi sang một trang khác,
+            không hiểu vì sao — đọc ra như lỗi chứ không như một đường lùi.
+         ⚠️ CỐ Ý KHÔNG MỜI "BẬT GIẢM CẤU HÌNH" Ở NHÁNH NÀY. Tới đây nghĩa là three.js
+            còn chưa tải xong; hạ chất lượng cảnh không cứu được một file chưa về tới
+            máy. Mời một thứ không có tác dụng là hứa hão — đúng cái `005` đang đi sửa.
+         ⚠️ VẪN TỰ ĐI SAU 4,5 GIÂY. Câu này để trẻ HIỂU chuyện gì đang xảy ra, không
+            phải để bắt nó phải bấm mới đi tiếp: mạng yếu mà còn dựng thêm một cửa
+            chặn nữa thì đúng là chỗ trẻ mắc kẹt. */
+      onSceneFail: function(){
+        showPerfNote('fail');
+        setTimeout(function(){ window.location.replace('mission-earth.html'); }, 4500);
+      }
     });
     // Nhãn được dựng lại khi đổi ngôn ngữ → tô lại; và tô định kỳ vì hành tinh
     // vào/ra khung nhìn thì `CSS2DRenderer` bật/tắt nhãn.
@@ -2573,6 +2636,49 @@ try{
     // Lời Comet của lượt onboarding + nhãn "BẮT ĐẦU TỪ ĐÂY" cũng phải dịch theo.
     if(window.AstroQMapOnboard) AstroQMapOnboard.setLang(lang);
     if(typeof paintGateLabels === 'function') paintGateLabels();
+    paintPerfNote();
+  }
+
+  /* ═════════ DẢI NHẮC MẠNG KÉM (`docs/decisions/005` mục 6) ═════════
+     ⚠️ GIỮ KHOÁ i18n CHỨ KHÔNG GIỮ CHUỖI (`perfNoteKind`): đổi VI/EN giữa lúc dải
+        đang hiện thì câu phải dịch theo, không đứng lại ở tiếng cũ. Đây đúng là lỗi
+        đã phải đi sửa ở lời báo lỗi form waitlist ngày 02/08. */
+  var PERF_NOTE_KEY = 'astroq-perf-note';
+  var perfNoteKind = null;         // null · 'slow' · 'fail'
+  function paintPerfNote(){
+    var box=$('perf-note'); if(!box) return;
+    if(!perfNoteKind){ box.hidden=true; return; }
+    box.hidden=false;
+    $('perf-note-txt').textContent =
+      T(perfNoteKind==='fail' ? 'sceneFailNote' : 'perfNote');
+    $('perf-note-go').textContent =
+      T(perfNoteKind==='fail' ? 'sceneFailGo' : 'perfNoteGo');
+    var x=$('perf-note-x');
+    x.hidden = perfNoteKind==='fail';   // đường lùi thì không có gì để bỏ qua
+    x.setAttribute('aria-label', T('perfNoteX'));
+  }
+  function showPerfNote(kind){
+    perfNoteKind = kind;
+    paintPerfNote();
+  }
+  function initPerfNote(){
+    var go=$('perf-note-go'), x=$('perf-note-x');
+    if(!go||!x) return;
+    go.addEventListener('click', function(){
+      if(perfNoteKind==='fail'){ window.location.replace('mission-earth.html'); return; }
+      var t=$('t-perf');
+      if(t && !t.checked){ t.checked=true; t.dispatchEvent(new Event('change')); }
+      showPerfNote(null);
+      try{ localStorage.setItem(PERF_NOTE_KEY,'1'); }catch(e){}
+    });
+    x.addEventListener('click', function(){
+      showPerfNote(null);
+      try{ localStorage.setItem(PERF_NOTE_KEY,'1'); }catch(e){}
+    });
+    /* Chỉ mời khi CHƯA bật và CHƯA từng bỏ qua — mời lại một thứ trẻ đã từ chối
+       là phiền, và mời bật một thứ đang bật là nói sai. */
+    var seen=false; try{ seen = localStorage.getItem(PERF_NOTE_KEY)==='1'; }catch(e){}
+    if(!seen && window.AstroQ && AstroQ.slowLink() && !AstroQ.getPerf()) showPerfNote('slow');
   }
 
   // Expose a tiny hook so future code can refresh/relocalize the navigation tree.
@@ -2583,6 +2689,7 @@ try{
   var savedLang; try{ savedLang=localStorage.getItem('astroq-lang'); }catch(e){}
   applyLanguage((savedLang==='vi'||savedLang==='en') ? savedLang : (window.LANG||'en'));
   AstroQ.initLang(applyLanguage);
+  initPerfNote();             // cũng SAU applyLanguage: dải nhắc dùng T()
   startMapOnboard();          // SAU applyLanguage — xem ghi chú ở chính hàm đó
   setInterval(refresh, 200);
   refresh();

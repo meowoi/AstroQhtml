@@ -21,10 +21,27 @@ Bộ này canh đúng những thứ ĐỌC CODE KHÔNG THẤY ĐƯỢC:
     **mà KHÔNG dùng `filter:grayscale()`**;
   · bấm OK thì đi tới `mission-earth.html`.
 
-⚠️ Rút `READ_MS` xuống bằng `AstroQMapOnboard._setReadMs()` cho bộ test chạy nhanh,
-   NHƯNG có một phép kiểm riêng đọc `READ_MS` mặc định để chắc sản phẩm thật vẫn là
-   10 giây — rút mốc chờ mà quên kiểm giá trị thật là cách để một bộ test xanh trong
-   khi sản phẩm sai.
+⛔ `READ_MS` / `_setReadMs()` / state `reading` ĐÃ BỎ HẲN khỏi `js/map-onboard.js`
+   (02/08/2026) — đừng dựng lại trong bộ test. Mốc SÀN 15 giây trước khi Comet hỏi đã
+   bị bỏ vì chủ dự án chơi thật và bác: *"sau khi trẻ ngắm trái đất, ấn nút tiếp tục sẽ
+   phải chuyển sang ngay phần tiếp, ko chờ"* — một cái nút ghi "Tiếp tục" mà bấm vào
+   không tiếp tục thì nó là một cái nút nói dối.
+   ⚠️ Ba phép kiểm ở đây từng BẢO VỆ đúng mốc chờ đó (kể cả một phép kiểm đòi
+      `READ_MS === 15000`), nên sửa sản phẩm cho đúng là chúng báo hỏng — cùng loại việc
+      đã làm với nút Mặt Trăng. Đã đảo chiều: nay đòi **không còn mốc chờ nào**.
+
+⚠️⚠️ CHROME HÃM `setInterval` Ở TRANG KHÔNG HIỆN — ĐO ĐƯỢC ~124ms/ký tự thay vì 22ms
+   (chậm 5,6 lần). Ban đầu tưởng chỉ xảy ra khi chạy SONG SONG với một bộ Playwright khác,
+   nhưng 02/08/2026 đo lại: nó xảy ra **cả khi chạy một mình**, vì bộ này mở nhiều context
+   và trong headless thì trang không phải trang đang hiện đều bị coi là ẩn. Vì thế
+   `wait_typed` để mốc **90 giây** — xem bảng số đo trong docstring của nó. Thấy đúng mấy
+   phép kiểm GÕ CHỮ đỏ mà mọi thứ khác xanh thì đó là mốc chờ, ĐỪNG đi sửa `js/map-onboard.js`.
+   (Ghi chú cũ, giữ để đối chiếu: chạy cùng `smoke_mission_earth.py` thì hai phép kiểm nhịp
+   0 báo hết hạn chờ, chạy một mình thì 68/68.) Nguyên nhân là hành vi của trình duyệt chứ không phải
+   của sản phẩm: `say()` gõ từng chữ bằng `setInterval(…, 22)`, mà Chrome **hãm đồng hồ
+   ở tab không có focus** xuống ~1 lần/giây — một câu 140 ký tự vì thế mất tới 140 giây,
+   vượt xa mốc chờ 20 giây của `wait_js`. Thấy đúng hai phép kiểm gõ chữ đỏ mà mọi thứ
+   khác xanh thì kiểm xem có bộ nào đang chạy cùng, ĐỪNG đi sửa `js/map-onboard.js`.
 """
 import json
 import sys
@@ -64,13 +81,10 @@ def newpage(ctx, lang="vi", read_ms=900):
         "localStorage.setItem('astroq-route-gate', %s);"
         % (json.dumps(lang), json.dumps(json.dumps(CACHE)))
     )
-    # Rút mốc chờ NGAY khi module vừa nạp, trước lúc nhịp phim tới bước đọc.
-    pg.add_init_script(
-        "Object.defineProperty(window,'__readMs',{value:%d});"
-        "addEventListener('DOMContentLoaded',function(){"
-        "  if(window.AstroQMapOnboard) AstroQMapOnboard._setReadMs(%d);"
-        "});" % (read_ms, read_ms)
-    )
+    # ⛔ KHÔNG CÒN GÌ ĐỂ RÚT. `_setReadMs()` đã bị bỏ khỏi sản phẩm cùng lúc với mốc
+    #    chờ; gọi nó là `TypeError` trong init script — mà lỗi ở init script thì im lặng
+    #    với `pageerror` và triệu chứng chỉ hiện ra dưới dạng "nhịp phim không tới bước
+    #    kế tiếp". Tham số `read_ms` giữ lại cho tương thích chỗ gọi, không dùng nữa.
     return pg, errs
 
 
@@ -88,7 +102,14 @@ def diag(pg):
           warp: document.getElementById('nm-warp').classList.contains('show'),
           say: document.getElementById('mo-say').classList.contains('show'),
           info: document.getElementById('info').classList.contains('open'),
-          ready: window.__solarReady === true
+          ready: window.__solarReady === true,
+          /* ⚠️ THEM 02/08/2026: ba phep kiem `wait_typed` het han cho ma cau ngay sau
+             lai DOC RA du chu — tuc go xong that, chi la `<b>` khong duoc dung lai.
+             Khong co ba truong nay thi khong the phan biet "chua go xong" voi
+             "go xong roi ma dau hieu bao xong khong bao gio den". */
+          lineLen: (document.getElementById('mo-line').textContent || '').length,
+          lineCoB: document.getElementById('mo-line').innerHTML.indexOf('<b>') >= 0,
+          lineHtml: document.getElementById('mo-line').innerHTML.slice(0, 90)
         })""")
     except Exception as e:
         return {"_err": str(e)[:90]}
@@ -140,9 +161,27 @@ def wait_typed(pg, label):
        trước tôi ngủ 1,4s rồi đọc — ra "Đây là Hệ Mặt T" và **6 phép kiểm báo hỏng
        oan**. Tín hiệu THẬT là thẻ `<b>` được dựng lại, việc chỉ xảy ra ở dòng cuối
        của `say()` trong `js/map-onboard.js`.
+
+    ⚠️⚠️ MỐC CHỜ 90 GIÂY, KHÔNG PHẢI 20 — VÀ ĐÂY LÀ CON SỐ ĐO ĐƯỢC, KHÔNG PHẢI NỚI
+       LỎNG CHO QUA. Ngày 02/08/2026 ba phép kiểm gõ chữ của nhịp 0 báo hết hạn chờ.
+       Chẩn đoán (nhờ thêm `lineLen`/`lineCoB` vào `diag`): lúc hết hạn `lineLen = 161`
+       và ĐANG TĂNG — chữ vẫn đang gõ. 161 ký tự trong 20s = **124ms/ký tự**, trong khi
+       `TYPE_MS = 22`. Chrome đang hãm `setInterval` khoảng **5,6 lần**.
+       Đối chiếu độ dài 4 câu (đếm từ chính `js/map-onboard.js`):
+           l3   172 ký tự →  3,8s @22ms  |  21,3s @124ms   ⛔ vượt mốc 20s
+           l3b  244 ký tự →  5,4s @22ms  |  30,3s @124ms   ⛔
+           l4   195 ký tự →  4,3s @22ms  |  24,2s @124ms   ⛔
+           ask  101 ký tự →  2,2s @22ms  |  12,5s @124ms   ✅ dưới 20s
+       ⇒ **Đúng ba câu dài nhất hỏng, câu ngắn nhất đạt.** Đó là dấu vân tay của một mốc
+         chờ quá chặt — một lỗi sản phẩm thì không quan tâm độ dài câu.
+       ⚠️ Ghi chú đầu file nói về chuyện hãm này NHƯNG chỉ cho trường hợp chạy SONG SONG
+          với một bộ Playwright khác. Thực tế nó xảy ra cả khi chạy MỘT MÌNH: bộ này mở
+          nhiều context, và trong headless thì trang nào không phải trang đang hiện đều
+          bị coi là ẩn. Đã dọn sạch Chromium rồi chạy lại — vẫn hỏng đúng ba câu đó.
+       90s = gấp ba câu dài nhất, vẫn đủ chặt để bắt treo thật.
     """
     return wait_js(pg, "() => document.getElementById('mo-line')"
-                       ".innerHTML.indexOf('<b>') >= 0", label)
+                       ".innerHTML.indexOf('<b>') >= 0", label, timeout=90000)
 
 
 def wait_btn(pg, label):
@@ -332,28 +371,71 @@ def main():
             "chi Trai Dat duoc to sang, khong to bua hanh tinh khac")
 
         # ─────────────────────────────────────────────────────────────
-        head("[4] ④ Bam Trai Dat -> bang thong tin -> SAN 10s -> Comet hoi")
+        head("[4] ④ Bam Trai Dat -> NHIP 0 (khi quyen -> moi xoay) -> SAN -> Comet hoi")
         chk(click_earth(pg), "bam duoc vao Trai Dat")
         wait_js(pg, "() => document.getElementById('info')"
                     ".classList.contains('open')", "bang thong tin mo ra")
         chk(True, "bang thong tin MO ra de doc")
-        st = pg.evaluate("() => AstroQMapOnboard._state()")
-        chk(st == "reading", "dong ho SAN bat dau dem SAU khi bang mo", st)
-        chk(not say(pg)["shown"],
-            "box thoai TAM AN de nhuong cho tre doc bang thong tin")
 
+        # ══ NHIP 0 (them 02/08/2026, `docs/decisions/005` muc 1) ═══════════════════
+        # Bai hoc ngay/dem CHUYEN tu ban do phang cua mission-earth.html sang QUA CAU
+        # 3D o day — noi ranh gioi la THAT (`PointLight` gan vao Mat Troi cua canh),
+        # con o kia no la mot gradient ma chu du an da bac bang anh chup.
+        st = pg.evaluate("() => AstroQMapOnboard._state()")
+        chk(st == "atmo", "vao NHIP 0 ngay sau khi bang thong tin mo", st)
+        wait_typed(pg, "Comet go xong cau ve bau khi quyen")
+        s0 = say(pg)
+        chk("khí quyển" in s0["text"], "Comet chi vao BAU KHI QUYEN", s0["text"][:70])
+        # ⚠️ Vanh khi quyen trong canh dang duoc ve DAY GAP ~2 LAN ban kinh hanh tinh.
+        #    Chi vao do ma khong noi gi la DAY SAI MO HINH TU DUY — day la mot RANG
+        #    BUOC cua `005`, khong phai mot cau van tuy y.
+        wait_btn(pg, "co nut Tiep tuc sau cau khi quyen")
+        pg.evaluate("() => document.getElementById('mo-next').click()")
+        wait_typed(pg, "Comet go xong cau 'khi quyen mong hon the nhieu'")
+        s0b = say(pg)
+        chk("mỏng hơn" in s0b["text"],
+            "Comet NOI THAT rang vanh dang duoc ve day qua", s0b["text"][:70])
+        wait_btn(pg, "co nut Tiep tuc sau cau dinh chinh")
+        pg.evaluate("() => document.getElementById('mo-next').click()")
+        wait_typed(pg, "Comet go xong loi moi xoay")
+        s0c = say(pg)
+        chk(pg.evaluate("() => AstroQMapOnboard._state()") == "spin",
+            "sang nhip MOI XOAY")
+        chk("xoay" in s0c["text"] and "ban ngày" in s0c["text"] and "ban đêm" in s0c["text"],
+            "moi tre XOAY de ngam nua ngay / nua dem", s0c["text"][:80])
+        # ⛔ QUA CAU 3D KHONG BAO GIO DUOC MANG DIEU KIEN THANG. Day la cho QUAN SAT.
+        #    Dieu kien thang do tren camera-orbit chinh la loi da lam buoc `rotation`
+        #    ban 3D KHONG THE HOAN THANH va treo vinh vien o reduced-motion.
+        chk(not pg.evaluate(
+                "() => !!(window.AstroQMapOnboard && AstroQMapOnboard.win)"),
+            "nhip 0 KHONG co dieu kien thang (chi la cho quan sat)")
+        wait_btn(pg, "co nut Tiep tuc sau loi moi xoay")
+        pg.evaluate("() => document.getElementById('mo-next').click()")
+
+        # ⚠️ ĐẢO CHIỀU 02/08/2026: trước đây chỗ này chờ state `reading` (mốc SÀN 15
+        #    giây) rồi mới sang `ask`. Nay **KHÔNG CÒN MỐC CHỜ NÀO** — bấm "Tiếp tục" là
+        #    sang câu hỏi NGAY. Điều phải kiểm giờ là chính điều đó, và nó chặt hơn bản
+        #    cũ: một cái nút ghi "Tiếp tục" thì phải tiếp tục.
         wait_js(pg, "() => AstroQMapOnboard._state() === 'ask'",
-                "Comet chuyen sang cau hoi")
+                "bam Tiep tuc la sang cau hoi NGAY, khong con moc cho nao")
+        # ⚠️ HỎI ĐÚNG HAI THỨ ĐÃ BỊ BỎ KHỎI BỀ MẶT CÔNG KHAI. Bản đầu của phép kiểm này
+        #    còn hỏi thêm `"reading" not in Object.keys(...)` — nhưng `reading()` là hàm
+        #    NỘI BỘ, chưa bao giờ được export, nên điều kiện đó LUÔN đúng: một nửa phép
+        #    kiểm rỗng, và nửa rỗng thì không bảo vệ gì mà vẫn làm người đọc yên tâm.
+        _sur = pg.evaluate("() => ['READ_MS' in AstroQMapOnboard,"
+                           " typeof AstroQMapOnboard._setReadMs]")
+        chk(_sur[0] is False and _sur[1] == "undefined",
+            "san pham KHONG con `READ_MS` va `_setReadMs` (moc cho da bo han)", str(_sur))
         wait_typed(pg, "Comet go xong cau hoi")
         wait_btn(pg, "nut OK hien ra")
         s = say(pg)
         chk(s["shown"], "Comet hien lai de hoi")
         chk("sẵn sàng" in s["text"] and "nhiệm vụ đầu tiên" in s["text"],
             "cau hoi dung y: 'san sang bat dau nhiem vu dau tien'", s["text"][:80])
-        # ⚠️ 10 GIÂY LÀ SÀN, KHÔNG PHẢI HẠN — bảng thông tin PHẢI còn mở.
+        # ⚠️ MỐC ĐỌC LÀ SÀN, KHÔNG PHẢI HẠN — bảng thông tin PHẢI còn mở.
         chk(pg.evaluate("() => document.getElementById('info')"
                         ".classList.contains('open')"),
-            "bang thong tin VAN MO khi Comet hoi (10s la SAN, khong phai han)")
+            "bang thong tin VAN MO khi Comet hoi (moc doc la SAN, khong phai han)")
         chk(s["btn"] and "OK" in s["btn"], "co nut OK", str(s["btn"]))
         # Box thoại ở đáy, bảng thông tin ở mép phải — không được đè nhau
         ov = pg.evaluate("""() => {
@@ -366,10 +448,10 @@ def main():
         chk(ov == 0, "box thoai KHONG de len bang thong tin", f"{ov}px²")
         chk(not errs, "0 loi console", str(errs[:3]))
 
-        # Mốc thật của sản phẩm phải là 10 giây, không phải mốc test rút ngắn
-        chk(pg.evaluate("() => AstroQMapOnboard.READ_MS") == 10000,
-            "san doc mac dinh cua SAN PHAM la 10 giay",
-            str(pg.evaluate("() => AstroQMapOnboard.READ_MS")))
+        # ⛔ PHÉP KIỂM "san doc mac dinh la 15 giay" ĐÃ BỎ — nó khẳng định đúng một
+        #    trạng thái không còn tồn tại. Thứ thay nó là phép kiểm ngay trên: sản phẩm
+        #    KHÔNG còn `READ_MS`. Đó là bảo đảm mạnh hơn (0 mốc chờ) chứ không phải nới
+        #    lỏng: mốc chờ nào quay lại cũng làm phép kiểm kia đỏ.
 
         head("[5] Bam OK -> vao nhiem vu Trai Dat")
         pg.evaluate("() => document.getElementById('mo-next').click()")
@@ -452,6 +534,12 @@ def main():
         chk(click_earth(pg), "dien thoai: bam duoc Trai Dat")
         wait_js(pg, "() => document.getElementById('info').classList.contains('open')",
                 "dien thoai: bang thong tin mo ra")
+        # NHIP 0 (khi quyen -> dinh chinh -> moi xoay) chen vao truoc cau hoi tu
+        # 02/08/2026. Ba cu bam "Tiep tuc" — cung dung cai nut se mang cau hoi sau do.
+        for _i in range(3):
+            wait_btn(pg, f"dien thoai: nut Tiep tuc cua nhip 0 ({_i+1}/3)")
+            pg.evaluate("() => document.getElementById('mo-next').click()")
+            pg.wait_for_timeout(150)
         wait_js(pg, "() => AstroQMapOnboard._state() === 'ask'",
                 "dien thoai: Comet chuyen sang cau hoi")
         wait_btn(pg, "dien thoai: nut OK hien ra")

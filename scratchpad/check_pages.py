@@ -315,7 +315,7 @@ for k in ("win_next_k", "win_next", "win_missions"):
           me.count(k + ":") == 2, f"{me.count(k + ':')} lan")
 
 # ══════════════════════════════════════════════════════════════
-print("\n=== [3c] Nhiem Vu 01: 8 buoc khop server + codex + i18n ===")
+print("\n=== [3c] Nhiem Vu 01: buoc khop server + codex + i18n ===")
 # Ba chỗ phải nói cùng một câu chuyện, và không chỗ nào suy ra được từ chỗ kia:
 #   · Missions.cs   : có những bước nào, thứ tự chơi, mẫu codex nào mở ở bước nào
 #   · mission-earth.html : STEP_IDS (thứ tự thật khi chơi)
@@ -331,7 +331,14 @@ _cl = _re.search(r"const STEP_IDS = \[([^\]]*)\]", me)
 cl_ids = _re.findall(r"'([a-z]+)'", _cl.group(1)) if _cl else []
 check("STEP_IDS cua trang KHOP dung thu tu voi Missions.cs",
       sv_ids == cl_ids, f"server={sv_ids} client={cl_ids}")
-check("Nhiem Vu 01 co 8 buoc", len(sv_ids) == 8, str(len(sv_ids)))
+# ⚠️ KHONG GAN CUNG SO BUOC. Truoc 02/08/2026 dong nay ghi `== 8`, va khi bo buoc
+#    `rotation` (docs/decisions/005) thi no bao hong DUNG LUC code lam dung — cung
+#    mot ho voi loi "gan cung con so ma noi khac moi la nguon su that" du an da gap
+#    nhieu lan (14 icon · 14 thuat ngu · 25 cau · 20 mau vat · 5 buoc).
+#    Nguon su that la `Missions.cs`. O day chi doi: doc duoc, va khop client.
+check("doc duoc danh sach buoc tu Missions.cs", len(sv_ids) >= 5, str(len(sv_ids)))
+check("KHONG con buoc `rotation` (bo 02/08/2026, docs/decisions/005)",
+      "rotation" not in sv_ids, str(sv_ids))
 check("Moi buoc co object xu ly trong trang",
       all(_re.search(r"^  " + s + r": \{", me, _re.M) for s in sv_ids),
       str([s for s in sv_ids if not _re.search(r"^  " + s + r": \{", me, _re.M)]))
@@ -349,6 +356,15 @@ check("earth_codex.json khong co bai doc la",
       set(cx_ids) <= set(sv_codex), str(sorted(set(cx_ids) - set(sv_codex))))
 check("earth_codex.json: `count` khop so entry",
       _cx["count"] == len(cx_ids), f'count={_cx["count"]} entries={len(cx_ids)}')
+# ⚠️ THEM 02/08/2026 — LOI THAT DA XAY RA. Bo buoc `rotation` lam mat mot entry
+#    codex, nhung `codexTotal` o mission-earth.html van la 9, nen man tong ket ghi
+#    **"8/9 mau du lieu"**: noi voi tre rang no bo sot mot mau KHONG TON TAI, o dung
+#    man khen thuong. `smoke_mission_earth` bat duoc (no choi that toi man tong ket),
+#    con muc [3c] thi khong — vi truoc do khong co phep kiem nao noi hai con so nay.
+_ct = _re.search(r"codexTotal:\s*(\d+)", me)
+check("mission-earth.html: `codexTotal` du phong khop so entry earth_codex.json",
+      bool(_ct) and int(_ct.group(1)) == len(cx_ids),
+      f'codexTotal={_ct.group(1) if _ct else "?"} entries={len(cx_ids)}')
 check("earth_codex.json: moi entry co tieu de vi+en",
       all(e.get("title", {}).get("vi") and e.get("title", {}).get("en") for e in _cx["entries"]),
       str([e["id"] for e in _cx["entries"] if not e.get("title", {}).get("en")]))
@@ -408,6 +424,332 @@ _me_skip = {"sr-only", "nebula", "starfield", "toast", "modal", "lic", "tt-inlin
 check("mission-earth.html: moi class deu co CSS",
       not sorted(_me_used - _me_css - _me_skip),
       f"thieu CSS: {sorted(_me_used - _me_css - _me_skip)}")
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [3f] Buoc (5) `life`: LAT CAT TRAI DAT — ngan sach khuon + 2 nguon ===")
+# Chot 02/08/2026, `docs/decisions/006`. Muc nay canh dung MOT thu: buoc (5) khong duoc
+# quay ve dung lai mot khuon DA DAY. Do la ly do no bi viet lai, va la loai loi doc code
+# khong thay — chi thay khi chieu lai quyet dinh roi DEM.
+_me_code_f = strip_comments(me)
+
+# --- (1) NGAN SACH KHUON — dem loi goi HAM, khong dem cam nhan ---
+# ⚠️ `docs/decisions/002` dong 120: mot nhiem vu khong dung cung mot khuon qua 2 lan.
+#    Hai engine keo-tha va cau do DA DAY o (4)(6) va (1)(3). Buoc (5) vi the phai co ma
+#    rieng (~90 dong khong dung lai duoc). Neu ai do "don dep" bang cach cho no dung lai
+#    mot trong hai thi con so duoi day len 3 va muc nay bao hong — dung luc do.
+_n_drag = len(_re.findall(r"\bdragDrop\(\{", _me_code_f))
+_n_ask = len(_re.findall(r"\bbuildAsk\(\{", _me_code_f))
+check("dragDrop dung DUNG 2 lan (4 energy + 6 eco), khong hon", _n_drag == 2, _n_drag)
+check("buildAsk dung DUNG 2 lan (1 scan + 3 sun), khong hon", _n_ask == 2, _n_ask)
+
+# --- (2) Buoc (5) khong con cham marker de mo the ---
+# ⚠️ Marker VAN GIU va camera VAN BAY TOI: tre phai thay noi do nam dau tren anh ve tinh
+#    thi cau hoi do cao moi co can cu. Chi cu BAM la doi xuong cot. Neu `steps.life` co
+#    lai ham `pick` thi co nguoi da dung lai signal_scan lan thu 3.
+_life_blk = _re.search(r"\n  life: \{(.*?)\n  \},", _me_code_f, _re.S)
+check("doc duoc khoi `steps.life`", _life_blk is not None)
+if _life_blk:
+    _lb = _life_blk.group(1)
+    check("buoc (5) KHONG con ham pick() (khong cham marker de mo the)",
+          not _re.search(r"\n\s+(async\s+)?pick\s*\(", _lb))
+    check("buoc (5) co onRung() — tre chon nac tren lat cat", "onRung" in _lb)
+    check("buoc (5) van goi focusMarker (camera van bay toi toa do that)",
+          "focusMarker" in _lb)
+
+# --- (3) Thu tu di tham KHONG don dieu ---
+# ⚠️ Neu rank theo `LIFE_ORDER` tang hoac giam dan thi sau hai noi dau tre doan duoc not
+#    bang quy luat "cai sau cao hon cai truoc", va cu bat ngo o Nam Cuc mat sach.
+_ord = _re.search(r"const LIFE_ORDER = \[(.*?)\];", _me_code_f, _re.S)
+_rk = dict(_re.findall(r"\{ id: '(\w+)',.*?rank: (\d)", _me_code_f))
+check("doc duoc LIFE_ORDER va rank cua 4 noi", bool(_ord) and len(_rk) == 4, _rk)
+if _ord and len(_rk) == 4:
+    _seq = [int(_rk[x]) for x in _re.findall(r"'(\w+)'", _ord.group(1))]
+    _mono = (all(a < b for a, b in zip(_seq, _seq[1:]))
+             or all(a > b for a, b in zip(_seq, _seq[1:])))
+    check("thu tu di tham KHONG don dieu (khong doan duoc bang quy luat)", not _mono, _seq)
+    check("4 noi phu du 4 nac 1..4", sorted(_seq) == [1, 2, 3, 4], _seq)
+
+# --- (4) HAI CON SO CO NGUON, va khong noi rong hon nguon ---
+# ⚠️ NASA noi NGUYEN VAN "up to 4,000 meters above sea level" cho Nam Cuc. Trang do
+#    KHONG noi "Nam Cuc la chau luc cao nhat" — cac trang pho thong deu noi the va con so
+#    trung binh moi nguon mot khac (2.200 / 2.300 / 2.500 m). Da doc lai toan trang.
+check("cau Nam Cuc dung con so NASA 4.000 m", "4.000 m" in _me_code_f)
+check("cau day dai duong dung con so NOAA 3.682 m", "3.682" in _me_code_f)
+# ⚠️ NOAA noi ve DAI DUONG NOI CHUNG, khong rieng Dai Tay Duong — gan con so cho rieng
+#    Dai Tay Duong la dan nguon cho mot cau nguon khong noi.
+_alt_w = _re.search(r"id: 'water'.*?alt: \{ vi: '([^']*)'", _me_code_f, _re.S)
+check("KHONG gan con so NOAA cho rieng Dai Tay Duong",
+      bool(_alt_w) and "3.682" in _alt_w.group(1)
+      and "Đại Tây Dương" not in _alt_w.group(1),
+      _alt_w and _alt_w.group(1)[:60])
+
+# --- (5) Nhan 4 nac KHONG goi ten dia hinh ---
+# ⚠️ Ban nhap dau dung ten dia hinh ("dinh nui", "day bien") va no TU TRA LOI HO tre:
+#    "Himalaya -> dinh nui" thi khong con gi de nghi. Nhan theo DAI DO CAO thi Nam Cuc
+#    moi thanh cau hoi that — va Nam Cuc la ca duy nhat dang hoi trong bon noi nay.
+_rl = [_re.search(r"rung_%d: '([^']*)'" % k, _me_code_f) for k in (1, 2, 3, 4)]
+check("doc duoc 4 nhan nac", all(_rl))
+if all(_rl):
+    _j = " ".join(m.group(1).lower() for m in _rl)
+    check("nhan 4 nac KHONG goi ten dia hinh (nui / day bien / cao nguyen / rung)",
+          not any(w in _j for w in ("núi", "đáy biển",
+                                    "cao nguyên", "rừng")), _j[:70])
+    check("ca 4 nhan deu neo vao 'muc nuoc bien'",
+          _j.count("mực nước biển") == 4, _j[:70])
+
+print("\n=== [3e] Nhiem Vu 01 sau `005`: 0 vung toi · 0 qua cau · noi dung co nguon ===")
+# Chot 02/08/2026, `docs/decisions/005`. Muc nay canh nhung RANG BUOC "tu nay" cua no —
+# thu ma doc code khong thay sai, chi thay sai khi chieu lai quyet dinh.
+_me_code = strip_comments(me)          # bo ghi chu: chinh chu thich GIAI THICH vi sao
+_me_css_raw = strip_comments(rd("css/mission-earth.css"))
+
+# --- (1) KHONG con vung toi nao tren ban do phang ---
+# ⚠️ Chu du an choi that roi BAC bang anh chup: gradient `.e2-terminator` trong nhu mot
+#    buc tuong den. Bai hoc ngay/dem da chuyen sang qua cau 3D o explorer.html.
+check("KHONG con `.e2-terminator` trong CSS (bo han, 005 muc 2)",
+      "e2-terminator" not in _me_css_raw)
+check("KHONG con `.e2-terminator` trong mission-earth.html",
+      "e2-terminator" not in _me_code)
+check("KHONG con `.e2-view::after` (gradient vung toi mac dinh)",
+      "e2-view::after" not in _me_css_raw)
+# `.e2-night` thi GIU — ca hanh tinh toi di vi Mat Troi chua chay, khac han mot dai
+# toi vat ngang ban do. Doi nham hai thu nay la bo mat khoanh khac cua buoc ③.
+check("`.e2-night` VAN con (mat nang khac han vung toi)", "e2-night" in _me_css_raw)
+
+# --- (1b) Lop ban do phang phai CAN GIUA, khong duoc neo mep trai ---
+# ⚠️ LOI CO SAN, sua 02/08/2026. `inset:0 + margin:auto + width` la QUA RANG BUOC, va CSS
+#    xu hai truc khac nhau: truc doc chia deu margin (can giua), truc ngang o `ltr` thi
+#    BO QUA `right` nen lop neo MEP TRAI. Hai hau qua: diem o `facing` roi vao 62,5% be
+#    rong khung (lech 36° tren 1440×900), va — nang hon — **moi kinh do dong hon ~83°
+#    KHONG THE dua vao khung tren dien thoai doc**, vi marker chi ve tren ban anh THAT.
+#    Tuc day Himalaya (lon 87) cua buoc ⑤ `life` chua bao gio nhin thay duoc tren may
+#    tinh bang doc. Phep kiem nay de khong ai vo tinh go ba thuoc tinh do ra.
+_flat_layer = re.search(r"\.e2\.e2-flat \.e2-layer\{([^}]*)\}", _me_css_raw)
+check("lop ban do phang CAN GIUA (khong neo mep trai)",
+      bool(_flat_layer) and "left:50%" in _flat_layer.group(1)
+      and "right:auto" in _flat_layer.group(1)
+      and "margin-left:" in _flat_layer.group(1),
+      str(_flat_layer and _flat_layer.group(1))[:120])
+# `centerOn` khong duoc mang lai so hang bu cua thoi neo-mep-trai.
+_e2 = rd("js/earth2d.js")
+check("js/earth2d.js co `centerOn`", "centerOn: function" in _e2)
+# ⚠️ LOI CO SAN THU HAI, sua 02/08/2026. `.e2-layer` doi CO theo che do ban do (qua cau
+#    `min(100vw,100vh)` vs phang `max(50vw,100vh)`), nhung `measure()` chi chay MOT LAN
+#    luc dung (khi map con la `globe`) va khi `resize` — nen `lyH` giu mai chieu cao cua
+#    anh QUA CAU. Tren 1440×900 hai so trung nhau (900) nen khong ai thay; tren dien
+#    thoai doc 390×844 thi lech 390 vs 844 → `maxPyPct()` ra 0 → phep dich DOC bi kep ve
+#    0 → **khong dua duoc vi do cao vao khung**. Do duoc: Nam Cuc (lat −75) o `dist:3,1`
+#    roi xuong y = 921 tren khung cao 844. `probe_map_cover` KHONG bat duoc vi kep py ve
+#    0 lam MAT kha nang dich doc chu khong lam HO khung.
+check("setMap() do lai bo cuc (lop doi co theo che do ban do)",
+      re.search(r'stage\.classList\.toggle\("e2-flat"[^\n]*\);(?:[^}]*?)\bmeasure\(\);',
+                strip_comments(_e2), re.S) is not None)
+check("centerOn KHONG con so hang bu `180 * vpW / lyW` (chi con z*lon)",
+      "180 * vpW / lyW" not in strip_comments(_e2))
+
+# --- (2) Nhiem vu KHONG BAO GIO dung anh qua cau ---
+check("KHONG goi setMap('globe') o trang nhiem vu (qua cau chi o explorer.html)",
+      "setMap('globe')" not in _me_code and 'setMap("globe")' not in _me_code)
+_setmaps = re.findall(r"setMap\('(\w+)'\)", _me_code)
+check("moi loi goi setMap deu la 'flat'", set(_setmaps) == {"flat"}, str(sorted(set(_setmaps))))
+# `setMap` la trang thai THUA HUONG — buoc nao khong khai thi nhan map cua buoc truoc,
+# ma buoc truoc doi luc nao cung duoc. Doi MOI buoc tu khai.
+check("moi buoc deu khai setMap tuong minh", len(_setmaps) >= len(sv_ids),
+      f"{len(_setmaps)} loi goi / {len(sv_ids)} buoc")
+
+# --- (3) Buoc ① — 7 chau luc + cau do bien/dat ---
+_ct_blk = re.search(r"const CONTINENTS = \[(.*?)\n\];", me, re.S)
+_ct_ids = re.findall(r"id: '([a-z]+)'", _ct_blk.group(1)) if _ct_blk else []
+check("buoc ①: co dung 7 chau luc", len(_ct_ids) == 7, str(_ct_ids))
+check("buoc ①: moi chau luc co ten vi+en",
+      _ct_blk is not None and len(re.findall(r"nm: \{ vi:", _ct_blk.group(1))) == 7 and
+      len(re.findall(r"en: '", _ct_blk.group(1))) >= 7)
+check("buoc ①: KHONG con ba dom `SCAN_POINTS` cu", "SCAN_POINTS" not in _me_code)
+for _k in ("s1_ask_q", "s1_ask_water", "s1_ask_land", "s1_ans_fact",
+           "s1_ans_right", "s1_ans_wrong"):
+    check(f"buoc ①: khoa cau do '{_k}' co o CA vi va en", _k in _vi and _k in _en)
+# ⚠️ 71%, KHONG phai 70% — cung mot nhiem vu tung noi hai con so cho mot su that
+#    (`004` da phai di sua 5 cho). Va "29%" luon phai duoc goi la PHAN CON LAI.
+check("buoc ①: dap an noi 71% (khong phai 70%)",
+      "71%" in _me_code and "70% bề mặt" not in _me_code)
+check("buoc ①: dap an goi 29% la PHAN CON LAI (khong gan cho NASA)",
+      "phần còn lại" in _me_code and "the rest" in _me_code)
+# Doan sai KHONG phat: ca hai nhanh deu di tiep, khong co trang thai thua.
+check("buoc ①: doan sai KHONG phat (ca hai nhanh cung goi finishStep)",
+      "s1_ans_wrong" in _me_code and re.search(r"onAnswer\(pick\)", _me_code) is not None)
+
+# --- (4) Buoc ② — 5 moc, moi con so co nguon ---
+_er = re.search(r"const ERAS = \[(.*?)\n\];", me, re.S)
+_er_ids = re.findall(r"id: '([a-z]+)'", _er.group(1)) if _er else []
+check("buoc ②: co dung 5 moc", len(_er_ids) == 5, str(_er_ids))
+check("buoc ②: co moc `life` (lap 92% lich su ma ban 4 moc nhay qua)",
+      "life" in _er_ids, str(_er_ids))
+check("buoc ②: `era-life` co tong mau rieng trong CSS",
+      "#stage.era-life" in _me_css_raw and ".me-era.era-life" in _me_css_raw)
+# ⛔ BON CAI BAY cua `005`. Ba cai kiem duoc bang chu; cai thu tu (cay len can TRUOC)
+#    kiem bang viec cau van phai nhac ca hai ky rieng ra.
+# ⚠️ QUET TREN `_me_code` (DA BOC COMMENT), khong tren `me`. Chinh khoi chu thich cua
+#    `ERAS`/`ZONES` LIET KE cac con so bi cam ("số 4,3 tỷ đã BỎ", "đừng viết 'vùng cực
+#    lúc nào cũng nhận ít nắng hơn'") — quet van ban tho la cau canh bao bi tinh la vi
+#    pham. Day la lan thu MUOI cung loai loi nay trong du an, va lan nay chinh phep
+#    kiem moi viet ra da bao hong ngay lan chay dau.
+check("bay 1: su song 3,8 ty — KHONG phai 3,7",
+      "3,8 tỷ" in _me_code and "3,7 tỷ" not in _me_code)
+check("bay 2: khung long 233 trieu — KHONG phai 230",
+      "233 triệu" in _me_code and "230 triệu" not in _me_code)
+check("bay 3: thu xuat hien CUNG THOI khung long, khong phai sau",
+      "cũng xuất hiện đúng thời đó" in _me_code and "same period" in _me_code)
+check("bay 4: cay len can (Silur) TRUOC, con vat (Devon) THEO SAU",
+      all(s in _me_code for s in ("Silur", "Devon", "Silurian", "Devonian")))
+check("buoc ②: dai duong 4,4 ty (zircon), KHONG con 3,8 ty cho dai duong",
+      "4,4 tỷ" in _me_code and "4.4 billion" in _me_code)
+check("buoc ②: KHONG dung so 4,3 ty (trang NASA doc duoc khong phat bieu no)",
+      "4,3 tỷ" not in _me_code and "4.3 billion" not in _me_code)
+
+# --- (4b) Tranh minh hoa (`005` muc ⑩ -> `006` diem 11, 02/08/2026) ---
+# ⚠️ MOI MOC PHAI CO TRANH, ke ca "now". Truoc 02/08/2026 phep kiem nay DOI moc `now`
+#    KHONG co tranh, va ly le nghe rat vung: thu trung thuc nhat dang nam ngay sau lung
+#    bang — chinh buc anh ve tinh THAT. Ly le do van dung ve NOI DUNG, nhung chu du an
+#    choi that va chi ra thu no bo qua: **4 moc co tranh roi moc thu 5 trong thi tre doc
+#    ra nhu mot cho BI THIEU**, khong nhu mot quyet dinh. Phep kiem cu vi the dang BAO VE
+#    dung cai bat nhat do — sua cho dung la no bao hong. Cung loai viec da lam voi nut
+#    Mat Trang va 6 phep kiem cua `004`.
+# ⚠️ DEM THEO `ERAS`, DUNG GAN CUNG TEN. Gan cung la them buc thu sau phai sua o day —
+#    dung bai hoc `make_era_assets.py` vua mac (script do gan cung 4 ten nen im lang bo
+#    qua `now.png` khi chu du an dat vao).
+_era_ids = re.findall(r"\{ id: '(\w+)'", _er.group(1)) if _er else []
+_era_imgs = re.findall(r"img: '(\w+)'", _er.group(1)) if _er else []
+check("buoc ②: MOI moc deu co tranh (ke ca 'now')",
+      len(_era_ids) >= 5 and _era_imgs == _era_ids,
+      "ids=%s imgs=%s" % (_era_ids, _era_imgs))
+for _n in _era_imgs:
+    for _w in (700, 1120):
+        for _ext in ("avif", "webp"):
+            _f = f"img/era/{_n}-{_w}.{_ext}"
+            check(f"co asset {_f}", os.path.exists(os.path.join(ROOT, _f)))
+# ⛔ NHAN "MINH HOA" LA BAT BUOC: khong ton tai anh chup Trai Dat 4,5 ty / 4,4 ty /
+#    3,8 ty / 233 trieu nam truoc. De tre tuong do la anh that la day mot dieu sai.
+check("buoc ②: co nhan MINH HOA o ca vi va en",
+      "era_illus" in _vi and "era_illus" in _en
+      and "MINH HOẠ" in _me_code and "ARTIST" in _me_code.upper())
+# Nhan o goc anh la thu trinh doc man hinh khong voi toi -> `alt` phai noi lai.
+check("buoc ②: `alt` cung noi ro day la TRANH DUNG",
+      "era_alt" in _vi and "era_alt" in _en
+      and "Tranh minh hoạ" in _me_code and "Artist’s impression" in _me_code)
+# ⚠️ Anh nap LUOI: mang yeu thi bai hoc van chay, chi thieu tranh.
+check("buoc ②: anh nap luoi + giai ma bat dong bo",
+      'loading="lazy"' in me and 'decoding="async"' in me)
+# ⚠️ Khai cho trong TRUOC khi anh ve, khong thi ca bang nhay len mot nhip luc anh tai xong.
+check("buoc ②: co khai cho trong cho anh (chan nhay bo cuc)",
+      "aspect-ratio:3/2" in _me_css_raw and 'width="700"' in me)
+# ⚠️ Ban goc 8,99 MB KHONG duoc commit; asset .avif/.webp thi PHAI duoc commit.
+_gi = rd(".gitignore")
+check("ban goc img/era/*.png bi chan khoi git", "img/era/*.png" in _gi)
+check("KHONG chan ca thu muc img/era (asset phai vao git)",
+      not re.search(r"^img/era/\s*$", _gi, re.M))
+# ⚠️⚠️ HAI PHEP KIEM DUOI DAY CANH HAI LOI DA XAY RA THAT, do duoc bang Chromium:
+# (a) `sizes` chi dat tren `<img>` → trong `<picture>` no KHONG ap cho `<source>`, nen
+#     trinh duyet mac dinh 100vw va keo ban 1120 thay vi 700 — nang gap doi tren dung
+#     nhom mang yeu ma viec nay sinh ra de phuc vu. Bang chung: `naturalWidth` bao 1440
+#     cho mot file 1120×747.
+check("buoc ②: `sizes` dat tren TUNG <source>, khong chi tren <img>",
+      len(re.findall(r"<source[^>]*sizes=", me)) >= 2)
+# (b) Anh rong het bang thi tren 1366×768 bang chiem 84,5% khung, chi con 30px ban do —
+#     ma buoc nay doi TONG MAU ca hanh tinh, va `004` chot do la NOI DUNG bai hoc.
+check("buoc ②: anh co tran be rong theo chieu cao khung (de con thay ban do)",
+      re.search(r"\.era-fig\{[^}]*max-width:min\(100%,\s*\d+vh\)", _me_css_raw, re.S) is not None)
+
+# --- (5) Buoc ③ — ba vung khi hau, va VI SAO ---
+_zn = re.search(r"const ZONES = \[(.*?)\n\];", me, re.S)
+_zn_ids = re.findall(r"id: '([a-z]+)'", _zn.group(1)) if _zn else []
+check("buoc ③: co dung 3 vung khi hau", len(_zn_ids) == 3, str(_zn_ids))
+check("buoc ③: du xich dao · on doi · cuc",
+      set(_zn_ids) == {"equator", "temperate", "polar"}, str(sorted(_zn_ids)))
+for _k in ("s2b_h", "s2b_p", "s2b_say1", "s2b_card", "s2b_say2"):
+    check(f"buoc ③: khoa '{_k}' co o CA vi va en", _k in _vi and _k in _en)
+# ⛔ QUAN NIEM SAI PHO BIEN NHAT ve chu de nay. Cau ket PHAI bac no ra mat chu khong
+#    chi tranh khong nhac — tre den day voi san mot cach giai thich sai trong dau.
+check("buoc ③: cau ket BAC HAN 'vi gan Mat Troi hon'",
+      "Không phải</b> vì vùng cực ở xa Mặt Trời hơn" in _me_code and
+      "not</b> because the poles are farther from the Sun" in _me_code)
+check("buoc ③: giai thich bang GOC CHIEU",
+      "góc chiếu" in _me_code and "angle" in _me_code)
+# ⚠️ THEM 02/08/2026 — chu du an choi that: *"'ngoi sao dang len'? tre hieu rang Mat Troi
+#    nam tren Trai Dat. Van vo ly."* Sau khi bo nut `.e2-sun`, thu tre THAT SU thay chi
+#    la ban do toi di roi sang lai — khong co vat the Mat Troi nao hien ra. Loi thoai vi
+#    the KHONG duoc mo ta mot cu "moc len", va PHAI noi ro Mat Troi o ngoai khong gian.
+#    Cung mot ho voi loi *"keo de xoay Trai Dat"* ma `004` da di sua.
+check("buoc ③: KHONG mo ta Mat Troi nhu dang MOC LEN tren ban do",
+      "đang lên" not in _me_code and "is rising" not in _me_code)
+check("buoc ③: noi ro Mat Troi o NGOAI KHONG GIAN, khong nam tren ban do",
+      "không nằm trên tấm bản đồ này" in _me_code and "not on this map" in _me_code)
+# ⚠️ THEM 02/08/2026 — chu du an chot: cu toi/sang phai la HE QUA cua mot viec tre vua
+#    lam, khong phai hieu ung roi tu tren troi. Hai ban truoc deu hong o cho nay (bat di
+#    TIM nut Mat Troi khong the tim ra · roi "ngoi sao dang len" ma khong co gi hien ra).
+check("buoc ③: tre TU DOAN truoc, roi moi tat Mat Troi",
+      "s2_ask_q" in _vi and "onAnswer" in _me_code
+      and _me_code.index("buildAsk({\n        k: t('s2_ask_k')") < _me_code.index("dimSun"))
+# CA BA lua chon deu dung — khong co nhanh "doan sai" o mot buoc dang day kien thuc moi.
+for _k in ("s2_opt_cold", "s2_opt_plant", "s2_opt_rain",
+           "s2_role_heat", "s2_role_plant", "s2_role_rain", "s2_ans"):
+    check(f"buoc ③: khoa '{_k}' co o CA vi va en", _k in _vi and _k in _en)
+check("buoc ③: day du BA vai tro cua Mat Troi (nhiet · quang hop · vong tuan hoan nuoc)",
+      "thể lỏng" in _me_code and "chuỗi thức ăn" in _me_code
+      and "vòng tuần hoàn của nước" in _me_code)
+# Buoc ③ KHONG duoc phat bieu ve tong nang luong ca nam: chinh trang NASA dang dan
+# viet rang vi do cao vao mua he nhan nhieu nang luong hon TRONG MOT NGAY.
+check("buoc ③: KHONG phat bieu 'vung cuc luc nao cung nhan it nang luong hon'",
+      "lúc nào cũng nhận ít" not in _me_code and "always receives less" not in _me_code)
+
+# --- (5b) Buoc ④ — ba nha may NEO TREN BAN DO, khong nam trong bang ---
+# Chu du an: *"nen rai 3 ong khoi tai 3 vung khac nhau len ban do 2D de tre keo nang
+# luong xanh vao. Truoc khi keo thi hinh anh trai dat tai cac vung do bi mo, sau khi keo
+# thi sang lai."*
+_st = re.search(r"const STACKS = \[(.*?)\n\];", me, re.S)
+_st_ids = re.findall(r"id: '(\w+)'", _st.group(1)) if _st else []
+check("buoc ④: 3 nha may co TOA DO THAT (khong con la 3 o trong bang)",
+      len(_st_ids) == 3 and _st.group(1).count("lat:") == 3 and _st.group(1).count("lon:") == 3,
+      str(_st_ids))
+# ⚠️ Keo-tha doi khay the VA o dich cung nam tren man hinh mot luc, ma man doc 390×844
+#    o san phong chi thay ~83° kinh do. Ba nha may trai qua rong la KHONG KEO DUOC.
+_st_lons = [int(x) for x in re.findall(r"lon:\s*(-?\d+)", _st.group(1))] if _st else []
+check("buoc ④: 3 nha may trai duoi 83° kinh do (khong thi man doc khong keo-tha duoc)",
+      bool(_st_lons) and (max(_st_lons) - min(_st_lons)) < 83,
+      f"trai {max(_st_lons) - min(_st_lons) if _st_lons else '?'}°")
+check("buoc ④: nha may la MARKER cua canh (paint() lo vi tri + chong-phong)",
+      "cls: 'e2-stack'" in _me_code and "e2-stack" in _me_css_raw)
+check("buoc ④: vung quanh nha may BI MO, va SANG LAI khi da thay nguon",
+      re.search(r"\.e2-mk\.e2-stack\{[^}]*box-shadow[^}]*\}", _me_css_raw, re.S) is not None
+      and re.search(r"\.e2-mk\.e2-stack\.ok\{[^}]*box-shadow", _me_css_raw, re.S) is not None)
+# ⚠️ Co y KHONG gan ten dia danh nao cho nha may: "cho nay o nhiem" la phat bieu ve the
+#    gioi that ma du an khong co nguon de dung sau, va khong nen dat vao mieng mot nhan
+#    vat cho tre em. `STACKS` vi the chi co id + lat + lon, KHONG co truong ten.
+# ⚠️ PHEP KIEM NAY TUNG QUET CA FILE VA BAO OAN NGAY LAN CHAY DAU: no bat "Ấn Độ Dương"
+#    (ten dai duong) va "Bắc Mỹ" (ten CHAU LUC — chinh la noi dung buoc ①). Dieu muon
+#    biet chi lien quan toi KHOI `STACKS`, nen soi dung khoi do. Mot phep kiem hay bao
+#    oan thi nguoi ta se bo qua no, tuc la mat luon.
+check("buoc ④: `STACKS` KHONG gan ten dia danh nao cho nha may",
+      bool(_st) and not re.search(r"\b(nm|name|label)\s*:", _st.group(1)),
+      str(_st and _st.group(1).strip()[:80]))
+check("buoc ④ → ⑥: co cau noi 'thay nang luong thoi CHUA DU'",
+      "chưa đủ</b> đâu" in _me_code and "not enough</b>" in _me_code)
+
+# --- (6) Buoc ⑦ core — giong ON TAP ---
+# ⚠️ VIET LAI 02/08/2026: buoc ⑦ khong con keo 3 vien ngoc ma la MAN CHOT HO SO.
+#    Chu du an choi that: *"bo nhiem vu keo vien ngoc di, khong logic"* — ba "vien ngoc"
+#    la vat the BIA, khong co trong bat cu thu gi nhiem vu day, trong khi ca nhiem vu
+#    dung tren anh ve tinh THAT voi toa do THAT.
+check("buoc ⑦: KHONG con vien ngoc / mach nang luong su song",
+      not any(k in _me_code for k in ("gem_sun", "slot_heat", "MẠCH NĂNG LƯỢNG",
+                                      "LIFE ENERGY CIRCUIT", "buildCore")))
+# Ba dong ho so PHAI la ba thu nhiem vu DA day — them dong thu tu ma khong co buoc nao
+# day no la nhoi kien thuc moi vao dung man tong ket.
+for _k in ("file_water", "file_heat", "file_air", "s5_stamp"):
+    check(f"buoc ⑦: khoa ho so '{_k}' co o CA vi va en", _k in _vi and _k in _en)
+check("buoc ⑦: ba dong ho so khop ba thu da day (71% · goc chieu · oxy)",
+      "71%" in _me_code and "góc chiếu của nắng" in _me_code and "oxy để thở" in _me_code)
+check("buoc ⑦: chi MOT cu bam, khong phai mot cua chan truoc man thuong",
+      "onStamp" in _me_code and "me-stamp" in _me_code)
 
 # ══════════════════════════════════════════════════════════════
 print("\n=== [3d] LUAT THUONG: doc bai KHONG thuong, quiz phai DAT ===")
@@ -1295,12 +1637,20 @@ check("rule doi cho gioi han o min-width:721px (khong thi be rong ra so AM)",
       re.search(r"@media \(min-width:721px\)\{\s*#info\.open ~ \.mo-say", _ecss)
       is not None)
 
-# --- ④ Moc 10 giay ---
-_rm = re.search(r"READ_MS\s*=\s*(\d+)", _mocode)
-check("moc doc la 10 giay (con so chu du an chot)",
-      bool(_rm) and int(_rm.group(1)) == 10000, str(_rm and _rm.group(1)))
-# 10s la SAN: cau hoi hien ra CANH bang thong tin, khong dong no.
-check("hoi xong KHONG dong bang thong tin (10s la SAN, khong phai han)",
+# --- ④ Bam la sang NGAY, khong con moc cho ---
+# ⛔ `READ_MS` DA BO HAN 02/08/2026. `003` chot "10 giay la SAN", `005` noi len 15 —
+#    nhung cai san do sinh ra khi nhip phim CHUA co nhip 0: Comet noi xong la box tu an,
+#    khong co nut nao, nen phai co dong ho moi biet khi nao hoi tiep. Nay nhip 0 ket bang
+#    mot NUT do tre chu dong bam, ma mot cai nut ten "Tiep tuc" roi bat ngoi doi them 15
+#    giay trong im lang thi chinh no la loi. Chu du an choi that va chot: bam la sang ngay.
+#    Phep kiem nay giu de khong ai dung lai cai dong ho do.
+check("KHONG con moc cho `READ_MS` nao",
+      re.search(r"READ_MS\s*=\s*\d+", _mocode) is None)
+check("KHONG con `setTimeout(ask` (bam la hoi ngay)",
+      "setTimeout(ask" not in _mocode)
+check("nut cuoi nhip 0 goi thang `ask()`",
+      "button(null); ask(); }" in _mocode)
+check("hoi xong KHONG dong bang thong tin (moc doc la SAN, khong phai han)",
       "_closeInfo" not in _mocode and "classList.remove('open')" not in _mocode)
 check("dong ho chi chay khi bang thong tin DA MO (khong dem luc camera con bay)",
       "MutationObserver" in _mocode and "reading" in _mocode)
@@ -1310,12 +1660,69 @@ check("bam OK thi sang mission-earth.html",
       "mission-earth.html" in _exp and "onGo" in _mocode)
 
 # --- i18n cua nhip phim: du ca vi va en ---
-for _k in ("l1", "l2", "ask", "next", "ok", "nm", "tag"):
+# `l3`/`l3b`/`l4` la NHIP 0, them 02/08/2026 (`docs/decisions/005`).
+for _k in ("l1", "l2", "l3", "l3b", "l4", "ask", "next", "ok", "nm", "tag"):
     check(f"khoa thoai '{_k}' co o CA vi va en",
           len(re.findall(r"\b" + _k + r":", _mo)) == 2,
           f"{len(re.findall(chr(92) + 'b' + _k + ':', _mo))} lan")
 check("doi ngon ngu giua chung thi dich lai loi Comet",
       "AstroQMapOnboard.setLang" in _exp and "setLang:" in _mo)
+# ⚠️ setLang PHAI biet ca hai trang thai moi. Thieu mot cai thi doi VI/EN giua nhip 0
+#    la cau do dung nguyen tieng cu tren man hinh — loi im lang.
+check("setLang xu ly ca trang thai 'atmo' va 'spin' cua nhip 0",
+      '"atmo"' in _mocode and '"spin"' in _mocode)
+
+# --- NHIP 0: khi quyen -> moi xoay -> ngay/dem (`005` muc 1) ---
+_mo_code = strip_comments(_mo)
+check("nhip 0: Comet chi bau KHI QUYEN (khop dong 'Khi quyen: Nito + oxy' cua bang)",
+      "khí quyển" in _mo_code and "atmosphere" in _mo_code)
+# ⚠️ Vanh khi quyen trong canh dang duoc ve DAY GAP ~2 LAN ban kinh hanh tinh. Chi vao
+#    do ma khong noi gi la DAY SAI MO HINH TU DUY. Duong re hon va trung thuc hon la
+#    Comet noi thang ra — va do la mot RANG BUOC cua `005`, khong phai mot cau van tuy y.
+check("nhip 0: NOI THAT rang vanh khi quyen dang ve day qua",
+      "mỏng hơn thế rất nhiều" in _mo_code and "far thinner" in _mo_code)
+check("nhip 0: MOI tre XOAY de ngam ngay/dem",
+      "xoay quanh Trái Đất" in _mo_code and "spin around Earth" in _mo_code)
+# ⚠️ THEM 02/08/2026 — chu du an choi that va bao: *"sau do khong hien gi tiep de biet
+#    la cho hay lam gi?"*. Nhip 0 co mot moc SAN roi moi hoi "san sang chua?", va trong
+#    khoang do box thoai TU AN de nhuong cho ngam — im lang thi doc ra nhu trang bi treo.
+check("nhip 0: NOI RO bam gi de di tiep (khong de tre ngoi doi trong im lang)",
+      "bấm <b>Tiếp tục</b>" in _mo_code and "hit <b>Next</b>" in _mo_code)
+check("nhip 0: noi ro mot nua NGAY mot nua DEM",
+      "ban ngày" in _mo_code and "ban đêm" in _mo_code)
+# ⛔ QUA CAU 3D KHONG BAO GIO DUOC MANG DIEU KIEN THANG (`005` rang buoc tu nay).
+#    Dieu kien thang do tren camera-orbit chinh la loi da lam buoc `rotation` ban 3D
+#    KHONG THE HOAN THANH va treo vinh vien o che do giam chuyen dong.
+check("nhip 0 KHONG co dieu kien thang (chi la cho QUAN SAT)",
+      "finishStep" not in _mo_code and "onWin" not in _mo_code)
+
+# --- Duong lui 12 giay: NOI MOT CAU roi hay di (`005` muc 5) ---
+check("duong lui KHONG con `location.replace` IM LANG",
+      "showPerfNote('fail')" in _exp)
+check("duong lui co cau giai thich o CA vi va en",
+      len(re.findall(r"\bsceneFailNote:", _exp)) == 2)
+check("duong lui VAN tu di tiep (khong dung them mot cua chan khi mang yeu)",
+      re.search(r"showPerfNote\('fail'\);\s*setTimeout", _exp) is not None)
+
+# --- perfMode: MOT khoa dung chung cho ca app (`005` muc 6) ---
+_uic = rd("js/ui-common.js")
+check("ui-common khai khoa dung chung `astroq-perf`", '"astroq-perf"' in _uic)
+check("ui-common xuat getPerf/setPerf/slowLink",
+      all(k in _uic for k in ("getPerf:getPerf", "setPerf:setPerf", "slowLink:slowLink")))
+check("explorer DOC lai lua chon giam cau hinh luc vao trang",
+      "AstroQ.getPerf()" in _exp)
+check("explorer GHI lai lua chon khi bam cong tac", "AstroQ.setPerf(" in _exp)
+check("doi o tab khac thi tab nay theo (nghe su kien storage)",
+      re.search(r"e\.key !== AstroQ\.LS_PERF", _exp) is not None)
+# ⚠️ Tu phat hien KHONG DU: [Chua kiem chung] Network Information API Safari/iOS khong
+#    ho tro, ma iPad la thiet bi hay choi nhiem vu nay nhat. Nen no chi la lop (a).
+check("dai nhac mang kem chi MOI khi CHUA bat va CHUA tung bo qua",
+      "AstroQ.slowLink() && !AstroQ.getPerf()" in _exp)
+check("dai nhac giu KHOA i18n chu khong giu chuoi (doi VI/EN thi dich theo)",
+      "perfNoteKind" in _exp and "paintPerfNote()" in _exp)
+for _k in ("perfNote", "perfNoteGo", "perfNoteX", "sceneFailNote", "sceneFailGo"):
+    check(f"khoa dai nhac '{_k}' co o CA vi va en",
+          len(re.findall(r"\b" + _k + r":", _exp)) == 2)
 
 # --- Nhip phim KHONG chay khi khong co ?onboard=1 ---
 check("nhip phim chi chay khi cong BAT (khong pha lan vao ban do binh thuong)",

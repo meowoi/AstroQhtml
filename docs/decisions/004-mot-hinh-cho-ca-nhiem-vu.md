@@ -1,8 +1,16 @@
 # 004. Một hình cho cả nhiệm vụ — bản đồ phẳng suốt 8 bước
 
-**Trạng thái:** đã chốt (thiết kế) · **chưa triển khai**
+**Trạng thái:** **đã thay thế bởi `005`** (02/08/2026) · phần đã triển khai vẫn đang chạy
 **Ngày mở:** 2026-08-01 · **Ngày chốt:** 2026-08-01
 **Người quyết:** chủ dự án
+
+> ⚠️ **ĐỌC `005` TRƯỚC.** Ba quyết định của file này **đã bị đảo** sau khi chủ dự án chơi thật và
+> gửi ảnh chụp: **mục ⑤** (bước `rotation` = vùng tối trượt — nay **bỏ hẳn bước**, nhiệm vụ còn
+> **7 bước**) · **mục A2** (hạ gradient rồi bước ③ dâng lên — nay **bỏ hẳn `.e2-terminator`**) ·
+> **mục 3 + bước ③** (ngày/đêm trên bản đồ phẳng — nay dạy trên **quả cầu 3D** ở `explorer.html`).
+> Bước ② cũng lên **5 mốc** vì bản 4 mốc dạy sai thứ tự thời gian.
+> Bảng đối chiếu đầy đủ ở `005` mục *"Đảo khỏi `004`"*, kèm danh sách phần **vẫn còn hiệu lực**.
+> File này giữ lại vì phần đo đạc và mục *"Đã bác"* của nó vẫn là căn cứ.
 
 ## Bối cảnh
 

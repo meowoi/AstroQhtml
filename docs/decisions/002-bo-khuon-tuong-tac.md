@@ -1,8 +1,15 @@
 # 002. Bộ khuôn tương tác cho nhiệm vụ
 
-**Trạng thái:** đã chốt
+**Trạng thái:** đã chốt · **một phần đã hết đối tượng** — xem ghi chú dưới
 **Ngày mở:** 2026-07-31 · **Ngày chốt:** 2026-07-31
 **Người quyết:** chủ dự án
+
+> ⚠️ **`orientation_align` nay có 0 NGƯỜI DÙNG (ghi 02/08/2026).** Khuôn thứ 5 được tạo ra
+> **chỉ để phục vụ bước `rotation`** của nhiệm vụ Trái Đất, với lý lẽ *"thanh đo liên tục duy nhất
+> của cả nhiệm vụ"*. `005` đã **bỏ hẳn bước đó** (nhiệm vụ còn 7 bước) sau khi chủ dự án chơi thật
+> và bác hình ảnh vùng tối. **Không xoá khuôn khỏi tài liệu này** — nhưng biết rằng nó chưa từng
+> được cài đặt và hiện không có bước nào cần nó. Giữ hay bỏ là câu của **World thứ hai**, không
+> phải của Trái Đất. Bốn khuôn còn lại không bị ảnh hưởng.
 
 ## Bối cảnh
 

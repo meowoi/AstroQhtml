@@ -49,7 +49,7 @@ qua API Gateway HTTP API, vùng `ap-southeast-1`. Mã nguồn nằm **ngoài rep
 | Bài wiki SEO | 10 bài × 2 ngôn ngữ (trang tĩnh, không nạp JS) |
 | File CSS / file JS | 26 / 23 |
 | Tổng dòng (JS + HTML chính) | **~19.600** |
-| **Nhiệm vụ (Mission)** | **1 chạy được** — Trái Đất, 8 bước. Mặt Trăng: "sắp ra mắt" |
+| **Nhiệm vụ (Mission)** | **1 chạy được** — Trái Đất, **7 bước**. Mặt Trăng: "sắp ra mắt" |
 | Mini-game | 6 khai báo, **3 chạy được** (né tiểu hành tinh · phòng thủ 360° · ghép chòm sao) |
 | Câu hỏi quiz | **35** |
 | Thuật ngữ codex | 17 |
@@ -61,16 +61,39 @@ qua API Gateway HTTP API, vùng `ap-southeast-1`. Mã nguồn nằm **ngoài rep
 
 ### ⚠️ Chi phí đơn vị — con số quan trọng nhất khi bạn đề xuất thêm nội dung
 
-**Nhiệm vụ Trái Đất = 8 bước = 2.088 dòng mã viết tay** (`mission-earth.html` 1.601 dòng
-+ `js/earth2d.js` 487), tức **~261 dòng cho mỗi bước**, vì mỗi bước hiện là một màn tương tác
-riêng viết thủ công. *(Con số cũ ~410 dòng/bước tính cả `js/earth3d.js` 1.114 dòng — file đó đã
-bỏ hẳn ngày 31/07/2026 cùng three.js.)*
+**Nhiệm vụ Trái Đất = 7 bước = 3.115 dòng mã viết tay** (`mission-earth.html` 2.526 dòng
++ `js/earth2d.js` 589), tức **~445 dòng cho mỗi bước**. Đếm lại ngày 02/08/2026.
+*(Lịch sử con số này: ~410 dòng/bước khi còn `js/earth3d.js` → ~261 sau khi bỏ three.js
+31/07 → **~445** sau ba vòng chơi thật `004`/`005`/`006`. Nó TĂNG vì mỗi vòng thêm phần
+lời dẫn, phần tra nguồn và phần chú thích giải thích vì sao KHÔNG làm cách khác — không
+phải vì thêm tính năng.)*
 
-Nghĩa là: mọi đề xuất kiểu "mỗi hành tinh có N nhiệm vụ" phải nhân với **~261 dòng**, **trừ khi**
+Nghĩa là: mọi đề xuất kiểu "mỗi hành tinh có N nhiệm vụ" phải nhân với **~445 dòng**, **trừ khi**
 đề xuất đó kèm theo một bộ khuôn tương tác dùng lại được. Hãy nói rõ bạn chọn hướng nào.
 
-Tám bước hiện có, xét theo *loại tương tác*, thực ra chỉ là mấy khuôn lặp lại:
-quét điểm nóng · sắp thứ tự mốc thời gian · kéo-thả phân loại · thu thập thẻ · giải đố ghép.
+### ⚠️⚠️ NGÂN SÁCH KHUÔN TƯƠNG TÁC — đọc trước khi đề xuất bất cứ cơ chế chơi nào
+
+`docs/decisions/002` chốt: **một nhiệm vụ không dùng cùng một khuôn quá 2 lần.** Đây không
+phải hướng dẫn mềm — nó đã **bác nguyên một vòng đề xuất** ngày 02/08/2026, vì cả hai bản
+đều tiêu một chỗ trống không còn.
+
+Đếm bằng công cụ trên mã nguồn thật, KHÔNG phải ước lượng:
+
+| Khuôn | Đã dùng | Ở bước nào | Còn trống |
+|---|---|---|---|
+| `signal_scan` (chạm dấu hiệu trên bản đồ) | 2 / 2 | ① scan · ③ sun | ⛔ ĐÃ ĐẦY |
+| `profile_builder` (thẻ → ô, kéo HOẶC bấm) | 2 / 2 | ④ energy · ⑥ eco | ⛔ ĐÃ ĐẦY |
+| câu đố chọn đáp án | 2 / 2 | ① scan · ③ sun | ⛔ ĐÃ ĐẦY |
+| `sequence_reconstruction` (sắp đúng thứ tự) | 1 / 2 | ② timeline | ✅ còn 1 chỗ |
+| "xếp lên thang đo" *(khuôn thứ 6, mới 02/08)* | 1 / 2 | ⑤ life | ✅ còn 1 chỗ |
+| `orientation_align` (ngắm/canh cho thẳng) | 0 / 2 | *(bước dùng nó đã bỏ)* | ⚠️ cấm mọi cú kéo bản đồ nên gần như không dùng được |
+
+⚠️ Bước ⑤ `life` từng đẩy `signal_scan` lên **3/2** và đó là lý do THẬT khiến nó phải viết
+lại — không phải vì hoạt cảnh drone. Nay nó là khuôn thứ sáu, có mã riêng ~90 dòng.
+
+⚠️ **Giới hạn của chính luật này, nói ra để bạn không bị hỏi một câu bất khả thi:** `002`
+chỉ ĐẶT TÊN 5 khuôn, **không đặc tả cái nào**. Nên bác được chắc chắn khi đếm được lời gọi
+hàm có thật; với một khuôn mới thì xét theo *tinh thần* (rủi ro đơn điệu), không theo tên.
 
 ### Nút thắt thật
 
@@ -110,7 +133,7 @@ Mặt Trăng (đường kính, khối lượng, trọng lực, khí quyển, kh�
 
 1. **Server quyết mọi phần thưởng.** Client chỉ báo "đã làm gì", không tự tính XP, không tự mở
    huy hiệu, không tự trừ tiền. Đề xuất nào để client quyết điểm số sẽ bị bác.
-2. **Chưa đăng nhập hoặc mất mạng → hiện dấu `—`, KHÔNG hiện `0`.** "0/8 bước" là một lời khẳng
+2. **Chưa đăng nhập hoặc mất mạng → hiện dấu `—`, KHÔNG hiện `0`.** "0/7 bước" là một lời khẳng
    định sai về tiến độ của người chơi.
 3. **Mọi chữ mới phải có cả tiếng Việt và tiếng Anh**, không có ngoại lệ.
 4. **CSS nằm ở file `.css` riêng.** Không `<style>` trong HTML, không `style="..."` inline
@@ -121,7 +144,7 @@ Mặt Trăng (đường kính, khối lượng, trọng lực, khí quyển, kh�
    trong DynamoDB). Thêm bước mới thì an toàn, đổi tên bước cũ thì không.
 8. **Tính năng nào cũng làm cả client lẫn backend** — không có tính năng chỉ sống ở localStorage.
 9. Nguồn khoa học phải dẫn được về **NASA / ESA / NOAA** hoặc tương đương, và URL phải sống thật.
-10. **Cổng lộ trình 70% đã chốt và luật nằm ở SERVER** (`docs/decisions/003`): xong **6/8 bước**
+10. **Cổng lộ trình 70% đã chốt và luật nằm ở SERVER** (`docs/decisions/003`): xong **5/7 bước**
     Trái Đất mới mở điểm đến kế tiếp; `GET /me/missions` trả sẵn `unlockedPlaces`, client không
     tự tính tỉ lệ. ⚠️ Cổng chỉ bật trong **lượt onboarding đầu tiên**, KHÔNG bật vĩnh viễn —
     khoá vĩnh viễn 6 hành tinh chưa có nhiệm vụ sẽ làm **7 mẫu vật không bao giờ thu được** và

@@ -38,4 +38,14 @@ img/AstroQ logo1.png
 # thành img/earth/*.avif|webp (230 KB). Bản gốc chỉ cần khi muốn sinh lại asset;
 # commit nó vào là đưa lại đúng 2,5 MB mà ta vừa cắt đi.
 img/earth/_src/
+
+# ---- Ảnh gốc 4 mốc thời gian của bước ② ----
+# Chủ dự án đặt `img/era/<id>.png` (1536×1024, tổng **8,99 MB**) ngày 02/08/2026;
+# `scratchpad/make_era_assets.py` hạ thành `img/era/<id>-{700,1120}.{avif,webp}`
+# (992 KB cả 16 file, và một lượt chơi chỉ tải ~162 KB vì ảnh nạp lười từng mốc).
+# Commit bản gốc là đưa lại đúng 9 MB mà ta vừa cắt đi — repo này deploy công khai
+# qua Pages nên mọi thứ commit là thứ người khác phải tải khi clone.
+# ⚠️ Chỉ chặn `.png`, KHÔNG chặn cả thư mục: asset `.avif`/`.webp` PHẢI được commit.
+img/era/*.png
+
 scratchpad/__pycache__/

@@ -70,5 +70,13 @@ canvas{display:block;}
    ============================================================ */
 @media (pointer: coarse){
   .back-btn{min-height:44px;}
-  .lang-switch button{min-width:44px;min-height:44px;}
+  /* ⚠️ 44 → 48px (02/08/2026). Đặt ĐÚNG 44 là không còn biên an toàn nào: 44 là mốc TỐI
+     THIỂU của WCAG 2.5.5, nên sai số dưới pixel làm phép kiểm khi đạt khi hỏng. Đo được
+     `audit_viewports` báo `explorer.html: vung cham >= 44px  ([{"t":"VI","w":44,"h":44}])`
+     ở iPad Pro dọc — cùng một mã, hai lượt chạy khác nhau, 683/1 rồi 684/0. Ca này đã
+     được ghi là "việc riêng đáng làm" từ 31/07/2026 và nằm treo từ đó.
+     ⚠️ Một phép kiểm hay báo oan thì sớm muộn người ta bỏ qua nó — đó mới là cái giá
+        thật, không phải một dòng đỏ trong báo cáo. Sửa cùng lượt với `.me-stamp` (cũng
+        44 → 48) vì đúng một lý do. */
+  .lang-switch button{min-width:48px;min-height:48px;}
 }

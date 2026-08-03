@@ -20,12 +20,12 @@
   "topic_id": "astronomy",
   "codex_id": "earth",
   "mission_id": "earth",
-  "sources_checked_at": "2026-07-29",
+  "sources_checked_at": "2026-08-02",
   "title": {
     "vi": "Hồ Sơ Trái Đất",
     "en": "The Earth File"
   },
-  "count": 9,
+  "count": 8,
   "entries": [
     {
       "id": "earth-formation",
@@ -34,46 +34,68 @@
       "kind": "history",
       "reviewed_by_teacher": false,
       "title": {
-        "vi": "Lịch sử 4,5 tỷ năm của Trái Đất",
-        "en": "Earth's 4.5-billion-year story"
+        "vi": "Lịch sử 4,54 tỷ năm của Trái Đất",
+        "en": "Earth's 4.54-billion-year story"
       },
       "summary": {
-        "vi": "Trái Đất hình thành khoảng 4,5 tỷ năm trước từ khí và bụi quay quanh Mặt Trời. Từ một quả cầu nóng chảy, nó nguội dần, có đại dương, rồi có sự sống.",
-        "en": "Earth formed about 4.5 billion years ago from gas and dust circling the Sun. From a molten ball it cooled down, gained oceans, then life."
+        "vi": "Trái Đất hình thành khoảng 4,54 tỷ năm trước từ khí và bụi quay quanh Mặt Trời. Từ một quả cầu nóng chảy, nó nguội dần, có đại dương, rồi có sự sống — và phần lớn quãng thời gian đó sự sống chỉ ở dưới nước.",
+        "en": "Earth formed about 4.54 billion years ago from gas and dust circling the Sun. From a molten ball it cooled, gained an ocean, then life — and for most of that time life stayed underwater."
       },
       "body": [
         {
-          "h": { "vi": "4,5 tỷ năm trước — Trái Đất dung nham", "en": "4.5 billion years ago — the magma Earth" },
+          "h": {
+            "vi": "4,54 tỷ năm trước — Trái Đất nóng bỏng",
+            "en": "4.54 billion years ago — a molten Earth"
+          },
           "p": {
             "vi": "Khi Hệ Mặt Trời mới thành hình, lực hấp dẫn kéo khí và bụi tụ lại thành hành tinh thứ ba tính từ Mặt Trời. Trái Đất lúc đó là một quả cầu cực nóng, bề mặt gần như nóng chảy — chưa có nước ở dạng lỏng, cũng chưa có không khí để thở.",
             "en": "As the young Solar System settled, gravity pulled gas and dust together into the third planet from the Sun. Early Earth was searingly hot with a largely molten surface — no liquid water yet, and no air anyone could breathe."
           }
         },
         {
-          "h": { "vi": "3,8 tỷ năm trước — đại dương đầu tiên và những sinh vật tí hon", "en": "3.8 billion years ago — first oceans and tiny life" },
+          "h": {
+            "vi": "4,4 tỷ năm trước — đại dương đầu tiên",
+            "en": "4.4 billion years ago — the first ocean"
+          },
           "p": {
-            "vi": "Bề mặt nguội đi và cứng lại thành lớp vỏ. Hơi nước trong khí quyển ngưng tụ, mưa xuống suốt thời gian rất dài và đọng lại thành những đại dương đầu tiên. Chính trong nước, các nhà khoa học tìm thấy dấu vết của những sinh vật đơn bào cổ nhất — khoảng 3,5 đến 3,8 tỷ năm tuổi.",
-            "en": "The surface cooled and hardened into a crust. Water vapour in the atmosphere condensed and rained down for a very long time, filling the first oceans. It is in that water that scientists find traces of the oldest single-celled life — roughly 3.5 to 3.8 billion years old."
+            "vi": "Bề mặt nguội đi và cứng lại thành lớp vỏ. Các nhà khoa học tìm được những tinh thể zircon 4,4 tỷ năm tuổi nằm trong đá; thành phần hoá học của chúng cho thấy chúng hình thành khi đã có nước ở dạng lỏng — rất có thể là cả một đại dương.",
+            "en": "The surface cooled and hardened into a crust. Scientists have found zircon crystals 4.4 billion years old inside rocks; their chemistry shows they formed in the presence of liquid water — likely even a whole ocean."
           }
         },
         {
-          "h": { "vi": "66 triệu năm trước — khủng long và rừng xanh", "en": "66 million years ago — dinosaurs and green forests" },
+          "h": {
+            "vi": "3,8 tỷ → 419 triệu năm trước — sự sống bắt đầu, rồi lên cạn",
+            "en": "3.8 billion → 419 million years ago — life begins, then moves ashore"
+          },
           "p": {
-            "vi": "Rất lâu sau đó, cây xanh phủ kín đất liền và nhả khí oxy vào khí quyển. Đây là Đại Trung Sinh — thời của khủng long, kéo dài từ khoảng 252 đến 66 triệu năm trước. Nó kết thúc bằng một đợt tuyệt chủng lớn cách nay khoảng 66 triệu năm.",
-            "en": "Much later, green plants covered the land and released oxygen into the air. This is the Mesozoic Era — the age of the dinosaurs — running from about 252 to 66 million years ago. It ended with a mass extinction around 66 million years ago."
+            "vi": "Sự sống bắt đầu trong đại dương khoảng 3,8 tỷ năm trước. Suốt một khoảng thời gian dài khó tưởng tượng, nó chỉ ở dưới nước: riêng đoạn này đã hơn 3 tỷ năm, dài hơn cả phần còn lại của câu chuyện cộng lại. Mãi tới kỷ Silur (khoảng 443–419 triệu năm trước) những cây đầu tiên mới lên cạn, và phải sang kỷ Devon tiếp theo những con vật đầu tiên mới theo sau.",
+            "en": "Life began in the ocean about 3.8 billion years ago. For a stretch of time that is hard to picture it stayed underwater: this part alone lasted over 3 billion years, longer than the whole rest of the story put together. Only in the Silurian (about 443–419 million years ago) did the first land plants appear, and animals followed in the Devonian after that."
           }
         },
         {
-          "h": { "vi": "Ngày nay — hành tinh xanh", "en": "Today — the blue planet" },
+          "h": {
+            "vi": "233 → 66 triệu năm trước — thời của khủng long",
+            "en": "233 → 66 million years ago — the age of dinosaurs"
+          },
           "p": {
-            "vi": "Bây giờ Trái Đất có nước lỏng, có không khí để thở và có hàng triệu loài sinh vật. Nước phủ khoảng 71% bề mặt, nên nhìn từ ngoài không gian nó là một quả cầu xanh. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.",
-            "en": "Today Earth has liquid water, breathable air and millions of species. Water covers about 71% of its surface, which is why it looks like a blue marble from space. So far it is the only planet we know of that has life."
+            "vi": "Khủng long thực sự xuất hiện khoảng 233 triệu năm trước, vào cuối kỷ Trias. Điều nhiều người không ngờ: những loài thú đầu tiên cũng xuất hiện ngay trong kỷ đó, chứ không phải sau khi khủng long biến mất. Lúc này rừng xanh đã phủ kín đất liền từ rất lâu rồi. Thời của khủng long kết thúc bằng một đợt tuyệt chủng lớn cách nay 66 triệu năm.",
+            "en": "True dinosaurs evolved about 233 million years ago, early in the Late Triassic. Here is the surprise: the first mammals appeared in that same period, not after the dinosaurs were gone. By then green forests had covered the land for ages. The age of dinosaurs ended in a mass extinction 66 million years ago."
+          }
+        },
+        {
+          "h": {
+            "vi": "Ngày nay — hành tinh xanh",
+            "en": "Today — the blue planet"
+          },
+          "p": {
+            "vi": "Sau đợt tuyệt chủng đó, các loài thú phát triển mạnh. Bây giờ Trái Đất có nước lỏng, có không khí để thở và có hàng triệu loài sinh vật. Nước phủ khoảng 71% bề mặt, nên nhìn từ ngoài không gian nó là một quả cầu xanh. Tới giờ đây vẫn là hành tinh duy nhất chúng ta biết là có sự sống.",
+            "en": "After that extinction, mammals flourished. Today Earth has liquid water, breathable air and millions of species. Water covers about 71% of its surface, which is why it looks like a blue marble from space. So far it is the only planet we know of that has life."
           }
         }
       ],
       "mascot_dialog": {
-        "vi": "Comet: Viên nham thạch bạn vừa thu được cứng như đá, nhưng 4,5 tỷ năm trước nó từng là dung nham chảy đỏ rực đấy!",
-        "en": "Comet: The lava rock you just collected is solid stone now — but 4.5 billion years ago it was glowing molten rock!"
+        "vi": "Comet: Viên nham thạch bạn vừa thu được cứng như đá, nhưng 4,54 tỷ năm trước nó từng là dung nham chảy đỏ rực đấy!",
+        "en": "Comet: The lava rock you just collected is solid stone now — but 4.54 billion years ago it was glowing molten rock!"
       },
       "source_reference": {
         "label": "NASA Science — Facts About Earth",
@@ -82,6 +104,10 @@
       "source_reference_2": {
         "label": "U.S. National Park Service — Geologic Time Scale",
         "url": "https://www.nps.gov/subjects/geology/time-scale.htm"
+      },
+      "source_reference_3": {
+        "label": "NASA Earth Observatory — Ancient Crystals Suggest Earlier Ocean",
+        "url": "https://science.nasa.gov/earth/earth-observatory/ancient-crystals-suggest-earlier-ocean/"
       }
     },
     {
@@ -100,35 +126,50 @@
       },
       "body": [
         {
-          "h": { "vi": "Vì sao khói lại là vấn đề", "en": "Why the smoke matters" },
+          "h": {
+            "vi": "Vì sao khói lại là vấn đề",
+            "en": "Why the smoke matters"
+          },
           "p": {
             "vi": "Than đá, dầu và khí đốt được gọi là nhiên liệu hoá thạch. Muốn lấy năng lượng từ chúng thì phải ĐỐT, mà đốt thì thải ra khí CO₂ cùng nhiều chất làm bẩn không khí. Hoá thạch cũng là loại tài nguyên có hạn: dùng hết là không có thêm trong đời chúng ta.",
             "en": "Coal, oil and natural gas are called fossil fuels. Getting energy out of them means BURNING them, and burning releases CO₂ along with substances that dirty the air. Fossil fuels are also limited: once used up, they are not replaced within our lifetimes."
           }
         },
         {
-          "h": { "vi": "☀️ Pin mặt trời", "en": "☀️ Solar panels" },
+          "h": {
+            "vi": "☀️ Pin mặt trời",
+            "en": "☀️ Solar panels"
+          },
           "p": {
             "vi": "Tấm pin mặt trời biến ánh sáng của Mặt Trời thành điện. Không có bộ phận nào phải quay, không có khói — chỉ cần trời sáng là nó làm việc.",
             "en": "A solar panel turns sunlight straight into electricity. Nothing has to spin and nothing burns — it works whenever there is daylight."
           }
         },
         {
-          "h": { "vi": "🌬️ Cối xoay gió", "en": "🌬️ Wind turbines" },
+          "h": {
+            "vi": "🌬️ Cối xoay gió",
+            "en": "🌬️ Wind turbines"
+          },
           "p": {
             "vi": "Gió đẩy những cánh quạt rất dài quay tròn, chuyển động quay đó làm máy phát điện chạy. Gió thì trời cho, thổi hoài không hết.",
             "en": "Wind pushes very long blades around, and that spinning drives a generator. The wind keeps coming back on its own."
           }
         },
         {
-          "h": { "vi": "🌊 Thuỷ điện", "en": "🌊 Hydroelectric power" },
+          "h": {
+            "vi": "🌊 Thuỷ điện",
+            "en": "🌊 Hydroelectric power"
+          },
           "p": {
             "vi": "Nước chảy từ chỗ cao xuống chỗ thấp làm quay tua-bin trong nhà máy thuỷ điện. Mưa lại đổ nước về sông, nên nguồn này cũng tự làm mới.",
             "en": "Water falling from high to low spins a turbine inside a hydro plant. Rain refills the rivers, so this source renews itself too."
           }
         },
         {
-          "h": { "vi": "Còn những nguồn sạch nào nữa?", "en": "Any other clean sources?" },
+          "h": {
+            "vi": "Còn những nguồn sạch nào nữa?",
+            "en": "Any other clean sources?"
+          },
           "p": {
             "vi": "Ngoài ba nguồn trên còn có địa nhiệt (hơi nóng từ trong lòng đất) và sinh khối. Tất cả cùng được gọi là năng lượng tái tạo, vì thiên nhiên liên tục cấp lại.",
             "en": "Besides those three there are geothermal energy (heat from inside the Earth) and biomass. Together they are called renewable energy, because nature keeps supplying them."
@@ -159,21 +200,73 @@
         "en": "You don't have to wait until you're grown up to protect the planet. These ten things can be done today, at home and at school."
       },
       "list": [
-        { "ic": "💡", "vi": "Tắt đèn và quạt khi ra khỏi phòng.", "en": "Switch off lights and fans when you leave a room." },
-        { "ic": "🚰", "vi": "Dùng bình nước cá nhân thay cho chai nhựa dùng một lần.", "en": "Use your own water bottle instead of single-use plastic ones." },
-        { "ic": "🌳", "vi": "Trồng cây và chăm cho cây sống.", "en": "Plant a tree — and keep it alive." },
-        { "ic": "♻️", "vi": "Phân loại rác: rác tái chế để riêng khỏi rác thường.", "en": "Sort your waste: keep recyclables apart from the rest." },
-        { "ic": "🚿", "vi": "Khoá vòi nước khi đang đánh răng hoặc xoa xà phòng.", "en": "Turn the tap off while brushing your teeth or soaping up." },
-        { "ic": "👝", "vi": "Mang túi vải đi mua sắm thay vì lấy túi nilon.", "en": "Bring a cloth bag when shopping instead of taking plastic ones." },
-        { "ic": "🚲", "vi": "Đi bộ, đạp xe hoặc đi xe buýt cho những đoạn đường ngắn.", "en": "Walk, cycle or take the bus for short trips." },
-        { "ic": "🍚", "vi": "Ăn hết phần ăn của mình, không bỏ thừa thức ăn.", "en": "Finish your food instead of throwing it away." },
-        { "ic": "📒", "vi": "Dùng hết hai mặt giấy, sửa đồ cũ trước khi nghĩ tới mua đồ mới.", "en": "Use both sides of the paper, and mend things before buying new ones." },
-        { "ic": "🤝", "vi": "Rủ gia đình và bạn bè cùng làm — một người làm thì ít, cả lớp làm thì nhiều.", "en": "Get your family and friends to join in — one person does a little, a whole class does a lot." }
+        {
+          "ic": "💡",
+          "vi": "Tắt đèn và quạt khi ra khỏi phòng.",
+          "en": "Switch off lights and fans when you leave a room."
+        },
+        {
+          "ic": "🚰",
+          "vi": "Dùng bình nước cá nhân thay cho chai nhựa dùng một lần.",
+          "en": "Use your own water bottle instead of single-use plastic ones."
+        },
+        {
+          "ic": "🌳",
+          "vi": "Trồng cây và chăm cho cây sống.",
+          "en": "Plant a tree — and keep it alive."
+        },
+        {
+          "ic": "♻️",
+          "vi": "Phân loại rác: rác tái chế để riêng khỏi rác thường.",
+          "en": "Sort your waste: keep recyclables apart from the rest."
+        },
+        {
+          "ic": "🚿",
+          "vi": "Khoá vòi nước khi đang đánh răng hoặc xoa xà phòng.",
+          "en": "Turn the tap off while brushing your teeth or soaping up."
+        },
+        {
+          "ic": "👝",
+          "vi": "Mang túi vải đi mua sắm thay vì lấy túi nilon.",
+          "en": "Bring a cloth bag when shopping instead of taking plastic ones."
+        },
+        {
+          "ic": "🚲",
+          "vi": "Đi bộ, đạp xe hoặc đi xe buýt cho những đoạn đường ngắn.",
+          "en": "Walk, cycle or take the bus for short trips."
+        },
+        {
+          "ic": "🍚",
+          "vi": "Ăn hết phần ăn của mình, không bỏ thừa thức ăn.",
+          "en": "Finish your food instead of throwing it away."
+        },
+        {
+          "ic": "📒",
+          "vi": "Dùng hết hai mặt giấy, sửa đồ cũ trước khi nghĩ tới mua đồ mới.",
+          "en": "Use both sides of the paper, and mend things before buying new ones."
+        },
+        {
+          "ic": "🤝",
+          "vi": "Rủ gia đình và bạn bè cùng làm — một người làm thì ít, cả lớp làm thì nhiều.",
+          "en": "Get your family and friends to join in — one person does a little, a whole class does a lot."
+        }
       ],
       "avoid": [
-        { "ic": "🗑️", "vi": "Vứt rác bừa bãi ra đường, sân trường, sông hồ.", "en": "Dropping litter on streets, playgrounds, rivers and lakes." },
-        { "ic": "💧", "vi": "Xả lãng phí nước sạch.", "en": "Letting clean water run to waste." },
-        { "ic": "🛍️", "vi": "Dùng quá nhiều túi nilon dùng một lần.", "en": "Using lots of single-use plastic bags." }
+        {
+          "ic": "🗑️",
+          "vi": "Vứt rác bừa bãi ra đường, sân trường, sông hồ.",
+          "en": "Dropping litter on streets, playgrounds, rivers and lakes."
+        },
+        {
+          "ic": "💧",
+          "vi": "Xả lãng phí nước sạch.",
+          "en": "Letting clean water run to waste."
+        },
+        {
+          "ic": "🛍️",
+          "vi": "Dùng quá nhiều túi nilon dùng một lần.",
+          "en": "Using lots of single-use plastic bags."
+        }
       ],
       "mascot_dialog": {
         "vi": "Comet: Không việc nào trong danh sách này cần tới phi thuyền cả — bạn làm được ngay hôm nay, ở nhà mình!",
@@ -194,25 +287,68 @@
       "ic": "☀️",
       "kind": "science",
       "reviewed_by_teacher": false,
-      "title": { "vi": "Mặt Trời — nguồn năng lượng của Trái Đất", "en": "The Sun — Earth's power source" },
-      "summary": {
-        "vi": "Mặt Trời là ngôi sao mang ánh sáng và nhiệt độ ấm áp cho Trái Đất.",
-        "en": "The Sun is the star that brings light and warmth to Earth."
+      "title": {
+        "vi": "Mặt Trời và ba vùng khí hậu",
+        "en": "The Sun and three climate zones"
       },
-      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
-    },
-    {
-      "id": "rotation",
-      "step": "rotation",
-      "ic": "🌗",
-      "kind": "science",
-      "reviewed_by_teacher": false,
-      "title": { "vi": "Ban ngày và ban đêm", "en": "Day and night" },
       "summary": {
-        "vi": "Chính sự tự quay của Trái Đất đã tạo ra ban ngày và ban đêm.",
-        "en": "Earth's own rotation is what makes day and night."
+        "vi": "Mặt Trời mang ánh sáng và hơi ấm cho Trái Đất. Nhưng cùng một Mặt Trời lại sưởi mỗi nơi một khác — và lý do không phải là khoảng cách, mà là GÓC CHIẾU của tia nắng.",
+        "en": "The Sun brings Earth light and warmth. But one Sun warms each place differently — and the reason is not distance, it is the ANGLE the rays arrive at."
       },
-      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+      "source_reference": {
+        "label": "NASA Earth Observatory — Climate and Earth's Energy Budget",
+        "url": "https://science.nasa.gov/earth/earth-observatory/climate-and-earths-energy-budget/"
+      },
+      "body": [
+        {
+          "h": {
+            "vi": "Xích đạo — nắng chiếu gần như thẳng đứng",
+            "en": "The tropics — sunlight comes in almost straight down"
+          },
+          "p": {
+            "vi": "Ở vùng quanh xích đạo, tia nắng đến gần như vuông góc với mặt đất. Cùng một lượng ánh sáng dồn vào một diện tích nhỏ, nên nơi đây nóng và ẩm gần như quanh năm.",
+            "en": "Around the equator the Sun's rays arrive almost perpendicular to the ground. The same amount of light is packed into a small area, so it stays hot and humid nearly all year."
+          }
+        },
+        {
+          "h": {
+            "vi": "Ôn đới — nắng xiên hơn, và trục Trái Đất nghiêng",
+            "en": "The temperate zone — a steeper angle, plus a tilted axis"
+          },
+          "p": {
+            "vi": "Đi xa xích đạo hơn, tia nắng bắt đầu chiếu xiên. Cộng thêm việc trục Trái Đất không dựng thẳng mà hơi nghiêng, mỗi nửa hành tinh lần lượt ngả về phía Mặt Trời rồi ngả ra xa — đó chính là bốn mùa.",
+            "en": "Farther from the equator the rays start to slant. Add that Earth's axis does not stand up straight but leans, so each half of the planet tilts toward the Sun and then away from it — and that is what gives us the four seasons."
+          }
+        },
+        {
+          "h": {
+            "vi": "Vùng cực — cùng lượng nắng, trải trên diện tích lớn hơn nhiều",
+            "en": "The polar zone — the same light spread over a far larger area"
+          },
+          "p": {
+            "vi": "Càng về hai cực, tia nắng càng chiếu xiên và bị trải ra một diện tích lớn hơn, nên mỗi mét vuông nhận được ít năng lượng hơn hẳn. Vì thế băng ở đó không tan hết. Lưu ý một điều thú vị: vào mùa hè vùng cực, ngày dài tới mức tổng năng lượng nhận được TRONG MỘT NGÀY lại có thể cao hơn ở xích đạo — nhưng góc chiếu thì vẫn xiên.",
+            "en": "Toward the poles the rays come in at ever smaller angles and spread over ever larger areas, so each square metre receives far less energy. That is why the ice does not melt away. One curious detail: in polar summer the days are so long that the energy received IN A SINGLE DAY can actually beat the equator — but the angle is still slanted."
+          }
+        },
+        {
+          "h": {
+            "vi": "⛔ Không phải vì gần Mặt Trời hơn",
+            "en": "⛔ It is not about being closer to the Sun"
+          },
+          "p": {
+            "vi": "Đây là chỗ rất nhiều người hiểu nhầm. Khoảng cách từ xích đạo tới Mặt Trời so với từ cực tới Mặt Trời chỉ chênh nhau khoảng 6.400 km, trong khi cả quãng đường là chừng 150 triệu km — nhỏ tới mức không giải thích được gì. Thứ quyết định là góc chiếu.",
+            "en": "This is where a lot of people go wrong. The distance from the equator to the Sun and from the pole to the Sun differ by only about 6,400 km, out of roughly 150 million km — far too small to explain anything. What decides it is the angle."
+          }
+        }
+      ],
+      "mascot_dialog": {
+        "vi": "Byte: Cầm một cái đèn pin chiếu thẳng xuống bàn — vệt sáng nhỏ và rõ. Nghiêng đèn đi, vệt sáng dài ra và nhạt hẳn. Xích đạo và vùng cực khác nhau đúng như vậy đấy!",
+        "en": "Byte: Point a torch straight down at a table — a small bright spot. Now tilt it: the spot stretches out and goes dim. That is exactly the difference between the equator and the poles!"
+      },
+      "source_reference_2": {
+        "label": "NASA Space Place — What Causes the Seasons?",
+        "url": "https://spaceplace.nasa.gov/seasons/en/"
+      }
     },
     {
       "id": "water",
@@ -220,12 +356,18 @@
       "ic": "🌊",
       "kind": "science",
       "reviewed_by_teacher": false,
-      "title": { "vi": "Đại dương", "en": "The ocean" },
+      "title": {
+        "vi": "Đại dương",
+        "en": "The ocean"
+      },
       "summary": {
         "vi": "Nước bao phủ khoảng 71% bề mặt Trái Đất!",
         "en": "Water covers about 71% of Earth's surface!"
       },
-      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+      "source_reference": {
+        "label": "NASA Science — Facts About Earth",
+        "url": "https://science.nasa.gov/earth/facts/"
+      }
     },
     {
       "id": "forest",
@@ -233,12 +375,18 @@
       "ic": "🌳",
       "kind": "science",
       "reviewed_by_teacher": false,
-      "title": { "vi": "Rừng xanh", "en": "Forests" },
+      "title": {
+        "vi": "Rừng xanh",
+        "en": "Forests"
+      },
       "summary": {
         "vi": "Rừng cung cấp oxy cho chúng ta hít thở!",
         "en": "Forests provide the oxygen we breathe!"
       },
-      "source_reference": { "label": "NASA Science for Kids — Earth", "url": "https://science.nasa.gov/kids/earth" }
+      "source_reference": {
+        "label": "NASA Science for Kids — Earth",
+        "url": "https://science.nasa.gov/kids/earth"
+      }
     },
     {
       "id": "animal",
@@ -246,12 +394,18 @@
       "ic": "🐧",
       "kind": "science",
       "reviewed_by_teacher": false,
-      "title": { "vi": "Muôn loài sinh vật", "en": "Millions of species" },
+      "title": {
+        "vi": "Muôn loài sinh vật",
+        "en": "Millions of species"
+      },
       "summary": {
         "vi": "Hàng triệu loài sinh vật cùng sinh sống trên Trái Đất!",
         "en": "Millions of species share our planet!"
       },
-      "source_reference": { "label": "NASA Science for Kids — Earth", "url": "https://science.nasa.gov/kids/earth" }
+      "source_reference": {
+        "label": "NASA Science for Kids — Earth",
+        "url": "https://science.nasa.gov/kids/earth"
+      }
     },
     {
       "id": "mountain",
@@ -259,12 +413,18 @@
       "ic": "🏔️",
       "kind": "science",
       "reviewed_by_teacher": false,
-      "title": { "vi": "Những rặng núi cao", "en": "High mountain ranges" },
+      "title": {
+        "vi": "Những rặng núi cao",
+        "en": "High mountain ranges"
+      },
       "summary": {
         "vi": "Những rặng núi cao che chắn và giữ nước cho hành tinh!",
         "en": "High mountain ranges shelter the planet and store its water!"
       },
-      "source_reference": { "label": "NASA Science — Facts About Earth", "url": "https://science.nasa.gov/earth/facts/" }
+      "source_reference": {
+        "label": "NASA Science — Facts About Earth",
+        "url": "https://science.nasa.gov/earth/facts/"
+      }
     }
   ]
 }

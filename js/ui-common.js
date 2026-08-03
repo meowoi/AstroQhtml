@@ -121,11 +121,50 @@
     };
   }
 
+  /* ═══════════ CHẾ ĐỘ GIẢM CẤU HÌNH — MỘT KHOÁ CHO CẢ APP ═══════════
+     Thêm 02/08/2026 (`docs/decisions/005` mục 6).
+
+     ⚠️ TRƯỚC ĐÓ NÓ CHỈ LÀ MỘT CÁI CÔNG TẮC TRONG BẢNG TRÁI CỦA `explorer.html`,
+        không lưu và không dùng chung: tải lại trang là mất, và trang khác không
+        biết gì. Nay theo đúng khuôn `astroq-sfx` / `astroq-lang` (quy tắc 2 mục 2
+        của CLAUDE.md): một khoá, mọi trang đọc chung, đổi ở tab này thì tab kia
+        nghe được qua sự kiện `storage`.
+
+     ⚠️ NÓ CHỈ HẠ CHẤT LƯỢNG CẢNH, KHÔNG CẮT BYTE TẢI VỀ. Thứ nặng thật ở
+        `explorer.html` là three.js kéo từ `unpkg.com`. Muốn cắt byte thì phải bỏ hẳn
+        cảnh 3D — và đó chính là lý do `005` mục 5 chốt quả cầu là **PHẦN THÊM**:
+        mọi bài học BẮT BUỘC nằm trong 7 bước của `mission-earth.html`, vốn đã 2D.
+
+     ⚠️ TỰ PHÁT HIỆN KHÔNG ĐỦ, ĐỪNG TIN NÓ MỘT MÌNH. [Chưa kiểm chứng] Network
+        Information API (`saveData` / `effectiveType`) **Safari/iOS không hỗ trợ**,
+        mà iPad lại là thiết bị hay chơi nhiệm vụ này nhất. Nên `slowLink()` chỉ là
+        lớp (a); lớp (b) chắc chắn hơn là mốc chờ 12 giây đã có ở `js/map-onboard.js`. */
+  var LS_PERF = "astroq-perf";
+  function getPerf(){
+    try{ return localStorage.getItem(LS_PERF) === "1"; }catch(e){ return false; }
+  }
+  function setPerf(on){
+    try{
+      if(on) localStorage.setItem(LS_PERF, "1");
+      else localStorage.removeItem(LS_PERF);
+    }catch(e){}
+  }
+  /** Đường truyền có dấu hiệu yếu không. `false` cũng có nghĩa "không biết". */
+  function slowLink(){
+    try{
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if(!c) return false;
+      if(c.saveData) return true;
+      return c.effectiveType === "slow-2g" || c.effectiveType === "2g";
+    }catch(e){ return false; }
+  }
+
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
               getLang:getLang, setLang:setLang, markLangButtons:markLangButtons,
               initLang:initLang, setDocLang:setDocLang,
               applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
-              LS_USER:LS_USER, LS_LANG:LS_LANG };
+              getPerf:getPerf, setPerf:setPerf, slowLink:slowLink,
+              LS_USER:LS_USER, LS_LANG:LS_LANG, LS_PERF:LS_PERF };
 
   global.AstroQ = global.AstroQ || {};
   for(var k in API){ if(API.hasOwnProperty(k)) global.AstroQ[k] = API[k]; }
