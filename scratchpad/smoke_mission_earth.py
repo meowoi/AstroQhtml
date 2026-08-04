@@ -697,6 +697,54 @@ def main():
             "CO ban tay CHI TRO vao dom (khong mat phan chi duong)",
             str([x for x in hlog if "tap" in x][:2]))
 
+        # ══ BAN TAY PHAI DI THEO TRE, KHONG THEO THU TU KHAI BAO ═════════════════
+        # Loi THAT 03/08/2026 (`docs/decisions/007`): chu du an bao *"click sang diem sang
+        # khac roi ma ban tay van o cho cu"*. Nguyen nhan la HAI LUAT DEU DUNG nhung NGUOC
+        # NHAU: `004` chot "cham dom nao truoc cung duoc", nhung `nextLeft` lai tra ve dom
+        # chua cham DAU TIEN THEO THU TU KHAI BAO. Tre cham tu giua ra thi dom so 0
+        # (`namerica`) cu chua cham mai -> tay dung nguyen mot cho suot nhieu cu cham lien.
+        # Tai hien duoc truoc khi sua: 5 cu cham lien, tay o (340,233) khong nhich 1 pixel.
+        #
+        # ⚠️ PHAI CHAM THEO THU TU KHAC HAN THU TU KHAI BAO — cham dung thu tu khai bao thi
+        #    ban CU cung "dung", nen phep kiem se xanh o ca trang thai hong.
+        # ⚠️ Va phai doi HAI dieu, khong chi mot: tay DOI CHO (khong dung nguyen) VA tay
+        #    chi vao dung mot dom co that (`handTarget`) dang o trong khung. "Co ban tay"
+        #    thi ban hong cung dat.
+        _hand_ids = page.evaluate("window.__mission.world.markers.map(m=>m.id)")
+        _scramble = _hand_ids[2:] + _hand_ids[1:2]      # bat dau tu GIUA, ket o dom so 1
+        _hpos, _stuck_hand, _bad_target = [], [], []
+        for _mid in _scramble:
+            page.wait_for_function("() => !window.__mission.busy", timeout=30000)
+            page.evaluate("id => window.__mission.pick({type:'marker', id})", _mid)
+            page.wait_for_timeout(220)
+            close_card(page)
+            page.wait_for_function("() => !window.__mission.busy", timeout=30000)
+            _h = page.evaluate("""() => {
+              const h = document.getElementById('hand');
+              const r = h.getBoundingClientRect();
+              const t = window.__mission.handTarget;
+              const p = t ? window.__mission.world.screenOf('marker', t) : null;
+              return {shown: h.classList.contains('show'), tgt: t,
+                      x: Math.round(r.left + r.width/2), y: Math.round(r.top),
+                      lech: p ? Math.round(Math.hypot(p.x - (r.left + r.width/2),
+                                                      p.y - (r.top - 16))) : null,
+                      con: window.__mission.world.markers.filter(m => !m.done).length};
+            }""")
+            if _h["con"] == 0:
+                break                                   # het dom -> khong con gi de chi
+            if _hpos and (_h["x"], _h["y"]) == _hpos[-1]:
+                _stuck_hand.append(_mid)
+            _hpos.append((_h["x"], _h["y"]))
+            if not _h["shown"] or _h["tgt"] is None or (_h["lech"] or 99) > 30:
+                _bad_target.append((_mid, _h["tgt"], _h["lech"]))
+        chk(not _stuck_hand,
+            "ban tay DOI CHO sau MOI cu cham (du tre cham khac thu tu khai bao)",
+            f"dung nguyen sau khi cham: {_stuck_hand}")
+        chk(not _bad_target,
+            "ban tay luon chi vao DUNG mot dom co that va nam trong khung",
+            f"sai: {_bad_target}")
+
+
         def _snap():
             return page.evaluate("""() => {
               const layer = document.querySelector('.e2-layer');
@@ -1014,59 +1062,10 @@ def main():
         chk("Không phải" in _sayline and "xa Mặt Trời" in _sayline,
             "câu kết BÁC HẲN cách hiểu 'vì gần Mặt Trời hơn'", _sayline[:80])
         say_through(page)
-        wait_step(page, "energy")
-
-        # ══════════════════════════════════════════════════════════════════
-        head("[4b] Bước 4 — thay 3 ống khói bằng năng lượng sạch, khói đen TAN")
-        say_through(page)
-        srcs = page.eval_on_selector_all(
-            "#energy-tray .me-gem", "es => es.map(e => e.textContent.trim())")
-        chk(len(srcs) == 3, "3 nguồn năng lượng sạch", str(srcs))
-        joined = " ".join(srcs)
-        chk("☀️" in joined and "🌬️" in joined and "🌊" in joined,
-            "đủ 3 nguồn: pin mặt trời ☀️ · cối xoay gió 🌬️ · thuỷ điện 🌊", joined)
-        chk("Mặt Trời" in joined and "Gió" in joined and "Thuỷ Điện" in joined,
-            "3 nguồn có TÊN TIẾNG VIỆT", joined)
-        # ⚠️ ĐỔI SELECTOR 02/08/2026: ba ống khói đã dời từ BẢNG xuống BẢN ĐỒ (chủ dự
-        #    án: *"nên rải 3 ống khói tại 3 vùng khác nhau lên bản đồ 2D"*). Chúng nay là
-        #    marker của cảnh `.e2-mk.e2-stack` với `data-zone`, không còn là phần tử của
-        #    `#energy-slots` (khối đó nay luôn rỗng).
-        chk(page.eval_on_selector_all(".e2-mk.e2-stack", "es => es.length") == 3,
-            "3 ống khói đang nhả khói TRÊN BẢN ĐỒ")
-        # Ống khói phải neo đúng toạ độ thật và nhìn thấy được — nếu không thì không kéo
-        # thẻ vào được, mà bước lại không có đường nào khác để qua.
-        _svis = page.evaluate(
-            "() => ['st1','st2','st3'].filter(id =>"
-            " window.__mission.world.screenOf('marker', id).visible).length")
-        chk(_svis == 3, "cả 3 ống khói nằm trong khung", f"{_svis}/3")
-
-        # THẢ SAI trước — không bị phạt (cùng nguyên tắc với bảng 3 viên ngọc)
-        w0 = page.eval_on_selector_all("#energy-tray .me-gem", "es => es.map(e=>e.dataset.want)")
-        bad_zone = next(z for z in ["st1", "st2", "st3"] if z != w0[0])
-        drag_to(page, f'#energy-tray .me-gem[data-want="{w0[0]}"]',
-                f'.e2-mk.e2-stack[data-zone="{bad_zone}"]')
-        chk(page.eval_on_selector(f'.e2-mk.e2-stack[data-zone="{bad_zone}"]',
-                                  "e => !e.classList.contains('ok')"),
-            "thả SAI ống: ống không sáng lên")
-        chk(page.eval_on_selector(f'#energy-tray .me-gem[data-want="{w0[0]}"]',
-                                  "e => !e.classList.contains('used')"),
-            "thả SAI ống: thẻ nguồn NẢY VỀ chỗ cũ")
-        e_hint = page.eval_on_selector("#energy-hint", "e => e.textContent")
-        chk("thử" in e_hint.lower(), "thả SAI ống: câu KHÍCH LỆ, không mắng", e_hint.strip())
-        page.wait_for_timeout(2400)
-
-        placed, smog0, smog1 = play_energy(page)
-        chk(placed == 3, "KÉO-THẢ THẬT đủ 3 ống khói thành trạm điện sạch", f"{placed}/3")
-        chk(smog0 > 0.9, "trước khi thay: khói đen phủ kín (--smog ≈ 1)", f"{smog0:.2f}")
-        chk(smog1 < 0.05, "sau khi thay đủ 3: khói TAN HẾT (--smog ≈ 0)", f"{smog1:.2f}")
-        page.wait_for_function("() => window.__mission.done.includes('energy')", timeout=20000)
-        say_through(page)
         wait_step(page, "life")
-        chk(page.evaluate("window.__navMark") == "still-here",
-            "bước 4 → 5 vẫn KHÔNG tải lại trang")
 
         # ══════════════════════════════════════════════════════════════════
-        head("[5] Bước 5 — LÁT CẮT TRÁI ĐẤT: đoán độ cao rồi hé lộ")
+        head("[4b] Bước 4 — LÁT CẮT TRÁI ĐẤT: đoán độ cao rồi hé lộ")
         # ⚠️⚠️ SÁU PHÉP KIỂM Ở MỤC NÀY ĐÃ ĐẢO CHIỀU 02/08/2026, và lý do KHÔNG phải là
         #    "đổi cho mới". Bản cũ chạm 4 marker để mở thẻ; đếm ngân sách khuôn thì
         #    "chạm dấu hiệu trên bản đồ" đã dùng ở ① và ③, nên ở đây là lần thứ 3 —
@@ -1177,7 +1176,7 @@ def main():
                 "4 thẻ có 4 câu kiến thức KHÁC nhau")
             chk(all(len(s) > 12 for s in subs) and len(set(subs)) == 4,
                 "4 thẻ có 4 câu HÉ LỘ ĐỘ CAO khác nhau", str([s[:24] for s in subs]))
-            chk(all(c[4] is False for c in cards), "dòng phụ của thẻ KHÔNG bị ẩn ở bước ⑤")
+            chk(all(c[4] is False for c in cards), "dòng phụ của thẻ KHÔNG bị ẩn ở bước ④")
             # ⚠️ HAI CON SỐ DUY NHẤT CỦA BƯỚC NÀY, cả hai đều đã tra nguồn 02/08/2026.
             #    Nguồn NASA nói "up to 4,000 meters"; nguồn NOAA nói "the ocean … about
             #    3,682 meters". Ai sửa hai số này thì phải mở lại nguồn, không phải nhớ.
@@ -1205,7 +1204,56 @@ def main():
 
         page.wait_for_function("() => window.__mission.done.includes('life')", timeout=25000)
         say_through(page)
+        wait_step(page, "energy")
+
+        # ══════════════════════════════════════════════════════════════════
+        head("[5] Bước 5 — thay 3 ống khói bằng năng lượng sạch, khói đen TAN")
+        say_through(page)
+        srcs = page.eval_on_selector_all(
+            "#energy-tray .me-gem", "es => es.map(e => e.textContent.trim())")
+        chk(len(srcs) == 3, "3 nguồn năng lượng sạch", str(srcs))
+        joined = " ".join(srcs)
+        chk("☀️" in joined and "🌬️" in joined and "🌊" in joined,
+            "đủ 3 nguồn: pin mặt trời ☀️ · cối xoay gió 🌬️ · thuỷ điện 🌊", joined)
+        chk("Mặt Trời" in joined and "Gió" in joined and "Thuỷ Điện" in joined,
+            "3 nguồn có TÊN TIẾNG VIỆT", joined)
+        # ⚠️ ĐỔI SELECTOR 02/08/2026: ba ống khói đã dời từ BẢNG xuống BẢN ĐỒ (chủ dự
+        #    án: *"nên rải 3 ống khói tại 3 vùng khác nhau lên bản đồ 2D"*). Chúng nay là
+        #    marker của cảnh `.e2-mk.e2-stack` với `data-zone`, không còn là phần tử của
+        #    `#energy-slots` (khối đó nay luôn rỗng).
+        chk(page.eval_on_selector_all(".e2-mk.e2-stack", "es => es.length") == 3,
+            "3 ống khói đang nhả khói TRÊN BẢN ĐỒ")
+        # Ống khói phải neo đúng toạ độ thật và nhìn thấy được — nếu không thì không kéo
+        # thẻ vào được, mà bước lại không có đường nào khác để qua.
+        _svis = page.evaluate(
+            "() => ['st1','st2','st3'].filter(id =>"
+            " window.__mission.world.screenOf('marker', id).visible).length")
+        chk(_svis == 3, "cả 3 ống khói nằm trong khung", f"{_svis}/3")
+
+        # THẢ SAI trước — không bị phạt (cùng nguyên tắc với bảng 3 viên ngọc)
+        w0 = page.eval_on_selector_all("#energy-tray .me-gem", "es => es.map(e=>e.dataset.want)")
+        bad_zone = next(z for z in ["st1", "st2", "st3"] if z != w0[0])
+        drag_to(page, f'#energy-tray .me-gem[data-want="{w0[0]}"]',
+                f'.e2-mk.e2-stack[data-zone="{bad_zone}"]')
+        chk(page.eval_on_selector(f'.e2-mk.e2-stack[data-zone="{bad_zone}"]',
+                                  "e => !e.classList.contains('ok')"),
+            "thả SAI ống: ống không sáng lên")
+        chk(page.eval_on_selector(f'#energy-tray .me-gem[data-want="{w0[0]}"]',
+                                  "e => !e.classList.contains('used')"),
+            "thả SAI ống: thẻ nguồn NẢY VỀ chỗ cũ")
+        e_hint = page.eval_on_selector("#energy-hint", "e => e.textContent")
+        chk("thử" in e_hint.lower(), "thả SAI ống: câu KHÍCH LỆ, không mắng", e_hint.strip())
+        page.wait_for_timeout(2400)
+
+        placed, smog0, smog1 = play_energy(page)
+        chk(placed == 3, "KÉO-THẢ THẬT đủ 3 ống khói thành trạm điện sạch", f"{placed}/3")
+        chk(smog0 > 0.9, "trước khi thay: khói đen phủ kín (--smog ≈ 1)", f"{smog0:.2f}")
+        chk(smog1 < 0.05, "sau khi thay đủ 3: khói TAN HẾT (--smog ≈ 0)", f"{smog1:.2f}")
+        page.wait_for_function("() => window.__mission.done.includes('energy')", timeout=20000)
+        say_through(page)
         wait_step(page, "eco")
+        chk(page.evaluate("window.__navMark") == "still-here",
+            "bước 5 → 6 vẫn KHÔNG tải lại trang")
 
         # ══════════════════════════════════════════════════════════════════
         head("[6] Bước 6 — Eco-Hero: phân loại NÊN / KHÔNG NÊN")
@@ -1384,8 +1432,11 @@ def main():
             "khối việc tiếp theo chỉ sang Trung Tâm Nhiệm Vụ", w["nextUp"])
 
         steps_called = [c["step"] for c in w["calls"]]
-        chk(steps_called == ["scan", "timeline", "sun", "energy",
-                             "life", "eco", "core"],
+        # ⚠️ THU TU DOI 03/08/2026: `life` len truoc `energy` (chu du an: *"su kien muc
+        #    nuoc bien chen giua vo duyen roi"*). Danh sach nay PHAI khop `Missions.All`
+        #    o backend va `STEP_IDS` o trang — check_pages.py [3c] so hai ben.
+        chk(steps_called == ["scan", "timeline", "sun", "life",
+                             "energy", "eco", "core"],
             "báo lên server ĐÚNG 7 bước, ĐÚNG thứ tự, KHÔNG trùng", str(steps_called))
         chk(all(c["mission"] == "earth" for c in w["calls"]),
             "mọi lời gọi đều mang mission='earth'")
@@ -1430,11 +1481,15 @@ def main():
             ("① scan",              30,  95, 2.6),
             ("② timeline",          30,  95, 3.4),
             ("③ sun",               30,  95, 5.2),   # lùi xa nhất -> ép sàn phóng
-            ("④ energy",            30,  95, 3.8),
-            ("⑤ life (thừa hưởng)",  10,  20, 3.1),
-            ("⑥ life",              10,  20, 3.1),
-            ("⑦ eco",               10,  20, 4.0),
-            ("⑧ core",              10,  20, 3.6),
+            # ⚠️ THU TU DOI 03/08/2026: `life` len truoc `energy`. Bon dong duoi day da
+            #    tinh lai theo loi goi camera THAT (grep `panTo(`/`centerOn(` trong
+            #    mission-earth.html): life `panTo({dist:3.1})` -> energy
+            #    `centerOn({lat:20,lon:32,dist:4.4})` -> eco `panTo({dist:4.0})` -> core
+            #    KHONG khai gi nen thua huong nguyen khung cua eco.
+            ("④ life",              10,  20, 3.1),
+            ("⑤ energy",            20,  32, 4.4),
+            ("⑥ eco",               20,  32, 4.0),
+            ("⑦ core (thừa hưởng)",  20,  32, 4.0),
             ("mép: lon 180",         0, 180, 4.4),   # kinh tuyến đổi dấu — chỗ dễ hở nhất
             ("mép: lon -95",         0, -95, 4.4),
         ]
@@ -1521,7 +1576,7 @@ def main():
                     return False
                 say_through(pg, 3)
                 if sid == "life":
-                    # ⚠️ BƯỚC ⑤ KHÔNG CÒN LÁI ĐƯỢC BẰNG `pick()` (02/08/2026) — nó không
+                    # ⚠️ BƯỚC ④ KHÔNG CÒN LÁI ĐƯỢC BẰNG `pick()` (02/08/2026) — nó không
                     #    nhận cú chạm marker nào nữa, trẻ chọn NẤC trên lát cắt. Để nó
                     #    lẫn trong nhánh marker bên dưới thì vòng lặp quay 320 lượt rồi
                     #    hết hạn, và triệu chứng đọc ra y như "sản phẩm treo".
@@ -1638,25 +1693,49 @@ def main():
         # ⚠️ ĐO BẰNG CHÍNH `screenOf().visible` (có tính cả việc bị mép khung cắt), và
         #    đo SAU khi thẻ nội dung đã đóng — đo lúc thẻ còn mở là đo giữa lúc bản đồ
         #    còn đang lướt.
+        # ⚠️⚠️ PHÉP KIỂM NÀY ĐÃ ĐỔI CÁCH ĐO 03/08/2026 (`docs/decisions/007`) — VÀ NÓ
+        #    MẠNH LÊN NHỜ THẾ. Bản cũ lấy `_left[0]`, tức châu lục chưa chạm đầu tiên
+        #    **theo thứ tự khai báo**, rồi đòi nó luôn trong khung. Điều đó chỉ đúng khi
+        #    cú lướt bản đồ cũng đi theo thứ tự khai báo — mà từ 03/08/2026 `nextLeft()`
+        #    đi theo đốm GẦN NHẤT với đốm vừa chạm (sửa lỗi "bàn tay vẫn ở chỗ cũ"), nên
+        #    `_left[0]` và đích thật của cú lướt không còn là một. Bản cũ vì thế báo hỏng
+        #    ĐÚNG LÚC sản phẩm làm đúng.
+        # ⚠️ Điều PHẢI bảo vệ vẫn nguyên: **trẻ không bao giờ kẹt**. Nhưng phát biểu đúng
+        #    của nó là *"đốm mà BÀN TAY đang chỉ vào luôn bấm được"*, không phải *"đốm thứ
+        #    n trong mảng luôn trong khung"*: trên màn dọc trẻ **chỉ bấm được thứ nó nhìn
+        #    thấy**, và bàn tay chính là thứ nói cho nó bấm vào đâu. Nên nay lái vòng lặp
+        #    bằng `handTarget` và đo `markerHittable`-tương-đương (`screenOf().visible`).
+        #    Chặt hơn bản cũ: nó kiểm CẢ bàn tay, thứ bản cũ không hỏi tới.
         say_through(page)
         page.wait_for_function("() => window.__mission.world.markers.length === 7", timeout=20000)
-        _stuck = []
+        _stuck, _nohand = [], []
         for _i in range(7):
             page.wait_for_function("() => !window.__mission.busy", timeout=20000)
-            _left = page.evaluate(
-                "() => window.__mission.world.markers.filter(m => !m.done).map(m => m.id)")
-            if not _left:
+            _st = page.evaluate("""() => {
+              const left = window.__mission.world.markers.filter(m => !m.done).map(m => m.id);
+              const t = window.__mission.handTarget;
+              const p = t ? window.__mission.world.screenOf('marker', t) : null;
+              return {left, tgt: t, vis: !!(p && p.visible),
+                      shown: document.getElementById('hand').classList.contains('show')};
+            }""")
+            if not _st["left"]:
                 break
-            _nx = _left[0]
-            _sp = page.evaluate("id => window.__mission.world.screenOf('marker', id)", _nx)
-            if not (_sp and _sp["visible"]):
-                _stuck.append(_nx)
+            if not (_st["shown"] and _st["tgt"]):
+                _nohand.append(_st["left"])
+                _nx = _st["left"][0]              # vẫn đi tiếp để còn đo được các lượt sau
+            else:
+                _nx = _st["tgt"]
+                if not _st["vis"]:
+                    _stuck.append(_nx)
             page.evaluate("id => window.__mission.pick({type:'marker', id})", _nx)
             page.wait_for_timeout(260)
             read_card(page, timeout=9000)
         chk(not _stuck,
-            "điện thoại: châu lục kế tiếp LUÔN nằm trong khung (không thể kẹt)",
+            "điện thoại: đốm BÀN TAY đang chỉ vào LUÔN bấm được (không thể kẹt)",
             f"ngoài khung: {_stuck}")
+        chk(not _nohand,
+            "điện thoại: luôn CÓ bàn tay chỉ đường khi còn đốm chưa chạm",
+            f"khong co tay trong khi con: {_nohand}")
         chk(page.evaluate("window.__mission.scanned") == 7,
             "điện thoại: chạm đủ 7 châu lục chỉ bằng cách bấm vào chỗ nhìn thấy")
 
@@ -1664,12 +1743,12 @@ def main():
         ctx.close()
 
         # ══════════════════════════════════════════════════════════════════
-        head("[10b] Điện thoại — bước ⑤ `life`: 4 mẫu vật cũng phải với tới được")
+        head("[10b] Điện thoại — bước ④ `life`: 4 mẫu vật cũng phải với tới được")
         # ⚠️ PHÉP KIỂM NÀY SINH RA TỪ MỘT LỖI CÓ SẴN, không phải từ bước ① mới.
         #    4 vùng sinh học nằm ở lon −62 · −42 · 20 · 87 (trải 149°), mà màn dọc
         #    390×844 ở `dist:3,1` chỉ thấy ~59° kinh độ. Trước 02/08/2026 lớp bản đồ
         #    còn bị NEO MÉP TRÁI nên **dãy Himalaya (lon 87) không tài nào đưa vào
-        #    khung** — tức bước ⑤ không chơi được trên máy tính bảng dọc, và 153 phép
+        #    khung** — tức bước ④ không chơi được trên máy tính bảng dọc, và 153 phép
         #    kiểm cũ không có phép nào hỏi câu đó (y hệt chuyện chúng không hỏi "bản
         #    đồ có phủ kín khung không").
         #    Cùng một họ với mục [10]: điều phải bảo vệ là **trẻ không bao giờ kẹt**.
@@ -1723,7 +1802,7 @@ def main():
                     page.wait_for_timeout(120)
             page.wait_for_timeout(300)
         chk(page.evaluate("window.__mission.step") == "life",
-            "điện thoại: tới được bước ⑤ `life`")
+            "điện thoại: tới được bước ④ `life`")
         say_through(page)
         page.wait_for_function("() => window.__mission.world.markers.length === 4", timeout=20000)
         _stuck2 = []

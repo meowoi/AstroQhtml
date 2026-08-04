@@ -9,10 +9,10 @@
      .me-hand    bàn tay hướng dẫn (chỉ bước 1)
      .me-card    thẻ mẫu vật / huy hiệu vừa nhận (bước 2, 5, 6)
      .me-era     lớp phủ đổi màu bầu trời theo mốc thời gian (bước 2 `timeline`)
-     .me-smog    lớp khói đen của nhiên liệu hoá thạch (bước 4 `energy`)
+     .me-smog    lớp khói đen của nhiên liệu hoá thạch (bước 5 `energy`)
      .me-board   KHUNG DÙNG CHUNG của 3 bảng kéo-thả ở đáy màn hình:
                    .me-time   thanh mốc thời gian 4,5 tỷ năm (bước 2)
-                   .me-energy 3 nguồn năng lượng sạch        (bước 4)
+                   .me-energy 3 nguồn năng lượng sạch        (bước 5)
                    .me-eco    2 rổ NÊN / KHÔNG NÊN           (bước 6)
                    .me-core   3 ô ngọc                       (bước 7)
      .me-win     màn tổng kết sứ mệnh
@@ -168,19 +168,57 @@ a{text-decoration:none;color:inherit;}
 @keyframes meTap{0%,100%{transform:scale(1);}45%{transform:scale(.78);}}
 
 /* ============ THẺ MẪU VẬT THU THẬP ============ */
-.me-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8) rotate(-4deg);
+/* ⚠️⚠️ `z-index` + `.lift` LÀ BẢN SỬA CHO LỖI "2 BẢNG THÔNG TIN CHE NHAU" (03/08/2026).
+   Thẻ này là `role="dialog" aria-modal="true"`, nhưng nó nằm TRƯỚC mọi `.me-board`
+   trong DOM và cả hai đều không khai `z-index` → bảng đáy vẽ **đè lên** thẻ. Chủ dự án
+   chơi thật bước ④ `life` và gửi ảnh: nút "Đã hiểu!" của thẻ bị bảng lát cắt cắt mất
+   nửa dưới — mà đó là đường DUY NHẤT đóng thẻ (mốc tự đóng 3,4 giây đã bỏ 02/08/2026),
+   nên trẻ **thấy nút mà bấm không được**.
+   Hai lớp chữa, cần CẢ HAI:
+     · `z-index:20` — cao hơn mọi `.me-board` (không khai z-index, tức 0 trong cùng
+       stacking context `.me-ui`). Modal thì phải ở trên.
+     · `.lift` — canh giữa phần khung CÒN LẠI phía trên bảng, thay vì giữa cả khung
+       nhìn. Nâng z-index một mình chỉ đổi "ai che ai"; hai hộp vẫn chồng nhau và vẫn
+       đọc ra như lỗi.
+   ⚠️ DÙNG LẠI ĐÚNG BIẾN `--board-h` CỦA `.me-say.lift` — cùng một bài toán (thứ neo
+      giữa vs thứ neo đáy), nên cùng một cơ chế. `liftCard()` trong `mission-earth.html`
+      đo chiều cao bảng NGAY LÚC MỞ THẺ (bảng eco và bảng lát cắt cao dần theo số thẻ đã
+      xếp) và tự bỏ `.lift` ở bước không có bảng nào. */
+.me-card{position:absolute;left:50%;top:50%;z-index:20;
+  transform:translate(-50%,-50%) scale(.8) rotate(-4deg);
   width:min(320px,calc(100vw - 40px));padding:0 0 16px;border-radius:18px;overflow:hidden;
   border:2px solid var(--cc,#38bdf8);background:rgba(6,11,30,.96);
   box-shadow:0 30px 66px -22px rgba(0,0,0,.92),0 0 46px -10px var(--cc,#38bdf8);
   opacity:0;visibility:hidden;text-align:center;
   transition:opacity .3s,transform .45s var(--jelly),visibility .3s;}
 .me-card.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1) rotate(0);}
+/* Canh giữa phần khung CÒN LẠI phía trên bảng đáy. `top` = nửa của khoảng trống đó.
+   ⚠️ CÓ SÀN `max(…, 8px)`: trên điện thoại dọc bảng lát cắt chiếm phần lớn khung, và
+      không có sàn thì `top` ra số ÂM — thẻ trôi lên trên mép màn hình, tiêu đề bị cắt.
+      Sàn 8px thì tệ nhất là thẻ dính mép trên nhưng vẫn còn nguyên; cùng tinh thần với
+      `.mo-say` ở `explorer.html`: dời chỗ thì được, đẩy ra ngoài khung thì không.
+   ⚠️ `transform` ở đây phải VIẾT LẠI ĐỦ, không kế thừa: `.me-card.show` đã khai
+      `translate(-50%,-50%)` để canh giữa theo cả hai trục, mà ở trạng thái `.lift` thì
+      `top` đã là tâm của vùng còn lại nên chỉ cần dịch lên nửa CHIỀU CAO THẺ. Bỏ sót là
+      thẻ lệch xuống đúng một nửa bảng. */
+.me-card.lift{top:max(8px, calc((100vh - var(--board-h,0px) - clamp(14px,4vh,40px)) / 2));}
+/* Bảng mục tiêu MỜ ĐI trong lúc thẻ đang mở. Thẻ canh giữa mà bảng mục tiêu neo góc
+   trên-trái, nên trên màn hẹp hai thứ luôn giao nhau — không nguy hiểm như ca nút bị đè
+   (thẻ đã ở trên nhờ `z-index`), nhưng hai khối chữ đè nhau ở độ đậm bằng nhau thì đọc
+   ra như lỗi bố cục. Làm mờ thì nó đọc ra đúng cái nó là: một thứ đang nằm SAU hộp thoại.
+   ⚠️ Phải dùng `:has()` vì `#obj` nằm TRƯỚC `#card` trong DOM — `~` chỉ chọn được em
+      sau. Trình duyệt không hỗ trợ `:has()` thì rule này lặng lẽ không áp: mất một chút
+      tinh tế, KHÔNG mất chức năng nào (nút vẫn bấm được nhờ `z-index`). Đó là lý do chọn
+      cách này thay vì bật/tắt class bằng JS.
+   ⚠️ Chỉ `opacity`, KHÔNG `display:none`: bảng mục tiêu biến mất rồi hiện lại sau mỗi
+      thẻ là một cú nháy ở đúng chỗ trẻ đang đọc. */
+.me-ui:has(#card.show) .me-obj{opacity:.3;}
 .me-card .top{padding:20px 0 14px;font-size:52px;line-height:1;
   background:linear-gradient(180deg,var(--cbg,rgba(56,189,248,.28)),transparent);}
 .me-card .nm{font-family:var(--font-display);font-weight:700;font-size:17px;margin:0 16px;
   color:#fff;}
 .me-card .fact{font-size:13.4px;line-height:1.6;color:var(--ink-soft);margin:9px 18px 0;}
-/* Dòng phụ, chỉ bước ⑤ dùng (câu hé lộ độ cao). Nhạt hơn và có vạch ngăn để trẻ đọc ra
+/* Dòng phụ, chỉ bước ④ dùng (câu hé lộ độ cao). Nhạt hơn và có vạch ngăn để trẻ đọc ra
    là "một ý nữa", không phải phần tiếp của câu trên. */
 .me-card .sub{font-size:12.4px;line-height:1.55;color:var(--ink-soft);opacity:.88;
   margin:9px 18px 0;padding-top:9px;border-top:1px solid rgba(255,255,255,.12);}
@@ -221,7 +259,7 @@ a{text-decoration:none;color:inherit;}
    đúng mấy cái rổ trẻ đang phải kéo thẻ vào. */
 .me-say.lift{bottom:calc(clamp(14px,4vh,40px) + var(--board-h,210px));}
 
-/* ============ BƯỚC ⑤ · LÁT CẮT TRÁI ĐẤT ============
+/* ============ BƯỚC ④ · LÁT CẮT TRÁI ĐẤT ============
    Cột 4 nấc, TRÊN xuống DƯỚI = cao xuống thấp. Trẻ đoán nơi vừa bay tới nằm nấc nào.
    ⚠️ CHIỀU CAO LÀ RÀNG BUỘC CHÍNH, KHÔNG PHẢI MÀU SẮC. Bảng neo đáy như mọi bảng khác,
       mà bước này bản đồ vẫn phải nhìn thấy được — trẻ nhìn nơi đó trên ảnh vệ tinh rồi
@@ -383,6 +421,19 @@ a{text-decoration:none;color:inherit;}
 .era-fig[hidden]{display:none;}
 .era-fig picture{display:block;}
 .era-fig img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;}
+/* ⚠️⚠️ CHE ẢNH TRONG LÚC CHỜ, ĐỪNG ĐỂ LỘ TRANH CỦA MỐC TRƯỚC (thêm 03/08/2026).
+   Trình duyệt giữ khung ảnh ĐÃ VẼ cho tới khi ảnh mới decode xong, nên đổi `srcset`
+   thôi thì trẻ bấm mốc "đại dương" mà vẫn đang xem tranh dung nham — không phải chậm,
+   mà là **hiện sai thông tin**. `.era-wait` do `paintEraImg` bật/tắt; nhờ `preloadEra`
+   thì ở lượt chơi thường nó chỉ tồn tại 0 khung hình.
+   ⚠️ Ô TRỐNG PHẢI GIỮ ĐÚNG CHỖ: `aspect-ratio` đặt trên chính `.era-fig` (không chỉ
+      trên `img`) vì `img` bị `opacity:0` vẫn chiếm chỗ nhưng ảnh CHƯA có `naturalWidth`
+      thì `height:auto` của nó ra 0 → bảng sụp xuống rồi bật lại. Hai lớp cùng khai
+      3:2 nên không lớp nào thắng sai.
+   Nhãn "MINH HOẠ" cũng ẩn theo: nó nói về một bức tranh đang không nhìn thấy. */
+.era-fig.era-wait{aspect-ratio:3/2;}
+.era-fig.era-wait img,.era-fig.era-wait .era-illus{opacity:0;}
+.era-fig img,.era-illus{transition:opacity .18s;}
 .era-illus{position:absolute;left:8px;bottom:8px;
   font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
   color:#e8eeff;background:rgba(4,6,15,.72);border:1px solid rgba(255,255,255,.28);
@@ -392,6 +443,40 @@ a{text-decoration:none;color:inherit;}
 .me-time .era-body h3{font-family:var(--font-display);font-weight:700;font-size:14.5px;
   margin:0;color:#ffe6c8;}
 .me-time .era-body p{font-size:12.8px;line-height:1.6;color:var(--ink-soft);margin:6px 0 0;}
+
+/* ---- MỘT CỠ CHUNG CHO CẢ 5 MỐC (sửa 03/08/2026) ----
+   Chủ dự án chơi thật và báo: *"khung chứa ảnh minh hoạ và thông tin giữa các mốc cần
+   căn chỉnh 1 cỡ chung, mốc 3,8 tỷ bị cao hơn do nội dung dài hơn."*
+   Bảng neo ở ĐÁY màn hình (`.me-board{bottom:…}`), nên chữ dài hơn thì bảng **mọc lên
+   trên**: cạnh trên nhảy chỗ giữa hai mốc liền nhau, và trên bản đồ phía sau thì cú
+   nhảy đó đọc ra như trang bị giật.
+
+   Cách làm: `.era-txt` là một ô grid duy nhất, khối chữ THẬT và khối GIỮ CHỖ cùng nằm
+   trong ô đó (`grid-area:1/1`). Khối giữ chỗ chứa CẢ 5 cặp tiêu đề+đoạn, cũng xếp chồng
+   lên nhau, nên chiều cao của nó = câu CAO NHẤT. Kết quả: ô grid luôn cao bằng mốc dài
+   nhất, ở MỌI bề rộng khung và MỌI ngôn ngữ, không có con số nào phải bảo trì.
+
+   ⛔ ĐỪNG THAY BẰNG `min-height` GÕ TAY. Số dòng của cùng một câu đổi theo bề rộng
+      khung (390px vs 1440px là hai con số khác nhau) và theo ngôn ngữ, nên mọi giá trị
+      cố định đều sai ở một khổ máy nào đó — mà đây đúng là trang phải chạy trên điện
+      thoại dọc. Đây là cùng loại lỗi với `.hub-tag` (`min-width:max-content`): đoán cỡ
+      chữ thay cho trình bày văn bản thì luôn có một khổ máy trả giá.
+   ⚠️ `visibility:hidden` chứ KHÔNG `display:none` — `display:none` thì phần tử không
+      được đo, tức mất sạch tác dụng giữ chỗ. Và `aria-hidden` trên chính khối đó để
+      trình đọc màn hình không đọc 5 mốc liền một lúc. */
+.me-time .era-txt{display:grid;}
+.me-time .era-txt>.era-live,.me-time .era-txt>.era-ghost{grid-area:1/1;}
+.me-time .era-ghost{display:grid;visibility:hidden;pointer-events:none;}
+.me-time .era-ghost>*{grid-area:1/1;}
+
+/* ---- Hàng chứa nút của mốc cuối ----
+   Chỉ để CĂN GIỮA cái nút. Hàng rỗng ở 4 mốc đầu cao **0px** (không padding, không
+   gap, con duy nhất đang `[hidden]`) nên nó không phá phép giữ chỗ ở trên.
+   ⛔ ĐỪNG chuyển sang `#time-ok{display:block;margin:auto}`: `display` của tác giả
+      THẮNG `display:none` mà trình duyệt áp cho `[hidden]`, và nút sẽ hiện ra ngay từ
+      mốc thứ nhất — tức trẻ chốt được bước ② khi mới xem 1/5 mốc. */
+.me-time .era-act{display:flex;justify-content:center;}
+.me-time .era-act .me-stamp{margin-top:12px;}
 
 /* Lớp phủ đổi màu bầu trời theo mốc thời gian.
    ⚠️ Trái Đất là <canvas> WebGL vẽ bằng shader (js/earth3d.js) — KHÔNG sửa được màu
@@ -426,7 +511,7 @@ a{text-decoration:none;color:inherit;}
 .me-energy{--bd-brd:rgba(74,222,128,.45);--bd-bg:rgba(8,20,18,.9);--bd-k:var(--green);}
 .me-energy .slots{display:flex;justify-content:center;gap:clamp(10px,3vw,20px);margin-top:14px;}
 /* Ống khói đang nhả khói — thả đúng nguồn sạch vào thì nó thành trạm phát điện. */
-/* ============ BƯỚC ④ · BA NHÀ MÁY TRÊN CHÍNH BẢN ĐỒ ============
+/* ============ BƯỚC ⑤ · BA NHÀ MÁY TRÊN CHÍNH BẢN ĐỒ ============
    Đổi 02/08/2026 theo chủ dự án: ba ống khói rời khỏi bảng ở đáy màn hình và neo vào
    toạ độ thật trên bản đồ, mỗi cái làm MỜ vùng quanh nó — kéo năng lượng sạch vào thì
    vùng đó sáng lại. Ô nhiễm nay xảy ra trên chính hành tinh trẻ vừa đi khắp.
@@ -637,7 +722,6 @@ a{text-decoration:none;color:inherit;}
                                       > .e2-grid
                                       > .e2-markers > button.e2-mk
                                       > .e2-drone > .e2-beam
-                          > button.e2-sun
                           > .e2-shield
    Trạng thái: `.e2-flat` (bản đồ phẳng) · `.e2-night` (mất nắng) trên #stage;
    `.done` trên marker; `.show`/`.ok` trên vệ tinh, drone, khiên.
@@ -676,7 +760,7 @@ a{text-decoration:none;color:inherit;}
    Và tệ hơn: dải kinh độ với tới được bị CẮT MẤT MỘT ĐẦU. Trên điện thoại dọc
    390×844, `facing.lon` chỉ chạy được trong [−180, 180) nên **mọi kinh độ đông hơn
    ~83° KHÔNG THỂ đưa vào khung** — marker chỉ được vẽ trên bản ảnh THẬT, hai bản
-   sao lát chỉ để lấp mắt. Tức là ở bước ⑤ `life`, dãy **Himalaya (lon 87)** đã
+   sao lát chỉ để lấp mắt. Tức là ở bước ④ `life`, dãy **Himalaya (lon 87)** đã
    không tài nào nhìn thấy trên máy tính bảng dọc, từ trước lượt này. Không phép
    kiểm nào hỏi câu đó nên nó sống im lặng.
    Căn giữa xong thì `facing.lon` đúng nghĩa "kinh độ ở TÂM khung", hai trục nhất
@@ -775,28 +859,52 @@ a{text-decoration:none;color:inherit;}
   box-shadow:0 0 10px rgba(192,132,252,.9);}
 
 /* ---- Mặt Trời (bước ③) ---- */
-/* CSS quyết chỗ đặt: `earth2d.js` KHÔNG gán left/top cho Mặt Trời (nó không nằm
-   trên bề mặt hành tinh). `--lit` 0 → 1 do `igniteSun`/`dimSun` tween. */
-.e2-sun{position:absolute;top:9%;right:8%;width:74px;height:74px;border-radius:50%;
-  border:none;padding:0;cursor:pointer;z-index:2;
-  background:radial-gradient(circle at 38% 34%, #fff6d8, var(--sun) 44%,
-                             var(--sun-warm) 88%);
-  opacity:calc(.28 + .72 * var(--lit,1));
-  box-shadow:0 0 calc(18px + 46px * var(--lit,1)) rgba(255,180,90,
-             calc(.25 + .5 * var(--lit,1)));}
-.e2-sun:active{transform:scale(.94);}
-
-
+/* ⛔⛔ `.e2-sun` ĐÃ BỎ HẲN 03/08/2026 — ĐỪNG DỰNG LẠI. Đây là rác còn sót của một quyết
+   định đã chốt từ 02/08/2026: bước ③ không còn vật thể Mặt Trời nào để chạm, và lời
+   thoại đã viết lại để nói rõ Mặt Trời **không nằm trên tấm bản đồ này** (có phép kiểm
+   ở `check_pages`). Nhưng thẻ DOM thì chưa ai xoá, nên nó vẫn vẽ một đĩa sáng mờ ở góc
+   trên-phải trong MỌI bước; chủ dự án chơi thật rồi hỏi *"vẫn còn hình mặt trời ở đây?
+   bỏ đi"*.
+   Cùng một họ với `.e2-terminator` và vành tròn cũ của `.e2-shield`: hình đúng cho QUẢ
+   CẦU (Mặt Trời ở ngoài rìa hành tinh) để nguyên trên BẢN ĐỒ PHẲNG phủ kín khung — nơi
+   mọi pixel đều là bề mặt Trái Đất — thì nó nói rằng Mặt Trời nằm TRÊN mặt đất.
+   Bài học của bước ③ nay chỉ nằm ở `.e2-night`: cả bản đồ tối đi rồi sáng lại. Biến
+   `--lit` vì thế cũng không còn ai đặt. */
 
 /* ---- Màng khí quyển (bước ⑦) ---- */
-/* ⚠️ Là VÀNH SÁNG Ở MÉP TRONG hình cầu, không phải một nét stroke dày: bản
-   `warp-screen` đã trả giá cho bài học đó — một cung nét dày trông như cái vòng
-   rời lơ lửng cạnh hành tinh. `--k` 0 → 1 do `shield()` tween. */
-.e2-shield{position:absolute;inset:0;margin:auto;z-index:2;pointer-events:none;
-  width:min(100vw,100vh);height:min(100vw,100vh);
-  border-radius:50%;opacity:var(--k,0);
-  background:radial-gradient(circle at 50% 50%,
-    rgba(95,240,255,0) 44%, rgba(95,240,255,.22) 47%, rgba(95,240,255,0) 50%);}
+/* ⛔⛔ KHÔNG CÒN HÌNH TRÒN — LỖI THẬT ĐÃ SỬA 03/08/2026, ĐỪNG HOÀN TÁC.
+   Bản trước là một VÀNH TRÒN `border-radius:50%` cỡ `min(100vw,100vh)` đặt giữa khung.
+   Nó đúng cho bản 3D, nơi hành tinh LÀ một quả cầu và vành đó là mép trong của cầu.
+   Nhưng cảnh nay là **bản đồ phẳng phủ kín khung** (`004`: một hình cho cả nhiệm vụ),
+   nên cái vành ấy không bọc quanh cái gì cả — nó là một đường tròn lơ lửng giữa châu
+   Phi. Chủ dự án chơi thật và hỏi đúng câu phải hỏi: *"sao đoạn này lại có hình tròn ở
+   giữa? Trái Đất trải phẳng rồi mà."*
+   Đây là **cùng một lỗi** với `.e2-terminator` (`005` mục 2): một hình ảnh đúng trên quả
+   cầu bị mang nguyên sang bản đồ phẳng, và trên bản đồ phẳng nó đọc ra thành một thứ
+   khác hẳn. Nên chữa bằng cách vẽ lại cho đúng hệ hình, không phải bằng cách gỡ bỏ —
+   khoảnh khắc "khí quyển bọc lấy Trái Đất" là câu kết của cả nhiệm vụ.
+
+   HÌNH MỚI, ĐÚNG VỚI BẢN ĐỒ PHẲNG: trên bản đồ phẳng thì **cả khung hình chính là bề
+   mặt hành tinh**, nên "một lớp màng bọc lấy nó" = một lớp phim sáng phủ kín khung, dày
+   lên ở bốn mép. Hai lớp:
+     · `inset box-shadow` — vành sáng bám sát bốn mép khung, tức mép của chính bề mặt
+       đang xem. Đây là phần đọc ra "có một lớp vỏ ở ngoài".
+     · vignette rất nhẹ — cảm giác đang nhìn XUYÊN QUA một lớp gì đó.
+   ⚠️⚠️ ĐO ĐƯỢC, VÀ ĐÂY LÀ CHỖ NÓ KHÁC HẲN `.e2-terminator`: màng này **làm SÁNG bản
+      đồ lên**, không làm tối. Chụp ảnh cùng khung, bật/tắt màng (bộ đo ghi trong lịch
+      sử lượt sửa 03/08/2026): độ sáng TB toàn ảnh **81,0 → 90,5 (+9,6 điểm)**, còn
+      **giữa khung thì +0,0 điểm** — tức phần bản đồ trẻ đang đọc KHÔNG bị đụng tới.
+      `005` mục 2 bác lớp phủ tối vì nó ăn **29,6 điểm sáng của mọi bước**; đó là con
+      số phải so với, và nó ngược dấu.
+   ⚠️ Vẫn đừng đổi vignette sang tông TỐI. Cái được ở đây là nó chỉ thêm sáng ở mép; hạ
+      độ sáng phần giữa là quay lại đúng vết `005` đã đi bỏ.
+   `--k` 0 → 1 do `shield()` tween; hợp đồng JS không đổi (xem `js/earth2d.js`). */
+.e2-shield{position:absolute;inset:0;z-index:2;pointer-events:none;
+  opacity:var(--k,0);
+  background:radial-gradient(ellipse 78% 78% at 50% 50%,
+    rgba(95,240,255,0) 40%, rgba(95,240,255,.09) 76%, rgba(95,240,255,.2) 100%);
+  box-shadow:inset 0 0 0 3px rgba(160,250,255,.72),
+             inset 0 0 78px 10px rgba(95,240,255,.42);}
 .e2-shield.show{}
 
 /* Giảm chuyển động: bỏ mọi animation vô hạn, GIỮ phần đổi tông (đó là nội dung

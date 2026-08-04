@@ -2471,13 +2471,107 @@ try{
     }, travelMs);
   }
 
-  /* ---- Warp starfield (2D canvas): stars streak past like light-speed travel ---- */
+  /* ═══════ VỆT SAO CỦA MÀN WARP — VẼ TRONG WEB WORKER (đổi 03/08/2026) ═══════
+     ⚠️⚠️ ĐÂY LÀ BẢN SỬA CHO MỘT LỖI ĐO ĐƯỢC, ĐỪNG GỘP LẠI VỀ MAIN THREAD.
+     Chủ dự án báo *"chuyển cảnh bay vào hệ mặt trời bị giật"*. Đo bằng
+     `PerformanceObserver('longtask')` (`scratchpad/probe_warp_longtask.py`):
+       máy thường  : warp sống 2.142 ms · long task chồng lên **1.908 ms (89%)**
+       CPU chậm x4 : warp sống 3.788 ms · long task **3.687 ms (97%)**, một khối
+                     duy nhất dài **2.879 ms** → vòng vẽ chỉ nhận **2 khung / 3,8 giây**
+     Thủ phạm là chính việc màn warp đang che: tải 13 module three.js từ `unpkg.com`
+     rồi dựng cả cảnh (texture + biên dịch shader của EffectComposer/UnrealBloomPass).
+     `requestAnimationFrame` xếp hàng SAU những khối đó, nên không có cách nào chữa
+     bằng cách làm khung vẽ rẻ hơn — vấn đề là **không được chạy**, không phải chạy
+     chậm. Chi tiết + giao thức: `js/warp-stars-worker.js`.
+
+     ⚠️ HAI ĐƯỜNG, VÀ ĐƯỜNG LÙI PHẢI CÒN NGUYÊN. `transferControlToOffscreen()` là cú
+        MỘT CHIỀU: sau đó main thread không xin `getContext('2d')` trên thẻ đó được
+        nữa. Nên nếu worker chết (chạy bằng `file://`, `Worker` bị chặn, 404 script)
+        thì phải THAY THẺ CANVAS bằng một thẻ mới rồi chạy bản cũ trên đó — mất cái
+        mượt, không mất màn phim. Bản main thread bên dưới GIỮ NGUYÊN đúng vì thế.
+     ⚠️ Cả `travelTo()` (du hành giữa các vùng) cũng đi qua `startWarp`/`stopWarp` này
+        — ở đó main thread rảnh nên không giật, nhưng hai đường vẽ cho cùng một cảnh
+        thì sớm muộn lệch nhau. Một đường, dùng cho cả hai chỗ. */
   var wctx, wstars=[], wraf=null, wW=0, wH=0;
-  function warpResize(){ wW=warpCv.width=warpCv.clientWidth||innerWidth; wH=warpCv.height=warpCv.clientHeight||innerHeight; }
+  /* ba cờ, ba việc khác nhau — gộp là sinh lỗi:
+       wWorker      null = chưa thử dựng · false = đã thử và KHÔNG dùng được · Worker
+       wTransferred quyền vẽ của thẻ canvas ĐÃ chuyển sang worker (cú MỘT CHIỀU)
+       wWorkerOn    worker đã báo `ready`, tức nhận được lệnh start/stop
+       wWantRun     màn warp ĐANG cần chạy — để lệnh tới sau lúc `ready` không bị mất */
+  var wWorker=null, wTransferred=false, wWorkerOn=false, wWantRun=false;
+
+  function warpMeasure(){ wW=warpCv.clientWidth||innerWidth; wH=warpCv.clientHeight||innerHeight; }
+  function warpResize(){
+    warpMeasure();
+    if(wTransferred){ if(wWorkerOn) wWorker.postMessage({type:'resize', w:wW, h:wH}); return; }
+    warpCv.width=wW; warpCv.height=wH;
+  }
+
+  /* Nói cho worker biết nên chạy hay nên dừng. Gọi được nhiều lần, kể cả trước khi
+     worker kịp `ready` (lúc đó chỉ ghi vào `wWantRun`, và `ready` sẽ đọc lại).
+     ⚠️ `reduced` KHÔNG vẽ vệt sao — giữ đúng hành vi cũ: lớp phủ tĩnh, chỉ có chữ. */
+  function warpWorkerSync(){
+    if(!wWorkerOn) return;
+    wWorker.postMessage(wWantRun && !reduced ? {type:'start', w:wW, h:wH} : {type:'stop'});
+  }
+
+  /* Dựng worker MỘT LẦN, ngay lần `startWarp` đầu tiên.
+     ⚠️ `onerror` là đường lùi BẮT BUỘC, không phải phòng xa cho vui: chạy trang bằng
+        `file://` là `new Worker` ném lỗi ngay, và đó là cách người ta hay mở thử một
+        trang tĩnh. Thẻ canvas cũ đã chuyển quyền nên phải THAY bằng thẻ mới. */
+  function warpWorkerInit(){
+    if(wWorker!==null) return;
+    wWorker=false;                                  // false = đã thử và không dùng được
+    if(typeof Worker!=='function' || typeof warpCv.transferControlToOffscreen!=='function') return;
+    try{
+      var w=new Worker('js/warp-stars-worker.js');
+      w.onmessage=function(ev){
+        if(!ev.data || ev.data.type!=='ready') return;
+        wWorkerOn=true;
+        warpWorkerSync();                           // bắt kịp lệnh đã phát trước lúc này
+      };
+      w.onerror=function(){
+        wWorker=false; wWorkerOn=false; wTransferred=false;
+        var fresh=document.createElement('canvas');
+        fresh.id=warpCv.id;
+        warpCv.parentNode.replaceChild(fresh, warpCv);
+        warpCv=fresh; wctx=null;
+        if(wWantRun) startWarpMain();
+      };
+      var off=warpCv.transferControlToOffscreen();
+      wTransferred=true;
+      warpMeasure();
+      w.postMessage({type:'init', canvas:off, w:wW, h:wH}, [off]);
+      wWorker=w;
+    }catch(e){ wWorker=false; }
+  }
+
+  function startWarp(){
+    warpWorkerInit();
+    warpMeasure();
+    wWantRun=true;
+    /* ⚠️ ĐÃ CHUYỂN QUYỀN THÌ TUYỆT ĐỐI KHÔNG GỌI `startWarpMain()` — `getContext('2d')`
+       trên một thẻ đã `transferControlToOffscreen` là **ném InvalidStateError**, và ở
+       đây nó sẽ ném ở CHÍNH lần warp đầu tiên (lúc đó worker chưa kịp `ready`, nên một
+       phép thử `wWorkerOn` là chưa đủ — phải hỏi `wTransferred`). Lệnh chạy đã nằm
+       trong `wWantRun`, `ready` sẽ nhặt nó lên sau vài ms. */
+    if(wTransferred){ warpWorkerSync(); return; }
+    startWarpMain();
+  }
+  function stopWarp(){
+    wWantRun=false;
+    if(wTransferred){ warpWorkerSync(); return; }
+    cancelAnimationFrame(wraf); if(wctx) wctx.clearRect(0,0,wW,wH);
+  }
+
+  /* ---- Bản vẽ trên MAIN THREAD: chỉ còn là đường lùi khi worker không dùng được.
+     Giữ nguyên từng dòng của bản 31/07/2026 (kể cả `z-=14` theo số khung) — nó đã
+     chạy đúng suốt, và ở đường lùi thì "giống bản cũ" đáng giá hơn "đẹp hơn". ---- */
   function makeStars(){ wstars=[]; var n=reduced?0:420; for(var i=0;i<n;i++){ wstars.push(newStar(true)); } }
   function newStar(spread){ var s={x:(Math.random()*2-1)*wW, y:(Math.random()*2-1)*wH, z:spread?Math.random()*wW:wW, px:0,py:0}; return s; }
-  function startWarp(){
-    warpResize(); makeStars();
+  function startWarpMain(){
+    warpCv.width=wW; warpCv.height=wH;
+    makeStars();
     if(!wctx) wctx=warpCv.getContext('2d');
     if(reduced) return;               // respect reduced-motion: static overlay only
     cancelAnimationFrame(wraf);
@@ -2497,7 +2591,6 @@ try{
       wraf=requestAnimationFrame(frame);
     })();
   }
-  function stopWarp(){ cancelAnimationFrame(wraf); if(wctx) wctx.clearRect(0,0,wW,wH); }
   addEventListener('resize', function(){ if(warp.classList.contains('show')) warpResize(); });
 
   /* ═══════ ①–④ COMET DẪN ĐƯỜNG Ở LƯỢT ONBOARDING (docs/decisions/003) ═══════

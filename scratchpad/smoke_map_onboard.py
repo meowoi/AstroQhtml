@@ -43,9 +43,11 @@ Bộ này canh đúng những thứ ĐỌC CODE KHÔNG THẤY ĐƯỢC:
    vượt xa mốc chờ 20 giây của `wait_js`. Thấy đúng hai phép kiểm gõ chữ đỏ mà mọi thứ
    khác xanh thì kiểm xem có bộ nào đang chạy cùng, ĐỪNG đi sửa `js/map-onboard.js`.
 """
+import io
 import json
 import sys
 
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8123"
@@ -221,24 +223,38 @@ def warp_state(pg):
     }""")
 
 
+def _bright(png):
+    """Số pixel sáng (tông vệt sao xanh-trắng) trong một ảnh PNG."""
+    im = Image.open(io.BytesIO(png)).convert("RGB")
+    n = 0
+    for r, g, b in im.getdata():
+        if r > 120 and g > 140 and b > 160:
+            n += 1
+    return n, im.tobytes()
+
+
 def warp_pixels(pg):
     """Đếm pixel sáng trên canvas warp — chứng minh vệt sao CHẠY THẬT.
 
-    ⚠️ Đọc pixel NGAY TRONG TRANG. `page.screenshot()` mất ~200ms, mà mỗi vệt sao
-       chỉ sống vài khung — chụp rồi đọc là đo một thứ đã thay đổi. Cùng bài học đã
-       ghi ở `verify_flame2.py` và `smoke_mission_earth.py`.
+    ⚠️⚠️ ĐỔI CÁCH ĐO 03/08/2026 — KHÔNG PHẢI DỌN DẸP, LÀ BẮT BUỘC.
+       Bản cũ đọc pixel bằng `cv.getContext('2d').getImageData(...)` ngay trong trang.
+       Từ lượt sửa cái giật của màn warp, quyền vẽ canvas đó đã chuyển sang Web Worker
+       (`transferControlToOffscreen`, xem `js/warp-stars-worker.js`), nên `getContext`
+       trên đó **ném `InvalidStateError`** — main thread không còn đọc được nó nữa. Đó
+       là đúng ý muốn, không phải hồi quy.
+       Nên đo bằng ẢNH CHỤP thẻ canvas — thứ trẻ thật sự nhìn thấy, và cũng là cách
+       duy nhất còn lại. Chú thích cũ lo `page.screenshot()` chậm nên "đo một thứ đã
+       thay đổi": đúng nếu muốn đo MỘT vệt sao cụ thể, nhưng ở đây chỉ hỏi "có vệt sao
+       nào không", mà ảnh chụp là một khung hình THẬT nên câu trả lời không sai được.
+    ⚠️ Trả về cả 'có ĐỔI giữa hai lần chụp' — phép kiểm mạnh hơn bản cũ: bản cũ chỉ
+       chứng minh canvas có gì đó sáng, không chứng minh nó ĐANG CHẠY. Chính cái giật
+       vừa sửa là "có hình mà không chạy", nên đây là chỗ phải hỏi câu đó.
     """
-    return pg.evaluate("""() => {
-      const cv = document.getElementById('nm-warp-cv');
-      if (!cv || !cv.width) return -1;
-      const g = cv.getContext('2d');
-      const d = g.getImageData(0, 0, cv.width, cv.height).data;
-      let n = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        if (d[i] > 120 && d[i+1] > 140 && d[i+2] > 160) n++;
-      }
-      return n;
-    }""")
+    loc = pg.locator("#nm-warp-cv")
+    n1, b1 = _bright(loc.screenshot())
+    pg.wait_for_timeout(120)
+    n2, b2 = _bright(loc.screenshot())
+    return max(n1, n2), (b1 != b2)
 
 
 def labels(pg):
@@ -296,8 +312,12 @@ def main():
         chk(w["n"] == "Hệ Mặt Trời", "ten vung la 'He Mat Troi'", w["n"])
         chk(w["sub"] == "Đang tiến vào vùng", "dong duoi la 'Dang tien vao vung'",
             w["sub"])
-        px = warp_pixels(pg)
-        chk(px > 400, "vet sao CHAY THAT (dem pixel sang tren canvas)", f"{px} px")
+        px, moved = warp_pixels(pg)
+        chk(px > 400, "vet sao CO THAT (dem pixel sang tren anh chup canvas)", f"{px} px")
+        # ⚠️ Phép kiểm này sinh ra tu cai giat da sua 03/08/2026: canvas co the day
+        #    sao ma van DUNG CUNG (main thread bi three.js chan 97% thoi gian). "Co
+        #    hinh" khong bang "dang chay", nen phai hoi rieng.
+        chk(moved, "vet sao CHAY THAT (hai anh chup cach 120ms KHAC nhau)")
         chk(pg.evaluate("() => getComputedStyle(document.getElementById"
                         "('nm-warp-k')).textTransform") == "uppercase",
             "chu in hoa do CSS lo, khong phai go hoa tay")

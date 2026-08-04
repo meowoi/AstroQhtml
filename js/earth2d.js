@@ -170,9 +170,23 @@
     var markerBox = el("div", "e2-markers", layer);
     var drone = el("div", "e2-drone", layer);
     var beam = el("div", "e2-beam", drone);
-    var sun = el("button", "e2-sun", view);
-    sun.type = "button";
-    sun.setAttribute("aria-label", "Mặt Trời");
+    /* ⛔⛔ KHÔNG DỰNG LẠI NÚT `.e2-sun` — ĐÃ BỎ HẲN 03/08/2026.
+       Đây là **rác còn sót của một quyết định đã chốt từ 02/08/2026**: bản 1 của bước ③
+       bắt trẻ đi tìm và chạm nút Mặt Trời, chủ dự án bác vì nút neo `top:9%; right:8%`
+       của khung mà bản đồ đã phủ kín → nó lẫn vào chính bức ảnh Trái Đất; rồi bản 2 bị
+       bác tiếp với đúng câu *"trẻ hiểu rằng mặt trời nằm trên trái đất. Vẫn vô lý"*.
+       Lời thoại đã viết lại cho đúng (có phép kiểm ở `check_pages` đòi nói rõ Mặt Trời
+       **không nằm trên tấm bản đồ này**), và chính chú thích của phép kiểm đó đã ghi
+       "sau khi bỏ nút `.e2-sun`" — nhưng THẺ DOM thì chưa ai xoá. Nên nó vẫn vẽ ra một
+       đĩa sáng mờ ở góc trên-phải trong MỌI bước, và chủ dự án chơi thật rồi hỏi lại:
+       *"vẫn còn hình mặt trời ở đây? bỏ đi"*.
+       Cùng một họ với `.e2-terminator` và vành tròn của `.e2-shield`: một hình đúng cho
+       QUẢ CẦU (nơi Mặt Trời ở ngoài rìa hành tinh) bị để nguyên trên BẢN ĐỒ PHẲNG phủ
+       kín khung, nơi mọi pixel đều là bề mặt Trái Đất — tức nó nói rằng Mặt Trời nằm
+       TRÊN mặt đất.
+       ⚠️ `igniteSun`/`dimSun` VẪN CÒN và vẫn là bài học của bước ③ — chúng chỉ còn tác
+          động lên `.e2-night` (cả bản đồ tối đi rồi sáng lại) và `sunLit`. Thứ trẻ thấy
+          là HỆ QUẢ, không phải cái đèn. */
     var shieldEl = el("div", "e2-shield", view);
 
     /* ---------------- Trạng thái ---------------- */
@@ -210,7 +224,7 @@
          thấy; trên **điện thoại dọc 390×844 thì lệch 390 vs 844**, và hậu quả là
          `maxPyPct()` ra **0** → `paint()` kẹp phép dịch DỌC về 0 → **không tài nào
          đưa được vĩ độ cao vào khung**. Đo được: Nam Cực (lat −75) ở `dist:3,1` rơi
-         xuống y = 921 trên khung cao 844, tức nằm ngoài — bước ⑤ `life` không chơi
+         xuống y = 921 trên khung cao 844, tức nằm ngoài — bước ④ `life` không chơi
          được trên máy tính bảng dọc.
          ⚠️ `probe_map_cover.py` KHÔNG bắt được (203/203 vẫn xanh): kẹp py về 0 làm
             MẤT khả năng dịch dọc chứ không làm HỞ khung, mà nó chỉ hỏi chuyện hở.
@@ -311,7 +325,7 @@
     /* ⚠️ KHÔNG `setPointerCapture` NGAY Ở `pointerdown` — đó là lỗi làm cả cảnh 2D
        KHÔNG CHƠI ĐƯỢC, và nó im lặng tuyệt đối.
        Bắt con trỏ lên `.e2-view` khiến MỌI sự kiện con trỏ sau đó bị chuyển hướng
-       về chính `view`, nên `click` KHÔNG BAO GIỜ tới được `.e2-mk` hay `.e2-sun`
+       về chính `view`, nên `click` KHÔNG BAO GIỜ tới được `.e2-mk`
        nằm bên trong. Hậu quả: chạm điểm tín hiệu không ăn, chạm Mặt Trời không ăn
        → nhiệm vụ tắc ở bước 1.
        Nham hiểm ở chỗ `document.elementFromPoint()` vẫn trả về đúng cái nút (việc
@@ -350,7 +364,12 @@
 
     function fire(ev) { for (var i = 0; i < pickCbs.length; i++) pickCbs[i](ev); }
 
-    sun.addEventListener("click", function () { fire({ type: "sun" }); });
+    /* ⛔ KHÔNG CÒN `sun.addEventListener(… fire({type:"sun"}))` — bỏ 03/08/2026 cùng thẻ
+       `.e2-sun`. Bước ③ không nhận cú chạm Mặt Trời nào nữa (`pick({type:'sun'})` đã bị
+       gỡ khỏi cả `mission-earth.html` lẫn bộ smoke từ 02/08/2026); giữ lời gọi này lại
+       sau khi biến `sun` biến mất là một `ReferenceError` chạy NGAY lúc dựng cảnh — và
+       đó đúng là lỗi tôi vừa tự tạo ra trong lượt này rồi bắt được bằng `pageerror`.
+       Cùng vết với nhánh `"sat"` ở `screenOf` bên dưới. */
 
     /* ---------------- Marker ---------------- */
     function clearMarkers() {
@@ -361,7 +380,7 @@
     /**
      * @param list [{id, lat, lon, rgb, label, cls?, html?}]
      *   `cls`  — class PHỤ thêm vào `.e2-mk`, để một bước dựng dấu hiệu kiểu khác
-     *            (bước ④ dùng nó cho ba nhà máy trên bản đồ).
+     *            (bước ⑤ dùng nó cho ba nhà máy trên bản đồ).
      *   `html` — nội dung bên trong. Mặc định rỗng (chấm tròn thuần CSS).
      * ⚠️ MỌI DẤU HIỆU NEO THEO lat/lon PHẢI ĐI QUA ĐÂY, đừng tự chèn phần tử vào
      *    `.e2-layer`: `paint()` chỉ cập nhật vị trí + chống-phóng cho những gì nằm
@@ -441,10 +460,15 @@
           for (var i = 0; i < markers.length; i++) {
             if (markers[i].id === id) { node = markers[i].node; break; }
           }
-        } else if (kind === "sun") node = sun;
-        /* ⚠️ NHÁNH `"sat"` ĐÃ BỎ 02/08/2026 cùng bước `rotation` (`docs/decisions/005`).
-           Nó còn sót lại sau khi biến `sat` bị xoá, tức là một `ReferenceError` nằm
-           chờ đúng người gọi đầu tiên — im lặng tuyệt đối cho tới lúc đó. */
+        }
+        /* ⚠️ HAI NHÁNH ĐÃ BỎ, CÙNG MỘT LÝ DO — ĐỪNG THÊM LẠI NHÁNH NÀO TRỎ VÀO BIẾN
+           KHÔNG CÒN TỒN TẠI:
+             · `"sat"` — bỏ 02/08/2026 cùng bước `rotation` (`docs/decisions/005`);
+             · `"sun"` — bỏ 03/08/2026 cùng thẻ `.e2-sun`.
+           Cả hai từng sống sót sau khi biến của chúng bị xoá, tức là một `ReferenceError`
+           **nằm chờ đúng người gọi đầu tiên** — im lặng tuyệt đối cho tới lúc đó. Nhánh
+           `"sun"` thì tệ hơn: lời gọi `sun.addEventListener` ở trên chạy NGAY lúc dựng
+           cảnh nên nó giết cả trang, và chỉ có `pageerror` mới nói ra được. */
         if (!node) return null;
         var r = node.getBoundingClientRect();
         var vr = view.getBoundingClientRect();
@@ -529,20 +553,22 @@
           function () { grid.style.display = "none"; });
       },
 
-      /* Mặt Trời: `sunOn` là GETTER (bản 3D cũng vậy) — `mission-earth.html` đọc
-         `world.sunOn` để chặn cú chạm thứ hai vào Mặt Trời đã cháy. */
+      /* Mặt Trời: `sunOn` là GETTER (bản 3D cũng vậy) — nay chỉ còn là "bản đồ đang
+         sáng hay đang tối", vì không còn vật thể Mặt Trời nào để chạm.
+         ⚠️ KHÔNG CÒN `sun.style.setProperty("--lit", …)`: thẻ `.e2-sun` đã bỏ hẳn
+            03/08/2026 (lý do đầy đủ ở chỗ khai `shieldEl`). Bài học của bước ③ nằm ở
+            `.e2-night` — CẢ BẢN ĐỒ tối đi rồi sáng lại — chứ không ở một cái đèn góc
+            màn hình. Giữ `sunLit` vì `mission-earth.html` và bộ smoke đọc `world.sunOn`. */
       get sunOn() { return !!sunLit; },
       igniteSun: function (ms) {
         return tween(ms == null ? 1700 : ms, function (k) {
           sunLit = k;
-          sun.style.setProperty("--lit", k.toFixed(3));
           stage.classList.toggle("e2-night", k < 0.5);
         }, function () { sunLit = 1; stage.classList.remove("e2-night"); });
       },
       dimSun: function (ms) {
         return tween(ms == null ? 1200 : ms, function (k) {
           sunLit = 1 - k;
-          sun.style.setProperty("--lit", (1 - k).toFixed(3));
           stage.classList.toggle("e2-night", k > 0.5);
         }, function () { sunLit = 0; stage.classList.add("e2-night"); });
       },

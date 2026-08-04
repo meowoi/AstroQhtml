@@ -102,7 +102,7 @@
     <div class="top" id="card-ic">🌊</div>
     <div class="nm" id="card-nm">—</div>
     <p class="fact" id="card-fact"></p>
-    <!-- Dòng phụ, chỉ bước ⑤ dùng: câu hé lộ độ cao. CỐ Ý đặt TRONG thẻ chứ không ở
+    <!-- Dòng phụ, chỉ bước ④ dùng: câu hé lộ độ cao. CỐ Ý đặt TRONG thẻ chứ không ở
          dòng nhắc dưới bảng — dòng nhắc bị chính thẻ này che, và tới lúc thẻ đóng thì
          câu hỏi kế tiếp đã ghi đè lên nó. Bước nào không dùng thì `showCard` tự ẩn. -->
     <p class="sub" id="card-sub" hidden></p>
@@ -134,8 +134,13 @@
               Trái Đất 4,5 tỷ / 4,4 tỷ / 3,8 tỷ / 233 triệu năm trước, nên đây là TRANH
               DỰNG. Để trẻ tưởng đó là ảnh thật là dạy một điều sai. Mốc "ngày nay" thì
               không có tranh — nó dùng chính bức ảnh vệ tinh THẬT đang làm nền.
-           ⚠️ `loading="lazy"` + `decoding="async"`: mỗi lượt chơi chỉ tải ảnh của mốc
-              trẻ thật sự mở. Mạng yếu thì bài học vẫn chạy, chỉ thiếu tranh.
+           ⚠️ ⛔ `loading="lazy"` ĐÃ BỎ 03/08/2026 — ĐỪNG ĐẶT LẠI. Nó khai "chỉ tải ảnh
+              của mốc trẻ thật sự mở", nhưng thẻ này LUÔN nằm trong khung nhìn khi bảng
+              hiện, nên `lazy` không tiết kiệm được gì; nó chỉ làm lượt tải **bắt đầu
+              muộn hơn** một nhịp so với lúc gán `src`. Việc tiết kiệm băng thông nay do
+              `preloadEra()` làm, và làm đúng hơn: tải trước ĐÚNG MỘT mốc kế tiếp, trong
+              lúc trẻ đang đọc. Xem khối chú thích ở `preloadEra` trong mã.
+              `decoding="async"` thì GIỮ — nó không dời lúc tải, chỉ tránh chặn khung vẽ.
            ⚠️ Hai cỡ qua `srcset` — máy thường lấy bản 700 (26–50 KB), màn DPR2 lấy bản
               1120. `sizes` khai đúng bề rộng thật của bảng, không thì trình duyệt đoán
               100vw và luôn kéo bản to. -->
@@ -153,12 +158,30 @@
                   sizes="(max-width: 784px) calc(100vw - 24px), 700px" />
           <source id="time-webp" type="image/webp"
                   sizes="(max-width: 784px) calc(100vw - 24px), 700px" />
-          <img id="time-img" alt="" loading="lazy" decoding="async" width="700" height="467" />
+          <img id="time-img" alt="" decoding="async" width="700" height="467" />
         </picture>
         <figcaption class="era-illus" id="time-illus">MINH HOẠ</figcaption>
       </figure>
-      <h3 id="time-h">—</h3>
-      <p id="time-p"></p>
+      <!-- ⚠️⚠️ KHỐI CHỮ PHẢI CAO BẰNG NHAU Ở CẢ 5 MỐC — VÀ ĐÓ LÀ VIỆC CỦA `#time-ghost`,
+           KHÔNG PHẢI CỦA MỘT `min-height` ĐOÁN BẰNG TAY (sửa 03/08/2026).
+           Chủ dự án chơi thật và báo: *"mốc 3,8 tỷ bị cao hơn do nội dung dài hơn"*. Đúng:
+           bảng neo ở ĐÁY màn hình, nên chữ dài hơn thì bảng **mọc lên trên** — cạnh trên
+           nhảy chỗ giữa hai mốc liền nhau, đọc ra như trang bị giật.
+           `min-height` bằng px KHÔNG chữa được: số dòng của cùng một câu đổi theo bề rộng
+           khung (390px vs 1440px là 2 con số khác nhau), nên mọi giá trị gõ tay đều sai ở
+           một khổ máy nào đó — mà đây đúng là trang chạy cả trên điện thoại dọc.
+           Cách dùng ở đây: `#time-ghost` chứa CẢ 5 cặp tiêu đề+đoạn, xếp CHỒNG nhau trong
+           cùng một ô grid với khối chữ thật. Chiều cao ô grid = câu CAO NHẤT ở đúng bề
+           rộng hiện tại, tự đo lại khi xoay máy hay đổi ngôn ngữ. Không con số nào phải
+           bảo trì. Ghost `visibility:hidden` + `aria-hidden` nên trình đọc màn hình không
+           đọc 5 lần. -->
+      <div class="era-txt">
+        <div class="era-live">
+          <h3 id="time-h">—</h3>
+          <p id="time-p"></p>
+        </div>
+        <div class="era-ghost" id="time-ghost" aria-hidden="true"></div>
+      </div>
       <!-- ⚠️ NÚT NÀY CHỈ HIỆN Ở MỐC CUỐI, VÀ NÓ SỬA MỘT LỖI THẬT (02/08/2026).
            Bốn mốc đầu không cần nút: trẻ tự bấm chấm kế tiếp theo nhịp của mình. Mốc
            cuối thì KHÔNG CÒN CHẤM NÀO ĐỂ BẤM, nên `openEra` gọi `finishStep` ngay sau
@@ -166,12 +189,20 @@
            nào của mốc cuối**, và cú cắt đó đọc ra như trang bị giật. Chủ dự án chơi thật
            và báo đúng như vậy.
            Cùng nguyên tắc đã áp cho thẻ nội dung: thứ MANG BÀI HỌC thì để trẻ tự quyết
-           lúc nào đọc xong, đừng để hệ thống quyết bằng đồng hồ hay bằng một cú nhảy. -->
-      <button type="button" class="me-stamp hit" id="time-ok" hidden></button>
+           lúc nào đọc xong, đừng để hệ thống quyết bằng đồng hồ hay bằng một cú nhảy.
+           ⚠️ NÚT NẰM TRONG `.era-act` ĐỂ CĂN GIỮA, KHÔNG dùng `margin:auto` trên chính
+              nút: `.era-body` để `text-align:left` (chữ bài học phải căn trái), mà nút là
+              `inline-block` nên `margin-inline:auto` không có tác dụng. Và ⛔ ĐỪNG gán
+              `display:block` cho nó để chữa: `display` của tác giả THẮNG `[hidden]` của
+              trình duyệt, nút sẽ hiện ra ngay từ mốc thứ nhất. Một hàng flex rỗng cao 0px
+              nên 4 mốc đầu không tốn chỗ nào. -->
+      <div class="era-act">
+        <button type="button" class="me-stamp hit" id="time-ok" hidden></button>
+      </div>
     </div>
   </section>
 
-  <!-- Bước 4 · Năng lượng sạch (kéo-thả) -->
+  <!-- Bước 5 · Năng lượng sạch (kéo-thả) -->
   <section class="me-board me-energy" id="energy">
     <span class="k" id="energy-k">THAY NGUỒN NĂNG LƯỢNG</span>
     <div class="slots" id="energy-slots"></div>
@@ -412,7 +443,7 @@ const I18N = {
     s1_ans_nm: 'Nước nhiều hơn hẳn!',
     /* ⚠️ "29%" là PHÉP TRỪ 100 − 71, không phải con số NASA viết — nên câu này luôn
        gọi nó là "phần còn lại". Và là 71%, KHÔNG phải 70% (thẻ mẫu vật `water` ở
-       bước ⑤ cũng 71%; `004` đã phải đi sửa 5 chỗ vì đúng chuyện này). */
+       bước ④ cũng 71%; `004` đã phải đi sửa 5 chỗ vì đúng chuyện này). */
     /* ⚠️ "bảy châu lục VÀ CÁC HÒN ĐẢO" chứ không chỉ "bảy châu lục": đất liền không
        đúng bằng bảy châu lục, và bước ① vừa nói tới "vô số hòn đảo" ở châu Đại Dương. */
     s1_ans_fact: 'Đại dương phủ khoảng 71% bề mặt Trái Đất. Toàn bộ đất liền — bảy châu lục và các hòn đảo — chỉ là phần còn lại, khoảng 29%. Vì thế nhìn từ vũ trụ, hành tinh của chúng ta có màu xanh nước biển.',
@@ -508,7 +539,7 @@ const I18N = {
     kb_wrong: 'Chưa đúng — {zone} không phải chỗ của {item}. Thử chỗ khác nhé.',
     kb_drop:  'Đã bỏ thẻ xuống.',
 
-    /* Bước 4 (energy) — Kích hoạt năng lượng sạch */
+    /* Bước 5 (energy) — Kích hoạt năng lượng sạch */
     ce_h: 'Kích hoạt năng lượng sạch',
     ce_p: 'Kéo 3 nguồn năng lượng sạch vào 3 ống khói đang nhả khói đen.',
     ce_say1: 'Báo động! Nhìn <b>ba nhà máy</b> trên bản đồ kìa — chúng đang <b>đốt nhiên liệu hoá thạch</b>, khói đen làm cả vùng quanh đó tối sầm. Kéo <b>năng lượng sạch</b> vào từng nhà máy giúp Byte nhé!',
@@ -532,7 +563,11 @@ const I18N = {
        lại đúng loại chú thích lạc hậu dự án đã trả giá. */
     s4_h: 'Sự sống ở khắp nơi',
     s4_p: 'Đoán xem mỗi nơi nằm ở đâu trên lát cắt Trái Đất.',
-    s4_say1: 'Trái Đất sạch hơn rồi! Giờ mình thử một việc khác: Byte dựng sẵn một <b>lát cắt</b> từ đáy biển lên tới đỉnh núi. Mình sẽ bay tới bốn nơi — bạn <b>đoán</b> xem mỗi nơi nằm ở nấc nào nhé!',
+    /* ⚠️ CÂU MỞ PHẢI NỐI VÀO BƯỚC ③ (Mặt Trời + ba vùng khí hậu), KHÔNG nối vào bước
+       năng lượng sạch. Bản cũ mở bằng *"Trái Đất sạch hơn rồi!"* vì bước này từng đứng
+       NGAY SAU `energy`; từ 03/08/2026 thứ tự đã đổi (`life` lên trước `energy`, xem
+       `STEP_IDS`), nên câu đó nói về một việc trẻ CHƯA làm. */
+    s4_say1: 'Xích đạo thì nóng, hai cực thì lạnh — vậy sự sống chọn sống ở đâu? Byte dựng sẵn một <b>lát cắt</b> từ đáy biển lên tới đỉnh núi. Mình sẽ bay tới bốn nơi — bạn <b>đoán</b> xem mỗi nơi nằm ở nấc nào nhé!',
     s4_n: 'Đã xếp',
     s4_card: 'ĐÃ THU THẬP',
     /* ⚠️ CÂU KẾT PHẢI NÓI RA ĐIỀU CỘT VỪA CHỨNG MINH. Câu cũ ("4 mẫu đã vào bình chứa")
@@ -558,7 +593,7 @@ const I18N = {
     /* Bước 7 (eco) — Eco-Hero: NÊN / KHÔNG NÊN làm */
     ec_h: 'Eco-Hero: nên hay không nên?',
     ec_p: 'Kéo từng thẻ vào rổ 🟢 NÊN LÀM hoặc 🔴 KHÔNG NÊN LÀM.',
-    /* ⚠️ CÂU NỐI TỪ BƯỚC ④, không phải một lời mở màn độc lập. Chủ dự án đưa
+    /* ⚠️ CÂU NỐI TỪ BƯỚC ⑤, không phải một lời mở màn độc lập. Chủ dự án đưa
        nguyên ý: *"đã dùng năng lượng xanh để thay thế nhưng chưa đủ, quan trọng hơn là
        Trái Đất đang ngày càng ô nhiễm, phải thay đổi thói quen"*. Không có nó thì bước
        này rơi xuống như một bài đạo đức gắn thêm vào cuối nhiệm vụ. */
@@ -704,7 +739,7 @@ const I18N = {
 
     s4_h: 'Life is everywhere',
     s4_p: 'Guess where each place sits on the slice through Earth.',
-    s4_say1: 'Earth is cleaner now! Let us try something different: Byte has built a <b>slice</b> through Earth, from the ocean floor up to the mountain tops. We will fly to four places — you <b>guess</b> which step each one belongs on!',
+    s4_say1: 'The equator is hot and the poles are cold — so where does life choose to live? Byte has built a <b>slice</b> through Earth, from the ocean floor up to the mountain tops. We will fly to four places — you <b>guess</b> which step each one belongs on!',
     s4_n: 'Placed',
     s4_card: 'COLLECTED',
     s4_say2: 'Look at the slice: from the <b>ocean floor</b> up to the <b>highest peaks</b>, every single step has living things on it. That is what I meant — life is <b>everywhere</b>.',
@@ -851,7 +886,7 @@ const CONTINENTS = [
    ⚠️ "29%" LÀ PHÉP TRỪ 100 − 71, KHÔNG PHẢI CON SỐ NASA VIẾT. Vì thế chữ hiển thị
       luôn nói "phần còn lại — khoảng 29%", không bao giờ nói "NASA cho biết 29%".
    ⚠️ 71%, KHÔNG PHẢI 70% — cùng một nhiệm vụ từng nói hai con số cho một sự thật
-      (`004` phải đi sửa 5 chỗ). Thẻ mẫu vật `water` ở bước ⑤ cũng là 71%.
+      (`004` phải đi sửa 5 chỗ). Thẻ mẫu vật `water` ở bước ④ cũng là 71%.
    ⚠️ ĐOÁN SAI KHÔNG PHẠT. Không có trạng thái thua ở bước này: đoán xong là hé lộ,
       cả hai nhánh đều đi tiếp. Đây là câu hỏi để trẻ DỰ ĐOÁN rồi đối chiếu, không
       phải bài kiểm tra — và ở bước đầu tiên của cả nhiệm vụ thì càng không. */
@@ -1065,7 +1100,7 @@ const ENERGY = [
       này ô nhiễm" là một phát biểu về thế giới thật mà dự án không có nguồn để đứng
       sau, và là loại câu không nên đặt vào miệng một nhân vật cho trẻ em.
    ⚠️ Cả ba nằm trên ĐẤT LIỀN của bức ảnh vệ tinh (Trung Âu · Trung Phi · Tây/Trung Á)
-      — đặt nhà máy giữa đại dương thì chính bức ảnh tố cáo, đúng bài học của bước ⑤. */
+      — đặt nhà máy giữa đại dương thì chính bức ảnh tố cáo, đúng bài học của bước ④. */
 const STACKS = [
   { id: 'st1', lat: 50, lon: 15 },   // Trung Âu
   { id: 'st2', lat:  5, lon: 20 },   // Trung Phi
@@ -1091,11 +1126,21 @@ const ECO = [
 /* ───────────────────── Trạng thái ───────────────────── */
 let world = null;
 /* THỨ TỰ NÀY PHẢI KHỚP `Missions.All` ở AstroqSV/Services/Missions.cs — server tra
-   bảng theo id bước, còn thứ tự thì quyết bước nào chạy trước. Ba bước giáo dục
-   (timeline · energy · eco) xen vào giữa để mỗi bài học nối vào cảnh vừa xảy ra:
-   lịch sử ngay sau khi quét xong hành tinh, năng lượng sạch ngay sau khi thấy Mặt
-   Trời, thói quen bảo vệ môi trường ngay sau khi thu mẫu sự sống. */
-const STEP_IDS = ['scan', 'timeline', 'sun', 'energy', 'life', 'eco', 'core'];
+   bảng theo id bước, còn thứ tự thì quyết bước nào chạy trước. Mạch bài học:
+   xem hành tinh có gì (`scan`) → nó từ đâu tới (`timeline`) → vì sao mỗi nơi mỗi khác
+   (`sun`) → sự sống ở đâu (`life`) → nó đang bị đe doạ (`energy`) → mình làm được gì
+   (`eco`) → chốt lại (`core`).
+   ⚠️⚠️ `life` ĐỔI LÊN TRƯỚC `energy` NGÀY 03/08/2026 — ĐỪNG ĐẢO LẠI. Chủ dự án chơi
+      thật và báo: *"sự kiện mực nước biển chen giữa vô duyên rồi, đổi 3 nhà máy xong
+      lại đến đoán mực nước biển và phân loại 7 việc?"*. Bằng chứng nằm ngay trong LỜI
+      THOẠI, không phải cảm giác: câu mở của `eco` (`ec_say1`) là *"Nhưng đổi được ba
+      nhà máy thôi thì CHƯA ĐỦ đâu…"* — nó nối trực tiếp vào `energy`, nên đặt `life`
+      giữa hai bước đó là **cắt một câu làm hai bằng một bài học khác**. Nay cặp
+      "vấn đề → hành động" (`energy` → `eco`) đứng liền nhau.
+   ⚠️ Đổi thứ tự KHÔNG phá dữ liệu cũ (id bước không đổi, DynamoDB khoá theo id), nhưng
+      PHẢI đổi cùng lúc ở `Missions.cs` — `check_pages.py` [3c] so hai danh sách theo
+      đúng thứ tự. */
+const STEP_IDS = ['scan', 'timeline', 'sun', 'life', 'energy', 'eco', 'core'];
 /* Trình điều phối — dựng SAU sổ đăng ký `steps` (xem chỗ gọi `AstroQMission.create`).
    Bước nào đã xong, thưởng server đã trả, đang ở bước mấy: tất cả nằm trong `RUN`,
    trang này không giữ bản sao nào — hai bản sao là hai thứ sớm muộn lệch nhau. */
@@ -1193,7 +1238,7 @@ function hand(kind) {
   if (kind === 'drag') { el.style.left = '50%'; el.style.top = '58%'; }
   if (kind === 'zoom') { el.style.left = '50%'; el.style.top = '52%'; }
 }
-function handOff() { $('hand').className = 'me-hand'; }
+function handOff() { $('hand').className = 'me-hand'; handId = null; }
 
 /* Chỉ bàn tay 👆 vào MỘT marker cụ thể (thêm 02/08/2026, `004`).
    ⚠️ Đây là thứ THAY CHO `hand('drag')`/`hand('zoom')` đã bỏ: bước ① không dạy thao
@@ -1202,6 +1247,7 @@ function handOff() { $('hand').className = 'me-hand'; }
       `position:fixed;inset:0` nên toạ độ khung nhìn CHÍNH LÀ toạ độ của nó, và nhờ đi
       qua đúng hàm cảnh đang dùng thì bàn tay không bao giờ lệch khỏi marker thật.
       Marker ngoài khung → `visible:false` → tắt bàn tay, không chỉ ra ngoài màn hình. */
+let handId = null;                       // đốm bàn tay ĐANG chỉ vào; null = đang tắt
 function handAt(id) {
   const at = world.screenOf('marker', id);
   if (!at || !at.visible) return handOff();
@@ -1209,11 +1255,46 @@ function handAt(id) {
   el.style.left = (at.x - 19) + 'px';
   el.style.top = (at.y + 16) + 'px';   // dưới đốm — ngón tay 👆 chỉ NGƯỢC LÊN vào nó
   el.className = 'me-hand show tap';
+  handId = id;
 }
 
-/* Marker chưa chạm tiếp theo, theo thứ tự khai báo. `null` = xong hết. */
-function nextLeft(list, gotIds) {
-  return list.find(p => !gotIds.has(p.id)) || null;
+/* Marker chưa chạm TIẾP THEO. `null` = xong hết.
+   ⚠️⚠️ ĐI THEO ĐỐM GẦN NHẤT, KHÔNG THEO THỨ TỰ KHAI BÁO — LỖI THẬT ĐÃ SỬA 03/08/2026.
+      Chủ dự án chơi thật và báo: *"click sang điểm sáng khác rồi mà bàn tay vẫn ở chỗ
+      cũ"*. Nguyên nhân là HAI LUẬT ĐÚNG NHƯNG NGƯỢC NHAU nằm cạnh nhau:
+        · thiết kế cho **chạm đốm nào trước cũng được** (`004`: ép thứ tự là tạo ra cú
+          chạm SAI ở một bước cả thiết kế đang cố làm cho không thể sai);
+        · nhưng bàn tay lại chỉ vào đốm ĐẦU TIÊN CHƯA CHẠM **theo thứ tự khai báo**.
+      Nên nếu trẻ chạm từ giữa ra, đốm số 0 (`namerica`) cứ chưa chạm mãi và bàn tay
+      **đứng nguyên một chỗ suốt nhiều cú chạm liền**. Tái hiện được: chạm 5 đốm liên
+      tiếp mà tay vẫn ở `(340, 233)` chỉ vào `namerica`, cách đó 7px, không nhích một
+      pixel. Trẻ đọc ra thành "bấm không ăn".
+   ⚠️ VÌ SAO "GẦN NHẤT" LÀ ĐÁP ÁN, không phải "đốm kế tiếp trong danh sách": đốm vừa
+      chạm đã `done`, nên đốm gần nhất **luôn là một đốm khác** → bàn tay CHẮC CHẮN dời
+      chỗ sau mỗi cú chạm. Nó còn dời tới chỗ ngay cạnh nơi trẻ đang nhìn, nên đọc ra
+      như một mạch đi tiếp chứ không như một cú nhảy sang đầu bản đồ.
+   ⚠️ Và nó làm CÚ LƯỚT BẢN ĐỒ ngắn hơn (`focusMarker` dùng chung `nx` này) — cùng bài
+      học đã ghi ở `LIFE_ORDER`: một cú lướt 149° dài gấp đôi mọi cú lướt khác của cả
+      nhiệm vụ thì bản thân nó là một lỗi.
+   ⚠️ ĐO KHOẢNG CÁCH BẰNG lat/lon, KHÔNG bằng px màn hình. Bản đồ là equirectangular
+      nên px theo trục ngang tỉ lệ ĐÚNG với `dlon` và trục dọc tỉ lệ đúng với `dlat`
+      (cùng một hệ số), tức Euclid trên (dlon, dlat) **là** khoảng cách màn hình sai
+      khác một hằng số. Lợi thế: không phụ thuộc khung nhìn hiện tại, nên kết quả không
+      đổi giữa lúc bản đồ đang lướt — mà `focusMarker` thì được gọi ngay sau đó.
+   ⚠️ `dlon` PHẢI GÓI VỀ ±180. Không gói thì `oceania` (lon 135) và `namerica` (lon
+      −100) đo ra 235° trong khi đường thật qua Thái Bình Dương chỉ 125°.
+   `fromId` rỗng (lúc vào bước) → giữ nguyên đốm đầu danh sách, đúng như trước. */
+function nextLeft(list, gotIds, fromId) {
+  const left = list.filter(p => !gotIds.has(p.id));
+  if (!left.length) return null;
+  const from = fromId ? list.find(p => p.id === fromId) : null;
+  if (!from) return left[0];
+  const dlon = (a, b) => {
+    let d = Math.abs(a - b) % 360;
+    return d > 180 ? 360 - d : d;
+  };
+  const dist = p => Math.hypot(dlon(p.lon, from.lon), p.lat - from.lat);
+  return left.reduce((best, p) => (dist(p) < dist(best) ? p : best), left[0]);
 }
 
 /* ĐƯA MARKER KẾ TIẾP VÀO KHUNG — chỉ khi nó ĐANG Ở NGOÀI KHUNG (02/08/2026, `005`).
@@ -1365,7 +1446,7 @@ const steps = {
         ic: p.ic, nm: p.nm[LANG] || p.nm.vi, fact: p.fact[LANG] || p.fact.vi,
         tag: t('s1_card'), cc: '#38bdf8', cbg: 'rgba(56,189,248,.28)'
       });
-      const nx = nextLeft(CONTINENTS, this.gotIds);
+      const nx = nextLeft(CONTINENTS, this.gotIds, p.id);   // `p.id` = đốm vừa chạm
       if (nx) {
         /* ⚠️ `busy` PHẢI CÒN BẬT SUỐT CÚ LƯỚT BẢN ĐỒ, đừng hạ ngay sau `showCard`.
            Hai lý do, và lý do đầu mới là lý do thật:
@@ -1452,6 +1533,11 @@ const steps = {
       objective({ ic: '🕰️', h: t('tl_h'), p: t('tl_p'), n: 0, total: ERAS.length });
       $('time-fig').hidden = true;          // chưa mở mốc nào thì chưa có tranh nào
       buildTimeline();
+      /* Tải trước tranh của mốc ĐẦU TIÊN ngay khi vào bước — Comet còn đang nói xong
+         một câu dài, tức có sẵn vài giây đường mạng rỗi trước cú bấm đầu tiên. Không
+         có dòng này thì mốc ① cũng trễ đúng như mốc ②, chỉ khó thấy hơn vì lúc đó chưa
+         có tranh nào để so. Xem khối chú thích ở `preloadEra`. */
+      preloadEra(0);
       await say('comet', t('tl_say1'));
       hideSay();
       $('time').classList.add('show');
@@ -1618,7 +1704,7 @@ const steps = {
         tag: t('s2b_card'), cc: z.cc, cbg: z.cbg
       });
       if (this.got.size >= ZONES.length) { busy = false; await finishStep('sun'); return; }
-      const nx = nextLeft(ZONES, this.got);
+      const nx = nextLeft(ZONES, this.got, z.id);            // cùng lý do như bước ①
       if (nx) {
         // `busy` còn bật suốt cú lướt — lý do ghi ở bước ①.
         await focusMarker(nx.id, nx.lat, nx.lon, 4.4);
@@ -1636,56 +1722,13 @@ const steps = {
     }
   },
 
-  /* ── 4. Kích hoạt năng lượng sạch ────────────────────────────
-     Đặt NGAY SAU bước Mặt Trời là có chủ ý: trẻ vừa tự tay bật ngôi sao lên và nghe
-     "Mặt Trời mang năng lượng cho Trái Đất", nên câu tiếp theo — "vậy sao mình còn
-     đốt than?" — là câu hỏi tự nhiên chứ không phải bài giảng chen vào. */
-  energy: {
-    placed: new Set(),
-    async enter() {
-      this.placed = new Set();
-      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG: không khai thì
-         bước này nhận map của bước trước, mà bước trước đổi lúc nào cũng được.
-         ⚠️ CHÚ THÍCH CŨ Ở ĐÂY NÓI "quả cầu đúng cho bước này" — ĐÃ SAI TỪ `004`
-            (một hình cho cả nhiệm vụ) và sai hẳn từ `005` (0 lần `setMap('globe')`).
-            Chú thích lạc hậu là thứ dự án đã trả giá thật, nên sửa chứ không để. */
-      world.setMap('flat');
-      world.setControls({ rotate: false, zoom: false });
-      world.setSpin(0);
-      /* Lùi về sàn phóng và căn giữa ba nhà máy (lon 15 · 20 · 60 → tâm ~32): cả ba
-         phải cùng nằm trên màn hình VỚI khay thẻ, không thì không kéo-thả được. */
-      await world.centerOn({ lat: 20, lon: 32, dist: 4.4, ms: reduced ? 0 : 1300 });
-      /* Khói xuất hiện TRƯỚC khi Byte nói, y như bước Mặt Trời tắt đèn trước khi
-         Comet hỏi: thấy vấn đề rồi mới nghe kể về vấn đề. */
-      setSmog(1);
-      objective({ ic: '🔋', h: t('ce_h'), p: t('ce_p'), n: 0, total: ENERGY.length });
-      buildEnergy();                       // dựng nhà máy TRƯỚC để Byte có cái mà chỉ
-      await say('byte', t('ce_say1'));
-      hideSay();
-      $('energy').classList.add('show');
-    },
-    async onPlace(id) {
-      if (this.placed.has(id)) return;
-      this.placed.add(id);
-      const n = this.placed.size;
-      progress(n, ENERGY.length);
-      // Khói mỏng đi theo TỪNG nguồn, không đợi đủ 3: trẻ thấy ngay việc mình vừa làm
-      // có tác dụng, mà vẫn còn khói nên biết là chưa xong.
-      setSmog(1 - n / ENERGY.length);
-      toast(t('ce_swap').replace('{n}', n));
-      if (n >= ENERGY.length) await finishStep('energy');
-    },
-    async outro() {
-      $('energy').classList.remove('show');
-      setSmog(0);
-      world.clearMarkers();                // dọn ba nhà máy khỏi bản đồ
-      sfx('ready');
-      await say('byte', t('ce_say2'));
-      hideSay();
-    }
-  },
-
-  /* ── 5. Thu thập mẫu sự sống ────────────────────────────────── */
+  /* ── 4. Sự sống ở khắp nơi — lát cắt Trái Đất ─────────────────────────────────
+     ⚠️ ĐỔI LÊN TRƯỚC `energy` NGÀY 03/08/2026 (trước đó là bước ⑤) — lý do đầy đủ ghi
+        ở `STEP_IDS`. Tóm: câu mở của `eco` nối trực tiếp vào `energy`, nên bước này
+        nằm giữa hai bước đó là cắt một câu làm hai.
+     Đặt NGAY SAU bước Mặt Trời là có chủ ý: bước ③ vừa dạy vì sao xích đạo nóng và hai
+     cực lạnh, nên câu hỏi tiếp theo — "vậy sự sống chọn ở đâu?" — là câu tự nhiên, và
+     cột lát cắt trả lời nó bằng chính bốn nơi trẻ vừa bay tới. */
   life: {
     got: new Set(),
     cur: null,           // nơi đang được hỏi; `null` = đang hé lộ hoặc đã xong
@@ -1780,11 +1823,68 @@ const steps = {
     }
   },
 
+  /* ── 5. Kích hoạt năng lượng sạch ─────────────────────────────────────────────
+     ⚠️ ĐỔI XUỐNG SAU `life` NGÀY 03/08/2026 (trước đó là bước ④) — lý do đầy đủ ghi ở
+        `STEP_IDS`. Cái được: bước này và `eco` nay đứng LIỀN NHAU, nên câu *"nhưng đổi
+        được ba nhà máy thôi thì chưa đủ đâu"* của `eco` nối thẳng vào việc trẻ vừa làm.
+     Đặt NGAY SAU bước lát cắt sự sống là có chủ ý: trẻ vừa tự tay dựng nên bằng chứng
+     "nấc nào cũng có sinh vật sống", nên ba cột khói phủ đen bản đồ ngay sau đó là một
+     lời đe doạ có ĐỊA CHỈ — nó đang phủ lên đúng cái vừa được chứng minh là quý. */
+  energy: {
+    placed: new Set(),
+    async enter() {
+      this.placed = new Set();
+      /* ⚠️ KHAI MAP TƯỜNG MINH. `setMap` là trạng thái THỪA HƯỞNG: không khai thì
+         bước này nhận map của bước trước, mà bước trước đổi lúc nào cũng được.
+         ⚠️ CHÚ THÍCH CŨ Ở ĐÂY NÓI "quả cầu đúng cho bước này" — ĐÃ SAI TỪ `004`
+            (một hình cho cả nhiệm vụ) và sai hẳn từ `005` (0 lần `setMap('globe')`).
+            Chú thích lạc hậu là thứ dự án đã trả giá thật, nên sửa chứ không để. */
+      world.setMap('flat');
+      world.setControls({ rotate: false, zoom: false });
+      world.setSpin(0);
+      /* Lùi về sàn phóng và căn giữa ba nhà máy (lon 15 · 20 · 60 → tâm ~32): cả ba
+         phải cùng nằm trên màn hình VỚI khay thẻ, không thì không kéo-thả được. */
+      await world.centerOn({ lat: 20, lon: 32, dist: 4.4, ms: reduced ? 0 : 1300 });
+      /* Khói xuất hiện TRƯỚC khi Byte nói, y như bước Mặt Trời tắt đèn trước khi
+         Comet hỏi: thấy vấn đề rồi mới nghe kể về vấn đề. */
+      setSmog(1);
+      objective({ ic: '🔋', h: t('ce_h'), p: t('ce_p'), n: 0, total: ENERGY.length });
+      buildEnergy();                       // dựng nhà máy TRƯỚC để Byte có cái mà chỉ
+      await say('byte', t('ce_say1'));
+      hideSay();
+      $('energy').classList.add('show');
+    },
+    async onPlace(id) {
+      if (this.placed.has(id)) return;
+      this.placed.add(id);
+      const n = this.placed.size;
+      progress(n, ENERGY.length);
+      // Khói mỏng đi theo TỪNG nguồn, không đợi đủ 3: trẻ thấy ngay việc mình vừa làm
+      // có tác dụng, mà vẫn còn khói nên biết là chưa xong.
+      setSmog(1 - n / ENERGY.length);
+      toast(t('ce_swap').replace('{n}', n));
+      if (n >= ENERGY.length) await finishStep('energy');
+    },
+    async outro() {
+      $('energy').classList.remove('show');
+      setSmog(0);
+      world.clearMarkers();                // dọn ba nhà máy khỏi bản đồ
+      sfx('ready');
+      await say('byte', t('ce_say2'));
+      hideSay();
+    }
+  },
+
   /* ── 6. Eco-Hero: NÊN / KHÔNG NÊN làm ────────────────────────
      Bước DUY NHẤT của nhiệm vụ nói về việc trẻ làm ngoài đời, không phải trong tàu.
-     Đặt ngay sau khi thu 4 mẫu sự sống: vừa cầm trên tay bằng chứng "hành tinh này
-     có sự sống" thì câu "vậy mình giữ nó thế nào?" mới là kết luận, không phải bài
-     đạo đức gắn vào. */
+     ⚠️ PHẢI ĐỨNG NGAY SAU `energy`, VÀ TỪ 03/08/2026 THÌ NÓ ĐỨNG ĐÚNG CHỖ. Câu mở
+        `ec_say1` là *"Nhưng đổi được ba nhà máy thôi thì CHƯA ĐỦ đâu…"* — nó nối trực
+        tiếp vào việc trẻ vừa làm ở `energy`. Trước lượt này bước `life` chen vào giữa
+        hai bước đó, tức trẻ nghe một câu bị cắt làm hai bởi một bài học khác; chủ dự án
+        chơi thật và bắt đúng chỗ đó. Ai dời `life` trở lại giữa hai bước này thì phải
+        viết lại `ec_say1` trước.
+     Nhờ đứng liền `energy`, câu "vậy mình giữ Trái Đất thế nào?" là KẾT LUẬN của việc
+     vừa làm, không phải một bài đạo đức gắn vào. */
   eco: {
     sorted: 0,
     async enter() {
@@ -1894,6 +1994,29 @@ RUN = AstroQMission.create({
    từ ba nguồn khác nhau: BIOMES có object vi/en, hai chỗ kia lấy từ `t()` và từ
    `js/badges.js`. Bắt cả ba nhét vào một hình dạng chỉ để hàm này tự dịch thì mỗi
    chỗ gọi lại phải bọc ngược lại. */
+/* ⚠️⚠️ THẺ NỘI DUNG PHẢI NHẤC LÊN KHỎI BẢNG ĐÁY — LỖI THẬT ĐÃ SỬA 03/08/2026.
+   Chủ dự án chơi thật bước ④ `life` rồi gửi ảnh: *"2 bảng thông tin che nhau"*. Thẻ
+   `.me-card` canh giữa KHUNG NHÌN, còn bảng `.me-board` neo ĐÁY — mà bảng lát cắt có
+   4 nấc nên nó cao nhất trong cả nhiệm vụ, và hai thứ chồng lên nhau. Nặng nhất: **nút
+   "Đã hiểu!" của thẻ bị bảng đè**, mà đó là đường DUY NHẤT đóng thẻ (mốc tự đóng 3,4
+   giây đã bỏ 02/08/2026) → trẻ nhìn thấy nút mà bấm không được.
+   Chữa bằng ĐÚNG cơ chế `boardSay()` đã dùng cho box thoại (`--board-h` + `.lift`),
+   không dựng cơ chế thứ hai: canh giữa phần khung CÒN LẠI phía trên bảng.
+   ⚠️ ĐO CHIỀU CAO NGAY LÚC MỞ THẺ, đừng gán cứng: bảng eco cao dần theo số thẻ đã xếp,
+      bảng lát cắt cao dần theo số chip, và bước nào không có bảng thì thẻ phải về giữa
+      khung như cũ.
+   ⚠️ CŨNG PHẢI NÂNG `z-index`: thẻ là `role="dialog" aria-modal="true"`, mà `.me-board`
+      nằm SAU nó trong DOM nên không có z-index thì bảng vẽ ĐÈ LÊN thẻ — đúng thứ trong
+      ảnh chụp. Một hộp thoại modal bị chính trang đè lên là hộp thoại nói dối. */
+function liftCard() {
+  const el = $('card');
+  const b = Array.from(document.querySelectorAll('.me-board.show'))
+                 .reduce((h, n) => Math.max(h, n.offsetHeight), 0);
+  if (!b) { el.style.removeProperty('--board-h'); el.classList.remove('lift'); return; }
+  el.style.setProperty('--board-h', (b + 12) + 'px');
+  el.classList.add('lift');
+}
+
 function showCard(c) {
   sfx('pickup');
   const el = $('card');
@@ -1906,6 +2029,7 @@ function showCard(c) {
   $('card-sub').hidden = !c.sub;      // bước nào không truyền `sub` thì không để lại ô trống
   $('card-got').textContent = c.tag;
   $('card-ok').textContent = t('card_ok');
+  liftCard();
   el.classList.add('show');
   el.setAttribute('aria-hidden', 'false');
   return new Promise(res => {
@@ -2025,6 +2149,19 @@ function buildTimeline() {
   paintTimeline(0, -1);
   $('time-h').textContent = '—';
   $('time-p').textContent = '';
+  paintEraGhost();
+}
+
+/* Khối GIỮ CHỖ: cả 5 cặp tiêu đề+đoạn xếp chồng trong cùng một ô grid với khối chữ
+   thật, nên ô đó luôn cao bằng câu DÀI NHẤT ở đúng bề rộng hiện tại → bảng không
+   nhảy khi trẻ chuyển giữa hai mốc. Xem khối chú thích ở `#time-ghost` trong HTML.
+   ⚠️ Dùng `<h3>`/`<p>` y như khối thật để CSS (`.me-time .era-body h3|p`) áp cùng
+      cỡ chữ và cùng `line-height` — khác một pixel là phép giữ chỗ sai một pixel.
+   ⚠️ Gọi lại trong `applyLang`: câu tiếng Anh dài khác câu tiếng Việt. */
+function paintEraGhost() {
+  $('time-ghost').innerHTML = ERAS.map(e =>
+    '<div><h3>' + esc(e.ic + '  ' + t('era_' + e.id + '_n')) + '</h3>' +
+    '<p>' + esc(t('era_' + e.id + '_p')) + '</p></div>').join('');
 }
 /** @param seen số mốc đã xem · @param cur mốc đang mở (để tô sáng) */
 function paintTimeline(seen, cur) {
@@ -2042,6 +2179,53 @@ function paintEraBody(e) {
   paintEraImg(e);
 }
 
+/* Bề rộng ô ảnh khai cho trình duyệt — MỘT bản sao dùng cho cả `<source>` trong HTML,
+   `paintEraImg` và `preloadEra`. Ba chỗ gõ lại ba lần là ba chỗ sớm muộn lệch, mà lệch
+   ở đây nghĩa là bản tải trước KHÁC bản đem hiện → tải hai lần, đúng hại thứ mà việc
+   tải trước sinh ra để chữa. */
+const ERA_SIZES = '(max-width: 784px) calc(100vw - 24px), 700px';
+
+/** Tên hai bản `srcset` của một mốc. */
+function eraSrcset(img, ext) {
+  const base = 'img/era/' + img;
+  return base + '-700.' + ext + ' 700w, ' + base + '-1120.' + ext + ' 1120w';
+}
+
+/* ⚠️⚠️ TẢI TRƯỚC ẢNH MỐC KẾ TIẾP — SỬA MỘT LỖI THẬT (03/08/2026).
+   Chủ dự án chơi thật và báo: *"mốc 4,4 tỷ năm khi click vào không ra ảnh tương ứng
+   luôn, bị trễ nhiều"*. Hai nguyên nhân cộng lại, và cả hai đều nằm ở đây:
+     ① Ảnh chỉ bắt đầu tải Ở ĐÚNG LÚC trẻ bấm (`loading="lazy"` + gán `src` trong
+        `paintEraImg`). Bản `-700.webp` nặng 26–50 KB, tức trên mạng vừa phải là vài
+        trăm ms, trên mạng kém là vài giây.
+     ② Nặng hơn ①: trong lúc chờ, thẻ `<img>` **vẫn hiện khung ảnh CŨ** — trình duyệt
+        giữ khung đã vẽ cho tới khi ảnh mới decode xong. Nên trẻ bấm mốc "đại dương"
+        mà vẫn thấy tranh dung nham của mốc trước: không phải "chậm", mà là **hiện sai
+        thông tin**, đúng loại lỗi dự án đã đặt lên đầu (`.e2-terminator`, thẻ Amazon
+        giữa đại dương).
+   Chữa ①: mở mốc nào thì tải trước ảnh của MỐC KẾ TIẾP — trẻ còn đang đọc mấy dòng
+   chữ, và đó chính là khoảng thời gian đường mạng đang rỗi. Không tải trước cả 5 (mạng
+   kém thì 5 ảnh cùng lúc là tranh băng thông của chính ảnh đang cần).
+   Chữa ②: `.era-wait` che ảnh cho tới khi ảnh ĐÚNG về tới máy — thà thấy ô trống còn
+   hơn thấy tranh của mốc khác. Ô trống vẫn giữ đúng chỗ (`aspect-ratio` trên `.era-fig`)
+   nên bảng không nhảy.
+   ⚠️ `srcset`+`sizes` PHẢI GIỐNG HỆT thẻ thật, không được chỉ tải `-700`: trình duyệt
+      chọn bản theo `sizes`, khai khác là màn DPR2 tải trước bản 700 rồi lại đi tải bản
+      1120 — tốn gấp đôi thay vì tiết kiệm. */
+function preloadEra(i) {
+  const e = ERAS[i];
+  if (!e || !e.img) return;
+  const im = new Image();
+  im.decoding = 'async';
+  im.sizes = ERA_SIZES;
+  /* AVIF chỉ đúng khi trình duyệt đọc được AVIF, mà `new Image()` không có `<picture>`
+     để chọn giúp. Nên tải trước bản WEBP — được hỗ trợ ở mọi trình duyệt trang này
+     nhắm tới, và là bản mà nhánh cuối của `<picture>` cũng dùng. Máy đọc được AVIF thì
+     lượt tải trước này thành vô ích chứ không thành sai; đổi lấy 0 dòng phát hiện định
+     dạng, và bản AVIF nhỏ hơn nên phần thiệt cũng nhỏ hơn. */
+  im.srcset = eraSrcset(e.img, 'webp');
+  im.src = 'img/era/' + e.img + '-700.webp';
+}
+
 /* Ảnh minh hoạ của mốc đang xem. `img` = tên file gốc; mốc nào không khai `img` thì
    KHÔNG có tranh — xem lý do ở `const ERAS`.
    ⚠️ `alt` PHẢI đổi theo ngôn ngữ và phải nói rõ đây là TRANH DỰNG: trình đọc màn hình
@@ -2049,21 +2233,33 @@ function paintEraBody(e) {
    ⚠️ Đặt `srcset` TRƯỚC `img.src`: gán `src` trước thì trình duyệt có thể bắt đầu tải
       bản mặc định rồi mới thấy `<source>`, tức tải hai lần trên đúng nhóm mạng yếu mà
       cả việc này sinh ra để phục vụ. */
+let eraImgSeq = 0;                     // chống đua: chỉ lượt MỚI NHẤT được mở ảnh ra
 function paintEraImg(e) {
   const fig = $('time-fig');
   if (!e.img) { fig.hidden = true; return; }
-  const base = 'img/era/' + e.img;
-  $('time-avif').srcset = base + '-700.avif 700w, ' + base + '-1120.avif 1120w';
-  $('time-webp').srcset = base + '-700.webp 700w, ' + base + '-1120.webp 1120w';
   const im = $('time-img');
-  im.sizes = '(max-width: 784px) calc(100vw - 24px), 700px';
-  im.src = base + '-700.webp';        // nhánh cuối cho trình duyệt không đọc <source>
+  /* Khoá ảnh lại NGAY, trước khi đổi `srcset` — đổi trước rồi mới che thì có một
+     khung hình lộ ra tranh cũ. */
+  fig.classList.add('era-wait');
+  const seq = ++eraImgSeq;
+  $('time-avif').srcset = eraSrcset(e.img, 'avif');
+  $('time-webp').srcset = eraSrcset(e.img, 'webp');
+  im.sizes = ERA_SIZES;
+  im.src = 'img/era/' + e.img + '-700.webp';   // nhánh cuối cho trình duyệt không đọc <source>
   im.alt = t('era_alt').replace('{n}', t('era_' + e.id + '_n'));
   $('time-illus').textContent = t('era_illus');
   fig.hidden = false;
+  /* Ảnh đã nằm trong cache (nhờ `preloadEra`) thì `complete` đã true ngay ở đây —
+     không có một khung hình nào bị che, cú bấm cảm giác tức thì.
+     ⚠️ Ảnh LỖI (`onerror`) cũng phải mở khoá: `.era-wait` mãi là một ô trống vĩnh
+        viễn, tức mất tranh mà còn mất cả lời giải thích vì sao. */
+  const reveal = () => { if (seq === eraImgSeq) fig.classList.remove('era-wait'); };
+  if (im.complete && im.naturalWidth) reveal();
+  else { im.onload = reveal; im.onerror = reveal; }
+  preloadEra(ERAS.indexOf(e) + 1);     // mốc kế tiếp — trẻ đang đọc, mạng đang rỗi
 }
 
-/* ───────────────────── Bước 4: năng lượng sạch ───────────────────── */
+/* ───────────────────── Bước 5: năng lượng sạch ───────────────────── */
 /* ⚠️ BA Ô THẢ NẰM TRÊN BẢN ĐỒ, KHÔNG NẰM TRONG BẢNG. Chúng là marker của cảnh
    (`world.addMarkers` với `zone`), nên `paint()` lo vị trí + chống-phóng cho chúng —
    xem cảnh báo ở `addMarkers` trong `js/earth2d.js`. `#energy-slots` vì thế bỏ trống;
@@ -2141,7 +2337,7 @@ function buildEco() {
       kết thành chỗ nhồi kiến thức mới — đúng lúc trẻ tưởng đã xong.
    ⚠️ MỘT CÚ BẤM, KHÔNG PHẢI MỘT CÂU ĐỐ. Đây là chỗ CHỐT, không phải chỗ kiểm tra: bắt
       trẻ trả lời đúng mới cho về là dựng một cửa chặn ngay trước màn thưởng. */
-/* ══ BƯỚC ⑤ · LÁT CẮT TRÁI ĐẤT ══════════════════════════════════════════════
+/* ══ BƯỚC ④ · LÁT CẮT TRÁI ĐẤT ══════════════════════════════════════════════
    ⚠️⚠️ ĐÂY LÀ KHUÔN TƯƠNG TÁC THỨ SÁU, VÀ NÓ CỐ Ý KHÔNG DÙNG LẠI HAI ENGINE CÓ SẴN.
       `docs/decisions/002` cấm dùng một khuôn quá 2 lần trong một nhiệm vụ. Đếm được
       bằng `grep` trên chính file này: `dragDrop(` **2 lần** (④ energy · ⑥ eco) và
@@ -2365,11 +2561,15 @@ function applyLang(lang) {
     // Mốc đang mở: dịch lại đúng cái đó, không nhảy về mốc đầu
     const cur = ERAS[Math.max(0, steps.timeline.seen - 1)];
     if (steps.timeline.seen > 0) paintEraBody(cur);
+    /* ⚠️ KHỐI GIỮ CHỖ PHẢI DỰNG LẠI THEO NGÔN NGỮ MỚI. Câu tiếng Anh dài khác câu
+       tiếng Việt, nên bỏ dòng này là sau khi bấm EN cả 5 mốc lại lệch nhau y như
+       trước — đúng cái lỗi vừa đi sửa, chỉ ẩn sau một cú bấm VI/EN. */
+    paintEraGhost();
   }
-  /* ⚠️⚠️ BƯỚC ⑤ PHẢI CÓ NHÁNH NÀY — VÀ NÓ ĐƯỢC THÊM VÌ VỪA BẮT ĐÚNG LỖI CÙNG HỌ Ở
-     BƯỚC ④ (nhãn ống khói không đổi theo ngôn ngữ). Cột lát cắt **sống suốt cả bước**
+  /* ⚠️⚠️ BƯỚC ④ PHẢI CÓ NHÁNH NÀY — VÀ NÓ ĐƯỢC THÊM VÌ VỪA BẮT ĐÚNG LỖI CÙNG HỌ Ở
+     BƯỚC ⑤ (nhãn ống khói không đổi theo ngôn ngữ). Cột lát cắt **sống suốt cả bước**
      (khác cái thẻ, vốn tạm thời và phải bấm OK mới đóng), nên thiếu nhánh này thì đổi
-     VI/EN giữa bước ⑤ để lại một cột tiếng Việt trong một trang tiếng Anh.
+     VI/EN giữa bước ④ để lại một cột tiếng Việt trong một trang tiếng Anh.
      ⚠️ DỊCH TẠI CHỖ, ĐỪNG DỰNG LẠI `innerHTML`: dựng lại là mất trạng thái `disabled`
         của bốn nấc và mất cả tiêu điểm bàn phím — trẻ đang dùng bàn phím thì cú Enter
         kế tiếp rơi vào `<body>`. */
@@ -2404,7 +2604,7 @@ function applyLang(lang) {
     /* ⚠️ DÒ `.e2-stack`, KHÔNG PHẢI `#energy-slots .me-stack` — LỖI THẬT ĐÃ SỬA
        02/08/2026. Ba ống khói đã dời lên BẢN ĐỒ thành marker của cảnh, `#energy-slots`
        nay luôn rỗng (xem `buildEnergy`), nên vòng lặp cũ chạy 0 lần và **đổi VI/EN
-       giữa bước ④ không đổi được nhãn ống khói nào**. Lỗi im lặng tuyệt đối: không
+       giữa bước ⑤ không đổi được nhãn ống khói nào**. Lỗi im lặng tuyệt đối: không
        ngoại lệ, không console, chỉ là một việc lặng lẽ không xảy ra.
        ⚠️ Ống khói mang nhãn ở `aria-label` chứ không có phần tử `.lb` — bên trong nó
           chỉ có emoji `aria-hidden`. Gọi `.querySelector('.lb').textContent` ở đây là
@@ -2488,8 +2688,10 @@ RUN.paint();
     get step() { return RUN.step; },
     get done() { return RUN.done; },
     get reward() { return RUN.reward; },
-    /* Bước 4 chặn cú chạm mới trong lúc drone đang bay (`busy`). Test phải đọc
-       được cờ này, không thì nó bấm mẫu thứ hai lúc còn bị chặn rồi báo hỏng oan. */
+    /* Mọi bước có hoạt cảnh đều chặn cú chạm mới trong lúc nó chạy (`busy`). Test
+       phải đọc được cờ này, không thì nó bấm lượt thứ hai lúc còn bị chặn rồi báo
+       hỏng oan. (Chú thích cũ ghi "bước 4 · drone đang bay" — con drone đã bỏ
+       02/08/2026 và số hiệu bước đã đổi 03/08/2026.) */
     get busy() { return busy; },
     /* ⚠️ Cố ý KHÔNG trả Promise ra ngoài. `page.evaluate` của Playwright TỰ CHỜ
        promise nào được trả về, mà `pick()` bên trong lại chờ trẻ bấm "Tiếp tục" →
@@ -2518,14 +2720,20 @@ RUN.paint();
     get scanned() { return steps.scan.hits; },
     /** Số vùng khí hậu đã chạm ở bước ③ (nhịp b). */
     get zones() { return steps.sun.got.size; },
-    /* ⚠️ BƯỚC ⑤ KHÔNG CÒN LÁI ĐƯỢC BẰNG `pick()` — nó không còn nhận cú chạm marker
+    /* Đốm bàn tay 👆 ĐANG chỉ vào; `null` = tay đang tắt.
+       ⚠️ THÊM 03/08/2026 CÙNG LÚC SỬA LỖI "bàn tay vẫn ở chỗ cũ". Không có bề mặt này
+          thì phép kiểm chỉ đo được *có bàn tay hay không*, chứ không đo được nó chỉ vào
+          ĐÚNG đốm nào — mà lỗi vừa sửa là bàn tay hiện rõ ràng, chỉ là chỉ sai chỗ. Một
+          lỗi mà bộ đo không có cách nào hỏi tới thì nó sẽ quay lại. */
+    get handTarget() { return handId; },
+    /* ⚠️ BƯỚC ④ KHÔNG CÒN LÁI ĐƯỢC BẰNG `pick()` — nó không còn nhận cú chạm marker
        nào (xem `steps.life.onRung`). Test phải chọn NẤC. Cùng quy tắc: KHÔNG trả Promise.
        ⚠️ Phải gọi được CẢ nhánh đoán sai: "đoán sai không phạt" là một luật của thiết
           kế, mà luật nào không có phép kiểm thì sớm muộn có người "sửa" nó đi. */
     rung: (rank) => { steps.life.onRung(rank); return true; },
     /** Nấc ĐÚNG của nơi đang được hỏi — test đoán sai bằng cách chọn nấc khác số này. */
     get rungWanted() { return steps.life.cur ? steps.life.cur.rank : null; },
-    /** Số nơi đã xếp lên lát cắt ở bước ⑤. */
+    /** Số nơi đã xếp lên lát cắt ở bước ④. */
     get placed() { return steps.life.got.size; },
     /** Giây còn lại của đường về tự động; `null` = đã tắt đếm. */
     get autoLeft() { return autoLeft; },
