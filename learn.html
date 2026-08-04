@@ -50,27 +50,22 @@
       <div class="hud-line"><span><span class="led"></span>MOD-A</span><span data-i18n="online">SYS.ONLINE</span></div>
       <div class="m-ic" id="ic-lib"></div>
       <span class="m-tag" data-i18n="lib_tag">Space Knowledge Archive</span>
-      <h2 data-i18n="lib_title">Thư Viện Khám Phá</h2>
+      <h2 data-i18n="lib_title">Góc Khám Phá</h2>
       <p data-i18n="lib_desc">Đọc tin tức &amp; hình ảnh vũ trụ mới nhất từ NASA, ESA, MIT… Đọc xong được ghi vào hồ sơ.</p>
-      <button class="m-btn" id="btn-lib"><span id="ic-lib-btn"></span> <span data-i18n="lib_btn">Vào Thư Viện Reading</span></button>
+      <button class="m-btn" id="btn-lib"><span id="ic-lib-btn"></span> <span data-i18n="lib_btn">Khám phá ngay</span></button>
     </article>
 
-    <article class="mode mode--codex">
-      <div class="hud-line"><span><span class="led"></span>MOD-C</span><span data-i18n="online">SYS.ONLINE</span></div>
-      <div class="m-ic" id="ic-codex"></div>
-      <span class="m-tag" data-i18n="cx_tag">Terminology Codex</span>
-      <h2 data-i18n="cx_title">Sổ Tay Thuật Ngữ</h2>
-      <p data-i18n="cx_desc">Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.</p>
-      <button class="m-btn" id="btn-codex"><span id="ic-codex-btn"></span> <span data-i18n="cx_btn">Mở Sổ Tay</span></button>
-    </article>
-
+    <!-- ⚠️ THẺ MOD-C "Sổ Tay Thuật Ngữ" ĐÃ GỠ KHỎI ĐÂY (04/08/2026) — nó chuyển
+         lên thẻ MOD-06 ở dashboard.html, thay chỗ "Thư Viện Thiên Văn" chưa có
+         trang. ĐỪNG THÊM LẠI: hai đường vào cho cùng một khu là hai chỗ phải sửa
+         mỗi lần đổi tên, và trẻ không nhận ra đó là một chỗ. -->
     <article class="mode mode--quiz">
       <div class="hud-line"><span><span class="led"></span>MOD-B</span><span data-i18n="online">SYS.ONLINE</span></div>
       <div class="m-ic" id="ic-quiz"></div>
       <span class="m-tag" data-i18n="quiz_tag">Quiz Diagnostics</span>
-      <h2 data-i18n="quiz_title">Thử Thách Quiz</h2>
+      <h2 data-i18n="quiz_title">Đấu Trường Kiến Thức</h2>
       <p data-i18n="quiz_desc">Thử tài kiến thức qua các bài trắc nghiệm — làm ĐẠT là có Thiên thạch tím!</p>
-      <button class="m-btn" id="btn-quiz"><span id="ic-quiz-btn"></span> <span data-i18n="quiz_btn">Làm Quiz Ngay</span></button>
+      <button class="m-btn" id="btn-quiz"><span id="ic-quiz-btn"></span> <span data-i18n="quiz_btn">Bắt đầu thử thách</span></button>
     </article>
   </section>
 
@@ -122,15 +117,12 @@
       title_h:"TRẠM TRI THỨC & DỮ LIỆU VŨ TRỤ", eyebrow:"Trạm Tri Thức",
       intro:"Chọn hành trình học của bạn: khám phá dữ liệu vũ trụ từ NASA · ESA · MIT, hoặc thử tài qua Quiz để săn Thiên thạch tím.",
       online:"SYS.ONLINE",
-      lib_tag:"Space Knowledge Archive", lib_title:"Thư Viện Khám Phá",
+      lib_tag:"Space Knowledge Archive", lib_title:"Góc Khám Phá",
       lib_desc:"Đọc tin tức & hình ảnh vũ trụ mới nhất từ NASA, ESA, MIT… Đọc xong được ghi vào hồ sơ.",
-      lib_btn:"Vào Thư Viện Reading",
-      quiz_tag:"Quiz Diagnostics", quiz_title:"Thử Thách Quiz",
+      lib_btn:"Khám phá ngay",
+      quiz_tag:"Quiz Diagnostics", quiz_title:"Đấu Trường Kiến Thức",
       quiz_desc:"Thử tài kiến thức qua các bài trắc nghiệm — làm ĐẠT là có Thiên thạch tím!",
-      cx_tag:"Terminology Codex", cx_title:"Sổ Tay Thuật Ngữ",
-      cx_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
-      cx_btn:"Mở Sổ Tay",
-      quiz_btn:"Làm Quiz Ngay",
+      quiz_btn:"Bắt đầu thử thách",
       feat:"Bài viết nổi bật", note:"* Nội dung minh hoạ cho mục đích học tập. Xem chi tiết ở nguồn chính thức.",
       src_link:"Nguồn chính thức",
       reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
@@ -143,15 +135,12 @@
       title_h:"KNOWLEDGE STATION & COSMIC DATA", eyebrow:"Knowledge Station",
       intro:"Choose your learning path: explore cosmic data from NASA · ESA · MIT, or test yourself with quizzes to mine Purple Meteors.",
       online:"SYS.ONLINE",
-      lib_tag:"Space Knowledge Archive", lib_title:"Discovery Library",
+      lib_tag:"Space Knowledge Archive", lib_title:"Discovery Corner",
       lib_desc:"Read the latest space news & imagery from NASA, ESA, MIT… Finishing is saved to your profile.",
-      lib_btn:"Enter Reading Library",
-      quiz_tag:"Quiz Diagnostics", quiz_title:"Quiz Challenge",
+      lib_btn:"Explore now",
+      quiz_tag:"Quiz Diagnostics", quiz_title:"Knowledge Arena",
       quiz_desc:"Test your knowledge with quizzes — pass and you earn Purple Meteors!",
-      cx_tag:"Terminology Codex", cx_title:"Terminology Codex",
-      cx_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
-      cx_btn:"Open the Codex",
-      quiz_btn:"Take Quiz Now",
+      quiz_btn:"Start the challenge",
       feat:"Featured articles", note:"* Illustrative content for learning. See full details at the official source.",
       src_link:"Official source",
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
@@ -275,9 +264,7 @@
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     $("ic-lib").innerHTML=lic("telescope"); $("ic-quiz").innerHTML=lic("zap");
-    $("ic-codex").innerHTML=lic("book");
     $("ic-lib-btn").innerHTML=lic("book"); $("ic-quiz-btn").innerHTML=lic("zap");
-    $("ic-codex-btn").innerHTML=lic("sparkles");
     render();
     if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
   }
@@ -286,7 +273,6 @@
   $("back").addEventListener("click", function(){ window.location.href="dashboard.html"; });
   $("btn-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
   $("btn-lib").addEventListener("click", function(){ window.location.href="library.html"; });
-  $("btn-codex").addEventListener("click", function(){ window.location.href="codex.html"; });
   $("articles").addEventListener("click", function(e){ var c=e.target.closest ? e.target.closest(".art") : null; if(c && c.getAttribute("data-id")) openReader(c.getAttribute("data-id")); });
   $("reader-close").addEventListener("click", closeReader);
   $("reader-claim").addEventListener("click", claim);

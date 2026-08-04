@@ -172,8 +172,10 @@ def main():
         # trơn). Phép kiểm này từng đòi tên CŨ nên nó báo hỏng đúng lúc trang đã
         # sửa đúng — cùng loại lỗi "bộ kiểm bảo vệ trạng thái cũ" đã ghi ở nút
         # Mặt Trăng. So khớp CHÍNH XÁC cả chữ "Trạm" để đổi tên nửa vời cũng bị bắt.
+        # "Sổ Tay Thuật Ngữ" thay "Thư Viện Thiên Văn" ở MOD-06 (04/08/2026) — khu
+        # cũ chưa có trang, khu mới thì codex.html đã chạy thật.
         for want in ("Trung Tâm Nhiệm Vụ", "Trạm Tri Thức", "Khu Huấn Luyện",
-                     "Bản Đồ Thiên Hà", "Phòng Nghiên Cứu", "Thư Viện Thiên Văn"):
+                     "Bản Đồ Thiên Hà", "Phòng Nghiên Cứu", "Sổ Tay Thuật Ngữ"):
             chk(want in names, f"co card '{want}'", "")
         mods = [h["mod"] for h in hud]
         chk(all(any(m in x for x in mods) for m in
@@ -185,16 +187,22 @@ def main():
         mission_card = next(h for h in hud if "Nhiệm Vụ" in h["name"])
         chk(mission_card["href"] == "missions.html",
             "card Mission Control dan sang missions.html", str(mission_card["href"]))
-        # Hai card chua co trang: nut PHAI disabled
+        # Card chua co trang: nut PHAI disabled. Tu 04/08/2026 chi con MOT
+        # (Phong Nghien Cuu) — MOD-06 da thanh So Tay Thuat Ngu, bam duoc that.
         soons = [h for h in hud if h["soon"]]
-        chk(len(soons) == 2, "co dung 2 card 'Sap ra mat'", str([h["name"] for h in soons]))
+        chk(len(soons) == 1, "co dung 1 card 'Sap ra mat'", str([h["name"] for h in soons]))
         chk(all(h["disabled"] for h in soons),
-            "ca 2 card 'Sap ra mat' co nut disabled (bam khong duoc)")
+            "card 'Sap ra mat' co nut disabled (bam khong duoc)")
         chk(all(h["href"] is None for h in soons),
             "card 'Sap ra mat' KHONG dan sang trang nao")
-        # Hai card do phai xuong CUOI luoi (ready truoc, soon sau)
+        # Card do phai xuong CUOI luoi (ready truoc, soon sau)
         chk(min(h["top"] for h in soons) >= max(h["top"] for h in hud if not h["soon"]),
-            "2 card 'Sap ra mat' nam o hang duoi cung")
+            "card 'Sap ra mat' nam o hang duoi cung")
+        # MOD-06 la duong vao THAT: co the bam, dan sang codex.html
+        codex_card = next((h for h in hud if "Sổ Tay" in h["name"]), None)
+        chk(codex_card is not None and codex_card["href"] == "codex.html",
+            "card So Tay Thuat Ngu dan sang codex.html",
+            str(codex_card and codex_card["href"]))
         # Den bao: xanh = dang chay, ho phach = standby. Khong duoc de xanh o card khoa.
         led = pg.eval_on_selector_all(
             ".cards .hud.soon .hud-line .led",
@@ -239,7 +247,7 @@ def main():
         pg.wait_for_timeout(400)
         en_names = pg.eval_on_selector_all(".cards .hud h3", "es => es.map(e => e.textContent.trim())")
         for want in ("Mission Control", "Knowledge Station", "Training Simulator",
-                     "Galaxy Map", "Research Lab", "Star Archive"):
+                     "Galaxy Map", "Research Lab", "Terminology Codex"):
             chk(want in en_names, f"EN: co card '{want}'", "")
         chk("Navigation Hub" in pg.eval_on_selector(".hero .eyebrow", "e => e.textContent"),
             "EN: hero eyebrow 'Navigation Hub'")

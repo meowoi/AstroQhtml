@@ -1,4 +1,5 @@
-/* js/quiz-questions.js — NGÂN HÀNG CÂU HỎI của Thử Thách Quiz.
+/* js/quiz-questions.js — NGÂN HÀNG CÂU HỎI của Đấu Trường Kiến Thức
+   (tên khu tới 04/08/2026: "Thử Thách Quiz").
    CHỖ DUY NHẤT khai báo câu hỏi cho quiz.html (trước 30/07/2026 mảng này nằm
    inline trong quiz.html). Tách ra vì bộ câu hỏi giờ lớn hơn cả phần logic của
    trang, và để trang khác (library.html "Làm Quiz bài này", màn ôn tập sau

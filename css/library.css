@@ -1,5 +1,5 @@
 /* ==========================================================
-   library.css — phần RIÊNG của library.html (Thư Viện Khám Phá).
+   library.css — phần RIÊNG của library.html (Góc Khám Phá; tên cũ: Thư Viện Khám Phá).
 
    Khung chung (tokens, nền, .wrap, header .hub-top, .currency, .lang-switch,
    .toast) ở css/page-shell.css — nạp trước file này.
@@ -102,6 +102,15 @@
   background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);transition:transform .25s var(--jelly),filter .2s;}
 .read-btn img{width:15px;height:15px;object-fit:contain;}
 .read-btn:hover{filter:brightness(1.08);transform:translateY(-2px);} .read-btn:active{transform:scale(.94);}
+
+/* Ba thẻ còn lại của khối nổi bật (1 thẻ lớn + 3 = LUÔN 4 bài, xem `pickFeatured`
+   trong library.html). Dùng `repeat(3,1fr)` chứ KHÔNG `auto-fill` như `.grid`:
+   ở đây số thẻ cố định là 3, để auto-fill thì trên màn rộng chúng co lại và chừa
+   một khoảng trống bên phải, đọc ra như thẻ thứ tư tải hỏng. Dưới 760px xuống 2
+   cột rồi 1 cột — thẻ hẹp hơn ~215px thì tiêu đề bài viết vỡ thành 4 dòng. */
+.feat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px;}
+@media(max-width:760px){.feat-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:460px){.feat-row{grid-template-columns:1fr;}}
 
 .feed-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:26px 0 2px;}
 .feed-head .ft{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);}

@@ -163,13 +163,15 @@
        tự mới là mọi tài liệu cũ sai hết.
 
        THỨ TỰ HIỂN THỊ thì khác số hiệu (cũng như games.html: ready trước, soon
-       sau): Trung Tâm Nhiệm Vụ lên đầu vì đó là đường đi chính của trẻ, hai card
-       "Sắp ra mắt" xuống cuối.
+       sau): Trung Tâm Nhiệm Vụ lên đầu vì đó là đường đi chính của trẻ, card
+       "Sắp ra mắt" xuống cuối. Từ 04/08/2026 chỉ còn MỘT card khoá (Phòng Nghiên
+       Cứu) — MOD-06 đã đổi từ "Thư Viện Thiên Văn" (chưa có trang) sang Sổ Tay
+       Thuật Ngữ (đã có trang).
 
        ⚠️ `data-tour` chỉ có trên 3 card CŨ. Màn Comet dẫn tham quan
-       (js/onboard-tour.js) vẫn giữ 7 bước — nó không giới thiệu Research Lab và
-       Star Archive vì hai khu đó chưa dùng được, mà dẫn trẻ tới một chỗ rồi nói
-       "chưa mở đâu" thì thà đừng dẫn. Mission Control cũng chưa vào tour: thêm
+       (js/onboard-tour.js) vẫn giữ 7 bước — nó không giới thiệu Phòng Nghiên Cứu
+       vì khu đó chưa dùng được, mà dẫn trẻ tới một chỗ rồi nói "chưa mở đâu" thì
+       thà đừng dẫn. Mission Control và Sổ Tay Thuật Ngữ cũng chưa vào tour: thêm
        bước là phải kiểm lại chỗ đặt box thoại trên màn 390px. -->
   <section class="cards">
     <!-- Trung Tâm Nhiệm Vụ → missions.html (Sảnh Nhiệm Vụ) -->
@@ -195,7 +197,7 @@
       <span class="tag" data-i18n="quiz_tag">Học &amp; Quiz</span>
       <h3 data-i18n="quiz_title">Trạm Tri Thức</h3>
       <p data-i18n="quiz_desc">Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.</p>
-      <button class="jelly-btn" id="btn-quiz" data-i18n="quiz_btn">Vào học &amp; làm Quiz</button>
+      <button class="jelly-btn" id="btn-quiz" data-i18n="quiz_btn">Khám phá ngay</button>
       <div class="hud-line bot"><span>LOC: EARTH_ORBIT</span><span>PWR: 100%</span></div>
     </article>
 
@@ -217,7 +219,7 @@
            nên bao giờ cũng sai với Ghép Chòm Sao, game đó 3 tt/lượt chứ không phải 5).
            Kèm theo: khoá i18n `game_cost_per` và 3 luật CSS `.hud .cost*` đã xoá vì
            không còn ai dùng. -->
-      <button class="jelly-btn" id="btn-game" data-i18n="game_btn">Chơi Game</button>
+      <button class="jelly-btn" id="btn-game" data-i18n="game_btn">Bắt đầu luyện</button>
       <div class="hud-line bot"><span>FEE: 5 / RUN</span><span>PWR: 100%</span></div>
     </article>
 
@@ -230,6 +232,25 @@
       <p data-i18n="map_desc">Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.</p>
       <a class="jelly-btn" href="explorer.html" data-i18n="map_btn">Mở bản đồ</a>
       <div class="hud-line bot"><span>NAV: MILKY_WAY</span><span>SIG: STRONG</span></div>
+    </article>
+
+    <!-- Sổ Tay Thuật Ngữ → codex.html.
+         ⚠️ Card này THAY CHỖ "Thư Viện Thiên Văn" (MOD-06, chưa có trang) ngày
+         04/08/2026, và giữ nguyên số hiệu MOD-06 theo đúng luật đã ghi ở đầu khối:
+         số hiệu không đánh lại. Đổi được vì `codex.html` ĐÃ CHẠY THẬT — biến một ô
+         "sắp ra mắt" thành một khu dùng được ngay, thay vì để trẻ nhìn hai ô khoá
+         cạnh nhau. Trước đó Sổ Tay là thẻ MOD-C trong `learn.html`; thẻ đó đã GỠ
+         HẲN, một khu chỉ nên có MỘT đường vào (hai đường vào là hai chỗ phải sửa
+         mỗi lần đổi tên, và trẻ không biết hai cái đó là một).
+         `card--codex` (trước: `card--archive`) — CSS ở css/dashboard.css. -->
+    <article class="hud card--codex">
+      <div class="hud-line top"><span><span class="led"></span>MOD-06</span><span class="ok">SYS.ONLINE</span></div>
+      <div class="ic">📖</div>
+      <span class="tag" data-i18n="codex_tag">Tra cứu thuật ngữ</span>
+      <h3 data-i18n="codex_title">Sổ Tay Thuật Ngữ</h3>
+      <p data-i18n="codex_desc">Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.</p>
+      <a class="jelly-btn" href="codex.html" data-i18n="codex_btn">Mở Sổ Tay</a>
+      <div class="hud-line bot"><span>IDX: ONLINE</span><span>PWR: 100%</span></div>
     </article>
 
     <!-- Phòng Nghiên Cứu — CHƯA CÓ TRANG.
@@ -247,16 +268,6 @@
       <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
     </article>
 
-    <!-- Thư Viện Thiên Văn — CHƯA CÓ TRANG (xem ghi chú ở card trên). -->
-    <article class="hud card--archive soon">
-      <div class="hud-line top"><span><span class="led standby"></span>MOD-06</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
-      <div class="ic">📚</div>
-      <span class="tag" data-i18n="archive_tag">Tra cứu</span>
-      <h3 data-i18n="archive_title">Thư Viện Thiên Văn</h3>
-      <p data-i18n="archive_desc">Tra cứu hành tinh, chòm sao và thuật ngữ thiên văn theo bảng chữ cái.</p>
-      <button class="jelly-btn" data-i18n="soon_btn" disabled>Sắp ra mắt</button>
-      <div class="hud-line bot"><span>IDX: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
-    </article>
   </section>
 
   <!-- ============ CONSOLE DƯỚI: Radar kỹ năng + Nhật ký hoạt động ============ -->
@@ -306,7 +317,7 @@
       open_vault:"📦 Mở Kho Mẫu Vật",
       unit_hour:"giờ", unit_min:"phút",
       log_badge:"Mở khoá huy hiệu ‘{n}’",
-      log_empty:"Chưa có hoạt động nào. Làm Quiz hay chơi một lượt để bắt đầu nhé!",
+      log_empty:"Chưa có hoạt động nào, hãy tham gia khám phá hoặc huấn luyện nhé",
       ago_now:"Vừa xong", ago_min:"{n} phút trước", ago_hour:"{n} giờ trước",
       ago_yesterday:"Hôm qua", ago_day:"{n} ngày trước",
       banner_desc:"Chọn một khu vực để bắt đầu: nhận nhiệm vụ, học kiến thức, thử tài trong game hay du hành khắp thiên hà.",
@@ -318,10 +329,10 @@
       radar_sub:"Kỹ năng", log_sub:"Hoạt động gần đây",
       quiz_tag:"Học & Quiz", quiz_title:"Trạm Tri Thức",
       quiz_desc:"Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.",
-      quiz_btn:"Vào học & làm Quiz",
+      quiz_btn:"Khám phá ngay",
       game_tag:"Game 2D", game_title:"Khu Huấn Luyện",
       game_desc:"Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.",
-      game_btn:"Chơi Game",
+      game_btn:"Bắt đầu luyện",
       map_tag:"Khám phá 3D", map_title:"Bản Đồ Thiên Hà",
       map_desc:"Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.",
       map_btn:"Mở bản đồ", logout:"Đăng xuất",
@@ -330,8 +341,9 @@
       mission_btn:"Xem bảng nhiệm vụ",
       lab_tag:"Thí nghiệm ảo", lab_title:"Phòng Nghiên Cứu",
       lab_desc:"Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.",
-      archive_tag:"Tra cứu", archive_title:"Thư Viện Thiên Văn",
-      archive_desc:"Tra cứu hành tinh, chòm sao và thuật ngữ thiên văn theo bảng chữ cái.",
+      codex_tag:"Tra cứu thuật ngữ", codex_title:"Sổ Tay Thuật Ngữ",
+      codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
+      codex_btn:"Mở Sổ Tay",
       soon_btn:"Sắp ra mắt", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
@@ -351,7 +363,7 @@
       open_vault:"📦 Open Specimen Vault",
       unit_hour:"h", unit_min:"min",
       log_badge:"Unlocked ‘{n}’ badge",
-      log_empty:"No activity yet. Take a quiz or play a run to get started!",
+      log_empty:"No activity yet — go explore or start training!",
       ago_now:"Just now", ago_min:"{n} min ago", ago_hour:"{n} hr ago",
       ago_yesterday:"Yesterday", ago_day:"{n} days ago",
       banner_desc:"Pick an area to begin: take a mission, learn, test your skills in a game or travel across the galaxy.",
@@ -363,10 +375,10 @@
       radar_sub:"Skills", log_sub:"Recent activity",
       quiz_tag:"Learn & Quiz", quiz_title:"Knowledge Station",
       quiz_desc:"Learn astronomy facts and answer quizzes to earn more Purple Asteroids.",
-      quiz_btn:"Study & take Quiz",
+      quiz_btn:"Explore now",
       game_tag:"2D Game", game_title:"Training Simulator",
       game_desc:"Test your reflexes in a 2D game. Each play costs a few Purple Asteroids.",
-      game_btn:"Play Game",
+      game_btn:"Start training",
       map_tag:"3D exploration", map_title:"Galaxy Map",
       map_desc:"Fly through the Solar System and nearby star regions in real-time 3D.",
       map_btn:"Open map", logout:"Log out",
@@ -375,8 +387,9 @@
       mission_btn:"Open mission board",
       lab_tag:"Virtual experiments", lab_title:"Research Lab",
       lab_desc:"Run experiments yourself: mix elements, drop objects under different gravity.",
-      archive_tag:"Reference", archive_title:"Star Archive",
-      archive_desc:"Look up planets, constellations and astronomy terms from A to Z.",
+      codex_tag:"Term reference", codex_title:"Terminology Codex",
+      codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
+      codex_btn:"Open the Codex",
       soon_btn:"Coming soon", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       need_title:"Not enough Purple Asteroids!",
       need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",

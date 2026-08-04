@@ -31,7 +31,11 @@
 
 <div class="wrap">
   <header class="hub-top">
-    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trạm Tri Thức</span></button>
+    <!-- ⚠️ Quay về TRUNG TÂM ĐIỀU HƯỚNG, không phải Trạm Tri Thức (đổi 04/08/2026
+         cùng lúc với việc Sổ Tay chuyển lên thẻ MOD-06 ở dashboard). Nút quay lại
+         phải trỏ về đúng chỗ trẻ vừa bấm để tới đây; trỏ về learn.html là đưa nó
+         sang một khu nó chưa từng đi qua. -->
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
     <span class="hub-tag">[ TERM_CODEX ]</span>
     <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
       <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
@@ -117,7 +121,7 @@
 
   var I18N = {
     vi: {
-      title:"AstroQ — Sổ Tay Thuật Ngữ", back:"Về Trạm Tri Thức",
+      title:"AstroQ — Sổ Tay Thuật Ngữ", back:"Về Trung Tâm Điều Hướng",
       h1:"Sổ Tay Thuật Ngữ",
       sub:"Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       prog_tag:"[ TIẾN ĐỘ GIẢI MÃ ]", f_status:"Trạng thái",
@@ -136,7 +140,7 @@
       b_net:"Không kết nối được máy chủ — các thẻ dưới đây đang hiện ở trạng thái chưa giải mã."
     },
     en: {
-      title:"AstroQ — Terminology Codex", back:"Back to Knowledge",
+      title:"AstroQ — Terminology Codex", back:"Back to Navigation Hub",
       h1:"Terminology Codex",
       sub:"Answer a term correctly in the Quiz and its card is decoded.",
       prog_tag:"[ DECODING PROGRESS ]", f_status:"Status",
@@ -296,7 +300,7 @@
     if(e.key==="Escape" && !$("modal").hidden) closeModal();
   });
   $("m-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
-  $("back").addEventListener("click", function(){ location.href = "learn.html"; });
+  $("back").addEventListener("click", function(){ location.href = "dashboard.html"; });
 
   /* ================= Số thật từ server ================= */
   /* ⚠️ NHẬN CHỮ ĐÃ DỊCH, không nhận khoá. Nhận khoá (`banner("b_auth")`) thì khoá

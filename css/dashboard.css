@@ -251,9 +251,12 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .card--map    {--ic-bg:rgba(143,123,255,.2);}
 .card--mission{--ic-bg:rgba(74,222,128,.18);}
 .card--lab    {--ic-bg:rgba(244,114,182,.16);}
-.card--archive{--ic-bg:rgba(255,207,107,.16);}
+/* `.card--codex` (04/08/2026) — trước là `.card--archive` của thẻ "Thư Viện Thiên
+   Văn"; thẻ đó đã nhường chỗ MOD-06 cho Sổ Tay Thuật Ngữ (trang có thật). Giữ
+   nguyên tông hổ phách. */
+.card--codex  {--ic-bg:rgba(255,207,107,.16);}
 
-/* ---- Khu vực CHƯA CÓ TRANG (Phòng Nghiên Cứu · Thư Viện Thiên Văn) ----
+/* ---- Khu vực CHƯA CÓ TRANG (Phòng Nghiên Cứu) ----
    Ba việc, và cả ba đều cần thiết để card không nói dối:
      · đèn + nhãn đổi sang HỔ PHÁCH (`.standby`) chứ không xanh: `SYS.ONLINE` màu
        xanh cạnh một cái nút bấm không được là hai thông điệp ngược nhau;

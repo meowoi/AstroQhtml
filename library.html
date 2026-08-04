@@ -9,7 +9,7 @@
      follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa,
      đồng thời bỏ noindex ở landing-app.html và bổ sung URL vào sitemap.xml. -->
 <meta name="robots" content="noindex,follow" />
-<title>AstroQ — Thư Viện Khám Phá</title>
+<title>AstroQ — Góc Khám Phá</title>
 
 <link rel="stylesheet" href="css/fonts.css" />
 
@@ -102,7 +102,7 @@
   var I18N={
     vi:{
       tt_name:"Thiên thạch tím",
-      a_source:"Nguồn", title:"AstroQ — Thư Viện Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
+      a_source:"Nguồn", title:"AstroQ — Góc Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
       src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
       st_read:"Đã đọc (bài)", st_coll:"Tổng bài viết", articles:"Bài viết", all_topics:"Tất cả chủ đề",
       cat_astronomy:"Thiên văn", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot",
@@ -113,11 +113,11 @@
       toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
     en:{
       tt_name:"Purple Meteor",
-      a_source:"Source", title:"AstroQ — Discovery Library", back:"Back to Knowledge Station", search_ph:"Search articles…",
+      a_source:"Source", title:"AstroQ — Discovery Corner", back:"Back to Knowledge Station", search_ph:"Search articles…",
       src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
       st_read:"Read (articles)", st_coll:"Total articles", articles:"Articles", all_topics:"All topics",
       cat_astronomy:"Astronomy", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots",
-      featured:"Featured article", read_now:"Read Now", src_link:"Source",
+      featured:"Featured articles", read_now:"Read Now", src_link:"Source",
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
       unread_badge:"Unread",
       quiz_cta:"TAKE THE QUIZ IF YOU UNDERSTOOD IT", credit:"Data source",
@@ -133,7 +133,7 @@
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
   var IMG="https://images-assets.nasa.gov/image/";
   var ARTICLES=[
-    { id:"lib-nebula", hero:true, src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"],
+    { id:"lib-nebula", src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"],
       img:IMG+"PIA25433/PIA25433~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/mission/webb/",
       title:{vi:"Tinh vân Đại Bàng — vườn ươm của các ngôi sao",en:"The Eagle Nebula — a nursery of stars"},
       body:{vi:["Trong vũ trụ có những đám mây khí và bụi khổng lồ gọi là <b>tinh vân</b>. Bên trong chúng, khí co lại và nóng dần lên cho tới khi bùng cháy thành những ngôi sao mới.",
@@ -212,6 +212,27 @@
   function markRead(id){ var s=readSet(); if(s.indexOf(id)<0){ s.push(id); try{ localStorage.setItem(READ_KEY,JSON.stringify(s)); }catch(e){} } }
   function libReadCount(){ var s=readSet(); return ARTICLES.filter(function(a){ return s.indexOf(a.id)>=0; }); }
 
+  /* ===== Bài viết nổi bật: LUÔN ĐÚNG 4, chưa đọc lên trước =====
+     ⚠️ Trước 04/08/2026 chỉ có MỘT bài nổi bật và nó ghim cứng bằng `hero:true`
+     trên `lib-nebula` — nghĩa là trẻ đọc xong bài đó rồi thì mỗi lần mở trang vẫn
+     thấy đúng nó chiếm chỗ đẹp nhất, còn 7 bài chưa đọc thì nằm dưới lưới.
+     Nay: chọn 4 bài, ưu tiên bài CHƯA ĐỌC (giữ thứ tự khai báo), thiếu thì lấy
+     thêm bài đã đọc cho đủ 4 — nên con số 4 không bao giờ hụt kể cả khi trẻ đã
+     đọc hết. `FEATURED` tính MỘT LẦN lúc mở trang, cố ý: tính lại sau mỗi lần
+     đánh dấu đã đọc thì bài vừa đọc biến khỏi khối nổi bật ngay dưới tay trẻ,
+     và cả khối nhảy chỗ. Phiên đăng nhập sau mở lại trang là đã có thứ tự mới. */
+  var FEAT_N = 4;
+  function pickFeatured(){
+    var unread=[], seen=[];
+    ARTICLES.forEach(function(a){ (isRead(a.id) ? seen : unread).push(a); });
+    return unread.concat(seen).slice(0, Math.min(FEAT_N, ARTICLES.length));
+  }
+  var FEATURED = pickFeatured();
+  function isFeatured(id){
+    for(var i=0;i<FEATURED.length;i++){ if(FEATURED[i].id===id) return true; }
+    return false;
+  }
+
   function paintBalance(){ $("bal").textContent=Economy.getAsteroids(); }
   /* ⚠️ Ô thứ hai TRƯỚC ĐÂY cộng tổng tt thưởng đọc bài. Đọc bài không thưởng nữa
      nên con số đó luôn là 0 — một ô thống kê luôn bằng 0 đọc ra thành "app hỏng".
@@ -232,11 +253,15 @@
     return '<span class="badge '+cls+'">🛰️ '+a.src+'</span>';
   }
 
-  /* ===== Render hero ===== */
-  function renderHero(){
-    var a=ARTICLES.filter(function(x){return x.hero;})[0]; if(!a) return;
-    var read=isRead(a.id);
-    $("hero-wrap").innerHTML =
+  /* ===== Render khối nổi bật (1 thẻ lớn + 3 thẻ thường = 4) ===== */
+  function renderFeatured(){
+    var box=$("hero-wrap");
+    /* Đang lọc / đang tìm thì ẨN khối nổi bật và cho lưới hiện MỌI kết quả khớp.
+       Bản cũ luôn giữ bài `hero` ngoài lưới, nên tìm đúng tên bài đó lại ra
+       "không tìm thấy bài viết phù hợp" — bài có thật mà máy bảo không có. */
+    if(filterOn() || !FEATURED.length){ box.innerHTML=""; return; }
+    var a=FEATURED[0], rest=FEATURED.slice(1);
+    box.innerHTML =
       '<article class="feat" data-id="'+a.id+'">'+imgboxHtml(a)+
         '<div class="feat-body">'+badgeHtml(a)+
           '<div class="feat-eyebrow">'+t("featured")+'</div>'+
@@ -244,7 +269,8 @@
           '<p>'+L({vi:a.body.vi[0].replace(/<[^>]+>/g,""),en:a.body.en[0].replace(/<[^>]+>/g,"")})+'</p>'+
           '<button class="read-btn">'+lic("book")+' '+t("read_now")+'</button>'+
         '</div>'+
-      '</article>';
+      '</article>'+
+      (rest.length ? '<div class="feat-row">'+rest.map(cardHtml).join("")+'</div>' : "");
   }
 
   /* ===== Render grid ===== */
@@ -255,19 +281,25 @@
       if(s.indexOf(fSearch)<0) return false; }
     return true;
   }
+  function filterOn(){ return !!fSearch || fSrc!=="all" || fCat!=="all"; }
+  /* Thẻ dùng chung cho lưới VÀ cho 3 ô của khối nổi bật — một hàm, không chép hai
+     bản: hai bản thì sớm muộn badge "đã đọc" ở hai nơi hiện khác nhau. */
+  function cardHtml(a){
+    var r=isRead(a.id)?'<span class="r done">'+lic("book")+' '+t("read_badge")+'</span>'
+                      :'<span class="r">'+lic("book")+' '+t("unread_badge")+'</span>';
+    return '<article class="card" data-id="'+a.id+'">'+imgboxHtml(a)+
+      '<div class="cbody">'+badgeHtml(a)+'<h3>'+L(a.title)+'</h3>'+
+        '<div class="foot">'+r+'<span class="cat-dot">'+t("cat_"+a.cat)+'</span></div>'+
+      '</div></article>';
+  }
   function render(){
-    var list=ARTICLES.filter(function(a){ return !a.hero && matches(a); });
+    var hideFeat = filterOn();   // đang lọc → khối nổi bật ẩn, lưới hiện đủ
+    var list=ARTICLES.filter(function(a){
+      return (hideFeat || !isFeatured(a.id)) && matches(a);
+    });
     var box=$("grid");
     if(!list.length){ box.innerHTML='<div class="empty">'+t("none")+'</div>'; $("feed-count").textContent="0"; return; }
-    box.innerHTML=list.map(function(a){
-      var read=isRead(a.id);
-      var r=read?'<span class="r done">'+lic("book")+' '+t("read_badge")+'</span>'
-                :'<span class="r">'+lic("book")+' '+t("unread_badge")+'</span>';
-      return '<article class="card" data-id="'+a.id+'">'+imgboxHtml(a)+
-        '<div class="cbody">'+badgeHtml(a)+'<h3>'+L(a.title)+'</h3>'+
-          '<div class="foot">'+r+'<span class="cat-dot">'+t("cat_"+a.cat)+'</span></div>'+
-        '</div></article>';
-    }).join("");
+    box.innerHTML=list.map(cardHtml).join("");
     $("feed-count").textContent=list.length;
   }
 
@@ -327,7 +359,7 @@
     if(window.AstroQProgress) AstroQProgress.lesson(curArt.id);
     toast(t("toast_claim"));
     var btn=$("r-claim"); btn.className="r-claim done"; btn.disabled=true; btn.textContent=t("claimed");
-    renderHero(); render(); renderCats(); paintStats();
+    renderFeatured(); render(); renderCats(); paintStats();
   }
 
   /* ===== Toast ===== */
@@ -342,19 +374,27 @@
     $("ic-search").innerHTML=lic("search"); $("ic-cat").innerHTML=lic("layers"); $("ic-award").innerHTML=lic("award");
     $("ic-read").innerHTML=lic("book"); $("ic-total").innerHTML=lic("layers");
     $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");
-    renderHero(); render(); renderCats(); paintStats();
+    renderFeatured(); render(); renderCats(); paintStats();
     if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
   }
 
   /* ===== Sự kiện ===== */
   $("back").addEventListener("click", function(){ window.location.href="learn.html"; });
-  $("q").addEventListener("input", function(e){ fSearch=(e.target.value||"").trim().toLowerCase(); render(); });
+  /* ⚠️ MỖI CHỖ ĐỔI BỘ LỌC PHẢI GỌI CẢ `renderFeatured()`, không chỉ `render()`:
+     khối nổi bật ẩn/hiện THEO bộ lọc, nên vẽ lại mỗi mình cái lưới thì lúc đang
+     lọc trẻ vẫn thấy 4 thẻ nổi bật không liên quan nằm trên đầu kết quả — và tệ
+     hơn, chúng lại trùng với chính mấy thẻ vừa hiện dưới lưới. */
+  $("q").addEventListener("input", function(e){ fSearch=(e.target.value||"").trim().toLowerCase();
+    renderFeatured(); render(); });
   $("srcfilter").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest("button"):null; if(!b) return;
     fSrc=b.getAttribute("data-src");
-    $("srcfilter").querySelectorAll("button").forEach(function(x){ x.classList.toggle("active", x===b); }); render(); });
+    $("srcfilter").querySelectorAll("button").forEach(function(x){ x.classList.toggle("active", x===b); });
+    renderFeatured(); render(); });
   $("cats").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest(".cat"):null; if(!b) return;
-    fCat=b.getAttribute("data-cat"); renderCats(); render(); });
-  $("hero-wrap").addEventListener("click", function(e){ var h=e.target.closest?e.target.closest(".feat"):null; if(h) openReader(h.getAttribute("data-id")); });
+    fCat=b.getAttribute("data-cat"); renderCats(); renderFeatured(); render(); });
+  /* Khối nổi bật chứa CẢ thẻ lớn `.feat` lẫn 3 thẻ `.card` — bắt cả hai, không
+     thì 3 thẻ kia bấm không ăn (im lặng, trông như trang treo). */
+  $("hero-wrap").addEventListener("click", function(e){ var h=e.target.closest?e.target.closest(".feat,.card"):null; if(h) openReader(h.getAttribute("data-id")); });
   $("grid").addEventListener("click", function(e){ var c=e.target.closest?e.target.closest(".card"):null; if(c) openReader(c.getAttribute("data-id")); });
   $("r-close").addEventListener("click", closeReader);
   $("r-claim").addEventListener("click", claim);

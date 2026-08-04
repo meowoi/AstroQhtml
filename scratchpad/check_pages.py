@@ -497,6 +497,78 @@ if all(_rl):
     check("ca 4 nhan deu neo vao 'muc nuoc bien'",
           _j.count("mực nước biển") == 4, _j[:70])
 
+print("\n=== [3g] Nhiem Vu 01 - 3 loi choi that 03/08/2026 (`docs/decisions/007`) ===")
+# Ba loi chu du an bat duoc khi choi that. Ca ba deu "hien ra dung nhu binh thuong" nen
+# doc code khong thay - chi thay khi chieu lai chinh cai quyet dinh da chot.
+_e2 = strip_comments(rd("js/earth2d.js"))
+_me3g = strip_comments(me)
+_css3g = strip_comments(rd("css/mission-earth.css"))
+
+# --- (1) DIA MAT TROI: rac con sot cua mot quyet dinh da chot tu 02/08 ---
+# WARN Loi thoai buoc 3 da viet lai tu 02/08/2026 de noi ro Mat Troi KHONG nam tren tam
+#   ban do (co phep kiem o muc [3e]), va chinh chu thich cua phep kiem do ghi "sau khi
+#   bo nut `.e2-sun`" - nhung THE DOM thi khong ai xoa. Nen no van ve mot dia sang mo o
+#   goc tren-phai trong MOI buoc, va chu du an hoi lai: "van con hinh mat troi o day?
+#   bo di". Cung ho voi `.e2-terminator` va vanh tron cu cua `.e2-shield`.
+check("KHONG con dung `.e2-sun` trong js/earth2d.js (bo han 03/08/2026)",
+      "e2-sun" not in _e2)
+check("KHONG con rule `.e2-sun` trong CSS", "e2-sun" not in _css3g)
+# WARN Hai cho nay tung song sot sau khi bien `sun` bi xoa - mot ReferenceError NAM CHO
+#   nguoi goi dau tien, va cai thu nhat thi giet ca trang ngay luc dung canh.
+check("KHONG con `sun.addEventListener` (ReferenceError giet ca trang)",
+      "sun.addEventListener" not in _e2)
+check("KHONG con nhanh `screenOf('sun')` tro vao bien da xoa",
+      'kind === "sun"' not in _e2 and "kind === 'sun'" not in _e2)
+check("KHONG con `pick({type:'sun'})` o trang nhiem vu",
+      "type: 'sun'" not in _me3g and 'type:"sun"' not in _me3g)
+# `igniteSun`/`dimSun` PHAI con - bai hoc buoc 3 nam o do (ca ban do toi di roi sang lai)
+check("VAN con `igniteSun`/`dimSun` (bai hoc buoc 3 khong bi bo theo)",
+      "igniteSun" in _e2 and "dimSun" in _e2)
+check("`igniteSun`/`dimSun` van doi `.e2-night`", _e2.count("e2-night") >= 4)
+
+# --- (2) BAN TAY phai DI THEO TRE, khong theo thu tu khai bao ---
+# WARN Hai luat DUNG nhung NGUOC NHAU tung nam canh nhau: thiet ke cho "cham dom nao
+#   truoc cung duoc" (`004`), nhung ban tay lai chi vao dom DAU TIEN CHUA CHAM theo thu
+#   tu khai bao. Tre cham tu giua ra thi dom so 0 chua cham mai va tay DUNG NGUYEN mot
+#   cho suot nhieu cu cham lien - tai hien duoc: 5 cu cham lien, tay khong nhich 1 pixel.
+check("`nextLeft` nhan `fromId` (dom vua cham) chu khong chi (list, gotIds)",
+      "function nextLeft(list, gotIds, fromId)" in _me3g)
+check("buoc 1 truyen dom VUA CHAM vao `nextLeft`",
+      "nextLeft(CONTINENTS, this.gotIds, p.id)" in _me3g)
+check("buoc 3 truyen dom VUA CHAM vao `nextLeft`",
+      "nextLeft(ZONES, this.got, z.id)" in _me3g)
+# WARN `dlon` phai goi ve +-180: khong goi thi `oceania`(135) va `namerica`(-100) do ra
+#   235 do trong khi duong that qua Thai Binh Duong chi 125 do - tay se chi sai dom.
+check("do khoang cach co GOI kinh do ve +-180 (khong thi chon sai dom gan nhat)",
+      "360 - d : d" in _me3g)
+# WARN Khong co be mat nay thi phep kiem chi do duoc *co ban tay hay khong*, chu khong do
+#   duoc no chi vao DUNG dom nao - ma loi vua sua la ban tay hien ro rang, chi la sai cho.
+check("co be mat test `__mission.handTarget` de do ban tay chi vao DAU",
+      "get handTarget()" in _me3g)
+
+# --- (3) THE NOI DUNG khong duoc chong len BANG DAY ---
+# WARN The la role=dialog aria-modal=true nhung nam TRUOC moi `.me-board` trong DOM va ca
+#   hai deu khong khai z-index -> bang ve DE LEN the. Nut "Da hieu!" bi cat mat nua duoi,
+#   ma do la duong DUY NHAT dong the (moc tu dong 3,4 giay da bo 02/08/2026).
+check("`.me-card` co z-index cao hon `.me-board`", "z-index:20" in _css3g)
+check("co class `.me-card.lift` canh giua phan khung con lai", ".me-card.lift{" in _css3g)
+check("`.me-card.lift` dung lai bien `--board-h` cua `.me-say.lift` (mot co che)",
+      _css3g.count("--board-h") >= 2)
+# WARN San `max(..., 8px)`: tren dien thoai doc bang lat cat chiem phan lon khung, khong
+#   co san thi `top` ra so AM va the troi len ngoai mep tren, tieu de bi cat.
+check("`.me-card.lift` co SAN 8px (khong de `top` ra so am tren dien thoai doc)",
+      "max(8px" in _css3g)
+check("`liftCard()` do chieu cao bang NGAY LUC MO THE (bang cao dan theo so the xep)",
+      "function liftCard()" in _me3g and ".me-board.show" in _me3g)
+# WARN Phai do TRONG than `showCard`, khong do tren ca file: `classList.add('show')` xuat
+#   hien o ca chuc cho khac (bang muc tieu, cac `.me-board`...) nen `index()` tren ca file
+#   se bat dung cai dau tien va bao hong oan. Ban dau tien cua phep kiem nay hong dung
+#   vi ly do do.
+_sc = _me3g.split("function showCard(", 1)[1].split(chr(10) + "function ", 1)[0]
+check("`showCard` goi `liftCard()` TRUOC khi hien the",
+      "liftCard();" in _sc and
+      _sc.index("liftCard();") < _sc.index("classList.add('show')"))
+
 print("\n=== [3e] Nhiem Vu 01 sau `005`: 0 vung toi · 0 qua cau · noi dung co nguon ===")
 # Chot 02/08/2026, `docs/decisions/005`. Muc nay canh nhung RANG BUOC "tu nay" cua no —
 # thu ma doc code khong thay sai, chi thay sai khi chieu lai quyet dinh.
@@ -940,10 +1012,11 @@ for f in sorted(os.listdir(ROOT)):
     s_nc = strip_comments(rd(f))
     if 'data-i18n="back"' not in s_nc and 'data-i18n="home_btn"' not in s_nc:
         continue
-    # library.html va codex.html deu la trang CON cua khu Tri Thuc (mo tu learn.html)
-    # nen nut quay lai tro ve do, khong ve hub — di mot buoc len cha la dung hon la
-    # nhay hai buoc ve goc.
-    if f in ("library.html", "codex.html"):
+    # library.html la trang CON cua khu Tri Thuc (mo tu learn.html) nen nut quay lai
+    # tro ve do, khong ve hub — di mot buoc len cha la dung hon la nhay hai buoc ve
+    # goc. ⚠️ codex.html DA RA KHOI danh sach nay (04/08/2026): So Tay nay mo tu the
+    # MOD-06 o dashboard, nen "mot buoc len cha" CHINH LA hub.
+    if f in ("library.html",):
         continue
     check(f"{f}: nut quay lai goi dung ten hub",
           "Trung Tâm Điều Hướng" in s_nc and "Navigation Hub" in s_nc)
@@ -955,25 +1028,34 @@ for f in sorted(os.listdir(ROOT)):
 # trong DIEU KIEN, khong nam trong nhan.
 print("\n=== [7b] Dashboard: 6 card, 3 khu moi ===")
 for key, mod in (("mission_title", "MOD-04"), ("lab_title", "MOD-05"),
-                 ("archive_title", "MOD-06")):
+                 ("codex_title", "MOD-06")):
     check(f"dashboard.html: co khoa i18n '{key}'", key in dash)
     check(f"dashboard.html: co so hieu {mod}", mod in dash_nc)
 for label, nm in (("Trung Tam Nhiem Vu", "Trung Tâm Nhiệm Vụ"),
                   ("Mission Control", "Mission Control"),
                   ("Phong Nghien Cuu", "Phòng Nghiên Cứu"),
                   ("Research Lab", "Research Lab"),
-                  ("Thu Vien Thien Van", "Thư Viện Thiên Văn"),
-                  ("Star Archive", "Star Archive")):
+                  ("So Tay Thuat Ngu", "Sổ Tay Thuật Ngữ"),
+                  ("Terminology Codex", "Terminology Codex")):
     check(f"dashboard.html: co ten '{label}'", nm in dash)
 # So hieu MOD cu KHONG duoc danh lai (tai lieu + cach nguoi dung goi ten bam vao no)
 for mod in ("MOD-01", "MOD-02", "MOD-03"):
     check(f"dashboard.html: giu nguyen {mod}", mod in dash_nc)
-# Hai khu chua co trang thi PHAI noi that: nut disabled, khong dan di dau
-check("dashboard.html: 2 card 'soon' co nut disabled",
-      dash_nc.count('data-i18n="soon_btn" disabled') == 2,
+# ⚠️ CHI CON MOT khu chua co trang (Phong Nghien Cuu) — MOD-06 doi tu "Thu Vien
+# Thien Van" (chua co trang) sang So Tay Thuat Ngu (codex.html, da chay that) ngay
+# 04/08/2026. Con so 1 nay la phep kiem CO RANG: them mot card khoa nua ma khong
+# ghi vao day thi no bao hong.
+check("dashboard.html: dung 1 card 'soon' co nut disabled",
+      dash_nc.count('data-i18n="soon_btn" disabled') == 1,
       str(dash_nc.count('data-i18n="soon_btn" disabled')))
 check("dashboard.html: card 'soon' KHONG dan sang trang khong ton tai",
       'href="research-lab.html"' not in dash and 'href="star-archive.html"' not in dash)
+# MOD-06 phai la duong vao THAT su bam duoc, khong con la o "sap ra mat"
+check("dashboard.html: card MOD-06 dan sang codex.html",
+      'href="codex.html"' in dash_nc)
+check("dashboard.html: KHONG con ten khu chua ton tai 'Thu Vien Thien Van'",
+      "Thư Viện Thiên Văn" not in strip_comments(dash)
+      and "Star Archive" not in strip_comments(dash))
 check("dashboard.html: card Mission Control dan sang missions.html",
       'href="missions.html"' in dash)
 
@@ -1260,13 +1342,21 @@ check("bo nguon so tay TRUNG KHOP bo nguon bank (de duoc kiem 200 mot lan)",
       _cx_urls == _bank_urls,
       f"chi so tay: {sorted(_cx_urls - _bank_urls)} · chi bank: {sorted(_bank_urls - _cx_urls)}")
 
-# --- (7) duong vao tu learn.html + khong con loi hua thuong doc bai ---
+# --- (7) duong vao + khong con loi hua thuong doc bai ---
+# ⚠️ DUONG VAO DOI CHO 04/08/2026: So Tay khong con la the MOD-C trong learn.html,
+# no la the MOD-06 tren dashboard (thay cho "Thu Vien Thien Van" chua co trang).
+# Hai phep kiem duoi canh dung MOT duong vao — them lai the o learn.html thi bao
+# hong, vi hai duong vao cho cung mot khu la hai cho phai sua moi lan doi ten.
 _learn = rd("learn.html")
-check("learn.html co the MOD-C dan sang codex.html",
-      'id="btn-codex"' in _learn and 'location.href="codex.html"' in strip_comments(_learn))
-for key in ("cx_tag", "cx_title", "cx_desc", "cx_btn"):
-    check(f"learn.html: khoa `{key}` co o CA vi va en", _learn.count(key + ":") == 2,
-          f"{_learn.count(key + ':')} lan")
+_dash_cx = strip_comments(rd("dashboard.html"))
+check("dashboard.html co the MOD-06 dan sang codex.html",
+      'href="codex.html"' in _dash_cx and "MOD-06" in _dash_cx)
+for key in ("codex_tag", "codex_title", "codex_desc", "codex_btn"):
+    check(f"dashboard.html: khoa `{key}` co o CA vi va en",
+          rd("dashboard.html").count(key + ":") == 2,
+          f"{rd('dashboard.html').count(key + ':')} lan")
+check("learn.html KHONG con duong vao thu hai cho So Tay",
+      "codex.html" not in strip_comments(_learn))
 # ⚠️ Doc bai khong con thuong tt (chot cung ngay) — cau chu quang cao phai theo.
 check("learn.html KHONG con hua 'doc xong nhan Thien thach tim'",
       "Đọc xong nhận Thiên thạch tím" not in _learn

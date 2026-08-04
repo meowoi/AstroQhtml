@@ -16,9 +16,10 @@
 
    ⚠️ VẪN 7 BƯỚC dù dashboard đã lên 6 card (29/07/2026). Ba card thêm vào
    KHÔNG có `data-tour`, và đó là quyết định có chủ ý:
-     · Phòng Nghiên Cứu và Thư Viện Thiên Văn chưa có trang → dẫn trẻ tới rồi
-       nói "chưa mở đâu" thì thà đừng dẫn;
-     · Trung Tâm Nhiệm Vụ thì đã có thật, nhưng thêm một bước nữa là phải đo
+     · Phòng Nghiên Cứu chưa có trang → dẫn trẻ tới rồi nói "chưa mở đâu" thì
+       thà đừng dẫn;
+     · Trung Tâm Nhiệm Vụ và Sổ Tay Thuật Ngữ (thẻ MOD-06 từ 04/08/2026, thay
+       chỗ "Thư Viện Thiên Văn" chưa có trang) thì đã có thật, nhưng thêm bước là phải đo
        lại chỗ đặt box thoại: thẻ HUD cao ~375px cộng box ~245px đã vượt màn
        hình 900px, nhánh "đặt sang BÊN" mới cứu được — thêm bước mà không đo
        lại là box rơi vào giữa và đè lên chính khu vực đang giới thiệu.

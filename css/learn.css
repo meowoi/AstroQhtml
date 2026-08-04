@@ -18,12 +18,14 @@
 .hero .eyebrow{font-size:11px;}
 .hero p{font-size:14px;max-width:560px;}
 /* ============ 2 MODE CARDS ============ */
-/* ⚠️ BA thẻ chứ không còn hai (thêm MOD-C Sổ Tay 30/07/2026). Lưới 2 cột cố định
-   thì thẻ thứ ba nằm lẻ một hàng, rộng gấp đôi hai thẻ trên — trông như lỗi bố
-   cục. Điện thoại 1 cột · tablet 2 cột · từ 900px thì 3 cột đều nhau. */
+/* ⚠️ HAI thẻ (04/08/2026): MOD-C Sổ Tay Thuật Ngữ đã chuyển lên dashboard, thay
+   chỗ MOD-06 "Thư Viện Thiên Văn". Lưới vì thế trở lại tối đa 2 cột — để
+   `repeat(3,1fr)` với hai thẻ thì chúng co lại còn 2/3 hàng và chừa một khoảng
+   trống bên phải, trông như thẻ thứ ba tải hỏng.
+   Thêm thẻ thứ ba thì nhớ mở lại nấc 900px → 3 cột (đừng để 2 cột: thẻ lẻ sẽ nằm
+   một mình một hàng rộng gấp đôi). */
 .modes{display:grid;grid-template-columns:1fr;gap:22px;margin-top:26px;}
 @media(min-width:600px){.modes{grid-template-columns:1fr 1fr;}}
-@media(min-width:900px){.modes{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:680px){.modes{grid-template-columns:1fr;}}
 .mode{position:relative;display:flex;flex-direction:column;border-radius:20px;padding:26px 24px;overflow:hidden;
   --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.9);
@@ -51,7 +53,6 @@
 .mode .m-btn:active{transform:scale(.94);}
 .mode--lib {--neon:rgba(56,189,248,.4);--neonS:rgba(56,189,248,.9);--ic-bg:rgba(56,189,248,.16);}
 .mode--quiz{--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
-.mode--codex{--neon:rgba(74,222,128,.4);--neonS:rgba(74,222,128,.9);--ic-bg:rgba(74,222,128,.16);}
 .mode--quiz .m-btn{background:linear-gradient(120deg,var(--purple),#8f7bff);box-shadow:0 12px 26px -12px rgba(192,132,252,.7);}
 
 /* ============ FEATURED ARTICLES ============ */
