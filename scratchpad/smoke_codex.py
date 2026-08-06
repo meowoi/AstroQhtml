@@ -19,8 +19,13 @@ with sync_playwright() as p:
         # ghim ngon ngu VI (navigator.language cua Chromium la en-US -> se chay ban EN)
         pg.add_init_script("localStorage.setItem('astroq-lang','vi')")
         pg.goto(URL, wait_until="load"); pg.wait_for_timeout(3600)
+        # ⚠️ SUY RA SO THE TU CHINH DU LIEU, khong gan cung. Ban cu doi dung 15 va bao
+        #    hong ngay khi Dot 1 them 4 the — trong khi khong co gi sai. Dieu muon biet
+        #    la "luoi ve DU moi the co trong du lieu", khong phai "co dung 15 the".
         n=pg.eval_on_selector_all(".cx-item","els=>els.length")
-        check(f"[{label}] luoi ve du 15 the", n==15, f"{n}")
+        n_data=pg.evaluate("() => AstroQCodex.all().length")
+        check(f"[{label}] luoi ve du moi the co trong du lieu", n==n_data, f"{n}/{n_data}")
+        check(f"[{label}] khong phai luoi rong (phep kiem khong dat rong)", n_data>=15, f"{n_data}")
         nlock=pg.eval_on_selector_all(".cx-item.lock","e=>e.length")
         nsoon=pg.eval_on_selector_all(".cx-item.soon","e=>e.length")
         # ⚠️ SUY RA, KHONG GAN CUNG "10 lock + 5 soon". Tu 30/07/2026 ca 15 thuat ngu
@@ -90,13 +95,25 @@ with sync_playwright() as p:
         // mo phong: tra loi dung ca luot -> nhung khoa nao duoc giai ma
         const decoded = new Set(round.map(q => q.term));
         const opened = AstroQCodex.all().filter(t => AstroQCodex.isDecoded(t, decoded));
+        // ⚠️ Dem lai tu chinh `q:[]` cua tung the — de doi chieu voi `quizTerms()`.
+        //    Lech nhau nghia la mot khoa bi rot tren duong tu the sang bang tra cuu.
+        const per = AstroQCodex.all().map(t => (t.q || []).length);
         return { round: round.length, noTerm, keys: keys.length,
+                 minKeys: per.length ? Math.min.apply(null, per) : 0,
+                 keysFromTerms: per.reduce((a, b) => a + b, 0),
                  unmapped, opened: opened.length, sample: opened.map(t => t.id).slice(0,3) };
     })()""")
     check("moi cau trong mot luot quiz deu co khoa `term`", r["noTerm"]==0, f"{r['noTerm']} cau thieu")
-    # ⚠️ SUY RA tu so thuat ngu (2 khoa/thuat ngu), khong gan cung 20.
-    check("so tay cho dung 2 khoa bank cho moi thuat ngu",
-          r["keys"] == 15 * 2, f"{r['keys']} khoa / 15 thuat ngu")
+    # ⚠️ "2 khoa/thuat ngu" LA MOT LUAT DA CHET — sua 06/08/2026.
+    #    No dung khi 15 the goc deu co dung 2 cau. Tu Dot 1, mot the co 13–20 cau, nen
+    #    doi dung 2 khoa moi the la doi mot dieu KHONG con dung va se can moi dot mo
+    #    rong ve sau. Dieu THAT SU muon bao dam: **moi the phai co it nhat MOT khoa**,
+    #    khong the nao co 0 — the 0 khoa la the KHOA VINH VIEN, va do la loi im lang
+    #    ma `codex.html` phai dung trang thai `soon` de noi that thay vi giau di.
+    check("khong the nao co 0 khoa bank (the 0 khoa = khoa vinh vien)",
+          r["minKeys"] >= 1, f"it nhat: {r['minKeys']} khoa")
+    check("tong khoa so tay khop tong dem duoc tu du lieu",
+          r["keys"] == r["keysFromTerms"], f"{r['keys']} vs {r['keysFromTerms']}")
     check("moi khoa bank tra ra dung mot the trong so tay", not r["unmapped"], f"{r['unmapped']}")
     check("tra loi dung ca luot -> giai ma duoc the that",
           r["opened"]>0, f"mo {r['opened']} the: {r['sample']}")

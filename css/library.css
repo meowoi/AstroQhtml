@@ -150,6 +150,11 @@
 .r-body{color:var(--ink-soft);font-size:15px;line-height:1.7;margin:14px 0 0;}
 .r-body p{margin:0 0 12px;}
 /* mascot box */
+/* ⚠️ `[hidden]` BỊ `display` CỦA TÁC GIẢ THẮNG — bài học đã ghi hai lần trong dự án
+   (`#time-ok` của bước ② nhiệm vụ, và `.pbtn` của cây chặng). Khối linh vật là
+   PHẦN THÊM: bài không khai `term` thì `openReader` đặt `hidden`, nên phải có
+   dòng này, không thì nó vẫn hiện ra rỗng. */
+.mascot[hidden]{display:none;}
 .mascot{display:flex;align-items:flex-start;gap:12px;margin:14px 0 0;padding:14px;border-radius:16px;
   background:linear-gradient(180deg,rgba(56,189,248,.1),rgba(192,132,252,.08));border:1px solid rgba(56,189,248,.4);}
 .mascot img{width:54px;height:auto;flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5)) drop-shadow(0 0 10px rgba(56,189,248,.4));}

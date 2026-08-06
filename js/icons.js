@@ -51,7 +51,35 @@
     'cx-gravity':'<circle cx="12" cy="15.6" r="4.4"/><path d="M12 2.8v3.2M12 6l-1.5-1.6M12 6l1.5-1.6"/><path d="M5.2 5.4l1.9 2.2M18.8 5.4l-1.9 2.2"/>',
     'cx-nebula':'<path d="M6.4 16.2a3.4 3.4 0 0 1-.5-6.7 4.6 4.6 0 0 1 8.6-2.2 3.8 3.8 0 0 1 3.6 6.1 3.2 3.2 0 0 1-2.3 2.8Z"/><circle cx="10" cy="12.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="14.4" cy="10.6" r="0.8" fill="currentColor" stroke="none"/>',
     'cx-supernova':'<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.9v3.4M12 18.7v3.4M1.9 12h3.4M18.7 12h3.4"/><path d="M4.9 4.9l2.4 2.4M16.7 16.7l2.4 2.4M19.1 4.9l-2.4 2.4M7.3 16.7l-2.4 2.4"/><circle cx="12" cy="12" r="6.4" stroke-dasharray="1.8 2.6"/>',
-    'cx-cmb':'<ellipse cx="12" cy="12" rx="9" ry="6.2"/><circle cx="8.2" cy="10.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.8" cy="9.8" r="0.75" fill="currentColor" stroke="none"/><circle cx="11.4" cy="14" r="0.85" fill="currentColor" stroke="none"/><circle cx="16.4" cy="13.6" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.4" cy="13.4" r="0.6" fill="currentColor" stroke="none"/>'
+    'cx-cmb':'<ellipse cx="12" cy="12" rx="9" ry="6.2"/><circle cx="8.2" cy="10.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.8" cy="9.8" r="0.75" fill="currentColor" stroke="none"/><circle cx="11.4" cy="14" r="0.85" fill="currentColor" stroke="none"/><circle cx="16.4" cy="13.6" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.4" cy="13.4" r="0.6" fill="currentColor" stroke="none"/>',
+
+    /* ── 4 icon của Đợt 1 (06/08/2026) ──────────────────────────────────
+       ⚠️ Phép kiểm `check_pages` mục [12] canh icon HAI CHIỀU: mọi `ic` của thẻ
+          phải có bản vẽ, VÀ không bản vẽ nào được bỏ không. Nên bốn icon này chỉ
+          hợp lệ khi 4 thẻ tương ứng cũng có mặt trong `js/codex-terms.js`.
+       ⚠️ `lic(name)` trả về `LIC[name] || ""` — icon thiếu thì ra một ô SVG RỖNG,
+          không lỗi, không cảnh báo. Đó là lý do phép kiểm hai chiều đáng giữ. */
+
+    /* Màu sắc & nhiệt độ của sao: một ngôi sao, dưới là THANG BA NẤC to→nhỏ.
+       Nét vẽ đơn sắc không dùng được màu để nói nóng–nguội, nên cỡ chấm là thứ
+       duy nhất còn lại để đọc ra "một cái thang". */
+    'cx-star-colour':'<circle cx="12" cy="8.6" r="3.6"/><path d="M12 1.8v1.9M4.9 8.6H3M21 8.6h-1.9M6.9 3.5l1.4 1.4M17.1 3.5l-1.4 1.4"/><path d="M4.6 18.6h14.8"/><circle cx="7" cy="18.6" r="2.1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.8" cy="18.6" r="0.85" fill="currentColor" stroke="none"/>',
+
+    /* Nhật thực: đĩa Mặt Trời có tia + một đĩa ĐẶC che lệch lên trên.
+       Đĩa che phải ĐẶC — hai vòng tròn rỗng chồng nhau đọc ra như hai hành tinh
+       cạnh nhau chứ không phải cái này che cái kia. */
+    'cx-solar-eclipse':'<circle cx="12" cy="12" r="5.4"/><path d="M12 3.1v1.6M12 19.3v1.6M3.1 12h1.6M19.3 12h1.6M5.7 5.7l1.2 1.2M17.1 17.1l1.2 1.2M18.3 5.7l-1.2 1.2M6.9 17.1l-1.2 1.2"/><circle cx="14.1" cy="9.9" r="4.3" fill="currentColor" stroke="none"/>',
+
+    /* Nguyệt thực: đĩa Mặt Trăng + cung NÉT ĐỨT = mép bóng Trái Đất đang bò lên,
+       cộng chấm nhỏ bên ngoài là Trái Đất đổ bóng đó.
+       ⚠️ Dùng lại đúng thành ngữ `stroke-dasharray` của `cx-moon` — hai thẻ cùng
+          họ Mặt Trăng thì phải nhìn ra là cùng họ. */
+    'cx-lunar-eclipse':'<circle cx="10.6" cy="12.6" r="5.6"/><path stroke-dasharray="2.1 2.4" d="M6.2 9.1a5.6 5.6 0 0 0 8.8 6.9"/><circle cx="20" cy="5.4" r="1.9"/><path d="M18.4 6.6l-2.3 2.3"/>',
+
+    /* Khí quyển: vòm hành tinh ở đáy + hai cung đồng tâm phía trên = các TẦNG.
+       Chỉ vẽ nửa dưới của hành tinh — vẽ cả quả cầu thì hai cung trên trông như
+       vành đai Sao Thổ chứ không như lớp khí bọc lấy mặt đất. */
+    'cx-earth-atmosphere':'<path d="M2.9 20.4a9.1 9.1 0 0 1 18.2 0"/><path d="M5.1 13.9a7.4 7.4 0 0 1 13.8 0"/><path stroke-dasharray="2.4 2.6" d="M3.3 9.6a9.6 9.6 0 0 1 17.4 0"/><circle cx="9.2" cy="17.6" r="0.9" fill="currentColor" stroke="none"/><circle cx="14.6" cy="18.4" r="0.7" fill="currentColor" stroke="none"/>'
   };
 
   /* Trả về chuỗi SVG của icon; cls: class phụ (tuỳ chọn). */

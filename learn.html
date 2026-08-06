@@ -101,12 +101,14 @@
      CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/articles.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
   "use strict";
-  var READ_KEY = "astroq-read";      // các bài đã đọc (nhận thưởng)
+  /* Khoá `astroq-read` nay khai ở `js/articles.js` — đọc qua `AstroQArticles.READ_KEY`.
+     Giữ một bản sao thứ hai ở đây là mời người sau sửa một chỗ mà quên chỗ kia. */
   var READ_SECS = 6;                 // giây "đọc" trước khi được nhận thưởng
 
   /* ===== i18n ===== */
@@ -154,41 +156,19 @@
 
 
   /* ===== Dữ liệu bài viết (mẫu minh hoạ, nguồn chính thức để tham khảo) ===== */
-  var ARTICLES = [
-    { id:"jwst", src:"NASA", em:"🔭", c:["#8ee0ff","#2f8fd6","#0e2a5e"], url:"https://science.nasa.gov/mission/webb/",
-      title:{vi:"Kính thiên văn James Webb hé lộ những thiên hà cổ đại", en:"James Webb Telescope reveals ancient galaxies"},
-      body:{
-        vi:["Kính thiên văn James Webb (JWST) quan sát bằng tia hồng ngoại, giúp nhìn xuyên qua các đám bụi vũ trụ để thấy ánh sáng từ những thiên hà hình thành chỉ vài trăm triệu năm sau Vụ Nổ Lớn.",
-            "Nhờ tấm gương vàng khổng lồ rộng 6,5 m, Webb thu được ánh sáng cực mờ đã du hành hơn 13 tỉ năm tới Trái Đất — như một cỗ máy thời gian nhìn về quá khứ của vũ trụ."],
-        en:["The James Webb Space Telescope (JWST) observes in infrared, seeing through cosmic dust to capture light from galaxies that formed just a few hundred million years after the Big Bang.",
-            "With its giant 6.5 m gold mirror, Webb collects extremely faint light that has travelled over 13 billion years to reach us — a time machine peering into the early universe."] } },
-    { id:"exo-ai", src:"NASA", em:"🪐", c:["#e6c6ff","#a06be0","#5a2f9e"], url:"https://science.nasa.gov/exoplanets/",
-      title:{vi:"Trí tuệ nhân tạo giúp phát hiện hành tinh ngoài Hệ Mặt Trời", en:"AI helps discover planets beyond the Solar System"},
-      body:{
-        vi:["Các nhà khoa học dùng học máy (machine learning) để rà soát kho dữ liệu khổng lồ từ các kính Kepler và TESS, tự động nhận ra những lần độ sáng của ngôi sao giảm nhẹ khi một hành tinh đi ngang qua (phương pháp quá cảnh).",
-            "AI giúp lọc nhiễu và tìm ra các tín hiệu mờ mà con người dễ bỏ sót, mở đường phát hiện thêm nhiều 'ngoại hành tinh' có thể giống Trái Đất."],
-        en:["Scientists use machine learning to sift through massive datasets from the Kepler and TESS telescopes, automatically spotting the tiny dips in a star's brightness when a planet passes in front of it (the transit method).",
-            "AI filters out noise and finds faint signals humans might miss, helping discover many more 'exoplanets' — some possibly Earth-like."] } },
-    { id:"gaia", src:"ESA", em:"🌌", c:["#b6f5cf","#3fd6a0","#146a4c"], url:"https://www.esa.int/Science_Exploration/Space_Science/Gaia",
-      title:{vi:"Tàu Gaia của ESA vẽ bản đồ 3D gần 2 tỉ ngôi sao", en:"ESA's Gaia maps nearly 2 billion stars in 3D"},
-      body:{
-        vi:["Đài quan sát Gaia của Cơ quan Vũ trụ châu Âu (ESA) đo cực kỳ chính xác vị trí, khoảng cách và chuyển động của gần 2 tỉ ngôi sao trong Dải Ngân Hà.",
-            "Từ đó, các nhà thiên văn dựng nên tấm bản đồ ba chiều chi tiết nhất về thiên hà của chúng ta, hé lộ cả lịch sử hình thành và tiến hoá của nó."],
-        en:["The European Space Agency's Gaia observatory measures with extreme precision the positions, distances and motions of nearly 2 billion stars in the Milky Way.",
-            "From this, astronomers build the most detailed 3D map of our galaxy ever made, revealing its formation and evolution history."] } },
-    { id:"eht", src:"MIT", em:"🕳️", c:["#ffe1a8","#f2a53c","#7a4a12"], url:"https://www.eventhorizontelescope.org/",
-      title:{vi:"Thuật toán giúp chụp bức ảnh đầu tiên về hố đen", en:"Algorithms helped capture the first image of a black hole"},
-      body:{
-        vi:["Mạng lưới kính Event Horizon Telescope kết nối nhiều đài quan sát khắp Trái Đất thành một 'kính ảo' cỡ hành tinh. Các thuật toán do nhóm nghiên cứu (trong đó có MIT) phát triển đã ghép dữ liệu để tái tạo hình ảnh.",
-            "Năm 2019, thế giới lần đầu thấy 'bóng' của hố đen ở trung tâm thiên hà M87 — một vòng sáng bao quanh vùng tối nơi ánh sáng không thể thoát ra."],
-        en:["The Event Horizon Telescope links observatories across Earth into a planet-sized 'virtual telescope'. Algorithms developed by researchers (including at MIT) combined the data to reconstruct an image.",
-            "In 2019 the world saw the 'shadow' of the black hole at the center of galaxy M87 — a ring of light around the dark region from which light cannot escape."] } }
-  ];
+  /* Bài đọc lấy từ `js/articles.js` — CHỖ DUY NHẤT khai báo, dùng chung với
+     `library.html`. Trang này là khu GIỚI THIỆU nên chỉ hiện 4 bài nổi bật;
+     xem đủ 9 bài thì sang Góc Khám Phá. Luật chọn (ưu tiên bài chưa đọc) dùng
+     chung một hàm với `library.html` — hai luật chọn khác nhau cho cùng một
+     việc thì sớm muộn hai trang nói hai điều về cùng một bài. */
+  var ARTICLES = AstroQArticles.featured(4);
 
   /* ===== Đọc / thưởng ===== */
-  function readSet(){ try{ return JSON.parse(localStorage.getItem(READ_KEY)||"[]"); }catch(e){ return []; } }
-  function isRead(id){ return readSet().indexOf(id)>=0; }
-  function markRead(id){ var s=readSet(); if(s.indexOf(id)<0){ s.push(id); try{ localStorage.setItem(READ_KEY, JSON.stringify(s)); }catch(e){} } }
+  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles.js`. Chúng phải giống hệt ở cả hai trang
+     — không thì lỗi "đọc bên này bên kia không biết" quay lại. `isRead` ở đó còn hiểu
+     cả id CŨ của bài đã gộp, nên lịch sử đọc của trẻ không bị mất. */
+  var readSet = AstroQArticles.readSet, isRead = AstroQArticles.isRead,
+      markRead = AstroQArticles.markRead;
 
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
 

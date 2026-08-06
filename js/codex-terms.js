@@ -60,7 +60,21 @@
     exo:      { label: "NASA Science — Exoplanets",       url: "https://science.nasa.gov/exoplanets/" },
     bh:       { label: "NASA Science — Black Holes",      url: "https://science.nasa.gov/universe/black-holes/" },
     gravity:  { label: "NASA Space Place — What Is Gravity?", url: "https://spaceplace.nasa.gov/what-is-gravity/en/" },
-    cosmos:   { label: "NASA Science — Cosmic History",   url: "https://science.nasa.gov/universe/overview/" }
+    cosmos:   { label: "NASA Science — Cosmic History",   url: "https://science.nasa.gov/universe/overview/" },
+
+    /* ── Nguồn của Đợt 1 (06/08/2026). Cả 10 URL đã kiểm trả 200 và đều nằm trong
+       `OK_HOSTS` của scratchpad/check_quiz_bank.py — xem khối lý do từng tên miền
+       ở đó trước khi thêm tên miền mới. */
+    atmoNasa:    { label: "NASA Science — What Is Earth's Atmosphere?", url: "https://www.nasa.gov/general/what-is-earths-atmosphere/" },
+    atmoStrato:  { label: "NASA Space Place — Stratosphere",  url: "https://spaceplace.nasa.gov/stratosphere/" },
+    atmoMeso:    { label: "NASA Space Place — Mesosphere",    url: "https://spaceplace.nasa.gov/mesosphere/" },
+    starTypes:   { label: "NASA Science — Star Types",        url: "https://science.nasa.gov/universe/stars/types/" },
+    starColors:  { label: "Las Cumbres Observatory — Magnitude and Color", url: "https://lco.global/spacebook/distance/magnitude-and-color/" },
+    eclipseTypes:{ label: "NASA Science — Types of Solar Eclipses", url: "https://science.nasa.gov/eclipses/types/" },
+    eclipseGeom: { label: "NASA Science — Why Do Eclipses Happen?", url: "https://science.nasa.gov/eclipses/geometry/" },
+    sunCorona:   { label: "NASA Space Place — What Is the Sun's Corona?", url: "https://spaceplace.nasa.gov/sun-corona/en/" },
+    moonEclipses:{ label: "NASA Science — Eclipses and the Moon", url: "https://science.nasa.gov/moon/eclipses/" },
+    spEclipses:  { label: "NASA Space Place — Lunar and Solar Eclipses", url: "https://spaceplace.nasa.gov/eclipses/" }
   };
 
   /* t = tên · an = tên ví von · sum = một dòng cho thẻ · def = định nghĩa
@@ -281,6 +295,107 @@
             def: "About 380,000 years after the big bang, the universe cooled enough for atomic nuclei to capture electrons — the period astronomers call the epoch of recombination. The light released then is still detectable today and is called the cosmic microwave background: it is the OLDEST LIGHT we can observe. Its map shows 13.8-billion-year-old temperature fluctuations — the very seeds that grew into the galaxies we see now.",
             gr: "Like a photo of you as a newborn: you look completely different today, but the photo still holds that moment. The light and dark speckles on this photo are exactly where galaxies later grew.",
             dg: ["380,000 years after big bang", "OLDEST light we can observe", "Temperature ripples → galaxy seeds"] }
+    },
+
+    /* ═══════════════ ĐỢT 1 · 4 thẻ mới, 06/08/2026 ═══════════════
+       65 câu hỏi kèm theo nằm ở `js/quiz-questions.js`. Mọi `srcQuote` của chúng
+       đã được đối chiếu NGUYÊN VĂN với trang nguồn (scratchpad/check_dot1.py mục
+       [7], 65/65 đạt). Bốn icon `cx-*` vào `js/icons.js` cùng lượt này — phép kiểm
+       `check_pages` mục [12] canh icon HAI CHIỀU nên không tách ra được. */
+
+    {
+      id: "term_earth_atmosphere", cat: "earth", ic: "cx-earth-atmosphere",
+      /* ⚠️ `cat: "earth"` là GIÁ TRỊ MỚI — trước đó bank chỉ có "space" và "ai".
+         Cố ý: vòng 2 còn 10 thẻ Trái Đất nữa. `codex.html` hiện chưa có bộ lọc
+         Phân loại nên giá trị này chưa lộ ra giao diện; khi làm bộ lọc thì PHẢI
+         thêm nhãn cho nhóm này, không thì cả nhóm rơi ra ngoài mọi bộ lọc. */
+      q: ["atmo-comp-nitrogen", "atmo-comp-ratio", "atmo-tropo-lowest", "atmo-tropo-weather",
+          "atmo-tropo-mass", "atmo-tropo-watervapor", "atmo-tropo-density", "atmo-strato-ozone",
+          "atmo-strato-uv", "atmo-strato-location", "atmo-meso-location", "atmo-meso-meteors",
+          "atmo-meso-friction", "atmo-thermo-location", "atmo-thermo-iss", "atmo-thermo-aurora",
+          "atmo-exo-outermost", "atmo-exo-end", "atmo-shield-meteoroids", "atmo-shield-radiation"],
+      src: [SRC.atmoNasa, SRC.atmoStrato, SRC.atmoMeso],
+      vi: { t: "Khí Quyển Trái Đất", an: "Tấm lá chắn khí bảo vệ sự sống",
+            sum: "Lớp khí bao quanh Trái Đất giúp giữ nhiệt, cung cấp không khí thở và chắn bức xạ có hại.",
+            def: "Bầu khí quyển Trái Đất gồm 78% nitơ, 21% oxy và 1% các khí khác. Nó chia thành năm tầng chính, từ thấp lên cao: đối lưu, bình lưu, trung lưu, nhiệt và ngoại lưu. Tầng đối lưu sát mặt đất chứa phần lớn khối lượng khí và hầu hết hơi nước, nên mọi hiện tượng thời tiết đều diễn ra ở đó.",
+            gr: "Giống như lớp vỏ giữ cho quả táo khỏi khô hỏng, bầu khí quyển giữ cho Trái Đất không bị thiêu nóng cũng không đóng băng. Mỗi lần bạn hít một hơi thật sâu hay ngẩng lên nhìn mây trôi, bạn đang chạm vào chính lớp áo ấy. Và mỗi vệt sao băng bạn thấy trên trời đêm là một mảnh đá vũ trụ đang cháy rụi trong đó — thay vì rơi xuống đầu bạn.",
+            dg: ["Tầng đối lưu — nơi có thời tiết", "Tầng bình lưu — nơi có lớp ôzôn", "Tầng trung lưu — nơi sao băng cháy"] },
+      en: { t: "Earth's Atmosphere", an: "The gas shield that protects life",
+            sum: "The blanket of gases around Earth that holds in heat, gives us air to breathe, and blocks harmful radiation.",
+            def: "Earth's atmosphere is 78% nitrogen, 21% oxygen and 1% other ingredients. It has five main layers, from lowest to highest: troposphere, stratosphere, mesosphere, thermosphere and exosphere. The troposphere at the bottom holds most of the atmosphere's mass and nearly all its water vapour, which is why all our weather happens there.",
+            gr: "Like the skin that keeps an apple from drying out, the atmosphere keeps Earth from scorching or freezing. Every deep breath you take and every cloud you watch drift by is that blanket at work. And every shooting star you spot at night is a piece of space rock burning up inside it — instead of landing on your head.",
+            dg: ["Troposphere — where weather happens", "Stratosphere — where the ozone layer is", "Mesosphere — where meteors burn up"] }
+    },
+
+    {
+      id: "term_star_colour", cat: "space", ic: "cx-star-colour",
+      /* ⚠️ 18 câu chứ không phải 20, cố ý. Đã quét 8 trang NASA ứng viên: KHÔNG
+         trang nào có nội dung màu sắc sao (`spaceplace/star-colors`, `stars/anatomy`,
+         `spaceplace/light` đều 404). Nguồn thật chỉ đỡ được chừng này, và
+         "nguồn chỉ đỡ được N câu" là câu trả lời ĐÚNG, không phải câu thất bại. */
+      q: ["star-color-temp-determine", "star-blue-hotter-red", "star-color-spectrum-order",
+          "star-surface-temp-color", "star-red-dwarf-coolest", "star-coolest-star-temperature",
+          "star-sun-age-main-sequence", "star-sirius-brightest", "star-proxima-red-dwarf",
+          "star-closest-main-sequence", "star-arcturus-red-giant", "star-betelgeuse-red-giant",
+          "star-red-giant-expansion", "star-properties-range", "star-red-dwarf-faint",
+          "star-red-dwarf-longevity", "star-prism-wavelengths", "star-visible-wavelength-range"],
+      src: [SRC.starColors, SRC.starTypes],
+      vi: { t: "Màu Sắc Ngôi Sao", an: "Cầu vồng nhiệt độ trên bầu trời đêm",
+            sum: "Màu của một ngôi sao chính là thước đo nhiệt độ bề mặt của nó.",
+            def: "Nhiệt độ bề mặt quyết định màu ánh sáng mà một ngôi sao phát ra. Sao xanh dương nóng nhất, sao vàng như Mặt Trời ở mức trung bình, sao đỏ nguội nhất. Nhờ vậy các nhà thiên văn đo được nhiệt độ của một ngôi sao mà không cần tới gần nó — chỉ cần nhìn màu ánh sáng nó gửi tới.",
+            gr: "Nhìn đống lửa trại, bạn dễ nghĩ màu đỏ là nóng nhất. Với các vì sao thì ngược hẳn lại: xanh mới là nóng. Hãy nhớ tới một thanh sắt nung trong lò rèn — mới nóng thì ửng đỏ, nóng hơn chuyển vàng, nóng nhất thì trắng chói. Các ngôi sao cũng đổi màu theo đúng thang đó.",
+            dg: ["Sao xanh dương — nóng nhất", "Sao vàng — trung bình", "Sao đỏ — nguội nhất"] },
+      en: { t: "Star Colours", an: "The temperature rainbow of the night sky",
+            sum: "A star's colour is a direct readout of its surface temperature.",
+            def: "Surface temperature decides the colour of light a star emits. Blue stars are the hottest, yellow stars like our Sun sit in the middle, and red stars are the coolest. That is how astronomers measure a star's temperature without going anywhere near it — they simply read the colour of the light it sends us.",
+            gr: "Looking at a campfire, you would guess red is hottest. For stars it is the other way round: blue is hot. Think of an iron bar in a blacksmith's forge — dull red at first, then yellow, then blazing white when it is hottest of all. Stars run up that very same scale.",
+            dg: ["Blue star — hottest", "Yellow star — moderate", "Red star — coolest"] }
+    },
+
+    {
+      id: "term_solar_eclipse", cat: "space", ic: "cx-solar-eclipse",
+      /* ⚠️ Nhãn `dg` thứ ba là BÓNG MẶT TRĂNG. Bản nháp ghi "Bóng tối Trái Đất" —
+         đó là cơ chế của NGUYỆT thực (thẻ ngay dưới), đặt vào đây là dạy trẻ lẫn
+         hai hiện tượng ngay tại cái sơ đồ dùng để phân biệt chúng. */
+      q: ["eclipse-definition-moon-between", "eclipse-annular-farthest-ring",
+          "eclipse-partial-crescent-shape", "eclipse-hybrid-annular-total",
+          "eclipse-shadow-umbra-penumbra", "eclipse-umbra-total-blocked",
+          "eclipse-penumbra-partially-blocked", "eclipse-corona-outermost-atmosphere",
+          "eclipse-corona-visible-totality", "eclipse-safety-totality-viewing",
+          "eclipse-safety-glasses-reappear", "eclipse-coincidence-size-distance-ratio",
+          "eclipse-moon-shadows-umbra-penumbra", "eclipse-phase-new-moon"],
+      src: [SRC.eclipseTypes, SRC.eclipseGeom, SRC.sunCorona],
+      vi: { t: "Nhật Thực", an: "Khi Mặt Trăng che khuất ánh sáng Mặt Trời",
+            sum: "Mặt Trăng đi vào giữa Mặt Trời và Trái Đất, đổ bóng che một phần hoặc toàn bộ ánh sáng Mặt Trời.",
+            def: "Nhật thực xảy ra khi Mặt Trăng đi vào đúng giữa Mặt Trời và Trái Đất, đổ bóng lên bề mặt hành tinh. Bóng đó có hai vùng: umbra ở tâm — nơi thấy Mặt Trời bị che hoàn toàn — và penumbra rộng hơn ở ngoài, nơi chỉ thấy che một phần. Nhật thực chỉ xảy ra vào pha Trăng mới.",
+            gr: "Mặt Trời to hơn Mặt Trăng tới 400 lần, nhưng cũng ở xa hơn đúng 400 lần — nên nhìn từ Trái Đất hai đĩa vừa khít nhau. Đó là một sự trùng hợp hiếm hoi, và nó cho ta thứ không hành tinh nào khác trong hệ có: những phút ban ngày hoá hoàng hôn, để lộ vành nhật hoa trắng bạc quanh Mặt Trời.",
+            dg: ["Mặt Trời", "Mặt Trăng — ở giữa", "Bóng Mặt Trăng đổ lên Trái Đất"] },
+      en: { t: "Solar Eclipse", an: "When the Moon blocks the Sun's light",
+            sum: "The Moon passes between the Sun and Earth, blocking part or all of the Sun's light.",
+            def: "A solar eclipse happens when the Moon moves directly between the Sun and Earth, casting its shadow onto the planet. That shadow has two parts: the umbra at its centre, where the Sun looks completely covered, and the wider penumbra outside it, where only part of the Sun is hidden. Solar eclipses can only happen at new moon.",
+            gr: "The Sun is 400 times wider than the Moon — but it also sits 400 times farther away, so from Earth the two discs look almost exactly the same size. It is a rare coincidence, and it hands us something no other planet in the solar system gets: a few minutes when daytime turns to dusk and the Sun's silver corona appears.",
+            dg: ["Sun", "Moon — in between", "Moon's shadow falling on Earth"] }
+    },
+
+    {
+      id: "term_lunar_eclipse", cat: "space", ic: "cx-lunar-eclipse",
+      q: ["lunar-definition-earth-shadow", "lunar-phase-full-moon", "lunar-earth-between-sun-moon",
+          "lunar-umbra-inner-shadow", "lunar-rayleigh-scattering-red-light",
+          "lunar-atmosphere-dust-redder", "lunar-partial-imperfect-alignment",
+          "lunar-penumbral-faint-outer-shadow", "lunar-red-filtered-atmosphere",
+          "lunar-sunrises-sunsets-projected", "lunar-difference-name-darker",
+          "lunar-shadow-huge-earth", "lunar-night-side-visibility"],
+      src: [SRC.moonEclipses, SRC.spEclipses],
+      vi: { t: "Nguyệt Thực", an: "Khi Trái Đất đổ bóng lên Mặt Trăng",
+            sum: "Trái Đất đi vào giữa Mặt Trời và Mặt Trăng, đổ bóng lên bề mặt Mặt Trăng.",
+            def: "Nguyệt thực xảy ra vào pha Trăng tròn, khi Trái Đất nằm chính giữa Mặt Trời và Mặt Trăng. Bóng Trái Đất phủ lên Mặt Trăng, làm nó mờ đi và thường chuyển sang sắc đỏ cam. Khác với nhật thực chỉ nhìn được trên một dải hẹp, nguyệt thực quan sát được từ toàn bộ nửa cầu đang là ban đêm.",
+            gr: "Vì sao Mặt Trăng hoá đỏ chứ không tối đen? Ánh sáng Mặt Trời đi vòng qua rìa Trái Đất bị lớp khí quyển lọc mất phần xanh, chỉ còn phần đỏ chiếu tới. Nói cách khác, thứ bạn đang nhìn là toàn bộ bình minh và hoàng hôn đang diễn ra khắp Trái Đất, cùng lúc rọi lên một mặt trăng.",
+            dg: ["Mặt Trời", "Trái Đất — ở giữa", "Bóng Trái Đất đổ lên Mặt Trăng"] },
+      en: { t: "Lunar Eclipse", an: "When Earth casts its shadow on the Moon",
+            sum: "Earth passes between the Sun and the Moon, casting its shadow onto the lunar surface.",
+            def: "A lunar eclipse happens at full moon, when Earth sits directly between the Sun and the Moon. Earth's shadow falls across the Moon, dimming it and often turning it a deep orange-red. Unlike a solar eclipse, which is visible only along a narrow track, a lunar eclipse can be seen from the whole night side of Earth at once.",
+            gr: "Why does the Moon turn red instead of going black? Sunlight bending around the edge of Earth is filtered by our atmosphere, which scatters the blue away and lets the red through. So what you are looking at is every sunrise and every sunset happening on Earth at that moment, all projected onto one moon.",
+            dg: ["Sun", "Earth — in between", "Earth's shadow falling on the Moon"] }
     }
   ];
 

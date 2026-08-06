@@ -86,9 +86,16 @@ def main():
         #    trong NEEDED du 2 cau" (muc [2] lo viec do) va "bo goc khong bi xoa bot".
         check("bank co it nhat 25 cau (bo goc khong bi xoa bot)", len(bank) >= 25,
               f"{len(bank)}")
-        check("so cau khop dung so thuat ngu khai o NEEDED (2 cau/thuat ngu) + 5 cau lap trinh",
-              len(bank) == len(NEEDED) * 2 + 5,
-              f"{len(bank)} vs {len(NEEDED) * 2 + 5}")
+        # ⚠️ VA NGAY DUOI CHU THICH "KHONG GAN CUNG SO CAU" thi dong ke tiep lai gan
+        #    cung `len(bank) == len(NEEDED)*2 + 5`. No dung khi bank co 35 cau, roi
+        #    bao HONG ngay khi Dot 1 them 65 cau — trong khi khong co gi sai. Da sua
+        #    06/08/2026. Bai hoc lap lai lan thu 7: **phep kiem phai hoi DIEU MINH
+        #    MUON BIET, dung gan cung con so ma noi khac moi la nguon su that.**
+        #    Dieu muon biet o day: 15 thuat ngu nen KHONG bi nhan doi ngoai y muon.
+        _base = {k for keys in NEEDED.values() for k in keys}
+        _n_base = sum(1 for it in bank if it["term"] in _base)
+        check("15 thuat ngu nen van dung 2 cau moi thuat ngu (khong bi nhan doi)",
+              _n_base == len(NEEDED) * 2, f"{_n_base} vs {len(NEEDED) * 2}")
 
         bad_shape = []
         for i, it in enumerate(bank):
@@ -131,23 +138,30 @@ def main():
             miss = [k for k in keys if k not in have]
             check(f"thuat ngu '{label}' co du 2 cau", not miss, f"thieu: {miss}")
 
-        print("\n=== [3] Dap an rai deu A/B/C/D ===")
+        print("\n=== [3] Vi tri dap an — luat 'rai deu' DA NGHI HUU ===")
+        # ⚠️⚠️ HAI PHEP KIEM "RAI DEU A/B/C/D" DA BO, 06/08/2026 — VA DAY LA MOT
+        #    QUYET DINH, KHONG PHAI NOI LONG CHO DU LIEU MOI LOT QUA.
+        #
+        #    Luat "rai deu dap an" ton tai de tre khong hoc meo "cu chon B". No chet
+        #    tu 31/07/2026, khi `quiz.html` them `shuffleOptions()` goi trong
+        #    `renderQuestion()`: 4 lua chon duoc TRON LAI MOI LAN HIEN CAU, nen thu tu
+        #    khai bao trong bank **khong bao gio toi nguoi choi**. Rai deu mot thu
+        #    khong ai nhin thay la do mot thu khong ton tai.
+        #
+        #    Chinh CLAUDE.md da ghi: luat nay "**da tieu tron mot vong phoi hop** khi
+        #    mot model duoc yeu cau di rai lai dap an cho 25 cau" — cong viec do khong
+        #    tao ra gia tri nao. Giu phep kiem lai la hen ngay lap lai dung viec do.
+        #
+        #    Thu THAY THE no la muc [7]: "thu tu 4 dap an KHAC thu tu khai bao o phan
+        #    lon cac luot" — tuc la do CHINH viec tron co xay ra hay khong. Do la dieu
+        #    that su bao ve dua tre, va no manh hon: neu ai do go `shuffleOptions()`
+        #    thi muc [7] do ngay, con phep kiem rai deu thi van xanh.
         dist = [sum(1 for it in bank if it["a"] == k) for k in range(4)]
-        check("moi vi tri A/B/C/D deu duoc dung it nhat 4 lan", min(dist) >= 4,
-              f"A={dist[0]} B={dist[1]} C={dist[2]} D={dist[3]}")
-        check("khong vi tri nao chiem qua 40% bank", max(dist) <= len(bank) * 0.4,
-              f"cao nhat {max(dist)}/{len(bank)}")
-        astro = [it for it in bank if it.get("src")]
-        adist = [sum(1 for it in astro if it["a"] == k) for k in range(4)]
-        # ⚠️ SUY RA THAY VI GAN CUNG "5/5/5/5". Voi 30 cau thien van thi khong chia
-        #    het cho 4, nen doi phan bo TUYET DOI deu la doi mot dieu bat kha thi.
-        #    Dieu muon biet: khong vi tri nao bi bo qua, va khong vi tri nao bi lam
-        #    dung — tre hoc "cu chon B" thi bai kiem tra mat tac dung.
-        _n = len(astro)
-        _lo, _hi = _n // 4 - 1, _n // 4 + 2
-        check("cau thien van rai deu moi vi tri A/B/C/D",
-              all(_lo <= x <= _hi for x in adist),
-              f"{adist} (moi vi tri phai trong [{_lo},{_hi}] voi {_n} cau)")
+        print(f"    (ghi nhan, khong phai tieu chi: A={dist[0]} B={dist[1]} "
+              f"C={dist[2]} D={dist[3]} — thu tu nay bi tron truoc khi toi nguoi choi)")
+        check("`shuffleOptions` van con trong quiz.html (thu bao ve tre THAT SU)",
+              "shuffleOptions" in open("quiz.html", encoding="utf-8").read(),
+              "— go no di thi luat rai deu song lai, xem muc [7]")
 
         print("\n=== [4] Nguon tham chieu ===")
         srcs = {}
@@ -164,19 +178,44 @@ def main():
         check("moi cau thien van deu co src (chi 5 cau lap trinh khong co)",
               sorted(no_src) == ["algorithm", "condition", "loop", "sensor", "sequence"],
               f"khong co src: {sorted(no_src)}")
-        # ⚠️ DA NOI RONG SANG "ten mien CUA NASA", va chi noi rong DUNG hai ten mien.
-        #    `gravity` dan NASA Space Place (`spaceplace.nasa.gov`) — trang NASA viet
-        #    CHO TRE EM, dung do tuoi 8-15, va science.nasa.gov khong co trang dinh
-        #    nghia luc hap dan tuong duong. Van la nguon NASA chinh thuc, khong phai
-        #    mo cho URL bat ky.
-        NASA_HOSTS = ("https://science.nasa.gov/", "https://spaceplace.nasa.gov/")
-        bad_host = sorted(u for u in srcs if not u.startswith(NASA_HOSTS))
-        check("moi URL nguon thuoc ten mien NASA qua https", not bad_host, f"{bad_host}")
+        # ⚠️ DANH SACH TEN MIEN LA MOT QUYET DINH NOI DUNG, KHONG PHAI DON DEP.
+        #    Moi lan noi rong deu ghi ly do o day, va chi noi rong DUNG ten mien can:
+        #      · science.nasa.gov   — nguon goc cua bank 30/07/2026
+        #      · spaceplace.nasa.gov — trang NASA viet CHO TRE EM, dung do tuoi 8-15;
+        #                             `gravity` dan no vi science.nasa.gov khong co trang
+        #                             dinh nghia luc hap dan tuong duong
+        #      · www.nasa.gov       — (06/08/2026) ten mien CHINH cua NASA. `what-is-earths-
+        #                             atmosphere` la trang mo ta tung tang khi quyen, khong
+        #                             co ban tuong duong ben science.
+        #      · lco.global         — (06/08/2026) Las Cumbres Observatory. Doi quan sat
+        #                             that; la trang DUY NHAT tim duoc noi thang "mau sao
+        #                             do nhiet do be mat". Da quet 8 trang NASA ung vien:
+        #                             KHONG trang nao co noi dung mau sac sao.
+        #      · scied.ucar.edu     — (06/08/2026) UCAR/NCAR, Learning Zone viet cho hoc sinh.
+        #                             Dung khi NOAA doi duong dan (URL JetStream 404).
+        #      · exploratorium.edu  — (06/08/2026) bao tang khoa hoc San Francisco. Giu ty le
+        #                             400x cua nhat thuc va bai "eclipse in a cup".
+        #    ⛔ Them ten mien moi thi PHAI ghi mot dong ly do o day. Danh sach khong ly do
+        #       la danh sach se bi noi rong tuy tien cho tien viec.
+        OK_HOSTS = ("https://science.nasa.gov/", "https://spaceplace.nasa.gov/",
+                    "https://www.nasa.gov/", "https://lco.global/",
+                    "https://scied.ucar.edu/", "https://www.exploratorium.edu/")
+        bad_host = sorted(u for u in srcs if not u.startswith(OK_HOSTS))
+        check("moi URL nguon thuoc danh sach ten mien da duyet, qua https",
+              not bad_host, f"{bad_host}")
 
+        # ⚠️ USER-AGENT PHAI LA CHUOI CHROME DAY DU, KHONG PHAI "Mozilla/5.0" TRON.
+        #    Do 06/08/2026 tren exploratorium.edu: "Mozilla/5.0" -> 403, chuoi Chrome
+        #    day du -> 200. Trang van song, chi la no chan bot theo User-Agent. De chuoi
+        #    ngan thi phep kiem bao mot URL SONG la CHET — va mot phep kiem hay bao oan
+        #    thi som muon bi bo qua, do moi la cai gia that.
+        UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         for url in sorted(srcs):
             code = 0
             try:
-                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                req = urllib.request.Request(url, headers={"User-Agent": UA,
+                                                           "Accept": "text/html"})
                 with urllib.request.urlopen(req, timeout=25) as r:
                     code = r.status
             except Exception as e:  # noqa: BLE001
@@ -249,7 +288,14 @@ def main():
                     bad_srcline.append("khong nhan ra cau hoi dang hien")
                     break
                 seen_terms_ui.add(it["term"])
-                if pg.inner_text("#q-topic").strip() != it["topic"]["vi"]:
+                # ⚠️ SO KHONG PHAN BIET HOA-THUONG. `.q-badge` co `text-transform:
+                #    uppercase`, nen badge LUON hien chu hoa du du lieu viet kieu gi.
+                #    So nguyen van la bat du lieu phai gan cung chu HOA — dung cai
+                #    phan kieu du an da ghi thanh luat o `games.html` ngay 27/07/2026:
+                #    "viet chu thuong trong du lieu vi CSS da uppercase san, dung
+                #    hardcode chu hoa". Dieu muon biet la badge hien DUNG CHU DE,
+                #    khong phai no hien dung kieu chu.
+                if pg.inner_text("#q-topic").strip().upper() != it["topic"]["vi"].upper():
                     wrong_topic.append(it["term"])
                 ui_opts = pg.eval_on_selector_all(
                     "#q-options .opt .txt", "els => els.map(e => e.textContent)")

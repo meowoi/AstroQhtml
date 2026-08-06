@@ -1285,6 +1285,55 @@ check("codex.html co trang thai thu BA cho thuat ngu chua co cau hoi",
 check("codex.html KHONG dan sang Quiz khi chua co cau hoi",
       'hidden = st==="soon"' in _cxp or '$("m-quiz").hidden = st==="soon"' in _cxp)
 
+# --- (2c) ID BAI DOC: kebab-case + duy nhat (them 06/08/2026) ---
+# ⚠️ `astroq-read` trong localStorage VA ban ghi `READ#<id>` tren server deu khoa theo
+#    id nay. Doi kieu dat ten giua chung la:
+#      · id cu va id moi khong bao gio gap nhau -> tre doc lai bai da doc
+#      · `AstroQProgress.lesson(id)` gui hai dang khoa cho cung mot kho
+#    Bank cu dung kebab (`lib-nebula`); dot noi dung moi de nghi `article_x_y` (gach
+#    duoi). Chot MOT kieu roi canh bang may.
+_art = rd("js/articles.js")
+_aids = re.findall(r'id:\s*"([^"]+)"', _art)
+_bad_id = [i for i in _aids if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", i)]
+check("id bai doc deu la kebab-case (khong gach duoi, khong chu hoa)",
+      not _bad_id, f"sai kieu: {_bad_id}")
+check("id bai doc khong trung", len(set(_aids)) == len(_aids),
+      f"trung: {sorted({i for i in _aids if _aids.count(i) > 1})}")
+
+# --- (2b) BA LO HONG TIM RA KHI RA SOAT DOT 1 CUA Gemini (06/08/2026) ---
+# Ca ba deu la loi IM LANG: khong ngoai le, khong console, chi la du lieu sai nam do.
+
+# (i) `term` TRUNG trong bank.
+# ⚠️ `_bank_terms` o tren la mot SET nen no NUOT trung lap — hai cau cung khoa thi
+#    set chi con mot, va moi phep kiem dua vao no van xanh. Phai dem tren DANH SACH.
+#    Hau qua that: hai cau de len nhau trong `PROGRESS.terms` cua tre; tra loi dung
+#    cau nay thi cau kia cung tinh la da lam.
+_bank_list = re.findall(r'term:\s*"([^"]+)"', _bank)
+_dup_terms = sorted({t for t in _bank_list if _bank_list.count(t) > 1})
+check("khong co `term` TRUNG trong bank cau hoi", not _dup_terms,
+      f"trung: {_dup_terms}")
+
+# (ii) Hai id thuat ngu khac nhau CHI BOI HAU TO.
+# ⚠️ `term_exoplanet` canh `term_exoplanets` CHAY EM: So Tay hien hai the gan giong
+#    nhau, tre mo duoc the nay ma the kia van khoa, va nguoi sua sau doc luot tuong
+#    la mot. Trung id han thi loi no ra ngay; gan trung thi khong.
+#    Cung ho voi ca `"map01Seen"` la TIEN TO cua `map01SeenAt` (01/08/2026).
+_near = sorted({f"{a} ~ {b}" for a in _ids for b in _ids
+                if a != b and b.startswith(a) and len(b) - len(a) <= 2})
+check("khong hai thuat ngu khac nhau chi boi hau to (vd `...planet` vs `...planets`)",
+      not _near, f"{_near}")
+
+# (iii) `srcQuote` — truong moi tu 06/08/2026, chua cau cu nao co nen chi kiem cau CO.
+# ⚠️ Cau trich RONG con te hon khong co: no bao rang da kiem chung trong khi khong.
+_q_pairs = re.findall(r'srcQuote:\s*"([^"]*)"', _bank)
+_empty_q = [i for i, q in enumerate(_q_pairs) if not q.strip()]
+check("khong co `srcQuote` rong", not _empty_q, f"{len(_empty_q)} cau rong")
+# Co cau trich thi phai co URL de doi chieu — nguoc lai la mot loi khang dinh khong
+# kiem duoc.
+check("moi `srcQuote` deu di kem mot `src`",
+      _bank.count("srcQuote:") <= _bank.count("src:"),
+      f"srcQuote={_bank.count('srcQuote:')} src={_bank.count('src:')}")
+
 # --- (3) icon: moi khoa `ic` phai co ban ve ---
 _ic_used = set(re.findall(r'ic: "(cx-[a-z-]+)"', _cx))
 _ic_have = set(re.findall(r"'(cx-[a-z-]+)':", _icons))
@@ -1328,19 +1377,55 @@ check("codex.html: the chua giai ma VAN bam duoc (che noi dung, khong che duong 
 check("codex.html co nguon NASA cho tung thuat ngu", "src_lbl" in _cxp and "x.src" in _cxp)
 check("js/codex-terms.js: moi thuat ngu co nguon", _cx.count("src: [") == len(_ids),
       f"{_cx.count('src: [')} / {len(_ids)}")
-# URL nguon phai thuoc ten mien NASA (science.nasa.gov hoac spaceplace.nasa.gov)
+# ⚠️ DANH SACH TEN MIEN DOC TU `check_quiz_bank.py`, KHONG CHEP LAI. Day tung la
+#    BAN SAO THU BA cua cung mot luat (check_quiz_bank + check_srcquote + o day), va
+#    ngay 06/08/2026 no bao hong vi hai file kia da noi rong con file nay thi chua.
+#    Mot luat nam o ba cho la mot luat se lech o hai cho. Ly do CUA TUNG ten mien ghi
+#    o `check_quiz_bank.py` — them ten mien moi thi them o do, khong them o day.
+_ok_hosts_src = rd("scratchpad/check_quiz_bank.py")
+OK_HOSTS = tuple(re.findall(
+    r'"(https://[^"]+/)"',
+    _ok_hosts_src[_ok_hosts_src.index("OK_HOSTS"):_ok_hosts_src.index("bad_host")]))
+check("doc duoc danh sach ten mien tu check_quiz_bank.py (khong chep lai)",
+      len(OK_HOSTS) >= 2, f"{len(OK_HOSTS)} ten mien")
 _cx_urls = set(re.findall(r'url: "([^"]+)"', _cx))
-check("moi URL nguon thuoc ten mien NASA",
-      all(u.startswith(("https://science.nasa.gov/", "https://spaceplace.nasa.gov/"))
-          for u in _cx_urls),
-      f"la: {[u for u in _cx_urls if not u.startswith(('https://science.nasa.gov/', 'https://spaceplace.nasa.gov/'))]}")
-# (b) Bo nguon cua so tay phai TRUNG KHOP bo nguon cua bank. Nho vay 12 URL do duoc
-#     `check_quiz_bank.py` kiem 200 THAT tren Chromium cung chinh la bo so tay dung —
-#     khong phai kiem 200 lan thu hai o day.
+check("moi URL nguon cua so tay thuoc danh sach ten mien da duyet",
+      all(u.startswith(OK_HOSTS) for u in _cx_urls),
+      f"la: {sorted(u for u in _cx_urls if not u.startswith(OK_HOSTS))}")
+# ⚠️ (b) DOI MOT CHIEU, KHONG DOI TRUNG KHOP — sua 06/08/2026.
+#     Ban cu doi `_cx_urls == _bank_urls`. Dung khi so tay va bank cung dan 12 URL,
+#     nhung tu Dot 1 thi MOT THE chi liet 2–3 nguon TIEU BIEU trong khi 20 cau cua no
+#     dan toi 8 trang — doi trung khop la doi the phai liet het moi trang, tuc bat the
+#     phinh ra vo ich. Dieu THAT SU muon bao dam van nguyen: **moi URL cua so tay phai
+#     co trong bank**, nho vay no da duoc `check_quiz_bank.py` kiem 200 that tren
+#     Chromium, khong phai kiem 200 lan thu hai o day. Chieu nguoc lai khong can.
 _bank_urls = set(re.findall(r'url: "([^"]+)"', _bank))
-check("bo nguon so tay TRUNG KHOP bo nguon bank (de duoc kiem 200 mot lan)",
-      _cx_urls == _bank_urls,
-      f"chi so tay: {sorted(_cx_urls - _bank_urls)} · chi bank: {sorted(_bank_urls - _cx_urls)}")
+check("moi URL cua so tay deu co trong bank (de duoc kiem 200 mot lan)",
+      _cx_urls <= _bank_urls,
+      f"chi so tay, chua ai kiem 200: {sorted(_cx_urls - _bank_urls)}")
+
+# ── (c) BAY CHUOI CAM CUA DOT 1 — CHO MU CUA MOI BO KIEM KHAC ────────────────
+# ⚠️⚠️ VI SAO MUC NAY TON TAI. `check_srcquote.py` doi chieu 65 cau trich voi trang
+#    nguon that, nhung no chi doc chuoi TIENG ANH — no **khong bao giờ** biet mot ban
+#    va bang TIENG VIET da duoc ap hay chua. Bay dong duoi day la bay chinh sua noi
+#    dung da phai yeu cau Gemini lam trong 10 vong ra soat (06/08/2026); moi dong la
+#    mot loi CO THAT tung nam trong du lieu. Khong co phep kiem nay thi ai do "don
+#    dep" hay dan de mot ban cu la chung lang le quay lai.
+_VI_CAM = [
+    ("biểu ảo",                  "khong phai thuat ngu — phai la 'bieu kien' (apparent)"),
+    ("acting như",               "sot chu tieng Anh giua cau tieng Viet"),
+    ("gần 4 lần",                "con so khong co trong cau trich nao"),
+    ("hàng triệu năm ánh sáng",  "sai: cac sao duoc nhac ten deu duoi 1.000 nam anh sang"),
+    ("dung nham",                "dap an nham — da thay bang hieu lam CO THAT"),
+    ("dây mây",                  "dich sai 'metal rod' — phai la 'thanh sat'"),
+    ("Bóng tối Trái Đất",        "SAI KHOA HOC o the NHAT thuc: do la bong MAT TRANG"),
+]
+# ⚠️ Quet tren code DA BOC COMMENT — chinh khoi ghi chu giai thich "vi sao khong dung
+#    X" se bi dem la vi pham. Du an da mac loi nay 10 lan.
+_dot1_src = strip_comments(_bank) + "\n" + strip_comments(_cx) + "\n" + strip_comments(rd("js/articles.js"))
+for _c, _ly in _VI_CAM:
+    check(f"khong con chuoi \"{_c}\" trong bank/so tay/bai doc",
+          _c.lower() not in _dot1_src.lower(), f"— {_ly}")
 
 # --- (7) duong vao + khong con loi hua thuong doc bai ---
 # ⚠️ DUONG VAO DOI CHO 04/08/2026: So Tay khong con la the MOD-C trong learn.html,

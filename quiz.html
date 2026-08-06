@@ -238,7 +238,38 @@
      Muốn đổi độ dài một lượt thì sửa ROUND_SIZE ở đây — nhớ trần thưởng của
      server (quiz 220 ☄️ ≈ 11 câu đúng, xem AstroqSV/Services/Wallet.cs). */
   var ROUND_SIZE = 5;
-  var QUESTIONS = AstroQQuestions.pickRound(ROUND_SIZE);
+
+  /* ĐỀ THEO BÀI ĐỌC: `quiz.html?terms=a,b,c` — thêm 06/08/2026.
+     Đọc xong một bài ở `library.html` thì nút "Làm Quiz bài này" gửi sang đây đúng
+     các khoá `terms` của bài đó, nên trẻ gặp lại chính thứ vừa đọc. Trước đó nút ấy
+     chỉ mở quiz với đề ngẫu nhiên — tức là đọc bài về nguyệt thực xong có thể phải
+     trả lời về sao chổi.
+
+     ⚠️ LUÔN CÓ ĐƯỜNG LÙI. Không có tham số, tham số rác, hay khoá không khớp câu nào
+        thì rơi về `pickRound()` như cũ. Một đường vào phụ không được phép làm hỏng
+        đường vào chính.
+     ⚠️ VẪN BÙ CHO ĐỦ ROUND_SIZE. Một bài đọc chỉ nối 4 khoá, mà bình năng lượng,
+        bảng tổng kết và mốc ĐẠT (≥60%) đều tính theo số câu của lượt — để lượt này
+        4 câu còn lượt kia 5 câu là hai thước đo khác nhau cho cùng một huy hiệu. */
+  function roundFromUrl() {
+    var raw = new URLSearchParams(location.search).get("terms");
+    if (!raw) return null;
+    var want = raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!want.length) return null;
+    var hit = AstroQQuestions.byTerms(want);
+    if (!hit.length) return null;                     // khoá sai hết → về đề ngẫu nhiên
+    var round = AstroQQuestions.shuffled(hit).slice(0, ROUND_SIZE);
+    if (round.length < ROUND_SIZE) {                  // bù cho đủ, không trùng câu đã có
+      var da = {};
+      round.forEach(function (q) { da[q.term] = 1; });
+      AstroQQuestions.shuffled(AstroQQuestions.ALL).forEach(function (q) {
+        if (round.length < ROUND_SIZE && !da[q.term]) { da[q.term] = 1; round.push(q); }
+      });
+    }
+    return round;
+  }
+
+  var QUESTIONS = roundFromUrl() || AstroQQuestions.pickRound(ROUND_SIZE);
 
   /* ================= Ngưỡng ĐẠT =================
      Chốt 30/07/2026: LÀM QUIZ PHẢI ĐẠT MỚI CÓ THIÊN THẠCH TÍM.

@@ -76,7 +76,7 @@
         <img id="r-mascot-img" src="img/b1.png" alt="" />
         <div class="m-body"><div class="m-who" id="r-mascot-who">BYTE</div><p id="r-mascot-text"></p></div>
       </div>
-      <div class="credit"><span id="ic-ext"></span><span id="r-credit"></span> · <a id="r-link" target="_blank" rel="noopener"><span data-i18n="src_link">Nguồn</span> <span id="ic-ext2"></span></a></div>
+      <div class="credit"><span id="ic-ext"></span><span id="r-credit"></span><a id="r-link" target="_blank" rel="noopener"><span data-i18n="src_link">Nguồn</span> <span id="ic-ext2"></span></a></div>
       <div class="r-actions">
         <button class="r-claim" id="r-claim"></button>
         <button class="r-quiz" id="r-quiz">⚡ <span data-i18n="quiz_cta">LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU</span> (+20 <img class="tt-inline" src="img/tt.png" alt="tt" />)</button>
@@ -91,12 +91,13 @@
      CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
+<script src="js/articles.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
   "use strict";
-  var READ_KEY="astroq-read", READ_SECS=5;
+  var READ_SECS=5;   /* khoá `astroq-read` khai ở js/articles.js, không chép lại */
 
   /* ===== i18n ===== */
   var I18N={
@@ -131,85 +132,17 @@
   var CAT_ICON={astronomy:"telescope", ai:"cpu", quantum:"atom", robot:"bot"};
 
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
-  var IMG="https://images-assets.nasa.gov/image/";
-  var ARTICLES=[
-    { id:"lib-nebula", src:"NASA", cat:"astronomy", em:"🌌", c:["#8ee0ff","#2f6fd0","#0e2a5e"],
-      img:IMG+"PIA25433/PIA25433~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/mission/webb/",
-      title:{vi:"Tinh vân Đại Bàng — vườn ươm của các ngôi sao",en:"The Eagle Nebula — a nursery of stars"},
-      body:{vi:["Trong vũ trụ có những đám mây khí và bụi khổng lồ gọi là <b>tinh vân</b>. Bên trong chúng, khí co lại và nóng dần lên cho tới khi bùng cháy thành những ngôi sao mới.",
-                "Tinh vân Đại Bàng nổi tiếng với 'Những Cột Trụ Sáng Tạo' — các cột khí cao hàng nghìn tỉ km, nơi hàng loạt ngôi sao đang chào đời."],
-            en:["Space has giant clouds of gas and dust called <b>nebulae</b>. Inside them, gas squeezes together and heats up until it lights up as new stars.",
-                "The Eagle Nebula is famous for the 'Pillars of Creation' — towers of gas trillions of km tall where many stars are being born."]},
-      term:{who:"comet", word:{vi:"Tinh vân",en:"Nebula"}, text:{vi:"<b>Tinh vân</b> là 'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",en:"A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱"}} },
-
-    { id:"lib-andromeda", src:"NASA", cat:"astronomy", em:"🌀", c:["#c6d8ff","#5a78c8","#20305e"],
-      img:IMG+"PIA04921/PIA04921~large.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/",
-      title:{vi:"Thiên hà Tiên Nữ — người hàng xóm khổng lồ",en:"The Andromeda Galaxy — our giant neighbour"},
-      body:{vi:["<b>Thiên hà</b> là một tập hợp khổng lồ gồm hàng trăm tỉ ngôi sao. Trái Đất của chúng ta nằm trong thiên hà Dải Ngân Hà.",
-                "Tiên Nữ (Andromeda) là thiên hà lớn gần chúng ta nhất, cách khoảng 2,5 triệu năm ánh sáng — và đang tiến lại gần Dải Ngân Hà!"],
-            en:["A <b>galaxy</b> is a huge collection of hundreds of billions of stars. Our Earth lives in the Milky Way galaxy.",
-                "Andromeda is the nearest big galaxy to us, about 2.5 million light-years away — and it's slowly heading toward the Milky Way!"]},
-      term:{who:"byte", word:{vi:"Năm ánh sáng",en:"Light-year"}, text:{vi:"<b>Năm ánh sáng</b> là quãng đường ánh sáng đi trong 1 năm — cực kỳ xa nhé! 🤖",en:"A <b>light-year</b> is how far light travels in one year — incredibly far! 🤖"}} },
-
-    { id:"lib-mars", src:"NASA", cat:"robot", em:"🔴", c:["#ffcaa8","#d1642f","#5e2410"],
-      img:IMG+"PIA21496/PIA21496~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://mars.nasa.gov/",
-      title:{vi:"Robot Perseverance khám phá Sao Hỏa",en:"Perseverance rover exploring Mars"},
-      body:{vi:["<b>Xe tự hành</b> (rover) là robot 6 bánh do NASA gửi lên Sao Hỏa. Nó tự lái, chụp ảnh và thu thập mẫu đá.",
-                "Perseverance đang tìm dấu vết của sự sống cổ đại và thử tạo khí oxy từ bầu khí quyển Sao Hỏa để giúp con người sau này."],
-            en:["A <b>rover</b> is a six-wheeled robot NASA sends to Mars. It drives itself, takes photos and collects rock samples.",
-                "Perseverance is looking for signs of ancient life and even makes oxygen from Mars' air to help future explorers."]},
-      term:{who:"byte", word:{vi:"Xe tự hành",en:"Rover"}, text:{vi:"<b>Rover</b> là robot biết tự lái trên hành tinh khác — giống anh em họ của tớ! 🤖",en:"A <b>rover</b> is a robot that drives itself on another planet — like my cousin! 🤖"}} },
-
-    { id:"lib-blackhole", src:"NASA", cat:"quantum", em:"🕳️", c:["#ffe1a8","#f2a53c","#3a2410"],
-      img:IMG+"PIA23122/PIA23122~medium.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/universe/black-holes/",
-      title:{vi:"Hố đen khổng lồ ở thiên hà M87",en:"The giant black hole in galaxy M87"},
-      body:{vi:["<b>Hố đen</b> là nơi có lực hấp dẫn mạnh đến mức ngay cả ánh sáng cũng không thoát ra được.",
-                "Ở trung tâm thiên hà M87 có một hố đen nặng gấp hàng tỉ lần Mặt Trời. Năm 2019, con người lần đầu chụp được 'bóng' của nó."],
-            en:["A <b>black hole</b> is a place where gravity is so strong that not even light can escape.",
-                "At the center of galaxy M87 sits a black hole billions of times heavier than the Sun. In 2019 humans first photographed its 'shadow'."]},
-      term:{who:"comet", word:{vi:"Hấp dẫn",en:"Gravity"}, text:{vi:"<b>Hấp dẫn</b> là lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",en:"<b>Gravity</b> is the pull that draws things together — a black hole pulls so hard it even traps light! 🐱"}} },
-
-    { id:"lib-exoplanet", src:"AI & Tech", cat:"ai", em:"🪐", c:["#e6c6ff","#a06be0","#3a1f6e"],
-      img:IMG+"PIA22082/PIA22082~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/exoplanets/",
-      title:{vi:"AI giúp tìm hành tinh ngoài Hệ Mặt Trời",en:"AI helps find planets beyond the Solar System"},
-      body:{vi:["<b>Ngoại hành tinh</b> là những hành tinh quay quanh một ngôi sao khác, không phải Mặt Trời của chúng ta.",
-                "Máy tính dùng <b>trí tuệ nhân tạo</b> để soi hàng triệu ngôi sao, nhận ra lúc ánh sáng chớp mờ đi — dấu hiệu có hành tinh đi ngang qua."],
-            en:["<b>Exoplanets</b> are planets orbiting other stars, not our Sun.",
-                "Computers use <b>artificial intelligence</b> to scan millions of stars and spot tiny dips in brightness — a sign a planet passed in front."]},
-      term:{who:"byte", word:{vi:"Trí tuệ nhân tạo",en:"Artificial Intelligence"}, text:{vi:"<b>AI</b> giúp máy tính học từ ví dụ để tự nhận ra quy luật — như cách tớ học vậy! 🤖",en:"<b>AI</b> lets computers learn from examples to spot patterns by themselves — just like me! 🤖"}} },
-
-    { id:"lib-saturn", src:"NASA", cat:"astronomy", em:"🪐", c:["#ffe6b0","#d9a441","#5e3f14"],
-      img:IMG+"PIA22766/PIA22766~orig.jpg", credit:"NASA / JPL-Caltech", url:"https://science.nasa.gov/saturn/",
-      title:{vi:"Tàu Cassini và vành đai Sao Thổ",en:"Cassini and Saturn's rings"},
-      body:{vi:["Sao Thổ nổi tiếng với những <b>vành đai</b> tuyệt đẹp làm từ hàng tỉ mảnh băng và đá, từ nhỏ như hạt cát đến to như ngôi nhà.",
-                "Tàu Cassini đã bay quanh Sao Thổ suốt 13 năm, gửi về vô số hình ảnh và khám phá về hành tinh này cùng các mặt trăng của nó."],
-            en:["Saturn is famous for its beautiful <b>rings</b> made of billions of pieces of ice and rock, from grains of sand to house-sized chunks.",
-                "The Cassini spacecraft orbited Saturn for 13 years, sending back countless images and discoveries about the planet and its moons."]},
-      term:{who:"comet", word:{vi:"Vành đai",en:"Rings"}, text:{vi:"<b>Vành đai</b> Sao Thổ không phải một khối liền — nó là hàng tỉ viên băng bay quanh cùng nhau! 🐱",en:"Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱"}} },
-
-    { id:"lib-gaia", src:"ESA", cat:"astronomy", em:"🛰️", c:["#b6f5cf","#3fd6a0","#12503a"],
-      img:"", credit:"ESA / Gaia / DPAC", url:"https://www.esa.int/Science_Exploration/Space_Science/Gaia",
-      title:{vi:"Tàu Gaia của ESA vẽ bản đồ 3D Ngân Hà",en:"ESA's Gaia maps the Milky Way in 3D"},
-      body:{vi:["<b>ESA</b> là Cơ quan Vũ trụ châu Âu. Tàu Gaia của họ đo vị trí và chuyển động của gần 2 tỉ ngôi sao.",
-                "Nhờ đó, các nhà khoa học dựng nên tấm <b>bản đồ sao</b> ba chiều chi tiết nhất về thiên hà của chúng ta."],
-            en:["<b>ESA</b> is the European Space Agency. Its Gaia spacecraft measures the position and motion of nearly 2 billion stars.",
-                "From this, scientists build the most detailed 3D <b>star map</b> of our galaxy ever made."]},
-      term:{who:"byte", word:{vi:"Bản đồ sao",en:"Star map"}, text:{vi:"<b>Bản đồ sao</b> cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",en:"A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖"}} },
-
-    { id:"lib-qubit", src:"AI & Tech", cat:"quantum", em:"⚛️", c:["#c6ffe6","#4ade80","#155e40"],
-      img:"", credit:"MIT / IBM Research", url:"https://www.ibm.com/quantum",
-      title:{vi:"Máy tính lượng tử là gì?",en:"What is a quantum computer?"},
-      body:{vi:["Máy tính thường dùng các bit chỉ mang giá trị 0 hoặc 1. Máy tính lượng tử dùng <b>qubit</b>, có thể mang cả 0 và 1 cùng lúc.",
-                "Nhờ vậy, máy tính lượng tử có thể thử rất nhiều lời giải một lúc, giúp giải những bài toán mà máy tính thường mất hàng nghìn năm."],
-            en:["Normal computers use bits that are only 0 or 1. Quantum computers use <b>qubits</b>, which can be both 0 and 1 at the same time.",
-                "This lets quantum computers try many answers at once, solving problems that would take normal computers thousands of years."]},
-      term:{who:"byte", word:{vi:"Qubit",en:"Qubit"}, text:{vi:"<b>Qubit</b> giống một đồng xu đang xoay tít — vừa là mặt ngửa vừa là mặt sấp cho tới khi bạn nhìn! 🤖",en:"A <b>qubit</b> is like a spinning coin — both heads and tails until you look! 🤖"}} }
-  ];
+  /* Bài đọc lấy từ `js/articles.js` — CHỖ DUY NHẤT khai báo, dùng chung với
+     `learn.html`. Xem đầu file đó: hai mảng riêng trước đây gây HAI lỗi thật.
+     Giữ tên `ARTICLES` để phần còn lại của trang không phải sửa một chữ nào. */
+  var ARTICLES = AstroQArticles.all();
 
   /* ===== Đọc / thưởng / thống kê ===== */
-  function readSet(){ try{ return JSON.parse(localStorage.getItem(READ_KEY)||"[]"); }catch(e){ return []; } }
-  function isRead(id){ return readSet().indexOf(id)>=0; }
-  function markRead(id){ var s=readSet(); if(s.indexOf(id)<0){ s.push(id); try{ localStorage.setItem(READ_KEY,JSON.stringify(s)); }catch(e){} } }
+  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles.js`. Chúng phải giống hệt ở cả hai trang
+     — không thì lỗi "đọc bên này bên kia không biết" quay lại. `isRead` ở đó còn hiểu
+     cả id CŨ của bài đã gộp, nên lịch sử đọc của trẻ không bị mất. */
+  var readSet = AstroQArticles.readSet, isRead = AstroQArticles.isRead,
+      markRead = AstroQArticles.markRead;
   function libReadCount(){ var s=readSet(); return ARTICLES.filter(function(a){ return s.indexOf(a.id)>=0; }); }
 
   /* ===== Bài viết nổi bật: LUÔN ĐÚNG 4, chưa đọc lên trước =====
@@ -222,12 +155,7 @@
      đánh dấu đã đọc thì bài vừa đọc biến khỏi khối nổi bật ngay dưới tay trẻ,
      và cả khối nhảy chỗ. Phiên đăng nhập sau mở lại trang là đã có thứ tự mới. */
   var FEAT_N = 4;
-  function pickFeatured(){
-    var unread=[], seen=[];
-    ARTICLES.forEach(function(a){ (isRead(a.id) ? seen : unread).push(a); });
-    return unread.concat(seen).slice(0, Math.min(FEAT_N, ARTICLES.length));
-  }
-  var FEATURED = pickFeatured();
+  var FEATURED = AstroQArticles.featured(FEAT_N);   /* luật chọn nằm ở js/articles.js */
   function isFeatured(id){
     for(var i=0;i<FEATURED.length;i++){ if(FEATURED[i].id===id) return true; }
     return false;
@@ -328,12 +256,29 @@
     $("r-title").textContent=L(a.title);
     $("r-body").innerHTML=L(a.body).map(function(p){return "<p>"+p+"</p>";}).join("");
     // mascot
-    var who=a.term.who;
-    $("r-mascot-img").src = who==="comet" ? "img/m1.png" : "img/b1.png";
-    $("r-mascot-who").textContent = who==="comet" ? "COMET" : "BYTE";
-    $("r-mascot-text").innerHTML = "<b>"+L(a.term.word)+":</b> "+L(a.term.text);
+    /* ⚠️ LỖI CÓ SẴN, SỬA 06/08/2026. Trước đây dòng này là `var who=a.term.who;`
+       không có lớp bảo vệ nào — mà bài `jwst` (đang chạy thật từ đợt gộp 05/08)
+       KHÔNG khai `term`. Hậu quả đo được: mở bài đó ở library.html thì `openReader`
+       ném `Cannot read properties of undefined (reading 'who')` NGAY TRƯỚC dòng
+       `classList.add("show")` — nên trình đọc **không bao giờ hiện ra**, trẻ bấm vào
+       thẻ và không có gì xảy ra. Lỗi im lặng với người dùng, chỉ console mới thấy.
+       Không bộ kiểm nào bắt được vì không bộ nào MỞ TỪNG BÀI.
+       ⇒ Khối linh vật nay là PHẦN THÊM: bài nào có `term` thì hiện, không có thì ẩn. */
+    var mas=$("r-mascot"), who=a.term&&a.term.who;
+    if(a.term){
+      if(mas) mas.hidden=false;
+      $("r-mascot-img").src = who==="comet" ? "img/m1.png" : "img/b1.png";
+      $("r-mascot-who").textContent = who==="comet" ? "COMET" : "BYTE";
+      $("r-mascot-text").innerHTML = "<b>"+L(a.term.word)+":</b> "+L(a.term.text);
+    } else if(mas){ mas.hidden=true; }
     // credit + link
-    $("r-credit").textContent = t("credit")+": "+a.credit;
+    /* ⚠️ `credit` có thể là null (bài không ảnh — `jwst`, `lib-qubit`, và 5 bài Đợt 1).
+       In thẳng ra thì dòng credit đọc là "Nguồn dữ liệu: null". Ghi công cho một bức
+       ảnh không tồn tại còn tệ hơn không ghi gì. */
+    /* ⚠️ Dấu " · " ngăn cách nay nằm TRONG chuỗi này chứ không phải text node trần
+       trong markup. Để ngoài thì bài không có credit hiện ra " · Nguồn" — một dấu
+       ngăn cách không ngăn cách gì. Text node trần thì không ẩn được bằng id. */
+    $("r-credit").textContent = a.credit ? t("credit")+": "+a.credit+" · " : "";
     $("r-link").href=a.url;
     // claim
     var btn=$("r-claim"); clearInterval(rTimer);
@@ -398,7 +343,13 @@
   $("grid").addEventListener("click", function(e){ var c=e.target.closest?e.target.closest(".card"):null; if(c) openReader(c.getAttribute("data-id")); });
   $("r-close").addEventListener("click", closeReader);
   $("r-claim").addEventListener("click", claim);
-  $("r-quiz").addEventListener("click", function(){ window.location.href="quiz.html"; });
+  $("r-quiz").addEventListener("click", function(){
+    /* Gửi kèm `terms` của bài đang đọc → quiz.html rút đúng câu của bài đó.
+       Bài không khai `terms` thì mở quiz thường, không chặn đường đi. */
+    var t = curArt && curArt.terms && curArt.terms.length ? curArt.terms : null;
+    window.location.href = t ? "quiz.html?terms="+encodeURIComponent(t.join(","))
+                             : "quiz.html";
+  });
   $("reader").addEventListener("click", function(e){ if(e.target===$("reader")) closeReader(); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeReader(); });
   AstroQ.initLang(applyLang);
