@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>BẢN MẪU — Trung Tâm Nhiệm Vụ (cửa trước)</title>
+
+<!-- ⚠️ BẢN MẪU: TRUNG TÂM NHIỆM VỤ LÀ CỬA TRƯỚC (phương án A, chủ dự án chốt 04/08/2026).
+
+     CÂU HỎI SINH RA TRANG NÀY: *"nhiệm vụ hàng ngày và sự kiện sẽ để ở đâu? nó không
+     thuộc bất kì 1 hành tinh nào"*.
+
+     Bản đồ tổ chức theo NƠI. Thứ không có nơi thì đặt lên bản đồ là phải bịa cho nó
+     một toạ độ — đúng lỗi SAI TẦNG mà chủ dự án đã bắt ở nút Mặt Trăng trong cây
+     Trái Đất. Nên chúng về đây, và trang này (`missions.html`, MOD-04, tên đã chốt là
+     Trung Tâm Nhiệm Vụ) chính là chỗ đang trống: từ khi bản đồ nhảy thẳng vào cây
+     chặng thì nó mất việc.
+
+     BỐN LOẠI, BA CHỖ Ở:
+       · chính tuyến  → bản đồ → hành tinh → cây chặng   (có nơi)
+       · phụ          → danh sách nhiệm vụ của hành tinh (có nơi)
+       · hàng ngày    → TRANG NÀY                        (không nơi)
+       · sự kiện      → TRANG NÀY                        (không nơi)
+
+     LUỒNG: dashboard → TRANG NÀY → bản đồ → hành tinh → cây chặng.
+     ⚠️ Thêm một tầng thì thêm một cú chạm. Bù bằng dòng "Chơi tiếp" ở NGAY ĐẦU trang
+        (2 cú chạm từ dashboard tới chỗ đang chơi dở — ÍT hơn luồng cũ). Nhờ (A) mà
+        trẻ ĐI QUA việc hàng ngày mỗi lần vào chơi, nên không cần nhắc nó ở đâu khác;
+        đó cũng là lý do bác phương án (B) đặt một dải hàng ngày lên bản đồ. -->
+
+<link rel="stylesheet" href="../css/fonts.css" />
+<link rel="stylesheet" href="../css/common.css" />
+<link rel="stylesheet" href="../css/page-shell.css" />
+<link rel="stylesheet" href="proto-resume.css" />
+<link rel="stylesheet" href="proto-hub.css" />
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <header class="hub-top">
+    <a class="back-btn" href="../dashboard.html"><span>&lt;</span> <span>Về Trung Tâm Điều Hướng</span></a>
+    <span class="hub-tag">[ MISSION CONTROL ]</span>
+    <div class="currency" title="Thiên thạch tím">
+      <span class="gem"><img src="../img/tt.png" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">🎯 MOD-04</span>
+    <h1>Trung Tâm Nhiệm Vụ</h1>
+  </section>
+
+  <!-- ═══ BẢNG THỬ — chỉ có ở bản mẫu ═══ -->
+  <section class="panel proto-switch">
+    <span class="panel-tag"><span class="led"></span><span>BẢN MẪU · CỬA TRƯỚC (PHƯƠNG ÁN A)</span></span>
+    <div class="filters">
+      <span class="lbl">Tiến độ giả lập</span>
+      <div class="seg" id="seg" role="group">
+        <button type="button" data-case="0" class="on">Mới bắt đầu</button>
+        <button type="button" data-case="6">Đang dở 6/7</button>
+        <button type="button" data-case="7">Xong Trái Đất</button>
+      </div>
+    </div>
+    <div class="filters">
+      <span class="lbl">Sự kiện</span>
+      <div class="seg" id="seg-ev" role="group">
+        <button type="button" data-ev="1" class="on">Đang có</button>
+        <button type="button" data-ev="0">Không có</button>
+      </div>
+    </div>
+    <p class="cmp">↔ <a href="proto-mission-map.html">bản đồ</a> ·
+      <a href="proto-planet.html">danh sách nhiệm vụ</a> ·
+      <a href="proto-mission-tree-c.html">cây chặng</a></p>
+  </section>
+
+  <!-- ═══ LỐI TẮT "CHƠI TIẾP" — dùng chung với bản đồ ═══
+       Đặt TRÊN mọi nhóm, cố ý: đây là thứ 90% lượt mở trang cần tới. -->
+  <section class="panel resume" id="resume" hidden>
+    <div class="resume-in">
+      <span class="r-ic" aria-hidden="true">⚡</span>
+      <div class="r-b">
+        <b id="r-nm">Eco-Hero: nên hay không nên?</b>
+        <span id="r-sub">Trái Đất · chặng 06 / 07</span>
+      </div>
+      <button class="pbtn" id="r-go" type="button">Chơi tiếp</button>
+    </div>
+  </section>
+
+  <!-- ═══ ① CHÍNH TUYẾN ═══ -->
+  <section class="panel">
+    <div class="sec-h">
+      <span class="sec-t">Chính tuyến</span>
+      <span class="sec-m" id="main-m"></span>
+    </div>
+    <a class="big" href="proto-mission-map.html">
+      <span class="big-ic" aria-hidden="true">🗺️</span>
+      <span class="big-b">
+        <b>Bản đồ Hệ Mặt Trời</b>
+        <span id="map-sub">Chọn nơi để tới. Trái Đất đang mở.</span>
+      </span>
+      <span class="chev" aria-hidden="true">›</span>
+    </a>
+  </section>
+
+  <!-- ═══ ② HÀNG NGÀY ═══ -->
+  <section class="panel">
+    <div class="sec-h">
+      <span class="sec-t">Hàng ngày</span>
+      <!-- ⚠️ Đồng hồ này ĐẾM LÙI TỪ SỐ GIÂY SERVER GỬI VỀ, không đọc đồng hồ máy.
+           Xem lý do ở đầu proto-hub.js. -->
+      <span class="sec-m" id="day-m">còn —</span>
+    </div>
+    <ul class="tasks" id="daily"></ul>
+    <p class="foot" id="day-foot"></p>
+  </section>
+
+  <!-- ═══ ③ SỰ KIỆN — chỉ hiện khi ĐANG CÓ ═══
+       ⚠️ Không có sự kiện thì ẨN CẢ KHỐI, không hiện một khối rỗng kèm câu "chưa có
+          sự kiện nào". Một khối trống là một lời hứa treo lơ lửng. -->
+  <section class="panel" id="ev-sec" hidden>
+    <div class="sec-h">
+      <span class="sec-t">Sự kiện</span>
+      <span class="sec-m" id="ev-m"></span>
+    </div>
+    <ul class="tasks" id="events"></ul>
+  </section>
+
+  <!-- ⚠️ NÓI THẬT: hai nhóm dưới là DỮ LIỆU GIẢ và backend chưa đỡ được chúng. -->
+  <p class="warn">⚠️ <b>Bản mẫu:</b> việc hàng ngày và sự kiện ở trên là <b>dữ liệu giả</b>.
+    Server chưa có hình dạng dữ liệu cho chúng — <code>POST /me/progress</code> chỉ nhận
+    <code>quiz</code> / <code>game</code> / <code>lesson</code> / <code>planet</code>, và bảng
+    thưởng <code>Wallet</code> không có mục nào cho <code>daily</code> (phép kiểm đã chứng minh
+    <code>reason</code> lạ trả <b>400</b>). Trang này để chốt <b>chỗ đặt</b>, chưa phải để chơi.</p>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="proto-hub.js"></script>
+</body>
+</html>

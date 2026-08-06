@@ -1,0 +1,146 @@
+/* ==========================================================
+   proto-mission-tree-c.css — CHỈ phần ĐƯỜNG ĐI của bản C.
+
+   Vòng tròn (`.node-btn`, `.num`, `.bdg`, ba trạng thái done/now/lock), bảng chi
+   tiết `.sheet`, thẻ kết `.finish` dùng lại `proto-mission-tree.css`; thanh dính
+   `.mbar` và nút nhảy `.jump` dùng lại `proto-mission-tree-b.css`.
+   Ở đây chỉ có thứ C làm khác: **bỏ nhãn cạnh nút, cột uốn lượn nằm giữa màn**.
+
+   ⚠️ GỐC CỦA LỖI "TRỐNG BÊN PHẢI" (chủ dự án báo 04/08/2026):
+      hàng của A/B là [vòng tròn][nhãn chữ]. Tên chặng dài ngắn khác nhau → mép phải
+      lởm chởm; mà tên dài nhất cũng chỉ ~250px trong cột 600px → luôn thừa một mảng
+      trống. Không thể chữa bằng cách canh lề: bản thân nội dung không lấp kín được.
+      Duolingo và Candy Crush không có lỗi này vì **không có nhãn nào để mà lệch**.
+
+   ⚠️ VÌ SAO UỐN LƯỢN CHỨ KHÔNG PHẢI MỘT CỘT THẲNG:
+      bỏ nhãn rồi thì một cột thẳng để trống CẢ HAI bên (mỗi bên ~260px) — đổi một
+      mảng trống bên phải lấy hai mảng trống hai bên. Đường uốn lấy lại bề ngang đó
+      và biến nó thành thứ có nghĩa: một con đường.
+      ⚠️ Khác hẳn lối so le đã bị bác ở bản 1 — cái bị bác là NHÃN CHỮ nhảy trái–phải
+         (mắt phải đi zíc-zắc để ĐỌC). Ở đây không có chữ nào trên đường.
+
+   ⛔ KHÔNG vẽ đoạn nối giữa hai vòng tròn. Đường thẳng nối hai nút lệch nhau thì cắt
+      chéo qua khoảng giữa và đọc ra như một mạng lưới, không như một lối đi — mà
+      chính hình dạng lượn sóng đã đủ nói "đi từ đây xuống đó". Duolingo cũng không có.
+   ========================================================== */
+
+/* ============ CÂU DẪN ============ */
+.lead{max-width:600px;margin:0 auto 4px;color:var(--ink-soft);
+  font-size:15px;line-height:1.55;text-align:center;}
+
+/* ============ ĐƯỜNG UỐN ============
+   Cột hẹp và CANH GIỮA — bề ngang chỉ vừa đủ cho nút cộng biên độ lượn, nên trên
+   màn rộng nó nằm chính giữa thay vì dạt về một phía. */
+.path{list-style:none;position:relative;
+  max-width:320px;margin:0 auto;padding:10px 0;}
+
+/* ⛔ ĐOẠN NỐI DỌC CỦA BẢN A PHẢI TẮT — LỖI THẬT, ẢNH CHỤP MỚI THẤY.
+   `.node + .node::before` của `proto-mission-tree.css` neo `left:38px` (đúng cho một
+   cột thẳng, nút nằm sát mép trái). Ở đây nút đã dời đi bằng `translateX`, còn đoạn
+   nối thì không — nên nó ở lại thành **mấy vạch mờ lơ lửng bên trái, không nối vào
+   đâu cả**. Cùng họ với `.e2-shield`/`.e2-terminator`: một hình vẽ đúng cho hệ hình
+   cũ mang nguyên sang hệ hình mới thì đọc ra thành thứ khác. */
+.path .node + .node::before{display:none;}
+
+.path .node{position:relative;display:flex;justify-content:center;padding:5px 0;
+  /* --dx: độ lệch ngang của từng nút, đặt bằng nth-child ngay dưới. */
+  --dx:0px;}
+.path .node-btn{transform:translateX(var(--dx));}
+.path .node-btn:hover{transform:translateX(var(--dx)) translateY(-3px);}
+.path .node-btn:active{transform:translateX(var(--dx)) scale(.94);}
+
+/* Chu kỳ 8 nút: giữa → phải → xa nhất → phải → giữa → trái → xa nhất → trái.
+   ⚠️ Dùng nth-child chứ KHÔNG gán style inline theo chỉ số: độ lệch là hình thức
+      trình bày, không phải dữ liệu do JS tính ra (quy tắc 1 mục 2 CLAUDE.md). */
+.path .node:nth-child(8n+2){--dx:44px;}
+.path .node:nth-child(8n+3){--dx:68px;}
+.path .node:nth-child(8n+4){--dx:44px;}
+.path .node:nth-child(8n+6){--dx:-44px;}
+.path .node:nth-child(8n+7){--dx:-68px;}
+.path .node:nth-child(8n+0){--dx:-44px;}
+
+/* ============ BONG BÓNG TÊN — CHỈ Ở CHẶNG ĐANG MỞ ============
+   Đây là thứ trả lại phần thông tin mà việc bỏ nhãn lấy đi. Duolingo làm đúng vậy:
+   một bong bóng "START" trên nút đang mở, các nút khác trần trụi.
+
+   ⚠️ CANH GIỮA THEO CỘT, KHÔNG THEO NÚT (`translateX(-50%)` trơn, không trừ --dx):
+      nút lệch 68px mà bong bóng rộng 250px thì canh theo nút là tràn khỏi khung trên
+      màn 390px. Bù lại, MŨI NHỌN mới là thứ chạy theo nút — nên nó vẫn chỉ đúng chỗ.
+   ⚠️ `pointer-events:none` — vùng bấm là VÒNG TRÒN (76px, trên mốc 48px). Bong bóng
+      bắt cú bấm thì trẻ chạm vào chữ mà không có gì xảy ra. */
+/* ⚠️ CHỖ CHO BONG BÓNG LẤY TỪ CHÍNH CHẶNG ĐANG MỞ, KHÔNG LẤY TỪ `padding` CỦA CỘT.
+   Lỗi thật, ảnh chụp mới thấy: khoảng cách hàng là 86px mà bong bóng cao ~68px, nên
+   nó **phủ kín chặng ngay phía trên** — trẻ mất luôn một dấu ✓ vừa kiếm được.
+   Đặt vào `margin-top` của `.node.now` thì chỗ trống đi theo chặng đang mở dù nó nằm
+   ở đâu, kể cả khi nó là chặng đầu tiên (padding của `.path` chặn margin thu gọn). */
+.path .node.now{margin-top:74px;}
+
+.path .bub{position:absolute;left:50%;bottom:100%;z-index:3;
+  transform:translateX(-50%);margin-bottom:13px;pointer-events:none;
+  max-width:250px;padding:8px 14px;border-radius:14px;
+  border:1px solid var(--cyan);background:rgba(11,22,44,.97);
+  box-shadow:0 0 22px -6px rgba(56,189,248,.8);
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.path .bub b{display:block;font-family:var(--font-display);font-weight:700;
+  font-size:15px;color:#fff;line-height:1.3;}
+.path .bub .go{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--cyan);}
+/* Mũi nhọn: chạy theo --dx nên luôn trỏ vào đúng nút, dù bong bóng canh giữa cột. */
+.path .bub::after{content:"";position:absolute;top:100%;left:calc(50% + var(--dx));
+  width:11px;height:11px;transform:translateX(-50%) translateY(-6px) rotate(45deg);
+  border:1px solid var(--cyan);border-top:none;border-left:none;
+  background:rgba(11,22,44,.97);}
+
+/* ============ CHẶNG CHƯA MỞ: CHẶN HẲN ============
+   ⚠️ Chặn thì phải chặn cho THẤY. Một cái nút bấm không ăn mà vẫn nhấc lên khi rê
+      chuột và vẫn lún xuống khi bấm là nói dối bằng hình ảnh — trẻ sẽ bấm lại vài
+      lần rồi tưởng máy hỏng. Ba dấu hiệu cùng lúc: con trỏ cấm, không nhấc, không lún. */
+.path .node.lock .node-btn{cursor:not-allowed;}
+.path .node.lock .node-btn:hover,
+.path .node.lock .node-btn:active{transform:translateX(var(--dx));}
+
+/* Câu nói ra điều kiện mở — thay cho cái bảng vừa bỏ. */
+.rule{max-width:320px;margin:10px auto 0;padding:9px 12px;border-radius:12px;
+  font-size:13px;line-height:1.5;text-align:center;color:var(--ink-faint);
+  border:1px dashed var(--brd);background:rgba(10,16,34,.4);}
+.rule[hidden]{display:none;}
+
+/* ============ HỘP "TIẾP HAY DỪNG" ============
+   Nút phụ phải NHÌN RA LÀ NÚT PHỤ nhưng vẫn bấm dễ — "để lần sau" là một lựa chọn
+   hợp lệ, không phải một cú thoát hiểm. */
+/* ⚠️⚠️ LỖI THẬT, VÀ LÀ LỖI DỰ ÁN ĐÃ TRẢ GIÁ MỘT LẦN (nút `#time-ok` của bảng mốc
+   thời gian, 03/08/2026): `.pbtn` khai `display` nên nó THẮNG `display:none` mà
+   trình duyệt áp cho `[hidden]`. Hậu quả ở đây: chặng cuối vẫn hiện nút "Chơi tiếp
+   chặng 08" trỏ vào một chặng không tồn tại. Phép kiểm mới bắt được.
+   ⛔ Đừng chữa bằng cách đổi sang `.hide` do JS bật/tắt — `hidden` là thuộc tính
+      chuẩn và trình đọc màn hình hiểu nó; thứ sai là CSS, nên sửa ở CSS. */
+.pbtn[hidden]{display:none;}
+
+.pbtn.ghost{margin-top:10px;background:transparent;color:var(--ink-soft);
+  border:1px solid var(--brd);box-shadow:none;}
+.pbtn.ghost:hover{color:var(--ink);border-color:var(--brd-on);filter:none;}
+
+/* ============ ĐƯỜNG TỚI DANH SÁCH NHIỆM VỤ ============
+   Chữ nhỏ, tông trung tính — nó là lối phụ, không được tranh mắt với chặng đang mở.
+   ⚠️ Vẫn phải cao ≥48px: lối phụ không có nghĩa là khó bấm. */
+.more{display:flex;align-items:center;justify-content:center;
+  min-height:48px;max-width:320px;margin:6px auto 0;
+  font-size:13.5px;color:var(--ink-soft);text-decoration:none;
+  border-top:1px dashed var(--brd);}
+.more:hover{color:var(--cyan);}
+
+/* ============ MÀN HẸP ============
+   Biên độ lượn thu lại theo bề rộng khung: 390px trừ padding còn ~330px, nút 66px
+   nên lệch tối đa 56px là còn 26px hở mỗi bên. */
+@media (max-width:520px){
+  .path{max-width:100%;}
+  /* Nút nhỏ hơn (66px) nhưng bong bóng có thể xuống 2 dòng trên màn hẹp → cần chỗ
+     hơn chứ không ít hơn. */
+  .path .node.now{margin-top:82px;}
+  .path .node:nth-child(8n+2),
+  .path .node:nth-child(8n+4){--dx:36px;}
+  .path .node:nth-child(8n+3){--dx:56px;}
+  .path .node:nth-child(8n+6),
+  .path .node:nth-child(8n+0){--dx:-36px;}
+  .path .node:nth-child(8n+7){--dx:-56px;}
+  .path .bub{max-width:min(250px,86vw);}
+}

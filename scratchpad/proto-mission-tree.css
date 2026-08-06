@@ -1,0 +1,205 @@
+/* ==========================================================
+   proto-mission-tree.css — PHẦN RIÊNG của bản mẫu cây nhiệm vụ.
+   Khung (nền, .wrap, .hub-top, .hero, .panel, .seg, .pbtn) lấy từ
+   css/common.css + css/page-shell.css — không chép lại ở đây.
+
+   ⚠️ BẢN 3 (04/08/2026): bỏ nút Mặt Trăng khỏi cây (sai tầng — bản đồ mới là chỗ
+      chọn NƠI) và GẤP phần đã xong lại. Lý do đo được ghi ở đầu proto-mission-tree.js.
+
+   ⚠️ BẢN 2 (04/08/2026): LÀM GỌN VÌ "RỐI, KHÓ NHÌN VỚI TRẺ". Lý do từng chỗ bỏ đi
+      ghi ở đầu proto-mission-tree.html. Nguyên tắc của bản này:
+        · MỘT CỘT. Lối so le hai bên bắt mắt đi zíc-zắc trái–phải–trái.
+        · MỘT dòng chữ cho mỗi chặng (tên). Số thứ tự nằm TRONG vòng tròn.
+        · Không chú giải. Ba dấu hiệu tự nói: ✓ đã xong · vòng sáng đang mở ·
+          ổ khoá chưa mở.
+
+   BA TRẠNG THÁI:
+     .done  sáng đủ màu + ✓        — "xong rồi, vẫn mở lại được"
+     .now   vòng sáng + chữ mời    — "làm được ngay"
+     .lock  mờ + ổ khoá            — "chưa tới lượt"
+     .mini  hàng nhỏ của chặng chưa mở — bớt chiều cao, vùng chạm vẫn ≥48px
+
+   ⛔ KHÔNG dùng `filter:grayscale()` để làm mờ — bài học đã ghi 3 lần: trên nền
+      gradient sáng nó cho ra khối xám SÁNG HƠN, tức hút mắt vào cái không dùng được.
+   ⚠️ Vòng sáng của `.now` để ở RULE GỐC, animation chỉ là phần thêm — `common.css`
+      tắt mọi animation khi `prefers-reduced-motion`, để trong keyframes thì lúc đó
+      không còn gì chỉ đường (bài học js/onboard-tour.js).
+   ========================================================== */
+
+.panel + .panel{margin-top:26px;}
+.proto-switch{margin-top:22px;border-style:dashed;border-color:rgba(251,146,60,.5);}
+.proto-switch .panel-tag{color:var(--amber);}
+.proto-switch .panel-tag .led{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:none;}
+.proto-switch .filters{margin:2px 0 0;}
+/* Dòng link qua lại giữa hai bản mẫu — chỉ có ở bản mẫu */
+.cmp{margin:14px 0 0;font-size:13px;line-height:1.6;color:var(--ink-soft);}
+.cmp a{color:var(--cyan);text-decoration:underline;text-underline-offset:3px;}
+
+/* ⚠️ Giới hạn bề rộng cột nội dung. Trên 1440px thì khối kính rộng ~1100px trong khi
+   cây chỉ chiếm ~450px — phần còn lại là một mảng trống lớn bên phải, đọc ra như
+   trang bị lỗi. Một cột hẹp cũng dễ đọc hơn cho trẻ. */
+.head, .tree{max-width:600px;margin-left:auto;margin-right:auto;}
+
+/* ============ ĐẦU KHỐI: một câu + một thanh ============ */
+.head{margin-bottom:6px;}
+.head p{margin:0 0 12px;color:var(--ink-soft);font-size:15px;line-height:1.55;}
+.head .bar{height:8px;border-radius:999px;overflow:hidden;background:rgba(120,160,255,.16);}
+.head .bar i{display:block;height:100%;border-radius:999px;transition:width .4s var(--ease);
+  background:linear-gradient(90deg,var(--cyan),var(--purple));}
+
+/* ============ CÂY — MỘT CỘT ============ */
+.tree{list-style:none;margin:18px 0 0;padding:0;position:relative;}
+
+.node{position:relative;display:flex;align-items:center;gap:16px;padding:9px 0;}
+
+/* Đoạn nối tới chặng trước; sáng lên khi chặng trước đã xong — cùng quy ước với dãy
+   chấm tiến độ trong nhiệm vụ (`.l.ok` ở js/mission-engine.js). */
+.node + .node::before{content:"";position:absolute;z-index:0;
+  left:38px;top:-13px;width:3px;height:26px;transform:translateX(-1.5px);
+  border-radius:2px;background:rgba(120,160,255,.2);}
+.node.lit::before{background:linear-gradient(180deg,var(--cyan),rgba(56,189,248,.4));
+  box-shadow:0 0 10px rgba(56,189,248,.5);}
+
+/* ---- Vòng tròn ---- */
+.node-btn{position:relative;z-index:1;flex:none;cursor:pointer;
+  width:76px;height:76px;border-radius:50%;
+  display:grid;place-items:center;font-size:32px;line-height:1;
+  border:2px solid var(--brd);
+  background:radial-gradient(circle at 50% 34%, rgba(30,44,86,.95), rgba(10,15,30,.95) 72%);
+  transition:transform .16s var(--jelly), box-shadow .22s, border-color .22s;}
+.node-btn:hover{transform:translateY(-3px);}
+.node-btn:active{transform:scale(.94);}
+
+/* Số thứ tự nằm TRONG vòng tròn (góc trên-trái) — trẻ đếm được bằng mắt mà không
+   tốn thêm một dòng chữ nào. */
+.node .num{position:absolute;z-index:2;left:-3px;top:-3px;
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:700;font-size:13px;
+  color:var(--ink-soft);background:#0b0f19;border:2px solid var(--brd);}
+/* Huy hiệu góc dưới-phải: ✓ đã xong · 🔒 chưa mở.
+   ⚠️ Neo vào CHÍNH cái nút, không neo vào cả hàng — hàng cao hơn nút thì huy hiệu
+      trôi ra giữa hai chặng và đọc ra như dấu ✓ của chặng dưới. */
+.node .bdg{position:absolute;z-index:2;right:-2px;bottom:-2px;
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-size:13px;font-weight:700;border:2px solid #0b0f19;}
+
+/* ---- Nhãn: MỘT dòng tên, dòng phụ chỉ khi thật sự có việc phải nói ---- */
+.node-lb{min-width:0;}
+.node-lb b{display:block;font-family:var(--font-display);font-size:17px;font-weight:700;
+  color:var(--ink);line-height:1.3;}
+.node-lb .sub{display:block;margin-top:4px;font-size:13px;line-height:1.45;color:var(--ink-faint);}
+
+/* ---- ĐÃ XONG ---- */
+.node.done .node-btn{border-color:rgba(74,222,128,.65);
+  background:radial-gradient(circle at 50% 34%, rgba(28,74,58,.95), rgba(10,22,20,.95) 72%);
+  box-shadow:0 0 22px -6px rgba(74,222,128,.7);}
+.node.done .num{color:rgba(74,222,128,.95);border-color:rgba(74,222,128,.5);}
+.node.done .bdg{background:var(--green);color:#04140c;}
+
+/* ---- LÀM ĐƯỢC NGAY ---- */
+.node.now .node-btn{border-color:var(--cyan);
+  box-shadow:0 0 0 4px rgba(56,189,248,.16), 0 0 26px -4px rgba(56,189,248,.9);
+  animation:nodePulse 2.2s ease-in-out infinite;}
+@keyframes nodePulse{
+  0%,100%{box-shadow:0 0 0 4px rgba(56,189,248,.14), 0 0 22px -6px rgba(56,189,248,.75);}
+  50%    {box-shadow:0 0 0 9px rgba(56,189,248,.06), 0 0 34px -2px rgba(56,189,248,1);}}
+.node.now .num{color:#04060f;background:var(--cyan);border-color:var(--cyan);}
+.node.now .node-lb b{color:#fff;}
+/* Dòng mời gọi — thứ DUY NHẤT trên cây nói "bấm vào đây" */
+.node.now .node-lb .sub{color:var(--cyan);font-weight:600;font-size:13.5px;}
+
+/* ---- CHƯA MỞ ---- */
+.node.lock{opacity:.42;}
+.node.lock .node-btn{border-color:rgba(120,160,255,.22);cursor:not-allowed;box-shadow:none;}
+.node.lock .node-btn:hover{transform:none;}
+.node.lock .bdg{background:#1b2340;color:var(--ink-faint);border-color:#0b0f19;}
+
+/* ---- HÀNG NHỎ: chặng chưa mở ----
+   ⚠️ Vẫn ≥48px (mốc vùng chạm của dự án) — nhỏ đi là để bớt chiều cao, KHÔNG phải
+      để bấm khó hơn. */
+.node.mini{padding:5px 0;}
+.node.mini .node-btn{width:54px;height:54px;font-size:23px;}
+.node.mini .num{width:22px;height:22px;font-size:11px;}
+.node.mini .bdg{width:22px;height:22px;font-size:11px;}
+.node.mini .node-lb b{font-size:14.5px;}
+.node.mini + .node.mini::before{left:27px;top:-9px;height:18px;}
+.node.mini::before{left:27px;}
+
+/* ============ DẢI GẤP "ĐÃ XONG" ============
+   Thứ trẻ cần thấy là chặng ĐANG mở. Danh sách việc đã làm gói lại thành MỘT hàng,
+   nhưng vẫn hiện đủ số chấm để nó nhìn ra mình đi được bao xa — và vẫn bấm mở được
+   để chơi lại (giấu hẳn là lấy đi một đường đi). */
+.fold{list-style:none;margin:0 0 6px;}
+.fold-btn{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;
+  padding:9px 14px;border-radius:16px;cursor:pointer;text-align:left;
+  border:1px solid rgba(74,222,128,.32);background:rgba(24,58,46,.35);
+  transition:border-color .18s, background .18s;}
+.fold-btn:hover{border-color:rgba(74,222,128,.6);background:rgba(24,58,46,.5);}
+.fold .dots{display:flex;flex-wrap:wrap;gap:4px;flex:none;}
+.fold .dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-size:14px;font-style:normal;
+  border:1px solid rgba(74,222,128,.45);background:rgba(10,22,20,.9);}
+.fold .fold-tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3;}
+.fold .fold-tx b{font-family:var(--font-display);font-size:14.5px;color:rgba(74,222,128,.95);}
+.fold .fold-tx .sub{font-size:12.5px;color:var(--ink-faint);margin-top:2px;}
+.fold .chev{flex:none;color:var(--ink-faint);font-size:13px;}
+.fold.up{margin:6px 0 6px;}
+.fold.up .fold-btn{min-height:44px;justify-content:center;
+  border-style:dashed;background:transparent;}
+.fold.up .fold-tx{flex:none;}
+
+/* ============ THẺ KẾT ============ */
+.finish[hidden]{display:none;}
+.finish{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  max-width:600px;margin:20px auto 0;padding:16px;border-radius:18px;
+  border:1px solid rgba(74,222,128,.4);background:rgba(24,58,46,.3);}
+.finish .f-ic{font-size:30px;line-height:1;flex:none;}
+.finish .f-b{flex:1;min-width:150px;display:flex;flex-direction:column;line-height:1.36;}
+.finish .f-b b{font-family:var(--font-display);font-size:16px;color:#fff;}
+.finish .f-b span{font-size:13px;color:var(--ink-soft);margin-top:3px;}
+.finish .pbtn{min-height:48px;text-decoration:none;}
+
+/* ============ BẢNG CHI TIẾT ============ */
+.sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(4,7,18,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}
+.sheet[hidden]{display:none;}
+.sheet-in{position:relative;width:min(560px,100%);max-height:88vh;overflow:auto;
+  padding:26px 22px 22px;border-radius:22px 22px 0 0;
+  border:1px solid rgba(56,189,248,.32);border-bottom:none;
+  background:linear-gradient(180deg, rgba(19,28,54,.98), rgba(11,16,32,.99));
+  box-shadow:0 -22px 60px -20px rgba(0,0,0,.9);
+  animation:sheetUp .26s var(--ease);}
+@keyframes sheetUp{from{transform:translateY(26px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@media (min-width:640px){
+  .sheet{align-items:center;}
+  .sheet-in{border-radius:22px;border-bottom:1px solid rgba(56,189,248,.32);}
+}
+/* 48px, KHÔNG phải 44 — 44 là mốc tối thiểu của WCAG nên không còn biên an toàn nào
+   (dự án đã có một ca phép kiểm chập chờn vì lý do đó). */
+.sh-x{position:absolute;top:12px;right:12px;width:48px;height:48px;min-width:48px;
+  border-radius:50%;cursor:pointer;border:1px solid var(--brd);background:rgba(8,14,38,.7);
+  color:var(--ink-soft);font-size:15px;line-height:1;}
+.sh-x:hover{color:var(--ink);border-color:var(--brd-on);}
+.sh-ic{display:block;font-size:40px;line-height:1;margin-bottom:10px;}
+.sh-tag{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--cyan);}
+.sheet h3{font-family:var(--font-display);font-weight:700;font-size:21px;margin:4px 0 8px;color:#fff;}
+.sheet p{color:var(--ink-soft);font-size:14.5px;line-height:1.62;margin:0 0 14px;}
+.sh-kv{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}
+.sh-kv span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--brd);background:rgba(8,14,38,.55);font-size:13px;color:var(--ink-soft);}
+.sh-kv img{width:15px;height:15px;object-fit:contain;}
+/* Câu nói thật về việc chơi lại — phải đọc được TRƯỚC khi bấm, không để trẻ tự phát
+   hiện ở màn tổng kết bằng dòng "+0". */
+.sh-note{font-size:13px;line-height:1.55;padding:11px 13px;border-radius:12px;
+  border:1px solid rgba(251,146,60,.38);background:rgba(251,146,60,.09);color:#ffd9ae;}
+.sh-note[hidden]{display:none;}
+.sheet .pbtn{width:100%;margin-top:16px;min-height:48px;font-size:15px;}
+.sheet .pbtn[disabled]{opacity:.42;cursor:not-allowed;filter:none;transform:none;}
+
+/* ============ MÀN HẸP ============ */
+@media (max-width:520px){
+  .node{gap:13px;padding:8px 0;}
+  .node-btn{width:66px;height:66px;font-size:28px;}
+  .node + .node::before{left:33px;top:-11px;height:22px;}
+  .node-lb b{font-size:15.5px;}
+}

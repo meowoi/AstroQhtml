@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌌 Solar System Explorer</title>
+<style>
+  /* ===================== BASE / RESET ===================== */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    background: #05010f;
+  }
+
+  /* Overall app layout: sidebar (controls) + main (canvas) */
+  #app {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ===================== SIDEBAR / CONTROL PANEL ===================== */
+  #sidebar {
+    width: 260px;
+    min-width: 220px;
+    background: linear-gradient(160deg, #2b0f5e 0%, #1a0836 60%, #0d0420 100%);
+    color: #fff;
+    padding: 16px 14px;
+    overflow-y: auto;
+    box-shadow: 4px 0 18px rgba(0,0,0,0.5);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  #sidebar h1 {
+    font-size: 20px;
+    margin: 0 0 4px 0;
+    text-align: center;
+    background: linear-gradient(90deg, #ffd166, #ef476f, #06d6a0, #118ab2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.3;
+  }
+
+  #sidebar .subtitle {
+    font-size: 11.5px;
+    text-align: center;
+    color: #c9b8ff;
+    margin-bottom: 4px;
+  }
+
+  .control-group {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .control-group h3 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #ffd166;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Fun, chunky, kid-friendly buttons */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  button.ctrl-btn {
+    flex: 1;
+    min-width: 80px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 6px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #1a0836;
+    background: linear-gradient(180deg, #ffe08a, #ffb703);
+    box-shadow: 0 3px 0 #b07500, 0 4px 6px rgba(0,0,0,0.35);
+    transition: transform 0.08s ease;
+  }
+  button.ctrl-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #b07500, 0 2px 4px rgba(0,0,0,0.35);
+  }
+  button.ctrl-btn.secondary {
+    background: linear-gradient(180deg, #8ecae6, #219ebc);
+    box-shadow: 0 3px 0 #106080, 0 4px 6px rgba(0,0,0,0.35);
+    color: #06222e;
+  }
+  button.ctrl-btn.secondary:active {
+    box-shadow: 0 1px 0 #106080, 0 2px 4px rgba(0,0,0,0.35);
+  }
+
+  /* Speed slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    accent-color: #06d6a0;
+  }
+  #speedLabel {
+    font-size: 12px;
+    min-width: 38px;
+    text-align: right;
+    color: #06d6a0;
+    font-weight: bold;
+  }
+
+  /* Toggle switches (checkboxes styled as pill toggles) */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .toggle-row:first-of-type { margin-top: 0; }
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider-pill {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #55407a;
+    transition: 0.2s;
+    border-radius: 22px;
+  }
+  .slider-pill:before {
+    position: absolute;
+    content: "";
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+  }
+  input:checked + .slider-pill { background-color: #06d6a0; }
+  input:checked + .slider-pill:before { transform: translateX(18px); }
+
+  /* Legend / planet quick-jump list */
+  #planetList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .planet-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: background 0.15s;
+  }
+  .planet-chip:hover { background: rgba(255,255,255,0.12); }
+  .chip-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(255,255,255,0.5);
+  }
+
+  .scale-note {
+    font-size: 10.5px;
+    color: #b8a9e0;
+    line-height: 1.4;
+    text-align: center;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(255,255,255,0.2);
+  }
+
+  /* ===================== MAIN CANVAS AREA ===================== */
+  #main {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+  }
+  #canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  /* ===================== INFO PANEL (planet click popup) ===================== */
+  #infoPanel {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 290px;
+    max-width: 80vw;
+    background: linear-gradient(160deg, rgba(43,15,94,0.96), rgba(13,4,32,0.97));
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
+    color: #fff;
+    padding: 16px 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    transform: scale(0.9) translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+  #infoPanel.show {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #infoPanel .close-btn {
+    position: absolute;
+    top: 8px; right: 10px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  #infoPanel .close-btn:hover { opacity: 1; }
+  #infoPanel h2 {
+    margin: 0 0 6px 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #infoPanel .info-swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(255,255,255,0.6);
+  }
+  #infoPanel .info-row {
+    font-size: 13px;
+    margin: 6px 0;
+    color: #dcd3ff;
+  }
+  #infoPanel .info-row b {
+    color: #ffd166;
+  }
+  #infoPanel .fact-box {
+    margin-top: 10px;
+    background: rgba(255,255,255,0.08);
+    border-left: 3px solid #06d6a0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  /* ===================== RESPONSIVE ===================== */
+  @media (max-width: 760px) {
+    #app { flex-direction: column; }
+    #sidebar {
+      width: 100%;
+      min-width: 0;
+      max-height: 42vh;
+      flex-direction: column;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+    }
+    #infoPanel { left: 12px; right: 12px; width: auto; }
+  }
+
+  /* Scrollbar styling for sidebar (cosmetic) */
+  #sidebar::-webkit-scrollbar, #planetList::-webkit-scrollbar { width: 6px; }
+  #sidebar::-webkit-scrollbar-thumb, #planetList::-webkit-scrollbar-thumb {
+    background: #55407a; border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ SIDEBAR: all user controls live here ============ -->
+  <div id="sidebar">
+    <h1>🌌 Solar System Explorer</h1>
+    <div class="subtitle">Click any planet to learn about it!</div>
+
+    <div class="control-group">
+      <h3>▶ Playback</h3>
+      <div class="btn-row">
+        <button id="playPauseBtn" class="ctrl-btn">⏸ Pause</button>
+        <button id="resetBtn" class="ctrl-btn secondary">🔄 Reset</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🚀 Speed</h3>
+      <div class="slider-row">
+        <input type="range" id="speedSlider" min="0" max="5" step="0.1" value="1">
+        <span id="speedLabel">1.0x</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>👀 Display</h3>
+      <div class="toggle-row">
+        <span>Show Orbit Lines</span>
+        <label class="switch">
+          <input type="checkbox" id="orbitToggle" checked>
+          <span class="slider-pill"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Show Planet Names</span>
+        <label class="switch">
+          <input type="checkbox" id="namesToggle" checked>
+          <span class="slider-pill"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🪐 Jump to Planet</h3>
+      <div id="planetList"><!-- filled in by JS --></div>
+    </div>
+
+    <div class="scale-note">
+      ⚠️ Note: Planet sizes, distances, and speeds are NOT to true scale.
+      They've been adjusted so every planet is easy to see and compare!
+    </div>
+  </div>
+
+  <!-- ============ MAIN: canvas + floating info panel ============ -->
+  <div id="main">
+    <canvas id="canvas"></canvas>
+
+    <div id="infoPanel">
+      <button class="close-btn" id="closeInfoBtn">✖</button>
+      <h2><span class="info-swatch" id="infoSwatch"></span><span id="infoName"></span></h2>
+      <div class="info-row"><b>Order from Sun:</b> <span id="infoOrder"></span></div>
+      <div class="info-row"><b>Diameter:</b> <span id="infoDiameter"></span></div>
+      <div class="info-row"><b>Orbital Period:</b> <span id="infoPeriod"></span></div>
+      <div class="fact-box">✨ <span id="infoFact"></span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   SOLAR SYSTEM SIMULATION
+   A self-contained, canvas-based, animated model of the solar system.
+   All sizes / distances / speeds are visually exaggerated so that every
+   planet (including tiny Mercury and huge Jupiter) can be clearly seen
+   on one screen -- this is explicitly NOT to real scale.
+   ===================================================================== */
+
+// ---------------------------------------------------------------------
+// 1. GRAB DOM ELEMENTS
+// ---------------------------------------------------------------------
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const playPauseBtn = document.getElementById('playPauseBtn');
+const resetBtn = document.getElementById('resetBtn');
+const speedSlider = document.getElementById('speedSlider');
+const speedLabel = document.getElementById('speedLabel');
+const orbitToggle = document.getElementById('orbitToggle');
+const namesToggle = document.getElementById('namesToggle');
+const planetListEl = document.getElementById('planetList');
+
+const infoPanel = document.getElementById('infoPanel');
+const closeInfoBtn = document.getElementById('closeInfoBtn');
+const infoSwatch = document.getElementById('infoSwatch');
+const infoName = document.getElementById('infoName');
+const infoOrder = document.getElementById('infoOrder');
+const infoDiameter = document.getElementById('infoDiameter');
+const infoPeriod = document.getElementById('infoPeriod');
+const infoFact = document.getElementById('infoFact');
+
+// ---------------------------------------------------------------------
+// 2. GLOBAL SIMULATION STATE
+// ---------------------------------------------------------------------
+let isPlaying = true;      // play / pause flag
+let speedMultiplier = 1;   // controlled by the speed slider
+let showOrbits = true;     // show/hide orbit ellipses
+let showNames = true;      // show/hide planet name labels
+let dpr = window.devicePixelRatio || 1; // for crisp rendering on retina screens
+
+// Logical (CSS-pixel) size of the canvas -- updated on resize
+let W = 0, H = 0;
+
+// ---------------------------------------------------------------------
+// 3. PLANET DATA
+// Each planet stores:
+//  - visual properties (color, radius, orbit shape, speed)
+//  - "angle" = current position in its orbit (radians), updated each frame
+//  - info-panel facts (kid-friendly, approximate real-world values)
+// orbitFraction values are fractions of the available orbit space and
+// get multiplied by a scale computed from the canvas size, so the whole
+// system always fits on screen no matter the window size.
+// ---------------------------------------------------------------------
+const planets = [
+  {
+    name: "Mercury", color: "#b5b0a8", highlight: "#d8d3c9",
+    radius: 5, orbitFraction: 0.13, ellipseRatio: 0.82,
+    baseSpeed: 0.024, angle: 0.3,
+    order: "1st planet from the Sun",
+    diameter: "≈ 4,880 km (about 1/3 the size of Earth)",
+    period: "88 Earth days",
+    fact: "Mercury has almost no atmosphere, so its temperature swings wildly -- scorching hot in the day and freezing at night!"
+  },
+  {
+    name: "Venus", color: "#e8c27c", highlight: "#f5deab",
+    radius: 8, orbitFraction: 0.19, ellipseRatio: 0.85,
+    baseSpeed: 0.018, angle: 2.1,
+    order: "2nd planet from the Sun",
+    diameter: "≈ 12,104 km (almost the same size as Earth)",
+    period: "225 Earth days",
+    fact: "Venus is the hottest planet in our solar system because its thick clouds trap heat like a giant greenhouse!"
+  },
+  {
+    name: "Earth", color: "#3d84f7", highlight: "#4ade80",
+    radius: 9, orbitFraction: 0.26, ellipseRatio: 0.88,
+    baseSpeed: 0.014, angle: 4.0,
+    order: "3rd planet from the Sun",
+    diameter: "≈ 12,742 km",
+    period: "365 days (1 year)",
+    fact: "Earth is the only planet we know of that has liquid water oceans and life!",
+    hasMoon: true
+  },
+  {
+    name: "Mars", color: "#c1440e", highlight: "#e2703a",
+    radius: 7, orbitFraction: 0.33, ellipseRatio: 0.86,
+    baseSpeed: 0.011, angle: 5.4,
+    order: "4th planet from the Sun",
+    diameter: "≈ 6,779 km (about half the size of Earth)",
+    period: "687 Earth days (almost 2 years)",
+    fact: "Mars is called the Red Planet because iron rust covers its surface -- and it has the tallest volcano in the solar system!"
+  },
+  {
+    name: "Jupiter", color: "#d9a066", highlight: "#f0c896",
+    radius: 20, orbitFraction: 0.45, ellipseRatio: 0.9,
+    baseSpeed: 0.006, angle: 1.1,
+    order: "5th planet from the Sun",
+    diameter: "≈ 139,820 km (11 times wider than Earth!)",
+    period: "12 Earth years",
+    fact: "Jupiter is the biggest planet in our solar system and has a giant storm called the Great Red Spot bigger than Earth!"
+  },
+  {
+    name: "Saturn", color: "#e3c789", highlight: "#f2e0b3",
+    radius: 17, orbitFraction: 0.57, ellipseRatio: 0.9,
+    baseSpeed: 0.0045, angle: 3.3,
+    order: "6th planet from the Sun",
+    diameter: "≈ 116,460 km (9.5 times wider than Earth)",
+    period: "29 Earth years",
+    fact: "Saturn's beautiful rings are made of billions of pieces of ice and rock -- some as small as sand, some as big as houses!",
+    hasRings: true
+  },
+  {
+    name: "Uranus", color: "#7de2e6", highlight: "#b6f2f2",
+    radius: 13, orbitFraction: 0.69, ellipseRatio: 0.92,
+    baseSpeed: 0.003, angle: 5.9,
+    order: "7th planet from the Sun",
+    diameter: "≈ 50,724 km (4 times wider than Earth)",
+    period: "84 Earth years",
+    fact: "Uranus spins on its side, like a rolling ball, probably because it was hit by something huge long ago!"
+  },
+  {
+    name: "Neptune", color: "#4169e1", highlight: "#7c9cf0",
+    radius: 13, orbitFraction: 0.81, ellipseRatio: 0.93,
+    baseSpeed: 0.0024, angle: 0.8,
+    order: "8th planet from the Sun",
+    diameter: "≈ 49,244 km (about 4 times wider than Earth)",
+    period: "165 Earth years",
+    fact: "Neptune has the strongest winds in the solar system, blowing more than 2,000 km/h -- faster than any storm on Earth!"
+  }
+];
+
+// The Moon is handled separately since it orbits Earth, not the Sun.
+const moon = {
+  name: "Moon", color: "#cfcfcf", radius: 2.6,
+  orbitDistance: 20, speed: 0.09, angle: 0
+};
+
+// Store each planet's initial angle so Reset can restore it exactly.
+planets.forEach(p => p.initialAngle = p.angle);
+
+// ---------------------------------------------------------------------
+// 4. STARFIELD BACKGROUND
+// Generated once and reused every frame for performance -- stars don't
+// need to be recalculated each animation tick, only redrawn.
+// ---------------------------------------------------------------------
+let stars = [];
+function generateStars() {
+  stars = [];
+  const starCount = Math.floor((W * H) / 1800); // density scales with screen size
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4 + 0.2,
+      twinklePhase: Math.random() * Math.PI * 2,
+      twinkleSpeed: 0.01 + Math.random() * 0.02
+    });
+  }
+}
+
+// ---------------------------------------------------------------------
+// 5. CANVAS SIZING (responsive)
+// Keeps the canvas' internal pixel buffer matching its displayed CSS
+// size (scaled by devicePixelRatio for sharpness on high-DPI screens).
+// ---------------------------------------------------------------------
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw using logical (CSS) pixel coordinates
+  generateStars();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ---------------------------------------------------------------------
+// 6. ORBIT GEOMETRY HELPERS
+// Every planet orbits on an ellipse centered on the Sun. We compute the
+// available radius from the smaller canvas dimension so everything
+// always fits, however the window is shaped.
+// ---------------------------------------------------------------------
+function getMaxOrbitRadius() {
+  return Math.min(W, H) * 0.46; // leave a little padding around the edge
+}
+
+function getPlanetPosition(planet) {
+  const maxR = getMaxOrbitRadius();
+  const a = planet.orbitFraction * maxR;       // semi-major axis (horizontal)
+  const b = a * planet.ellipseRatio;           // semi-minor axis (vertical) -- slightly flattened ellipse
+  const cx = W / 2, cy = H / 2;
+  return {
+    x: cx + Math.cos(planet.angle) * a,
+    y: cy + Math.sin(planet.angle) * b,
+    a, b, cx, cy
+  };
+}
+
+// ---------------------------------------------------------------------
+// 7. DRAWING FUNCTIONS
+// ---------------------------------------------------------------------
+
+// -- Background: deep space gradient + twinkling stars --
+function drawBackground(time) {
+  // subtle radial gradient so the center (near the sun) glows a bit
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
+  grad.addColorStop(0, '#160a33');
+  grad.addColorStop(0.5, '#0a0420');
+  grad.addColorStop(1, '#020108');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  for (const s of stars) {
+    const twinkle = 0.55 + 0.45 * Math.sin(time * s.twinkleSpeed + s.twinklePhase);
+    ctx.globalAlpha = twinkle;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// -- The Sun: glowing circle at the center --
+function drawSun() {
+  const cx = W / 2, cy = H / 2;
+  const sunRadius = Math.max(22, Math.min(W, H) * 0.045);
+
+  // Outer glow
+  const glow = ctx.createRadialGradient(cx, cy, sunRadius * 0.3, cx, cy, sunRadius * 3.2);
+  glow.addColorStop(0, 'rgba(255,220,120,0.55)');
+  glow.addColorStop(1, 'rgba(255,220,120,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, sunRadius * 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sun body
+  const bodyGrad = ctx.createRadialGradient(cx - sunRadius*0.3, cy - sunRadius*0.3, sunRadius*0.1, cx, cy, sunRadius);
+  bodyGrad.addColorStop(0, '#fff6d0');
+  bodyGrad.addColorStop(0.5, '#ffd93d');
+  bodyGrad.addColorStop(1, '#ff9d0a');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, sunRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#3a1e00';
+  ctx.font = 'bold 13px Trebuchet MS';
+  ctx.textAlign = 'center';
+  ctx.fillText('Sun', cx, cy + sunRadius + 16);
+}
+
+// -- Orbit path (ellipse outline) for one planet --
+function drawOrbit(planet) {
+  const { a, b, cx, cy } = getPlanetPosition(planet);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 4]);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, a, b, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// -- Saturn's rings (drawn behind + in front of the planet body) --
+function drawSaturnRings(x, y, planetRadius, frontHalf) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(-0.35); // tilt the rings
+  ctx.scale(1, 0.38); // flatten into an ellipse (viewed edge-on-ish)
+
+  const ringInner = planetRadius * 1.4;
+  const ringOuter = planetRadius * 2.3;
+
+  // Draw as a ring band using multiple concentric strokes for a banded look
+  const ringColors = ['#d9c290', '#c9ae77', '#e8dcb8', '#b89f68'];
+  const steps = ringColors.length;
+  for (let i = 0; i < steps; i++) {
+    const r = ringInner + (ringOuter - ringInner) * (i / (steps - 1));
+    ctx.beginPath();
+    ctx.arc(0, 0, r, frontHalf ? 0 : Math.PI, frontHalf ? Math.PI : Math.PI * 2);
+    ctx.strokeStyle = ringColors[i];
+    ctx.lineWidth = (ringOuter - ringInner) / steps + 1.5;
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// -- One planet: body (with simple shading) + optional rings + label --
+function drawPlanet(planet, time) {
+  const pos = getPlanetPosition(planet);
+  planet._screenX = pos.x; // cache for click detection
+  planet._screenY = pos.y;
+  planet._screenR = planet.radius;
+
+  // Rings BEHIND the planet (the half passing behind)
+  if (planet.hasRings) drawSaturnRings(pos.x, pos.y, planet.radius, false);
+
+  // Planet body with a simple light/shadow gradient for a "3D" look
+  const bodyGrad = ctx.createRadialGradient(
+    pos.x - planet.radius * 0.35, pos.y - planet.radius * 0.35, planet.radius * 0.15,
+    pos.x, pos.y, planet.radius
+  );
+  bodyGrad.addColorStop(0, planet.highlight);
+  bodyGrad.addColorStop(1, planet.color);
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, planet.radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rings IN FRONT of the planet (the half passing in front)
+  if (planet.hasRings) drawSaturnRings(pos.x, pos.y, planet.radius, true);
+
+  // Earth's Moon: small satellite orbiting Earth's current position
+  if (planet.hasMoon) {
+    moon.angle += 0; // angle updated in update loop; just draw here
+    const moonX = pos.x + Math.cos(moon.angle) * moon.orbitDistance;
+    const moonY = pos.y + Math.sin(moon.angle) * moon.orbitDistance * 0.6;
+
+    if (showOrbits) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.setLineDash([1, 3]);
+      ctx.beginPath();
+      ctx.ellipse(pos.x, pos.y, moon.orbitDistance, moon.orbitDistance * 0.6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.fillStyle = moon.color;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moon.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    moon._screenX = moonX;
+    moon._screenY = moonY;
+    moon._screenR = moon.radius;
+  }
+
+  // Name label
+  if (showNames) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Trebuchet MS';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(planet.name, pos.x, pos.y - planet.radius - 10);
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ---------------------------------------------------------------------
+// 8. MAIN ANIMATION LOOP
+// ---------------------------------------------------------------------
+let lastTime = 0;
+function animate(time) {
+  ctx.clearRect(0, 0, W, H);
+
+  drawBackground(time * 0.001);
+
+  // Orbit lines drawn first so planets sit on top of them
+  if (showOrbits) planets.forEach(drawOrbit);
+
+  drawSun();
+
+  // Advance angles only while playing
+  if (isPlaying) {
+    planets.forEach(p => { p.angle += p.baseSpeed * speedMultiplier; });
+    moon.angle += moon.speed * speedMultiplier;
+  }
+
+  // Draw planets in order from Sun outward so nothing overlaps oddly
+  planets.forEach(p => drawPlanet(p, time));
+
+  requestAnimationFrame(animate);
+}
+
+// ---------------------------------------------------------------------
+// 9. UI: PLAY / PAUSE / RESET
+// ---------------------------------------------------------------------
+playPauseBtn.addEventListener('click', () => {
+  isPlaying = !isPlaying;
+  playPauseBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+});
+
+resetBtn.addEventListener('click', () => {
+  planets.forEach(p => { p.angle = p.initialAngle; });
+  moon.angle = 0;
+  speedSlider.value = 1;
+  speedMultiplier = 1;
+  speedLabel.textContent = '1.0x';
+  isPlaying = true;
+  playPauseBtn.textContent = '⏸ Pause';
+  closeInfoPanel();
+});
+
+// ---------------------------------------------------------------------
+// 10. UI: SPEED SLIDER
+// ---------------------------------------------------------------------
+speedSlider.addEventListener('input', () => {
+  speedMultiplier = parseFloat(speedSlider.value);
+  speedLabel.textContent = speedMultiplier.toFixed(1) + 'x';
+});
+
+// ---------------------------------------------------------------------
+// 11. UI: ORBIT / NAME TOGGLES
+// ---------------------------------------------------------------------
+orbitToggle.addEventListener('change', () => { showOrbits = orbitToggle.checked; });
+namesToggle.addEventListener('change', () => { showNames = namesToggle.checked; });
+
+// ---------------------------------------------------------------------
+// 12. INFO PANEL: show / hide / populate
+// ---------------------------------------------------------------------
+function openInfoPanel(planet) {
+  infoSwatch.style.background = planet.color;
+  infoName.textContent = planet.name;
+  infoOrder.textContent = planet.order;
+  infoDiameter.textContent = planet.diameter;
+  infoPeriod.textContent = planet.period;
+  infoFact.textContent = planet.fact;
+  infoPanel.classList.add('show');
+}
+function closeInfoPanel() {
+  infoPanel.classList.remove('show');
+}
+closeInfoBtn.addEventListener('click', closeInfoPanel);
+
+// ---------------------------------------------------------------------
+// 13. CLICK DETECTION ON CANVAS
+// Checks the mouse click position against each planet's last-drawn
+// screen position; a little extra padding makes small planets (like
+// Mercury) easier to tap, especially on touch screens.
+// ---------------------------------------------------------------------
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  let clickedPlanet = null;
+  let closestDist = Infinity;
+
+  for (const p of planets) {
+    if (p._screenX === undefined) continue;
+    const dx = mx - p._screenX, dy = my - p._screenY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const hitRadius = p._screenR + 8; // extra padding for easy clicking
+    if (dist <= hitRadius && dist < closestDist) {
+      closestDist = dist;
+      clickedPlanet = p;
+    }
+  }
+
+  if (clickedPlanet) {
+    openInfoPanel(clickedPlanet);
+  }
+});
+
+// ---------------------------------------------------------------------
+// 14. SIDEBAR PLANET QUICK-JUMP LIST
+// Clicking an item in the sidebar opens that planet's info panel too,
+// so kids who have trouble clicking tiny moving planets can still
+// explore every planet easily.
+// ---------------------------------------------------------------------
+function buildPlanetList() {
+  planetListEl.innerHTML = '';
+  planets.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'planet-chip';
+    chip.innerHTML = `<span class="chip-dot" style="background:${p.color}"></span><span>${p.name}</span>`;
+    chip.addEventListener('click', () => openInfoPanel(p));
+    planetListEl.appendChild(chip);
+  });
+}
+
+// ---------------------------------------------------------------------
+// 15. INITIALIZE
+// ---------------------------------------------------------------------
+resizeCanvas();
+buildPlanetList();
+requestAnimationFrame(animate);
+
+</script>
+</body>
+</html>

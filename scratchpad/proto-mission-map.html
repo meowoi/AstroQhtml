@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>BẢN MẪU — Bản đồ nhiệm vụ 2D</title>
+
+<!-- ⚠️ BẢN MẪU ĐỂ XEM BỐ CỤC, KHÔNG PHẢI TRANG THẬT.
+     · Bản canvas (proto-solar-map.js) ĐÃ BỊ BÁC 04/08/2026 — khó nhìn hơn bản này.
+     · Nền vẽ TẠM bằng CSS: quỹ đạo là ellipse, hành tinh là đĩa gradient lấy đúng
+       hai màu `c`/`c2` khai trong js/planets.js. Thay ảnh thật thì chỉ đổi phần nền,
+       toạ độ hotspot giữ nguyên (xem ghi chú trong proto-mission-map.js).
+     · Nhãn tên là PHẦN TỬ DOM đặt lên trên nền, KHÔNG vẽ vào ảnh — chữ vẽ chết vào
+       ảnh là bản tiếng Anh vẫn thấy tiếng Việt và chữ không co theo màn hình.
+     · Dữ liệu tiến độ là GIẢ, gieo sẵn; không gọi API, không cần đăng nhập.
+     Mở: python -m http.server 8123 → /scratchpad/proto-mission-map.html            -->
+
+<link rel="stylesheet" href="../css/fonts.css" />
+<link rel="stylesheet" href="../css/common.css" />
+<link rel="stylesheet" href="../css/page-shell.css" />
+<!-- Dòng "Chơi tiếp" dùng chung với Trung Tâm Nhiệm Vụ -->
+<link rel="stylesheet" href="proto-resume.css" />
+<link rel="stylesheet" href="proto-mission-map.css" />
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <header class="hub-top">
+    <!-- ⚠️ Trỏ về TRUNG TÂM NHIỆM VỤ, không về dashboard (đổi 04/08/2026, phương án A).
+         Bản đồ nay nằm TRONG Trung Tâm Nhiệm Vụ — nhảy vượt một tầng khi quay lại là
+         trẻ mất luôn đường tới việc hàng ngày và sự kiện, tức mất đúng thứ mà phương
+         án A dựng ra để nó đi qua. -->
+    <a class="back-btn" href="proto-hub.html"><span>&lt;</span> <span>Về Trung Tâm Nhiệm Vụ</span></a>
+    <span class="hub-tag">[ MISSION_CONTROL · MAP ]</span>
+    <div class="currency" title="Thiên thạch tím">
+      <span class="gem"><img src="../img/tt.png" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">🎯 Trung Tâm Nhiệm Vụ</span>
+    <h1>Chọn một nơi để tới</h1>
+    <p id="intro">Chạm vào một thiên thể để xem các nhiệm vụ ở đó.</p>
+  </section>
+
+  <!-- ═══ BẢNG THỬ TRẠNG THÁI — chỉ có ở bản mẫu ═══ -->
+  <section class="panel proto-switch">
+    <span class="panel-tag"><span class="led"></span><span>BẢN MẪU · CHỌN TÌNH HUỐNG</span></span>
+    <div class="filters">
+      <span class="lbl">Tiến độ giả lập</span>
+      <div class="seg" id="seg" role="group">
+        <button type="button" data-case="0" class="on">Chưa làm gì</button>
+        <button type="button" data-case="5">Xong 5/7 Trái Đất</button>
+        <button type="button" data-case="7">Xong Trái Đất</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ LỐI TẮT — trẻ quay lại hôm sau chỉ muốn chơi tiếp, không muốn chọn ═══ -->
+  <section class="panel resume" id="resume" hidden>
+    <span class="panel-tag"><span class="led"></span><span>ĐANG DỞ</span></span>
+    <div class="resume-in">
+      <span class="r-ic" aria-hidden="true">⚡</span>
+      <div class="r-b">
+        <b id="r-nm">Kích hoạt năng lượng sạch</b>
+        <span id="r-sub">Trái Đất · chặng 05 / 07</span>
+      </div>
+      <button class="pbtn" id="r-go" type="button">Chơi tiếp</button>
+    </div>
+  </section>
+
+  <!-- ═══ BẢN ĐỒ ═══ -->
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span>HỆ MẶT TRỜI</span></span>
+    <h2><span class="ic" aria-hidden="true">🗺️</span><span>Bản đồ nhiệm vụ</span></h2>
+
+    <div class="map" id="map">
+      <!-- Quỹ đạo + thiên thể do JS đặt: toạ độ tính từ CÙNG công thức ellipse nên
+           đĩa hành tinh luôn nằm ĐÚNG trên đường quỹ đạo ở mọi cỡ màn. -->
+    </div>
+
+    <div class="legend">
+      <span class="lg"><i class="dot open"></i>Có nhiệm vụ chơi được</span>
+      <span class="lg"><i class="dot soon"></i>Đã tới được · nhiệm vụ sắp ra mắt</span>
+      <span class="lg"><i class="dot lock"></i>Chưa mở</span>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══ BẢNG CHI TIẾT MỘT THIÊN THỂ ═══ -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" hidden>
+  <div class="sheet-in">
+    <button class="sh-x" id="sh-x" type="button" aria-label="Đóng">✕</button>
+    <span class="sh-orb" id="sh-orb" aria-hidden="true"></span>
+    <span class="sh-tag" id="sh-tag"></span>
+    <h3 id="sh-h"></h3>
+    <p id="sh-p"></p>
+    <p class="sh-note" id="sh-note"></p>
+    <button class="pbtn" id="sh-go" type="button">Xem nhiệm vụ</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../js/planets.js"></script>
+<script src="proto-mission-map.js"></script>
+</body>
+</html>

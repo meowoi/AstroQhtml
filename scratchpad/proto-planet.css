@@ -1,0 +1,63 @@
+/* ==========================================================
+   proto-planet.css — PHẦN RIÊNG của màn "nhiệm vụ ở một hành tinh".
+
+   ⚠️ Phần lớn bố cục DÙNG LẠI `proto-mission-tree.css` (hàng `.node` · dải gấp
+      `.fold` · thẻ kết `.finish`). Một cơ chế dùng ở hai tầng thì trẻ chỉ phải học
+      một lần, và sửa một chỗ là cả hai màn cùng đúng. Ở đây chỉ thêm ba thứ mà màn
+      nhiệm vụ có còn màn chặng không có:
+        · thanh tiến độ nhỏ trong hàng (nhiệm vụ có nhiều chặng, chặng thì không)
+        · dải gấp "còn N nhiệm vụ nữa" ở CUỐI danh sách
+        · dải nhắc "tên giả" của bản mẫu
+   ========================================================== */
+
+/* ============ HÀNG THẺ TRẢI HẾT BỀ RỘNG ============
+   ⚠️ CÙNG MỘT LỖI với cây chặng ("căn hết về trái, trống hết bên phải", chủ dự án
+      báo 04/08/2026) NHƯNG PHẢI CHỮA KHÁC.
+      Ở cây chặng thì bỏ nhãn được, vì bảy chặng là bảy phần của MỘT nhiệm vụ và
+      trẻ đi tuần tự — không cần đọc tên để chọn.
+      Ở đây thì KHÔNG: 11 nhiệm vụ là 11 thứ khác nhau, trẻ phải đọc tên mới chọn
+      được. Bỏ nhãn là biến danh sách thành 11 vòng tròn không phân biệt nổi.
+   ⇒ Cách chữa là khuôn hàng-thẻ tiêu chuẩn: [vòng tròn][tên + tiến độ · giãn hết
+      chỗ][mũi chỉ ở mép phải]. Bề rộng thừa không còn là chỗ trống — nó thuộc về
+      một cái thẻ bấm được, và mép phải có điểm neo. */
+.node{padding:10px 12px;border-radius:16px;
+  border:1px solid var(--brd);background:rgba(10,16,34,.42);
+  transition:border-color .18s, background .18s, transform .16s var(--jelly);}
+.node + .node{margin-top:8px;}
+/* Đoạn nối dọc của cây chặng KHÔNG hợp ở đây: hàng đã thành thẻ rời, một sợi dây
+   chạy xuyên qua khe giữa hai thẻ đọc ra như nét vẽ thừa. */
+.node + .node::before{display:none;}
+.node-lb{flex:1;}
+.node .chev{flex:none;font-size:22px;line-height:1;color:var(--ink-faint);}
+
+.node.now{border-color:rgba(56,189,248,.55);background:rgba(14,32,60,.6);}
+.node.done{border-color:rgba(74,222,128,.3);}
+.node:not(.lock):not(.soon):hover{border-color:var(--brd-on);background:rgba(14,24,48,.7);}
+.node:not(.lock):not(.soon):hover .chev{color:var(--cyan);}
+.node.lock, .node.soon{background:rgba(10,16,34,.28);}
+
+/* Dải nhắc của bản mẫu — nói thẳng 10 nhiệm vụ kia chưa tồn tại */
+.warn{margin:14px 0 0;padding:10px 13px;border-radius:12px;font-size:12.8px;line-height:1.55;
+  border:1px solid rgba(251,146,60,.4);background:rgba(251,146,60,.09);color:#ffd9ae;}
+
+/* Thanh tiến độ nhỏ trong một hàng nhiệm vụ.
+   ⚠️ CHỈ vẽ cho nhiệm vụ ĐANG CHƠI. Vẽ cho cả hàng đã xong (100%) lẫn hàng chưa mở
+      (0%) là 11 thanh xếp dọc — mắt đọc ra một bảng biểu, không phải một hành trình. */
+.node .mini-bar{display:block;height:6px;margin-top:7px;max-width:230px;
+  border-radius:999px;overflow:hidden;background:rgba(120,160,255,.18);}
+.node .mini-bar i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));}
+
+/* Dải gấp phần CUỐI ("còn N nhiệm vụ nữa") — cùng khuôn `.fold` nhưng tông trung
+   tính, vì nó nói về thứ CHƯA làm chứ không phải thứ ĐÃ xong. */
+.fold.rest .fold-btn{border-color:var(--brd);background:rgba(10,16,34,.5);}
+.fold.rest .fold-btn:hover{border-color:var(--brd-on);background:rgba(14,22,44,.7);}
+.fold.rest .fold-tx b{color:var(--ink-soft);}
+.fold.rest .dot{border-color:rgba(120,160,255,.3);background:rgba(10,15,30,.9);opacity:.55;}
+
+/* Nhiệm vụ CHƯA CÓ NỘI DUNG — khác hẳn "chưa mở khoá" (bài học js/specimens.js:
+   đừng hứa một nhiệm vụ chưa tồn tại). */
+.node.soon .node-btn{border-color:rgba(251,146,60,.5);
+  background:radial-gradient(circle at 50% 34%, rgba(66,44,20,.9), rgba(16,12,8,.95) 72%);}
+.node.soon .num{color:var(--amber);border-color:rgba(251,146,60,.5);}
+.node.soon .node-lb .sub{color:rgba(251,146,60,.95);}

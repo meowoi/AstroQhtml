@@ -1,0 +1,66 @@
+/* ==========================================================
+   proto-mission-tree-b.css — CHỈ phần RIÊNG của bản B.
+
+   Toàn bộ hàng `.node`, bảng chi tiết `.sheet`, thẻ kết `.finish` dùng lại
+   `proto-mission-tree.css` của bản A — hai bản chỉ khác CƠ CHẾ, không khác hình
+   thức. Khác hình thức thì đặt cạnh nhau không so được cái cần so.
+
+   Ba thứ chỉ bản B có:
+     · `.mbar`  thanh dính "mình đang ở đâu"
+     · `.jump`  nút nổi "về chỗ đang chơi"   (Duolingo có đúng nút này)
+     · `.cmp`   dòng link qua lại giữa hai bản — chỉ có ở bản mẫu
+   ========================================================== */
+
+/* Dòng so sánh giữa hai bản mẫu */
+.cmp{margin:14px 0 0;font-size:13px;line-height:1.6;color:var(--ink-soft);}
+.cmp a{color:var(--cyan);text-decoration:underline;text-underline-offset:3px;}
+
+/* ⚠️ BỎ THANH TIẾN ĐỘ TRONG `.head` — thanh dính đã mang tiến độ rồi. Ảnh chụp cho
+   thấy hai thanh xếp ngay dưới nhau, và hai thanh cùng nói một điều thì trẻ phải
+   dừng lại hỏi "hai cái này khác nhau chỗ nào". Bản A thì vẫn giữ (bản A không có
+   thanh dính). */
+.head .bar{display:none;}
+.head p{margin-bottom:0;}
+
+/* ============ THANH DÍNH ============
+   ⚠️ `--top` do JS đo từ chiều cao thật của `.hub-top` rồi gán. KHÔNG gán cứng:
+      header tự xuống 2 hàng trên màn hẹp (390px), nên mọi con số cố định đều sai ở
+      một khổ máy nào đó — đúng bài học `#time-ghost` của bảng mốc thời gian. */
+.mbar{position:sticky;top:var(--top,64px);z-index:25;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:0 auto;max-width:600px;padding:9px 14px;border-radius:14px;
+  border:1px solid rgba(56,189,248,.3);
+  /* ⚠️ .99 chứ không phải .94: ảnh chụp cho thấy tiêu đề trang trôi qua BÊN DƯỚI
+     thanh dính vẫn đọc được lờ mờ xuyên qua nó — hai dòng chữ chồng nhau đọc ra như
+     lỗi vẽ. Vẫn giữ `blur` nên vẫn đúng tông kính của dự án. */
+  background:rgba(11,16,32,.99);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 10px 26px -18px rgba(0,0,0,.9);}
+.mbar .m-ic{font-size:19px;line-height:1;flex:none;}
+.mbar .m-nm{font-family:var(--font-display);font-weight:700;font-size:14.5px;color:#fff;}
+.mbar .m-ct{font-family:var(--font-mono);font-size:12px;color:var(--cyan);flex:none;}
+.mbar .m-bar{flex:1;min-width:90px;height:6px;border-radius:999px;overflow:hidden;
+  background:rgba(120,160,255,.18);}
+.mbar .m-bar i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));}
+
+/* ============ NÚT NỔI "VỀ CHỖ ĐANG CHƠI" ============
+   ⚠️ Chỉ hiện khi chặng đang mở KHÔNG còn trong khung nhìn. Hiện thường trực là một
+      cái nút luôn ở đó mà phần lớn thời gian bấm vào không đổi gì. */
+.jump{position:fixed;right:18px;bottom:20px;z-index:55;
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  min-height:48px;padding:0 18px;border-radius:999px;border:none;
+  font-family:var(--font-display);font-weight:700;font-size:14px;color:#04060f;
+  background:linear-gradient(120deg,var(--cyan),var(--purple));
+  box-shadow:0 12px 30px -10px rgba(56,189,248,.85);
+  animation:jumpIn .22s var(--jelly);}
+.jump[hidden]{display:none;}
+.jump:hover{filter:brightness(1.08);}
+.jump:active{transform:scale(.95);}
+.jump .j-ar{font-size:16px;line-height:1;}
+@keyframes jumpIn{from{transform:translateY(12px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+@media (max-width:520px){
+  .jump{right:12px;bottom:14px;padding:0 15px;font-size:13.5px;}
+  .mbar{gap:8px;padding:8px 12px;}
+  .mbar .m-nm{font-size:13.5px;}
+}

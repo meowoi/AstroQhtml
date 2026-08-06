@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>BẢN MẪU B — Đường liền mạch (kiểu Duolingo)</title>
+
+<!-- ⚠️ BẢN MẪU B — DỰNG SAU KHI KHẢO SÁT (04/08/2026).
+     Cùng dữ liệu, cùng hàng, cùng bảng chi tiết với bản A. Khác ĐÚNG MỘT cơ chế:
+
+       A (proto-mission-tree.html)   — GẤP phần đã xong lại → màn luôn ngắn
+       B (trang này)                 — ĐƯỜNG LIỀN MẠCH + tự cuộn tới chặng đang mở
+                                       + nút nổi "Về chỗ đang chơi"
+
+     B làm theo đúng cách Duolingo và Candy Crush đang làm: không giấu phần đã xong
+     (cái đuôi dài các nút đã qua CHÍNH LÀ phần thưởng), bù lại bằng hai thứ giữ cho
+     trẻ không lạc: thanh tiêu đề dính và nút nhảy về chỗ đang chơi.
+     ⚠️ Cách này có cái giá đã được ghi nhận: người dùng Duolingo phàn nàn mất ~20
+        giây cuộn để về bài cũ. Với 7 chặng thì chưa tới mức đó — đó là lý do B đáng
+        thử cho CÂY CHẶNG, còn danh sách 11 nhiệm vụ thì vẫn nên gấp.
+     Nguồn khảo sát ghi trong tin nhắn kèm theo.                                    -->
+
+<link rel="stylesheet" href="../css/fonts.css" />
+<link rel="stylesheet" href="../css/common.css" />
+<link rel="stylesheet" href="../css/page-shell.css" />
+<!-- Dùng lại toàn bộ CSS hàng/bảng của bản A — hai bản chỉ khác cơ chế, không khác
+     hình thức. Có vậy thì đặt cạnh nhau mới so được. -->
+<link rel="stylesheet" href="proto-mission-tree.css" />
+<link rel="stylesheet" href="proto-mission-tree-b.css" />
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <header class="hub-top" id="top">
+    <a class="back-btn" href="proto-planet.html"><span>&lt;</span> <span>Về nhiệm vụ ở Trái Đất</span></a>
+    <span class="hub-tag">[ MISSION-01 · EARTH ]</span>
+    <div class="currency" title="Thiên thạch tím">
+      <span class="gem"><img src="../img/tt.png" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+  </header>
+
+  <!-- ═══ THANH DÍNH — trả lời câu "mình đang ở đâu" khi đã cuộn xa ═══
+       Duolingo có thanh tương tự cho từng unit. ⚠️ Chính thanh đó bị người dùng chê
+       là "không giúp được mấy" — nên ở đây nó phải mang TIẾN ĐỘ chứ không chỉ mang
+       cái tên, không thì nó chỉ là một dải chiếm chỗ. -->
+  <div class="mbar" id="mbar">
+    <span class="m-ic" aria-hidden="true">🌍</span>
+    <span class="m-nm">Hành Tinh Xanh</span>
+    <span class="m-ct" id="m-ct">5 / 7</span>
+    <span class="m-bar"><i id="m-fill"></i></span>
+  </div>
+
+  <section class="hero">
+    <span class="eyebrow">🌍 Nhiệm vụ 01 · Trái Đất</span>
+    <h1>Hành Tinh Xanh</h1>
+  </section>
+
+  <!-- ═══ BẢNG THỬ — chỉ có ở bản mẫu ═══ -->
+  <section class="panel proto-switch">
+    <span class="panel-tag"><span class="led"></span><span>BẢN MẪU B · ĐƯỜNG LIỀN MẠCH</span></span>
+    <div class="filters">
+      <span class="lbl">Tiến độ giả lập</span>
+      <div class="seg" id="seg" role="group">
+        <button type="button" data-case="0" class="on">Chưa làm gì</button>
+        <button type="button" data-case="5">Đang dở 5/7</button>
+        <button type="button" data-case="7">Đã xong hết</button>
+      </div>
+    </div>
+    <p class="cmp">Đây là <b>bản B</b> — không gấp gì cả, mở trang là tự cuộn tới chặng
+      đang mở. <a href="proto-mission-tree.html">↔ bản A (gấp)</a> ·
+      <a href="proto-mission-tree-c.html">↔ bản C (đường uốn, bỏ nhãn)</a></p>
+  </section>
+
+  <!-- ═══ HÀNH TRÌNH ═══ -->
+  <section class="panel">
+    <div class="head">
+      <p id="lead"></p>
+      <div class="bar"><i id="bar-fill"></i></div>
+    </div>
+
+    <ol class="tree" id="tree"></ol>
+
+    <div class="finish" id="finish" hidden>
+      <span class="f-ic" aria-hidden="true">🎉</span>
+      <div class="f-b">
+        <b>Xong cả bảy chặng của Trái Đất!</b>
+        <span>Quay lại chọn nhiệm vụ tiếp theo ở Trái Đất.</span>
+      </div>
+      <a class="pbtn" href="proto-planet.html">Về danh sách nhiệm vụ</a>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══ BẢNG CHI TIẾT MỘT CHẶNG — giống hệt bản A ═══ -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" hidden>
+  <div class="sheet-in">
+    <button class="sh-x" id="sh-x" type="button" aria-label="Đóng">✕</button>
+    <span class="sh-ic" id="sh-ic" aria-hidden="true">🛰️</span>
+    <span class="sh-tag" id="sh-tag">Chặng 1</span>
+    <h3 id="sh-h">Bề mặt hành tinh xanh</h3>
+    <p id="sh-p"></p>
+    <div class="sh-kv" id="sh-kv"></div>
+    <p class="sh-note" id="sh-note"></p>
+    <button class="pbtn" id="sh-go" type="button">Bắt đầu chặng này</button>
+  </div>
+</div>
+
+<!-- ═══ NÚT NỔI "VỀ CHỖ ĐANG CHƠI" ═══
+     Duolingo có đúng nút này (mũi tên nổi góc dưới-phải). Nó tồn tại VÌ đường dài —
+     tức là nếu bản B cần nó thì bản B cũng thừa nhận cái giá của mình. -->
+<button class="jump" id="jump" type="button" hidden>
+  <span class="j-ar" aria-hidden="true">↓</span>
+  <span>Về chỗ đang chơi</span>
+</button>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="proto-mission-tree-b.js"></script>
+</body>
+</html>

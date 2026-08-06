@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>BẢN MẪU — Trái Đất có 11 nhiệm vụ</title>
+
+<!-- ⚠️ BẢN MẪU TRẢ LỜI ĐÚNG MỘT CÂU HỎI: "thêm 10 nhiệm vụ nữa ở Trái Đất thì bố
+     cục thế nào?" (04/08/2026).
+
+     ⚠️⚠️ 10 NHIỆM VỤ TỪ SỐ 02 TRỞ ĐI LÀ TÊN GIẢ, CHỈ ĐỂ XEM BỐ CỤC. Chúng KHÔNG
+     tồn tại, không có nội dung, không có trong `Services/Missions.cs`. Dự án có luật:
+     đừng hứa một nhiệm vụ chưa tồn tại — nên bản mẫu này có một dải nhắc màu hổ phách
+     nói thẳng điều đó, và trang thật sẽ chỉ vẽ những nhiệm vụ server trả về.
+
+     CÂU TRẢ LỜI VỀ BỐ CỤC (chi tiết ở đầu proto-planet.js):
+       Ba màn, mỗi màn một tầng — BẢN ĐỒ (nơi) → HÀNH TINH (nhiệm vụ) → NHIỆM VỤ (chặng).
+       Và một luật đếm được: MỖI MÀN TỐI ĐA ~6 HÀNG, bất kể có bao nhiêu nhiệm vụ.  -->
+
+<link rel="stylesheet" href="../css/fonts.css" />
+<link rel="stylesheet" href="../css/common.css" />
+<link rel="stylesheet" href="../css/page-shell.css" />
+<!-- Dùng lại CSS của cây chặng: hàng · dải gấp · thẻ kết đều giống hệt. Một cơ chế
+     dùng ở hai tầng thì trẻ chỉ phải học một lần. -->
+<link rel="stylesheet" href="proto-mission-tree.css" />
+<link rel="stylesheet" href="proto-planet.css" />
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <header class="hub-top">
+    <a class="back-btn" href="proto-mission-map.html"><span>&lt;</span> <span>Về bản đồ nhiệm vụ</span></a>
+    <span class="hub-tag">[ EARTH · MISSIONS ]</span>
+    <div class="currency" title="Thiên thạch tím">
+      <span class="gem"><img src="../img/tt.png" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">🌍 Trái Đất</span>
+    <h1>Nhiệm vụ ở Trái Đất</h1>
+  </section>
+
+  <!-- ═══ BẢNG THỬ TRẠNG THÁI — chỉ có ở bản mẫu ═══ -->
+  <section class="panel proto-switch">
+    <span class="panel-tag"><span class="led"></span><span>BẢN MẪU · CHỌN TÌNH HUỐNG</span></span>
+    <div class="filters">
+      <span class="lbl">Đã xong mấy nhiệm vụ</span>
+      <div class="seg" id="seg" role="group">
+        <button type="button" data-case="0" class="on">0</button>
+        <button type="button" data-case="1">1</button>
+        <button type="button" data-case="4">4</button>
+        <button type="button" data-case="11">11 (hết)</button>
+      </div>
+    </div>
+    <p class="warn">⚠️ Nhiệm vụ 02–11 là <b>tên giả để xem bố cục</b>. Chúng chưa tồn tại;
+      trang thật chỉ vẽ những nhiệm vụ server trả về.</p>
+  </section>
+
+  <!-- ═══ DANH SÁCH NHIỆM VỤ ═══ -->
+  <section class="panel">
+    <div class="head">
+      <p id="lead"></p>
+      <div class="bar"><i id="bar-fill"></i></div>
+    </div>
+
+    <ol class="tree" id="list"></ol>
+
+    <div class="finish" id="finish" hidden>
+      <span class="f-ic" aria-hidden="true">🎉</span>
+      <div class="f-b">
+        <b>Xong hết nhiệm vụ ở Trái Đất!</b>
+        <span>Quay lại bản đồ để chọn nơi tiếp theo.</span>
+      </div>
+      <a class="pbtn" href="proto-mission-map.html">Về bản đồ</a>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="proto-planet.js"></script>
+</body>
+</html>
