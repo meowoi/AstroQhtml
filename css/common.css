@@ -80,3 +80,30 @@ canvas{display:block;}
         44 → 48) vì đúng một lý do. */
   .lang-switch button{min-width:48px;min-height:48px;}
 }
+
+/* ============================================================
+   HUY HIỆU SỐ HIỆU BẢN DỰNG — `js/ui-common.js` tự dựng trên mọi trang nạp nó.
+   Mục đích: khi ai đó báo lỗi thì nhìn màn hình là biết họ đang xem bản nào.
+
+   ⚠️ `pointer-events:none` LÀ BẮT BUỘC, không phải cho gọn. Huy hiệu này neo cố
+      định ở góc dưới-phải của MỌI trang, kể cả 3 mini-game và màn nhiệm vụ, nơi
+      cả khung hình là vùng chạm. Dự án đã trả giá đúng loại lỗi này hai lần:
+      `#loader` của explorer NUỐT mọi cú bấm trong 0,8 giây (opacity đã về .02 mà
+      `visibility` vẫn `visible`), và thẻ `.me-card` bị bảng đáy đè khiến nút
+      "Đã hiểu!" — đường ra DUY NHẤT — bấm không được. Một huy hiệu chỉ để đọc
+      thì không bao giờ được phép ăn một cú chạm.
+   ⚠️ Góc dưới-PHẢI: góc dưới-trái đã có `.env-badge` (js/firebase-auth-ui.js).
+      Hai huy hiệu chồng nhau thì không đọc được cái nào.
+   ⚠️ z-index 60 — dưới `.env-badge` (70) và dưới mọi lớp phủ/modal, vì nó là
+      thông tin chẩn đoán chứ không phải nội dung: nó không được che thứ trẻ
+      đang đọc.
+   ============================================================ */
+.ver-badge{
+  position:fixed;right:10px;bottom:8px;z-index:60;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;
+  color:var(--ink-faint);opacity:.42;
+  pointer-events:none;user-select:none;
+}
+@media (max-width:560px){ .ver-badge{font-size:9px;right:8px;bottom:6px;} }
+/* In ra giấy thì bỏ — nó là thứ để đọc trên màn hình. */
+@media print{ .ver-badge{display:none;} }

@@ -77,6 +77,43 @@
   function setDocLang(lang){
     try{ document.documentElement.setAttribute("lang", lang==="en" ? "en" : "vi"); }
     catch(e){}
+    paintVersion(lang);
+  }
+
+  /* ---------------- Số hiệu bản dựng ----------------
+     Mục đích DUY NHẤT: khi ai đó báo lỗi, biết họ đang xem bản nào. Cùng một
+     trang có thể đang là hai bản khác nhau ở hai máy, vì trình duyệt giữ cache
+     và GitHub Pages có lúc deploy chậm — chuyện đã xảy ra thật ngày 06/08/2026,
+     khi hai lần deploy liên tiếp hết giờ và bản thật đứng yên ở bản 04/08 gần
+     một ngày. Lúc đó không có cách nào nhìn màn hình mà biết là bản nào.
+
+     ⚠️ VERSION LÀ CHỖ DUY NHẤT KHAI. `scratchpad/stamp_version.py` sửa đúng dòng
+        dưới đây bằng máy — đừng gõ tay, và đừng chép giá trị này sang chỗ khác.
+     ⚠️ Định dạng `YYYY.MM.DD.n` cố ý KHÔNG mang mã commit: mã commit của chính
+        lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
+        vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
+        và đủ để đối chiếu với lịch sử git. */
+  var VERSION = "2026.08.07.4";   /* stamp_version.py sửa dòng này */
+
+  var VER_LBL = { vi: "Phiên bản", en: "Version" };
+
+  function paintVersion(lang){
+    var el = document.querySelector(".ver-badge");
+    if(!el) return;
+    var l = VER_LBL[lang === "en" ? "en" : "vi"];
+    el.setAttribute("aria-label", l + " " + VERSION);
+    el.setAttribute("title", l + " " + VERSION);
+  }
+
+  /* Dựng huy hiệu ở góc dưới-PHẢI. Góc dưới-trái đã có `.env-badge` của
+     js/firebase-auth-ui.js — hai cái chồng nhau thì không đọc được cái nào. */
+  function mountVersion(){
+    if(document.querySelector(".ver-badge")) return;
+    var el = document.createElement("div");
+    el.className = "ver-badge";
+    el.textContent = "v" + VERSION;
+    document.body.appendChild(el);
+    paintVersion(getLang());   /* sau khi gắn — paintVersion tìm phần tử qua DOM */
   }
 
   /* Gắn nút .lang-switch + đồng bộ khi tab/trang khác đổi ngôn ngữ.
@@ -131,9 +168,13 @@
         nghe được qua sự kiện `storage`.
 
      ⚠️ NÓ CHỈ HẠ CHẤT LƯỢNG CẢNH, KHÔNG CẮT BYTE TẢI VỀ. Thứ nặng thật ở
-        `explorer.html` là three.js kéo từ `unpkg.com`. Muốn cắt byte thì phải bỏ hẳn
-        cảnh 3D — và đó chính là lý do `005` mục 5 chốt quả cầu là **PHẦN THÊM**:
-        mọi bài học BẮT BUỘC nằm trong 7 bước của `mission-earth.html`, vốn đã 2D.
+        `explorer.html` là three.js — **183 KB gzip**, nay tự host ở `vendor/`
+        (07/08/2026; trước đó kéo từ `unpkg.com` và là bản không rút gọn, 274 KB).
+        Tự host cắt được 33% và bỏ một tên miền ngoài, nhưng **vẫn không cứu được
+        máy yếu**: 183 KB vẫn phải tải, texture vẫn phải dựng, shader bloom vẫn
+        phải biên dịch. Muốn cắt byte thật thì phải bỏ hẳn cảnh 3D — và đó chính
+        là lý do `005` mục 5 chốt quả cầu là **PHẦN THÊM**: mọi bài học BẮT BUỘC
+        nằm trong 7 bước của `mission-earth.html`, vốn đã 2D.
 
      ⚠️ TỰ PHÁT HIỆN KHÔNG ĐỦ, ĐỪNG TIN NÓ MỘT MÌNH. [Chưa kiểm chứng] Network
         Information API (`saveData` / `effectiveType`) **Safari/iOS không hỗ trợ**,
@@ -164,9 +205,18 @@
               initLang:initLang, setDocLang:setDocLang,
               applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
               getPerf:getPerf, setPerf:setPerf, slowLink:slowLink,
+              VERSION:VERSION,
               LS_USER:LS_USER, LS_LANG:LS_LANG, LS_PERF:LS_PERF };
 
   global.AstroQ = global.AstroQ || {};
   for(var k in API){ if(API.hasOwnProperty(k)) global.AstroQ[k] = API[k]; }
   if(!global.$) global.$ = $;
+
+  /* Dựng huy hiệu bản dựng trên MỌI trang nạp file này (18 trang) — không phải
+     đi sửa từng trang, đúng quy tắc 2 mục 6 của CLAUDE.md.
+     ⚠️ Chờ `DOMContentLoaded` vì phần lớn trang nạp script này trong <head>,
+        lúc đó `document.body` còn chưa tồn tại. */
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", mountVersion);
+  } else { mountVersion(); }
 })(window);
