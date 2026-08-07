@@ -21,6 +21,7 @@ User-agent: *
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Allow: /llms.txt
 Disallow: /docs/
 
@@ -35,6 +36,7 @@ User-agent: OAI-SearchBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # GPTBot: thu thập dữ liệu huấn luyện
@@ -42,6 +44,7 @@ User-agent: GPTBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ChatGPT-User: truy cập theo yêu cầu tức thời của người dùng trong ChatGPT
@@ -49,6 +52,7 @@ User-agent: ChatGPT-User
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ---------- Perplexity ----------
@@ -56,6 +60,7 @@ User-agent: PerplexityBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ---------- Anthropic (Claude) ----------
@@ -63,12 +68,14 @@ User-agent: ClaudeBot
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 User-agent: Claude-Web
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ---------- Google ----------
@@ -78,6 +85,7 @@ User-agent: Google-Extended
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ---------- Apple ----------
@@ -86,6 +94,7 @@ User-agent: Applebot-Extended
 Allow: /
 Allow: /wiki/
 Allow: /wiki/en/
+Allow: /en/
 Disallow: /docs/
 
 # ---------- Sitemap ----------

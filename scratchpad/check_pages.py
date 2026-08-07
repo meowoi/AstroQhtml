@@ -2226,8 +2226,18 @@ check("khong con truong an kieu _subject/_gotcha cua dich vu cu",
 
 # --- day noi client ---
 check("client goi POST /waitlist", '"/waitlist"' in _wl_code)
+# ⚠️ Doi 07/08/2026: truoc day phep kiem ghim nguyen van `import("./api.js")`.
+#    Chuoi do khong con dung ke tu khi trang chu tach lam HAI URL (`/` va `/en/`):
+#    day la script CO DIEN nen `import()` giai theo URL cua TAI LIEU, tuc
+#    `./api.js` se thanh `/en/api.js` va 404 — form waitlist chet cam, dung loai
+#    loi da giet chinh form nay suot 6 ngay (02/08/2026). Nay duong dan suy tu
+#    `document.currentScript` (JS_DIR).
+#    Phep kiem gio hoi DIEU CAN BIET, khong ghim mot chuoi: (a) van la import
+#    DONG, (b) duong dan KHONG con la hang chuoi cung o goc.
 check("client nap js/api.js bang import DONG (trang chu dang toi uu SEO)",
-      'import("./api.js")' in _wl_code)
+      re.search(r'import\(\s*JS_DIR\s*\+\s*"api\.js"\s*\)', _wl_code) is not None)
+check("duong dan api.js suy tu currentScript, KHONG phai hang cung",
+      "document.currentScript" in _wl_code and 'import("./api.js")' not in _wl_code)
 check("index.html KHONG dat the <script> cho api.js",
       "js/api.js" not in _wl_html)
 check("payload gui du email + lang + bay bot",

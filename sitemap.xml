@@ -11,11 +11,29 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Trang chủ: HAI URL, mỗi ngôn ngữ một bản TĨNH (tách 07/08/2026).
+       Trước đó một URL phục vụ cả hai ngôn ngữ bằng JS, nên chữ đổi sang tiếng
+       Anh mà 2 khối JSON-LD mãi là tiếng Việt — Google thấy dữ liệu có cấu trúc
+       lệch nội dung, trên đúng trang duy nhất được lập chỉ mục.
+       Sinh lại bản EN: python scratchpad/gen_home_en.py -->
   <url>
     <loc>https://astroq.org/</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/"/>
+  </url>
+
+  <url>
+    <loc>https://astroq.org/en/</loc>
+    <lastmod>2026-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://astroq.org/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://astroq.org/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://astroq.org/"/>
   </url>
 
   <!-- Wiki AEO — mục lục -->

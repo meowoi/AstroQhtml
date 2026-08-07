@@ -78,7 +78,7 @@ canvas{display:block;}
      ⚠️ Một phép kiểm hay báo oan thì sớm muộn người ta bỏ qua nó — đó mới là cái giá
         thật, không phải một dòng đỏ trong báo cáo. Sửa cùng lượt với `.me-stamp` (cũng
         44 → 48) vì đúng một lý do. */
-  .lang-switch button{min-width:48px;min-height:48px;}
+  .lang-switch button,.lang-switch a{min-width:48px;min-height:48px;}
 }
 
 /* ============================================================

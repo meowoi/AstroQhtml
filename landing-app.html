@@ -262,10 +262,20 @@ function applyLang(lang){
   document.title = dict.title;
   AstroQ.applyTexts(k => (dict[k] !== undefined ? dict[k] : k));
   AstroQ.markLangButtons(lang);
-  AstroQ.setLang(lang);
+  /* ⚠️ ĐỪNG GỌI `AstroQ.setLang(lang)` Ở ĐÂY — bỏ 07/08/2026.
+     Nó GHI PHÁN ĐOÁN vào `astroq-lang` ngay lượt tải đầu, tức ĐÓNG BĂNG một
+     lựa chọn mà người dùng chưa hề đưa ra. Hai hậu quả đo được:
+       ① 17 trang kia KHÔNG ghi, chỉ trang này ghi → cùng một khách được đối xử
+          khác nhau tuỳ trang họ đáp xuống. Đo: mở lần đầu bằng máy `ja-JP` thì
+          `astroq-lang` = 'en' ở landing-app, còn `null` ở index/dashboard/learn.
+       ② Phán đoán bị khoá vĩnh viễn: máy đặt sai giờ hoặc đang bật VPN lúc vào
+          lần đầu thì sửa xong vẫn không đổi được, vì bậc ① luôn thắng.
+     Bấm nút VI/EN vẫn ghi bình thường — `AstroQ.initLang` tự gọi `setLang`
+     trong handler của nút. Đó mới là chỗ ĐÚNG để ghi: lúc người dùng CHỌN. */
 }
 
-// Khởi tạo: ưu tiên lựa chọn đã lưu, sau đó tới ngôn ngữ trình duyệt, mặc định VI.
+/* Lượt đầu đoán theo nơi truy cập (guessLang ở js/ui-common.js): lựa chọn đã
+   lưu → múi giờ Việt Nam → ngôn ngữ trình duyệt → còn lại là tiếng Anh. */
 applyLang(AstroQ.getLang());
 AstroQ.initLang(applyLang);
 </script>

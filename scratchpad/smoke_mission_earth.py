@@ -1404,7 +1404,12 @@ def main():
             "huy hiệu ROOKIE ASTRONAUT", w["badge"])
         chk("Tập Sự" in w["sub"] or "Rookie" in w["sub"],
             "phụ đề 'Huy Hiệu Phi Hành Gia Tập Sự'", w["sub"])
-        chk(w["ttImg"] == "img/tt.png",
+        # ⚠️ Đổi 07/08/2026 từ so BẰNG `"img/tt.png"` sang so ĐUÔI. `ttImg()` nay
+        #    ghép thêm gốc site suy từ `document.currentScript` — bắt buộc, vì
+        #    trang chủ có hai bản ở hai độ sâu thư mục (`/` và `/en/`) và chuỗi
+        #    cứng sẽ 404 ở bản `/en/`. Điều phép kiểm này muốn biết vẫn nguyên:
+        #    dùng ĐÚNG ảnh thiên thạch tím, không phải một ảnh khác.
+        chk(w["ttImg"].endswith("img/tt.png"),
             "phần thưởng dùng ĐÚNG ảnh thiên thạch tím của game", str(w["ttImg"]))
         # Tổng theo đúng bảng luật 7 bước ở Services/Missions.cs (xem STUB_PROGRESS)
         chk(str(STUB_METEORS) in w["tt"],

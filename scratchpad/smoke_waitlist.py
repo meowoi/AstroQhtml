@@ -20,6 +20,12 @@ from playwright.sync_api import sync_playwright
 
 BASE_URL = "http://localhost:8000"
 URL = BASE_URL + "/index.html"
+# ⚠️ Trang chu tach lam HAI URL TINH tu 07/08/2026 (xem scratchpad/gen_home_en.py).
+#    Ban tieng Anh KHONG con lay duoc bang cach dat `astroq-lang='en'` roi doi chu
+#    tai cho — phai mo dung URL cua no. Va bam nut VI/EN gio la DIEU HUONG, khong
+#    phai doi chu tai cho, nen moi phep kiem "doi ngon ngu giua chung" phai doi
+#    cach do theo.
+URL_EN = BASE_URL + "/en/index.html"
 OK = FAIL = 0
 
 
@@ -46,7 +52,7 @@ def new_page(pw, lang="vi", width=1440, height=900):
         r.fulfill(status=202, content_type="application/json",
                   body='{"ok":true,"dup":false,"mailSent":true}')))
     pg.add_init_script("localStorage.setItem('astroq-lang','%s')" % lang)
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL_EN if lang == "en" else URL, wait_until="networkidle")
     pg.eval_on_selector("#waitlist", "e=>e.scrollIntoView({block:'center'})")
     pg.wait_for_timeout(300)
     return b, pg
@@ -176,10 +182,17 @@ with sync_playwright() as pw:
     pg.wait_for_timeout(250)
     t6 = (pg.inner_text("#wl-err") or "").strip()
     check("loi hien bang tieng Anh", "Enter your email" in t6, repr(t6))
-    pg.click('.lang-switch [data-lang="vi"]')
+    # Bam VI = DIEU HUONG sang `/` (link that, crawler di duoc). Trang moi khong
+    # con loi cu — dieu can chung minh nay la: sang dung ban tieng Viet.
+    with pg.expect_navigation(wait_until="load"):
+        pg.click('.lang-switch [data-lang="vi"]')
+    pg.wait_for_timeout(300)
+    check("bam VI o ban EN thi DIEU HUONG sang ban tieng Viet",
+          pg.evaluate("()=>document.documentElement.lang") == "vi", pg.url)
+    pg.click("#wl-submit")
     pg.wait_for_timeout(250)
     t6b = (pg.inner_text("#wl-err") or "").strip()
-    check("doi sang VI thi cau loi dich theo", "Nhập email" in t6b, repr(t6b))
+    check("cau loi o ban VI la tieng Viet", "Nhập email" in t6b, repr(t6b))
     check("khong loi JS", pg.perr == [], pg.perr)
     b.close()
 
@@ -232,8 +245,11 @@ with sync_playwright() as pw:
     check("KHONG bao 'kiem tra hom thu' ve mot la thu chua di", "Kiểm tra hòm thư" not in d9, repr(d9[:110]))
     check("noi that la thu dang truc trac", "trục trặc" in d9, repr(d9[:110]))
     check("van nhac dung email", "sesloi@astroq.org" in d9)
-    pg.click('.lang-switch [data-lang="en"]')
-    pg.wait_for_timeout(300)
+    # Bam EN = DIEU HUONG sang `/en/`. The "da dang ky" duoc dung lai tu
+    # localStorage nen phai con nguyen cau "thu dang truc trac" o ban tieng Anh.
+    with pg.expect_navigation(wait_until="load"):
+        pg.click('.lang-switch [data-lang="en"]')
+    pg.wait_for_timeout(700)
     d9b = pg.inner_text("#wl-done")
     check("doi sang EN van giu dung cau 'chua gui duoc'",
           "snag" in d9b and "Check your inbox" not in d9b, repr(d9b[:110]))

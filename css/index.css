@@ -70,10 +70,15 @@ a{text-decoration:none;}
 @media (max-width:560px){ .status-pill{display:none;} }
 
 .lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+/* ⚠️ `a` nằm cùng quy tắc với `button`, KHÔNG khai bản thứ hai (quy tắc 2 mục 2).
+   Trang chủ có HAI URL tĩnh nên nút đổi ngôn ngữ ở đây là <a href> thật —
+   crawler đi được, và đó là nửa còn lại của hreflang. 17 trang app vẫn dùng
+   <button> vì mỗi trang chỉ có một URL. */
+.lang-switch button,.lang-switch a{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
   font-family:var(--font-display);font-weight:600;font-size:11px;padding:6px 11px;border-radius:999px;
+  text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
   transition:background .18s,color .18s;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+.lang-switch button.active,.lang-switch a.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
 
 /* ============================== HERO ============================== */
 .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,54px);
@@ -367,3 +372,45 @@ a{text-decoration:none;}
   .foot a{display:inline-flex;align-items:center;justify-content:center;
           min-width:44px;min-height:44px;padding:0 8px;}
 }
+
+/* ============================================================
+   DẢI MỜI SANG BẢN NGÔN NGỮ KIA (`.lang-note`)
+   Dùng lại đúng khuôn `.mob-note` ngay trên — neo đáy, không che nội dung,
+   `env(safe-area-inset-bottom)` cho iPhone có thanh gesture.
+   ⚠️ `--ln-lift` do JS đặt: khi dải "nên dùng laptop" cũng đang hiện (khách
+      quốc tế vào bằng điện thoại — hoàn toàn có thật), hai dải cùng neo đáy sẽ
+      CHỒNG LÊN NHAU. JS đo chiều cao dải kia rồi nâng dải này lên trên.
+   ⚠️ Tông TÍM chứ không cyan: `.mob-note` đã là cyan, hai dải cùng màu cạnh
+      nhau đọc ra như một khối bị vỡ làm đôi.
+   ============================================================ */
+.lang-note{
+  position:fixed;left:10px;right:10px;z-index:61;
+  bottom:calc(10px + var(--ln-lift, 0px) + env(safe-area-inset-bottom, 0px));
+  display:flex;align-items:flex-start;gap:11px;
+  padding:12px 13px 13px;border-radius:16px;
+  background:rgba(10,14,30,.96);border:1px solid rgba(143,123,255,.42);
+  box-shadow:0 12px 34px -10px rgba(0,0,0,.8), 0 0 22px -8px rgba(143,123,255,.4);
+  backdrop-filter:blur(8px);
+  transform:translateY(120%);opacity:0;
+  transition:transform .34s cubic-bezier(.34,1.4,.64,1),opacity .28s ease;
+}
+.lang-note.show{transform:translateY(0);opacity:1;}
+.lang-note .ln-ic{font-size:22px;line-height:1.15;flex:none;}
+.lang-note .ln-body{min-width:0;flex:1;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:4px 10px;}
+.lang-note p{margin:0;font-size:12.5px;line-height:1.55;color:var(--ink-soft);}
+.lang-note .ln-go{
+  font-family:var(--font-display,inherit);font-size:12.5px;font-weight:600;
+  color:#c9bcff;text-decoration:none;border-bottom:1px solid rgba(143,123,255,.5);
+  /* Vùng chạm >=44px theo WCAG 2.5.5 — dự án đã trả giá vì đặt đúng mốc 44,
+     nên để 48 cho có biên an toàn (bài học 02/08/2026). */
+  display:inline-flex;align-items:center;min-height:48px;
+}
+.lang-note .ln-go:hover{color:#fff;border-color:#c9bcff;}
+.lang-note .ln-x{
+  flex:none;width:34px;height:34px;min-width:34px;border-radius:10px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);
+  color:var(--ink-soft);font-size:20px;line-height:1;
+}
+.lang-note .ln-x:hover{color:#fff;border-color:rgba(143,123,255,.55);}
+@media (pointer:coarse){ .lang-note .ln-x{width:44px;height:44px;min-width:44px;} }

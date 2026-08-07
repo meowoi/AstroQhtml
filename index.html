@@ -10,6 +10,9 @@
 <meta name="robots" content="index,follow,max-image-preview:large" />
 <meta name="theme-color" content="#0b0f19" />
 <link rel="canonical" href="https://astroq.org/" />
+<link rel="alternate" hreflang="vi" href="https://astroq.org/" />
+<link rel="alternate" hreflang="en" href="https://astroq.org/en/" />
+<link rel="alternate" hreflang="x-default" href="https://astroq.org/" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="astroQ.org" />
@@ -144,8 +147,8 @@
     <div class="top-right">
       <span class="status-pill" data-i18n="status">TRẠM ĐANG KHỞI ĐỘNG</span>
       <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Ngôn ngữ / Language">
-        <button type="button" data-lang="vi">VI</button>
-        <button type="button" data-lang="en">EN</button>
+        <a href="/" data-lang="vi" hreflang="vi" class="active" aria-current="true">VI</a>
+        <a href="/en/" data-lang="en" hreflang="en">EN</a>
       </div>
     </div>
   </header>
@@ -351,6 +354,37 @@
     <p data-i18n-html="mob_body">astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!</p>
   </div>
   <button type="button" class="mn-x" id="mob-x" data-i18n-aria="mob_close" aria-label="Đã hiểu, đóng">&times;</button>
+</div>
+
+<!-- ============================================================
+     DẢI MỜI SANG BẢN NGÔN NGỮ KIA
+     Trang chủ có HAI URL tĩnh: `/` (tiếng Việt) và `/en/` (tiếng Anh). hreflang
+     lo phần lưu lượng từ Google; dải này chỉ dành cho người GÕ THẲNG URL hoặc
+     bấm link ngoài Google — nhóm mà hreflang không với tới.
+
+     ⚠️ CỐ Ý KHÔNG TỰ CHUYỂN HƯỚNG (chủ dự án chốt 07/08/2026). [Chưa kiểm chứng]
+        Googlebot render JS ở locale en-US và không ở múi giờ Việt Nam, nên nếu
+        `/` tự chuyển sang `/en/` thì nhiều khả năng CHÍNH GOOGLEBOT cũng bị
+        chuyển — tức trang DUY NHẤT đang được lập chỉ mục mất phần nội dung
+        tiếng Việt của nó. Một dải mời thì không có rủi ro đó.
+
+     ⚠️ KHÔNG có `data-i18n` ở đây, CỐ Ý. Chữ trong dải LUÔN thuộc NGÔN NGỮ KIA
+        — mời một người Nhật sang bản tiếng Anh mà viết bằng tiếng Việt thì họ
+        không đọc được, tức là dải vô dụng đúng với người nó sinh ra để phục vụ.
+        `applyTexts` đổ theo ngôn ngữ CỦA TRANG nên sẽ dịch ngược; JS tự đổ chữ
+        từ từ điển của ngôn ngữ kia (xem initLangNote trong js/index.js).
+
+     ⚠️ Cùng khuôn `.mob-note`: neo đáy, KHÔNG che nội dung, KHÔNG bẫy tiêu điểm
+        (`role="region"` chứ không phải `dialog`). Trang đã go-live và Google
+        lập chỉ mục theo mobile-first — lớp phủ chắn nội dung bị xếp vào
+        "intrusive interstitial" và ăn phạt xếp hạng. -->
+<div class="lang-note" id="lang-note" role="region" hidden>
+  <span class="ln-ic" aria-hidden="true">🌐</span>
+  <div class="ln-body">
+    <p id="ln-txt"></p>
+    <a class="ln-go" id="ln-go" href="/en/" hreflang="en"></a>
+  </div>
+  <button type="button" class="ln-x" id="ln-x">&times;</button>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

@@ -29,6 +29,13 @@ USER = {"name": "Bi", "pilotName": "Bi", "character": "raica",
         "avatar": "ava/avaraica.png", "uid": "lang-uid", "selectedCharacter": "raica"}
 
 # Trang · cho de doc chu doi theo ngon ngu · doan chu tieng Viet phai bien mat
+# ⚠️ TRANG CHU DUNG LINK, KHONG DUNG NUT — doi 07/08/2026.
+#    `/` va `/en/` la HAI URL TINH (xem scratchpad/gen_home_en.py). Nut doi ngon
+#    ngu o do phai la <a href> that de Googlebot di duoc sang ban kia — do la nua
+#    con lai cua hreflang. Bam vao la DIEU HUONG chu khong doi chu tai cho, va
+#    KHONG ghi `astroq-lang` (ngon ngu do URL quyet, khong phai lua chon da luu).
+LINK_PAGES = {"index.html", "en/index.html"}
+
 PAGES = [
     ("index.html",         "h1",              None),
     ("select.html",        None,              None),
@@ -93,7 +100,7 @@ with sync_playwright() as p:
 
         # (1) Nut co ton tai, NHIN THAY va la phan tu tren cung tai diem giua no
         info = pg.evaluate("""() => {
-          const btns = [...document.querySelectorAll('.lang-switch button[data-lang]')];
+          const btns = [...document.querySelectorAll('.lang-switch [data-lang]')];
           if (btns.length < 2) return {n: btns.length};
           const en = btns.find(b => b.dataset.lang === 'en');
           const r = en.getBoundingClientRect();
@@ -124,8 +131,15 @@ with sync_playwright() as p:
                               "return e?e.innerText.trim():null}", title_sel)
 
         # (2) Bam that vao nut EN
-        pg.click(".lang-switch button[data-lang='en']")
-        pg.wait_for_timeout(900)
+        if page in LINK_PAGES:
+            with pg.expect_navigation(wait_until="load"):
+                pg.click(".lang-switch [data-lang='en']")
+            pg.wait_for_timeout(500)
+            check(pg.url.rstrip("/").endswith("/en"),
+                  f"{page}: bam EN thi DIEU HUONG sang /en/", pg.url)
+        else:
+            pg.click(".lang-switch [data-lang='en']")
+            pg.wait_for_timeout(900)
         after = pg.evaluate("() => document.body.innerText")
         check(after != before, f"{page}: bam EN thi CHU TREN TRANG doi that")
         if title_sel:
@@ -137,10 +151,18 @@ with sync_playwright() as p:
         st = pg.evaluate("""() => ({
           saved: localStorage.getItem('astroq-lang'),
           docLang: document.documentElement.lang,
-          activeLang: ([...document.querySelectorAll('.lang-switch button')]
+          activeLang: ([...document.querySelectorAll('.lang-switch [data-lang]')]
                         .find(b => b.classList.contains('active')) || {dataset:{}}).dataset.lang
         })""")
-        check(st["saved"] == "en", f"{page}: luu lai lua chon 'en'", str(st["saved"]))
+        if page in LINK_PAGES:
+            # Ngon ngu do URL quyet, KHONG do localStorage. Bo do gieo san
+            # `astroq-lang='vi'` (xem seed()), nen dieu can chung minh la trang
+            # KHONG GHI DE len no khi nguoi dung bam EN — chu khong phai "trong".
+            check(st["saved"] == "vi",
+                  f"{page}: KHONG ghi de astroq-lang (ngon ngu do URL, khong do localStorage)",
+                  str(st["saved"]))
+        else:
+            check(st["saved"] == "en", f"{page}: luu lai lua chon 'en'", str(st["saved"]))
         check(st["docLang"] == "en", f"{page}: <html lang> doi sang en", repr(st["docLang"]))
         check(st["activeLang"] == "en", f"{page}: nut EN sang len", str(st["activeLang"]))
         check(not errs, f"{page}: 0 loi console", str(errs[:1])[:90])
@@ -158,7 +180,7 @@ with sync_playwright() as p:
     b = ctx.new_page()
     b.goto(f"{BASE}/learn.html", wait_until="load", timeout=30000)
     b.wait_for_timeout(1200)
-    b.click(".lang-switch button[data-lang='en']")
+    b.click(".lang-switch [data-lang='en']")
     b.wait_for_timeout(1200)
     a.bring_to_front()
     a.wait_for_timeout(1200)

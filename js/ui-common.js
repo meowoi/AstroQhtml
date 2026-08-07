@@ -21,11 +21,60 @@
   function clearUser(){ try{ localStorage.removeItem(LS_USER); }catch(e){} }
 
   /* ---------------- Ngôn ngữ (VI/EN) ----------------
-     Ưu tiên lựa chọn đã lưu, sau đó ngôn ngữ trình duyệt, mặc định VI. */
+     Thứ tự quyết định ngôn ngữ cho lượt vào trang ĐẦU TIÊN:
+       ① Lựa chọn đã lưu (`astroq-lang`)      → LUÔN THẮNG
+       ② Múi giờ thiết bị là Việt Nam          → vi   ("truy cập từ Việt Nam")
+       ③ Ngôn ngữ trình duyệt là tiếng Việt    → vi   (người Việt ở nước ngoài)
+       ④ Còn lại                               → en   (khách quốc tế)
+
+     ⚠️⚠️ ĐỔI 07/08/2026 — LỖI CŨ: CẢ THẾ GIỚI TRỪ NGƯỜI NÓI TIẾNG ANH ĐỀU
+        THẤY TIẾNG VIỆT. Điều kiện cũ là `navigator.language.indexOf("en")===0`
+        rồi mặc định `vi`, nên **chỉ trình duyệt tiếng Anh mới ra tiếng Anh**.
+        Đo được trên Chromium: `ja-JP` → tiếng Việt · `fr-FR` → tiếng Việt.
+        Một trang song ngữ Việt–Anh mà khách Nhật/Pháp/Hàn/Trung đọc ra tiếng
+        Việt thì bản EN gần như không ai thấy. Nay `en` là **lưới an toàn quốc
+        tế**, còn `vi` phải có căn cứ (múi giờ HOẶC ngôn ngữ trình duyệt).
+
+     ⚠️ DÙNG MÚI GIỜ, KHÔNG DÙNG DỊCH VỤ TRA IP. Ba lý do, không phải chuộng
+        đơn giản: ① tra IP là **một request ra tên miền ngoài** — đúng thứ dự
+        án vừa gỡ sạch ngày 07/08/2026, và nó đóng lại đường PWA (service
+        worker không cache đàng hoàng được cross-origin không CORS); ② nó **trễ
+        khung hình đầu**: trang phải đứng chờ mạng, hoặc hiện tiếng Việt rồi
+        nhảy sang tiếng Anh trước mắt khách; ③ nó **gửi IP của từng đứa trẻ cho
+        một bên thứ ba** — dự án đã từ chối Google Analytics đúng vì lý do này.
+        Múi giờ thì đọc tức thì, 0 byte, không qua mạng, không lộ gì.
+     ⚠️ [Suy luận] Múi giờ là chỉ dấu vị trí, KHÔNG phải vị trí: người dùng VPN,
+        người đang đi công tác, hay máy đặt sai giờ sẽ bị đoán nhầm. Chấp nhận
+        được vì bấm nút VI/EN một lần là ghi vào `astroq-lang` và từ đó ① thắng
+        vĩnh viễn — sai lầm chỉ tồn tại đúng một cú bấm.
+     ⚠️ CHỈ khớp hai id CỦA RIÊNG VIỆT NAM. `Asia/Bangkok` cũng UTC+7 nhưng là
+        Thái Lan; khớp theo múi giờ ±7 là gán tiếng Việt cho cả Thái, Lào,
+        Campuchia, Indonesia. `Asia/Saigon` là bí danh cũ [Chưa kiểm chứng: một
+        số hệ máy cũ vẫn trả về nó], giữ cho chắc.
+     ⚠️ `wiki/` KHÔNG chịu ảnh hưởng của hàm này — đó là trang tĩnh thuần không
+        nạp JS, và nó đã có URL riêng cho từng ngôn ngữ + 3 thẻ `hreflang`, tức
+        Google tự chọn bản đúng. Đừng "thống nhất" hai cơ chế đó làm một. */
+  var VN_TZ = { "Asia/Ho_Chi_Minh":1, "Asia/Saigon":1 };
+  var _guess = null;                     /* nhớ trong một lượt tải trang */
+
+  function guessLang(){
+    if(_guess) return _guess;
+    _guess = "en";
+    try{
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if(tz && VN_TZ[tz]) return (_guess = "vi");
+    }catch(e){}
+    /* Chỉ xét ngôn ngữ CHÍNH. Người khai ["en-US","vi-VN"] là ưu tiên tiếng
+       Anh — quét cả danh sách thì họ bị đẩy sang tiếng Việt. */
+    try{
+      if((navigator.language||"").toLowerCase().indexOf("vi")===0) return (_guess = "vi");
+    }catch(e){}
+    return _guess;
+  }
+
   function getLang(){
     try{ var sv=localStorage.getItem(LS_LANG); if(sv==="en"||sv==="vi") return sv; }catch(e){}
-    try{ if((navigator.language||"vi").toLowerCase().indexOf("en")===0) return "en"; }catch(e){}
-    return "vi";
+    return guessLang();
   }
   function setLang(lang){ try{ localStorage.setItem(LS_LANG, lang); }catch(e){} }
 
@@ -93,7 +142,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.07.4";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.08.07.5";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 
@@ -137,8 +186,24 @@
      · type "ok"/"bad"   → icon check/cross phát sáng ở đầu toast   */
   /* Ảnh Thiên thạch tím chèn vào toast qua token {tt}. alt đổi theo ngôn ngữ đang chọn
      — hàm chứ không phải hằng, vì người dùng có thể đổi ngôn ngữ giữa chừng. */
+  /* Gốc site, suy từ chính thẻ <script> đang nạp file này.
+     ⚠️ BẮT BUỘC từ 07/08/2026: trang chủ nay có HAI bản ở HAI ĐỘ SÂU thư mục
+        (`/` và `/en/`), nên chuỗi cứng `img/tt.png` sẽ thành `/en/img/tt.png`
+        và **404** — ảnh vỡ ngay trong toast "You're in! 500 ☄️ are waiting",
+        tức đúng khoảnh khắc khách quốc tế vừa đăng ký thành công.
+     ⚠️ KHÔNG dùng đường dẫn tuyệt đối `/img/…`: nó phá cách xem bằng `file://`
+        và khoá dự án vào việc phải nằm ở gốc tên miền. Suy từ `currentScript`
+        thì đúng ở mọi độ sâu và mọi cách phục vụ. */
+  var SITE = (function(){
+    try{
+      var s = document.currentScript && document.currentScript.src;
+      if(s) return s.replace(/js\/ui-common\.js.*$/, "");
+    }catch(e){}
+    return "";                      /* đường lùi: giữ nguyên hành vi cũ */
+  })();
+
   function ttImg(){
-    return '<img class="tt-inline" src="img/tt.png" alt="' +
+    return '<img class="tt-inline" src="' + SITE + 'img/tt.png" alt="' +
            (getLang() === "en" ? "Purple Meteor" : "Thiên thạch tím") + '" />';
   }
   var TOAST_IC = {
@@ -201,7 +266,7 @@
   }
 
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
-              getLang:getLang, setLang:setLang, markLangButtons:markLangButtons,
+              getLang:getLang, guessLang:guessLang, setLang:setLang, markLangButtons:markLangButtons,
               initLang:initLang, setDocLang:setDocLang,
               applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
               getPerf:getPerf, setPerf:setPerf, slowLink:slowLink,
