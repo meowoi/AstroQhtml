@@ -620,12 +620,31 @@ setTimeout(function(){
 }, 9000);
 </script>
 
-<!-- ES module import map -->
+<!-- ES module import map — three.js TỰ HOST, không còn unpkg.com (07/08/2026)
+
+     ⚠️ ĐỪNG TRẢ VỀ CDN. Ba lý do, cả ba đo được:
+       ① `explorer.html` nằm trên luồng onboarding BẮT BUỘC của mọi phi hành gia
+          mới (select → explorer?onboard=1 → mission-earth). unpkg hỏng hoặc bị
+          chặn = trẻ rơi vào đường lùi 12 giây ở `js/map-onboard.js`, tức một
+          tên miền không ai trong dự án kiểm soát đang gác cửa vào app.
+       ② Service worker KHÔNG cache đàng hoàng được phản hồi cross-origin không
+          CORS (chỉ nhận opaque response). Tự host là ĐIỀU KIỆN TIÊN QUYẾT của
+          PWA, không phải việc dọn dẹp cho đẹp.
+       ③ Bản đang kéo là bản KHÔNG rút gọn: 256.686 gzip. Bản `.min` mà r160 có
+          sẵn chỉ 166.230 gzip — **cắt 35%** mà không đổi một dòng mã nào.
+
+     ⚠️ VERSION NẰM TRONG ĐƯỜNG DẪN — cố ý. Nâng cấp = thư mục mới = URL mới =
+        cache cũ chết tự nhiên. Dự án đã trả giá vì cache một lần (06/08/2026,
+        astroq.org đứng ở bản 04/08 gần một ngày).
+
+     Tải lại / nâng cấp: `python scratchpad/vendor_deps.py`. Đừng tải tay —
+     6 addon này kéo theo 6 file nữa bằng đường dẫn tương đối, thiếu một cái là
+     404 giữa lúc dựng cảnh. -->
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    "three": "./vendor/three/0.160.0/three.module.min.js",
+    "three/addons/": "./vendor/three/0.160.0/addons/"
   }
 }
 </script>

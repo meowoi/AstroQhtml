@@ -25,14 +25,33 @@
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
 import { apiPost, apiGetAuth, apiPutAuth, apiPostAuth, isApiConfigured } from "./api.js";
 
-const SDK = "https://www.gstatic.com/firebasejs/12.16.0";
+/* SDK Firebase TỰ HOST, không còn gstatic.com (07/08/2026). Tải lại/nâng cấp
+   bằng `python scratchpad/vendor_deps.py` — đừng tải tay.
+
+   ⚠️⚠️ TẢI HAI FILE VỀ LÀ CHƯA ĐỦ, VÀ ĐÓ LÀ CÁI BẪY IM LẶNG NHẤT Ở ĐÂY:
+        `firebase-auth.js` nhúng URL **tuyệt đối** tới gstatic ngay trong lệnh
+        import của chính nó. Chỉ đổi hằng này thôi thì bản local vẫn tự đi kéo
+        `firebase-app.js` từ mạng ngoài — phụ thuộc **chưa hề bị gỡ**, mà đọc mã
+        của dự án thì không thấy gì sai. Script vendor viết lại đúng URL đó
+        thành `./firebase-app.js` và có phép kiểm canh.
+        (Ngược lại, 2 chuỗi gstatic còn sót trong `firebase-app.js` là TÊN
+        COMPONENT + nhãn logger của sổ đăng ký nội bộ Firebase — **cố ý không
+        đụng**; sửa nội tạng thư viện mà không có lý do là thứ không ai rà lại
+        được ở lần nâng cấp sau.)
+
+   ⚠️ Đường dẫn TƯƠNG ĐỐI TỪ FILE NÀY, không phải từ trang. `import()` trong
+      module giải đường dẫn theo URL của **module**, nên `../vendor/…` là đúng
+      dù trang gọi nó (`landing-app.html`) nằm ở gốc. Viết `vendor/…` là 404.
+
+   Vẫn giữ import ĐỘNG: chưa điền config thì không tải byte nào (64 KB gzip). */
+const SDK = "../vendor/firebase/12.16.0";
 
 let auth = null;
 let fb = null;                 // các hàm của firebase-auth SDK, nạp động
 let pendingName = "";          // tên nhập lúc đăng ký, ghi vào hồ sơ sau khi xác minh xong
 
-/* Chỉ tải SDK khi đã có config — tránh kéo vài trăm KB vô ích.
-   Mất mạng / gstatic bị chặn → trả null chứ KHÔNG ném lỗi: mọi hàm bên dưới
+/* Chỉ tải SDK khi đã có config — tránh kéo 64 KB gzip vô ích.
+   Mất mạng / file vendor thiếu → trả null chứ KHÔNG ném lỗi: mọi hàm bên dưới
    đều bắt đầu bằng `if(!(await boot()))`, ném ra ở đây là làm vỡ cả chuỗi
    promise của phía gọi (đã gặp: màn giới thiệu không hiện khi mất mạng). */
 async function boot(){

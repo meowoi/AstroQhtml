@@ -1220,7 +1220,15 @@ print("\n=== [12] SO TAY THUAT NGU: day noi that quiz -> server -> codex ===")
 # KHONG trang nao nap, va `quiz.html` khong gui `terms` nen khong the giai ma.
 _cx = rd("js/codex-terms.js")
 _cxp = rd("codex.html")
-_bank = rd("js/quiz-questions.js")
+# ⚠️ NGAN HANG CAU HOI NAY LA NHIEU FILE (doi 07/08/2026): `js/quiz-index.js` +
+#    `js/quiz/<khoa-cau>.js`, MOT CAU MOI FILE. Noi lai thanh MOT chuoi `_bank` de
+#    moi phep kiem regex duoi day chay nguyen — chung soi NOI DUNG (term, srcQuote,
+#    url), khong soi so file. Ten file la nguon su that cua tap khoa.
+_qdir = os.path.join(ROOT, "js", "quiz")
+_qfiles = sorted(f for f in os.listdir(_qdir) if f.endswith(".js")) \
+    if os.path.isdir(_qdir) else []
+_bank = rd("js/quiz-index.js") + "\n" + "\n".join(
+    rd("js/quiz/" + f) for f in _qfiles)
 _icons = rd("js/icons.js")
 _qz = strip_comments(rd("quiz.html"))
 _prog = strip_comments(rd("js/progress.js"))
@@ -1247,6 +1255,47 @@ for f in ("t:", "an:", "sum:", "def:", "gr:", "dg:"):
 # --- (2) DAY NOI: moi khoa `q` phai co THAT trong bank cau hoi ---
 _bank_terms = set(re.findall(r'\bterm:\s*"([^"]+)"', _bank))
 check("doc duoc khoa term trong bank", len(_bank_terms) > 0, f"{len(_bank_terms)}")
+
+# --- (2a) BANK CHIA THEO FILE: ten file LA khoa cau ---
+# Do 07/08/2026: bank mot-file la 43,6 KB gzip cho 100 cau = 51% duong tai cua
+# quiz.html, ma mot luot chi dung 5 cau. Nay muc luc + 5 file = 10,2 KB.
+_file_keys = {os.path.splitext(f)[0] for f in _qfiles}
+check("co thu muc js/quiz/ voi cac file cau", len(_file_keys) >= 100,
+      f"{len(_file_keys)} file")
+check("khoa `term` trong file KHOP dung ten file (ten file la khoa)",
+      _file_keys == _bank_terms,
+      f"chi co file: {sorted(_file_keys - _bank_terms)[:5]} · "
+      f"chi khai trong file: {sorted(_bank_terms - _file_keys)[:5]}")
+# ⚠️ URL CHI DUOC O MUC LUC. De bai muc 2a: `src` la KHOA tro vao bang `S`, khong
+#    phai URL — 870 cau viet URL thang la ~870 ban sao cua ~40 dia chi, va ngay
+#    NASA doi mot duong dan thi phai sua hang tram file.
+_url_in_q = [f for f in _qfiles if "http" in rd("js/quiz/" + f)]
+check("KHONG file cau nao viet URL thang (src la KHOA vao bang S)",
+      not _url_in_q, f"{len(_url_in_q)} file: {_url_in_q[:5]}")
+# Muc luc phai liet ke dung tap file — lech la cau co that ma khong bao gio duoc rut
+_ix = rd("js/quiz-index.js")
+_ix_keys = set()
+for _m in re.finditer(r"\bq:\s*\[([^\]]*)\]", _ix):
+    _ix_keys |= set(re.findall(r'"([a-z0-9][a-z0-9-]*)"', _m.group(1)))
+check("muc luc js/quiz-index.js liet ke dung tap file trong js/quiz/",
+      _ix_keys == _file_keys,
+      f"chi muc luc: {sorted(_ix_keys - _file_keys)[:5]} · "
+      f"chi file: {sorted(_file_keys - _ix_keys)[:5]}")
+# ⚠️ QUET TREN CODE DA BOC COMMENT. Lan dau phep kiem nay bao hong OAN: chinh khoi
+#    chu thich cua quiz.html giai thich "truoc day bank nam o js/quiz-questions.js"
+#    — va do la ghi chu NEN CO (no ke lai vi sao code co hinh dang nay). Day la lan
+#    thu 11 du an mac dung loi "dem ca chu trong ghi chu cua chinh minh"; moi phep
+#    kiem dang "khong duoc chua X" phai quet tren `strip_comments()`.
+check("quiz.html nap MUC LUC, khong nap bank mot-file cu",
+      'src="js/quiz-index.js"' in rd("quiz.html")
+      and "quiz-questions.js" not in strip_comments(rd("quiz.html")))
+# ⚠️ `lv` VAN LA TRUONG NGU — chu du an chot 07/08/2026 GIU no, cho duong "server
+#    tinh cap do roi client rut de theo cap do" (quiz.html co y khong nap SDK
+#    Firebase nen chua co token doc cap do). Phep kiem canh no khong bi xoa am tham
+#    va cung khong bi noi vao nua voi.
+check("muc luc con giu bang LV (truong `lv` chua bi xoa)", "var LV = {" in _ix)
+check("`lv` chua co nguoi doc — chua ai nap cap do vao quiz.html",
+      "AstroQQuestions.LV" not in strip_comments(rd("quiz.html")))
 _blocks = re.split(r'\n    \{\n(?=      id: "term_)', "\n" + _cx)
 _qmap, _dangling, _noq = {}, [], []
 for b in _blocks[1:]:
@@ -1271,6 +1320,32 @@ check("mot khoa bank khong bi hai thuat ngu cung nhan",
 PENDING = set()
 check("khong thuat ngu nao con thieu cau hoi trong bank", set(_noq) == PENDING,
       f"thieu cau hoi: {sorted(set(_noq))}" if _noq else "")
+
+# --- (2b) NHAN PHAN LOAI: `cat` phai co NGUOI DOC ---
+# Truoc 07/08/2026 `cat` duoc khai o moi the ma KHONG file nao doc — mot truong khai
+# ma khong ai doc la mot loi khai sai. Nay codex.html hien nhan phan loai tren the.
+# CHUA co bo loc phan loai, co y: 18 the `space` + 1 the `earth` thi mot chip chua
+# dung MOT the — de Dot 3 (thêm ~10 the Trai Dat + ~5 the dung cu) roi tai dung khuon
+# sidebar-dem-so cua library.html.
+_cats = set(re.findall(r'cat:\s*"([a-z-]+)"', strip_comments(_cx)))
+check("doc duoc gia tri `cat` cua cac the", len(_cats) > 0, f"{sorted(_cats)}")
+_cxp_code = strip_comments(_cxp)
+check("codex.html CO doc `cat` (nhan phan loai tren the)",
+      "catLabel(" in _cxp_code and "cx-i-cat" in _cxp_code)
+# ⚠️ MOI gia tri `cat` phai co MOT NHANH LITERAL trong catLabel — ghep dong
+#    `t("cat_" + x.cat)` thi phep kiem i18n duoi day bao 3 khoa nay "khai ma khong
+#    dung", va loi do im lang. Cung bai hoc voi `s1_hit1/2/3` o mission-earth.html.
+_miss_cat = [c for c in _cats if f'"{c}"' not in _cxp_code
+             or f'cat_{c}' not in _cxp_code]
+check("moi gia tri `cat` co mot nhanh literal trong catLabel()",
+      not _miss_cat, f"thieu nhanh: {sorted(_miss_cat)}")
+check("co luoi an toan `cat_other` cho gia tri `cat` moi",
+      'cat_other' in _cxp_code)
+for _k in ("cat_space", "cat_earth", "cat_other"):
+    check(f"khoa i18n `{_k}` co o CA vi va en", _cxp.count(_k + ":") == 2,
+          f"{_cxp.count(_k + ':')} lan")
+check("codex.html CHUA co bo loc phan loai (co y, doi Dot 3)",
+      "seg-cat" not in _cxp_code)
 
 # ⚠️ HAI PHEP KIEM DUOI DAY CHUYEN TU `check_codex.py` SANG (30/07/2026), truoc khi
 #    xoa bo React da bi thay the. Chung canh CODE DANG CHAY nen khong duoc mat.
@@ -1597,15 +1672,23 @@ check("khong trang nao truyen selector RIENG cho initLang", not _own_sel, str(_o
 
 # --- (2) Khong trang nao nap script tu TEN MIEN NGOAI ---
 # ⚠️ Du an da tra gia de bo 2 ket noi ngoai (tu host font: 621 KB -> 101 KB) va co
-#    y KHONG nap SDK Firebase o trang can muot. Nhung `explorer.html` va
-#    `mission-earth.html` van keo three.js tu unpkg.com — do duoc 257 KB gzip, tu
-#    mot ten mien khong ai kiem soat, nam tren duong onboarding BAT BUOC.
+#    y KHONG nap SDK Firebase o trang can muot.
 #    Phep kiem nay KHONG doi 0 ngay mot: no GHIM danh sach hien tai lai, de them
-#    trang thu ba la biet ngay. Bo three.js xong thi xoa ten khoi _KNOWN_CDN va
-#    phep kiem thu hai se doi danh sach phai RONG.
+#    trang thu ba la biet ngay, va TU THAT LAI khi bo dan phu thuoc ngoai.
 # 31/07/2026: `mission-earth.html` đã bỏ three.js (bậc 5) nên rời khỏi danh sách.
-# Còn đúng `explorer.html`. Khi trang đó cũng bỏ thì đổi thành set() rỗng.
-_KNOWN_CDN = {"explorer.html"}
+# 07/08/2026: `explorer.html` cũng rời — three.js + SDK Firebase nay TU HOST ở
+#   `vendor/` (xem `scratchpad/vendor_deps.py`). Danh sách nay RỖNG, và phép kiểm
+#   thứ hai biến nó thành hàng rào vĩnh viễn: **không trang nào được nạp script
+#   từ tên miền ngoài nữa**.
+#   ⚠️ ĐỪNG NỚI LẠI. Ba cái giá đã đo được: ① service worker KHÔNG cache đàng
+#      hoàng được phản hồi cross-origin không CORS, nên một tên miền ngoài là
+#      **đóng cửa hẳn đường PWA**; ② `explorer.html` nằm trên luồng onboarding
+#      BẮT BUỘC, unpkg hỏng = trẻ mới rơi vào đường lùi 12 giây; ③ bản `.min`
+#      tự host còn nhẹ hơn bản CDN đang dùng 90 KB gzip.
+#   Có phép kiểm chạy thật trên Chromium canh cùng chuyện này (`smoke_vendor.py`,
+#   chặn cứng 4 tên miền rồi đòi app vẫn dựng đủ cảnh) — phép kiểm ở đây chỉ
+#   soi văn bản, nên hai cái bổ cho nhau.
+_KNOWN_CDN = set()
 _ext = {}
 for _f in _html_pages:
     _h = rd(_f)
