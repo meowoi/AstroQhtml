@@ -7,9 +7,10 @@
       Nhãn tên GIỮ NGUYÊN là phần tử DOM — ảnh có chữ nướng sẵn thì bản tiếng Anh
       vẫn hiện tiếng Việt và chữ không co theo màn hình.
 
-   ⚠️ ĐÃ THỬ BẢN CANVAS (`proto-solar-map.js`, port từ img/solar-system-simulation.html)
-      NGÀY 04/08/2026 VÀ CHỦ DỰ ÁN BÁC: khó nhìn hơn bản này. File đó còn trên đĩa
-      nhưng KHÔNG trang nào nạp — đừng nối lại mà chưa hỏi.
+   ⚠️ ĐÃ THỬ BẢN CANVAS (`proto-solar-map.js`, port từ
+      `scratchpad/solar-system-simulation.html` — file đó nằm ở `img/` cho tới
+      07/08/2026) NGÀY 04/08/2026 VÀ CHỦ DỰ ÁN BÁC: khó nhìn hơn bản này. File đó
+      còn trên đĩa nhưng KHÔNG trang nào nạp — đừng nối lại mà chưa hỏi.
    ========================================================== */
 
 .panel + .panel{margin-top:26px;}

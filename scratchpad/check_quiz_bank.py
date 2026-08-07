@@ -73,8 +73,15 @@ def main():
         pg.wait_for_timeout(400)
 
         print("=== [1] Bank nap duoc + cau truc tung cau ===")
-        bank = pg.evaluate("window.AstroQQuestions ? AstroQQuestions.ALL : null")
-        check("js/quiz-questions.js nap duoc, co AstroQQuestions.ALL", bool(bank),
+        # ⚠️ BANK NAY LA NHIEU FILE (doi 07/08/2026): muc luc `js/quiz-index.js` +
+        #    mot file moi cau trong `js/quiz/`. Khong con `AstroQQuestions.ALL`.
+        #    Nap HET de soi cau truc — day la cho DUY NHAT trong du an tai ca bank,
+        #    va no la bo kiem chu khong phai trang cua tre.
+        bank = pg.evaluate("""async () => {
+            if (!window.AstroQQuestions || !AstroQQuestions.load) return null;
+            return await AstroQQuestions.load(AstroQQuestions.terms());
+        }""")
+        check("js/quiz-index.js nap duoc, tai duoc moi cau qua load()", bool(bank),
               f"{len(bank or [])} cau")
         if not bank:
             br.close()
@@ -222,28 +229,39 @@ def main():
                 code = f"loi: {e}"
             check(f"URL tra 200: {url}", code == 200, f"{code}")
 
-        print("\n=== [5] pickRound: dung so cau, khong trung thuat ngu ===")
+        print("\n=== [5] pickKeys: dung so cau, khong trung THE ===")
+        # ⚠️ DOI TU `pickRound` SANG `pickKeys` (07/08/2026) va phep chong trung nay
+        #    DOI PHAT BIEU — no khong con la "khong trung `term`" ma la "khong trung
+        #    THE So Tay". Ly do: `term` la khoa cua CAU (moi cau mot khoa rieng:
+        #    `star`, `star-fusion`), do duoc 100/100 khoa la duy nhat, nen phep loc
+        #    theo `term` CHUA BAO GIO chan duoc gi ke tu khi no duoc viet. Y dinh ghi
+        #    trong chu thich cu ("mot luot 5 cau co the hoi Sao choi hai lan") chi
+        #    thanh that khi loc theo THE. Sau Dot 2 no moi that su quan trong: 15 the
+        #    len ~20 cau/the, khong loc thi mot luot co the toan cau ve nhat thuc.
         res = pg.evaluate("""() => {
-          const out = {rounds: 0, badLen: 0, dupTerm: 0, dupItem: 0, seen: {}};
+          const out = {rounds: 0, badLen: 0, dupCard: 0, dupKey: 0, seen: {}};
           for (let i = 0; i < 400; i++) {
-            const r = AstroQQuestions.pickRound(5);
+            const ks = AstroQQuestions.pickKeys(5);
             out.rounds++;
-            if (r.length !== 5) out.badLen++;
-            const ts = r.map(x => x.term);
-            if (new Set(ts).size !== 5) out.dupTerm++;
-            if (new Set(r).size !== 5) out.dupItem++;
-            ts.forEach(t => out.seen[t] = (out.seen[t] || 0) + 1);
+            if (ks.length !== 5) out.badLen++;
+            if (new Set(ks).size !== 5) out.dupKey++;
+            const cards = ks.map(k => { const g = AstroQQuestions.groupOf(k);
+                                        return g ? (g.c || k) : k; });
+            if (new Set(cards).size !== 5) out.dupCard++;
+            ks.forEach(t => out.seen[t] = (out.seen[t] || 0) + 1);
           }
           return out;
         }""")
         check("400 luot deu ra dung 5 cau", res["badLen"] == 0, f"lech: {res['badLen']}")
-        check("khong luot nao trung thuat ngu", res["dupTerm"] == 0, f"trung: {res['dupTerm']}")
-        check("khong luot nao trung cau hoi", res["dupItem"] == 0, f"trung: {res['dupItem']}")
+        check("khong luot nao trung KHOA cau", res["dupKey"] == 0, f"trung: {res['dupKey']}")
+        check("khong luot nao trung THE So Tay", res["dupCard"] == 0,
+              f"trung: {res['dupCard']}")
         never = sorted(t for t in terms if t not in res["seen"])
         check("sau 400 luot moi cau trong bank deu tung duoc rut", not never, f"chua ra: {never}")
-        # pickRound doi thu tu ALL tai cho la loi im lang -> kiem thu tu con nguyen
-        after = pg.evaluate("AstroQQuestions.ALL.map(x => x.term)")
-        check("pickRound KHONG tron tai cho mang ALL", after == terms)
+        # Tron tai cho mang G/LV la loi im lang -> kiem thu tu khai bao con nguyen
+        after = pg.evaluate("() => AstroQQuestions.terms()")
+        check("pickKeys KHONG tron tai cho muc luc", after == terms,
+              "" if after == terms else "thu tu khoa da bi doi")
 
         print("\n=== [6] Chay that: tra loi, popup, nguon, ngon ngu ===")
         by_q_vi = {it["q"]["vi"]: it for it in bank}

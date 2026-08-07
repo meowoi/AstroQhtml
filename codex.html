@@ -129,6 +129,7 @@
       none:"Không có thuật ngữ nào ở mục này.",
       note:"* Nội dung do đội ngũ AstroQ biên soạn lại cho trẻ em từ nguồn NASA, chưa qua rà soát chuyên môn.",
       st_done:"Đã giải mã", st_lock:"Chưa giải mã", st_soon:"Sắp có câu hỏi",
+      cat_space:"Không gian", cat_earth:"Trái Đất", cat_other:"Khác",
       h_def:"Định nghĩa", h_gr:"Ví dụ dễ hiểu",
       open:"Mở sổ tay", how:"Cách mở khoá",
       lock_hint:"Trả lời đúng câu hỏi về thuật ngữ này trong Quiz là thẻ được giải mã ngay.",
@@ -148,6 +149,7 @@
       none:"No terms in this group.",
       note:"* Content rewritten for children by the AstroQ team from NASA sources; not yet reviewed by a subject expert.",
       st_done:"Decoded", st_lock:"Not decoded", st_soon:"Questions coming",
+      cat_space:"Space", cat_earth:"Earth", cat_other:"Other",
       h_def:"Definition", h_gr:"An easy example",
       open:"Open codex", how:"How to unlock",
       lock_hint:"Answer a Quiz question about this term correctly and the card is decoded right away.",
@@ -179,6 +181,25 @@
     return AstroQCodex.hasPath(term) ? "lock" : "soon";
   }
 
+  /* Nhãn PHÂN LOẠI của thẻ (`cat` ở js/codex-terms.js). Thêm 07/08/2026.
+     ⚠️ VÌ SAO CÓ NHÃN MÀ CHƯA CÓ BỘ LỌC: `cat` được khai từ Đợt 1 nhưng KHÔNG ai
+     đọc — một trường khai mà không ai đọc là một lời khai sai. Hiện có 18 thẻ
+     `space` + 1 thẻ `earth`, nên một bộ lọc phân loại sẽ là hai chip mà một chip
+     chứa đúng MỘT thẻ — bấm vào thấy một thẻ trơ thì bộ lọc đó vô dụng. Nhãn thì
+     có ích ngay: trẻ thấy thẻ này thuộc nhóm nào. Bộ lọc để Đợt 3 (thêm ~10 thẻ
+     Trái Đất + ~5 thẻ dụng cụ), lúc đó tái dùng khuôn sidebar-đếm-số của
+     `library.html` chứ đừng dựng cái thứ hai.
+     ⚠️ BA KHOÁ LITERAL, KHÔNG ghép `t("cat_" + x.cat)` — phép kiểm i18n của
+     `check_pages` quét `t("khoá")` dạng chữ, ghép động là ba khoá này bị báo
+     "khai mà không dùng" và lỗi đó im lặng. Cùng bài học với `s1_hit1/2/3` ở
+     `mission-earth.html`. Thêm giá trị `cat` mới thì thêm một nhánh ở đây —
+     `cat_other` là lưới an toàn để thẻ mới không hiện ra khoá thô. */
+  function catLabel(c){
+    if(c==="space") return t("cat_space");
+    if(c==="earth") return t("cat_earth");
+    return t("cat_other");
+  }
+
   /* ================= Lưới thẻ ================= */
   function render(){
     var list = TERMS.filter(function(x){
@@ -198,10 +219,14 @@
     $("grid").innerHTML = list.map(function(x){
       var st = stateOf(x), tx = AstroQCodex.text(x.id, LANG);
       var badge = st==="done" ? t("st_done") : st==="soon" ? t("st_soon") : t("st_lock");
+      var cat = catLabel(x.cat);
       return '<button type="button" class="cx-item '+st+'" data-id="'+x.id+'" aria-label="'+
-               AstroQ.esc(tx.t)+' — '+badge+'">'+
+               AstroQ.esc(tx.t)+' — '+badge+' · '+AstroQ.esc(cat)+'">'+
         '<span class="cx-i-ic">'+lic(x.ic)+'</span>'+
-        '<span class="cx-i-badge">'+badge+'</span>'+
+        '<span class="cx-i-top">'+
+          '<span class="cx-i-badge">'+badge+'</span>'+
+          '<span class="cx-i-cat">'+AstroQ.esc(cat)+'</span>'+
+        '</span>'+
         '<span class="cx-i-t">'+AstroQ.esc(tx.t)+'</span>'+
         '<span class="cx-i-en">'+AstroQ.esc(x[LANG==="en"?"vi":"en"].t)+'</span>'+
         '<span class="cx-i-an">“'+AstroQ.esc(tx.an)+'”</span>'+

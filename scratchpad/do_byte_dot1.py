@@ -7,9 +7,18 @@ r"""Do xem bao nhieu byte cua bank la SIEU DU LIEU KIEM CHUNG (khong ai doc luc 
 """
 import gzip
 import io
+import os
 import re
 
-S = io.open("js/quiz-questions.js", encoding="utf-8").read()
+# ⚠️ TRO LAI SANG HINH DANG MOI (07/08/2026): bank khong con la mot file
+#    `js/quiz-questions.js` ma la `js/quiz-index.js` + mot file moi cau trong
+#    `js/quiz/`. Chinh phep do cua script NAY la dau vao cho quyet dinh cat file,
+#    nen giu no song thay vi bo — cau hoi "bao nhieu byte la sieu du lieu kiem
+#    chung" con dung cho Dot 3-5, khi bank len ~870 cau.
+QDIR = "js/quiz"
+QFILES = sorted(f for f in os.listdir(QDIR) if f.endswith(".js"))
+S = io.open("js/quiz-index.js", encoding="utf-8").read() + "\n" + "\n".join(
+    io.open(os.path.join(QDIR, f), encoding="utf-8").read() for f in QFILES)
 Q = io.open("quiz.html", encoding="utf-8").read()
 
 
@@ -42,7 +51,13 @@ for m in list(re.finditer(r"AstroQCodex\.\w+", Q))[:4]:
     j = Q.rfind("\n", 0, m.start())
     print("   ", Q[j + 1:Q.find("\n", m.end())].strip()[:118])
 
-print("\n=== MOT LUOT CHOI DUNG BAO NHIEU PHAN CUA BANK? ===")
-n = len(re.findall(r'\n    \{\s*\n\s*term:\s*"', S))
-print(f"  bank {n} cau · mot luot ROUND_SIZE=5 -> dung {5/n*100:.0f}%, "
-      f"tai ve 100% ({GOC/1024:.1f} KB gzip)")
+print("\n=== MOT LUOT CHOI TAI BAO NHIEU PHAN CUA BANK? ===")
+n = len(QFILES)
+ix = gz(io.open("js/quiz-index.js", encoding="utf-8").read())
+per = [gz(io.open(os.path.join(QDIR, f), encoding="utf-8").read()) for f in QFILES]
+avg = sum(per) / len(per)
+print(f"  bank {n} cau · mot luot ROUND_SIZE=5 -> dung {5/n*100:.0f}% cau hoi")
+print(f"  va nay CHI TAI dung phan do: muc luc {ix/1024:.1f} KB + 5 file "
+      f"{avg*5/1024:.1f} KB = {(ix+avg*5)/1024:.1f} KB gzip")
+print(f"  (truoc 07/08/2026: tai ve 100% bank = {GOC/1024:.1f} KB gzip du dung 5%)")
+print("  Con so day du + doi chieu: scratchpad/check_quiz_split.py muc [8]")

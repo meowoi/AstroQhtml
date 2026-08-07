@@ -83,11 +83,12 @@ with sync_playwright() as p:
     errs=[]
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until="load")
-    pg.add_script_tag(url="/js/quiz-questions.js")
+    # ⚠️ NAP MUC LUC, khong nap bank mot-file (bank chia thanh mot file moi cau tu
+    #    07/08/2026). Va vi the phep rut de nay ASYNC — `round()` tra Promise.
+    pg.add_script_tag(url="/js/quiz-index.js")
     pg.wait_for_timeout(400)
-    r=pg.evaluate("""(() => {
-        const bank = AstroQQuestions.all ? AstroQQuestions.all() : null;
-        const round = AstroQQuestions.pickRound(5);
+    r=pg.evaluate("""(async () => {
+        const round = await AstroQQuestions.round(5);
         const noTerm = round.filter(q => !q.term).length;
         // moi khoa cua 20 cau thien van phai tra ra mot the trong so tay
         const keys = AstroQCodex.quizTerms();
@@ -125,7 +126,7 @@ with sync_playwright() as p:
     r2 = pg.evaluate("""(() => {
         const NEW = ['term_black_hole','term_gravity','term_nebula',
                      'term_supernova','term_cmb'];
-        const bankTerms = new Set(AstroQQuestions.ALL.map(q => q.term));
+        const bankTerms = new Set(AstroQQuestions.terms());
         const dangling = [];
         NEW.forEach(id => { const t = AstroQCodex.get(id);
           t.q.forEach(k => { if (!bankTerms.has(k)) dangling.push(id + ' -> ' + k); }); });

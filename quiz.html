@@ -144,6 +144,23 @@
   </div>
 </div>
 
+<!-- ============ KHONG TAI DUOC CAU HOI ============
+     Tu 07/08/2026 cau hoi tai bang `import()` tung file, nen lan dau co the HONG
+     vi mang. Dung lai khuon `.modal` co san o css/common.css — dung dung mot hop
+     thoai thu hai cho mot viec da co khuon. KHONG co nut "Bo qua": khong co cau
+     hoi thi khong co gi de choi, im lang de trang trong la de tre tuong app vo. -->
+<div class="modal" id="load-modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="m-ic">📡</div>
+    <h3 data-i18n="load_fail_title">Chưa tải được câu hỏi</h3>
+    <p data-i18n="load_fail_body">Có vẻ đường mạng đang chập chờn. Thử lại một lượt nhé — không mất gì cả.</p>
+    <div class="modal-actions">
+      <button id="load-home" data-i18n="act_home">Về Trung Tâm Điều Hướng</button>
+      <button class="danger" id="load-retry" data-i18n="load_retry">Thử lại</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ EXIT CONFIRM ============ -->
 <div class="modal" id="exit-modal" role="dialog" aria-modal="true">
   <div class="modal-card">
@@ -165,7 +182,7 @@
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
 <script src="js/progress.js"></script>
-<script src="js/quiz-questions.js"></script>
+<script src="js/quiz-index.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
@@ -187,6 +204,10 @@
       act_retry:"Làm lại", act_home:"Về Trung Tâm Điều Hướng", act_next:"Nhiệm vụ tiếp",
       exit_title:"Rút lui khỏi nhiệm vụ?", exit_body:"Tiến trình câu hỏi hiện tại sẽ không được lưu.",
       exit_stay:"Ở lại", exit_go:"Rút lui",
+      loading_q:"Đang tải câu hỏi…",
+      load_fail_title:"Chưa tải được câu hỏi",
+      load_fail_body:"Có vẻ đường mạng đang chập chờn. Thử lại một lượt nhé — không mất gì cả.",
+      load_retry:"Thử lại",
       badge_name:"Phi Công Thuật Toán",
       next_toast:"Đây là nhiệm vụ demo — luyện lại bộ câu hỏi nhé!",
       rank3:"Xuất sắc, Phi công!", rank2:"Làm tốt lắm!", rank1:"Cần luyện thêm nhé!",
@@ -212,6 +233,10 @@
       act_retry:"Retry", act_home:"Back to Navigation Hub", act_next:"Next Mission",
       exit_title:"Abort the mission?", exit_body:"Your current question progress won't be saved.",
       exit_stay:"Stay", exit_go:"Retreat",
+      loading_q:"Loading questions…",
+      load_fail_title:"Couldn't load the questions",
+      load_fail_body:"Your connection looks shaky. Give it another try — nothing is lost.",
+      load_retry:"Try again",
       badge_name:"Algorithm Pilot",
       next_toast:"This is a demo mission — practice the set again!",
       rank3:"Outstanding, Pilot!", rank2:"Well done!", rank1:"Keep practicing!",
@@ -230,13 +255,24 @@
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
   /* ================= Ngân hàng câu hỏi =================
-     Dữ liệu nằm ở js/quiz-questions.js (CHỖ DUY NHẤT khai báo). Ngày 30/07/2026
-     bank lên 25 câu — 20 câu thiên văn theo NASA + 5 câu lập trình cũ — nên
-     KHÔNG hỏi hết trong một lượt nữa: mỗi lượt rút ROUND_SIZE câu, ưu tiên
-     không trùng thuật ngữ. Nhờ vậy "Làm lại" ra đề khác chứ không lặp y nguyên,
-     và thêm câu vào bank không làm nhiệm vụ dài thêm.
+     Dữ liệu nằm ở js/quiz-index.js + js/quiz/<khoá-câu>.js — MỘT FILE MỖI CÂU.
+     Mỗi lượt rút ROUND_SIZE câu; nhờ vậy "Làm lại" ra đề khác chứ không lặp y
+     nguyên, và thêm câu vào bank không làm nhiệm vụ dài thêm.
      Muốn đổi độ dài một lượt thì sửa ROUND_SIZE ở đây — nhớ trần thưởng của
-     server (quiz 220 ☄️ ≈ 11 câu đúng, xem AstroqSV/Services/Wallet.cs). */
+     server (quiz 220 ☄️ ≈ 11 câu đúng, xem AstroqSV/Services/Wallet.cs).
+
+     ⚠️⚠️ CÂU HỎI NAY TẢI KHÔNG ĐỒNG BỘ (đổi 07/08/2026). Trước đó cả bank nằm
+     trong một file `js/quiz-questions.js` nạp bằng `<script src>`, nên `QUESTIONS`
+     có sẵn ngay lúc chạy dòng đầu. Đo được lý do phải đổi: file đó là **43,6 KB
+     gzip cho 100 câu = 51% đường tải của trang** (85,9 KB gzip), mà một lượt chỉ
+     dùng 5 câu; Đợt 2 thêm 270 câu sẽ đẩy nó lên ~161 KB gzip [Suy luận].
+     Nay: mục lục 5,8 KB + đúng 5 file câu ≈ **10,2 KB gzip một lượt** (4,4 KB từ
+     lượt thứ hai vì mục lục đã cache) — đo bằng `scratchpad/check_quiz_split.py`.
+
+     ⚠️ HỆ QUẢ PHẢI TÔN TRỌNG: `QUESTIONS` RỖNG trong khoảnh khắc đầu. Mọi hàm đọc
+        `QUESTIONS[idx]` phải chịu được mảng rỗng — `applyLang()` là chỗ dễ quên
+        nhất vì `AstroQ.initLang` gọi nó, và trẻ đổi VI/EN ở TAB KHÁC trong lúc
+        đang tải thì nó chạy khi chưa có câu nào. */
   var ROUND_SIZE = 5;
 
   /* ĐỀ THEO BÀI ĐỌC: `quiz.html?terms=a,b,c` — thêm 06/08/2026.
@@ -246,30 +282,32 @@
      trả lời về sao chổi.
 
      ⚠️ LUÔN CÓ ĐƯỜNG LÙI. Không có tham số, tham số rác, hay khoá không khớp câu nào
-        thì rơi về `pickRound()` như cũ. Một đường vào phụ không được phép làm hỏng
+        thì rơi về đề ngẫu nhiên. Một đường vào phụ không được phép làm hỏng
         đường vào chính.
      ⚠️ VẪN BÙ CHO ĐỦ ROUND_SIZE. Một bài đọc chỉ nối 4 khoá, mà bình năng lượng,
         bảng tổng kết và mốc ĐẠT (≥60%) đều tính theo số câu của lượt — để lượt này
-        4 câu còn lượt kia 5 câu là hai thước đo khác nhau cho cùng một huy hiệu. */
-  function roundFromUrl() {
+        4 câu còn lượt kia 5 câu là hai thước đo khác nhau cho cùng một huy hiệu.
+        Việc bù nằm trong `AstroQQuestions.byTerms(list, n)`. */
+  function wantedTerms() {
     var raw = new URLSearchParams(location.search).get("terms");
-    if (!raw) return null;
-    var want = raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-    if (!want.length) return null;
-    var hit = AstroQQuestions.byTerms(want);
-    if (!hit.length) return null;                     // khoá sai hết → về đề ngẫu nhiên
-    var round = AstroQQuestions.shuffled(hit).slice(0, ROUND_SIZE);
-    if (round.length < ROUND_SIZE) {                  // bù cho đủ, không trùng câu đã có
-      var da = {};
-      round.forEach(function (q) { da[q.term] = 1; });
-      AstroQQuestions.shuffled(AstroQQuestions.ALL).forEach(function (q) {
-        if (round.length < ROUND_SIZE && !da[q.term]) { da[q.term] = 1; round.push(q); }
-      });
-    }
-    return round;
+    if (!raw) return [];
+    return raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   }
 
-  var QUESTIONS = roundFromUrl() || AstroQQuestions.pickRound(ROUND_SIZE);
+  /* Rút một lượt. Trả về Promise<[câu]>; rỗng nghĩa là KHÔNG tải được gì. */
+  function drawRound() {
+    var want = AstroQQuestions.keysOfTerms(wantedTerms());
+    var p = want.length ? AstroQQuestions.byTerms(want, ROUND_SIZE)
+                        : AstroQQuestions.round(ROUND_SIZE);
+    return p.then(function (qs) {
+      /* Khoá `?terms=` sai hết → đề ngẫu nhiên. Cũng che luôn ca "khoá đúng
+         nhưng file của nó hỏng": thà đổi đề còn hơn báo trẻ là quiz chết. */
+      if (!qs.length && want.length) return AstroQQuestions.round(ROUND_SIZE);
+      return qs;
+    })["catch"](function () { return []; });
+  }
+
+  var QUESTIONS = [];
 
   /* ================= Ngưỡng ĐẠT =================
      Chốt 30/07/2026: LÀM QUIZ PHẢI ĐẠT MỚI CÓ THIÊN THẠCH TÍM.
@@ -288,7 +326,11 @@
   /* Khoá thuật ngữ đã TRẢ LỜI ĐÚNG trong lượt này → gửi lên server để Sổ Tay
      Thuật Ngữ giải mã thẻ tương ứng (js/codex-terms.js). */
   var okTerms=[];
-  var TOTAL = QUESTIONS.length;
+  /* ⚠️ KHỞI TẠO BẰNG `ROUND_SIZE`, KHÔNG PHẢI `QUESTIONS.length` (= 0 lúc này).
+     Bình năng lượng vẽ theo TOTAL nên để 0 là lúc mới vào trang nó chia cho 0 và
+     hiện ra một thanh rỗng không giải thích được. Đặt lại bằng số câu THẬT ngay
+     sau khi tải xong — nếu mạng chỉ về được 4 câu thì mọi thước đo phải là 4. */
+  var TOTAL = ROUND_SIZE;
 
   /* Mission HUD + Power-ups */
   var TIME_PER=30, FREEZE_SEC=15, lastGain=0;
@@ -611,6 +653,11 @@
     document.title=t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
+    /* ⚠️ CHƯA CÓ CÂU NÀO thì dừng ở đây. `AstroQ.initLang` gọi hàm này, và trẻ
+       đổi VI/EN ở TAB KHÁC trong lúc câu hỏi còn đang tải cũng gọi nó — đọc
+       `QUESTIONS[idx].topic` lúc đó là TypeError, và nó giết cả trang chứ không
+       chỉ làm hụt một nhãn. Chữ "Đang tải câu hỏi…" vẫn phải dịch theo. */
+    if(!QUESTIONS.length){ $("q-text").textContent=t("loading_q"); return; }
     // vẽ lại phần động theo ngôn ngữ (không phá trạng thái đang trả lời)
     var it=QUESTIONS[idx];
     $("q-topic").textContent=L(it.topic);
@@ -636,17 +683,47 @@
   $("act-retry").addEventListener("click", function(){ restart(); });
   $("act-next").addEventListener("click", function(){ toast(t("next_toast")); restart(); });
 
-  function restart(){
-    // Rút đề MỚI cho lượt sau — làm lại mà gặp đúng 5 câu vừa rồi thì trẻ chỉ
-    // học được thứ tự đáp án, không học được kiến thức.
-    QUESTIONS = AstroQQuestions.pickRound(ROUND_SIZE);
-    TOTAL = QUESTIONS.length;
+  /* Đặt lại trạng thái cho một lượt mới. Tách khỏi `restart()` vì việc rút đề nay
+     là ASYNC: phải dọn trạng thái TRƯỚC khi chờ mạng, không thì bảng tổng kết của
+     lượt cũ còn nằm đó trong lúc chờ và trẻ tưởng bấm "Làm lại" không ăn. */
+  function resetRoundState(){
     idx=0; selected=-1; status="idle"; earned=0; correctCount=0; answered=0; locked=false;
     okTerms=[];
     streak=0; frozen=0; shieldOn=false; boostOn=false; protectedThisQ=false; resetPowerups();
     $("summary").classList.remove("show");
     var stEls=$("stars").children; for(var i=0;i<stEls.length;i++) stEls[i].classList.remove("on");
+    if(timerId){ clearInterval(timerId); timerId=null; }
+  }
+
+  /* Nhận đề đã tải xong rồi vào lượt. Đề rỗng = không tải được gì → nói thật. */
+  function startRound(qs){
+    if(!qs || !qs.length){
+      $("q-text").textContent=t("load_fail_title");
+      $("load-modal").classList.add("show");
+      return;
+    }
+    $("load-modal").classList.remove("show");
+    QUESTIONS = qs;
+    TOTAL = QUESTIONS.length;   // số câu THẬT, không phải số câu mong muốn
     paintEnergy(); renderPowerups(); renderMission(); renderQuestion();
+  }
+
+  /* Rút đề rồi vào lượt. Dùng cho CẢ lượt đầu và "Làm lại" — một đường duy nhất,
+     nên đường lùi lúc mất mạng giống nhau ở hai chỗ. */
+  function beginRound(){
+    resetRoundState();
+    QUESTIONS = [];
+    $("q-options").innerHTML = "";
+    $("q-text").textContent = t("loading_q");
+    $("engage").disabled = true;
+    paintEnergy();
+    return drawRound().then(startRound);
+  }
+
+  function restart(){
+    // Rút đề MỚI cho lượt sau — làm lại mà gặp đúng 5 câu vừa rồi thì trẻ chỉ
+    // học được thứ tự đáp án, không học được kiến thức.
+    beginRound();
   }
 
   // toast nhỏ tái sử dụng cho "Nhiệm vụ tiếp" (kiểu dáng ở css/common.css + css/quiz.css)
@@ -671,6 +748,18 @@
     if(b && b.getAttribute("data-pu")) usePowerup(b.getAttribute("data-pu"));
   });
 
+  $("load-home").addEventListener("click", function(){ window.location.href="dashboard.html"; });
+  $("load-retry").addEventListener("click", function(){ beginRound(); });
+
+  /* ================= Bề mặt cho bộ đo =================
+     `scratchpad/smoke_quiz_async.py` cần rút lại đề nhiều lượt để chứng minh
+     "Làm lại" không lặp y nguyên đề.
+     ⚠️ CỐ Ý KHÔNG TRẢ PROMISE — cùng luật đã ghi cho `window.__mission` ở
+        `mission-earth.html`: `page.evaluate` tự chờ promise được trả về, mà
+        `beginRound()` chờ mạng, nên trả promise là script test TREO vĩnh viễn
+        thay vì báo hỏng. Bộ đo tự chờ câu hỏi hiện ra. */
+  window.__quizRestart = function(){ beginRound(); };
+
   /* ================= Khởi tạo ================= */
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
@@ -679,8 +768,12 @@
   $("streak-ic").innerHTML=lic("flame");
   $("score-ic").innerHTML=lic("trophy");
   resetPowerups(); renderPowerups(); renderMission();
-  renderQuestion();     // bắt đầu đếm giờ cho câu 1
+  /* ⚠️ `applyLang` TRƯỚC `beginRound`, cố ý: nó dịch cả chữ "Đang tải câu hỏi…",
+     mà `beginRound` đặt chữ đó. Gọi ngược lại thì trẻ chọn EN vẫn thấy dòng chờ
+     bằng tiếng Việt trong suốt lượt tải đầu. `renderQuestion()` KHÔNG còn gọi ở
+     đây nữa — nó nằm trong `startRound()`, sau khi đề đã về. */
   applyLang(LANG);
+  beginRound();          // rút đề → tải 5 file → vào câu 1 (bắt đầu đếm giờ)
 })();
 </script>
 </body>

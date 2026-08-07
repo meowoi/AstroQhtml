@@ -29,7 +29,13 @@ import sys
 import unicodedata
 import urllib.request
 
-BANK = "js/quiz-questions.js"
+import os
+
+# ⚠️ NGAN HANG CAU HOI NAY LA NHIEU FILE (doi 07/08/2026): bang nguon `S` o
+#    `js/quiz-index.js`, con MOI CAU mot file trong `js/quiz/`. Truoc do ca bank
+#    nam trong `js/quiz-questions.js`.
+INDEX = "js/quiz-index.js"
+QDIR = "js/quiz"
 OK = FAIL = 0
 _cache = {}
 
@@ -92,28 +98,41 @@ def page_text(url):
     return txt
 
 
-def read_bank(path=BANK):
-    """Tra ve [(term, url, quote)] cho moi cau CO `srcQuote`."""
+def source_table(path=INDEX):
+    """Bang nguon `S` o muc luc: khoa -> url. Cau hoi tro vao day bang KHOA
+    (`src: "star"`), KHONG viet URL — 870 cau viet URL thang la ~870 ban sao cua
+    ~40 dia chi, va ngay NASA doi mot duong dan thi phai sua hang tram file."""
     s = io.open(path, encoding="utf-8").read()
-    # Bang nguon dung chung `S` — bank tro vao no bang `src: S.<khoa>`, khong viet
-    # URL thang (12 URL khai mot cho, dung 30 lan).
-    # ⚠️ BANG NGUON `S` CO HAI DANG KHAI, PHAI DOC CA HAI:
-    #      · `khoa: { …url… }`   — trong khoi `var S = { … };` goc
-    #      · `S.khoa = { …url… };` — dang Dot 1 dung de THEM khoa vao bang co san
-    #    Chi doc dang dau thi 20 khoa cua Dot 1 bien mat va bo kiem bao 65 cau
-    #    "co srcQuote nhung KHONG co src" — bao oan tron mot dot noi dung.
+    # ⚠️ DOC CA HAI DANG KHAI, giu tu ban truoc: bang goc dung `khoa: { …url… }`,
+    #    con Dot 1 THEM khoa bang `S.khoa = { …url… };`. Chi doc dang dau thi 20
+    #    khoa cua Dot 1 bien mat va bo kiem bao 65 cau "co srcQuote nhung KHONG co
+    #    src" — bao oan tron mot dot noi dung.
     tbl = dict(re.findall(r'(\w+):\s*\{[^}]*url:\s*"([^"]+)"', s))
     tbl.update(dict(re.findall(r'S\.(\w+)\s*=\s*\{[^}]*url:\s*"([^"]+)"', s)))
+    return tbl
+
+
+def read_bank(qdir=QDIR, index=INDEX):
+    """Tra ve [(term, url, quote)] cho moi cau CO `srcQuote`.
+    Doc MOT FILE MOI CAU trong `js/quiz/` — ten file la khoa cau."""
+    tbl = source_table(index)
     out = []
-    for blk in re.split(r"\n    \{", s):
-        t = re.search(r'term:\s*"([^"]+)"', blk)
+    if not os.path.isdir(qdir):
+        return out
+    for fn in sorted(f for f in os.listdir(qdir) if f.endswith(".js")):
+        blk = io.open(os.path.join(qdir, fn), encoding="utf-8").read()
         q = re.search(r'srcQuote:\s*"([^"]*)"', blk)
-        if not t or not q:
+        if not q:
             continue
-        k = re.search(r"src:\s*S\.(\w+)", blk)
-        u = re.search(r'src:\s*"(https?://[^"]+)"', blk)   # cho phep ca URL thang
-        url = tbl.get(k.group(1)) if k else (u.group(1) if u else None)
-        out.append((t.group(1), url, q.group(1)))
+        term = os.path.splitext(fn)[0]      # ten file LA khoa cau
+        # `src: "khoa"` la dang chuan; van cho phep URL thang de bo kiem con bat
+        # duoc ca truong hop ai do viet sai luat (check_pages [12] bao hong rieng).
+        k = re.search(r'\bsrc:\s*"([^"]+)"', blk)
+        raw = k.group(1) if k else None
+        url = None
+        if raw:
+            url = raw if raw.startswith("http") else tbl.get(raw)
+        out.append((term, url, q.group(1)))
     return out
 
 

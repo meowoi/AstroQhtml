@@ -1,4 +1,4 @@
-# ĐỀ BÀI GEMINI — VÒNG 2: câu hỏi theo THUẬT NGỮ, không theo cấp độ
+No, it's not item. Oh man, did you mean that she can be eight home side twenty twenty two British baby two thirty three song you don't talk a lot being hundred and thirty one is a beansVÒNG 2: câu hỏi theo THUẬT NGỮ, không theo cấp độ
 
 > Ngày 05/08/2026 · **THAY HẲN** `2026-08-05-de-bai-gemini-1000-quiz-100-bai-doc.md`.
 > Đề bài vòng 1 sai hướng ở phần quiz; lý do ghi ở mục 0. Phần **bài đọc** thì giữ,
@@ -42,6 +42,57 @@ trang quiz sẽ là **thứ nặng nhất dự án**, gấp 25 lần cả bộ f
 
 ⇒ **Nộp thành NHIỀU FILE, mỗi file một thuật ngữ.** Trang chỉ tải đúng nhóm câu nó cần —
 việc chia file là phần bạn phải làm đúng ngay từ đầu, không phải việc gộp lại sau.
+
+---
+
+## ⚠️ CẬP NHẬT 07/08/2026 — MỤC 1① ĐÃ ĐƯỢC THỰC HIỆN Ở PHÍA CODE. ĐỌC MỤC 2a MỚI.
+
+Việc chia file **đã làm xong**, và **đơn vị chia là TỪNG CÂU**, không phải từng thuật ngữ:
+`js/quiz/<khoá-câu>.js` — một câu một file, cộng một mục lục `js/quiz-index.js`.
+
+Đo được sau khi chia (`scratchpad/check_quiz_split.py`): một lượt chơi tải **10,2 KB gzip**
+(mục lục 5,8 KB + 5 file câu) thay vì **43,5 KB** của cả bank, và từ lượt thứ hai chỉ còn
+**4,4 KB** vì mục lục đã nằm trong cache. **Con số này không tăng khi bank lớn lên tới
+1.000 câu** — đó là lý do chọn đơn vị "từng câu" chứ không phải "từng thẻ" (chia theo thẻ
+thì một lượt trộn 5 thuật ngữ vẫn kéo về 100 câu ≈ 50 KB, và con số đó gần như không giảm).
+
+⇒ **Bạn KHÔNG phải tự chia file.** Nộp theo khuôn ở mục 2a như cũ (một khối JS cho mỗi thẻ,
+gồm định nghĩa thẻ + ~20 câu). Phía code có script `scratchpad/split_quiz_bank.py` cắt ra
+thành file và sinh lại mục lục. **Nhưng ba điều dưới đây đổi, và chúng đổi HÌNH DẠNG dữ liệu
+bạn nộp** — sai là phải làm lại cả đợt.
+
+### ⓐ `term` NAY LÀ **TÊN FILE**, không chỉ là một khoá
+
+Câu có `term: "star-color"` sẽ thành file `js/quiz/star-color.js`. Nên `term` phải:
+
+- **chữ thường, chỉ `a–z`, `0–9` và dấu `-`** — không dấu tiếng Việt, không `_`, không `.`,
+  không khoảng trắng, không chữ HOA (Windows và Linux xử chữ hoa/thường khác nhau: hai khoá
+  `Star` và `star` là MỘT file trên máy này và HAI file trên máy chủ);
+- **duy nhất trong CẢ bank**, không chỉ trong thẻ của bạn — hai câu cùng khoá là hai file đè
+  lên nhau, tức **mất một câu mà không có thông báo nào**;
+- **mô tả được nội dung câu** (`eclipse-annular-farthest-ring` tốt hơn `eclipse-07`) — vì từ
+  nay khoá đó là tên file mà người ta phải mở ra sửa. ⚠️ Tránh đặt dài quá ~60 ký tự.
+
+Có phép kiểm đòi đúng những điều này; sai một khoá là script cắt file **dừng và báo lỗi**.
+
+### ⓑ `topic` phải **GIỐNG NHAU ở mọi câu của cùng một thẻ**
+
+Mục lục giữ `topic` ở cấp THẺ (một thẻ = một badge `[ CHỦ ĐỀ · CÂU n/m ]`). Đo trên bank
+hiện tại: cả 19 thẻ đều đã nhất quán, nên đây là ràng buộc **ghi lại điều đang đúng** chứ
+không phải đòi hỏi mới. Nhưng nếu bạn nộp 20 câu của một thẻ mà câu thứ 13 ghi `topic` khác
+đi một chữ thì script **dừng và báo lỗi**, vì lúc đó không biết badge phải hiện chữ nào.
+
+### ⓒ `lv` VẪN BẮT BUỘC KHAI — và đây là lý do, để bạn không tưởng nó vô nghĩa
+
+Hiện **chưa có dòng code nào đọc `lv`** (đo 07/08/2026: 65/100 câu có khai, 0 chỗ đọc).
+Chủ dự án chốt **GIỮ** trường này thay vì bỏ, vì đích đến là *server tính cấp độ của trẻ rồi
+client rút đề theo cấp độ đó* — đúng như mục 2a đã ghi. Chưa nối được vì `quiz.html` cố ý
+không nạp SDK Firebase (233 KB) nên chưa có token để đọc cấp độ; việc đó cần thêm một lớp
+cache do dashboard ghi.
+
+⇒ Khai `lv` cho **mọi câu mới**, rải đều 1/2/3. ⛔ **Đừng bỏ trống** — 35 câu cũ đang thiếu
+`lv` và mỗi câu thiếu là một câu phải rà lại bằng tay sau này. ⛔ Và **đừng để `lv` lộ ra cho
+trẻ chọn**: nó chỉ để hệ thống rút đề.
 
 ### ② Số câu và số **thẻ Sổ Tay** đi liền nhau — không tách rời được
 

@@ -318,7 +318,14 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 .modal-card h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:10px 0 0;}
 .modal-card p{color:var(--ink-soft);font-size:14px;line-height:1.55;margin:10px 0 0;}
 .modal-actions{margin-top:20px;}
-.modal-actions button{cursor:pointer;border-radius:13px;padding:12px 20px;font-family:var(--font-display);font-weight:600;font-size:14px;
+/* ⚠️ `min-height:48px`, KHONG PHAI 44. Do duoc: padding 12px + chu 14px cho ra dung
+   44,0px — tuc mốc TOI THIEU cua WCAG 2.5.5 va khong con bien an toan nao. Du an da
+   tra gia mot ca chap chon that vi dieu nay (nut VI/EN cua explorer.html do ra dung
+   44x44 nen `audit_viewports` khi 683/1 khi 684/0 ma khong dung dong nao), va da
+   chot san 48px cho `.lang-switch button` + `.me-stamp`. Ap cung san o day cho khop.
+   Anh huong 2 hop thoai cua trang: #exit-modal va #load-modal. */
+.modal-actions button{cursor:pointer;border-radius:13px;padding:12px 20px;min-height:48px;
+  font-family:var(--font-display);font-weight:600;font-size:14px;
   border:1px solid var(--brd);background:rgba(255,255,255,.06);color:var(--ink);transition:transform .2s var(--jelly),background .18s;}
 .modal-actions button:hover{background:rgba(255,255,255,.12);}
 .modal-actions button:active{transform:scale(.93);}

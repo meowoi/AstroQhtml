@@ -1,14 +1,15 @@
 /* ==========================================================
    proto-solar-map.js — BẢN ĐỒ NHIỆM VỤ vẽ trên canvas 2D.
 
-   PORT TỪ `img/solar-system-simulation.html` (856 dòng, có sẵn trong dự án từ
-   21/07/2026). Giữ phần ĐÁNG GIÁ của nó — toán quỹ đạo ellipse, cách vẽ Mặt Trời /
+   PORT TỪ `scratchpad/solar-system-simulation.html` (778 dòng, có sẵn trong dự án từ
+   21/07/2026; **dời khỏi `img/` ngày 07/08/2026** — nó là một trang HTML, không phải
+   ảnh). Giữ phần ĐÁNG GIÁ của nó — toán quỹ đạo ellipse, cách vẽ Mặt Trời /
    hành tinh / vành Sao Thổ / Mặt Trăng, nền sao, hit-test theo bán kính, xử lý DPR —
    và bỏ phần vỏ: sidebar, bảng thông tin, danh sách hành tinh, play/pause/tốc độ.
 
    ⚠️ VÌ SAO PORT CHỨ KHÔNG NHÚNG `<iframe>` file gốc:
-      · File đó là một TRANG độc lập (có `<html>`, CSS riêng, sidebar riêng) và đang
-        nằm trong `img/` — thư mục ảnh.
+      · File đó là một TRANG độc lập — có `<html>`, có CSS riêng viết thẳng trong
+        `<style>`, có sidebar riêng.
       · Nhúng iframe là hai bộ CSS, hai vòng `requestAnimationFrame`, không đọc được
         `js/planets.js`, không đổi ngôn ngữ theo trang cha, và mỗi cú chạm phải đi qua
         `postMessage` mới ra được ngoài. Đắt hơn port, và sinh nợ.

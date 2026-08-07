@@ -90,6 +90,24 @@
 .cx-item.lock .cx-i-ic,
 .cx-item.soon .cx-i-ic { color: #64748b; }
 
+/* Hàng trên của thẻ: trạng thái + phân loại nằm cạnh nhau. Bọc thành MỘT hàng
+   flex thay vì hai con riêng của `.cx-item` (cột flex) — hai con riêng thì phân
+   loại tụt xuống dòng dưới và ăn thêm 7px `gap`, làm thẻ cao thêm ở mọi ô lưới.
+   `flex-wrap` để nhãn dài (tiếng Anh "Questions coming") vẫn xuống dòng được
+   trên màn hẹp thay vì bóp chữ. */
+.cx-i-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+/* Phân loại: cùng khuôn chữ với `.cat-dot` của library.html (mono, 9px, HOA) để
+   hai khu đọc như một hệ, nhưng KHÔNG dùng chung selector — `.cat-dot` nằm trong
+   `css/library.css` và chỉ trang đó nạp. */
+.cx-i-cat {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
 .cx-i-badge {
   align-self: flex-start;
   font-family: var(--font-mono);
