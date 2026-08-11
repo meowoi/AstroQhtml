@@ -107,9 +107,20 @@
        Vừa chọn nhân vật xong thì đây định nghĩa là phi hành gia MỚI, nên khỏi phải
        hỏi server cờ `map01Seen`. Qua dashboard trước thì trẻ thấy dashboard nhấp một
        cái rồi bị nhảy đi — `mapFirst()` ở đó phải chờ `getOnboarding()` mới quyết được.
-       `mapFirst()` vẫn giữ, làm lưới an toàn cho đường ĐĂNG NHẬP (máy khác). */
+       `mapFirst()` vẫn giữ, làm lưới an toàn cho đường ĐĂNG NHẬP (máy khác).
+
+       ⚠️ TÀI KHOẢN ADMIN LÀ NGOẠI LỆ DUY NHẤT: nó chơi bình thường nhưng BỎ onboarding,
+          nên đi thẳng vào khoang lái. Không có nhánh này thì cờ `map01Seen` đặt sẵn ở
+          server cũng vô dụng — `?onboard=1` bật màn dẫn đường theo THAM SỐ URL, không
+          theo cờ (xem `explorer.html`), nên lượt chọn nhân vật đầu tiên vẫn kéo vào
+          màn giới thiệu.
+       ⚠️ Cờ `admin` đọc từ hồ sơ trong máy, do `login()` đóng dấu — `select.html` CỐ Ý
+          không nạp SDK Firebase nên ở đây không hỏi claim trực tiếp được. Nó là gợi ý
+          giao diện, không phải quyền: sửa localStorage thì bỏ được màn giới thiệu của
+          chính mình, và đó không phải thứ cần bảo vệ. */
+    var admin = !!(existing && existing.admin === true);
     setTimeout(function(){
-      window.location.href = "explorer.html?onboard=1";
+      window.location.href = admin ? "dashboard.html" : "explorer.html?onboard=1";
     }, 1150);
   }
 

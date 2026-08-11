@@ -17,6 +17,10 @@
 <script src="js/characters.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/ranks.js"></script>
+<!-- Đường vào trang báo cáo hệ thống cho tài khoản admin. Tự thoát êm khi không
+     phải admin, và KHÔNG gọi mạng — chỉ đọc cờ trong hồ sơ máy do `login()`
+     đóng dấu (xem js/admin-link.js). -->
+<script src="js/admin-link.js"></script>
 <script src="js/progress.js"></script>
 </head>
 <body>
@@ -136,6 +140,12 @@
     <a class="pbtn ghost" href="games.html" data-i18n="go_train">🎮 Khu Huấn Luyện</a>
     <a class="pbtn ghost" href="learn.html" data-i18n="go_learn">📚 Trạm Tri Thức</a>
   </div>
+
+  <!-- Đường vào trang báo cáo hệ thống — CHỈ hiện với tài khoản admin (js/admin-link.js).
+       ĐẶT NGOÀI `.foot-links`, không nằm trong đó: ba nút kia là ba khu vực CHƠI của
+       trẻ, còn đây là trang quản trị. Nhét chung một hàng là làm loãng nghĩa cả hàng —
+       cùng lý do `.pt-parent` ở dashboard.html không làm ô thứ tư trong `.ptiles`. -->
+  <div data-admin-link hidden></div>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

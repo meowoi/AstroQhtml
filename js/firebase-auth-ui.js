@@ -59,7 +59,15 @@ function busy(form, on){
   btn.textContent = on ? tx("wait") : btn.dataset.label;
 }
 
-/* Đích đến sau khi vào được: đã chọn nhân vật thì vào khoang lái, chưa thì đi chọn. */
+/* Đích đến sau khi vào được: đã chọn nhân vật thì vào khoang lái, chưa thì đi chọn.
+   TÀI KHOẢN ADMIN ĐI CÙNG ĐƯỜNG NÀY — nó là tài khoản chơi bình thường, chỉ thêm một
+   đường vào trang báo cáo ở hồ sơ (xem js/admin-link.js).
+
+   ⚠️ CỐ Ý KHÔNG rẽ admin sang `admin-report.html` ở đây. Bản trước làm vậy và nó phải
+      `await` một lời gọi đọc claim TRƯỚC khi chuyển trang — biến đường vào app của
+      MỌI đứa trẻ thành phụ thuộc vào một lời gọi chỉ dùng để chọn trang (và lời gọi
+      đó đo được là có thể không bao giờ resolve khi không có phiên). Giờ cờ admin đã
+      được `login()` đóng dấu vào hồ sơ máy, nên không cần chờ gì ở đây nữa. */
 function go(){
   const u = AstroQ.getUser() || {};
   setTimeout(() => { location.href = u.character ? "dashboard.html" : "select.html"; }, 900);

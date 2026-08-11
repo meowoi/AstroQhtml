@@ -1,0 +1,364 @@
+/* ==========================================================
+   admin.css — trang báo cáo toàn hệ thống cho chủ dự án.
+   Nạp sau: css/common.css → css/page-shell.css → css/admin.css
+
+   Khung (`.wrap`, `.hub-top`, `.hero`, `.panel`, `.seg`, `.filters`, `.banner`,
+   `.kv`, `.pbtn`, `.empty`) DÙNG LẠI NGUYÊN của page-shell.css. File này chỉ
+   thêm những gì page-shell không có: bảng màu biểu đồ, nét vẽ, số dẫn đầu,
+   bảng số.
+
+   ⚠️ ĐÂY LÀ CHỖ DUY NHẤT KHAI MÀU BIỂU ĐỒ. `js/viz.js` chỉ gắn class
+      (`.s1`…`.s5`, `.r0`…`.r6`); không có mã hex nào trong JS. Đổi bảng màu là
+      sửa đúng file này.
+   ========================================================== */
+
+:root{
+  /* ── NỀN KHUNG BIỂU ĐỒ ──
+     Đây là màu ĐÃ CHỒNG của `.panel` (rgba(15,23,42,.62) trên --bg2) — cũng là
+     nền mà bảng màu dưới đây đã được KIỂM ĐỐI CHIẾU. Đổi nền panel thì phải
+     chạy lại `scripts/validate_palette.py` với nền mới, đừng đổi mắt thường. */
+  --viz-surface:#0e1527;
+
+  /* ══ NĂM MÀU PHÂN LOẠI, THỨ TỰ CỐ ĐỊNH ══
+     Gán theo THỰC THỂ (quiz luôn là s1, game luôn là s2…), KHÔNG gán theo hạng.
+     Lọc bỏ một series thì các series còn lại GIỮ NGUYÊN màu — người đọc đã học
+     "quiz màu xanh" thì đừng đổi dưới chân họ.
+
+     ⚠️ ĐÃ KIỂM bằng `scripts/validate_palette.py` của bộ kỹ năng dataviz,
+        chế độ tối, nền #0e1527, danh sách cặp LIỀN KỀ (cột chồng / cột / đường):
+          dải sáng L 0,48–0,67 ...... ĐẠT cả 5
+          sàn chroma ≥ 0,10 ......... ĐẠT cả 5
+          tách CVD .................. ĐẠT — cặp tệ nhất #2ba565↔#d9762b ΔE 8,1 (protan)
+          sàn thị lực thường ≥ 15 ... ĐẠT — cặp tệ nhất #d9558f↔#a06bf0 ΔE 17,5
+          tương phản nền ≥ 3:1 ...... ĐẠT cả 5
+     ⚠️ NĂM LÀ TRẦN Ở TRANG NÀY. Thêm màu thứ 6 thì PHẢI chạy lại phép kiểm —
+        năm màu này đạt vì thứ tự của chúng, không phải vì chúng "trông khác nhau".
+     ⚠️ Bộ này KHÔNG đạt khi xét TẤT CẢ CÁC CẶP (biểu đồ phân tán, bong bóng,
+        bản đồ nhiệt nhiều màu). Trang này không có hình dạng nào như vậy. */
+  --s1:#2b9fd8;   /* quiz    — lam  */
+  --s2:#d9762b;   /* game    — hổ phách */
+  --s3:#2ba565;   /* bài đọc — lục  */
+  --s4:#a06bf0;   /* hành tinh — tím */
+  --s5:#d9558f;   /* nhiệm vụ — hồng sen */
+
+  /* ══ DẢI MỘT TÔNG, 7 BẬC ══ dùng cho hạng mục CÓ THỨ TỰ: bậc phễu, bước
+     nhiệm vụ. KHÔNG dùng cho hạng mục rời rạc — tô đậm-theo-giá-trị trên các
+     hạng mục không có thứ tự là đốt kênh màu để nhắc lại độ dài thanh.
+     ⚠️ ĐÃ KIỂM `--ordinal`: sáng→đậm đơn điệu · ΔL mỗi bậc ≥ 0,06 ·
+        bậc đậm nhất #00628c còn 2,71:1 với nền · độ lệch tông 3°. */
+  --r0:#dceaf4; --r1:#b6d4e7; --r2:#90bdd9; --r3:#68a7cc;
+  --r4:#3c91be; --r5:#007aab; --r6:#00628c;
+
+  /* ══ MÀU TRẠNG THÁI ══ CHỈ dùng khi màu MANG NGHĨA tốt/xấu, và luôn đi kèm
+     chữ — không bao giờ để một mình. Không bao giờ dùng làm "series thứ 6". */
+  --st-good:#4ade80; --st-warn:#fbbf24; --st-bad:#f87171;
+
+  /* Mực và khung: nhạt hơn nền một bậc, phải LÙI VỀ SAU dữ liệu.
+     ⚠️ MỘT biến cho cả trục lẫn lưới. Chúng là cùng một hairline ở trang này;
+        khai hai biến là mở đường cho hai thứ đáng lẽ giống nhau lệch nhau. */
+  --viz-grid:#1e2a44;
+  --viz-ink:#8ea3cf;
+}
+
+/* ============ HÀNG BỘ LỌC ============
+   MỘT hàng, NẰM TRÊN mọi thứ nó phủ. Không có bộ lọc riêng cho từng biểu đồ:
+   hai biểu đồ cạnh nhau mà khác khoảng thời gian là hai con số không so được. */
+.ad-bar{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  margin:24px 0 0;padding:12px 14px;border-radius:14px;
+  border:1px solid var(--brd);background:rgba(8,14,38,.42);
+}
+/* ⚠️ BẮT BUỘC. `display:flex` ở trên là selector CLASS nên nó THẮNG luật
+   `[hidden]{display:none}` của trình duyệt — hàng lọc vẫn hiện khi trang đang bị
+   chặn (chưa đăng nhập / không phải admin), tức bày ra ba nút lọc và nút "Tính lại
+   ngay" bấm vào không có gì xảy ra. Thấy đúng như vậy trên ảnh chụp dải nhắc.
+   Các `<section class="panel" hidden>` KHÔNG bị lỗi này vì `.panel` không đặt
+   `display` — nhưng hễ sau này có ai thêm `display` vào `.panel` thì phải thêm
+   một dòng như dòng dưới đây. */
+.ad-bar[hidden]{display:none;}
+.ad-bar .lbl{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-faint);
+}
+.ad-bar .grow{flex:1;}
+/* Ghi chú "khoảng này không phủ cái gì" — chiếm CẢ dòng dưới hàng lọc, không nhét
+   vào cuối hàng: nó là một câu phải đọc được, không phải chú thích bên lề. */
+.ad-bar-note{
+  flex-basis:100%;margin:2px 0 0;color:var(--ink-faint);
+  font-size:11.8px;line-height:1.55;
+}
+.ad-bar-note b{color:var(--ink-soft);font-weight:600;}
+.ad-stamp{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+}
+.ad-stamp b{color:var(--ink-soft);font-weight:400;}
+.ad-stamp .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--st-good);
+  box-shadow:0 0 8px var(--st-good);flex:none;
+}
+/* Số liệu quá hạn / bị cắt: đổi CẢ màu đèn LẪN chữ đi kèm — màu một mình không
+   bao giờ được là kênh duy nhất mang nghĩa. */
+.ad-stamp.stale .dot{background:var(--st-warn);box-shadow:0 0 8px var(--st-warn);}
+
+/* ============ SỐ DẪN ĐẦU ============
+   ĐÚNG MỘT cái cho cả trang. Cùng font sans với mọi thứ khác — font trang trí ở
+   đây đọc ra "đồ hoạ", không đọc ra "con số".
+   `tabular-nums` CỐ TÌNH KHÔNG DÙNG: nó cho mọi chữ số bề rộng của số 0, nên
+   "121" ở cỡ 56px trông rời rạc. Chỉ dùng ở cột số của bảng. */
+.ad-hero{
+  display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 4px;
+}
+.ad-hero .n{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(44px,7vw,60px);line-height:.95;color:#fff;
+  text-shadow:0 2px 34px rgba(95,150,255,.4);
+}
+.ad-hero .u{color:var(--ink-soft);font-size:14px;padding-bottom:8px;}
+/* Cảnh báo "tài khoản admin cũng được tính" — hổ phách, KHÔNG đỏ: đây là một điều
+   cần biết khi đọc số, không phải một lỗi. */
+.ad-hero .hero-warn{color:var(--st-warn);font-weight:600;}
+
+/* ============ Ô SỐ LIỆU ============
+   `.kv` của page-shell lo phần lưới. Đây thêm dòng phụ và cho nhãn XUỐNG DÒNG.
+
+   ⚠️ GHI ĐÈ `white-space:nowrap` + `text-overflow:ellipsis` CỦA page-shell.css.
+      Luật đó đúng cho các trang của TRẺ (nhãn ngắn: "Lượt quiz", "XP"), nhưng
+      nhãn của trang này dài hơn hẳn ("Chờ bấm link kích hoạt", "Độ chính xác toàn
+      hệ thống") và đo trên ảnh chụp thì chúng bị gặm thành "CHỜ BẤM LINK KÍCH HO…"
+      / "ĐỘ CHÍNH XÁC TOÀN HỆ…". Một nhãn bị cắt đuôi thì người đọc phải ĐOÁN xem
+      con số bên trên đang đếm cái gì — tệ hơn một ô cao thêm 12px. */
+.kv .cell .k{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.35;}
+.kv .cell{align-items:flex-start;}
+.kv .cell .ic{margin-top:1px;}
+.kv .cell .sub{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;
+  color:var(--ink-faint);margin-top:3px;
+}
+.kv .cell .sub.good{color:var(--st-good);}
+.kv .cell .sub.warn{color:var(--st-warn);}
+.kv .cell .sub.bad{color:var(--st-bad);}
+
+/* ⚠️ `flex:1` cho khối chữ là BẮT BUỘC khi có đường tí hon. page-shell để `.b`
+   tự co theo nội dung; đường tí hon nằm trong đó nên nó thừa hưởng một bề rộng
+   bằng bề rộng CHỮ, tức mỗi ô một bề rộng khác nhau và không ô nào dùng hết chỗ. */
+.kv .cell .b{flex:1;}
+
+/* Đường tí hon trong ô số liệu — phần "trend" của một ô. `position:relative` là
+   BẮT BUỘC: tooltip của js/viz.js định vị tuyệt đối theo khung chứa nó.
+
+   ⚠️ KHÔNG THÊM `.spark:empty{display:none}` VÀO ĐÂY. Nghe thì hợp lý ("ô không có
+      chuỗi thì đừng chừa khoảng trắng"), nhưng nó hỏng thật và hỏng im lặng: lúc
+      js/viz.js ĐO bề rộng thì div vẫn còn RỖNG (SVG chưa được chèn vào), nên nó
+      khớp `:empty`, `display:none`, và `clientWidth` trả về **0** → mọi đường bị vẽ
+      ở sàn 40px rồi mới hiện ra trong một ô rộng 123px. Đo được đúng như vậy:
+      `spark=123 svg=40`.
+      Không cần rule đó: js/admin-report.js chỉ TẠO div này khi thật sự có chuỗi. */
+.kv .cell .spark{position:relative;margin-top:6px;min-height:26px;}
+
+/* ============ KHUNG BIỂU ĐỒ ============ */
+.ad-grid{display:grid;gap:16px;margin:16px 0 0;}
+@media (min-width:900px){ .ad-grid.two{grid-template-columns:1fr 1fr;} }
+
+.ad-card{
+  position:relative;border-radius:16px;padding:16px 14px 12px;
+  border:1px solid var(--brd);background:rgba(10,16,34,.5);
+}
+.ad-card h3{
+  font-family:var(--font-display);font-weight:700;font-size:13.5px;margin:0 0 2px;
+  display:flex;align-items:center;gap:7px;
+}
+.ad-card .hint{color:var(--ink-faint);font-size:11.5px;line-height:1.5;margin:0 0 10px;}
+/* Nút "Bảng số" — bản song sinh của biểu đồ, không phải tính năng phụ. */
+.ad-card .swap{
+  position:absolute;top:12px;right:12px;cursor:pointer;
+  border:1px solid var(--brd);background:rgba(8,14,38,.6);color:var(--ink-faint);
+  border-radius:999px;padding:4px 10px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+}
+.ad-card .swap:hover{color:var(--ink);border-color:var(--brd-on);}
+.ad-card .swap[aria-pressed="true"]{color:#04060f;background:var(--cyan);border-color:transparent;}
+
+/* Đang tải lại: GIỮ hình cũ ở độ mờ thấp. Không xương khô, không nhảy khung —
+   khung trắng nhấp nháy làm người đọc mất chỗ đang xem. */
+.ad-card .plot{position:relative;min-height:40px;}
+.ad-card.busy .plot{opacity:.45;transition:opacity .2s;}
+
+/* ============ NÉT VẼ (js/viz.js gắn class, giá trị ở đây) ============ */
+.viz{display:block;overflow:visible;}
+
+.viz-grid line{stroke:var(--viz-grid);stroke-width:1;}           /* hairline LIỀN */
+.viz-ytick,.viz-xtick text{
+  fill:var(--viz-ink);font-family:var(--font-mono);font-size:9.5px;
+  font-variant-numeric:tabular-nums;                              /* cột số → canh dọc */
+}
+.viz-ytick{text-anchor:end;}
+.viz-xtick text{text-anchor:middle;}
+
+/* Đường 2px, đầu và khớp tròn. Vùng tô là một LỚP RỬA 10%, không phải khối đặc. */
+.viz-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+.viz-area{stroke:none;opacity:.1;}
+/* Điểm cuối: VÒNG 2px màu nền, để nó đọc được ở chỗ chồng lên đường. Vòng này
+   là một phần của hình, không phải viền tách hình (xem luật ③ ở viz.js). */
+.viz-dot{stroke:var(--viz-surface);stroke-width:2;}
+
+/* Đường tí hon: nét 1,5px (không phải 2px) — lý do ở js/viz.js. Điểm cuối mang
+   vòng 1,5px thay vì 2px, vì ở bán kính 2,5 thì vòng 2px gần như ăn hết cái điểm. */
+.viz-spark{fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;}
+.viz-spark-dot{stroke:var(--viz-surface);stroke-width:1.5;}
+
+/* Hình mang dữ liệu: KHÔNG viền. Cái tách chúng là khe 2px màu nền do viz.js
+   trừ vào chiều cao mỗi tầng. */
+.viz-bar{stroke:none;}
+.viz-track{fill:var(--r0);opacity:.13;}   /* rãnh = bậc nhạt của chính dải */
+
+/* Thanh đo tỉ lệ: hai nhãn hai đầu + con số giữa thanh. */
+.viz-mlab{fill:var(--ink-soft);font-family:var(--font-body);font-size:11.5px;}
+.viz-mval{
+  fill:#fff;font-family:var(--font-display);font-weight:700;font-size:13px;
+  paint-order:stroke;stroke:rgba(4,8,20,.72);stroke-width:3px;stroke-linejoin:round;
+}
+/* ⚠️ `paint-order:stroke` + viền nền mỏng quanh chữ là BẮT BUỘC, không phải trang
+   trí: con số nằm giữa thanh, nên tuỳ tỉ lệ mà nó rơi trên phần ĐÃ ĐẦY (nền màu
+   đậm) hoặc trên phần RÃNH (nền tối). Một màu chữ duy nhất sẽ mất tương phản ở một
+   trong hai trường hợp; viền nền giữ nó đọc được ở cả hai. */
+
+.viz-cross{stroke:var(--cyan);stroke-width:1;opacity:0;}
+.viz-cross.on{opacity:.55;}
+
+/* Vùng chạm: trong suốt, rộng hơn hình. `pointer-events:all` là bắt buộc —
+   `fill:none` thì SVG không nhận sự kiện trỏ. */
+.viz-hit{fill:none;pointer-events:all;cursor:crosshair;}
+.viz-hit:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px;}
+
+/* Hình được trỏ vào phải PHẢN HỒI, không chỉ hiện tooltip ở nơi khác. */
+.viz-bar.hot,.viz-hit.hot+*{filter:brightness(1.25);}
+
+/* Nhãn hàng và giá trị: ĐEO TOKEN CHỮ, không đeo màu series. Màu series nhạt
+   (hổ phách, lục) làm chữ không đọc nổi; danh tính đến từ cái hình BÊN CẠNH. */
+.viz-rowlab{fill:var(--ink-soft);font-family:var(--font-body);font-size:11.5px;}
+.viz-rowval{
+  fill:#fff;font-family:var(--font-display);font-weight:700;font-size:11.5px;
+  font-variant-numeric:tabular-nums;
+}
+.viz-empty{color:var(--ink-faint);font-size:12.5px;margin:14px 2px;line-height:1.6;}
+
+/* Màu series — CHỈ ở đây. `fill` cho hình khối, `stroke` cho đường. */
+.s1{fill:var(--s1);stroke:var(--s1);}
+.s2{fill:var(--s2);stroke:var(--s2);}
+.s3{fill:var(--s3);stroke:var(--s3);}
+.s4{fill:var(--s4);stroke:var(--s4);}
+.s5{fill:var(--s5);stroke:var(--s5);}
+.r0{fill:var(--r0);stroke:var(--r0);}
+.r1{fill:var(--r1);stroke:var(--r1);}
+.r2{fill:var(--r2);stroke:var(--r2);}
+.r3{fill:var(--r3);stroke:var(--r3);}
+.r4{fill:var(--r4);stroke:var(--r4);}
+.r5{fill:var(--r5);stroke:var(--r5);}
+.r6{fill:var(--r6);stroke:var(--r6);}
+/* Đường không được để `fill` của class series bịt kín — ghi đè sau. */
+.viz-line.s1,.viz-line.s2,.viz-line.s3,.viz-line.s4,.viz-line.s5{fill:none;}
+
+/* ============ CHÚ GIẢI ============
+   CÓ MẶT bất cứ khi nào ≥ 2 series — danh tính không bao giờ chỉ dựa vào việc
+   người đọc tự dò màu. Ô vuông cho khối/vùng tô, nét cho đường (khớp với hình
+   thật của dấu trên biểu đồ). */
+.viz-legend{
+  display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 0;
+  font-size:11.5px;color:var(--ink-soft);
+}
+.viz-legend span{display:inline-flex;align-items:center;gap:6px;}
+.viz-legend i{width:11px;height:11px;border-radius:3px;flex:none;}
+.viz-legend i.line{width:14px;height:2px;border-radius:2px;}
+.viz-legend i.s1{background:var(--s1);} .viz-legend i.s2{background:var(--s2);}
+.viz-legend i.s3{background:var(--s3);} .viz-legend i.s4{background:var(--s4);}
+.viz-legend i.s5{background:var(--s5);}
+
+/* ============ TOOLTIP ============
+   GIÁ TRỊ dẫn (đậm, tương phản cao), TÊN series theo sau (mờ hơn) — ngược thứ
+   bậc của chú giải, vì ở đây người đọc đã biết series và đang cần con số.
+   `left`/`top` do js/viz.js đặt: hình học theo con trỏ, khai trước không được. */
+.viz-tip{
+  position:absolute;z-index:5;pointer-events:none;opacity:0;
+  min-width:96px;max-width:230px;padding:8px 10px;border-radius:10px;
+  background:rgba(6,11,28,.96);border:1px solid rgba(95,211,255,.4);
+  box-shadow:0 14px 30px -14px rgba(0,0,0,.9);
+  font-size:11.5px;line-height:1.5;color:var(--ink-soft);
+  transition:opacity .12s;
+}
+.viz-tip.on{opacity:1;}
+.viz-tip-h{
+  display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);font-weight:400;margin-bottom:4px;
+}
+.viz-tip-row{display:flex;align-items:baseline;gap:6px;white-space:nowrap;}
+.viz-tip-row b{color:#fff;font-family:var(--font-display);font-weight:700;}
+/* Nét ngắn, KHÔNG ô vuông: ở mật độ tooltip, ô vuông là mực nặng làm việc của
+   một cái nhãn. */
+.viz-key{width:12px;height:2px;border-radius:2px;flex:none;align-self:center;}
+.viz-key.s1{background:var(--s1);} .viz-key.s2{background:var(--s2);}
+.viz-key.s3{background:var(--s3);} .viz-key.s4{background:var(--s4);}
+.viz-key.s5{background:var(--s5);}
+.viz-key.r0{background:var(--r0);} .viz-key.r1{background:var(--r1);}
+.viz-key.r2{background:var(--r2);} .viz-key.r3{background:var(--r3);}
+.viz-key.r4{background:var(--r4);} .viz-key.r5{background:var(--r5);}
+.viz-key.r6{background:var(--r6);}
+.viz-key.total{background:var(--ink-faint);}
+
+/* ============ BẢNG SỐ ============
+   Cuộn ngang PHẢI NẰM TRONG khung này. Để cả trang cuộn ngang là lỗi bố cục
+   thấy ngay trên điện thoại. */
+.viz-tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;margin:4px 0 0;}
+.viz-table{width:100%;border-collapse:collapse;font-size:12px;}
+.viz-table caption{
+  caption-side:top;text-align:left;color:var(--ink-faint);font-size:11.5px;
+  padding:0 0 8px;
+}
+.viz-table th,.viz-table td{
+  padding:6px 9px;border-bottom:1px solid var(--viz-grid);text-align:left;
+  white-space:nowrap;
+}
+.viz-table thead th{
+  position:sticky;top:0;z-index:1;
+  /* ⚠️ Nền hàng tiêu đề dính phải ĐẶC, không trong suốt: trong suốt thì các hàng
+     cuộn qua bên dưới hiện xuyên lên và đọc lẫn vào tiêu đề. */
+  background:#0b1120;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);font-weight:400;
+}
+.viz-table tbody th{color:var(--ink-soft);font-weight:400;}
+.viz-table td.num,.viz-table th.num{
+  text-align:right;font-variant-numeric:tabular-nums;color:#fff;
+}
+.viz-table tbody tr:hover td,.viz-table tbody tr:hover th{background:rgba(56,189,248,.07);}
+
+/* ============ CHÚ THÍCH GIỚI HẠN ============
+   Trang này PHẢI in ra ba giới hạn của dữ liệu (mốc bắt đầu ghi nhật ký, cách
+   tính giữ chân, và cái mà "im lặng" không đếm). Nói ra là phần của báo cáo,
+   không phải chữ nhỏ cho đẹp. */
+.ad-notes{
+  margin:26px 0 0;padding:14px 16px;border-radius:14px;
+  border:1px solid var(--brd);background:rgba(8,14,38,.36);
+  color:var(--ink-faint);font-size:12.2px;line-height:1.75;
+}
+.ad-notes h2{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-soft);margin:0 0 8px;font-weight:400;
+}
+.ad-notes ul{margin:0;padding-left:18px;}
+.ad-notes li+li{margin-top:5px;}
+.ad-notes b{color:var(--ink-soft);font-weight:600;}
+
+/* ============ VÙNG CHẠM 44px TRÊN CẢM ỨNG ============
+   Lý do đầy đủ ở css/common.css. Nút riêng của trang này phải tự khai. */
+@media (pointer:coarse){
+  .ad-card .swap{min-height:44px;padding:4px 14px;}
+}
+
+/* ============ GIẤY ============
+   In ra để dán vào báo cáo tuần: bỏ tooltip (không có con trỏ trên giấy) và bỏ
+   nút đổi-sang-bảng (nút không bấm được trên giấy). */
+@media print{
+  .viz-tip,.ad-card .swap,.ad-bar{display:none;}
+  .ad-card{break-inside:avoid;}
+}

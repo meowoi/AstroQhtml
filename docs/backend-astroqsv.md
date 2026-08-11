@@ -353,6 +353,9 @@ Tất cả (trừ `/health` và `/lessons`) yêu cầu header `Authorization: Be
 | `POST` | `/me/missions/step` | ✅ Báo **xong một bước nhiệm vụ**. Body `{mission, step, opId}` — **KHÔNG nhận con số thưởng nào** |
 | `GET` | `/me/specimens` | ✅ Kho Mẫu Vật (suy ra từ bộ đếm, không có route "đã thu thập") |
 | `PUT` | `/me/specimens/desk` | ✅ Mẫu vật trưng ở khoang lái. Body `{desk:[id,…]}` |
+| `GET` | `/me/report` | ✅ Báo cáo tuần cho phụ huynh (`parent.html`) |
+| `POST` | `/me/report/email` | ✅ Gửi báo cáo tuần qua SES |
+| `GET` | `/admin/stats` | ✅ **Báo cáo toàn hệ thống** cho chủ dự án (`admin-report.html`). `?refresh=1` = bắt tính lại |
 | `GET` | `/me` | *(gộp vào `/me/profile`)* |
 | `PUT` | `/me` | *(gộp vào `/me/profile`)* |
 | `POST` | `/me/wallet` | *(đã thay bằng `/me/wallet/spend` + phần cộng thưởng trong `/me/progress`)* |
@@ -361,6 +364,87 @@ Tất cả (trừ `/health` và `/lessons`) yêu cầu header `Authorization: Be
 | `GET` | `/lessons` | Danh sách bài học — công khai, cache được |
 | `GET` | `/lessons/{id}` | Chi tiết một bài |
 | `POST` | `/me/lessons/{id}/complete` | Đánh dấu đã học xong + cộng thưởng |
+
+### `/admin/stats` — nhóm route DUY NHẤT đọc được dữ liệu của mọi người *(thêm 11/08/2026)*
+
+Mọi route `/me/*` lấy uid **từ token**, nên không ai đọc được hồ sơ người khác. `/admin/*`
+là ngoại lệ có chủ ý: nó gộp cả bảng thành chỉ số sức khoẻ dự án. Vì thế nó có ba lớp mà
+các nhóm khác không có.
+
+**① Ai vào được — allowlist trong biến môi trường, mặc định RỖNG**
+
+`Services/AdminAuth.cs` đọc `ADMIN_EMAILS` (tham số `AdminEmails` của stack). Policy
+`"admin"` gắn ở **cấp group** trong `AdminEndpoints`, y như `/me` dùng `"verified"` — thêm
+route vào nhóm đó là tự có bảo vệ.
+
+Hiện `AdminEmails` mặc định là **`trangtt.tshn@gmail.com`** trong `template.yaml`, nên
+`sam deploy` trơn là đủ. Đổi hoặc thêm admin:
+
+```bash
+sam deploy --parameter-overrides AdminEmails=a@x.com,b@y.com
+```
+
+Để địa chỉ thẳng trong `Default` được vì `AstroqSV/` **không phải git repo** — chỉ
+`AstroQhtml/` mới đẩy lên GitHub Pages. Nếu sau này đưa backend vào một repo công khai
+thì phải bỏ nó khỏi `Default` và truyền lúc deploy.
+
+- **Rỗng = không ai vào được.** Khác cố ý với `ALLOWED_ORIGINS` (có `Fallback`): quên cấu
+  hình CORS thì trang hỏng ầm ĩ, sửa ngay; còn để một địa chỉ dự phòng trong mã nguồn công
+  khai thì đó là cửa đọc số liệu cả hệ thống.
+- **Đòi cả `email_verified`.** Firebase cho client tự `signUp` bằng apiKey công khai, nên
+  một tài khoản *khai* email của admin là chuyện dựng được. So khớp email mà không kiểm cờ
+  xác minh là để bất kỳ ai cũng vào được.
+- Chạy ở máy thì đặt `ADMIN_EMAILS` trong `appsettings.Development.json`.
+
+**② Vì sao phải `Scan` cả bảng, và vì sao có bản chụp**
+
+Bảng chỉ có PK/SK, **không có GSI**. Mọi câu hỏi dạng "tất cả người dùng…" (DAU, giữ chân,
+phễu) đều cắt NGANG các PK — không có khoá nào query được. Đó là cái giá đã biết của thiết
+kế một bảng.
+
+Nên kết quả được cache thành **một bản ghi `PK=STATS#GLOBAL, SK=SNAPSHOT`** giữ JSON đã
+serialize:
+
+| | |
+|---|---|
+| Quá `15 phút` | lượt gọi tiếp theo tự quét lại |
+| `?refresh=1` | bắt quét lại ngay, có cooldown `60s` (trả `throttled:true` + bản cũ, **không** 429) |
+| Quét hỏng | trả **bản chụp cũ** kèm `stale:true` — số liệu 30 phút trước còn dùng được, một trang trắng thì không |
+| Chưa có bản chụp nào và quét hỏng | `503 {code:"scan-failed"}` |
+| Bản chụp > 380 KB | **vẫn trả cho client**, chỉ không lưu được; ghi `LogWarning` để còn hạ `Insights.TopN`/`UserRows` |
+
+**Đường nâng cấp đã chừa sẵn:** khi bảng lớn tới mức quét không kịp 20 giây của Lambda,
+thay chỗ **ghi** snapshot bằng một job EventBridge chạy đêm. Route đọc và cả trang admin
+không phải sửa gì — chúng chỉ biết tới bản chụp.
+
+**③ Báo cáo KHÔNG chứa email, tên hay avatar của ai**
+
+Bảng người dùng chỉ có **8 ký tự đầu của uid**. Dữ liệu ở đây là của trẻ em, và một trang
+theo dõi chỉ số không cần biết tên đứa trẻ để trả lời được "app có giữ được người dùng
+không". Bộ kiểm ở `Insights` có phép kiểm khẳng định JSON không lọt email và không lọt uid
+đầy đủ.
+
+**Ba giới hạn `Services/Insights.cs` PHẢI nói ra, không được làm tròn thành 0**
+
+1. **Nhật ký chỉ chảy từ `LogSince` (09/08/2026).** Mọi chỉ số theo trục thời gian đều rỗng
+   trước mốc đó và **không backfill được**. `LogSince` nay là **bản chính** của mốc này và
+   được trả ra client trong `report.logSince` — trước đó nó chỉ tồn tại ở `parent.html` dưới
+   tên `LOG_SINCE`.
+2. **"Im lặng" chỉ đếm người đăng ký TỪ mốc đó.** Tài khoản mở trước khi có nhật ký mà không
+   có sự kiện nào thì không phải người dùng im lặng — chỉ là những ngày đầu của họ không
+   được ghi. Gộp hai nhóm là bịa ra một tỉ lệ rời app.
+3. **Phễu onboarding cố ý tính trên TẤT CẢ người dùng** — nó đọc cờ `PROFILE` và bộ đếm
+   cả-đời `PROGRESS`, hai thứ có từ trước nhật ký. Cắt phễu theo mốc nhật ký là tự bỏ đi
+   phần lớn dữ liệu đang có. Hệ quả: **một bậc không bao hàm bậc trước** (trẻ bỏ qua tour
+   vẫn làm được quiz) nên số có thể TĂNG giữa hai bậc, và trang vẽ đúng con số chứ không kẹp
+   cho phễu thu hẹp đẹp mắt.
+
+Giữ chân tính kiểu **"trôi"** (có việc từ ngày thứ N trở đi), không phải "đúng ngày thứ N":
+ở quy mô vài chục người, một trẻ vào app ngày thứ 8 chứ không phải ngày thứ 7 sẽ làm D7 tụt
+về 0 và đọc ra kết luận sai.
+
+**Cửa sổ 90 ngày, tính MỘT LẦN.** Nút 7/30/90 ngày ở trang admin chỉ cắt chuỗi ở client —
+mỗi lựa chọn một lượt quét thì mỗi cú bấm là một lần đọc cả bảng và bản chụp mất tác dụng.
 
 ### Hệ nhiệm vụ — chỗ DUY NHẤT phần thưởng KHÔNG THỂ bịa
 

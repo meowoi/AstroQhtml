@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- noindex như 18 trang app còn lại. Ở đây còn một lý do riêng: đây là trang
+     quản trị, không có gì để Google lập chỉ mục và cũng không nên có. -->
+<meta name="robots" content="noindex,nofollow" />
+<title>AstroQ — Báo cáo hệ thống</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/admin.css" />
+
+<script src="js/ui-common.js"></script>
+
+<!-- ⚠️ BỐN FILE DƯỚI ĐÂY CHỈ ĐỂ LẤY **TÊN**. Server trả về KHOÁ (`comet-tail`,
+     `quiz-1`, `mercury`, `lib-exoplanet`); tên hiển thị nằm ở client. Cùng phân
+     công đã dùng cho báo cáo phụ huynh: **server giữ mốc, client giữ tên**.
+     Không file nào kéo theo nội dung thật — câu hỏi và bài đọc chỉ được
+     `import()` khi thật sự mở chúng. -->
+<script src="js/badges.js"></script>
+<script src="js/quiz-index.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/articles-index.js"></script>
+
+<script src="js/viz.js"></script>
+<!-- Trang này BẮT BUỘC nạp SDK Firebase: `GET /admin/stats` cần ID token. Cùng
+     đánh đổi có ý thức như parent.html / specimen-vault.html / codex.html. -->
+<script type="module" src="js/firebase-auth.js"></script>
+<script defer src="js/admin-report.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <!-- ============ HEADER ============
+       ⚠️ CỐ Ý KHÔNG CÓ NÚT ĐỔI NGÔN NGỮ, và đây là trang duy nhất như vậy.
+          Nút VI/EN có để phục vụ TRẺ và PHỤ HUYNH. Trang này chỉ một người đọc —
+          chủ dự án — nên dựng thêm một bộ chuỗi tiếng Anh là công bảo trì cho một
+          người đọc không tồn tại, và mỗi chỉ số mới lại phải dịch hai lần. -->
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span>Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ ADMIN_REPORT ]</span>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <span class="eyebrow">🛰️ Chỉ dành cho chủ dự án</span>
+    <h1>Sức khoẻ dự án &amp; hành vi người dùng</h1>
+    <p>Mọi con số lấy từ chính bảng dữ liệu — không ước lượng, không lấy mẫu. Chỗ nào chưa đo được thì hiện dấu “—” chứ không hiện 0.</p>
+  </section>
+
+  <!-- Dải nhắc: chưa đăng nhập / không phải admin / mất mạng. -->
+  <div class="banner" id="gate" role="status">
+    <span class="ic" aria-hidden="true">🔒</span>
+    <span id="gate-msg"></span>
+  </div>
+
+  <!-- ============ HÀNG BỘ LỌC ============
+       MỘT hàng, NẰM TRÊN mọi thứ nó phủ, và mọi biểu đồ bên dưới vẽ lại theo
+       cùng một khoảng — hai biểu đồ khác khoảng thời gian là hai con số không
+       so được với nhau. Đổi khoảng KHÔNG gọi lại API: server đã trả sẵn 90 ngày
+       và trang tự cắt (xem Services/Insights.cs). -->
+  <div class="ad-bar" id="bar" hidden>
+    <span class="lbl">Khoảng</span>
+    <div class="seg" id="range" role="group" aria-label="Khoảng thời gian"></div>
+    <span class="grow"></span>
+    <span class="ad-stamp" id="stamp"></span>
+    <button class="pbtn ghost" id="refresh" type="button">Tính lại ngay</button>
+    <!-- ⚠️ NÓI RÕ NÚT NÀY KHÔNG PHỦ CÁI GÌ. Người đọc mặc định cho rằng bộ lọc phủ
+         cả trang; ở đây nó chỉ phủ được thứ có chuỗi theo ngày. Các số tổng (phễu,
+         giữ chân, nhịp, phân bố, xếp hạng) do server tính một lần cho cả 90 ngày —
+         cắt chúng ở client là bịa số. Không nói ra thì bấm "7 ngày" rồi đọc phễu sẽ
+         hiểu sai hoàn toàn. -->
+    <p class="ad-bar-note">Khoảng chỉ áp cho các biểu đồ <b>theo ngày</b> và các ô số liệu. Phễu, giữ chân, nhịp, phân bố và các bảng xếp hạng luôn tính trên <b>cả 90 ngày</b> (hoặc cả đời) — chúng do server tính một lần.</p>
+  </div>
+
+  <!-- ============ 1 · SỨC KHOẺ ============ -->
+  <section class="panel" id="sec-health" hidden>
+    <span class="panel-tag"><span class="led"></span><span>SỨC KHOẺ</span></span>
+    <h2><span class="ic" aria-hidden="true">💗</span><span>Dự án đang ở đâu</span></h2>
+
+    <!-- Số dẫn đầu: ĐÚNG MỘT cái cho cả trang. -->
+    <div class="ad-hero">
+      <span class="n" id="hero-n">—</span>
+      <span class="u" id="hero-u">phi hành gia đã kích hoạt tài khoản</span>
+    </div>
+
+    <!-- Mỗi ô số liệu CÓ TRỤC THỜI GIAN đều mang một đường tí hon: con số nói
+         "bây giờ bao nhiêu", đường nói "đang đi lên hay đi xuống". Ô nào không có
+         chuỗi theo ngày thì KHÔNG có đường — xem ghi chú ở js/admin-report.js. -->
+    <div class="kv" id="kv-health"></div>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="signup">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Người mới &amp; hàng chờ mỗi ngày</h3>
+        <p class="hint">Hai đường cùng đơn vị (người/ngày) nên dùng chung MỘT trục — so được trực tiếp. Hàng chờ tăng mà đăng ký không tăng nghĩa là có người muốn vào nhưng chưa mở cửa được cho họ.</p>
+        <div class="plot" id="p-signup"></div>
+        <div class="viz-legend" id="lg-signup"></div>
+      </div>
+
+      <div class="ad-card" data-card="reach">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Người hoạt động: hôm nay · 7 ngày · 30 ngày</h3>
+        <p class="hint">Ba cửa sổ càng rộng càng nhiều người — khoảng cách giữa chúng mới là điều đáng đọc: ba cột gần nhau nghĩa là người dùng vào hàng ngày, cột đầu thấp hẳn nghĩa là họ chỉ vào thưa thớt.</p>
+        <div class="plot" id="p-reach"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · HOẠT ĐỘNG ============
+       ⚠️ HAI KHUNG RIÊNG, KHÔNG GỘP. "Số người" (đơn vị chục) và "số việc" (đơn
+          vị trăm) trên cùng một khung sẽ cần hai thang đo Y, và chỗ hai đường
+          cắt nhau khi đó là ngẫu nhiên theo cách chọn thang — khung hình tự bịa
+          ra một mối liên hệ không có trong dữ liệu. Hai khung, mỗi khung một
+          thang, là cách đọc đúng. -->
+  <section class="panel" id="sec-activity" hidden>
+    <span class="panel-tag"><span class="led"></span><span>HOẠT ĐỘNG</span></span>
+    <h2><span class="ic" aria-hidden="true">📈</span><span>Ai vào app, và làm gì</span></h2>
+
+    <div class="ad-grid">
+      <div class="ad-card" data-card="dau">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Người hoạt động mỗi ngày</h3>
+        <p class="hint">Một người được tính một lần trong ngày, dù làm bao nhiêu việc. Ngày tính theo giờ Việt Nam.</p>
+        <div class="plot" id="p-dau"></div>
+      </div>
+
+      <div class="ad-card" data-card="mix">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Số việc mỗi ngày, theo loại</h3>
+        <p class="hint">Loại việc nào đang gánh app, loại nào chưa ai chạm tới. Trỏ vào một cột để xem đủ năm loại của ngày đó.</p>
+        <div class="plot" id="p-mix"></div>
+        <div class="viz-legend" id="lg-mix"></div>
+      </div>
+    </div>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="xp">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>XP trao mỗi ngày</h3>
+        <p class="hint">Thước đo “app trả thưởng bao nhiêu”. Tăng vọt mà số người không tăng là dấu hiệu một đường trao thưởng đang bị lạm dụng.</p>
+        <div class="plot" id="p-xp"></div>
+      </div>
+
+      <div class="ad-card" data-card="secs">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Thời gian chơi game mỗi ngày</h3>
+        <p class="hint">Tính bằng phút, và chỉ từ những lượt CÓ ghi số giây — nên đây là chặn dưới của thời gian thật, không phải tổng thời gian trong app.</p>
+        <div class="plot" id="p-secs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · PHỄU & GIỮ CHÂN ============ -->
+  <section class="panel" id="sec-funnel" hidden>
+    <span class="panel-tag"><span class="led"></span><span>PHỄU</span></span>
+    <h2><span class="ic" aria-hidden="true">🪜</span><span>Người mới rơi ở bước nào</span></h2>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="funnel">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Phễu onboarding</h3>
+        <p class="hint">Tính trên <b>tất cả</b> người dùng — mọi bậc đọc cờ hồ sơ và bộ đếm cả đời, không đọc nhật ký, nên không bị mốc bắt đầu ghi nhật ký cắt. Trỏ vào một bậc để xem tỉ lệ rơi so với bậc trước.</p>
+        <div class="plot" id="p-funnel"></div>
+      </div>
+
+      <div class="ad-card" data-card="ret">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Giữ chân</h3>
+        <p class="hint">Trong số người đã đăng ký đủ N ngày, bao nhiêu người còn quay lại từ ngày thứ N trở đi. Số trong ngoặc là cỡ nhóm đủ tuổi trả lời câu hỏi đó.</p>
+        <div class="plot" id="p-ret"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · NHỊP ============ -->
+  <section class="panel" id="sec-rhythm" hidden>
+    <span class="panel-tag"><span class="led"></span><span>NHỊP</span></span>
+    <h2><span class="ic" aria-hidden="true">🕰️</span><span>Trẻ vào app lúc nào</span></h2>
+    <p class="panel-sub">Dùng để chọn giờ gửi email nhắc học và giờ deploy. Tất cả theo giờ Việt Nam.</p>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="hours">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Theo giờ trong ngày</h3>
+        <div class="plot" id="p-hours"></div>
+      </div>
+      <div class="ad-card" data-card="dows">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Theo thứ trong tuần</h3>
+        <div class="plot" id="p-dows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · NỘI DUNG ============ -->
+  <section class="panel" id="sec-content" hidden>
+    <span class="panel-tag"><span class="led"></span><span>NỘI DUNG</span></span>
+    <h2><span class="ic" aria-hidden="true">🧩</span><span>Nội dung nào hỏng, nội dung nào chạy</span></h2>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="weak">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Chủ đề trẻ sai nhiều nhất</h3>
+        <p class="hint">Xếp theo <b>số lượt sai</b>, không theo tỉ lệ: một câu sai 3/3 lượt chưa nói được gì, một câu sai 40/100 lượt thì có. Đây là danh sách việc cần làm với ngân hàng câu hỏi.</p>
+        <div class="plot" id="p-weak"></div>
+      </div>
+
+      <div class="ad-card" data-card="top">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Nội dung được dùng nhiều nhất</h3>
+        <div class="seg" id="top-kind" role="group" aria-label="Loại nội dung"></div>
+        <div class="plot" id="p-top"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · TIẾN TRIỂN ============ -->
+  <section class="panel" id="sec-progress" hidden>
+    <span class="panel-tag"><span class="led"></span><span>TIẾN TRIỂN</span></span>
+    <h2><span class="ic" aria-hidden="true">🎖️</span><span>Trẻ đi được tới đâu</span></h2>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="acc">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Phân bố độ chính xác</h3>
+        <p class="hint">Trung bình toàn hệ thống che mất chuyện “một nhóm làm rất tốt, một nhóm đang chật vật” — mà đó mới là chỗ cần can thiệp.</p>
+        <div class="plot" id="p-acc"></div>
+      </div>
+      <div class="ad-card" data-card="lv">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Phân bố cấp độ</h3>
+        <div class="plot" id="p-lv"></div>
+      </div>
+      <div class="ad-card" data-card="steps">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Bước nhiệm vụ Trái Đất</h3>
+        <p class="hint">Bảy bước đúng thứ tự chơi. Chỗ con số tụt xuống là chỗ trẻ bỏ dở.</p>
+        <div class="plot" id="p-steps"></div>
+      </div>
+      <div class="ad-card" data-card="badges">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Phân bố số huy hiệu mỗi người</h3>
+        <p class="hint">Cột “chưa có cái nào” cao nghĩa là huy hiệu đầu tiên đang quá xa với người mới — đó là phần thưởng quan trọng nhất vì nó dạy trẻ rằng cố gắng thì được ghi nhận.</p>
+        <div class="plot" id="p-badges"></div>
+      </div>
+
+      <div class="ad-card" data-card="rare">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Huy hiệu ít người mở nhất</h3>
+        <p class="hint">Huy hiệu không ai mở được là một phần thưởng không tồn tại — mốc của nó đang quá xa.</p>
+        <div class="plot" id="p-rare"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · KINH TẾ ============ -->
+  <section class="panel" id="sec-econ" hidden>
+    <span class="panel-tag"><span class="led"></span><span>KINH TẾ</span></span>
+    <h2><span class="ic" aria-hidden="true">💜</span><span>Thiên thạch tím đi đâu</span></h2>
+    <p class="panel-sub">Trẻ tích mà không tiêu thì phần thưởng mất nghĩa; tiêu hết ngay thì giá vào lượt game đang quá thấp.</p>
+    <div class="kv" id="kv-econ"></div>
+
+    <div class="ad-grid two">
+      <div class="ad-card" data-card="spend">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Thiên thạch tím: đã tiêu / còn giữ</h3>
+        <p class="hint">Một thanh, không phải bánh hai miếng — đọc một tỉ lệ đã biết sẵn thì không nên bắt mắt so hai góc. Vùng lành mạnh là khoảng 20–80%.</p>
+        <div class="plot" id="p-spend"></div>
+      </div>
+
+      <div class="ad-card" data-card="mt">
+        <button class="swap" type="button" aria-pressed="false">Bảng số</button>
+        <h3>Thiên thạch tím trao mỗi ngày</h3>
+        <p class="hint">Đối chiếu với “XP trao mỗi ngày” ở trên: hai đường lệch nhịp nghĩa là có đường trao tt mà không trao XP, hoặc ngược lại.</p>
+        <div class="plot" id="p-mt"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8 · BẢNG NGƯỜI DÙNG ============ -->
+  <section class="panel" id="sec-users" hidden>
+    <span class="panel-tag"><span class="led"></span><span>NGƯỜI DÙNG</span></span>
+    <h2><span class="ic" aria-hidden="true">🧑‍🚀</span><span>Từng người, không nêu tên</span></h2>
+    <p class="panel-sub">Bảng này <b>không có email và không có tên</b> — chỉ 8 ký tự đầu của mã tài khoản. Đủ để thấy dạng hành vi (“có người chơi 20 ngày liền, có người vào một lần rồi thôi”) mà không phơi dữ liệu của một đứa trẻ cụ thể lên màn hình.</p>
+    <div class="plot" id="p-users"></div>
+  </section>
+
+  <!-- ============ GIỚI HẠN CỦA SỐ LIỆU ============
+       ⚠️ ĐÂY LÀ PHẦN CỦA BÁO CÁO, KHÔNG PHẢI CHỮ NHỎ CHO ĐẸP. Không in ba dòng
+          này ra thì người đọc sẽ hiểu "0" là "không ai học", trong khi sự thật
+          có thể là "chưa ghi được". Cùng nguyên tắc dòng "astroQ bắt đầu ghi
+          nhật ký từ…" ở parent.html. -->
+  <section class="ad-notes">
+    <h2>Số liệu này không nói được gì</h2>
+    <ul>
+      <li><b>Nhật ký chỉ chảy từ <span id="note-since">—</span>.</b> Mọi chỉ số theo trục thời gian — hoạt động mỗi ngày, DAU/WAU/MAU, giữ chân, nhịp theo giờ — đều rỗng trước mốc đó, và <b>không backfill được</b>. Ngày rỗng trước mốc này nghĩa là “chưa ghi”, không phải “không ai học”.</li>
+      <li><b>“Im lặng” chỉ đếm người đăng ký từ mốc đó.</b> Tài khoản mở trước khi có nhật ký mà không có sự kiện nào thì không phải người dùng im lặng — chỉ là những ngày đầu của họ không được ghi.</li>
+      <li><b>Giữ chân tính kiểu “trôi”</b>, không phải “đúng ngày thứ N”: ở quy mô vài chục người, một trẻ vào app ngày thứ 8 chứ không phải ngày thứ 7 sẽ làm D7 tụt về 0 và đọc ra một kết luận sai.</li>
+      <li><b>Bộ đếm cả đời và nhật ký trả lời hai câu khác nhau.</b> Độ chính xác, phễu và phân bố cấp độ đọc bộ đếm cả đời ở hồ sơ (có từ trước nhật ký); còn chuỗi ngày, nhịp và chủ đề sai đọc nhật ký. Vì thế hai nhóm số này có thể không khớp nhau, và đó không phải lỗi.</li>
+      <li><b>Mọi biểu đồ đều có bản “Bảng số”.</b> Không con số nào chỉ đọc được bằng cách trỏ chuột.</li>
+    </ul>
+  </section>
+</div>
+
+</body>
+</html>

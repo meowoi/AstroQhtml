@@ -25,6 +25,10 @@
 <!-- Dùng chung với profile.html / achievements.html -->
 <script src="js/badges.js"></script>
 <script src="js/ranks.js"></script>
+<!-- Đường vào trang báo cáo hệ thống cho tài khoản admin. Tự thoát êm khi không
+     phải admin, và KHÔNG gọi mạng — chỉ đọc cờ trong hồ sơ máy do `login()`
+     đóng dấu (xem js/admin-link.js). -->
+<script src="js/admin-link.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
 <!-- Cổng lộ trình: trang này CÓ token nên nó là chỗ làm mới cache cho
@@ -220,6 +224,13 @@
         <span data-i18n="pt_parent">Dành cho bố mẹ: xem báo cáo tuần của con</span>
         <span class="ar" aria-hidden="true">›</span>
       </a>
+
+      <!-- Đường vào trang báo cáo hệ thống — CHỈ hiện với tài khoản admin.
+           `js/admin-link.js` tự dựng thẻ vào đây; ô này để `hidden` sẵn nên với trẻ
+           nó không chiếm chỗ nào và trang không nhấp một cái rồi mới ẩn đi.
+           ⚠️ Nhãn/biểu tượng/đường dẫn KHÔNG viết ở đây — chúng nằm ở admin-link.js,
+              để trang thứ ba chỉ cần một thẻ div. -->
+      <div data-admin-link hidden></div>
     </div>
   </section>
 

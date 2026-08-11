@@ -126,6 +126,27 @@ function errMsg(code){
 const fail = (e) => ({ ok: false, code: e && e.code, message: errMsg(e && e.code) });
 const NOT_CONFIGURED = { ok: false, notConfigured: true, message: "" };
 
+/* ---------------- Cờ admin: ĐỌC MỘT LẦN, ĐÓNG DẤU VÀO HỒ SƠ MÁY ----------------
+   Claim `admin` nằm trong ID token do Google ký. Đọc nó cần một `User` của SDK, tức
+   cần SDK đã nạp — mà `select.html` cố ý KHÔNG nạp SDK, và `dashboard.html` thì nạp
+   nhưng gọi thêm một vòng bất đồng bộ chỉ để ẩn/hiện một cái link là tốn vô ích.
+
+   Nên: đọc claim ĐÚNG MỘT LẦN lúc đăng nhập (lúc đó đã có `cred.user` trong tay,
+   không phải chờ `onAuthStateChanged`), rồi ghi `admin:true|false` vào hồ sơ trong
+   máy. Mọi trang sau đó chỉ cần `AstroQ.getUser().admin` — không lời gọi nào.
+
+   ⚠️ ĐÂY LÀ GỢI Ý GIAO DIỆN, KHÔNG PHẢI QUYỀN. Ai cũng sửa được localStorage bằng
+      DevTools và làm cái link hiện ra — bấm vào thì server trả 403, vì cổng thật là
+      allowlist `ADMIN_EMAILS` (Services/AdminAuth.cs). Cùng đúng khuôn `route-gate.js`
+      đã ghi: "cổng là lời dẫn đường, không phải hàng rào an ninh".
+   ⚠️ Không bao giờ dùng cờ này để quyết ẩn/hiện DỮ LIỆU — chỉ để chọn đường đi. */
+async function readAdminClaim(user){
+  try{
+    const r = await user.getIdTokenResult();
+    return !!(r && r.claims && r.claims.admin === true);
+  }catch(e){ return false; }
+}
+
 /* ---------------- Đồng bộ hồ sơ Firebase → localStorage ----------------
    Giữ nguyên khoá "astroq-user" để dashboard / select / quiz không phải sửa gì.
    Object.assign để KHÔNG xoá mất character, avatar… đã có sẵn.               */
@@ -180,7 +201,12 @@ const AstroQAuth = {
         // Không ghi hồ sơ → vẫn không vào được app.
         return { ok: false, needVerify: true, email: cred.user.email };
       }
-      syncProfile(cred.user);
+      /* Đóng dấu cờ admin NGAY ĐÂY — chỗ duy nhất trong dự án đọc claim. Đọc từ
+         `cred.user` (đã có trong tay) nên không phải chờ `onAuthStateChanged`, tức
+         không có nguy cơ treo đường đăng nhập. Lý do đầy đủ ở `readAdminClaim`.
+         ⚠️ Ghi cả khi FALSE, không phải chỉ khi true: tài khoản bị rút quyền admin mà
+            hồ sơ cũ trong máy còn `admin:true` thì cái link vẫn hiện mãi. */
+      syncProfile(cred.user, { admin: await readAdminClaim(cred.user) });
       return { ok: true, user: cred.user };
     }catch(e){ return fail(e); }
   },
@@ -411,6 +437,48 @@ const AstroQAuth = {
     if(r.ok) return { ok:true, data:r.data };
     // Kèm số dư server báo về để phía gọi chỉnh lại cache ngay
     return Object.assign({}, r, { meteors: r.data && r.data.meteors, need: r.data && r.data.need });
+  },
+
+  /**
+   * Đọc LẠI claim `admin` từ phiên hiện tại và cập nhật hồ sơ trong máy.
+   *
+   * Đường thường KHÔNG cần hàm này: `login()` đã đóng dấu cờ vào hồ sơ, và mọi trang
+   * chỉ đọc `AstroQ.getUser().admin` (xem `readAdminClaim`). Hàm này dành cho lúc
+   * quyền vừa đổi mà người dùng chưa đăng nhập lại.
+   *
+   * ⚠️ CHỜ `onAuthStateChanged` nên CÓ THỂ LÂU (đo được: không có phiên thì nó không
+   *    bao giờ resolve). ĐỪNG `await` nó trên đường đăng nhập hay trước một lần
+   *    chuyển trang — đã từng đặt ở đó và nó biến một lời gọi phụ thành chỗ kẹt cả
+   *    đường vào app.
+   * ⚠️ Token sống ~1 giờ nên claim vừa gắn ở server có thể chưa có trong token đang
+   *    giữ. `getIdToken(true)` buộc làm mới để thấy ngay.
+   */
+  async refreshAdminFlag(){
+    try{
+      const u = await this.currentUser();
+      if(!u) return false;
+      await u.getIdToken(true);                 // buộc lấy token mới
+      const admin = await readAdminClaim(u);
+      syncProfile(u, { admin });
+      return admin;
+    }catch(e){ return false; }
+  },
+
+  /* ---------------- Báo cáo toàn hệ thống (admin-report.html) ----------------
+     ⚠️ ĐÂY LÀ LỜI GỌI DUY NHẤT KHÔNG NẰM DƯỚI `/me`. Server quyết ai được đọc —
+        allowlist `ADMIN_EMAILS` + `email_verified` (xem Services/AdminAuth.cs) —
+        nên client KHÔNG tự đoán "mình có phải admin không" rồi ẩn/hiện gì cả.
+        Kiểm quyền ở client là kiểm trang trí: ai cũng sửa được JS trong tab của
+        họ. Ở đây chỉ có: gọi, rồi đọc câu trả lời của server. */
+
+  /** Báo cáo sức khoẻ dự án + hành vi người dùng.
+      → { ok:true, data:{ cached, throttled, stale, ageSeconds, buildMs, report } }
+      → { ok:false, reason:"http", status:403 } khi không phải admin
+      `refresh` = true thì BẮT server quét lại bảng (server tự chặn bấm liên tục). */
+  async getAdminStats(refresh){
+    const q = refresh ? "?refresh=1" : "";
+    const r = await this._authed(t => apiGetAuth("/admin/stats" + q, t));
+    return r.ok ? { ok:true, data:r.data } : r;
   },
 
   /** Lấy token rồi gọi `fn(token)`; gói mọi lỗi thành { ok:false, reason }. */
