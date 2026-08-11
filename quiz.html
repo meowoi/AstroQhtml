@@ -326,6 +326,12 @@
   /* Khoá thuật ngữ đã TRẢ LỜI ĐÚNG trong lượt này → gửi lên server để Sổ Tay
      Thuật Ngữ giải mã thẻ tương ứng (js/codex-terms.js). */
   var okTerms=[];
+  /* ⚠️ KHOÁ TRẢ LỜI SAI (kể cả HẾT GIỜ). Trước 09/08/2026 câu sai KHÔNG được lưu ở
+     đâu cả: `PROGRESS.terms` chỉ nhận câu đúng (nó là chìa khoá mở Sổ Tay), còn bộ
+     đếm thì chỉ có tổng số. Nên câu *"con còn vướng chủ đề nào"* — thứ `pricing.html`
+     hứa với phụ huynh — không có nguyên liệu để trả lời. Danh sách này đi vào NHẬT KÝ
+     sự kiện, KHÔNG đi vào `PROGRESS.terms`. */
+  var noTerms=[];
   /* ⚠️ KHỞI TẠO BẰNG `ROUND_SIZE`, KHÔNG PHẢI `QUESTIONS.length` (= 0 lúc này).
      Bình năng lượng vẽ theo TOTAL nên để 0 là lúc mới vào trang nó chia cho 0 và
      hiện ra một thanh rỗng không giải thích được. Đặt lại bằng số câu THẬT ngay
@@ -560,6 +566,12 @@
       setBubble(t("correct_bubble"), true);
     } else {
       status="incorrect";
+      /* ⚠️ GHI CẢ KHI HẾT GIỜ và cả khi Khiên Tím giữ chuỗi. Khiên chỉ cứu CHUỖI,
+         không đổi việc trẻ chưa nắm được câu này — báo cáo cho phụ huynh mà bỏ qua
+         mấy câu đó là vẽ ra một bức tranh đẹp hơn sự thật.
+         ⚠️ Ghi Ở ĐÂY, không suy lại ở màn tổng kết: `pickRound` rút đề mới mỗi lượt
+         nên tới lúc đó không còn biết câu nào đã sai (cùng lý do với `okTerms`). */
+      if(it.term && noTerms.indexOf(it.term)===-1) noTerms.push(it.term);
       if(!timedOut && selected>=0) opts[SLOT[selected]].classList.add("wrong");
       opts[SLOT[it.a]].classList.add("correct");
       sndNo();
@@ -640,7 +652,8 @@
        làm lại cả bài mới cho giải mã. Server kẹp số khoá theo `correct` nên không
        giải mã được nhiều hơn số câu đúng. */
     if(window.AstroQProgress) AstroQProgress.quiz({
-      correct: correctCount, total: TOTAL, meteors: gain, terms: okTerms });
+      correct: correctCount, total: TOTAL, meteors: gain,
+      terms: okTerms, wrong: noTerms });
     var stEls=$("stars").children;
     for(var i=0;i<stEls.length;i++){ (function(el,on){ setTimeout(function(){ el.classList.toggle("on", on); }, 200+ i*220); })(stEls[i], i<stars); }
     $("summary").classList.add("show");
@@ -688,7 +701,7 @@
      lượt cũ còn nằm đó trong lúc chờ và trẻ tưởng bấm "Làm lại" không ăn. */
   function resetRoundState(){
     idx=0; selected=-1; status="idle"; earned=0; correctCount=0; answered=0; locked=false;
-    okTerms=[];
+    okTerms=[]; noTerms=[];
     streak=0; frozen=0; shieldOn=false; boostOn=false; protectedThisQ=false; resetPowerups();
     $("summary").classList.remove("show");
     var stEls=$("stars").children; for(var i=0;i<stEls.length;i++) stEls[i].classList.remove("on");

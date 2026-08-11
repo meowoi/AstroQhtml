@@ -298,7 +298,7 @@ DynamoDB, tránh join và giữ mọi truy vấn ở mức một lần đọc.
 | Hồ sơ | `USER#<uid>` | `PROFILE` | `name`, `email`, `character`, `avatar`, `createdAt`, **`tourSeen`, `tourSeenAt`, `intro01Seen`, `intro01SeenAt`, `profileUpdatedAt`** |
 | **Tiến độ** | `USER#<uid>` | **`PROGRESS`** | `xp`, `quizTaken/Answered/Correct/Perfect`, `gamesPlayed`, `lessonsRead`, `flightSeconds`, `meteorsEarned`, `planets` (SS), `bests` (M), `consts` (M), `desk` (L), `badges` (M: id → ngày mở), **`missions` (M: id nhiệm vụ → M: id bước → ngày xong)** |
 | Ví | `USER#<uid>` | `WALLET` | `meteors`, `diamonds`, `updatedAt` |
-| Lịch sử | `USER#<uid>` | `HIST#<ISO8601>` | `type`, `refId`, `delta`, `score` |
+| **Nhật ký** | `USER#<uid>` | **`HIST#<ISO8601>#<4 hex>`** | `type` (quiz/game/lesson/planet/mission), `refId`, `at`, `xp`, `meteors`, `ttl` (400 ngày) + tuỳ loại: `correct`/`total` (quiz), `score`/`seconds` (game) |
 | Bài đã đọc | `USER#<uid>` | `READ#<lessonId>` | `readAt` — ghi có điều kiện, chống đọc lại để farm |
 | **Chống trùng** | `USER#<uid>` | **`OP#<opId>`** | `at`, `ttl` (7 ngày) — xem mục 5 |
 | Bài học | `LESSON#<id>` | `META` | `title`, `topic`, `level`, `body`, `reward` |
@@ -307,7 +307,23 @@ DynamoDB, tránh join và giữ mọi truy vấn ở mức một lần đọc.
 `PK = USER#<uid>` — nhanh và rẻ hơn nhiều so với gọi 4 bảng.
 
 **Điểm phải nhớ:** `HIST#<ISO8601>` cho phép sắp xếp lịch sử theo thời gian mà không cần index phụ,
-vì chuỗi ISO 8601 sắp xếp theo thứ tự từ điển trùng với thứ tự thời gian.
+vì chuỗi ISO 8601 sắp xếp theo thứ tự từ điển trùng với thứ tự thời gian. Nhờ vậy báo cáo một
+tuần chỉ là `SK BETWEEN :dauTuan AND :cuoiTuan` — không cần GSI.
+
+⚠️ **Nhật ký là NGUYÊN LIỆU DUY NHẤT cho báo cáo gửi phụ huynh** (nối 09/08/2026). Bộ đếm ở
+`PROGRESS` là **tổng cả đời, không có trục thời gian**, nên "tuần này con làm bao nhiêu câu"
+không tính ra được từ chúng.
+
+⚠️ **Hậu tố 4 hex sau mốc thời gian là bắt buộc:** `PutItem` ghi đè khi trùng khoá, mà hàng chờ
+ở client (`astroq-progress-queue`, tối đa 40 việc) gửi lại thành một loạt liên tiếp — hai việc
+rơi vào cùng một mốc là một dòng biến mất, im lặng. Tiền tố ISO vẫn quyết định thứ tự sắp xếp.
+
+⚠️ **Chỉ ghi ở nhánh `counted:true`.** `POST /me/progress` có ba đường ra sớm không tính công
+(trùng `opId` · đọc lại bài · ghé lại hành tinh); ghi trước chúng là báo cáo thổi phồng số lượt
+của trẻ. Có phép kiểm riêng cho cả ba ở `scratchpad/test_history.py`.
+
+⚠️ **`ttl` 400 ngày** — khác `WAITLIST#` (cố ý không có TTL). Đây là nhật ký sự kiện; tổng cả đời
+nằm ở `PROGRESS` và không bao giờ hết hạn, nên chỉ mất phần chi tiết theo tuần cũ hơn ~13 tháng.
 
 **Chế độ:** `PAY_PER_REQUEST` (on-demand). Lưu lượng của astroQ giai đoạn đầu rất thấp và không đều
 — on-demand không phải đoán capacity và gần như miễn phí ở mức nhỏ.

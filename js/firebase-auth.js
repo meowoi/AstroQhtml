@@ -377,6 +377,26 @@ const AstroQAuth = {
     return r.ok ? { ok:true, data:r.data } : r;
   },
 
+  /** Báo cáo tuần cho phụ huynh. `week` = 0 tuần này, 1 tuần trước…
+      → { ok:true, data:{ week, child, current, previous, badges[], lifetime } }
+      ⚠️ Nguồn là NHẬT KÝ sự kiện (`HIST#…`), chảy từ 09/08/2026 — tuần nào trước
+         đó cũng trả `current.empty = true`, và trang phải NÓI THẬT chứ đừng vẽ 0. */
+  async getReport(week){
+    const w = Number(week) > 0 ? Math.floor(Number(week)) : 0;
+    const r = await this._authed(t => apiGetAuth("/me/report?week=" + w, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Gửi báo cáo tuần về email của tài khoản.
+      → { ok:true, data:{ sent:true, to } } hoặc { sent:false, reason:"cooldown"|"empty"|"mail-failed" }
+      ⚠️ `sent:false` KHÔNG phải lỗi — đó là câu trả lời thật (tuần rỗng thì không
+         gửi thư "con bạn học 0 phút"). Giao diện phải phân biệt hai thứ đó. */
+  async sendReportEmail(week){
+    const w = Number(week) > 0 ? Math.floor(Number(week)) : 0;
+    const r = await this._authed(t => apiPostAuth("/me/report/email?week=" + w, {}, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
   /** Số dư ví thật. → { ok:true, data:{ meteors } } */
   async getWallet(){
     const r = await this._authed(t => apiGetAuth("/me/wallet", t));

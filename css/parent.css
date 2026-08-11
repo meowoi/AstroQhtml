@@ -1,0 +1,90 @@
+/* ══════════════════════════════════════════════════════════════════════
+   parent.css — Bảng theo dõi cho bố mẹ (parent.html).
+   Nạp SAU css/common.css và css/page-shell.css: nền, .wrap, .hub-top, .hero,
+   .panel, .banner, .filters/.seg, .kv, .pbtn đều đến từ page-shell.
+   Ở đây chỉ có phần RIÊNG.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Dòng phụ dưới một ô số liệu — dùng cho xu hướng "tăng 8 điểm".
+   ⚠️ `.kv .cell .b` của page-shell xếp dọc sẵn nên chỉ cần thêm dòng thứ ba. */
+.kv .cell .sub{display:block;margin-top:3px;font-size:11px;line-height:1.4;
+  color:var(--ink-soft,#9fb2d9);}
+/* Tăng thì xanh; giảm thì KHÔNG tô đỏ — đây là báo cáo học tập của một đứa trẻ,
+   màu đỏ đọc ra thành "con làm sai rồi". Giảm cứ để màu chữ thường. */
+.kv .cell .sub.up{color:#7ee7a6;}
+
+/* ── Tuần rỗng ──
+   Khối này THAY cho lưới số liệu, không đứng cạnh nó: hiện "0" ở tám ô rồi thêm
+   một dòng giải thích bên dưới thì mắt đọc con số trước, và con số đó nói sai. */
+/* ⚠️⚠️ `[hidden]` PHẢI KHAI LẠI — LẦN THỨ BA TRONG NGÀY GẶP ĐÚNG BẪY NÀY.
+   `display` của tác giả THẮNG `display:none` mà trình duyệt áp cho `[hidden]`, nên
+   `$("empty").hidden = true` KHÔNG ẩn được khối này: nó có `padding:26px` nên vẫn
+   chiếm một mảng ~52px và hiện ra ngay cả ở tuần CÓ dữ liệu — tức phụ huynh đọc
+   "chưa ghi được hoạt động nào" ngay dưới bảng số liệu đầy đủ.
+   Hai ca trước cùng hôm nay: `#time-ok` ở mission-earth, `.lk-btn` ở locks.css. */
+.pt-empty[hidden]{display:none;}
+.pt-empty{display:flex;flex-direction:column;align-items:center;gap:7px;
+  text-align:center;padding:26px 18px;border-radius:14px;
+  border:1px dashed rgba(255,207,107,.34);background:rgba(255,207,107,.06);}
+.pt-empty .ic{font-size:30px;line-height:1;}
+.pt-empty b{font-family:var(--font-display);font-weight:700;font-size:15px;
+  color:var(--ink,#eaf1ff);}
+.pt-empty span:last-child{font-size:13px;line-height:1.6;color:var(--ink-soft,#9fb2d9);
+  max-width:420px;}
+
+/* ── Huy hiệu mở trong tuần ── */
+.pt-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.pt-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;
+  border-radius:999px;font-size:13px;color:#ffe3bd;
+  border:1px solid rgba(255,207,107,.4);background:rgba(255,207,107,.1);}
+
+/* ── Chủ đề: vững / cần luyện thêm ──
+   ⚠️ CẦN LUYỆN THÊM tô HỔ PHÁCH, KHÔNG tô ĐỎ. Đây là báo cáo học tập của một đứa
+   trẻ, và màu đỏ đọc ra thành "con bạn sai rồi" chứ không phải "chỗ này đáng ngồi
+   cùng con" — cùng lý do đã chốt cho `.sum-note` ở quiz.html và cho việc xu hướng
+   GIẢM không bị tô đỏ ở ngay trang này. */
+.pt-topics{display:flex;flex-direction:column;gap:8px;}
+.pt-topic{display:flex;align-items:center;gap:10px;padding:10px 13px;
+  border-radius:12px;border:1px solid rgba(150,180,255,.16);
+  background:rgba(10,16,38,.5);}
+.pt-topic .tn{flex:1;min-width:0;font-size:14px;color:var(--ink,#eaf1ff);}
+.pt-topic .tc{flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13px;color:var(--ink-soft,#9fb2d9);}
+.pt-topic .tg{flex:none;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;}
+.pt-topic.weak{border-color:rgba(255,207,107,.34);background:rgba(255,207,107,.07);}
+.pt-topic.weak .tg{color:#ffcf6b;border:1px solid rgba(255,207,107,.4);}
+.pt-topic.solid .tg{color:#7ee7a6;border:1px solid rgba(126,231,166,.35);}
+
+/* Màn hẹp: tên chủ đề xuống dòng riêng, không bóp nhãn còn "CẦN LUYỆN…" */
+@media (max-width:520px){
+  .pt-topic{flex-wrap:wrap;gap:6px 10px;}
+  .pt-topic .tn{flex:1 0 100%;}
+}
+
+/* ── Gửi email ── */
+/* ⚠️ min-height 48px KHAI LẠI Ở ĐÂY, không dựa vào `.pbtn` của page-shell: đo trên
+   màn 390px thì nút gửi ra **40px**, dưới cả mốc tối thiểu 44px của WCAG 2.5.5.
+   Đây là nút chính của cả trang với phụ huynh — bấm trượt là mất luôn tính năng. */
+.pt-mail{display:flex;flex-wrap:wrap;align-items:center;gap:12px;}
+.pt-mail .pbtn{min-height:48px;}
+.pbtn.primary{border-color:transparent;color:#08122b;
+  background:linear-gradient(135deg,#38bdf8,#8f7bff);}
+.pbtn[disabled]{opacity:.6;cursor:default;}
+
+.pt-mail-msg{font-size:13px;line-height:1.5;color:var(--ink-soft,#9fb2d9);}
+.pt-mail-msg.ok{color:#7ee7a6;}
+/* ⚠️ Chỉ `.bad` mới đỏ, và nó CHỈ dùng cho lỗi thật (SES hỏng / chưa đăng nhập).
+   "Tuần này chưa có hoạt động" và "vừa gửi rồi" KHÔNG phải lỗi — tô đỏ chúng là
+   nói với phụ huynh rằng có gì đó hỏng trong khi hệ thống đang trả lời đúng. */
+.pt-mail-msg.bad{color:#ff8a8a;}
+
+/* ── Dòng nói thật về mốc bắt đầu ghi ── */
+.pt-since{margin:18px 0 30px;font-size:11.8px;line-height:1.65;
+  color:var(--ink-soft,#9fb2d9);opacity:.8;text-align:center;}
+
+@media (max-width:520px){
+  .pt-mail{flex-direction:column;align-items:stretch;}
+  .pt-mail .pbtn{width:100%;}
+  .pt-mail-msg{text-align:center;}
+}

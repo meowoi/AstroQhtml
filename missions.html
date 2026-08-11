@@ -12,8 +12,10 @@
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/missions.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/locks.js"></script>
 <!-- Tên hành tinh song ngữ — CHỖ DUY NHẤT khai báo (js/planets.js) -->
 <script src="js/planets.js"></script>
 <script src="js/progress.js"></script>
@@ -85,7 +87,7 @@
       tag_ov:"Tổng quan", ov_h:"Bảng điều phối",
       ov_done:"Nhiệm vụ hoàn thành", ov_steps:"Bước đã xong", ov_codex:"Mẫu dữ liệu",
       steps_unit:"bước", codex_unit:"mẫu dữ liệu",
-      soon:"Sắp ra mắt", complete:"HOÀN THÀNH",
+      soon:"Sắp ra mắt", why:"Vì sao chưa mở?", complete:"HOÀN THÀNH",
       start:"Bắt đầu nhiệm vụ", resume:"Tiếp tục nhiệm vụ", replay:"Chơi lại nhiệm vụ",
       soon_toast:"🚧 Nhiệm vụ này sắp ra mắt — hoàn thành Nhiệm Vụ 01 trước nhé!",
       start_toast:"🚀 Đang mở nhiệm vụ…",
@@ -104,7 +106,7 @@
       tag_ov:"Overview", ov_h:"Dispatch board",
       ov_done:"Missions complete", ov_steps:"Steps finished", ov_codex:"Data samples",
       steps_unit:"steps", codex_unit:"data samples",
-      soon:"Coming soon", complete:"COMPLETE",
+      soon:"Coming soon", why:"Why is it locked?", complete:"COMPLETE",
       start:"Start mission", resume:"Resume mission", replay:"Replay mission",
       soon_toast:"🚧 This mission is coming soon — finish Mission 01 first!",
       start_toast:"🚀 Opening the mission…",
@@ -201,7 +203,10 @@
       /* Nhãn nút theo tiến độ THẬT. Chưa đọc được tiến độ (chưa đăng nhập / mất
          mạng) thì nói "Bắt đầu" — đó là câu đúng trong mọi trường hợp, còn
          "Tiếp tục" mà thật ra chưa làm bước nào là hứa sai. */
-      var label = soon ? t("soon")
+      /* Nhiệm vụ khoá: nhãn nút là một CÂU HỎI BẤM ĐƯỢC, không phải chữ "Sắp ra
+         mắt" lặp lại đúng cái nhãn trạng thái ngay phía trên — nút mở modal giải
+         thích, nên nhãn phải mời bấm. */
+      var label = soon ? t("why")
                 : !s ? t("start")
                 : s.done ? t("replay")
                 : doneSteps > 0 ? t("resume") : t("start");
@@ -223,8 +228,19 @@
       var planetName = m.planet && window.AstroQPlanets
         ? AstroQPlanets.name(m.planet, LANG) : "";
 
+      /* Huy hiệu khoá — trạng thái và chữ đều lấy từ js/locks.js (chỗ duy nhất
+         khai). `soon` là hổ phách "SẮP RA MẮT", KHÔNG phải "TRẢ PHÍ": nhiệm vụ
+         này chưa có nội dung, gắn nhãn trả phí là hứa rằng trả tiền sẽ mở được. */
+      var lk = (soon && window.AstroQLocks) ? AstroQLocks.get("mission:"+m.key) : null;
+      var badge = lk
+        ? '<span class="lk-badge '+lk.state+' lk-pin">'+
+            AstroQ.esc(AstroQLocks.text(lk.state==="soon" ? "badge_soon" : "badge_pro"))+
+          '</span>'
+        : '';
+
       return '<article class="mcard '+m.cls+(soon?' soon':'')+(s&&s.done?' done':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+m.code+'</span>'+status+'</div>'+
+        badge+
         '<div class="ic">'+m.icon+'</div>'+
         '<span class="tag">'+AstroQ.esc(t("m_"+m.key+"_tag"))+'</span>'+
         '<h3>'+AstroQ.esc(t("m_"+m.key+"_name"))+'</h3>'+
@@ -238,10 +254,16 @@
   }
 
   /* ================= Mở một nhiệm vụ ================= */
-  function launch(key){
+  function launch(key, trigger){
     var m=null; for(var i=0;i<MISSIONS.length;i++){ if(MISSIONS[i].key===key) m=MISSIONS[i]; }
     if(!m) return;
-    if(m.status!=="ready" || !m.file){ toast(t("soon_toast")); return; }
+    if(m.status!=="ready" || !m.file){
+      /* Nhiệm vụ chưa mở: mở MODAL nói rõ vì sao khoá + khi mở sẽ được gì, thay
+         cho một dòng toast trôi qua trong 2 giây. Toast chỉ còn là đường lùi khi
+         js/locks.js không nạp được. */
+      if(window.AstroQLocks && AstroQLocks.open("mission:"+key, trigger)) return;
+      toast(t("soon_toast")); return;
+    }
     /* KHÔNG trừ Thiên thạch tím: nhiệm vụ là phần học, không phải mini-game. Bảng
        phí ở Services/Wallet.cs cũng không có mục nào cho nhiệm vụ. */
     toast(t("start_toast"));
@@ -289,7 +311,7 @@
   /* ================= Sự kiện ================= */
   $("missions").addEventListener("click", function(e){
     var b = e.target.closest ? e.target.closest(".play-btn") : null;
-    if(b) launch(b.getAttribute("data-key"));
+    if(b) launch(b.getAttribute("data-key"), b);
   });
   $("back").addEventListener("click", function(){ location.href="dashboard.html"; });
 

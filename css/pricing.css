@@ -1,0 +1,154 @@
+/* ══════════════════════════════════════════════════════════════════════
+   pricing.css — trang Gói & Ưu đãi (pricing.html).
+   Nạp SAU css/common.css và css/page-shell.css: khung trang (nền, .wrap,
+   .hub-top, .hero, .panel, .banner, .pbtn) đến từ page-shell, ở đây chỉ có
+   phần RIÊNG của bảng giá.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Dải "trang này dành cho bố mẹ" — tông hổ phách để khác hẳn dải lỗi mạng
+   màu đỏ/xám của page-shell: đây là thông tin, không phải sự cố.
+
+   ⚠️⚠️ `display:flex` LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ. `.banner` ở page-shell.css
+      khai `display:none` và chỉ hiện khi JS gắn thêm `.show` — đúng cho dải "mất
+      mạng" của missions/achievements (có điều kiện), nhưng SAI cho dải này: đây là
+      lời nói thật thường trực, phải hiện ngay cả khi JS chưa chạy.
+      Bản đầu quên chốt này nên dải **chưa bao giờ hiện ra** — và phép kiểm vẫn
+      xanh, vì `innerText` của Chrome rơi về `textContent` với phần tử không được
+      vẽ. Nay `smoke_locks.py` đo `is_visible()` chứ không đo chữ.
+   ⚠️ Cố ý KHÔNG chữa bằng cách thêm class `.show` vào markup: `.show` là cờ do JS
+      bật/tắt, dùng nó cho một dải luôn hiện là mượn sai ý nghĩa. */
+.banner.pr-note{display:flex;border-color:rgba(255,207,107,.34);
+  background:rgba(255,207,107,.09);}
+.banner.pr-note .ic{filter:none;}
+
+/* ── Lưới gói ── */
+.plans{display:grid;gap:14px;margin:22px 0 26px;
+  grid-template-columns:repeat(auto-fit,minmax(228px,1fr));}
+
+.plan{position:relative;display:flex;flex-direction:column;gap:8px;
+  border-radius:18px;padding:22px 18px 18px;
+  border:1px solid rgba(56,189,248,.24);
+  background:linear-gradient(180deg,rgba(17,26,54,.86),rgba(11,17,38,.86));}
+
+/* Thẻ có huy hiệu cần thêm chỗ ở đỉnh, không thì huy hiệu đè lên tiêu đề */
+.plan.has-badge{padding-top:30px;}
+
+/* Gói được khuyên dùng: viền sáng hơn, KHÔNG phóng to.
+   Phóng to một thẻ trong lưới `auto-fit` làm cả hàng lệch chiều cao trên màn hẹp. */
+.plan.hot{border-color:rgba(143,123,255,.6);
+  box-shadow:0 0 0 1px rgba(143,123,255,.22),0 18px 40px -26px rgba(143,123,255,.75);}
+
+.p-badge{position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-mono,monospace);font-size:9.5px;letter-spacing:.09em;
+  padding:4px 10px;border-radius:999px;white-space:nowrap;}
+.p-badge.popular{color:#08122b;background:linear-gradient(135deg,#38bdf8,#8f7bff);}
+.p-badge.limited{color:#ffcf6b;background:rgba(255,207,107,.14);
+  border:1px solid rgba(255,207,107,.5);}
+
+.plan h3{font-family:var(--font-display);font-weight:700;font-size:16.5px;
+  margin:0;color:var(--ink,#eaf1ff);}
+.p-desc{margin:0;font-size:12.8px;line-height:1.55;color:var(--ink-soft,#9fb2d9);min-height:38px;}
+
+.p-price{margin-top:4px;}
+.p-main{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;}
+.p-main b{font-family:var(--font-display);font-size:26px;line-height:1.1;color:var(--ink,#eaf1ff);}
+.p-per{font-size:12.5px;color:var(--ink-soft,#9fb2d9);}
+.p-alt{margin-top:5px;font-size:12.8px;color:var(--ink-soft,#9fb2d9);}
+.p-off{display:inline-block;margin-left:4px;padding:1px 7px;border-radius:999px;
+  font-size:10.5px;color:#7ee7a6;background:rgba(126,231,166,.12);
+  border:1px solid rgba(126,231,166,.34);}
+.p-eq{margin-top:3px;font-size:11.5px;color:var(--ink-soft,#9fb2d9);opacity:.85;}
+
+/* ⚠️ 48px chứ không phải 44 — 44 là mốc TỐI THIỂU của WCAG 2.5.5, đặt đúng mốc
+   thì phép kiểm vùng chạm chập chờn (ca nút VI của explorer.html). */
+.p-cta{display:flex;align-items:center;justify-content:center;min-height:48px;
+  margin-top:auto;border-radius:12px;text-decoration:none;cursor:pointer;
+  font-family:var(--font-display);font-weight:700;font-size:13.4px;
+  border:1px solid rgba(56,189,248,.4);color:var(--cyan,#38bdf8);
+  background:rgba(56,189,248,.08);transition:filter .14s ease;}
+.plan.hot .p-cta{border-color:transparent;color:#08122b;
+  background:linear-gradient(135deg,#38bdf8,#8f7bff);}
+.p-cta:hover{filter:brightness(1.1);}
+.p-cta:focus-visible{outline:2px solid var(--cyan,#38bdf8);outline-offset:2px;}
+/* Gói đang dùng: KHÔNG phải nút — không có gì để bấm, nên không giả làm nút. */
+.p-cta.cur{cursor:default;color:var(--ink-soft,#9fb2d9);
+  border-style:dashed;border-color:rgba(255,255,255,.18);background:none;}
+
+/* ── Bảng so sánh ── */
+.cmp{display:flex;flex-direction:column;gap:1px;border-radius:12px;overflow:hidden;
+  background:rgba(255,255,255,.06);}
+.cmp-head,.cmp-row{display:grid;grid-template-columns:1fr 92px 92px;align-items:center;
+  gap:8px;padding:11px 13px;background:rgba(11,17,38,.92);}
+.cmp-head{font-family:var(--font-mono,monospace);font-size:10.5px;letter-spacing:.07em;
+  color:var(--cyan,#38bdf8);text-transform:uppercase;}
+.cmp-head span:not(:first-child),.cmp-row span:not(:first-child){text-align:center;}
+.cmp-k{font-size:13.4px;line-height:1.5;color:var(--ink,#eaf1ff);}
+
+.cmp .yes{color:#7ee7a6;font-weight:700;}
+.cmp .no{color:rgba(255,255,255,.26);}
+.cmp .lim{font-size:11px;color:var(--ink-soft,#9fb2d9);}
+
+/* Nhãn trạng thái thật của từng mục — thứ giữ cho trang giá này trung thực */
+.st{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+  font-family:var(--font-mono,monospace);font-size:9.5px;letter-spacing:.05em;
+  white-space:nowrap;vertical-align:middle;}
+.st.have{color:#7ee7a6;background:rgba(126,231,166,.1);border:1px solid rgba(126,231,166,.3);}
+.st.soon{color:#ffcf6b;background:rgba(255,207,107,.1);border:1px solid rgba(255,207,107,.34);}
+
+/* ── Ai nhận gì ── */
+.who{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));}
+.who-col{border-radius:14px;padding:15px 16px;
+  border:1px solid rgba(56,189,248,.2);background:rgba(56,189,248,.05);}
+.who-col h3{font-family:var(--font-display);font-weight:700;font-size:14.5px;
+  margin:0 0 9px;color:var(--ink,#eaf1ff);}
+.who-col ul{margin:0;padding:0;list-style:none;}
+.who-col li{position:relative;padding-left:19px;margin:7px 0;
+  font-size:13.3px;line-height:1.55;color:var(--ink-soft,#9fb2d9);}
+.who-col li::before{content:"✓";position:absolute;left:1px;top:0;
+  color:#7ee7a6;font-size:11.5px;font-weight:700;}
+
+/* ── Ưu đãi ── */
+.perks{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));}
+.perk{display:flex;gap:9px;align-items:flex-start;border-radius:12px;padding:12px 13px;
+  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);}
+.perk .ic{color:var(--cyan,#38bdf8);font-size:12px;line-height:1.6;flex:none;}
+.perk p{margin:0;font-size:13.2px;line-height:1.6;color:var(--ink-soft,#9fb2d9);}
+.perk b{color:var(--ink,#eaf1ff);}
+
+/* ── FAQ ── */
+.faq{display:flex;flex-direction:column;gap:8px;}
+.fq{border-radius:12px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.03);overflow:hidden;}
+/* min-height 48px: <summary> là vùng chạm thật, phải đủ to trên máy tính bảng */
+.fq summary{cursor:pointer;list-style:none;padding:13px 15px;min-height:48px;
+  display:flex;align-items:center;gap:9px;
+  font-family:var(--font-display);font-weight:700;font-size:13.8px;color:var(--ink,#eaf1ff);}
+.fq summary::-webkit-details-marker{display:none;}
+.fq summary::before{content:"+";flex:none;width:17px;color:var(--cyan,#38bdf8);font-size:15px;}
+.fq[open] summary::before{content:"–";}
+.fq summary:focus-visible{outline:2px solid var(--cyan,#38bdf8);outline-offset:-2px;}
+.fq-a{padding:0 15px 14px 41px;font-size:13.2px;line-height:1.65;color:var(--ink-soft,#9fb2d9);}
+.fq-a b{color:var(--ink,#eaf1ff);}
+
+/* ── CTA cuối trang ── */
+.pr-cta{text-align:center;margin:26px 0 34px;border-radius:18px;padding:26px 20px 22px;
+  border:1px solid rgba(143,123,255,.28);
+  background:linear-gradient(180deg,rgba(143,123,255,.12),rgba(11,17,38,.6));}
+.pr-cta h2{font-family:var(--font-display);font-weight:700;font-size:19px;
+  margin:0 0 8px;color:var(--ink,#eaf1ff);}
+.pr-cta p{margin:0 auto;max-width:520px;font-size:13.6px;line-height:1.6;
+  color:var(--ink-soft,#9fb2d9);}
+.pr-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+.pbtn.primary{border-color:transparent;color:#08122b;
+  background:linear-gradient(135deg,#38bdf8,#8f7bff);}
+.pr-fine{margin-top:14px !important;font-size:11.6px !important;opacity:.75;}
+
+@media (max-width:560px){
+  .cmp-head,.cmp-row{grid-template-columns:1fr 62px 62px;padding:10px;}
+  .cmp-k{font-size:12.6px;}
+  .pr-acts .pbtn{width:100%;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .p-cta:hover{filter:none;}
+}

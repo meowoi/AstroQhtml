@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app — noindex như 17 trang còn lại. Ở đây còn một lý do riêng: nội dung
+     là dữ liệu học tập của một đứa trẻ, không có gì để Google lập chỉ mục. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Bảng theo dõi cho bố mẹ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/parent.css" />
+<script src="js/ui-common.js"></script>
+<!-- ⚠️ Trang này BẮT BUỘC nạp SDK Firebase: báo cáo đọc `GET /me/report` nên phải
+     có token. Cùng đánh đổi có ý thức như specimen-vault.html và codex.html —
+     `check_pages.py` mục [4] có danh sách trang được phép nạp, đã thêm trang này. -->
+<script src="js/badges.js"></script>
+<!-- ⚠️ NẠP MỤC LỤC NGÂN HÀNG CÂU HỎI (5,8 KB) CHỈ ĐỂ LẤY TÊN CHỦ ĐỀ.
+     Server trả về khoá câu (`star`, `comet-tail`); `AstroQQuestions.groupOf(khoá)`
+     đổi nó thành thẻ Sổ Tay + tên song ngữ. Cùng phân công với huy hiệu: server giữ
+     mốc, client giữ tên. File này KHÔNG kéo theo 100 file câu — chúng chỉ được
+     `import()` khi thật sự chơi. -->
+<script src="js/quiz-index.js"></script>
+<script src="js/progress.js"></script>
+<script type="module" src="js/firebase-auth.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <!-- ============ HEADER ============ -->
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ PARENT_DASHBOARD ]</span>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <span class="eyebrow" data-i18n="eyebrow">👨‍👩‍👧 Dành cho bố mẹ</span>
+    <h1 data-i18n="title_h">Tuần này con học được gì</h1>
+    <p data-i18n="intro">Số liệu lấy từ chính việc con làm trong app — không phải ước lượng. Bố mẹ xem được cả tuần này lẫn tuần trước để so.</p>
+  </section>
+
+  <!-- Dải nhắc khi chưa đăng nhập / mất mạng. Mọi con số khi đó hiện dấu "—",
+       KHÔNG hiện 0 — "0 lượt quiz" là một lời khẳng định SAI về đứa trẻ. -->
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <!-- ============ CHỌN TUẦN ============ -->
+  <div class="filters">
+    <span class="lbl" data-i18n="pick_week">Xem tuần</span>
+    <div class="seg" id="weeks" role="group"></div>
+  </div>
+
+  <!-- ============ Ô SỐ LIỆU ============ -->
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_sum">TỔNG QUAN</span></span>
+    <h2><span class="ic" aria-hidden="true">📊</span><span id="sum-h" data-i18n="sum_h">Tuần này</span></h2>
+    <p class="panel-sub" id="range"></p>
+    <div class="kv" id="stats"></div>
+    <div class="pt-empty" id="empty" hidden></div>
+  </section>
+
+  <!-- ============ CHỦ ĐỀ: VỮNG / CẦN LUYỆN THÊM ============
+       Đây là thứ `pricing.html` hứa với phụ huynh: "Thấy rõ con vững chủ đề nào,
+       còn vướng chỗ nào". Server trả về KHOÁ CÂU + số đúng/sai; tên chủ đề lấy từ
+       `js/quiz-index.js` — chỗ duy nhất khai tên, y như huy hiệu lấy từ js/badges.js. -->
+  <section class="panel" id="topic-panel" hidden>
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_topic">CHỦ ĐỀ</span></span>
+    <h2><span class="ic" aria-hidden="true">🧭</span><span data-i18n="topic_h">Con vững chỗ nào, vướng chỗ nào</span></h2>
+    <p class="panel-sub" data-i18n="topic_sub">Tính theo từng câu con đã làm trong tuần. Chủ đề còn vướng xếp lên trước — đó là chỗ đáng ngồi cùng con nhất.</p>
+    <div class="pt-topics" id="topics"></div>
+  </section>
+
+  <!-- ============ HUY HIỆU MỞ TRONG TUẦN ============ -->
+  <section class="panel" id="badge-panel" hidden>
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_badge">HUY HIỆU</span></span>
+    <h2><span class="ic" aria-hidden="true">🎖️</span><span data-i18n="badge_h">Con mở được trong tuần</span></h2>
+    <div class="pt-badges" id="badges"></div>
+  </section>
+
+  <!-- ============ GỬI EMAIL ============ -->
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_mail">EMAIL</span></span>
+    <h2><span class="ic" aria-hidden="true">✉️</span><span data-i18n="mail_h">Gửi báo cáo về email</span></h2>
+    <p class="panel-sub" data-i18n="mail_sub">Thư gửi tới chính email đăng ký tài khoản. Không có quảng cáo trong thư, và không có thông tin nào được chia sẻ ra ngoài.</p>
+    <div class="pt-mail">
+      <button class="pbtn primary" id="send" type="button" data-i18n="mail_btn">Gửi báo cáo tuần này</button>
+      <span class="pt-mail-msg" id="mail-msg" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <!-- ⚠️ NÓI THẲNG MỐC BẮT ĐẦU GHI. Không backfill được, nên tuần trước ngày này
+       luôn rỗng. Không nói ra thì phụ huynh đọc "0" và tưởng con không học. -->
+  <p class="pt-since" id="since"></p>
+</div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+
+  /* ⚠️ MỐC NÀY PHẢI KHỚP NGÀY DEPLOY `AddHistoryAsync` (09/08/2026). Nó không suy
+     ra được từ dữ liệu: một tuần rỗng có thể là "chưa ghi" hoặc "con không học",
+     và hai câu đó nói ngược nhau với phụ huynh. */
+  var LOG_SINCE = "2026-08-09";
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", title:"AstroQ — Bảng theo dõi cho bố mẹ",
+      back:"Về Trung Tâm Điều Hướng",
+      eyebrow:"👨‍👩‍👧 Dành cho bố mẹ", title_h:"Tuần này con học được gì",
+      intro:"Số liệu lấy từ chính việc con làm trong app — không phải ước lượng. Bố mẹ xem được cả tuần này lẫn tuần trước để so.",
+      pick_week:"Xem tuần", w_0:"Tuần này", w_1:"Tuần trước", w_2:"2 tuần trước",
+      tag_sum:"Tổng quan", sum_h:"Tuần này", sum_h1:"Tuần trước", sum_h2:"2 tuần trước",
+      tag_topic:"Chủ đề", topic_h:"Con vững chỗ nào, vướng chỗ nào",
+      topic_sub:"Tính theo từng câu con đã làm trong tuần. Chủ đề còn vướng xếp lên trước — đó là chỗ đáng ngồi cùng con nhất.",
+      tp_weak:"cần luyện thêm", tp_solid:"vững",
+      tag_badge:"Huy hiệu", badge_h:"Con mở được trong tuần",
+      tag_mail:"Email", mail_h:"Gửi báo cáo về email",
+      mail_sub:"Thư gửi tới chính email đăng ký tài khoản. Không có quảng cáo trong thư, và không có thông tin nào được chia sẻ ra ngoài.",
+      mail_btn:"Gửi báo cáo tuần này",
+      mail_sending:"Đang gửi…",
+      mail_sent:"Đã gửi tới {to}. Kiểm tra hòm thư nhé.",
+      mail_empty:"Tuần này chưa có hoạt động nào nên chưa có gì để gửi.",
+      mail_cool:"Vừa gửi xong rồi — thử lại sau {n} phút nhé.",
+      mail_fail:"Đường gửi thư đang trục trặc, chưa gửi được. Thử lại sau nhé.",
+      mail_auth:"Cần đăng nhập mới gửi được báo cáo.",
+      k_days:"Số ngày có học", k_quiz:"Lượt Đấu Trường", k_ans:"Số câu đã làm",
+      k_acc:"Độ chính xác", k_steps:"Bước nhiệm vụ", k_read:"Bài đã đọc",
+      k_games:"Lượt huấn luyện", k_xp:"XP nhận được",
+      range:"Từ {a} đến {b}",
+      up:"tăng {n} điểm", down:"giảm {n} điểm", same:"bằng tuần trước",
+      first:"tuần đầu có dữ liệu",
+      partial:"tuần đầu, {n} ngày kể từ ngày đăng ký",
+      pre_h:"Tuần này nằm trước ngày con đăng ký",
+      pre_p:"Tài khoản của con mở sau tuần này, nên không có gì để báo cáo.",
+      empty_h:"Tuần này chưa ghi được hoạt động nào",
+      empty_p:"Có thể con chưa vào app tuần này, hoặc tuần này nằm trước ngày astroQ bắt đầu ghi nhật ký.",
+      since:"astroQ bắt đầu ghi nhật ký hoạt động từ ngày {d}. Các tuần trước đó không có số liệu — đó là giới hạn của hệ thống, không phải con không học.",
+      off_guest:"Bạn chưa đăng nhập nên các con số đang hiện dấu “—”. <a href=\"landing-app.html\">Đăng nhập</a> để xem báo cáo thật.",
+      off_net:"Không kết nối được máy chủ nên các con số đang hiện dấu “—”. Kiểm tra mạng rồi tải lại trang nhé.",
+      mins:"phút"
+    },
+    en:{
+      a_lang:"Language", title:"AstroQ — Parent dashboard",
+      back:"Back to Navigation Hub",
+      eyebrow:"👨‍👩‍👧 For parents", title_h:"What your child learned this week",
+      intro:"These numbers come from what your child actually did in the app — not estimates. You can compare this week with last week.",
+      pick_week:"Show week", w_0:"This week", w_1:"Last week", w_2:"2 weeks ago",
+      tag_sum:"Overview", sum_h:"This week", sum_h1:"Last week", sum_h2:"2 weeks ago",
+      tag_topic:"Topics", topic_h:"What is solid, what still needs work",
+      topic_sub:"Counted from the questions your child answered this week. Topics that need work come first — that is where sitting down together helps most.",
+      tp_weak:"needs work", tp_solid:"solid",
+      tag_badge:"Badges", badge_h:"Earned this week",
+      tag_mail:"Email", mail_h:"Email this report",
+      mail_sub:"Sent to the account's own email address. No ads in the email, and nothing is shared with anyone else.",
+      mail_btn:"Email this week's report",
+      mail_sending:"Sending…",
+      mail_sent:"Sent to {to}. Check your inbox.",
+      mail_empty:"Nothing happened this week, so there is nothing to send.",
+      mail_cool:"Just sent one — try again in {n} minutes.",
+      mail_fail:"Our mail service is having trouble, nothing was sent. Try again later.",
+      mail_auth:"You need to sign in to email the report.",
+      k_days:"Days active", k_quiz:"Quiz rounds", k_ans:"Questions answered",
+      k_acc:"Accuracy", k_steps:"Mission steps", k_read:"Articles read",
+      k_games:"Training runs", k_xp:"XP earned",
+      range:"From {a} to {b}",
+      up:"up {n} points", down:"down {n} points", same:"same as last week",
+      first:"first week with data",
+      partial:"first week, {n} days since sign-up",
+      pre_h:"This week is before your child signed up",
+      pre_p:"The account was created after this week, so there is nothing to report.",
+      empty_h:"No activity recorded this week",
+      empty_p:"Either your child didn't open the app this week, or this week is before astroQ started keeping an activity log.",
+      since:"astroQ started logging activity on {d}. Weeks before that have no data — that's a limit of the system, not a sign your child wasn't learning.",
+      off_guest:"You are not signed in, so the numbers show “—”. <a href=\"landing-app.html\">Sign in</a> to see the real report.",
+      off_net:"Couldn't reach the server, so the numbers show “—”. Check your connection and reload.",
+      mins:"min"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  var DASH = "—";
+  var WEEK = 0;
+  /* ok:false → mọi con số hiện "—". KHÔNG đoán, không bịa — cùng nguyên tắc
+     missions.html / achievements.html / specimen-vault.html. */
+  var VIEW = { ok:false, reason:"net", data:null };
+
+  function num(n){ return (n==null) ? DASH : Number(n).toLocaleString(LANG==="en"?"en-US":"vi-VN"); }
+
+  /* ---------- Gom KHOÁ CÂU thành THẺ CHỦ ĐỀ ----------
+     Server cố ý trả về KHOÁ CÂU (`star`, `comet-tail`) chứ không trả tên: tên chủ đề
+     song ngữ nằm ở `js/quiz-index.js`, và cách gom câu thành chủ đề là bảng của
+     client — nó sẽ đổi khi ngân hàng lớn từ 100 lên ~870 câu. Gom ở đây thì nhật ký
+     cũ vẫn gom lại được cho đúng; gom sẵn ở server là đóng băng nó vĩnh viễn. */
+  function topicRows(list){
+    var by = {}, out = [];
+    (list || []).forEach(function(x){
+      if (!x || !x.term) return;
+      var g = window.AstroQQuestions ? AstroQQuestions.groupOf(x.term) : null;
+      /* ⚠️ KHOÁ KHÔNG CÒN TRONG NGÂN HÀNG VẪN PHẢI HIỆN. Câu bị gỡ khỏi bank sau khi
+         trẻ đã làm là chuyện bình thường; bỏ qua nó là âm thầm nuốt mất một phần
+         kết quả của trẻ. Không có tên thì hiện chính khoá — xấu, nhưng thật. */
+      var key = g ? (g.c || g.q[0]) : x.term;
+      var nm  = g && g.t ? (g.t[LANG] || g.t.vi) : x.term;
+      var r = by[key];
+      if (!r){ r = by[key] = { key:key, name:nm, ok:0, no:0 }; out.push(r); }
+      r.ok += x.ok | 0;
+      r.no += x.wrong | 0;
+    });
+    /* CẦN LUYỆN THÊM LÊN TRƯỚC — đó là thứ phụ huynh mở trang này để tìm. Hai khoá
+       phụ chỉ để thứ tự tất định giữa các lần vẽ. */
+    out.sort(function(a,b){
+      return (b.no - a.no) || ((b.ok + b.no) - (a.ok + a.no)) ||
+             (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    });
+    return out;
+  }
+
+  function fmtDay(iso, shift){
+    var d = new Date(iso);
+    if (isNaN(d)) return "?";
+    // Khoảng là NỬA MỞ: "đến" là 00:00 thứ Hai tuần sau, nên lùi 1 ngày để in ra Chủ nhật.
+    if (shift) d = new Date(d.getTime() + shift*86400000);
+    return ("0"+d.getDate()).slice(-2) + "/" + ("0"+(d.getMonth()+1)).slice(-2);
+  }
+
+  /* ---------- Chọn tuần ---------- */
+  function renderWeeks(){
+    var html = "";
+    for (var i=0;i<3;i++){
+      html += '<button type="button" data-w="'+i+'"'+(i===WEEK?' class="on"':'')+
+              ' aria-pressed="'+(i===WEEK)+'">'+AstroQ.esc(t("w_"+i))+'</button>';
+    }
+    $("weeks").innerHTML = html;
+    Array.prototype.forEach.call($("weeks").querySelectorAll("button"), function(b){
+      b.addEventListener("click", function(){
+        WEEK = Number(b.getAttribute("data-w"))||0;
+        renderWeeks(); paintAll(); load();
+      });
+    });
+  }
+
+  /* ---------- Ô số liệu ---------- */
+  function trendText(cur, prv){
+    if (cur == null || prv == null) return cur != null ? t("first") : "";
+    var d = cur - prv;
+    if (d === 0) return t("same");
+    return (d > 0 ? t("up") : t("down")).replace("{n}", Math.abs(d));
+  }
+
+  function paintAll(){
+    $("sum-h").textContent = t(WEEK===0 ? "sum_h" : "sum_h"+WEEK);
+
+    var d = VIEW.ok && VIEW.data ? VIEW.data : null;
+    var c = d && d.current, p = d && d.previous;
+
+    /* ⚠️ TUẦN BỊ CẮT THÌ PHẢI NÓI RA. Đăng ký thứ Bảy → tuần đầu chỉ còn 2 ngày;
+       không nói thì phụ huynh đọc nó NHƯ MỘT TUẦN LƯỜI HỌC. Cùng nguyên tắc với
+       dấu "—" thay cho 0 và dòng "bắt đầu ghi nhật ký từ…". */
+    $("range").textContent = c
+      ? t("range").replace("{a}", fmtDay(c.from)).replace("{b}", fmtDay(c.to, -1)) +
+        (c.partial && c.days > 0 ? " · " + t("partial").replace("{n}", c.days) : "")
+      : "";
+
+    /* Tuần rỗng → nói thật, KHÔNG vẽ một loạt số 0. "0 lượt quiz" đọc ra là "con
+       làm mà không được gì"; sự thật là "không có gì được ghi". */
+    var isEmpty = !!(c && c.empty);
+    /* `days === 0` = cả tuần nằm TRƯỚC ngày con đăng ký. Khác hẳn "chưa ghi được
+       hoạt động nào" — nói nhầm câu là đổ cho đứa trẻ một tuần nó chưa tồn tại. */
+    var beforeSignup = !!(c && c.partial && c.days === 0);
+    $("empty").hidden = !isEmpty;
+    if (isEmpty){
+      /* ⚠️ BỐN KHOÁ VIẾT THẲNG, KHÔNG ghép `t(cờ ? "a" : "b")` — phép kiểm i18n của
+         `check_pages` quét `t("khoá")` dạng CHỮ, nên ghép động là cả bốn bị báo
+         "khai mà không dùng", và lỗi đó im lặng. Cùng bài học `s1_hit1/2/3`. */
+      var eh = beforeSignup ? t("pre_h") : t("empty_h");
+      var ep = beforeSignup ? t("pre_p") : t("empty_p");
+      $("empty").innerHTML = '<span class="ic" aria-hidden="true">'+(beforeSignup?"🚪":"🗓️")+'</span>'+
+        '<b>'+AstroQ.esc(eh)+'</b><span>'+AstroQ.esc(ep)+'</span>';
+    }
+
+    var accTrend = c && p ? trendText(c.accuracy, p.accuracy) : "";
+    var cells = isEmpty ? [] : [
+      /* ⚠️ MẪU SỐ LÀ `c.days`, KHÔNG PHẢI 7 — tuần đăng ký bị cắt còn 2 ngày mà
+         in "1/7" thì đọc ra một tuần lười học, đúng cách đọc sai mà việc cắt
+         tuần sinh ra để tránh. */
+      { ic:"📅", v: c ? c.activeDays+"/"+Math.max(1, c.days||7) : DASH, k:t("k_days") },
+      { ic:"⚡", v: c ? num(c.quizRounds) : DASH,           k:t("k_quiz") },
+      { ic:"📝", v: c ? (c.quizAnswered ? c.quizCorrect+"/"+c.quizAnswered : "0") : DASH, k:t("k_ans") },
+      { ic:"🎯", v: c && c.accuracy!=null ? c.accuracy+"%" : DASH, k:t("k_acc"), sub:accTrend,
+        up: c && p && c.accuracy!=null && p.accuracy!=null && c.accuracy>p.accuracy },
+      { ic:"🚀", v: c ? num(c.missionSteps) : DASH,         k:t("k_steps") },
+      { ic:"📖", v: c ? num(c.lessons) : DASH,              k:t("k_read") },
+      { ic:"🎮", v: c ? num(c.games)+(c.gameSeconds ? " ("+Math.round(c.gameSeconds/60)+" "+t("mins")+")" : "") : DASH, k:t("k_games") },
+      { ic:"✨", v: c ? "+"+num(c.xp) : DASH,               k:t("k_xp") }
+    ];
+
+    $("stats").innerHTML = cells.map(function(x){
+      return '<div class="cell"><span class="ic" aria-hidden="true">'+x.ic+'</span>'+
+        '<span class="b"><span class="v">'+AstroQ.esc(String(x.v))+'</span>'+
+        '<span class="k">'+AstroQ.esc(x.k)+'</span>'+
+        (x.sub ? '<span class="sub'+(x.up?" up":"")+'">'+AstroQ.esc(x.sub)+'</span>' : '')+
+        '</span></div>';
+    }).join("");
+
+    // Huy hiệu mở trong tuần — tên lấy từ js/badges.js (chỗ duy nhất khai tên).
+    var bs = (d && d.badges) || [];
+    $("badge-panel").hidden = !(VIEW.ok && bs.length);
+    if (bs.length){
+      $("badges").innerHTML = bs.map(function(id){
+        // API của js/badges.js là name()/icon(), KHÔNG phải get(). Thiếu tên thì
+        // nó trả chính id — trang vẫn vẽ được, không vỡ.
+        var nm = window.AstroQBadges ? AstroQBadges.name(id, LANG) : id;
+        var ic = window.AstroQBadges ? AstroQBadges.icon(id) : "🎖️";
+        return '<span class="pt-badge">'+ic+' '+AstroQ.esc(nm)+'</span>';
+      }).join("");
+    }
+
+    // Chủ đề: vững / cần luyện thêm
+    var tr = c ? topicRows(c.terms) : [];
+    $("topic-panel").hidden = !(VIEW.ok && tr.length);
+    if (tr.length){
+      $("topics").innerHTML = tr.map(function(r){
+        var weak = r.no > 0;
+        /* ⚠️ HAI KHOÁ LITERAL, không ghép `t("tp_" + …)` — cùng bài học `off_guest`/
+           `off_net` ngay dưới đây và `s1_hit1/2/3` ở mission-earth. */
+        var tag = weak ? t("tp_weak") : t("tp_solid");
+        return '<div class="pt-topic'+(weak?" weak":" solid")+'">'+
+          '<span class="tn">'+AstroQ.esc(r.name)+'</span>'+
+          '<span class="tc">'+r.ok+'/'+(r.ok+r.no)+'</span>'+
+          '<span class="tg">'+AstroQ.esc(tag)+'</span></div>';
+      }).join("");
+    }
+
+    $("since").textContent = t("since").replace("{d}", LOG_SINCE.split("-").reverse().join("/"));
+
+    // Dải nhắc
+    var off = $("offline");
+    if (VIEW.ok){ off.classList.remove("show"); }
+    else {
+      /* ⚠️ HAI KHOÁ LITERAL, không ghép `t("off_"+…)` — phép kiểm i18n quét
+         `t("khoá")` dạng CHỮ, ghép động là hai khoá này bị báo "khai mà không
+         dùng" và lỗi đó im lặng (cùng bài học `s1_hit1/2/3`, `cat_*`, `tier1..5`). */
+      $("offline-msg").innerHTML = (VIEW.reason==="auth") ? t("off_guest") : t("off_net");
+      off.classList.add("show");
+    }
+  }
+
+  /* ---------- Tải báo cáo ---------- */
+  function load(){
+    if (!window.AstroQAuth || !AstroQAuth.getReport){
+      // SDK chưa nạp xong — chờ một nhịp rồi thử lại, đừng kết luận "chưa đăng nhập".
+      setTimeout(load, 400);
+      return;
+    }
+    AstroQAuth.getReport(WEEK).then(function(r){
+      if (r && r.ok){ VIEW = { ok:true, reason:null, data:r.data }; }
+      else { VIEW = { ok:false, reason: (r && r.status===401) ? "auth" : "net", data:null }; }
+      paintAll();
+    }).catch(function(){
+      VIEW = { ok:false, reason:"net", data:null };
+      paintAll();
+    });
+  }
+
+  /* ---------- Gửi email ---------- */
+  function sendMail(){
+    var btn = $("send"), msg = $("mail-msg");
+    if (!window.AstroQAuth || !AstroQAuth.sendReportEmail){ msg.textContent = t("mail_auth"); return; }
+    btn.disabled = true;
+    msg.className = "pt-mail-msg";
+    msg.textContent = t("mail_sending");
+
+    AstroQAuth.sendReportEmail(WEEK).then(function(r){
+      btn.disabled = false;
+      if (!r || !r.ok){ msg.className="pt-mail-msg bad"; msg.textContent = t("mail_auth"); return; }
+      var d = r.data || {};
+      /* ⚠️ `sent:false` KHÔNG phải lỗi — server trả lời thật. Ba lý do ba câu khác
+         nhau; gộp thành "gửi thất bại" là nói sai với phụ huynh trong 2/3 trường hợp. */
+      if (d.sent){
+        msg.className = "pt-mail-msg ok";
+        msg.textContent = t("mail_sent").replace("{to}", d.to || "");
+      } else if (d.reason === "empty"){
+        msg.className = "pt-mail-msg"; msg.textContent = t("mail_empty");
+      } else if (d.reason === "cooldown"){
+        msg.className = "pt-mail-msg";
+        msg.textContent = t("mail_cool").replace("{n}", Math.max(1, Math.ceil((d.retryAfter||0)/60)));
+      } else {
+        msg.className = "pt-mail-msg bad"; msg.textContent = t("mail_fail");
+      }
+    }).catch(function(){
+      btn.disabled = false;
+      msg.className = "pt-mail-msg bad";
+      msg.textContent = t("mail_fail");
+    });
+  }
+
+  /* ---------- Ngôn ngữ ---------- */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    renderWeeks();
+    paintAll();
+  }
+
+  $("back").addEventListener("click", function(){ location.href="dashboard.html"; });
+  $("send").addEventListener("click", sendMail);
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  load();
+})();
+</script>
+</body>
+</html>

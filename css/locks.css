@@ -1,0 +1,111 @@
+/* ══════════════════════════════════════════════════════════════════════
+   locks.css — huy hiệu khoá trên thẻ + modal "vì sao khoá".
+   Đi kèm js/locks.js. Nạp SAU css/common.css (cần `.modal` và token màu).
+
+   ⚠️ CỐ Ý KHÔNG dùng lại `.modal-card` / `.modal-ic` / `.m-btn`: ba thứ đó đang
+      có BA BẢN ở dashboard.css / games.css / quiz.css và không giống hệt nhau,
+      nên chép thêm bản thứ tư là sớm muộn bốn cái trôi khỏi nhau. Ở đây chỉ
+      mượn `.modal` (định vị + ẩn/hiện) của common.css, ruột đặt tên `.lk-*`.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Huy hiệu trên thẻ bị khoá ──
+   ⚠️ KHÔNG dùng `filter:grayscale()` để làm mờ thẻ khoá — bài học đã trả giá
+      ba lần: trên nền gradient sáng nó cho ra khối xám SÁNG HƠN thẻ bình
+      thường, tức hút mắt vào đúng cái không dùng được. */
+.lk-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono,monospace);
+  font-size:10px;letter-spacing:.08em;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+.lk-badge::before{content:"🔒";font-size:10px;}
+.lk-badge.soon{color:#ffcf6b;background:rgba(255,207,107,.12);border:1px solid rgba(255,207,107,.4);}
+.lk-badge.pro{color:#c084fc;background:rgba(192,132,252,.12);border:1px solid rgba(192,132,252,.42);}
+
+/* Huy hiệu neo góc thẻ (dashboard/missions/games dùng chung một cách đặt) */
+.lk-pin{position:absolute;top:10px;right:10px;z-index:2;}
+
+/* Nút mở modal trên thẻ khoá — bấm ĐƯỢC (khác nút `disabled` cũ).
+   Một cái nút bấm không được là một ngõ cụt: trẻ chỉ tưởng mình bấm trượt. */
+.lk-open{cursor:pointer;}
+
+/* ⚠️ NHƯNG BẤM ĐƯỢC KHÔNG CÓ NGHĨA LÀ TRÔNG NHƯ SẴN SÀNG. Bỏ `disabled` làm nút
+   MOD-05 trở lại nền gradient sáng của `.jelly-btn` — một nút CTA rực rỡ nằm trên
+   thẻ `SYS.STANDBY` là hai thông điệp ngược nhau, đúng cái luật dashboard đã chốt
+   ("SYS.ONLINE màu xanh cạnh một cái nút bấm không được"). Nên giữ nguyên vẻ
+   standby cũ: nét đứt hổ phách, không gradient.
+   ⚠️ `border:1px dashed` KHÔNG làm nút cao thêm, vì `.jelly-btn` đã chừa sẵn
+      `border:1px solid transparent` đúng để tránh cú lệch 2px đó — đọc ghi chú ở
+      `.jelly-btn` trong css/dashboard.css trước khi đụng vào đây. */
+.hud.soon .jelly-btn.lk-open{background:none;box-shadow:none;filter:none;
+  color:var(--sun,#ffcf6b);border:1px dashed rgba(255,207,107,.45);}
+.hud.soon .jelly-btn.lk-open:hover{background:rgba(255,207,107,.1);filter:none;}
+
+/* Thẻ standby thì nút cũng KHÔNG nhấc lên khi hover — cùng lý do card `.hud.soon`
+   đã bỏ hiệu ứng nhấc-lên. Bỏ cú `translateY(-2px)` này còn làm phép đo "nút trong
+   cùng một hàng thẳng hàng tuyệt đối" hết chập chờn khi con trỏ còn đứng trên nút. */
+.hud.soon .jelly-btn.lk-open:hover,
+.hud.soon .jelly-btn.lk-open:active{transform:none;}
+
+/* ── Modal ── */
+.lk-modal{z-index:80;background:rgba(4,8,20,.72);backdrop-filter:blur(4px);
+  padding:18px;transition:opacity .2s ease,visibility .2s ease;}
+
+.lk-card{position:relative;width:min(430px,100%);max-height:88vh;overflow-y:auto;
+  border-radius:20px;padding:26px 22px 20px;text-align:center;
+  border:1px solid rgba(56,189,248,.3);
+  background:linear-gradient(180deg,rgba(15,23,50,.98),rgba(9,14,34,.98));
+  box-shadow:0 26px 60px -22px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04) inset;}
+
+.lk-ic{font-size:40px;line-height:1;margin-bottom:8px;}
+
+.lk-card .lk-badge{margin-bottom:10px;}
+
+.lk-card h3{font-family:var(--font-display);font-weight:700;font-size:18px;
+  margin:0 0 10px;color:var(--ink,#eaf1ff);line-height:1.35;}
+
+.lk-body{color:var(--ink-soft,#9fb2d9);font-size:14px;line-height:1.65;margin:0;}
+
+/* Danh sách quyền lợi */
+.lk-feats{margin:14px 0 0;text-align:left;border-radius:14px;padding:12px 14px;
+  border:1px solid rgba(56,189,248,.2);background:rgba(56,189,248,.06);}
+.lk-feats-h{display:block;font-family:var(--font-mono,monospace);font-size:10.5px;
+  letter-spacing:.08em;color:var(--cyan,#38bdf8);margin-bottom:7px;text-transform:uppercase;}
+.lk-feats ul{margin:0;padding:0;list-style:none;}
+.lk-feats li{position:relative;padding-left:20px;margin:5px 0;
+  font-size:13.4px;line-height:1.55;color:var(--ink,#eaf1ff);}
+.lk-feats li::before{content:"✦";position:absolute;left:2px;top:0;color:var(--cyan,#38bdf8);font-size:11px;}
+
+.lk-note{margin:12px 0 0;font-size:12.4px;line-height:1.6;color:var(--ink-soft,#9fb2d9);
+  border-top:1px dashed rgba(255,255,255,.12);padding-top:11px;}
+
+.lk-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+
+/* ⚠️⚠️ BẮT BUỘC — `display` CỦA TÁC GIẢ THẮNG `display:none` MÀ TRÌNH DUYỆT ÁP
+   CHO `[hidden]`. `.lk-btn` khai `display:inline-flex`, nên `go.hidden = true`
+   trong js/locks.js KHÔNG ẩn được nút, và modal của một trò SẼ MIỄN PHÍ vẫn hiện
+   nút "Xem các gói" — tức mời mua một thứ không bán.
+   Đây đúng cái bẫy CLAUDE.md đã ghi cho `#time-ok` ở mission-earth.html ("đừng
+   chữa bằng display:block — nút hiện ra ngay từ mốc thứ nhất"). Bộ smoke bắt
+   được, và phép kiểm đó phải giữ. */
+.lk-card [hidden]{display:none;}
+
+/* ⚠️ min-height 48px, KHÔNG phải 44: 44 là mốc TỐI THIỂU của WCAG 2.5.5, đặt
+   đúng mốc là không còn biên an toàn nào và phép kiểm vùng chạm sẽ chập chờn
+   (ca `explorer.html` nút VI đo đúng 44×44 đã treo hơn hai ngày). */
+.lk-btn{display:inline-flex;align-items:center;justify-content:center;
+  min-height:48px;padding:0 18px;border-radius:12px;cursor:pointer;
+  font-family:var(--font-display);font-weight:700;font-size:13.6px;
+  text-decoration:none;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);color:var(--ink,#eaf1ff);
+  transition:transform .14s ease,filter .14s ease;}
+.lk-btn.primary{border-color:transparent;color:#08122b;
+  background:linear-gradient(135deg,#38bdf8,#8f7bff);}
+.lk-btn:hover{transform:translateY(-1px);filter:brightness(1.08);}
+.lk-btn:focus-visible{outline:2px solid var(--cyan,#38bdf8);outline-offset:2px;}
+
+@media (max-width:420px){
+  .lk-card{padding:22px 16px 18px;}
+  .lk-acts{flex-direction:column;}
+  .lk-btn{width:100%;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .lk-btn:hover{transform:none;}
+}

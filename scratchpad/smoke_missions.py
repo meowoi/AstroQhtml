@@ -144,7 +144,13 @@ def main():
         back = pg.eval_on_selector("#back", "e => e.textContent")
         chk("Navigation Hub" in back, "nut quay lai: 'Back to Navigation Hub'", back.strip())
         soon_btn = pg.eval_on_selector(".mcard.soon .play-btn", "e => e.textContent.trim()")
-        chk(soon_btn == "Coming soon", "EN: nut 'Coming soon'", soon_btn)
+        # ⚠️ DOI PHAT BIEU 09/08/2026: nhan nut cua the khoa nay la mot CAU HOI
+        #    bam duoc ("Why is it locked?"), khong con lap lai dung chu trang thai
+        #    "Coming soon" ngay phia tren. Nut mo modal giai thich, nen nhan phai
+        #    moi bam. Phep kiem cu khang dinh dung trang thai CU nen no bao hong
+        #    DUNG LUC san pham lam dung.
+        chk("locked" in soon_btn.lower(), "EN: nhan nut khoa moi bam", soon_btn)
+        chk(soon_btn != "Coming soon", "EN: nhan nut KHONG lap lai nhan trang thai", soon_btn)
         chk(len(errs2) == 0, "EN: 0 loi console", "; ".join(errs2[:3]))
         ctx.close()
 
@@ -191,8 +197,30 @@ def main():
         # (Phong Nghien Cuu) — MOD-06 da thanh So Tay Thuat Ngu, bam duoc that.
         soons = [h for h in hud if h["soon"]]
         chk(len(soons) == 1, "co dung 1 card 'Sap ra mat'", str([h["name"] for h in soons]))
-        chk(all(h["disabled"] for h in soons),
-            "card 'Sap ra mat' co nut disabled (bam khong duoc)")
+        # ⚠️ DOI PHAT BIEU 09/08/2026 — nguyen tac KHONG bi noi long.
+        #    Luat cu: "nut bam duoc thi phai co gi do xay ra", nen nut cua khu chua
+        #    co trang phai `disabled`. Nay nut do MO MODAL noi vi sao khoa + khi mo
+        #    se duoc gi, tuc co xay ra that; con `disabled` moi la ngo cut (tre bam
+        #    khong an va chi tuong minh bam truot). Phep kiem nay giau HON ban cu:
+        #    no doi nut phai bam duoc VA phai that su mo duoc modal.
+        chk(not any(h["disabled"] for h in soons),
+            "card 'Sap ra mat': nut BAM DUOC (khong con disabled)")
+        pg.click(".card--lab .jelly-btn")
+        pg.wait_for_selector("#aq-lock.show", timeout=6000)
+        chk(pg.locator("#aq-lock.show").count() == 1,
+            "bam nut do thi MO MODAL giai thich")
+        lk_title = pg.inner_text("#lk-title")
+        chk("xây" in lk_title, "modal noi dang XAY chu khong doi tien", lk_title)
+        chk(pg.locator("#lab-badge").inner_text().strip() != "",
+            "the co huy hieu khoa")
+        pg.keyboard.press("Escape")
+        # ⚠️ DUA CHUOT RA KHOI NUT truoc khi do bo cuc phia duoi. Cu `pg.click` o tren
+        #    de lai con tro DUNG TREN nut, ma `.jelly-btn:hover` co `translateY(-2px)`
+        #    — phep do "nut trong cung mot hang thang hang tuyet doi" se doc ra lech
+        #    2px va to cao oan san pham. Do mot phan tu DANG HOVER la do mot trang
+        #    thai nguoi dung khong o trong luc doc bo cuc.
+        pg.mouse.move(2, 2)
+        pg.wait_for_timeout(350)          # transform co transition .3s
         chk(all(h["href"] is None for h in soons),
             "card 'Sap ra mat' KHONG dan sang trang nao")
         # Card do phai xuong CUOI luoi (ready truoc, soon sau)
