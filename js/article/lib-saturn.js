@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 70,
+  ord: 1150,
   id: "lib-saturn",
   src: "NASA",
   cat: "astronomy",
@@ -21,6 +21,6 @@ export default {
   term: { who: "comet",
            word: { vi: "Vành đai",
                    en: "Rings" },
-           text: { vi: "<b>Vành đai</b> Sao Thổ không phải một khối liền — nó là hàng tỉ viên băng bay quanh cùng nhau! 🐱",
+           text: { vi: "không phải một khối liền — nó là hàng tỉ viên băng bay quanh Sao Thổ cùng nhau! 🐱",
                    en: "Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱" } }
 };

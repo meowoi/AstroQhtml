@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 300,
+  ord: 2070,
   id: "art-robonaut-first-humanoid",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Robot hình người",
                    en: "Humanoid robot" },
-           text: { vi: "<b>Robot hình người</b> là robot có hình dạng giống người — thường vì nó phải dùng những dụng cụ vốn làm cho tay người. 🤖",
+           text: { vi: "robot có hình dạng giống người — thường vì nó phải dùng những dụng cụ vốn làm cho tay người. 🤖",
                    en: "A <b>humanoid robot</b> is shaped like a person — usually because it has to use tools that were made for human hands. 🤖" } },
   terms: []
 };

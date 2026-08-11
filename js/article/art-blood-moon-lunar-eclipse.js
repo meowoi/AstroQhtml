@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 130,
+  ord: 1110,
   id: "art-blood-moon-lunar-eclipse",
   src: "NASA",
   cat: "astronomy",

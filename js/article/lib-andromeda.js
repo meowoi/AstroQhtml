@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 30,
+  ord: 1170,
   id: "lib-andromeda",
   src: "NASA",
   cat: "astronomy",
@@ -21,6 +21,6 @@ export default {
   term: { who: "byte",
            word: { vi: "Năm ánh sáng",
                    en: "Light-year" },
-           text: { vi: "<b>Năm ánh sáng</b> là quãng đường ánh sáng đi trong 1 năm — cực kỳ xa nhé! 🤖",
+           text: { vi: "quãng đường ánh sáng đi trong 1 năm — cực kỳ xa nhé! 🤖",
                    en: "A <b>light-year</b> is how far light travels in one year — incredibly far! 🤖" } }
 };

@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 80,
+  ord: 1190,
   id: "lib-gaia",
   src: "ESA",
   cat: "astronomy",
@@ -21,6 +21,6 @@ export default {
   term: { who: "byte",
            word: { vi: "Bản đồ sao",
                    en: "Star map" },
-           text: { vi: "<b>Bản đồ sao</b> cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",
+           text: { vi: "cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",
                    en: "A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖" } }
 };

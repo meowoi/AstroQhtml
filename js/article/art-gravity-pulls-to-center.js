@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 160,
+  ord: 1070,
   id: "art-gravity-pulls-to-center",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Khối lượng",
                    en: "Mass" },
-           text: { vi: "<b>Khối lượng</b> là lượng vật chất tạo nên một vật. Nó đi đâu cũng không đổi — chỉ có <i>cân nặng</i> mới đổi theo nơi bạn đứng. ☄️",
-                   en: "<b>Mass</b> is how much material something is made of. It never changes as you travel — only your <i>weight</i> does. ☄️" } },
+           text: { vi: "lượng vật chất tạo nên một vật. Nó đi đâu cũng không đổi — chỉ có <i>cân nặng</i> mới đổi theo nơi bạn đứng. ☄️",
+                   en: "how much material something is made of. It never changes as you travel — only your <i>weight</i> does. ☄️" } },
   terms: ["gravity", "gravity-distance"]
 };

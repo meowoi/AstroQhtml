@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 90,
+  ord: 5010,
   id: "lib-qubit",
   src: "NASA",
   cat: "quantum",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Qubit",
                    en: "Qubit" },
-           text: { vi: "<b>Qubit</b> là bit của máy tính lượng tử. Theo NASA nó biểu diễn được một số 0, một số 1, <i>hoặc một chồng chập</i> của cả hai — chứ không phải \"vừa 0 vừa 1\". 🤖",
+           text: { vi: "bit của máy tính lượng tử. Theo NASA nó biểu diễn được một số 0, một số 1, <i>hoặc một chồng chập</i> của cả hai — chứ không phải \"vừa 0 vừa 1\". 🤖",
                    en: "A <b>qubit</b> is a quantum computer's bit. Per NASA it can represent a zero, a one, <i>or a superposition</i> of both — not \"both 0 and 1\". 🤖" } },
   terms: []
 };

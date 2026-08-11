@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 170,
+  ord: 1050,
   id: "art-comet-tail-points-away",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Coma",
                    en: "Coma" },
-           text: { vi: "<b>Coma</b> là lớp khí bao quanh nhân sao chổi khi nó ấm lên. Tớ tên là Comet, nhưng cái đuôi thì tớ không có nhé! ☄️",
+           text: { vi: "lớp khí bao quanh nhân sao chổi khi nó ấm lên. Tớ tên là Comet, nhưng cái đuôi thì tớ không có nhé! ☄️",
                    en: "The <b>coma</b> is the cloud of gas around a comet's nucleus as it warms. My name is Comet — but I don't come with a tail! ☄️" } },
   terms: ["comet-what", "comet-tail"]
 };

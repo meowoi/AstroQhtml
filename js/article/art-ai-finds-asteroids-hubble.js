@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 190,
+  ord: 3060,
   id: "art-ai-finds-asteroids-hubble",
   src: "NASA",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Nhận dạng mẫu",
                    en: "Pattern recognition" },
-           text: { vi: "<b>Nhận dạng mẫu</b> là việc máy học cách nhận ra một hình dạng lặp đi lặp lại — như vệt cong của tiểu hành tinh. Nó nhìn rất nhanh, nhưng người vẫn phải kiểm lại. 🤖",
-                   en: "<b>Pattern recognition</b> is a machine learning to spot a shape that keeps repeating — like an asteroid's curved streak. It looks fast, but people still check its work. 🤖" } },
+           text: { vi: "việc máy học cách nhận ra một hình dạng lặp đi lặp lại — như vệt cong của tiểu hành tinh. Nó nhìn rất nhanh, nhưng người vẫn phải kiểm lại. 🤖",
+                   en: "a machine learning to spot a shape that keeps repeating — like an asteroid's curved streak. It looks fast, but people still check its work. 🤖" } },
   terms: []
 };

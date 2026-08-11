@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 140,
+  ord: 1090,
   id: "art-light-and-shadow-space",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Bước sóng",
                    en: "Wavelength" },
-           text: { vi: "<b>Bước sóng</b> là khoảng cách giữa hai đỉnh sóng ánh sáng. Sóng dài cho màu đỏ, sóng ngắn cho màu tím — cả cầu vồng nằm ở giữa. ☄️",
-                   en: "<b>Wavelength</b> is the distance between two crests of a light wave. Long waves look red, short waves look violet — the whole rainbow sits in between. ☄️" } },
+           text: { vi: "khoảng cách giữa hai đỉnh sóng ánh sáng. Sóng dài cho màu đỏ, sóng ngắn cho màu tím — cả cầu vồng nằm ở giữa. ☄️",
+                   en: "the distance between two crests of a light wave. Long waves look red, short waves look violet — the whole rainbow sits in between. ☄️" } },
   terms: ["star-prism-wavelengths", "star-visible-wavelength-range", "lunar-difference-name-darker", "eclipse-phase-new-moon"]
 };

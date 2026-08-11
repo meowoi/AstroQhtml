@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 20,
+  ord: 1130,
   id: "lib-nebula",
   src: "NASA",
   cat: "astronomy",
@@ -21,6 +21,6 @@ export default {
   term: { who: "comet",
            word: { vi: "Tinh vân",
                    en: "Nebula" },
-           text: { vi: "<b>Tinh vân</b> là 'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",
+           text: { vi: "'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",
                    en: "A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱" } }
 };

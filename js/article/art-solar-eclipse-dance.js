@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 120,
+  ord: 1100,
   id: "art-solar-eclipse-dance",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Vành nhật hoa",
                    en: "Corona" },
-           text: { vi: "<b>Vành nhật hoa</b> là lớp khí ngoài cùng của Mặt Trời. Ngày thường nó bị ánh sáng bề mặt lấn át; chỉ khi nhật thực toàn phần nó mới hiện ra. ☄️",
+           text: { vi: "lớp khí ngoài cùng của Mặt Trời. Ngày thường nó bị ánh sáng bề mặt lấn át; chỉ khi nhật thực toàn phần nó mới hiện ra. ☄️",
                    en: "The <b>corona</b> is the Sun's outermost layer of gas. Normally the surface glare drowns it out — only during a total eclipse does it appear. ☄️" } },
   terms: ["eclipse-definition-moon-between", "eclipse-coincidence-size-distance-ratio", "eclipse-shadow-umbra-penumbra", "eclipse-safety-totality-viewing"]
 };

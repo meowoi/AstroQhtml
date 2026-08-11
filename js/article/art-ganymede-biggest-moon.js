@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 390,
+  ord: 1020,
   id: "art-ganymede-biggest-moon",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Từ trường",
                    en: "Magnetic field" },
-           text: { vi: "<b>Từ trường</b> là vùng quanh một vật thể mà kim la bàn cảm nhận được. Trái Đất có, và trong tất cả các vệ tinh đã biết thì chỉ Ganymede có từ trường riêng. ☄️",
+           text: { vi: "vùng quanh một vật thể mà kim la bàn cảm nhận được. Trái Đất có, và trong tất cả các vệ tinh đã biết thì chỉ Ganymede có từ trường riêng. ☄️",
                    en: "A <b>magnetic field</b> is the region around a body that a compass needle can feel. Earth has one — and of all known moons, only Ganymede has its own. ☄️" } },
   terms: ["moon-largest"]
 };

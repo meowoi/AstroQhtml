@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 340,
+  ord: 5020,
   id: "art-quantum-many-states-at-once",
   src: "NASA",
   cat: "quantum",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Chồng chập",
                    en: "Superposition" },
-           text: { vi: "<b>Chồng chập</b> là khi một hạt được mô tả là ở nhiều trạng thái cùng lúc — chứ không phải là ta chưa biết nó ở trạng thái nào. ☄️",
-                   en: "<b>Superposition</b> is when a particle is described as being in many states at once — not merely that we don't yet know which one. ☄️" } },
+           text: { vi: "khi một hạt được mô tả là ở nhiều trạng thái cùng lúc — chứ không phải là ta chưa biết nó ở trạng thái nào. ☄️",
+                   en: "when a particle is described as being in many states at once — not merely that we don't yet know which one. ☄️" } },
   terms: []
 };

@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 360,
+  ord: 2060,
   id: "art-robots-buy-crew-time",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Thời gian phi hành đoàn",
                    en: "Crew time" },
-           text: { vi: "<b>Thời gian phi hành đoàn</b> là số giờ làm việc của người trên trạm — thứ đắt nhất ở đó. Mỗi việc robot nhận là một giờ trả lại cho khoa học. 🤖",
-                   en: "<b>Crew time</b> is the working hours of the people on board — the most expensive thing up there. Every job a robot takes is an hour handed back to science. 🤖" } },
+           text: { vi: "số giờ làm việc của người trên trạm — thứ đắt nhất ở đó. Mỗi việc robot nhận là một giờ trả lại cho khoa học. 🤖",
+                   en: "the working hours of the people on board — the most expensive thing up there. Every job a robot takes is an hour handed back to science. 🤖" } },
   terms: []
 };

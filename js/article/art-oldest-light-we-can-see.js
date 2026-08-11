@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 240,
+  ord: 1200,
   id: "art-oldest-light-we-can-see",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Bức xạ nền vũ trụ",
                    en: "Cosmic microwave background" },
-           text: { vi: "<b>Bức xạ nền vũ trụ</b> là ánh sáng còn lại từ lúc những nguyên tử đầu tiên hình thành. Nó ở khắp mọi hướng trên trời — và nó cổ hơn mọi ngôi sao. ☄️",
+           text: { vi: "ánh sáng còn lại từ lúc những nguyên tử đầu tiên hình thành. Nó ở khắp mọi hướng trên trời — và nó cổ hơn mọi ngôi sao. ☄️",
                    en: "The <b>cosmic microwave background</b> is light left over from when the first atoms formed. It comes from every direction — and it is older than every star. ☄️" } },
   terms: ["cmb", "cmb-when"]
 };

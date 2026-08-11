@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 320,
+  ord: 3070,
   id: "art-ai-tags-nasa-data",
   src: "NASA",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Dữ liệu mô tả",
                    en: "Metadata" },
-           text: { vi: "<b>Dữ liệu mô tả</b> là thông tin nói về dữ liệu — ai đo, đo ở đâu, đo cái gì. Không có nó thì tập dữ liệu vẫn tồn tại mà không ai tìm thấy. 🤖",
-                   en: "<b>Metadata</b> is information about data — who measured it, where, and what. Without it a dataset still exists, but nobody can find it. 🤖" } },
+           text: { vi: "thông tin nói về dữ liệu — ai đo, đo ở đâu, đo cái gì. Không có nó thì tập dữ liệu vẫn tồn tại mà không ai tìm thấy. 🤖",
+                   en: "information about data — who measured it, where, and what. Without it a dataset still exists, but nobody can find it. 🤖" } },
   terms: []
 };

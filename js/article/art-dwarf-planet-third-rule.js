@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 220,
+  ord: 1060,
   id: "art-dwarf-planet-third-rule",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Dọn sạch quỹ đạo",
                    en: "Clearing its orbit" },
-           text: { vi: "<b>Dọn sạch quỹ đạo</b> nghĩa là hành tinh đã hút hết hoặc ném đi hết những hòn đá lớn gần đường bay của nó. Đó là điều luật Sao Diêm Vương không đạt. ☄️",
-                   en: "<b>Clearing its orbit</b> means a planet has pulled in or flung away the large rocks near its path. That is the rule Pluto did not meet. ☄️" } },
+           text: { vi: "hành tinh đã hút hết hoặc ném đi hết những hòn đá lớn gần đường bay của nó. Đó là điều luật Sao Diêm Vương không đạt. ☄️",
+                   en: "a planet has pulled in or flung away the large rocks near its path. That is the rule Pluto did not meet. ☄️" } },
   terms: ["dwarf", "dwarf-ceres"]
 };

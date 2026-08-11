@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 200,
+  ord: 1030,
   id: "art-asteroid-belt-leftovers",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Hành tinh nhỏ",
                    en: "Minor planet" },
-           text: { vi: "<b>Hành tinh nhỏ</b> là một tên gọi khác của tiểu hành tinh. Đừng lẫn với <i>hành tinh lùn</i> nhé — đó lại là chuyện khác! ☄️",
-                   en: "<b>Minor planet</b> is another name for an asteroid. Don't mix it up with a <i>dwarf planet</i> — that's a different story! ☄️" } },
+           text: { vi: "một tên gọi khác của tiểu hành tinh. Đừng lẫn với <i>hành tinh lùn</i> nhé — đó lại là chuyện khác! ☄️",
+                   en: "another name for an asteroid. Don't mix it up with a <i>dwarf planet</i> — that's a different story! ☄️" } },
   terms: ["asteroid-what", "asteroid-belt"]
 };

@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 370,
+  ord: 3100,
   id: "art-algorithms-are-opinions",
   src: "AI & Tech",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Thiên lệch thuật toán",
                    en: "Algorithmic bias" },
-           text: { vi: "<b>Thiên lệch thuật toán</b> là khi một hệ thống đối xử không đều với các nhóm khác nhau — thường vì dữ liệu dạy nó vốn đã lệch. Máy không cố ý; nó học đúng thứ nó được cho xem. 🤖",
-                   en: "<b>Algorithmic bias</b> is a system treating groups unevenly — usually because the data that taught it was already skewed. The machine is not being unfair on purpose; it learned exactly what it was shown. 🤖" } },
+           text: { vi: "khi một hệ thống đối xử không đều với các nhóm khác nhau — thường vì dữ liệu dạy nó vốn đã lệch. Máy không cố ý; nó học đúng thứ nó được cho xem. 🤖",
+                   en: "a system treating groups unevenly — usually because the data that taught it was already skewed. The machine is not being unfair on purpose; it learned exactly what it was shown. 🤖" } },
   terms: []
 };

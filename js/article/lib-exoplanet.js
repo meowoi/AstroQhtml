@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 60,
+  ord: 3110,
   id: "lib-exoplanet",
   src: "AI & Tech",
   cat: "ai",

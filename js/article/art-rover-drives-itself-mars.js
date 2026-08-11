@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 180,
+  ord: 2030,
   id: "art-rover-drives-itself-mars",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Vật cản",
                    en: "Hazard" },
-           text: { vi: "<b>Vật cản</b> là thứ chắn đường robot — tảng đá, cái hố, dốc quá đứng. Nhận ra nó là việc đầu tiên, đi vòng qua nó là việc thứ hai. 🤖",
+           text: { vi: "thứ chắn đường robot — tảng đá, cái hố, dốc quá đứng. Nhận ra nó là việc đầu tiên, đi vòng qua nó là việc thứ hai. 🤖",
                    en: "A <b>hazard</b> is anything blocking a robot's path — a rock, a hole, a slope too steep. Spotting it comes first; steering around it comes second. 🤖" } },
   terms: ["sensor", "condition", "sequence", "algorithm"]
 };

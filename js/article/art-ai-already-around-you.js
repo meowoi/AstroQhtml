@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 380,
+  ord: 3020,
   id: "art-ai-already-around-you",
   src: "AI & Tech",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Thuật toán gợi ý",
                    en: "Recommendation algorithm" },
-           text: { vi: "<b>Thuật toán gợi ý</b> là phần chọn thứ hiện ra tiếp theo cho bạn. Nó không đọc được ý bạn — nó đoán, từ những gì bạn và người khác đã làm trước đó. 🤖",
+           text: { vi: "phần chọn thứ hiện ra tiếp theo cho bạn. Nó không đọc được ý bạn — nó đoán, từ những gì bạn và người khác đã làm trước đó. 🤖",
                    en: "A <b>recommendation algorithm</b> is the part that picks what you see next. It cannot read your mind — it guesses, from what you and others did before. 🤖" } },
   terms: []
 };

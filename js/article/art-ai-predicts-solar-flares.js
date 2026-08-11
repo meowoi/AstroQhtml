@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 330,
+  ord: 3080,
   id: "art-ai-predicts-solar-flares",
   src: "NASA",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Thời tiết không gian",
                    en: "Space weather" },
-           text: { vi: "<b>Thời tiết không gian</b> là những gì Mặt Trời gửi tới Trái Đất — bùng sáng, hạt tích điện, từ trường. Nó không làm mưa, nhưng làm hỏng vệ tinh và lưới điện. 🤖",
-                   en: "<b>Space weather</b> is what the Sun sends our way — flares, charged particles, magnetic fields. It brings no rain, but it can knock out satellites and power grids. 🤖" } },
+           text: { vi: "những gì Mặt Trời gửi tới Trái Đất — bùng sáng, hạt tích điện, từ trường. Nó không làm mưa, nhưng làm hỏng vệ tinh và lưới điện. 🤖",
+                   en: "what the Sun sends our way — flares, charged particles, magnetic fields. It brings no rain, but it can knock out satellites and power grids. 🤖" } },
   terms: []
 };

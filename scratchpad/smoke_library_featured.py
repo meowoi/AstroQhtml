@@ -394,7 +394,14 @@ with sync_playwright() as p:
     CATS = set(pg.evaluate(
         "() => Array.from(document.querySelectorAll('#cats .cat'))"
         ".map(b => b.dataset.cat).filter(c => c !== 'all')"))
-    chk(len(CATS) == 4, "doc duoc bo loc chu de tu sidebar", str(sorted(CATS)))
+    # ⚠️ ĐỪNG gán cứng số chủ đề — bản đầu viết `== 4` và nó báo hỏng ngay khi thêm
+    #    `it` (CNTT) 11/08/2026, tức khẳng định đúng một trạng thái không còn tồn tại.
+    #    Điều cần bảo vệ: đọc RA được bộ lọc, và MỌI `cat` trong dữ liệu đều có chip.
+    chk(len(CATS) >= 4, "doc duoc bo loc chu de tu sidebar", str(sorted(CATS)))
+    _cat_data = sorted({e.get("cat") for e in idx})
+    _no_chip = [c for c in _cat_data if c not in CATS]
+    chk(not _no_chip, "moi `cat` trong du lieu deu co chip o sidebar",
+        f"thieu chip: {_no_chip}")
 
     QUIZ = {os.path.splitext(f)[0] for f in os.listdir(os.path.join(ROOT, "js", "quiz"))
             if f.endswith(".js")}
@@ -470,6 +477,61 @@ with sync_playwright() as p:
         blob = " ".join((b.get("vi") or []) + (b.get("en") or []))
         if "Thiên thạch tím" in blob or "Purple Meteor" in blob:
             flag(a, "hua thuong Thien thach tim trong than bai")
+
+    # ── DAI NGAN + DUNG CHUNG NGUON (luat moi 11/08/2026) ─────────────────────
+    # ⚠️ Do duoc tren 39 bai cu: TB **1.121 ky tu · 3,6 doan ≈ 5 phut doc** cho tre 8-12.
+    #    Chu du an: *"tre ko doc het mot bai dai… moi bai 1 thong tin"*. Nen dat TRAN, va
+    #    dat theo con so DO DUOC (bai dai nhat dang co la 1.632) chu khong theo cam giac.
+    _lens = [(a["id"], sum(len(p) for p in (a.get("body") or {}).get("vi") or []),
+              len((a.get("body") or {}).get("vi") or [])) for a in arts]
+    _qua_dai = [(i, n) for i, n, _ in _lens if n > 1700]
+    chk(not _qua_dai, "khong bai nao vuot 1.700 ky tu (tran, khong phai cam giac)",
+        str(_qua_dai[:3]))
+    _qua_nhieu = [(i, p) for i, _, p in _lens if p > 4]
+    chk(not _qua_nhieu, "khong bai nao qua 4 doan", str(_qua_nhieu[:3]))
+    _tb = sum(n for _, n, _ in _lens) // max(1, len(_lens))
+    chk(_tb <= 1150, f"do dai TRUNG BINH khong tang len ({_tb} ky tu)", f"tran 1150")
+    # ⚠️ MOT NGUON DUOC NUOI NHIEU BAI — nhung moi bai phai noi mot dieu KHAC. Neu hai
+    #    bai cung url ma co mot DOAN GIONG NHAU tung chu thi do la nhoi cho du bai, va
+    #    do dung la rui ro cua viec "toi uu nguon" ma phep kiem nay sinh ra de chan.
+    _byurl = {}
+    for a in arts:
+        _byurl.setdefault(a.get("url"), []).append(a)
+    _lap = []
+    for u, group in _byurl.items():
+        if len(group) < 2:
+            continue
+        seen = {}
+        for a in group:
+            for p in (a.get("body") or {}).get("vi") or []:
+                k = p.strip()
+                if len(k) > 60 and k in seen:
+                    _lap.append(f"{seen[k]} ↔ {a['id']}")
+                seen[k] = a["id"]
+    chk(not _lap, "bai dung CHUNG nguon khong lap doan cua nhau", "; ".join(_lap[:3]))
+    _shared = {u: len(g) for u, g in _byurl.items() if len(g) > 1}
+    chk(True, f"{len(_shared)} nguon dang nuoi >1 bai (ghi nhan, khong phai tieu chi)",
+        str(sorted(_shared.values(), reverse=True)[:5]))
+
+    # ⚠️⚠️ BOX LINH VAT KHONG DUOC LAP CHU. `library.html` ve bang
+    #    `"<b>"+term.word+":</b> " + term.text` — CHINH BO VE da in cai nhan. Dot 1
+    #    (06/08) viet `term.text` mo dau bang chinh chu do, va no duoc CHEP vao 30 bai
+    #    sau; do duoc **61/96 chuoi** lap, tuc man hinh hien
+    #    "Cong suat: Cong suat la luong nang luong moi giay."
+    #    Chi lo ra khi soi anh chup — khong phep kiem nao hoi toi. Nay co.
+    _lapchu = []
+    for a in arts:
+        t = a.get("term")
+        if not t:
+            continue
+        for lang in ("vi", "en"):
+            w = ((t.get("word") or {}).get(lang) or "").strip()
+            tx = re.sub(r"<[^>]+>", "", (t.get("text") or {}).get(lang) or "").strip()
+            if w and tx.lower().startswith(w.lower()):
+                _lapchu.append(f"{a['id']}[{lang}]")
+    chk(not _lapchu,
+        "box linh vat KHONG lap lai `word` o dau `text` (bo ve da in nhan roi)",
+        ", ".join(_lapchu[:4]))
 
     for why in sorted(bad):
         chk(False, f"kho bai doc: {why}", ", ".join(bad[why][:4]))

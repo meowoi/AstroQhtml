@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 100,
+  ord: 1080,
   id: "art-atmosphere-shield",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Tầng đối lưu",
                    en: "Troposphere" },
-           text: { vi: "<b>Tầng đối lưu</b> là tầng khí quyển sát mặt đất — nơi có mây, mưa và gió. Bạn đang đứng trong nó ngay lúc này đấy! ☄️",
+           text: { vi: "tầng khí quyển sát mặt đất — nơi có mây, mưa và gió. Bạn đang đứng trong nó ngay lúc này đấy! ☄️",
                    en: "The <b>troposphere</b> is the atmospheric layer closest to the ground — home to clouds, rain and wind. You are standing in it right now! ☄️" } },
   terms: ["atmo-comp-nitrogen", "atmo-tropo-weather", "atmo-strato-ozone", "atmo-meso-meteors"]
 };

@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 290,
+  ord: 2100,
   id: "art-curiosity-lab-on-wheels",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Môi trường ở được",
                    en: "Habitable environment" },
-           text: { vi: "<b>Môi trường ở được</b> là nơi có đủ điều kiện cho sự sống tồn tại — không có nghĩa là đã từng có sinh vật ở đó. Hai chuyện khác nhau! 🤖",
+           text: { vi: "nơi có đủ điều kiện cho sự sống tồn tại — không có nghĩa là đã từng có sinh vật ở đó. Hai chuyện khác nhau! 🤖",
                    en: "A <b>habitable environment</b> is a place with the right conditions for life — which is not the same as saying life was there. Two different claims! 🤖" } },
   terms: []
 };

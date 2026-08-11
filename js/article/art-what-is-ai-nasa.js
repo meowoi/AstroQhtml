@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 310,
+  ord: 3010,
   id: "art-what-is-ai-nasa",
   src: "NASA",
   cat: "ai",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Học máy",
                    en: "Machine learning" },
-           text: { vi: "<b>Học máy</b> là khi máy tự tìm ra luật từ rất nhiều ví dụ, thay vì được người viết sẵn từng luật. Cho xem nhiều ảnh mèo, nó tự học ra mèo trông thế nào. 🤖",
-                   en: "<b>Machine learning</b> is a machine working out the rules from lots of examples, instead of being given every rule. Show it many cat photos and it learns what a cat looks like. 🤖" } },
+           text: { vi: "khi máy tự tìm ra luật từ rất nhiều ví dụ, thay vì được người viết sẵn từng luật. Cho xem nhiều ảnh mèo, nó tự học ra mèo trông thế nào. 🤖",
+                   en: "a machine working out the rules from lots of examples, instead of being given every rule. Show it many cat photos and it learns what a cat looks like. 🤖" } },
   terms: []
 };

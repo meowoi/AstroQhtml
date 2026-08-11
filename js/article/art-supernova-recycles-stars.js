@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 230,
+  ord: 1140,
   id: "art-supernova-recycles-stars",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Nhiệt hạch",
                    en: "Fusion" },
-           text: { vi: "<b>Nhiệt hạch</b> là khi các hạt nhỏ ép vào nhau thành hạt lớn hơn và nhả ra năng lượng. Đó là thứ giữ cho một ngôi sao sáng — và khi nó dừng, ngôi sao hết đường chống lại lực hấp dẫn. ☄️",
-                   en: "<b>Fusion</b> is small particles squeezing together into bigger ones and releasing energy. It is what keeps a star shining — and when it stops, the star has nothing left to hold gravity back. ☄️" } },
+           text: { vi: "khi các hạt nhỏ ép vào nhau thành hạt lớn hơn và nhả ra năng lượng. Đó là thứ giữ cho một ngôi sao sáng — và khi nó dừng, ngôi sao hết đường chống lại lực hấp dẫn. ☄️",
+                   en: "small particles squeezing together into bigger ones and releasing energy. It is what keeps a star shining — and when it stops, the star has nothing left to hold gravity back. ☄️" } },
   terms: ["supernova", "supernova-elements"]
 };

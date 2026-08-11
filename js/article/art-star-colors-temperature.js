@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 110,
+  ord: 1120,
   id: "art-star-colors-temperature",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Sao lùn đỏ",
                    en: "Red dwarf" },
-           text: { vi: "<b>Sao lùn đỏ</b> là loại sao nhỏ nhất và nguội nhất trong dải sao chính. Chúng đông nhất thiên hà, nhưng mờ tới mức mắt thường không thấy được. 🤖",
+           text: { vi: "loại sao nhỏ nhất và nguội nhất trong dải sao chính. Chúng đông nhất thiên hà, nhưng mờ tới mức mắt thường không thấy được. 🤖",
                    en: "A <b>red dwarf</b> is the smallest and coolest kind of main sequence star. They are the most common stars in the galaxy — yet too faint for the naked eye. 🤖" } },
   terms: ["star-color-temp-determine", "star-blue-hotter-red", "star-red-dwarf-coolest", "star-color-spectrum-order"]
 };

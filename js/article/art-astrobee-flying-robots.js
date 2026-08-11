@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 350,
+  ord: 2050,
   id: "art-astrobee-flying-robots",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Vi trọng lực",
                    en: "Microgravity" },
-           text: { vi: "<b>Vi trọng lực</b> là trạng thái mọi thứ trong trạm gần như không có trọng lượng. Không có sàn để lăn bánh xe, nên robot ở đó phải BAY. 🤖",
-                   en: "<b>Microgravity</b> is the state where everything in the station is nearly weightless. There is no floor to roll on — so a robot there has to fly. 🤖" } },
+           text: { vi: "trạng thái mọi thứ trong trạm gần như không có trọng lượng. Không có sàn để lăn bánh xe, nên robot ở đó phải BAY. 🤖",
+                   en: "the state where everything in the station is nearly weightless. There is no floor to roll on — so a robot there has to fly. 🤖" } },
   terms: []
 };

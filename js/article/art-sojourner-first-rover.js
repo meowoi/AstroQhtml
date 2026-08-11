@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 270,
+  ord: 2020,
   id: "art-sojourner-first-rover",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Rover",
                    en: "Rover" },
-           text: { vi: "<b>Rover</b> là robot có bánh xe, chạy trên bề mặt một thiên thể khác. Khác với tàu đứng yên: rover chọn được nơi mình muốn tới. 🤖",
+           text: { vi: "robot có bánh xe, chạy trên bề mặt một thiên thể khác. Khác với tàu đứng yên: rover chọn được nơi mình muốn tới. 🤖",
                    en: "A <b>rover</b> is a wheeled robot that drives on the surface of another world. Unlike a lander, a rover gets to choose where it goes. 🤖" } },
   terms: []
 };

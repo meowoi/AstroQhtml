@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 50,
+  ord: 5030,
   id: "lib-blackhole",
   src: "NASA",
   cat: "quantum",
@@ -21,6 +21,6 @@ export default {
   term: { who: "comet",
            word: { vi: "Hấp dẫn",
                    en: "Gravity" },
-           text: { vi: "<b>Hấp dẫn</b> là lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",
-                   en: "<b>Gravity</b> is the pull that draws things together — a black hole pulls so hard it even traps light! 🐱" } }
+           text: { vi: "lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",
+                   en: "the pull that draws things together — a black hole pulls so hard it even traps light! 🐱" } }
 };

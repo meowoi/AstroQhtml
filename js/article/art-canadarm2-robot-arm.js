@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 260,
+  ord: 2040,
   id: "art-canadarm2-robot-arm",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Đầu kẹp khoá",
                    en: "Latching End Effector" },
-           text: { vi: "<b>Đầu kẹp khoá</b> là bàn tay ở hai đầu Canadarm2. Vì hai đầu giống hệt nhau nên cánh tay tự bò được — đầu nào cũng làm vai được cả. 🤖",
+           text: { vi: "bàn tay ở hai đầu Canadarm2. Vì hai đầu giống hệt nhau nên cánh tay tự bò được — đầu nào cũng làm vai được cả. 🤖",
                    en: "A <b>Latching End Effector</b> is the hand at each end of Canadarm2. Because both ends match, the arm can walk itself along — either end can play shoulder. 🤖" } },
   terms: []
 };

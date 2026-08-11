@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 250,
+  ord: 2080,
   id: "art-ingenuity-first-flight-mars",
   src: "NASA",
   cat: "robot",
@@ -25,7 +25,7 @@ export default {
   term: { who: "byte",
            word: { vi: "Mật độ không khí",
                    en: "Air density" },
-           text: { vi: "<b>Mật độ không khí</b> cho biết trong một khoảng không có bao nhiêu phân tử khí. Càng loãng thì cánh quạt càng khó bám — đó là lý do bay trên Sao Hoả khó thế. 🤖",
-                   en: "<b>Air density</b> is how many gas molecules fill a space. The thinner it is, the less a rotor has to grip — that's why flying on Mars is so hard. 🤖" } },
+           text: { vi: "cho biết trong một khoảng không có bao nhiêu phân tử khí. Càng loãng thì cánh quạt càng khó bám — đó là lý do bay trên Sao Hoả khó thế. 🤖",
+                   en: "how many gas molecules fill a space. The thinner it is, the less a rotor has to grip — that's why flying on Mars is so hard. 🤖" } },
   terms: []
 };

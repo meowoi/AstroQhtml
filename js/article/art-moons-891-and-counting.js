@@ -1,7 +1,7 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 210,
+  ord: 1010,
   id: "art-moons-891-and-counting",
   src: "NASA",
   cat: "astronomy",
@@ -25,7 +25,7 @@ export default {
   term: { who: "comet",
            word: { vi: "Vệ tinh tự nhiên",
                    en: "Natural satellite" },
-           text: { vi: "<b>Vệ tinh tự nhiên</b> là vật thể tự hình thành rồi quay quanh một thiên thể khác. Trạm vũ trụ cũng quay quanh Trái Đất, nhưng nó do người làm ra — nên nó là vệ tinh <i>nhân tạo</i>. ☄️",
+           text: { vi: "vật thể tự hình thành rồi quay quanh một thiên thể khác. Trạm vũ trụ cũng quay quanh Trái Đất, nhưng nó do người làm ra — nên nó là vệ tinh <i>nhân tạo</i>. ☄️",
                    en: "A <b>natural satellite</b> formed on its own and orbits another body. The space station orbits Earth too — but people built it, so it is an <i>artificial</i> satellite. ☄️" } },
   terms: ["moon"]
 };
