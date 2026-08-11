@@ -43,21 +43,29 @@ qua API Gateway HTTP API, vùng `ap-southeast-1`. Mã nguồn nằm **ngoài rep
 
 ## 3. Quy mô thật — dùng những con số này để ước lượng
 
-| Hạng mục | Con số thật (31/07/2026) |
+| Hạng mục | Con số thật (09/08/2026) |
 |---|---|
-| Trang HTML chính | 17 |
+| Trang HTML chính | 20 |
 | Bài wiki SEO | 10 bài × 2 ngôn ngữ (trang tĩnh, không nạp JS) |
-| File CSS / file JS | 26 / 23 |
-| Tổng dòng (JS + HTML chính) | **~19.600** |
+| File CSS / file JS | 30 / 29 (+ **100 file câu hỏi** ở `js/quiz/`, một câu một file) |
+| Tổng dòng (JS + HTML chính) | **~23.500** |
 | **Nhiệm vụ (Mission)** | **1 chạy được** — Trái Đất, **7 bước**. Mặt Trăng: "sắp ra mắt" |
 | Mini-game | 6 khai báo, **3 chạy được** (né tiểu hành tinh · phòng thủ 360° · ghép chòm sao) |
-| Câu hỏi quiz | **35** |
-| Thuật ngữ codex | 17 |
+| Câu hỏi quiz | **100** — phủ 19 thẻ codex; 65 câu có `srcQuote` |
+| Thuật ngữ codex | **19** (18 `space` + 1 `earth`) — và **19 icon SVG vẽ tay**, tỉ lệ 1:1 |
+| **Bài đọc** (`js/articles.js`) | **34** — 18 thiên văn · 8 robot · 5 AI · 3 lượng tử |
 | Mẫu vật | **21** (server là nguồn sự thật) |
 | Huy hiệu | **22**, chia 5 nhóm (học · huấn luyện · khám phá · nhiệm vụ · cấp độ) |
 | Hành tinh trong dữ liệu | **8** (`js/planets.js`). Bản đồ 3D có thêm Mặt Trời + Mặt Trăng |
-| Kho nội dung học (`learningdata/`) | **Rất mỏng** — 1 file codex Trái Đất + vài bài NASA |
-| Endpoint API | 15 |
+| Kho nội dung học (`learningdata/`) | **Rất mỏng** — 1 file codex Trái Đất + vài bài NASA. ⚠️ **0 trang nào đọc `level_*.json`** |
+| Endpoint API | 19 |
+
+⚠️ **Dây chuyền nội dung ĐANG CHẠY — đừng đề xuất lại từ đầu.** Đã chốt **30 thẻ · 870 câu ·
+5 đợt** (`docs/proposals/2026-08-06-review-gemini-30-the-chot.md`) và **100 bài đọc**
+(`2026-08-05-de-bai-gemini-VONG-2-theo-thuat-ngu.md` mục 5). Đợt 1 đã giao: 15→19 thẻ ·
+20→100 câu · 9→14 bài đọc. **Đợt 2 đang chờ:** 270 câu đào sâu 15 thẻ cũ.
+⛔ Và **AI · Lượng tử · Lập trình · CNTT đang được HOÃN** khỏi vòng thẻ/câu hỏi — lý do ở
+chính file đó. Đề xuất mở lại thì phải nói rõ dữ kiện mới là gì.
 
 ### ⚠️ Chi phí đơn vị — con số quan trọng nhất khi bạn đề xuất thêm nội dung
 
@@ -97,8 +105,16 @@ hàm có thật; với một khuôn mới thì xét theo *tinh thần* (rủi ro
 
 ### Nút thắt thật
 
-**Nội dung, không phải mã.** 35 câu quiz và 1 file dữ liệu học là quá ít cho quy mô 8 hành tinh.
-Đề xuất giúp *sản xuất nội dung nhanh hơn* có giá trị hơn đề xuất thêm tính năng.
+**Nội dung, không phải mã.** Đề xuất giúp *sản xuất nội dung nhanh hơn* có giá trị hơn đề
+xuất thêm tính năng.
+
+Trong nội dung thì **BÀI ĐỌC từng là chỗ hẹp nhất**, nay đã đỡ: Đợt A (09/08/2026) thêm 20
+bài, kho lên **34 bài** và kế hoạch 100 bài đã giao **25/100**. Ba chủ đề trước đây trơ
+(AI 1 · Robot 1 · Lượng tử 2) nay là **AI 5 · Robot 8 · Lượng tử 3** — viết qua góc *"robot
+và AI trong không gian"* nên vẫn đúng bộ nguồn NASA/ESA.
+
+⇒ **Chỗ hẹp nhất hiện giờ là CÂU HỎI và THẺ:** câu đã giao **80/850**, thẻ **4/30**.
+**Đợt 2 (270 câu đào sâu 15 thẻ cũ, 0 icon mới) là việc rẻ nhất đang chờ.**
 
 ---
 

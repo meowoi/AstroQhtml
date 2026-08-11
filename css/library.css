@@ -58,8 +58,9 @@
 .cat:hover{background:rgba(56,189,248,.08);} .cat:active{transform:scale(.97);}
 .cat.active{background:linear-gradient(120deg,rgba(56,189,248,.16),rgba(192,132,252,.12));border-color:rgba(56,189,248,.5);}
 .cat .c-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:15px;color:var(--cat-c,var(--cyan));background:var(--cat-bg,rgba(56,189,248,.14));border:1px solid var(--cat-c,rgba(56,189,248,.4));}
+/* `.c-n` (số bài mỗi chủ đề) ĐÃ BỎ 09/08/2026 — lý do ghi ở `renderCats()`
+   trong library.html. Giữ rule mà không ai dùng là để lại một class chết. */
 .cat .c-nm{flex:1;font-size:13.5px;font-weight:500;}
-.cat .c-n{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);}
 .cat--astronomy{--cat-c:#38bdf8;--cat-bg:rgba(56,189,248,.14);}
 .cat--ai{--cat-c:#c084fc;--cat-bg:rgba(192,132,252,.14);}
 .cat--quantum{--cat-c:#4ade80;--cat-bg:rgba(74,222,128,.14);}

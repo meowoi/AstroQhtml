@@ -1,4 +1,4 @@
-# RÀ SOÁT M-02 → M-04 — gửi ChatGPT trước khi viết M-05, M-06
+No, it's not item.# RÀ SOÁT M-02 → M-04 — gửi ChatGPT trước khi viết M-05, M-06
 
 > Ngày 05/08/2026 · Đã đối chiếu từng bảng với mã nguồn và với `docs/decisions/`.
 

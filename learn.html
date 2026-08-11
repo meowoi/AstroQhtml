@@ -101,13 +101,13 @@
      CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
-<script src="js/articles.js"></script>
+<script src="js/articles-index.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
   "use strict";
-  /* Khoá `astroq-read` nay khai ở `js/articles.js` — đọc qua `AstroQArticles.READ_KEY`.
+  /* Khoá `astroq-read` nay khai ở `js/articles-index.js` — đọc qua `AstroQArticles.READ_KEY`.
      Giữ một bản sao thứ hai ở đây là mời người sau sửa một chỗ mà quên chỗ kia. */
   var READ_SECS = 6;                 // giây "đọc" trước khi được nhận thưởng
 
@@ -129,7 +129,9 @@
       src_link:"Nguồn chính thức",
       reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
       reading_cta:"Chưa đọc",
-      toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!"
+      toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!",
+      read_fail:"Không tải được nội dung bài này. Kiểm tra kết nối rồi thử lại nhé.",
+      read_file:"Trang này đang được mở trực tiếp từ ổ đĩa (file://), và trình duyệt chặn việc tải nội dung bài theo cách đó — không phải do mạng. Hãy mở bằng một máy chủ: chạy <code>python -m http.server 8000</code> trong thư mục AstroQhtml rồi vào <code>http://localhost:8000/learn.html</code>."
     },
     en:{
       tt_name:"Purple Meteor",
@@ -147,7 +149,9 @@
       src_link:"Official source",
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
       reading_cta:"Unread",
-      toast_claim:"Saved to your profile · Knowledge loaded!"
+      toast_claim:"Saved to your profile · Knowledge loaded!",
+      read_fail:"Could not load this article. Check your connection and try again.",
+      read_file:"This page was opened straight from disk (file://), and the browser blocks loading article content that way — it is not a network problem. Serve it instead: run <code>python -m http.server 8000</code> in the AstroQhtml folder, then open <code>http://localhost:8000/learn.html</code>."
     }
   };
   var LANG = AstroQ.getLang();
@@ -156,7 +160,7 @@
 
 
   /* ===== Dữ liệu bài viết (mẫu minh hoạ, nguồn chính thức để tham khảo) ===== */
-  /* Bài đọc lấy từ `js/articles.js` — CHỖ DUY NHẤT khai báo, dùng chung với
+  /* Bài đọc lấy từ `js/articles-index.js` — CHỖ DUY NHẤT khai báo, dùng chung với
      `library.html`. Trang này là khu GIỚI THIỆU nên chỉ hiện 4 bài nổi bật;
      xem đủ 9 bài thì sang Góc Khám Phá. Luật chọn (ưu tiên bài chưa đọc) dùng
      chung một hàm với `library.html` — hai luật chọn khác nhau cho cùng một
@@ -164,7 +168,7 @@
   var ARTICLES = AstroQArticles.featured(4);
 
   /* ===== Đọc / thưởng ===== */
-  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles.js`. Chúng phải giống hệt ở cả hai trang
+  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles-index.js`. Chúng phải giống hệt ở cả hai trang
      — không thì lỗi "đọc bên này bên kia không biết" quay lại. `isRead` ở đó còn hiểu
      cả id CŨ của bài đã gộp, nên lịch sử đọc của trẻ không bị mất. */
   var readSet = AstroQArticles.readSet, isRead = AstroQArticles.isRead,
@@ -190,16 +194,32 @@
   }
 
   /* ===== Trình đọc ===== */
-  var curArt=null, readTimer=null, readLeft=0;
+  /* ⚠️ `openId` đặt NGAY khi mở, `curArt` chỉ có khi thân bài đã về — xem ghi chú cùng
+     nội dung ở `library.html`. Không có `openId` thì thân bài của bài CŨ ghi vào trình
+     đọc đang hiện bài MỚI. */
+  var curArt=null, openId=null, readTimer=null, readLeft=0;
+  /* ⚠️ KHÔNG ĐỒNG BỘ TỪ 09/08/2026 — thân bài nằm ở `js/article/<id>.js`, tải khi cần
+     (lý do + số đo ở đầu `js/articles-index.js`). Hiện KHUNG ngay rồi mới chờ thân bài:
+     bấm mà không có gì xảy ra là trẻ tưởng bấm trượt. */
   function openReader(id){
-    var a=null; for(var i=0;i<ARTICLES.length;i++){ if(ARTICLES[i].id===id) a=ARTICLES[i]; }
-    if(!a) return; curArt=a;
+    var a=AstroQArticles.byId(id);
+    if(!a) return;
+    openId=id; curArt=null;
     var th=$("reader-thumb"); th.style.setProperty("--c1",a.c[0]); th.style.setProperty("--c2",a.c[1]); th.style.setProperty("--c3",a.c[2]);
     $("reader-em").textContent=a.em;
     $("reader-src").innerHTML=lic("satellite")+' '+a.src;
     $("reader-title").textContent=L(a.title);
-    $("reader-body").innerHTML = L(a.body).map(function(p){ return "<p>"+p+"</p>"; }).join("");
-    $("reader-link").href=a.url;
+    $("reader-body").innerHTML="";
+    AstroQArticles.load(id).then(function(full){
+      if(openId!==id) return;
+      /* ⚠️ Nói đúng lý do — xem ghi chú cùng nội dung ở `library.html`: `file://` chặn
+         `import()`, mạng không liên quan. */
+      if(!full){ $("reader-body").innerHTML="<p>"+
+                   (AstroQArticles.needsServer()? t("read_file") : t("read_fail"))+"</p>"; return; }
+      curArt=full;
+      $("reader-body").innerHTML = L(full.body).map(function(p){ return "<p>"+p+"</p>"; }).join("");
+      $("reader-link").href=full.url;
+    });
     var btn=$("reader-claim");
     clearInterval(readTimer);
     if(isRead(a.id)){
@@ -215,7 +235,7 @@
     }
     $("reader").classList.add("show");
   }
-  function closeReader(){ clearInterval(readTimer); $("reader").classList.remove("show"); }
+  function closeReader(){ clearInterval(readTimer); openId=null; $("reader").classList.remove("show"); }
   function claim(){
     if(!curArt || isRead(curArt.id)) return;
     markRead(curArt.id);
@@ -246,7 +266,7 @@
     $("ic-lib").innerHTML=lic("telescope"); $("ic-quiz").innerHTML=lic("zap");
     $("ic-lib-btn").innerHTML=lic("book"); $("ic-quiz-btn").innerHTML=lic("zap");
     render();
-    if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
+    if($("reader").classList.contains("show") && openId) openReader(openId);
   }
 
   /* ===== Sự kiện ===== */

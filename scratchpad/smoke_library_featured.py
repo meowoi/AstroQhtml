@@ -14,9 +14,12 @@ Cau hoi bo do nay tra loi — do TREN TRANG, khong doc code:
      python -m http.server 8123     (trong AstroQhtml/)
      PYTHONIOENCODING=utf-8 python scratchpad/smoke_library_featured.py
 """
+import os
+import re
 import sys
 from playwright.sync_api import sync_playwright
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = "http://127.0.0.1:8123"
 URL = BASE + "/library.html"
 OK = FAIL = 0
@@ -146,6 +149,36 @@ with sync_playwright() as p:
         "dang tim -> khoi noi bat AN", str(s["feat"] + s["featCards"]))
     chk("lib-nebula" in s["grid"] and not s["empty"],
         "tim dung ten bai DANG noi bat van ra ket qua", str(s["grid"]))
+
+    # ── [4a] TIM KIEM TOAN VAN van chay sau khi CHIA KHO (09/08/2026) ─────
+    # ⚠️ Truoc khi chia, `matches()` doc thang `a.body` vi ca kho nam trong trang. Nay
+    #    than bai tai TRE, nen day la phep kiem duy nhat chung minh duong `primeSearch`
+    #    -> `loadAll()` -> ve lai thuc su chay. Chon mot cum chi co trong THAN BAI va
+    #    KHONG co trong bat ky tieu de nao — neu tim theo tieu de thi no phai ra 0.
+    CUM = "khói của một chiếc xe"   # nam trong than bai `art-comet-tail-points-away`
+    # ⚠️ Cum dau tien toi chon ("qua cau tuyet ban") KHONG CO trong bai nao — no o
+    #    ghi chu cua ngan hang cau hoi. Phep kiem bao hong va suyt lam toi tuong
+    #    duong tim kiem hong. `grep -rl` tren js/article/ la cach kiem 2 giay.
+    _tit = pg.evaluate(
+        "c => AstroQArticles.all().filter(a =>"
+        " (a.title.vi + ' ' + a.title.en).toLowerCase().includes(c)).length",
+        CUM.lower())
+    chk(_tit == 0, f"cum thu '{CUM}' KHONG nam o tieu de nao (nen phep kiem co nghia)",
+        str(_tit))
+    pg.fill("#q", "")
+    pg.wait_for_timeout(150)
+    pg.click("#q")                     # `primeSearch` chay tu cu CHAM, som hon cu go
+    pg.fill("#q", CUM)
+    # cho `loadAll()` ve roi trang tu ve lai — khong ngu mot khoang co dinh
+    try:
+        pg.wait_for_function(
+            "() => document.querySelectorAll('#grid .card').length === 1",
+            timeout=8000)
+    except Exception:
+        pass
+    s = snap(pg)
+    chk(s["grid"] == ["art-comet-tail-points-away"],
+        "tim TOAN VAN (cum chi co trong than bai) ra dung 1 bai", str(s["grid"]))
     pg.fill("#q", "")
     pg.wait_for_timeout(300)
     s = snap(pg)
@@ -314,6 +347,191 @@ with sync_playwright() as p:
         pg.wait_for_timeout(1400)
         chk(pg.eval_on_selector("#q-total", "e => e.textContent").strip() == "5",
             f"duong lui '{nhan}': van rut du 5 cau")
+    ctx.close()
+
+    # ── [8] CAU TRUC KHO BAI DOC — hang rao dau tien cua `js/articles.js` ──────
+    # ⚠️ VI SAO O DAY MA KHONG O check_pages.py: doc file bang regex thi phai doan
+    #    ranh gioi tung object, ma file nay long nhieu muc va co chuoi chua dau `{`.
+    #    O day trinh duyet DA PHAN TICH HO — `AstroQArticles.all()` tra ve object
+    #    that. Phan doi chieu voi dia (khoa quiz co file khong) thi Python lo.
+    ctx = br.new_context(viewport={"width": 1440, "height": 900})
+    ctx.on("weberror", lambda e: errs.append(str(e)))
+    pg = ctx.new_page()
+    pg.goto(URL, wait_until="load")
+    pg.wait_for_selector(".card")
+    # ⚠️ KHO DA CHIA 09/08/2026: `all()` nay tra ve MUC LUC (nhe), than bai nam o
+    #    `js/article/<id>.js`. Nen phai HOP hai nua lai moi kiem duoc cau truc day du —
+    #    `loadAll()` la duong CHINH THUC de lay het, dung cho tim kiem toan van.
+    idx = pg.evaluate("() => AstroQArticles.all()")
+    chk(len(idx) >= 19, f"doc duoc MUC LUC ({len(idx)} bai)")
+    # ⚠️ QUET MOI DONG, KHONG chi `idx[0]`. Ban dau toi chi soi phan tu dau tien, va
+    #    phep thu pha hoai (nhet `body` vao mot dong o GIUA muc luc) LOT — vi dong dau
+    #    van sach. Mot phep kiem chi xem phan tu dau la mot phep kiem xem 1/39 du lieu.
+    LIGHT_ONLY = ("body", "term", "terms", "url", "credit")
+    _phinh = sorted({k for e in idx for k in LIGHT_ONLY if k in e})
+    chk(not _phinh, "muc luc KHONG chua than bai (giu duong tai nhe)", str(_phinh))
+    # ⚠️ THU TU MUC LUC LA THU TU CURATION: `featured()` lay "bai chua doc dau tien theo
+    #    thu tu muc luc" lam THE LON. Che do SINH LAI cua bo chia doc file bang `glob`
+    #    (a-b-c), va lan dau chay no da AM THAM doi thu tu — the lon nhay tu `jwst` sang
+    #    `art-ai-already-around-you`. Khong phep kiem nao bat, vi tat ca deu SUY thu tu
+    #    tu chinh du lieu. Nay `ord` nam trong file bai va muc luc phai sap theo no.
+    _ords = [e.get("ord") for e in idx]
+    chk(all(o is not None for o in _ords), "moi dong muc luc co `ord`",
+        str([e["id"] for e in idx if e.get("ord") is None][:3]))
+    chk(_ords == sorted(o for o in _ords if o is not None),
+        "muc luc sap TANG theo `ord` (thu tu curation, khong phai a-b-c)",
+        str(_ords[:6]))
+    full = pg.evaluate("() => AstroQArticles.loadAll()")
+    chk(len(full) == len(idx),
+        f"loadAll() tai duoc DU than bai ({len(full)}/{len(idx)})")
+    # hop muc luc + than bai -> object day du nhu truoc khi chia
+    _by = {a["id"]: a for a in full}
+    arts = [dict(e, **_by.get(e["id"], {})) for e in idx]
+
+    # ⛔ Chan "dat rong": 0 bai thi moi vong lap duoi day deu di qua sach se.
+    chk(len(arts) >= 19, f"hop duoc kho bai doc day du ({len(arts)} bai)")
+
+    CATS = set(pg.evaluate(
+        "() => Array.from(document.querySelectorAll('#cats .cat'))"
+        ".map(b => b.dataset.cat).filter(c => c !== 'all')"))
+    chk(len(CATS) == 4, "doc duoc bo loc chu de tu sidebar", str(sorted(CATS)))
+
+    QUIZ = {os.path.splitext(f)[0] for f in os.listdir(os.path.join(ROOT, "js", "quiz"))
+            if f.endswith(".js")}
+    chk(len(QUIZ) >= 100, f"doc duoc ngan hang cau hoi ({len(QUIZ)} khoa)")
+
+    # ⚠️ `mit.edu` them 09/08/2026 — KHONG phai noi long chinh sach nguon, MIT DA LA nguon
+    #    tin cay cua du an: bo `wiki/` dan `media.mit.edu` · `scratch.mit.edu` ·
+    #    `appinventor.mit.edu`, va muc 2 CLAUDE.md ghi nguon wiki la "NASA/ESA/MIT".
+    #    Can no vi NASA gan nhu khong co noi dung ve AI trong DOI SONG (thuat toan de
+    #    xuat, thien lech, quyen rieng tu) — thu ma tre 8-15 gap moi ngay.
+    OKDOM = ("nasa.gov", "esa.int", "noaa.gov", "usgs.gov", "nps.gov",
+             "mit.edu", "exploratorium.edu", "lco.global", "ucar.edu")
+    # ⚠️ GHIM MON NO, KHONG NOI RONG OKDOM — dung khuon `_KNOWN_CDN` cua check_pages:
+    #    liet ke dung cai dang sai de them cai THU HAI la biet ngay, va danh sach tu
+    #    that lai khi don xong. Noi rong OKDOM thi moi trang thuong mai deu lot.
+    #    ✅ DA DON XONG 09/08/2026: `lib-qubit` tung dan `ibm.com/quantum` (trang san pham)
+    #    trong khi credit ghi "MIT / IBM Research"; nay dan trang QuAIL cua NASA. Danh
+    #    sach RONG, va phep kiem duoi day giu no rong — them mot nguon ngoai la bao ngay.
+    LEGACY_SRC = set()
+    ids, bad = set(), {}
+
+    def flag(a, why):
+        bad.setdefault(why, []).append(a.get("id", "?"))
+
+    for a in arts:
+        i = a.get("id", "")
+        if i in ids:
+            flag(a, "id trung")
+        ids.add(i)
+        if not re.fullmatch(r"[a-z0-9-]+", i):
+            flag(a, "id sai dinh dang")
+        if a.get("cat") not in CATS:
+            flag(a, "cat khong co trong bo loc")
+        # song ngu du — thieu mot ben la trang hien khoa tho hoac o trong
+        for f in ("title", "body"):
+            v = a.get(f) or {}
+            if not v.get("vi") or not v.get("en"):
+                flag(a, f"thieu song ngu o `{f}`")
+        b = a.get("body") or {}
+        # ⚠️ Lech SO DOAN thi ban EN va ban VI ke hai cau chuyen dai ngan khac nhau,
+        #    va khong co gi bao — trang van ve binh thuong.
+        if isinstance(b.get("vi"), list) and isinstance(b.get("en"), list) \
+                and len(b["vi"]) != len(b["en"]):
+            flag(a, f"body vi/en lech so doan ({len(b['vi'])} vs {len(b['en'])})")
+        t = a.get("term")
+        if t:
+            if t.get("who") not in ("comet", "byte"):
+                flag(a, "term.who khong phai linh vat")
+            for f in ("word", "text"):
+                v = t.get(f) or {}
+                if not v.get("vi") or not v.get("en"):
+                    flag(a, f"thieu song ngu o `term.{f}`")
+        # ⚠️ `terms` la DAY NOI sang bank; sai mot chu la day dut IM LANG.
+        for k in (a.get("terms") or []):
+            if k not in QUIZ:
+                flag(a, f"khoa quiz `{k}` khong co file")
+        # ⚠️ CO Y KHONG doi `credit` phai null theo `img`: `credit` la credit NGUON
+        #    DU LIEU, library.html:285 in no khong phu thuoc anh. Thu phai canh la
+        #    `img` — chuoi rong thi moi cho dung `if (a.img)` deu coi nhu khong anh,
+        #    tuc mot gia tri khong bao gio dung toi ma van doc ra nhu co anh.
+        im = a.get("img")
+        if im is not None and not (isinstance(im, str) and im.startswith("https://")):
+            flag(a, "`img` khong phai null cung khong phai URL https")
+        u = a.get("url") or ""
+        if not u.startswith("https://") or (
+                not any(d in u for d in OKDOM) and i not in LEGACY_SRC):
+            flag(a, "url khong thuoc nguon tin cay")
+        c = a.get("c") or []
+        if len(c) != 3 or not all(re.fullmatch(r"#[0-9a-fA-F]{6}", x) for x in c):
+            flag(a, "`c` khong phai 3 ma mau hex")
+        # ⛔ Doc bai KHONG con thuong tu 30/07/2026 (`Wallet.MaxPerLesson = 0`).
+        #    Hua sai la loi da phai di sua mot lan.
+        blob = " ".join((b.get("vi") or []) + (b.get("en") or []))
+        if "Thiên thạch tím" in blob or "Purple Meteor" in blob:
+            flag(a, "hua thuong Thien thach tim trong than bai")
+
+    for why in sorted(bad):
+        chk(False, f"kho bai doc: {why}", ", ".join(bad[why][:4]))
+    chk(not bad, "moi bai dung cau truc (id · song ngu · terms · nguon · mau)",
+        f"{len(arts)} bai, 0 loi" if not bad else "")
+    # Danh sach mien tru phai TU THAT LAI, khong duoc phinh ra. Nay da RONG.
+    chk(not LEGACY_SRC,
+        f"0 bai duoc mien tru khoi danh sach nguon tin cay ({len(LEGACY_SRC)})",
+        ", ".join(sorted(LEGACY_SRC)))
+    # ⛔ Khong bai nao duoc noi qubit "vua 0 vua 1" — NASA viet la "MOT CHONG CHAP cua ca
+    #    hai gia tri", va hai bai luong tu trong kho tung noi hai kieu ve dung cho nay.
+    # ⚠️⚠️ MIEN TRU PHAI THEO CUA SO QUANH TUNG CHO XUAT HIEN, KHONG theo ca bai.
+    #    Ban dau toi mien tru theo ca bai, va `lib-qubit` co chu "khong phai" o doan 2
+    #    (cau "Day khong phai chuyen bat be chu nghia") => mot chu do cap MIEN NHIEM cho
+    #    TOAN BAI, nen phep pha (nhet "vua 0 vua 1" vao doan 1) LOT. Phep kiem rong.
+    BAD = ("cả 0 và 1 cùng lúc", "vừa là 0 vừa là 1", "vừa 0 vừa 1",
+           "both 0 and 1 at the same time", "both heads and tails until")
+    NEG = ("không phải", "không viết", "nhưng nasa", "dẫn tới một ý sai", "nên tránh",
+           "not what nasa", 'not "both', "leads to a worse idea", "worth avoiding")
+    W = 200  # ky tu moi ben — du de phu mot cau giai thich, khong du de phu ca bai
+    _sai = []
+    for a in arts:
+        b = a.get("body") or {}
+        parts = (b.get("vi") or []) + (b.get("en") or [])
+        t = ((a.get("term") or {}).get("text") or {})
+        parts += [t.get("vi") or "", t.get("en") or ""]
+        low = " ␟ ".join(parts).lower()   # dau ngan doan de cua so khong tran doan khac
+        for cum in BAD:
+            i = low.find(cum)
+            while i >= 0:
+                win = low[max(0, i - W): i + len(cum) + W]
+                if not any(k in win for k in NEG):
+                    _sai.append(f"{a['id']}: “{cum}” khong co chu bac ben canh")
+                i = low.find(cum, i + 1)
+    chk(not _sai, "khong bai nao noi qubit 'vua 0 vua 1' ma khong bac lai ngay canh",
+        "; ".join(_sai[:3]))
+    ctx.close()
+
+    # ── [9] MO BANG `file://`: PHAI NOI DUNG LY DO ────────────────────────────
+    # ⚠️ Chu du an gap that 09/08/2026: mo library.html tu o dia thi trinh doc hien
+    #    "Khong tai duoc noi dung bai nay. Kiem tra ket noi roi thu lai nhe." — mot cau
+    #    NOI SAI NGUYEN NHAN. Do duoc: `file://` chan `import()` module (CORS, origin
+    #    'null'), mang khong lien quan gi, nen nguoi doc bi chi di sua mot thu khong hong.
+    # ⚠️ Day la HE QUA cua viec chia kho cung ngay: truoc do ca kho nam trong mot script
+    #    co dien nen xem bang file:// van doc duoc bai.
+    _root = ROOT.replace("\\", "/")
+    ctx = br.new_context(viewport={"width": 1440, "height": 900})
+    ctx.add_init_script("localStorage.setItem('astroq-lang','vi');")
+    pg = ctx.new_page()
+    pg.goto("file:///" + _root + "/library.html", wait_until="load")
+    pg.wait_for_selector(".card", timeout=15000)
+    chk(pg.evaluate("()=>AstroQArticles.needsServer()") is True,
+        "[file://] needsServer() nhan ra giao thuc")
+    _n_idx = pg.evaluate("()=>AstroQArticles.all().length")
+    chk(_n_idx >= 39, "[file://] MUC LUC van nap duoc (script co dien)", str(_n_idx))
+    pg.click('.card[data-id="art-atmosphere-shield"]')
+    pg.wait_for_timeout(1600)
+    _t = pg.eval_on_selector("#r-body", "e=>e.textContent")
+    chk("file://" in _t and "http.server" in _t,
+        "[file://] noi ly do THAT (giao thuc) va chi cach sua", _t[:56])
+    chk("Kiểm tra kết nối" not in _t,
+        "[file://] KHONG bao 'kiem tra ket noi' (mang khong lien quan)")
     ctx.close()
 
     chk(not errs, "0 loi console / pageerror", str(errs[:3]))

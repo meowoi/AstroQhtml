@@ -1,4 +1,4 @@
-No, it's not item. Oh man, did you mean that she can be eight home side twenty twenty two British baby two thirty three song you don't talk a lot being hundred and thirty one is a beansVÒNG 2: câu hỏi theo THUẬT NGỮ, không theo cấp độ
+# VÒNG 2: câu hỏi theo THUẬT NGỮ, không theo cấp độ
 
 > Ngày 05/08/2026 · **THAY HẲN** `2026-08-05-de-bai-gemini-1000-quiz-100-bai-doc.md`.
 > Đề bài vòng 1 sai hướng ở phần quiz; lý do ghi ở mục 0. Phần **bài đọc** thì giữ,

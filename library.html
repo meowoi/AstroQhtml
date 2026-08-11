@@ -91,13 +91,13 @@
      CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB. Không có
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
-<script src="js/articles.js"></script>
+<script src="js/articles-index.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
 (function(){
   "use strict";
-  var READ_SECS=5;   /* khoá `astroq-read` khai ở js/articles.js, không chép lại */
+  var READ_SECS=5;   /* khoá `astroq-read` khai ở js/articles-index.js, không chép lại */
 
   /* ===== i18n ===== */
   var I18N={
@@ -111,7 +111,9 @@
       reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
       unread_badge:"Chưa đọc",
       quiz_cta:"LÀM QUIZ BÀI NÀY NẾU BẠN ĐÃ HIỂU", credit:"Nguồn dữ liệu",
-      toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp." },
+      toast_claim:"Đã ghi vào hồ sơ · Kiến thức nạp đầy!", none:"Không tìm thấy bài viết phù hợp.",
+      read_fail:"Không tải được nội dung bài này. Kiểm tra kết nối rồi thử lại nhé.",
+      read_file:"Trang này đang được mở trực tiếp từ ổ đĩa (file://), và trình duyệt chặn việc tải nội dung bài theo cách đó — không phải do mạng. Hãy mở bằng một máy chủ: chạy <code>python -m http.server 8000</code> trong thư mục AstroQhtml rồi vào <code>http://localhost:8000/library.html</code>." },
     en:{
       tt_name:"Purple Meteor",
       a_source:"Source", title:"AstroQ — Discovery Corner", back:"Back to Knowledge Station", search_ph:"Search articles…",
@@ -122,7 +124,9 @@
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
       unread_badge:"Unread",
       quiz_cta:"TAKE THE QUIZ IF YOU UNDERSTOOD IT", credit:"Data source",
-      toast_claim:"Saved to your profile · Knowledge loaded!", none:"No matching articles found." }
+      toast_claim:"Saved to your profile · Knowledge loaded!", none:"No matching articles found.",
+      read_fail:"Could not load this article. Check your connection and try again.",
+      read_file:"This page was opened straight from disk (file://), and the browser blocks loading article content that way — it is not a network problem. Serve it instead: run <code>python -m http.server 8000</code> in the AstroQhtml folder, then open <code>http://localhost:8000/library.html</code>." }
   };
   var LANG = AstroQ.getLang();
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
@@ -132,13 +136,13 @@
   var CAT_ICON={astronomy:"telescope", ai:"cpu", quantum:"atom", robot:"bot"};
 
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
-  /* Bài đọc lấy từ `js/articles.js` — CHỖ DUY NHẤT khai báo, dùng chung với
+  /* Bài đọc lấy từ `js/articles-index.js` — CHỖ DUY NHẤT khai báo, dùng chung với
      `learn.html`. Xem đầu file đó: hai mảng riêng trước đây gây HAI lỗi thật.
      Giữ tên `ARTICLES` để phần còn lại của trang không phải sửa một chữ nào. */
   var ARTICLES = AstroQArticles.all();
 
   /* ===== Đọc / thưởng / thống kê ===== */
-  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles.js`. Chúng phải giống hệt ở cả hai trang
+  /* ⚠️ Ba hàm này ĐÃ CHUYỂN sang `js/articles-index.js`. Chúng phải giống hệt ở cả hai trang
      — không thì lỗi "đọc bên này bên kia không biết" quay lại. `isRead` ở đó còn hiểu
      cả id CŨ của bài đã gộp, nên lịch sử đọc của trẻ không bị mất. */
   var readSet = AstroQArticles.readSet, isRead = AstroQArticles.isRead,
@@ -155,7 +159,7 @@
      đánh dấu đã đọc thì bài vừa đọc biến khỏi khối nổi bật ngay dưới tay trẻ,
      và cả khối nhảy chỗ. Phiên đăng nhập sau mở lại trang là đã có thứ tự mới. */
   var FEAT_N = 4;
-  var FEATURED = AstroQArticles.featured(FEAT_N);   /* luật chọn nằm ở js/articles.js */
+  var FEATURED = AstroQArticles.featured(FEAT_N);   /* luật chọn nằm ở js/articles-index.js */
   function isFeatured(id){
     for(var i=0;i<FEATURED.length;i++){ if(FEATURED[i].id===id) return true; }
     return false;
@@ -189,25 +193,52 @@
        "không tìm thấy bài viết phù hợp" — bài có thật mà máy bảo không có. */
     if(filterOn() || !FEATURED.length){ box.innerHTML=""; return; }
     var a=FEATURED[0], rest=FEATURED.slice(1);
+    /* ⚠️ Đoạn mở đầu của THẺ LỚN là thứ DUY NHẤT ở lưới cần tới thân bài, nên nó tải
+       riêng đúng một file (`load`), không phải cả kho. Cố ý KHÔNG nhét một trường
+       `sum` vào mục lục: `sum` là bản sao thứ hai của đoạn mở đầu, sẽ lệch đúng vào
+       ngày ai đó sửa thân bài mà quên chạy lại bộ sinh — và nó làm mục lục phình
+       thêm ~17 KB thô cho một thứ chỉ MỘT thẻ dùng.
+       ⚠️ Thẻ hiện NGAY, đoạn chữ điền sau; chưa về thì để trống chứ không hiện chữ
+          giữ chỗ giả. */
     box.innerHTML =
       '<article class="feat" data-id="'+a.id+'">'+imgboxHtml(a)+
         '<div class="feat-body">'+badgeHtml(a)+
           '<div class="feat-eyebrow">'+t("featured")+'</div>'+
           '<h1>'+L(a.title)+'</h1>'+
-          '<p>'+L({vi:a.body.vi[0].replace(/<[^>]+>/g,""),en:a.body.en[0].replace(/<[^>]+>/g,"")})+'</p>'+
+          '<p id="feat-lead"></p>'+
           '<button class="read-btn">'+lic("book")+' '+t("read_now")+'</button>'+
         '</div>'+
       '</article>'+
       (rest.length ? '<div class="feat-row">'+rest.map(cardHtml).join("")+'</div>' : "");
+    AstroQArticles.load(a.id).then(function(full){
+      var p=$("feat-lead");
+      if(!p || !full || !full.body) return;
+      p.textContent = L({vi:full.body.vi[0], en:full.body.en[0]}).replace(/<[^>]+>/g,"");
+    });
   }
 
   /* ===== Render grid ===== */
+  /* ⚠️ TÌM KIẾM TOÀN VĂN VẪN GIỮ, nhưng thân bài nay tải trễ — nên `matches` dùng thân
+     bài NẾU nó đã có trong bộ nhớ (`loaded`), còn không thì tìm theo tiêu đề. Cộng với
+     `primeSearch()` gọi ngay khi trẻ CHẠM vào ô tìm (sớm hơn cú gõ đầu tiên), thực tế
+     thân bài luôn về trước khi gõ xong.
+     ⚠️ Cố ý KHÔNG chặn giao diện chờ `loadAll()`: ô tìm phải phản hồi ngay từ ký tự đầu.
+        Thà một khoảnh khắc chỉ tìm theo tiêu đề rồi tự vẽ lại, hơn là ô tìm đứng im. */
   function matches(a){
     if(fSrc!=="all" && a.src!==fSrc) return false;
     if(fCat!=="all" && a.cat!==fCat) return false;
-    if(fSearch){ var s=(L(a.title)+" "+L({vi:a.body.vi.join(" "),en:a.body.en.join(" ")})).toLowerCase();
-      if(s.indexOf(fSearch)<0) return false; }
+    if(fSearch){
+      var full=AstroQArticles.loaded(a.id);
+      var s=L(a.title);
+      if(full && full.body) s+=" "+L({vi:full.body.vi.join(" "),en:full.body.en.join(" ")});
+      if(s.toLowerCase().indexOf(fSearch)<0) return false;
+    }
     return true;
+  }
+  var primed=false;
+  function primeSearch(){
+    if(primed) return; primed=true;
+    AstroQArticles.loadAll().then(function(){ if(fSearch) render(); });
   }
   function filterOn(){ return !!fSearch || fSrc!=="all" || fCat!=="all"; }
   /* Thẻ dùng chung cho lưới VÀ cho 3 ô của khối nổi bật — một hàm, không chép hai
@@ -235,25 +266,56 @@
   function renderCats(){
     var cats=["all","astronomy","ai","quantum","robot"];
     $("cats").innerHTML=cats.map(function(c){
-      var n = c==="all" ? ARTICLES.length : ARTICLES.filter(function(a){return a.cat===c;}).length;
       var ic = c==="all" ? "layers" : CAT_ICON[c];
       var nm = c==="all" ? t("all_topics") : t("cat_"+c);
+      // ⚠️ CỐ Ý KHÔNG hiện số bài mỗi chủ đề (bỏ 09/08/2026). Kho bài còn mỏng
+      //    (AI 1 bài, Robot 1 bài) nên con số đó nói với trẻ rằng "chỗ này gần như
+      //    trống" ngay trước khi nó kịp bấm vào — đúng thứ ta không muốn nói lúc
+      //    đang mời khám phá. Số bài KHỚP bộ lọc vẫn hiện ở `#feed-count` phía
+      //    feed, tức thông tin không mất, chỉ thôi đứng ở chỗ mời gọi.
       return '<button class="cat cat--'+c+(fCat===c?' active':'')+'" data-cat="'+c+'">'+
-        '<span class="c-ic">'+lic(ic)+'</span><span class="c-nm">'+nm+'</span><span class="c-n">'+n+'</span></button>';
+        '<span class="c-ic">'+lic(ic)+'</span><span class="c-nm">'+nm+'</span></button>';
     }).join("");
   }
 
   /* ===== Reader ===== */
-  var curArt=null, rTimer=null, rLeft=0;
+  /* ⚠️ `openId` đặt NGAY LẬP TỨC khi mở, còn `curArt` chỉ có khi thân bài đã về. Cần cả
+     hai vì trẻ có thể đóng rồi mở bài khác trong lúc file đầu còn đang bay — không có
+     `openId` thì thân bài của bài CŨ ghi vào trình đọc đang hiện bài MỚI. */
+  var curArt=null, openId=null, rTimer=null, rLeft=0;
+  /* ⚠️ KHÔNG ĐỒNG BỘ TỪ 09/08/2026 — thân bài nay nằm ở `js/article/<id>.js`, tải khi
+     cần (lý do + số đo ở đầu `js/articles-index.js`).
+     ⚠️ Mở ngay phần KHUNG (ảnh/nhãn/tiêu đề — toàn bộ nằm ở mục lục) rồi mới chờ thân
+        bài, chứ KHÔNG chờ mạng xong mới hiện gì: bấm vào thẻ mà không có gì xảy ra
+        trong nửa giây là trẻ tưởng bấm trượt — đúng lỗi `#loader` của explorer đã trả
+        giá. Thân bài về sau thì điền vào.
+     ⚠️ Tải hỏng thì NÓI THẬT (`read_fail`) chứ không để một trình đọc trống. */
   function openReader(id){
-    var a=null; for(var i=0;i<ARTICLES.length;i++){ if(ARTICLES[i].id===id) a=ARTICLES[i]; }
-    if(!a) return; curArt=a;
+    var a=AstroQArticles.byId(id);
+    if(!a) return;
+    openId=id; curArt=null;
     var rh=$("r-hero"); rh.style.setProperty("--c1",a.c[0]); rh.style.setProperty("--c2",a.c[1]); rh.style.setProperty("--c3",a.c[2]);
     $("r-em").textContent=a.em;
     rh.querySelectorAll("img").forEach(function(x){x.remove();});
     if(a.img){ var im=document.createElement("img"); im.src=a.img; im.alt=""; im.onerror=function(){ this.remove(); }; rh.insertBefore(im, $("r-badge")); }
     $("r-badge").className="badge r-badge "+(a.src==="NASA"?"nasa":(a.src==="ESA"?"esa":"ai")); $("r-badge").textContent="🛰️ "+a.src;
     $("r-title").textContent=L(a.title);
+    $("r-body").innerHTML="";
+    $("reader").classList.add("show");
+    AstroQArticles.load(id).then(function(full){ paintReader(id, full); });
+  }
+  /* Điền phần NẶNG khi thân bài về. Bỏ qua nếu trẻ đã đóng hoặc đã mở bài khác. */
+  function paintReader(id, a){
+    if(openId!==id || !$("reader").classList.contains("show")) return;
+    /* ⚠️ NÓI ĐÚNG LÝ DO. Mở trang bằng `file://` thì trình duyệt chặn `import()` module
+       (CORS, origin `null`) — mạng hoàn toàn không liên quan, nên câu "kiểm tra kết nối"
+       là chỉ người đọc đi sửa một thứ không hỏng. Cùng nguyên tắc đã chốt cho ba lý do
+       `sent:false` của email phụ huynh: gộp chúng thành một câu là nói sai 2/3 trường hợp. */
+    if(!a){ $("r-body").innerHTML='<p class="empty">'+
+              (AstroQArticles.needsServer()? t("read_file") : t("read_fail"))+"</p>";
+      var m0=$("r-mascot"); if(m0) m0.hidden=true;
+      $("r-credit").textContent=""; return; }
+    curArt=a;
     $("r-body").innerHTML=L(a.body).map(function(p){return "<p>"+p+"</p>";}).join("");
     // mascot
     /* ⚠️ LỖI CÓ SẴN, SỬA 06/08/2026. Trước đây dòng này là `var who=a.term.who;`
@@ -287,9 +349,8 @@
       rTimer=setInterval(function(){ rLeft--;
         if(rLeft<=0){ clearInterval(rTimer); btn.disabled=false; btn.textContent=t("claim"); }
         else btn.textContent=t("reading")+" ("+rLeft+"s)"; },1000); }
-    $("reader").classList.add("show");
   }
-  function closeReader(){ clearInterval(rTimer); $("reader").classList.remove("show"); }
+  function closeReader(){ clearInterval(rTimer); openId=null; $("reader").classList.remove("show"); }
   function claim(){
     if(!curArt || isRead(curArt.id)) return;
     markRead(curArt.id);
@@ -320,7 +381,7 @@
     $("ic-read").innerHTML=lic("book"); $("ic-total").innerHTML=lic("layers");
     $("ic-ext").innerHTML=lic("ext"); $("ic-ext2").innerHTML=lic("ext");
     renderFeatured(); render(); renderCats(); paintStats();
-    if($("reader").classList.contains("show") && curArt) openReader(curArt.id);
+    if($("reader").classList.contains("show") && openId) openReader(openId);
   }
 
   /* ===== Sự kiện ===== */
@@ -329,6 +390,11 @@
      khối nổi bật ẩn/hiện THEO bộ lọc, nên vẽ lại mỗi mình cái lưới thì lúc đang
      lọc trẻ vẫn thấy 4 thẻ nổi bật không liên quan nằm trên đầu kết quả — và tệ
      hơn, chúng lại trùng với chính mấy thẻ vừa hiện dưới lưới. */
+  /* ⚠️ `focus` KÈM `pointerdown`: trên máy tính bảng thì `focus` tới muộn hơn hẳn cú
+     chạm, mà đó chính là thiết bị chậm mạng nhất. Cả hai đều gọi `primeSearch` và
+     nó có cờ chống gọi hai lần. */
+  $("q").addEventListener("focus", primeSearch);
+  $("q").addEventListener("pointerdown", primeSearch);
   $("q").addEventListener("input", function(e){ fSearch=(e.target.value||"").trim().toLowerCase();
     renderFeatured(); render(); });
   $("srcfilter").addEventListener("click", function(e){ var b=e.target.closest?e.target.closest("button"):null; if(!b) return;
