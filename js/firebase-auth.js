@@ -440,24 +440,35 @@ const AstroQAuth = {
   },
 
   /**
-   * Đọc LẠI claim `admin` từ phiên hiện tại và cập nhật hồ sơ trong máy.
+   * XÁC MINH cờ admin TỪ ID TOKEN (không phải từ localStorage), rồi đồng bộ lại hồ sơ
+   * trong máy. Đây là hàm mà giao diện phải dùng khi quyết định CÓ HIỆN mục quản trị
+   * hay không.
    *
-   * Đường thường KHÔNG cần hàm này: `login()` đã đóng dấu cờ vào hồ sơ, và mọi trang
-   * chỉ đọc `AstroQ.getUser().admin` (xem `readAdminClaim`). Hàm này dành cho lúc
-   * quyền vừa đổi mà người dùng chưa đăng nhập lại.
+   * ⚠️ VÌ SAO KHÔNG ĐỌC `AstroQ.getUser().admin` ĐỂ HIỆN/ẨN: hồ sơ trong máy là dữ
+   *    liệu ai cũng sửa được bằng DevTools, nên một tài khoản thường có thể tự làm
+   *    mục quản trị hiện lên. Bấm vào thì server trả 403 (cổng thật là allowlist
+   *    `ADMIN_EMAILS`) nên KHÔNG lộ dữ liệu — nhưng người dùng của app này là TRẺ EM,
+   *    và một mục "chỉ tài khoản được cấp phép mới thấy" mà thấy được bằng cách sửa
+   *    một dòng JSON thì không giữ được lời hứa đó. Claim nằm trong JWT do Google ký,
+   *    SDK tự đối chiếu — không sửa được bằng localStorage.
+   *    Cờ trong hồ sơ máy vẫn giữ, nhưng CHỈ để `select.html` (trang cố ý không nạp
+   *    SDK) biết có bỏ onboarding hay không. Sửa cờ đó thì chỉ bỏ được màn giới thiệu
+   *    của chính mình — không phải thứ cần bảo vệ.
+   *
+   * @param force Buộc lấy token MỚI. Token sống ~1 giờ, nên claim vừa gắn ở server có
+   *   thể chưa có trong token đang giữ. Mặc định `false` → đọc token đã cache, KHÔNG
+   *   gọi mạng, nên gọi hàm này lúc mở trang là gần như miễn phí.
    *
    * ⚠️ CHỜ `onAuthStateChanged` nên CÓ THỂ LÂU (đo được: không có phiên thì nó không
    *    bao giờ resolve). ĐỪNG `await` nó trên đường đăng nhập hay trước một lần
    *    chuyển trang — đã từng đặt ở đó và nó biến một lời gọi phụ thành chỗ kẹt cả
    *    đường vào app.
-   * ⚠️ Token sống ~1 giờ nên claim vừa gắn ở server có thể chưa có trong token đang
-   *    giữ. `getIdToken(true)` buộc làm mới để thấy ngay.
    */
-  async refreshAdminFlag(){
+  async verifyAdmin(force){
     try{
       const u = await this.currentUser();
       if(!u) return false;
-      await u.getIdToken(true);                 // buộc lấy token mới
+      if(force) await u.getIdToken(true);
       const admin = await readAdminClaim(u);
       syncProfile(u, { admin });
       return admin;

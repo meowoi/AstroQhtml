@@ -3,24 +3,34 @@
 
    Dùng:  <script src="js/admin-link.js"></script>
           rồi đặt một ô trống ở nơi muốn link xuất hiện:
-            <div data-admin-link></div>
+            <div data-admin-link hidden></div>
 
    Trang KHÔNG phải biết gì về admin, chỉ khai CHỖ ĐẶT. Nhãn, biểu tượng, đường dẫn
    và điều kiện hiện đều nằm ở file này — thêm trang thứ ba chỉ cần một thẻ div, và
    đổi nhãn thì sửa đúng một nơi.
 
-   ── VÌ SAO ĐỌC `AstroQ.getUser().admin` CHỨ KHÔNG HỎI FIREBASE ──────────────
-   Cờ này do `login()` đóng dấu MỘT LẦN vào hồ sơ trong máy (xem `readAdminClaim`
-   ở js/firebase-auth.js). Nhờ vậy:
-     · không tốn thêm lời gọi nào, không chờ `onAuthStateChanged`;
-     · `select.html` — trang CỐ Ý không nạp SDK Firebase — vẫn dùng được.
+   ══════════════ LUẬT QUAN TRỌNG NHẤT CỦA FILE NÀY ══════════════
+   **CHỈ HIỆN SAU KHI XÁC MINH CLAIM TỪ ID TOKEN. KHÔNG BAO GIỜ HIỆN THEO
+   `localStorage`.**
 
-   ⚠️ ĐÂY LÀ GỢI Ý GIAO DIỆN, KHÔNG PHẢI QUYỀN. Ai cũng sửa được localStorage bằng
-      DevTools để cái link hiện ra; bấm vào thì `/admin/stats` trả 403 vì cổng thật
-      là allowlist `ADMIN_EMAILS` ở server (Services/AdminAuth.cs). Cùng đúng nguyên
-      tắc `js/route-gate.js` đã ghi: "cổng là lời dẫn đường, không phải hàng rào an
-      ninh". Một cái link hiện ra không làm lộ dữ liệu nào.
-   ⚠️ ĐỪNG dùng cờ này để ẩn/hiện DỮ LIỆU — chỉ để chọn đường đi.
+   Bản đầu đọc `AstroQ.getUser().admin` cho nhanh (cờ do `login()` đóng dấu). Nhưng hồ
+   sơ trong máy là dữ liệu ai cũng sửa được bằng DevTools, nên một tài khoản THƯỜNG chỉ
+   cần đổi một dòng JSON là mục quản trị hiện ra. Bấm vào thì server trả 403 — cổng thật
+   là allowlist `ADMIN_EMAILS` (Services/AdminAuth.cs) — nên KHÔNG lộ dữ liệu nào. Nhưng
+   yêu cầu là "chỉ tài khoản được cấp phép mới thấy mục này", và một lời hứa phá được
+   bằng cách sửa một dòng JSON thì không phải lời hứa.
+
+   Claim `admin` nằm trong JWT do Google ký và SDK tự đối chiếu, nên `AstroQAuth
+   .verifyAdmin()` là câu trả lời không giả được bằng localStorage. Nó đọc token ĐÃ
+   CACHE (không gọi mạng) nên gần như miễn phí.
+
+   ⚠️ HỆ QUẢ CÓ Ý THỨC: link xuất hiện CHẬM một nhịp sau khi trang tải, vì phải chờ
+      SDK và phiên. Đánh đổi đúng: thà chậm một nhịp còn hơn hiện cho người không được
+      phép. Không có phiên / hết hạn chờ → không hiện gì.
+   ⚠️ CỜ TRONG HỒ SƠ MÁY VẪN CÒN GIÁ TRỊ, nhưng cho việc KHÁC: `select.html` cố ý không
+      nạp SDK Firebase (64 KB gzip trên đúng đường onboarding của trẻ) nên `auth-flow.js`
+      đọc cờ đó để biết có bỏ màn giới thiệu hay không. Sửa cờ đó thì chỉ bỏ được màn
+      giới thiệu của CHÍNH MÌNH — không phải thứ cần bảo vệ.
    ============================================================ */
 (function (global) {
   "use strict";
@@ -30,102 +40,98 @@
     en: { label: "System report",    hint: "Project health & user behaviour metrics" }
   };
 
-  function isAdmin() {
-    try {
-      var u = global.AstroQ && AstroQ.getUser();
-      return !!(u && u.admin === true);
-    } catch (e) { return false; }
-  }
+  /* Kết quả xác minh. `null` = CHƯA biết (chưa xác minh xong) — khác hẳn `false`
+     (đã xác minh, không phải admin). Chưa biết thì KHÔNG vẽ gì. */
+  var verified = null;
 
-  function mount() {
-    if (!isAdmin()) return;                 // không phải admin → không chèn gì
+  /* Chờ SDK: `AstroQAuth` do một ES module gắn lên window, mà module luôn chạy SAU
+     script thường. Chờ CÓ TRẦN để không quay vòng vô hạn ở trang không nạp SDK. */
+  var WAIT_TRIES = 25, WAIT_MS = 100;      // 25 × 100ms = 2,5 giây
+
+  function draw() {
+    if (verified !== true) return;          // chỉ vẽ khi ĐÃ xác minh là admin
 
     var lang = (global.AstroQ && AstroQ.getLang()) || "vi";
     var t = TXT[lang] || TXT.vi;
-    var slots = global.document.querySelectorAll("[data-admin-link]");
 
-    Array.prototype.forEach.call(slots, function (slot) {
-      if (slot.querySelector(".admin-link")) return;   // đã chèn rồi (đổi ngôn ngữ)
+    Array.prototype.forEach.call(
+      global.document.querySelectorAll("[data-admin-link]"),
+      function (slot) {
+        if (slot.querySelector(".admin-link")) return;    // đã vẽ rồi
 
-      var a = global.document.createElement("a");
-      a.className = "admin-link";
-      a.href = "admin-report.html";
+        var a = global.document.createElement("a");
+        a.className = "admin-link";
+        a.href = "admin-report.html";
 
-      var ic = global.document.createElement("span");
-      ic.setAttribute("aria-hidden", "true");
-      ic.textContent = "🛰️";
-      a.appendChild(ic);
+        var ic = global.document.createElement("span");
+        ic.setAttribute("aria-hidden", "true");
+        ic.textContent = "🛰️";
+        a.appendChild(ic);
 
-      var b = global.document.createElement("span");
-      b.className = "al-b";
-      var l1 = global.document.createElement("b");
-      l1.textContent = t.label;
-      b.appendChild(l1);
-      var l2 = global.document.createElement("span");
-      l2.textContent = t.hint;
-      b.appendChild(l2);
-      a.appendChild(b);
+        var b = global.document.createElement("span");
+        b.className = "al-b";
+        var l1 = global.document.createElement("b");
+        l1.textContent = t.label;
+        b.appendChild(l1);
+        var l2 = global.document.createElement("span");
+        l2.textContent = t.hint;
+        b.appendChild(l2);
+        a.appendChild(b);
 
-      var ar = global.document.createElement("span");
-      ar.className = "ar";
-      ar.setAttribute("aria-hidden", "true");
-      ar.textContent = "›";
-      a.appendChild(ar);
+        var ar = global.document.createElement("span");
+        ar.className = "ar";
+        ar.setAttribute("aria-hidden", "true");
+        ar.textContent = "›";
+        a.appendChild(ar);
 
-      slot.appendChild(a);
-      slot.hidden = false;                  // ô để `hidden` sẵn nên không chiếm chỗ
-    });
+        slot.appendChild(a);
+        slot.hidden = false;                // ô để `hidden` sẵn nên không chiếm chỗ
+      });
   }
 
-  /* ══════════════ BÙ CỜ CHO PHIÊN CŨ ══════════════
-     Cờ `admin` chỉ được `login()` đóng dấu. Nên một phiên đã đăng nhập TỪ TRƯỚC khi
-     có tính năng này (hoặc trước khi được cấp quyền admin) sẽ không có cờ, và cái link
-     không bao giờ hiện — trong khi cách sửa duy nhất là "đăng xuất rồi vào lại", một
-     câu người dùng không có cách nào tự đoán ra.
+  /* Gỡ link đã vẽ — dùng khi xác minh ra KHÔNG phải admin, hoặc khi đổi ngôn ngữ. */
+  function clear() {
+    Array.prototype.forEach.call(
+      global.document.querySelectorAll("[data-admin-link]"),
+      function (slot) {
+        var a = slot.querySelector(".admin-link");
+        if (a) a.remove();
+        slot.hidden = true;
+      });
+  }
 
-     Nên: hồ sơ có `uid` (tức ĐANG đăng nhập) mà CHƯA TỪNG được kiểm cờ (khoá `admin`
-     không tồn tại) thì hỏi lại một lần ở nền, rồi vẽ lại.
-
-     ⚠️ Phân biệt `"admin" in u` với `u.admin`: đã kiểm và ra FALSE thì cũng là đã
-        kiểm — không hỏi lại mỗi lần mở trang.
-     ⚠️ CHẠY Ở NỀN, KHÔNG AI CHỜ NÓ. `refreshAdminFlag()` đi qua `onAuthStateChanged`
-        và đo được là có thể không bao giờ resolve khi không có phiên — vô hại ở đây
-        vì không có lần chuyển trang nào phụ thuộc nó (đúng bài học đã trả giá khi đặt
-        một lời gọi như vậy vào giữa đường đăng nhập).
-     ⚠️ `AstroQAuth` do một ES module gắn lên window, mà module luôn chạy SAU script
-        thường — nên phải chờ nó xuất hiện. Chờ CÓ TRẦN (2 giây) để không quay vòng
-        vô hạn ở những trang cố ý không nạp SDK. */
-  function backfill(tries) {
-    var u;
-    try { u = global.AstroQ && AstroQ.getUser(); } catch (e) { return; }
-    if (!u || !u.uid) return;                 // chưa đăng nhập → không có gì để hỏi
-    if ("admin" in u) return;                 // đã kiểm rồi (kể cả false)
-
+  /**
+   * Xác minh rồi vẽ. `force` = buộc lấy token mới, dùng khi quyền vừa được cấp mà
+   * người dùng chưa đăng nhập lại (token sống ~1 giờ).
+   *
+   * ⚠️ CHẠY Ở NỀN, KHÔNG AI CHỜ NÓ. `verifyAdmin()` đi qua `onAuthStateChanged` và đo
+   *    được là có thể không bao giờ resolve khi không có phiên — vô hại ở đây vì không
+   *    có lần chuyển trang nào phụ thuộc nó (đúng bài học đã trả giá khi đặt một lời
+   *    gọi như vậy vào giữa đường đăng nhập).
+   */
+  function check(force, tries) {
     var A = global.AstroQAuth;
-    if (!A || !A.refreshAdminFlag) {
-      if ((tries || 0) >= 20) return;         // 20 × 100ms = 2s rồi thôi
-      global.setTimeout(function () { backfill((tries || 0) + 1); }, 100);
+    if (!A || !A.verifyAdmin) {
+      if ((tries || 0) >= WAIT_TRIES) return;      // trang không có SDK → thôi
+      global.setTimeout(function () { check(force, (tries || 0) + 1); }, WAIT_MS);
       return;
     }
-    A.refreshAdminFlag().then(function () { mount(); }).catch(function () {});
+    A.verifyAdmin(force).then(function (ok) {
+      verified = !!ok;
+      if (verified) draw(); else clear();
+    }).catch(function () { /* hỏng thì coi như không phải admin: không vẽ gì */ });
   }
-
-  /* Đổi ngôn ngữ thì vẽ lại nhãn. Không có hàm đăng ký sự kiện ngôn ngữ dùng chung
-     nên phơi `mount` ra để trang tự gọi lại nếu cần. */
-  function relabel() {
-    Array.prototype.forEach.call(
-      global.document.querySelectorAll("[data-admin-link] .admin-link"),
-      function (a) { a.remove(); });
-    mount();
-  }
-
-  function start() { mount(); backfill(0); }
 
   if (global.document.readyState === "loading")
-    global.document.addEventListener("DOMContentLoaded", start);
-  else start();
+    global.document.addEventListener("DOMContentLoaded", function () { check(false, 0); });
+  else check(false, 0);
 
   global.AstroQAdminLink = {
-    mount: mount, relabel: relabel, isAdmin: isAdmin, backfill: backfill
+    /** Vẽ lại nhãn sau khi đổi ngôn ngữ. KHÔNG xác minh lại (đã xác minh rồi). */
+    relabel: function () { clear(); draw(); },
+    /** Xác minh lại, buộc lấy token mới. Dùng khi vừa được cấp quyền admin. */
+    recheck: function () { check(true, 0); },
+    /** true | false | null (chưa xác minh xong). */
+    state: function () { return verified; }
   };
 })(window);
