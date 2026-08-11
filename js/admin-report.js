@@ -956,6 +956,14 @@
              { href:"landing-app.html", text:"Tới trang đăng nhập" });
       else if (r && r.status === 503)
         gate("Server không quét được bảng và chưa có bản chụp nào để hiện. Thử lại sau.", "📡");
+      /* ⚠️ 404 KHÔNG PHẢI LỖI MẠNG — phải nói khác hẳn. Nhóm route `/admin` chỉ tồn tại
+         sau khi deploy AstroqSV; trang tĩnh thì lên GitHub Pages ngay khi push, còn
+         Lambda phải `sam deploy` riêng. Hai thứ lệch nhịp là chuyện BÌNH THƯỜNG, và
+         gộp nó vào "kiểm tra mạng" là chỉ người đọc đi sửa đúng thứ không hỏng.
+         (Đã gặp thật: frontend live, `/health` trả 200, `/admin/stats` trả 404.) */
+      else if (r && r.status === 404)
+        gate("Server chưa có route /admin/stats — backend AstroqSV chưa được deploy " +
+             "bản mới. Chạy `sam deploy` trong thư mục AstroqSV rồi tải lại trang.", "🛠️");
       else
         gate("Không gọi được server. Kiểm tra mạng rồi tải lại trang.", "📡");
     }).catch(function(){
