@@ -8,14 +8,16 @@
      follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa,
      đồng thời bỏ noindex ở landing-app.html và bổ sung URL vào sitemap.xml. -->
 <meta name="robots" content="noindex,follow" />
-<title>AstroQ — Sảnh Trò Chơi</title>
+<title>AstroQ — Khu Huấn Luyện</title>
 
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/games.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/locks.js"></script>
 </head>
 <body>
 
@@ -39,7 +41,7 @@
 
   <!-- ============ HERO ============ -->
   <section class="hero">
-    <span class="eyebrow" data-i18n="eyebrow">Sảnh Trò Chơi</span>
+    <span class="eyebrow" data-i18n="eyebrow">Khu Huấn Luyện</span>
     <h1 data-i18n="title_h">Chọn một trò chơi để bắt đầu</h1>
     <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!</p>
   </section>
@@ -72,23 +74,25 @@
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Sảnh Trò Chơi", back:"Về Trung Tâm Điều Hướng",
-      eyebrow:"Sảnh Trò Chơi", title_h:"Chọn một trò chơi để bắt đầu",
+      title:"AstroQ — Khu Huấn Luyện", back:"Về Trung Tâm Điều Hướng",
+      eyebrow:"Khu Huấn Luyện", title_h:"Chọn một trò chơi để bắt đầu",
       intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
+      when:"Khi nào có?",
       soon_toast:"🚧 Trò chơi này sắp ra mắt — luyện Quiz để tích Thiên thạch trước nhé!",
       start_toast:"🎮 Đang khởi động trò chơi…"
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Arcade Bay", back:"Back to Navigation Hub",
-      eyebrow:"Arcade Bay", title_h:"Pick a game to start",
+      title:"AstroQ — Training Simulator", back:"Back to Navigation Hub",
+      eyebrow:"Training Simulator", title_h:"Pick a game to start",
       intro:"Each play costs a few Purple Meteors. Earn more at the Knowledge Station if you run low!",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
       diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now", need_later:"Later",
+      when:"When is it coming?",
       soon_toast:"🚧 This game is coming soon — practice quizzes to stock up on meteors!",
       start_toast:"🎮 Launching game…"
     }
@@ -115,7 +119,7 @@
       desc:{vi:"Tăng tốc vượt chướng ngại vật, về đích trước khi hết nhiên liệu.", en:"Speed past obstacles and reach the finish before fuel runs out."} },
     { key:"defender", code:"ARCADE-02", cls:"card--blaster", icon:"🛰️", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
       tag:{vi:"Phòng thủ 360°", en:"360° defense"},
-      name:{vi:"Space Defender", en:"Space Defender"},
+      name:{vi:"Phòng Thủ Không Gian", en:"Space Defender"},
       desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
     { key:"match", code:"ARCADE-04", cls:"card--match", icon:"✨", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       tag:{vi:"Giải đố", en:"Puzzle"},
@@ -143,10 +147,22 @@
       var code = g.code || "ARCADE-??";
       var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span class="online">SYS.ONLINE</span>';
       var btn = soon
-        ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("soon")+'</button>'
+        /* Nhan nut khoa la mot cau hoi BAM DUOC — nut nay mo modal, nen nhan
+           phai moi bam chu khong lap lai dung chu "Sap ra mat" ngay phia tren. */
+        ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("when")+'</button>'
         : '<button class="play-btn" data-key="'+g.key+'">'+t("play")+'</button>';
+      /* Huy hieu khoa. Ba tro nay khi ra mat se MIEN PHI nen trang thai la
+         `soon` (ho phach), khong bao gio la `pro`. */
+      var lk = (soon && window.AstroQLocks) ? AstroQLocks.get("game:"+g.key) : null;
+      var badge = lk
+        ? '<span class="lk-badge '+lk.state+' lk-pin">'+
+            AstroQ.esc(AstroQLocks.text(lk.state==="soon" ? "badge_soon" : "badge_pro"))+
+          '</span>'
+        : '';
+
       return '<article class="gcard '+g.cls+(soon?' soon':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
+        badge+
         '<div class="ic">'+g.icon+'</div>'+
         '<span class="tag">'+L(g.tag)+'</span>'+
         '<h3>'+L(g.name)+'</h3>'+
@@ -160,10 +176,16 @@
   }
 
   /* ================= Khởi chạy 1 trò chơi ================= */
-  function launch(key){
+  function launch(key, trigger){
     var g=null; for(var i=0;i<GAMES.length;i++){ if(GAMES[i].key===key) g=GAMES[i]; }
     if(!g) return;
-    if(g.status!=="ready" || !g.file){ toast(t("soon_toast")); return; }
+    if(g.status!=="ready" || !g.file){
+      /* Trò chưa dựng: mở MODAL nói rõ đang phát triển. ⚠️ Ba trò này khi ra mắt
+         sẽ MIỄN PHÍ (docs/decisions/009 không xếp mini-game vào phần trả phí), nên
+         modal của chúng KHÔNG có lời mời mua gì cả — xem `plan:null` ở js/locks.js. */
+      if(window.AstroQLocks && AstroQLocks.open("game:"+key, trigger)) return;
+      toast(t("soon_toast")); return;
+    }
     // Phí Thiên thạch tím được trừ mỗi lượt bên trong game (kể cả khi chơi lại).
     if(Economy.getAsteroids() < g.cost){ openNeed(g.cost); return; }
     toast(t("start_toast"));
@@ -198,7 +220,7 @@
   /* ================= Sự kiện ================= */
   $("games").addEventListener("click", function(e){
     var b=e.target.closest ? e.target.closest(".play-btn") : null;
-    if(b && b.getAttribute("data-key")) launch(b.getAttribute("data-key"));
+    if(b) launch(b.getAttribute("data-key"), b);
   });
   $("back").addEventListener("click", function(){ window.location.href="dashboard.html"; });
   $("need-later").addEventListener("click", closeNeed);

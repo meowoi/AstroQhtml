@@ -15,6 +15,8 @@
 <link rel="stylesheet" href="css/achievements.css" />
 <script src="js/ui-common.js"></script>
 <script src="js/badges.js"></script>
+<!-- Tên 10 bậc huấn luyện — dùng chung với dashboard.html / profile.html -->
+<script src="js/ranks.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/constellations.js"></script>
 <script src="js/progress.js"></script>
@@ -72,6 +74,20 @@
     </div>
   </section>
 
+  <!-- ============ LỘ TRÌNH HUẤN LUYỆN ============
+       Đặt NGAY SAU tổng quan và TRƯỚC lưới huy hiệu, cố ý: hai khối "toàn cảnh"
+       đứng cạnh nhau (đã mở bao nhiêu huy hiệu · con đường cấp bậc dài bao xa),
+       rồi mới tới phần chi tiết từng huy hiệu. Đây cũng là khối DUY NHẤT trong app
+       cho xem CẢ thang cấp bậc — dashboard và profile chỉ hiện bậc hiện tại. -->
+  <section class="panel ladder">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_ladder">LỘ TRÌNH</span></span>
+    <h2><span class="ic" aria-hidden="true">🚀</span><span data-i18n="ladder_h">Lộ trình huấn luyện phi hành gia</span>
+        <span class="hub-tag h2-count" id="ld-count">—</span></h2>
+    <p class="panel-sub" data-i18n="ladder_p">Mười bậc huấn luyện, mỗi bậc 5 cấp — đây là toàn bộ con đường phía trước, không chỉ chỗ bạn đang đứng.</p>
+    <ol class="ranks" id="ranks"></ol>
+    <p class="ld-note" id="ld-note" style="display:none"></p>
+  </section>
+
   <!-- ============ BỘ LỌC ============ -->
   <div class="filters">
     <span class="lbl" data-i18n="filter_state">Trạng thái</span>
@@ -95,13 +111,13 @@
     <section class="panel">
       <span class="panel-tag"><span class="led"></span><span data-i18n="tag_planets">HÀNH TINH</span></span>
       <h2><span class="ic" aria-hidden="true">🪐</span><span data-i18n="col_planets">Hành tinh đã ghé</span>
-          <span class="hub-tag" style="flex:none;margin-left:auto" id="pl-count">0/8</span></h2>
+          <span class="hub-tag h2-count" id="pl-count">0/8</span></h2>
       <div class="chips" id="planets"></div>
     </section>
     <section class="panel">
       <span class="panel-tag"><span class="led"></span><span data-i18n="tag_consts">CHÒM SAO</span></span>
       <h2><span class="ic" aria-hidden="true">✨</span><span data-i18n="col_consts">Chòm sao đã ghép</span>
-          <span class="hub-tag" style="flex:none;margin-left:auto" id="cs-count">0</span></h2>
+          <span class="hub-tag h2-count" id="cs-count">0</span></h2>
       <div class="chips" id="consts"></div>
       <div class="empty" id="consts-empty" style="display:none">
         <span class="ic" aria-hidden="true">🌌</span>
@@ -145,6 +161,11 @@
       ov_h:"Đã mở {a}/{b} huy hiệu",
       ov_p:"Còn {n} huy hiệu đang chờ bạn. Làm Quiz, chơi ở Khu Huấn Luyện và khám phá hành tinh để mở thêm.",
       ov_p_done:"Bạn đã mở HẾT huy hiệu hiện có. Thật đáng nể! 🎉",
+      tag_ladder:"Lộ trình", ladder_h:"Lộ trình huấn luyện phi hành gia",
+      ladder_p:"Mười bậc huấn luyện, mỗi bậc 5 cấp — đây là toàn bộ con đường phía trước, không chỉ chỗ bạn đang đứng. Cấp độ do máy chủ tính từ XP bạn kiếm được khi làm Quiz, đọc bài, chơi ở Khu Huấn Luyện và ghé các hành tinh.",
+      ld_count:"{n} bậc · {m} cấp",
+      ld_range:"Cấp {a}–{b}", ld_xp:"từ {n} XP", ld_here:"Bạn đang ở đây",
+      ld_unknown:"Chưa đọc được cấp độ của bạn nên chưa đánh dấu bạn đang ở bậc nào.",
       filter_state:"Trạng thái", filter_group:"Nhóm",
       f_all:"Tất cả", f_on:"Đã mở", f_off:"Chưa mở",
       none_here:"Không có huy hiệu nào ở mục này.",
@@ -167,6 +188,11 @@
       ov_h:"{a}/{b} badges unlocked",
       ov_p:"{n} badges are still waiting for you. Take quizzes, play in the Training Simulator and explore planets to unlock more.",
       ov_p_done:"You unlocked EVERY badge available. Amazing! 🎉",
+      tag_ladder:"Track", ladder_h:"Astronaut training track",
+      ladder_p:"Ten ranks, five levels each — this is the whole road ahead, not just where you stand now. Levels are computed by the server from the XP you earn in quizzes, readings, the Training Simulator and planet visits.",
+      ld_count:"{n} ranks · {m} levels",
+      ld_range:"Level {a}–{b}", ld_xp:"from {n} XP", ld_here:"You are here",
+      ld_unknown:"Your level couldn't be loaded, so no rank is marked as yours yet.",
       filter_state:"Status", filter_group:"Group",
       f_all:"All", f_on:"Unlocked", f_off:"Locked",
       none_here:"No badges in this section.",
@@ -195,8 +221,13 @@
      GHI, đừng đoán theo cái nhìn thấy trên giao diện. */
   var CONSTS = AstroQConsts.all();
 
+  /* `level` = null nghĩa là CHƯA BIẾT cấp độ (chưa đăng nhập / mất mạng) — khác hẳn
+     "cấp 1". Bảng lộ trình khi đó vẫn vẽ đủ 10 bậc nhưng KHÔNG đánh dấu bậc nào là
+     của người xem; đoán một bậc là nói sai về tiến độ của trẻ.
+     `ladder` = mảng mốc XP do server trả (`levels.xp`); null thì ẩn cột XP chứ
+     KHÔNG tự tính từ công thức — xem Achievements.XpLadder ở server. */
   var VIEW = { ok:false, reason:"", badges:[], summary:{earned:0,total:0}, newBadges:[],
-               planets:[], consts:{} };
+               planets:[], consts:{}, level:null, ladder:null };
   var FILTER = { state:"all", group:"all" };
 
   function fmtDate(iso){
@@ -218,6 +249,9 @@
         VIEW.badges = a.badges || [];
         VIEW.summary = a.summary || { earned:0, total:(a.badges||[]).length };
         VIEW.newBadges = d.newBadges || [];
+        VIEW.level  = (d.level && d.level.level) ? d.level : null;
+        VIEW.ladder = (d.levels && Array.isArray(d.levels.xp) && d.levels.xp.length)
+                        ? d.levels.xp : null;
         VIEW.planets = (d.progress && d.progress.planets) || [];
         VIEW.consts  = (d.progress && d.progress.consts) || {};
         if(VIEW.newBadges.length > 0){
@@ -228,6 +262,10 @@
         VIEW.reason = (r && r.reason) || "net";
         // Hành tinh + chòm sao vẫn đọc được từ bản sao trong máy → phần bộ sưu
         // tập còn dùng được, chỉ phần huy hiệu là phải chờ server.
+        // ⚠️ Bản sao trong máy CỐ Ý không chứa XP/cấp độ (xem `astroq-progress` ở
+        // CLAUDE.md mục 4), nên `level` giữ null và bảng lộ trình không đánh dấu.
+        VIEW.level   = null;
+        VIEW.ladder  = null;
         VIEW.planets = (AstroQProgress.local().planets) || [];
         VIEW.consts  = {};
       }
@@ -255,6 +293,61 @@
       return '<span class="gchip"><span class="ic" aria-hidden="true">'+AstroQBadges.groupIcon(k)+'</span>'+
              AstroQBadges.groupName(k, LANG)+' <b>'+on+'/'+inG.length+'</b></span>';
     }).join("");
+  }
+
+  /* ---------------- Lộ trình huấn luyện ----------------
+     TOÀN BỘ thang cấp bậc, không chỉ bậc hiện tại — đây là chỗ duy nhất trong app
+     trả lời được câu "phía trước còn những bậc nào".
+
+     PHÂN CÔNG (giống js/badges.js và js/specimens.js): `js/ranks.js` giữ TÊN 10 bậc,
+     SERVER giữ MỐC (số cấp tối đa + XP từng cấp). Trang này không tự tính gì cả —
+     kể cả số cấp mỗi bậc, nó cũng đọc `AstroQRanks.PER_RANK` (suy ra từ MAX_LEVEL)
+     chứ không gõ số 5.
+     ⚠️ ĐỪNG chép công thức `100·(n−1)·n/2` vào đây để khỏi phụ thuộc server: đó là
+     luật chơi, và hai nơi cùng giữ một luật thì ngày đổi độ khó bảng này sẽ nói SAI
+     với phụ huynh. Thiếu bảng XP thì ẩn cột XP — nói ít còn hơn nói sai. */
+  function renderLadder(){
+    var R = window.AstroQRanks;
+    if(!R || !$("ranks")) return;          // thiếu ranks.js thì bỏ khối, không vỡ trang
+
+    var last = R.ALL.length - 1;
+    var cur  = VIEW.level ? VIEW.level.level : 0;   // 0 = chưa biết, KHÔNG phải cấp 1
+    var xpTab = VIEW.ladder;
+
+    $("ld-count").textContent = t("ld_count").replace("{n}", R.ALL.length)
+                                             .replace("{m}", R.MAX_LEVEL);
+
+    $("ranks").innerHTML = R.ALL.map(function(rk, i){
+      var lo = R.levelOf(i);
+      var hi = i === last ? R.MAX_LEVEL : R.levelOf(i + 1) - 1;
+      var st = cur === 0 ? "off" : (cur > hi ? "done" : (cur >= lo ? "now" : "off"));
+
+      var xp = "";
+      if(xpTab && xpTab.length >= lo){
+        var n = Number(xpTab[lo - 1]) || 0;
+        var pretty;
+        try{ pretty = n.toLocaleString(LANG === "en" ? "en-GB" : "vi-VN"); }
+        catch(e){ pretty = String(n); }
+        xp = '<span class="xp">' + t("ld_xp").replace("{n}", pretty) + '</span>';
+      }
+
+      return '<li class="rk '+st+'">'+
+        '<span class="ic" aria-hidden="true">'+rk.ic+'</span>'+
+        '<span class="b">'+
+          '<span class="nm">'+AstroQ.esc(R.name(lo, LANG))+'</span>'+
+          '<span class="mt">'+
+            '<span class="lv">'+t("ld_range").replace("{a}", lo).replace("{b}", hi)+'</span>'+
+            xp +
+          '</span>'+
+        '</span>'+
+        (st === "now" ? '<span class="here">'+AstroQ.esc(t("ld_here"))+'</span>' : '')+
+        '</li>';
+    }).join("");
+
+    // Nói thật khi chưa biết cấp độ, thay vì để bảng trông như "bạn đang ở bậc 1".
+    $("ranks").setAttribute("data-unknown", cur === 0 ? "1" : "0");
+    $("ld-note").textContent = cur === 0 ? t("ld_unknown") : "";
+    $("ld-note").style.display = cur === 0 ? "" : "none";
   }
 
   function renderGroupFilter(){
@@ -356,7 +449,8 @@
   }
 
   function render(){
-    renderOverview(); renderGroupFilter(); renderBadges(); renderCollections(); renderBanner();
+    renderOverview(); renderLadder(); renderGroupFilter(); renderBadges();
+    renderCollections(); renderBanner();
   }
 
   /* ---------------- Ngôn ngữ + khởi tạo ---------------- */

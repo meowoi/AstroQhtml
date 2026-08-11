@@ -21,7 +21,7 @@
 
 <!-- ===== Header ===== -->
 <header class="top">
-  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
   <span class="tag" id="gtag">[ ASTROQ ]</span>
   <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
     <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
@@ -38,6 +38,8 @@
   <!-- Bảng HUD nằm PHÍA TRÊN canvas (không đè lên sân) — nếu đè thì chip số liệu sẽ
        che mất chùm thiên thạch ở dải trên, mà hitbox vẫn ở đó = chết oan. -->
   <div class="hud" id="hud">
+    <!-- Chip CẤP: nhãn nằm trong .v (xem paintHud) để màn hẹp không mất nhãn -->
+    <div class="chip lvl"><span class="v" id="lvl">Cấp 1</span></div>
     <div class="chip"><span class="k" data-i18n="score_lbl">Điểm</span><span class="v" id="score">0</span></div>
     <div class="chip"><span class="k" data-i18n="dist_lbl">Quãng đường</span><span class="v"><span id="dist">0</span><small data-i18n="unit_m">m</small></span></div>
     <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
@@ -75,8 +77,9 @@
       <h2 data-i18n="start_title">Né Thiên Thạch</h2>
       <div class="how">
         <span data-i18n-html="how1">🚀 <b>Bay lên</b>: nhấn <kbd>Space</kbd> hoặc click chuột. Thả ra là rơi xuống.</span>
-        <span data-i18n-html="how2">☄️ <b>Lách</b> qua khe hẹp giữa các cột thiên thạch — đâm vào hoặc chạm mép trên/dưới là hết lượt!</span>
-        <span data-i18n-html="how3">💎 <b>Thu</b> Thiên thạch tím trong khe: +10 điểm mỗi viên.</span>
+        <span data-i18n-html="how2">☄️ <b>Lách</b> qua vành đai thiên thạch — luôn có một đường trống, đâm vào đá hoặc chạm mép trên/dưới là hết lượt!</span>
+        <span data-i18n-html="how3">💎 <b>Thu</b> Thiên thạch tím trên đường trống: +10 điểm mỗi viên.</span>
+        <span data-i18n-html="how4">📈 Càng bay xa càng lên <b>cấp</b>: đá dày hơn, trôi dọc, rồi có cả đá lớn.</span>
       </div>
       <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
       <div class="acts">
@@ -100,7 +103,7 @@
       <div class="paid" id="paid"></div>
       <div class="acts">
         <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>5</b></button>
-        <button id="hub-btn" data-i18n="to_hub">Về Sảnh Game</button>
+        <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
         <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
       </div>
     </div>
@@ -114,7 +117,7 @@
       <p id="need-body"></p>
       <div class="acts">
         <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
-        <button id="need-hub" data-i18n="to_hub">Về Sảnh Game</button>
+        <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
       </div>
     </div>
   </div>
@@ -124,10 +127,10 @@
     <div class="ov-card">
       <div class="ov-ic">⏸️</div>
       <h2 data-i18n="pause_title">Tạm dừng</h2>
-      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+      <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?</p>
       <div class="acts">
         <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
-        <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+        <button id="pause-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
       </div>
     </div>
   </div>
@@ -175,20 +178,58 @@
     flapV: -400,              // vận tốc bật lên mỗi lần nhấn
     maxFall: 540, maxRise: -430,
 
-    /* Cuộn màn hình — tăng rất chậm theo thời gian */
-    scroll0: 190, scrollAcc: 2.2, scrollMax: 300,
+    /* Cuộn màn hình — tốc độ do CẤP quyết định, `scroll0` chỉ là lúc mới vào */
+    scroll0: 195,
+    speedLerp: 0.8,           // 1/s — tốc độ bò dần tới tốc độ của cấp (không giật)
 
-    /* Cột chùm thiên thạch + khe hẹp */
-    colGap: 300,              // khoảng cách ngang giữa 2 cột
-    colW: 64,                 // bề rộng cột
-    gapH0: 200,               // khe hẹp lúc đầu
-    gapHMin: 158,             // khe hẹp nhỏ nhất
-    gapShrink: 1.4,           // px khe hẹp bị bóp mỗi giây
-    gapMargin: 52,            // khe không bao giờ sát mép trên/dưới
-    gapStep: 150,             // độ lệch tối đa giữa 2 khe liền nhau (cho công bằng)
+    /* ══ VÀNH ĐAI THIÊN THẠCH: ĐÁ RỜI, KHÔNG CÒN CỘT ══════════════════════════
+       ⛔ KHÔNG DỰNG LẠI `cols` / `colW` / `gapH*`. Trước 08/08/2026 vật cản là
+          hai KHỐI ĐÁ chồng khít nhau thành tường, chừa một khe — tức là flappy
+          với ống làm bằng đá, không phải "né thiên thạch". Chủ dự án bác:
+          *"các thiên thạch ko chụm vào nhau thành cột nữa"*.
+
+       ⚠️ NHƯNG RẢI NGẪU NHIÊN TỰ DO LÀ CÓ NGÀY BỊT KÍN CẢ CHIỀU CAO — và một
+          màn không thể qua được thì trẻ không hiểu là mình dở hay game hỏng. Nên
+          đá rải theo ĐỢT + LÀN: mỗi đợt chừa đúng một LÀN TRỐNG (`safeLane`), đá
+          chỉ được đặt trong làn của nó và không bao giờ tràn sang làn bên
+          (xem `laneJitter`). Bảo đảm đo được: `sim_dodge2.py`.
+
+       ⚠️ LÀN TRỐNG CHỈ LỆCH 1 LÀN MỖI ĐỢT (`laneJump`), y như luật `gapStep` cũ.
+          Cho lệch 2 làn thì trẻ phải bay 180px dọc trong lúc chỉ đi được 65px
+          ngang giữa hai đợt (≈690px/s) — quá sức cú bật 400px/s. */
+    /* ⚠️ 4 LÀN, KHÔNG PHẢI 5 — ĐÂY LÀ SỐ ĐO, KHÔNG PHẢI CẢM GIÁC.
+       Một cú bật nhấc tàu lên đúng `flapV²/(2·gravity)` = 400²/(2·1500) = **53px**
+       trước khi trọng lực thắng lại. Với 5 làn thì nửa làn chỉ 44,8px, tức là MỘT
+       cú bấm đã đưa tàu sang làn bên — giữ làn thành việc bất khả thi và
+       `sim_dodge2.py` đo được chỉ sống 5,5 giây ở CẤP 1 (vành đai lúc đó mới có
+       ~1,2 hòn đá mỗi đợt!). 4 làn → làn cao 112px, dung sai ±59px > 53px.
+       ⇒ Đổi `flapV` / `gravity` / `LANES` thì phải đo lại con số 53px này. */
+    LANES: 4,                 // số làn chia đều theo chiều cao
+    laneMargin: 26,           // dải trên/dưới không bao giờ có đá (mép = chết)
+    lanePad: 15,              // đá phải cách ranh giới làn ít nhất bấy nhiêu
+    laneJump: 1,              // làn trống lệch tối đa mỗi đợt
+    waveJitter: 0.42,         // rải x trong đợt (× khoảng cách đợt) → KHÔNG thẳng cột
+    rockR: [15, 27],          // bán kính đá thường
+    bigR:  [30, 39],          // đá lớn — chiếm 2 làn liền nhau
+    /* Biên dạng đá: bán kính đỉnh chạy trong dải hẹp quanh 1 nên VÒNG VA CHẠM
+       (`rc = r*rockHit`) gần đúng bằng hình vẽ — lệch lớn nhất ~0,5px. */
+    rockHit: 0.86,
+
+    /* ══ CẤP ĐỘ: khó tăng theo BẬC, và trẻ NHÌN THẤY mình đang ở bậc nào ═══════
+       `at` = giây bắt đầu cấp. Mỗi cấp thêm đúng MỘT thứ mới để trẻ nhận ra
+       cái vừa đổi, chứ không đổi bốn thông số một lúc.
+       ⚠️ CẤP CUỐI LÀ TRẦN, không tăng vô hạn — luật cũ của game này ("khó tăng
+          nhẹ rồi phẳng, chơi endless được lâu") vẫn giữ. */
+    tiers: [
+      { at:0,   gap:340, fill:0.30, min:1, drift:0,  big:0,    speed:195 },
+      { at:24,  gap:315, fill:0.42, min:1, drift:22, big:0,    speed:215 },
+      { at:52,  gap:296, fill:0.52, min:2, drift:34, big:0.10, speed:238 },
+      { at:84,  gap:278, fill:0.60, min:2, drift:44, big:0.18, speed:262 },
+      { at:120, gap:264, fill:0.66, min:2, drift:52, big:0.24, speed:285 }
+    ],
 
     /* Vật phẩm */
-    gemChance: 0.8,           // xác suất mỗi cột có 1 Thiên thạch tím trong khe
+    gemChance: 0.8,           // xác suất mỗi đợt có 1 Thiên thạch tím ở làn trống
     gemR: 15, gemScore: 10,   // +10 điểm & +1 tt vào ví tạm
 
     /* Người chơi */
@@ -226,12 +267,18 @@
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Né Thiên Thạch", back:"Về Sảnh", home_btn:"Trung Tâm Điều Hướng", to_hub:"Về Sảnh Game",
+      title:"AstroQ — Né Thiên Thạch", back:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng", to_hub:"Về Khu Huấn Luyện",
       score_lbl:"Điểm", dist_lbl:"Quãng đường", hud_best:"Kỷ lục", mined_lbl:"Đã thu", unit_m:"m",
+      lvl_lbl:"Cấp",
       start_title:"Né Thiên Thạch",
       how1:"🚀 <b>Bay lên</b>: nhấn <kbd>Space</kbd> hoặc click chuột (chạm màn hình). Thả ra là rơi xuống.",
-      how2:"☄️ <b>Lách</b> qua khe hẹp giữa các cột thiên thạch — đâm vào hoặc chạm mép trên/dưới là hết lượt!",
-      how3:"💎 <b>Thu</b> Thiên thạch tím trong khe: +"+CONFIG.gemScore+" điểm và +1 "+TT+" mỗi viên.",
+      how2:"☄️ <b>Lách</b> qua vành đai thiên thạch — luôn có một đường trống, đâm vào đá hoặc chạm mép trên/dưới là hết lượt!",
+      how3:"💎 <b>Thu</b> Thiên thạch tím trên đường trống: +"+CONFIG.gemScore+" điểm và +1 "+TT+" mỗi viên.",
+      how4:"📈 Càng bay xa càng lên <b>cấp</b>: đá dày hơn, trôi dọc, rồi có cả đá lớn. Cấp "+CONFIG.tiers.length+" là cao nhất.",
+      tier_up:"CẤP {n} · {s}",
+      tier1:"Vành đai thưa", tier2:"Đá bắt đầu trôi dọc",
+      tier3:"Xuất hiện đá lớn", tier4:"Dày hơn và nhanh hơn",
+      tier5:"Cấp cao nhất — giữ vững!",
       cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Bắt đầu", over_title:"Kết thúc lượt!",
       again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
@@ -240,18 +287,24 @@
       reward_toast:"+{n} {tt} vào ví!", paid_lbl:"Đã cộng {n} {tt} vào ví",
       paid_none:"Lượt này chưa thu được Thiên thạch tím",
       newbest:"🏆 Kỷ lục mới!",
-      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?",
       resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
       tap_hint:"NHẤN SPACE / CLICK ĐỂ BAY LÊN"
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Asteroid Dodge", back:"Arcade", home_btn:"Navigation Hub", to_hub:"Back to Arcade",
+      title:"AstroQ — Asteroid Dodge", back:"Training Simulator", home_btn:"Navigation Hub", to_hub:"Back to Training Simulator",
       score_lbl:"Score", dist_lbl:"Distance", hud_best:"Best", mined_lbl:"Collected", unit_m:"m",
+      lvl_lbl:"Level",
       start_title:"Asteroid Dodge",
       how1:"🚀 <b>Fly up</b>: press <kbd>Space</kbd> or click (tap the screen). Let go and you fall.",
-      how2:"☄️ <b>Slip</b> through the narrow gaps between asteroid columns — a hit or touching the top/bottom edge ends the run!",
-      how3:"💎 <b>Collect</b> Purple Meteors in the gaps: +"+CONFIG.gemScore+" points and +1 "+TT+" each.",
+      how2:"☄️ <b>Weave</b> through the asteroid belt — there is always one clear lane; hitting a rock or the top/bottom edge ends the run!",
+      how3:"💎 <b>Collect</b> Purple Meteors along the clear lane: +"+CONFIG.gemScore+" points and +1 "+TT+" each.",
+      how4:"📈 The further you fly, the higher the <b>level</b>: denser rocks, drifting rocks, then big ones. Level "+CONFIG.tiers.length+" is the highest.",
+      tier_up:"LEVEL {n} · {s}",
+      tier1:"Thin belt", tier2:"Rocks start drifting",
+      tier3:"Big rocks appear", tier4:"Denser and faster",
+      tier5:"Top level — hold on!",
       cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Start", over_title:"Run over!",
       again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
@@ -260,7 +313,7 @@
       reward_toast:"+{n} {tt} added!", paid_lbl:"Added {n} {tt} to your wallet",
       paid_none:"No Purple Meteors collected this run",
       newbest:"🏆 New best!",
-      pause_title:"Paused", pause_body:"Continue playing or return to the arcade?",
+      pause_title:"Paused", pause_body:"Continue playing or return to the Training Simulator?",
       resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
       tap_hint:"PRESS SPACE / CLICK TO FLY UP"
     }
@@ -292,6 +345,9 @@
       flap:function(){ beep(300,0.05,"sine",0.035); beep(430,0.05,"sine",0.03,0.035); },
       hit:function(){ beep(150,0.24,"sawtooth",0.06); beep(85,0.3,"sawtooth",0.055,0.1); },
       start:function(){ beep(440,0.08,"square",0.04); beep(660,0.1,"square",0.04,0.08); },
+      /* Lên cấp: ba nốt đi LÊN — nghe ra là "được thêm", không phải "bị trừ" */
+      levelUp:function(){ beep(523,0.07,"triangle",0.045); beep(659,0.07,"triangle",0.045,0.07);
+                          beep(880,0.12,"triangle",0.05,0.14); },
       isMuted:function(){ return muted; },
       toggle:function(){
         muted=!muted;
@@ -369,7 +425,7 @@
   var state="start";      // start | play | paused | dying | over
   /* byte = phi thuyền người chơi (tên biến giữ từ bản robot Byte cũ) */
   var byte={x:VW*CONFIG.byteX, y:VH*0.42, vy:0, rot:0, flapT:0, blink:0};
-  var cols=[], gems=[], parts=[], trail=[], starsFar=[], starsNear=[];
+  var rocks=[], gems=[], parts=[], trail=[], starsFar=[], starsNear=[];
   var speed=0, elapsed=0, dist=0, gemPts=0, mined=0, shake=0, dieT=0, holding=false;
   var bandOff=0, hudCache={};
   var best=0; try{ best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0; }catch(e){}
@@ -410,11 +466,14 @@
        client chỉ gửi tên game. Hàm vẫn trả ngay true/false theo cache nên logic
        chặn lượt chơi không đổi. Xem economy.js. */
     Economy.spend("dodge"); paintBalance(); bumpGem();
-    cols=[]; gems=[]; parts=[]; trail=[];
+    rocks=[]; gems=[]; parts=[]; trail=[];
     speed=CONFIG.scroll0; elapsed=0; dist=0; gemPts=0; mined=0; shake=0; dieT=0; holding=false;
     byte.x=VW*CONFIG.byteX; byte.y=VH*0.42; byte.vy=0; byte.rot=0; byte.flapT=0;
-    lastGapY=VH/2;
-    spawnCol(VW+140); spawnCol(VW+140+CONFIG.colGap);
+    /* Làn trống mở màn là làn GIỮA và tàu cũng vào ở đó (VH*0.42 ≈ tâm làn 2) —
+       không thì cú vào màn đã là một cú né. */
+    tierIdx=0; safeLane=Math.floor(CONFIG.LANES/2); nextWaveX=VW+40;
+    spawnWave(VW+120); spawnWave(VW+120+CONFIG.tiers[0].gap);
+    nextWaveX=VW+120+CONFIG.tiers[0].gap*2;
     hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause");
     state="play"; last=0; syncBtns();
     SFX.unlock(); SFX.start(); toast(t("start_toast"));
@@ -504,47 +563,124 @@
     if(hudCache.d!==d){ $("dist").textContent=d; hudCache.d=d; }
     if(hudCache.m!==mined){ $("mined").textContent=mined; hudCache.m=mined; }
     if(hudCache.b!==best){ $("best").textContent=best; hudCache.b=best; }
+    /* ⚠️ CHIP CẤP TỰ MANG NHÃN TRONG `.v`, không dùng `.k`: trên màn ≤560px
+       `css/game-shell.css` ẩn hết `.chip .k`, nên một chip chỉ còn con số "3" là
+       một con số không ai biết của cái gì. */
+    var lv=t("lvl_lbl")+" "+(tierIdx+1);
+    if(hudCache.lv!==lv){ $("lvl").textContent=lv; hudCache.lv=lv; }
   }
 
-  /* ===== Cột chùm thiên thạch ===== */
-  var lastGapY=VH/2;
-  /* Biên dạng đá: số đỉnh 7–10 + bán kính lệch nhiều → nhìn ra khối đá góc cạnh,
-     nếu để đều nhau thì cả cột trông như một chùm bông tròn dính vào nhau. */
+  /* ============================================================
+     VÀNH ĐAI THIÊN THẠCH — đá RỜI, sinh theo ĐỢT + LÀN
+     Lý do bỏ cột và luật bảo đảm luôn qua được: xem khối `LANES` trong CONFIG.
+     ============================================================ */
+  var safeLane = 2;           // làn trống của đợt vừa sinh
+  var nextWaveX = 0;          // x của đợt kế tiếp
+  var tierIdx = 0;            // cấp hiện tại (chỉ số trong CONFIG.tiers)
+
+  function laneH(){ return (VH - CONFIG.laneMargin*2) / CONFIG.LANES; }
+  /** Tâm của làn thứ i. */
+  function laneY(i){ return CONFIG.laneMargin + laneH()*(i + 0.5); }
+
+  /** Cấp theo giây đã chơi. */
+  function tierAt(sec){
+    var k = 0, T = CONFIG.tiers;
+    for(var i=0;i<T.length;i++) if(sec >= T[i].at) k = i;
+    return k;
+  }
+  function tier(){ return CONFIG.tiers[tierIdx]; }
+
+  /* Câu mô tả của từng cấp.
+     ⚠️ NĂM KHOÁ VIẾT THẲNG, KHÔNG ghép `t("tier"+n)`. Phép kiểm i18n của
+        `check_dodge.py` quét `t("khoá")` dạng chữ, nên ghép động là năm khoá này bị
+        báo *"khai mà không dùng"* — cùng bài học đã ghi cho `s1_hit1/2/3` ở
+        `mission-earth.html` và `cat_*` ở `codex.html`. Thêm cấp thì thêm một nhánh.
+     `tier1` cố ý CÓ mô tả dù cấp 1 không bao giờ hiện lời báo lên cấp: nó là lưới
+     an toàn để cấp mới thêm vào không hiện ra khoá thô. */
+  function tierText(n){
+    if(n===1) return t("tier1");
+    if(n===2) return t("tier2");
+    if(n===3) return t("tier3");
+    if(n===4) return t("tier4");
+    return t("tier5");
+  }
+
+  /* Biên dạng đá: 7–10 đỉnh, bán kính đỉnh trong dải HẸP quanh 1.
+     ⚠️ ĐỪNG NỚI DẢI NÀY RA. Va chạm đo bằng MỘT vòng tròn `r*rockHit`; dải rộng
+        (bản cũ 0,66–1,12) thì chỗ lõm hụt so với vòng va chạm tới 4px, tức "chết
+        khi mắt còn thấy hở" — đúng lỗi mà hitbox của tàu đã phải đi sửa một lần. */
   function rockPts(){
     var n=7+Math.floor(Math.random()*4), a=[];
-    for(var i=0;i<n;i++) a.push(0.66+Math.random()*0.46);
+    for(var i=0;i<n;i++) a.push(0.84+Math.random()*0.24);
     return a;
   }
-  /* Lấp kín một đoạn cột bằng các khối đá chồng nhau (đá bị cắt gọn theo hitbox khi vẽ) */
-  function fillRocks(x0, yTop, yBot, out){
-    for(var y=yTop; y<=yBot+22; y+=24){
-      out.push({
-        cx: x0 + CONFIG.colW/2 + (Math.random()-0.5)*CONFIG.colW*0.42,
-        cy: Math.min(y, yBot+10),
-        r : CONFIG.colW*0.40 + Math.random()*CONFIG.colW*0.22,
-        rot: Math.random()*TAU,
-        pts: rockPts()
-      });
-    }
+
+  /**
+   * Đặt một hòn đá vào làn `i` (hoặc nằm giữa hai làn `i`,`i+1` nếu là đá lớn).
+   * `amp` = biên độ trôi dọc, đã kẹp để đá KHÔNG BAO GIỜ tràn khỏi dải làn của nó
+   * — đó là thứ giữ cho làn trống luôn thật sự trống.
+   */
+  function putRock(x, i, big){
+    var lh = laneH();
+    var r  = big ? CONFIG.bigR[0] + Math.random()*(CONFIG.bigR[1]-CONFIG.bigR[0])
+                 : CONFIG.rockR[0] + Math.random()*(CONFIG.rockR[1]-CONFIG.rockR[0]);
+    var cy = big ? (laneY(i)+laneY(i+1))/2 : laneY(i);
+    var half = (big ? lh : lh/2) - r - CONFIG.lanePad;   // chỗ còn lại để xê dịch
+    if(half < 0) half = 0;
+    var off = (Math.random()*2-1)*half;
+    var amp = Math.min(tier().drift, Math.max(0, half - Math.abs(off)));
+    rocks.push({
+      x: x + (Math.random()-0.5)*tier().gap*CONFIG.waveJitter,
+      y0: cy + off, y: cy + off, amp: amp,
+      ph: Math.random()*TAU, phv: 0.7 + Math.random()*0.6,
+      r: r, rc: r*CONFIG.rockHit,
+      rot: Math.random()*TAU, spin: (Math.random()-0.5)*1.1,
+      pts: rockPts()
+    });
   }
-  function spawnCol(x){
-    var gapH = Math.max(CONFIG.gapHMin, CONFIG.gapH0 - elapsed*CONFIG.gapShrink);
-    var lo = CONFIG.gapMargin + gapH/2, hi = VH - CONFIG.gapMargin - gapH/2;
-    /* Khe mới không lệch quá gapStep so với khe trước → không có cú nhảy bất khả thi */
-    var lo2 = Math.max(lo, lastGapY-CONFIG.gapStep), hi2 = Math.min(hi, lastGapY+CONFIG.gapStep);
-    var gapY = lo2 + Math.random()*Math.max(0, hi2-lo2);
-    lastGapY = gapY;
 
-    var col={ x:x, gapY:gapY, gapH:gapH, rocks:[], scored:false };
-    fillRocks(x, -30, gapY-gapH/2, col.rocks);         // chùm trên
-    fillRocks(x, gapY+gapH/2, VH+30, col.rocks);       // chùm dưới
-    cols.push(col);
+  /** Một đợt đá: chừa đúng một làn trống, các làn khác lấp theo xác suất của cấp. */
+  function spawnWave(x){
+    var T = tier(), L = CONFIG.LANES, i;
 
-    /* Thiên thạch tím nằm trong khe hẹp */
-    if(Math.random() < CONFIG.gemChance){
-      var jitter=(Math.random()-0.5)*Math.max(0, gapH-CONFIG.gemR*4);
-      gems.push({ x:x+CONFIG.colW/2, y:gapY+jitter, r:CONFIG.gemR, ph:Math.random()*TAU });
+    /* Làn trống đi bước nhỏ so với đợt trước → không có cú nhảy bất khả thi */
+    var lo = Math.max(0, safeLane-CONFIG.laneJump), hi = Math.min(L-1, safeLane+CONFIG.laneJump);
+    safeLane = lo + Math.floor(Math.random()*(hi-lo+1));
+
+    var filled = [];
+    for(i=0;i<L;i++) filled.push(false);
+
+    /* Đá lớn chiếm HAI làn liền nhau — phải đánh dấu cả hai, không thì phép đếm
+       "còn làn nào trống" nói dối và trẻ gặp một bức tường. */
+    if(Math.random() < T.big){
+      var pairs = [];
+      for(i=0;i<L-1;i++) if(i!==safeLane && i+1!==safeLane) pairs.push(i);
+      if(pairs.length){
+        var p = pairs[Math.floor(Math.random()*pairs.length)];
+        putRock(x, p, true); filled[p]=filled[p+1]=true;
+      }
     }
+    for(i=0;i<L;i++){
+      if(i===safeLane || filled[i]) continue;
+      if(Math.random() < T.fill){ putRock(x, i, false); filled[i]=true; }
+    }
+    /* Đợt rỗng đọc ra như game đang lỗi → bù cho đủ số đá tối thiểu của cấp */
+    var have = filled.filter(Boolean).length;
+    for(var guard=0; have < T.min && guard < 8; guard++){
+      var free = [];
+      for(i=0;i<L;i++) if(i!==safeLane && !filled[i]) free.push(i);
+      if(!free.length) break;
+      var j = free[Math.floor(Math.random()*free.length)];
+      putRock(x, j, false); filled[j]=true; have++;
+    }
+
+    /* Thiên thạch tím nằm ở LÀN TRỐNG — nên nó luôn lấy được mà không phải
+       đâm vào đá, khác hẳn "phần thưởng đặt trong chỗ chết". */
+    if(Math.random() < CONFIG.gemChance){
+      gems.push({ x:x, y:laneY(safeLane)+(Math.random()-0.5)*(laneH()*0.3),
+                  r:CONFIG.gemR, ph:Math.random()*TAU });
+    }
+    nextWaveX = x + T.gap;
   }
 
   /* ===== Va chạm AABB ===== */
@@ -554,6 +690,15 @@
              w:CONFIG.byteW-i*2,        h:CONFIG.byteH-i*1.2 };
   }
   function hit(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+  /* Đá là VÒNG TRÒN, tàu là hình chữ nhật → đo bằng điểm gần nhất trên hình chữ
+     nhật, không quy đá về AABB: đá quy về hình vuông thì bốn góc vuông đó giết
+     tàu ở chỗ mắt thấy rõ ràng còn hở. */
+  function hitRock(b, a){
+    var cx = Math.max(b.x, Math.min(a.x, b.x+b.w));
+    var cy = Math.max(b.y, Math.min(a.y, b.y+b.h));
+    var dx = a.x-cx, dy = a.y-cy;
+    return dx*dx + dy*dy <= a.rc*a.rc;
+  }
 
   /* ===== Điều khiển ===== */
   function flap(){
@@ -587,7 +732,17 @@
 
   function update(dt){
     elapsed+=dt;
-    speed = Math.min(CONFIG.scrollMax, CONFIG.scroll0 + elapsed*CONFIG.scrollAcc);
+
+    /* --- Cấp độ: lên bậc thì NÓI RA, không đổi lặng lẽ --- */
+    var k = tierAt(elapsed);
+    if(k !== tierIdx){
+      tierIdx = k;
+      SFX.levelUp();
+      toast(t("tier_up").replace("{n}", k+1).replace("{s}", tierText(k+1)));
+      paintHud();
+    }
+    /* Tốc độ BÒ dần tới tốc độ của cấp — đặt thẳng là cả màn hình giật một nhịp */
+    speed += (tier().speed - speed) * Math.min(1, dt*CONFIG.speedLerp);
     dist += speed*dt*CONFIG.distPerPx;
     var dx = speed*dt;
 
@@ -605,21 +760,22 @@
       die(); return;
     }
 
-    /* --- Cột: trôi phải → trái, tái sinh khi ra khỏi màn --- */
-    var bb=byteBox(), i, c;
-    for(i=cols.length-1;i>=0;i--){
-      c=cols[i]; c.x-=dx;
-      for(var k=0;k<c.rocks.length;k++) c.rocks[k].cx-=dx;
-      if(hit(bb,{x:c.x,y:0,w:CONFIG.colW,h:c.gapY-c.gapH/2}) ||
-         hit(bb,{x:c.x,y:c.gapY+c.gapH/2,w:CONFIG.colW,h:VH-(c.gapY+c.gapH/2)})){
-        die(); return;
-      }
-      if(c.x+CONFIG.colW < -20) cols.splice(i,1);
+    /* --- Đá: trôi phải → trái, mỗi hòn dập dềnh trong LÀN của nó --- */
+    var bb=byteBox(), i, a;
+    for(i=rocks.length-1;i>=0;i--){
+      a=rocks[i];
+      a.x-=dx; a.rot+=a.spin*dt;
+      if(a.amp>0){ a.ph+=a.phv*dt; a.y = a.y0 + Math.sin(a.ph)*a.amp; }
+      if(hitRock(bb,a)){ die(); return; }
+      if(a.x + a.r < -24) rocks.splice(i,1);
     }
-    /* Cột mới đặt cách cột cuối đúng colGap, chỉ sinh khi cột cuối đã lọt vào màn hình
-       → cột mới luôn nằm ngoài mép phải, không "hiện ra" giữa sân. */
-    var lastCol=cols[cols.length-1];
-    if(!lastCol || lastCol.x < VW) spawnCol(lastCol ? lastCol.x+CONFIG.colGap : VW+140);
+    /* Đợt mới luôn sinh NGOÀI mép phải (không "hiện ra" giữa sân).
+       ⚠️ `nextWaveX` là một điểm TRONG THẾ GIỚI nên nó phải trôi cùng mọi thứ —
+          không trừ `dx` thì mốc sinh đứng yên còn đá thì trôi, và khoảng cách
+          giữa hai đợt không còn liên quan gì tới `gap` của cấp. Mốc trôi tới
+          `VW+40` nghĩa là thế giới vừa đi đúng `gap` kể từ đợt trước. */
+    nextWaveX -= dx;
+    if(nextWaveX <= VW + 40) spawnWave(VW + 40);
 
     /* --- Thiên thạch tím: +10 điểm & +1 vào ví tạm --- */
     for(i=gems.length-1;i>=0;i--){
@@ -717,7 +873,7 @@
     if(shake>0){ ox=(Math.random()-0.5)*shake; oy=(Math.random()-0.5)*shake; }
     ctx.save(); ctx.translate(ox,oy);
 
-    for(var i=0;i<cols.length;i++) drawColumn(cols[i]);
+    for(var i=0;i<rocks.length;i++) drawRock(rocks[i]);
     for(var j=0;j<gems.length;j++) drawGem(gems[j]);
     if(state!=="over"){ drawTrail(); drawShip(); }
     drawParts();
@@ -745,34 +901,10 @@
     ctx.globalAlpha=1;
   }
 
-  /* Cột thiên thạch: đá được CẮT GỌN đúng theo hitbox (clip) nên hình = vùng chết */
-  function drawColumn(c){
-    var topH=c.gapY-c.gapH/2, botY=c.gapY+c.gapH/2;
-    drawRockBlock(c, c.x, 0, CONFIG.colW, topH);
-    drawRockBlock(c, c.x, botY, CONFIG.colW, VH-botY);
-
-    /* Vệt sáng mờ ở 2 mép khe — chỉ để mắt bắt được đường bay, KHÔNG vẽ dày
-       kẻo trông như cái nắp/bậc thang chứ không phải mép đá. */
-    ctx.save();
-    ctx.strokeStyle="rgba(125,211,252,.3)"; ctx.lineWidth=1;
-    ctx.shadowColor="rgba(56,189,248,.55)"; ctx.shadowBlur=7;
-    ctx.beginPath(); ctx.moveTo(c.x+3,topH); ctx.lineTo(c.x+CONFIG.colW-3,topH);
-    ctx.moveTo(c.x+3,botY); ctx.lineTo(c.x+CONFIG.colW-3,botY); ctx.stroke();
-    ctx.restore();
-  }
-  function drawRockBlock(c,x,y,w,h){
-    if(h<=0) return;
-    ctx.save();
-    ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
-    for(var i=0;i<c.rocks.length;i++){
-      var a=c.rocks[i];
-      if(a.cy+a.r < y || a.cy-a.r > y+h) continue;   // ngoài khối này
-      drawRock(a);
-    }
-    ctx.restore();
-  }
+  /* Một hòn đá rời. Không còn `clip()` theo khối cột — hình vẽ ĐÚNG bằng vòng va
+     chạm `rc` (xem `rockPts` và `CONFIG.rockHit`). */
   function drawRock(a){
-    ctx.save(); ctx.translate(a.cx,a.cy); ctx.rotate(a.rot);
+    ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
     var grd=ctx.createRadialGradient(-a.r*0.32,-a.r*0.32,a.r*0.18,0,0,a.r);
     grd.addColorStop(0,"#8291b0"); grd.addColorStop(0.6,"#44516f"); grd.addColorStop(1,"#212b45");
     ctx.fillStyle=grd;

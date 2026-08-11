@@ -107,7 +107,13 @@ def state(pg):
       bal:+document.getElementById('bal').textContent,
       ovs:[...document.querySelectorAll('.ov')].filter(o=>o.classList.contains('show')).map(o=>o.id),
       pauseHidden:document.getElementById('btn-pause').classList.contains('is-hidden'),
-      sfxOff:document.getElementById('btn-sfx').classList.contains('off')
+      sfxOff:document.getElementById('btn-sfx').classList.contains('off'),
+      gun:(document.getElementById('gunlvl')||{}).textContent,
+      empW:(document.getElementById('emp-fill')||{style:{}}).style.width,
+      empReady:document.getElementById('btn-emp').classList.contains('ready'),
+      empOff:document.getElementById('btn-emp').disabled,
+      empHidden:document.getElementById('btn-emp').classList.contains('is-hidden'),
+      foes:(window.__dbg&&window.__dbg.foes)||-1
     })""")
 
 with sync_playwright() as pw:
@@ -125,9 +131,13 @@ with sync_playwright() as pw:
         hull:document.querySelector('.hullwrap .k').textContent,
         how:[...document.querySelectorAll('.how span')].length})""")
     print("  ", vi, state(page))
-    check("Space Defender" in vi["title"], "tieu de dung")
+    # ⚠️ Ten game co ban TIENG VIET tu 08/08/2026 (chu du an: "Space defender doi
+    #    thanh tieng Viet khi sang che do tieng Viet"). Phep kiem cu ghim nguyen van
+    #    "Space Defender" nen no bao hong dung luc san pham lam dung.
+    check("Phòng Thủ Không Gian" in vi["title"], "tieu de tieng Viet dung")
     check(vi["hull"] == "Giáp trạm", "nhan thanh giap tieng Viet")
-    check(vi["how"] == 6, "co 6 dong huong dan")
+    # 6 -> 8 dong: them Xung kich EMP + Nang cap phao (08/08/2026)
+    check(vi["how"] == 8, "co 8 dong huong dan (%s)" % vi["how"])
     check(state(page)["ovs"] == ["ov-start"], "chi overlay brief hien")
     check(state(page)["hull"] == "100%", "giap bat dau 100%")
     check(state(page)["pauseHidden"], "nut Pause an o man brief")
@@ -210,6 +220,68 @@ with sync_playwright() as pw:
     check(quiz_seen, "gap va kiem duoc thien thach VANG (quiz)")
     check(s["mined"] > 0, "thu duoc Thien thach tim trong luot (%s)" % s["mined"])
 
+    print("== 4b. XUNG KICH EMP + NANG CAP PHAO (them 08/08/2026) ==")
+    # ⚠️ Lai bang `window.__dbg` chu khong ngoi ban ha 14 vat the bang autopilot: cai
+    #    can do la *no roi thi san co sach khong*, khong phai *co ban trung khong*
+    #    (phan do da co o muc 4). Bam nut thi VAN BAM THAT nhu tre.
+    page.evaluate("()=>{window.__autoOn=false}")
+    answer_quiz_if_open(page)
+    if not state(page)["ovs"]:
+        s = state(page)
+        check(not s["empHidden"], "nut EMP hien khi dang choi")
+        # --- chua nap day thi nut phai VO HIEU (mot nut bam khong an la nut noi doi) ---
+        page.evaluate("()=>{window.__dbg.setScore(0)}")
+        emp0 = page.evaluate("()=>window.__dbg.emp")
+        if emp0 < 14:
+            check(state(page)["empOff"], "chua nap day -> nut EMP vo hieu")
+            check(not state(page)["empReady"], "chua nap day -> khong sang 'ready'")
+        # --- nap day + gieo vat the roi BAM NUT ---
+        page.evaluate("()=>{window.__dbg.chargeEmp(); window.__dbg.spawn(9)}")
+        page.wait_for_timeout(120)
+        s = state(page)
+        check(s["empW"] == "100%", "thanh nap EMP day 100%% (%s)" % s["empW"])
+        check(s["empReady"] and not s["empOff"], "nap day -> nut EMP sang va bam duoc")
+        # ⚠️ HOI BANG SO HIEU, KHONG HOI BANG SO LUONG. Bo sinh van chay trong 0,5 giay
+        #    song lan, nen luon co vat the MOI — ban dau toi doi `foes == 0` va phep
+        #    kiem bao hong (11 -> 1) trong khi cu no da lam dung viec cua no. Cai can
+        #    do la "moi vat the DANG O TRONG SAN luc no deu bien mat".
+        before = page.evaluate("()=>window.__dbg.serials")
+        check(len(before) >= 6, "co %d vat the trong san truoc khi no" % len(before))
+        shot(page, "d04b-emp-ready.png")
+        page.click("#btn-emp")
+        # ⚠️ Doc `emp` NGAY sau cu bam, khong doc sau 900ms: dan ban truoc do van con
+        #    bay va co the ha mot vat the MOI -> nap them 1, va phep kiem "EMP khong tu
+        #    nap lai" bao hong oan (loi cua phep do, khong phai cua game).
+        check(page.evaluate("()=>window.__dbg.emp") == 0, "cu no TIEU HET thanh nap")
+        page.wait_for_timeout(90)
+        check(page.evaluate("()=>window.__dbg.wave") > 0, "vong song EMP dang lan ra")
+        shot(page, "d04c-emp-wave.png")
+        page.wait_for_timeout(900)          # song lan 900px/s, phu het san trong ~0,5s
+        after = page.evaluate("()=>window.__dbg.serials")
+        left = [n for n in before if n in after]
+        print("   vat the luc no: %d | con sot: %s | wave=%s"
+              % (len(before), left, page.evaluate("()=>window.__dbg.wave")))
+        check(not left, "EMP no SACH moi vat the dang o trong san (sot %s)" % left)
+        check(page.evaluate("()=>window.__dbg.wave") < 0, "vong song tat khi lan het san")
+        # --- nang cap phao theo diem ---
+        page.evaluate("()=>{window.__dbg.setScore(0)}")
+        page.wait_for_timeout(120)
+        check(state(page)["gun"] == "Pháo 1", "diem 0 -> Phao 1 (%r)" % state(page)["gun"])
+        page.evaluate("()=>{window.__dbg.setScore(160)}")
+        page.wait_for_timeout(260)
+        s = state(page)
+        check(s["gun"] == "Pháo 2", "160 diem -> Phao 2 (%r)" % s["gun"])
+        check(page.evaluate("()=>window.__dbg.gun") == 1, "cap phao trong ma = 1")
+        page.evaluate("()=>{window.__dbg.setScore(420)}")
+        page.wait_for_timeout(260)
+        s = state(page)
+        check(s["gun"] == "Pháo 3", "420 diem -> Phao 3 (%r)" % s["gun"])
+        toast_txt = page.evaluate("()=>document.getElementById('toast').textContent")
+        check("PHÁO CẤP 3" in toast_txt, "co loi bao len cap phao (%r)" % toast_txt)
+        shot(page, "d04d-gun3.png")
+        page.evaluate("()=>{window.__dbg.setScore(0)}")
+        page.evaluate(AUTOPILOT)
+
     print("== 5. Tam dung ==")
     answer_quiz_if_open(page)
     if not state(page)["ovs"]:
@@ -267,12 +339,17 @@ with sync_playwright() as pw:
     en = page.evaluate("""()=>({title:document.title, hull:document.querySelector('.hullwrap .k').textContent,
       rl:[...document.querySelectorAll('.res .rl')].map(e=>e.textContent),
       paid:document.getElementById('paid').textContent.trim(),
+      gun:(document.getElementById('gunlvl')||{}).textContent,
       hub:document.getElementById('hub-btn').textContent})""")
     print("  ", en); shot(page, "d07-over-en.png")
     check(en["hull"] == "Hull", "nhan giap doi sang EN")
     check("Collected" in en["rl"] and "Held for" in en["rl"], "nhan bang ket qua doi sang EN")
     check(not any(ch in en["paid"] for ch in "ạợđếươ"), "dong thuong doi sang EN: %r" % en["paid"])
-    check(en["hub"] == "Back to Arcade", "nut hub doi sang EN")
+    # ⚠️ Ten khu doi 08/08/2026: "Arcade Bay" -> "Training Simulator".
+    check(en["hub"] == "Back to Training Simulator", "nut hub doi sang EN")
+    # Ten game o EN VAN la "Space Defender" — doi ten chi ap cho ban tieng Viet
+    check("Space Defender" in en["title"], "ban EN giu ten Space Defender")
+    check(en["gun"] == "Gun 1", "chip cap phao doi sang EN (%r)" % en["gun"])
 
     print("== 8. Thieu tt ==")
     page.click(".lang-switch button[data-lang='vi']"); page.wait_for_timeout(200)

@@ -81,6 +81,10 @@
           <span><b id="xp-in">0</b> / <span id="xp-span">100</span> XP</span>
           <span id="xp-next">—</span>
         </div>
+        <!-- Đích BẬC, dòng riêng — cố ý KHÔNG nhồi vào `.meta`: ô đó là hàng mono
+             10px chia hai bên, thêm "để thành Nhà Thám Hiểm (Explorer)" vào là tràn
+             trên màn hẹp. Ẩn khi đã ở bậc cuối (không có gì để hứa nữa). -->
+        <div class="goal" id="rank-goal" style="display:none"></div>
       </div>
 
       <div class="rename">
@@ -168,6 +172,8 @@
       k_games:"Lượt huấn luyện", k_read:"Bài đã đọc", k_tt:"Thiên thạch đã thu",
       k_badges:"Huy hiệu", k_planets:"Hành tinh đã ghé",
       xp_next:"Còn {n} XP nữa lên cấp {lv}", xp_max:"Đã đạt cấp cao nhất!",
+      rank_next:"🎖️ Còn {n} cấp nữa để thành {r}",
+      rank_soon:"🎖️ Lên cấp {lv} là thành {r}!",
       visited:"ĐÃ GHÉ", locked:"CHƯA TỚI",
       rec_dodge:"Né Thiên Thạch", rec_defender:"Space Defender", rec_constellation:"Ghép Chòm Sao",
       rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm",
@@ -197,6 +203,8 @@
       k_games:"Training runs", k_read:"Articles read", k_tt:"Meteors collected",
       k_badges:"Badges", k_planets:"Planets visited",
       xp_next:"{n} XP to level {lv}", xp_max:"Top level reached!",
+      rank_next:"🎖️ {n} more levels to become {r}",
+      rank_soon:"🎖️ Reach level {lv} to become {r}!",
       visited:"VISITED", locked:"NOT YET",
       rec_dodge:"Asteroid Dodge", rec_defender:"Space Defender", rec_constellation:"Constellation Match",
       rec_none:"None yet", rec_pts:"pts", rec_done:"done",
@@ -314,6 +322,31 @@
     $("xp-next").textContent = left > 0
       ? t("xp_next").replace("{n}", left).replace("{lv}", lv.level + 1)
       : t("xp_max");
+
+    /* ĐÍCH BẬC KẾ TIẾP — "còn n cấp nữa để thành Chuyên Gia (Specialist)".
+       Trước 08/08/2026 trang chỉ nói "còn n XP nữa lên cấp 8": một con số không
+       nói lên điều gì với trẻ, vì cái nó muốn là CÁI TÊN. Mốc cấp lấy từ
+       `AstroQRanks.next()` (suy ra từ MAX_LEVEL), tên bậc từ cùng chỗ khai báo với
+       dashboard — không gõ lại tên nào ở đây.
+       Hai câu khác nhau có chủ đích: cách 1 cấp thì đó là khoảnh khắc lớn, nói
+       thẳng "lên cấp k là thành X"; còn xa thì nói còn mấy cấp để trẻ ước lượng.
+       Bậc cuối → ẩn hẳn dòng, đừng hứa một bậc không tồn tại. */
+    var goal = $("rank-goal");
+    if(goal){
+      var nx = window.AstroQRanks ? AstroQRanks.next(lv.level) : null;
+      if(nx){
+        var togo = nx.level - lv.level;
+        var rname = AstroQRanks.name(nx.level, LANG);
+        goal.textContent = (togo <= 1)
+          ? t("rank_soon").replace("{lv}", nx.level).replace("{r}", rname)
+          : t("rank_next").replace("{n}", togo).replace("{r}", rname);
+        goal.classList.toggle("soon", togo <= 1);
+        goal.style.display = "";
+      } else {
+        goal.textContent = "";
+        goal.style.display = "none";
+      }
+    }
 
     // Vòng cấp độ: chu vi 2πr với r=45 → 282.7. dashoffset chạy theo phần trăm.
     var ring = $("lv-ring"), C = 2 * Math.PI * 45;

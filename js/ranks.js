@@ -1,7 +1,15 @@
 /* ============================================================
    js/ranks.js — 10 BẬC HUẤN LUYỆN PHI HÀNH GIA, CHỖ DUY NHẤT khai báo tên.
-   Thêm 31/07/2026. Dùng bởi dashboard.html · profile.html · achievements.html
-   (bảng xếp hạng) — nạp SAU js/ui-common.js.
+   Thêm 31/07/2026. Dùng bởi dashboard.html · profile.html (bậc HIỆN TẠI, qua
+   `name()`) · achievements.html (khối "Lộ trình huấn luyện" — CẢ 10 bậc, qua
+   `ALL`/`levelOf`/`PER_RANK`) — nạp SAU js/ui-common.js.
+
+   ⚠️ Chú thích này từng ghi "achievements.html (bảng xếp hạng)" từ 31/07/2026 tới
+      08/08/2026 trong khi khối đó CHƯA TỒN TẠI — grep `AstroQRanks` ở trang đó ra
+      0 kết quả suốt 8 ngày. Hệ quả thật: `ALL`, `levelOf`, `next`, `icon`, `short`
+      được export mà **không một chỗ nào gọi**, nên trẻ chỉ thấy bậc mình đang ở và
+      không có cách nào biết phía trước còn bậc nào. Một chú thích nói về thứ chưa
+      làm đọc ra y như thứ đã làm.
 
    Tên bậc lấy theo thang huấn luyện thật của phi hành đoàn, do người dùng chốt:
      Rookie · Cadet · Explorer · Navigator · Specialist ·
@@ -13,7 +21,13 @@
    ⚠️ MỐC CẤP ĐỘ SUY RA TỪ MỘT CON SỐ, không gõ cứng 10 mốc. Dự án đã bốn lần trả
       giá cho lỗi "gán cứng con số mà nơi khác mới là nguồn sự thật" (14 icon, 14
       thuật ngữ, 25 câu, 20 mẫu vật). `MAX_LEVEL` phải khớp `Achievements.MaxLevel`
-      ở server — có phép kiểm đối chiếu.
+      ở server — `check_pages.py` mục [17] đối chiếu hai bên (phép kiểm đó chỉ có
+      từ 08/08/2026; chú thích này ghi "có phép kiểm đối chiếu" từ 31/07 trong khi
+      grep `MAX_LEVEL` trong `scratchpad/*.py` ra 0 kết quả — tức con số 50 đã đứng
+      cạnh server suốt 8 ngày mà không ai canh).
+   ⚠️ MỐC XP TỪNG CẤP KHÔNG NẰM Ở ĐÂY, cố ý. Công thức `100·(n−1)·n/2` là luật chơi
+      của `Achievements.XpForLevel`; server trả sẵn cả bảng trong `GET /me/achievements`
+      (`levels.xp`). Chép công thức sang đây là hai nơi cùng giữ một luật.
    ⚠️ ĐÂY CHỈ LÀ TÊN. Cấp độ do SERVER tính (`Achievements.Level(xp)`), client
       không tự suy XP → cấp. Cùng phân công như `js/badges.js`: server giữ mốc,
       client giữ tên.

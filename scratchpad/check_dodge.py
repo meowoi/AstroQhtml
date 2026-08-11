@@ -68,7 +68,16 @@ for a in ["i18n", "i18n-html", "i18n-ph", "i18n-title", "i18n-aria", "i18n-alt"]
     attr_keys |= set(re.findall(r'data-%s="([^"]+)"' % a, src))
 ok(attr_keys <= vi, "moi data-i18n* co trong tu dien (thieu: %s)" % sorted(attr_keys - vi))
 
-js_keys = set(re.findall(r'(?<![\w$.])t\("([^"]+)"\)', js))   # tranh khop getContext("2d")
+# ⚠️ QUET TREN BAN DA BO CHU THICH — loi "dem ca chu trong ghi chu cua chinh minh"
+#    da lap lai 11 lan trong du an nay. Ghi chu giai thich *vi sao khong ghep
+#    `t("khoa")` dong* la ghi chu NEN CO, va no khong duoc tinh la mot khoa dang dung.
+#    check_pages.py da lam dung chuyen nay tu 30/07/2026; day la ban sao cho bo dodge.
+def no_comments(s):
+    s = re.sub(r"/\*.*?\*/", " ", s, flags=re.S)
+    return re.sub(r"(?m)^\s*//.*$", " ", s)
+
+
+js_keys = set(re.findall(r'(?<![\w$.])t\("([^"]+)"\)', no_comments(js)))  # tranh getContext("2d")
 ok(js_keys <= vi, "moi t(\"key\") co trong tu dien (thieu: %s)" % sorted(js_keys - vi))
 unused = sorted(vi - attr_keys - js_keys)
 print("      khoa khong dung o dau:", unused)

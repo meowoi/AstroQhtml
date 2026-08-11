@@ -43,6 +43,13 @@
 .xp .meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;
   font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;color:var(--ink-soft);}
 .xp .meta b{color:var(--purple);}
+/* Đích BẬC kế tiếp (js/ranks.js). Dòng RIÊNG chứ không nhồi vào `.meta` — ô đó là
+   hàng mono 10px chia hai bên, thêm tên bậc kèm tên gốc tiếng Anh vào là tràn. */
+.xp .goal{margin-top:8px;font-size:11.8px;line-height:1.45;color:var(--ink-soft);
+  text-wrap:balance;}
+/* Còn ĐÚNG một cấp là tới bậc mới — khoảnh khắc lớn nhất của cả thang, nên sáng lên. */
+.xp .goal.soon{color:#ffe9bd;font-weight:600;
+  text-shadow:0 0 12px rgba(255,207,107,.45);}
 
 .dossier .joined{margin-top:16px;padding-top:13px;border-top:1px dashed rgba(150,180,255,.2);
   font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}

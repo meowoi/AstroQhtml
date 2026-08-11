@@ -21,7 +21,7 @@
 
 <!-- ===== Header ===== -->
 <header class="top">
-  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Sảnh</span></button>
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
   <span class="tag" id="gtag">[ ASTROQ ]</span>
   <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
     <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
@@ -46,8 +46,19 @@
     <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
       <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="mined">0</span>
     </div>
+    <!-- Cấp pháo: nhãn nằm TRONG .v vì màn ≤560px ẩn hết .chip .k (game-shell.css) -->
+    <div class="chip gun"><span class="v" id="gunlvl">Pháo 1</span></div>
 
     <div class="hud-btns">
+      <!-- XUNG KÍCH EMP: nút bấm được bằng CHUỘT/CHẠM, phím tắt E.
+           Có nút thật vì trên máy tính bảng không có bàn phím, mà đây là kỹ năng
+           chính của game. `disabled` khi chưa nạp đầy — một cái nút bấm mà không có
+           gì xảy ra thì trẻ tưởng game lỗi. Thanh nạp là ::after theo --emp. -->
+      <button class="iconbtn empbtn is-hidden" id="btn-emp" type="button" disabled
+              data-i18n-aria="emp_aria" data-i18n-title="emp_aria" aria-label="Xung kích EMP">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z"/></svg>
+        <span class="empbar" id="emp-bar"><i id="emp-fill"></i></span>
+      </button>
       <!-- Pause: icon "⏸" khi đang chơi, "▶" khi đã tạm dừng (class .off) -->
       <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
         <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
@@ -73,7 +84,7 @@
       <div class="ov-card">
         <span class="ov-tag">[ MISSION_BRIEF ]</span>
         <div class="ov-ic">🛰️</div>
-        <h2 data-i18n="start_title">Space Defender</h2>
+        <h2 data-i18n="start_title">Phòng Thủ Không Gian</h2>
         <div class="how">
           <span data-i18n-html="how1">🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ.</span>
           <span data-i18n-html="how2">🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.</span>
@@ -81,6 +92,8 @@
           <span data-i18n-html="how4">💜 <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví tạm.</span>
           <span data-i18n-html="how5">⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì hồi giáp & thưởng!</span>
           <span data-i18n-html="how6">🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.</span>
+          <span data-i18n-html="how7">⚡ <b>Xung kích EMP</b>: hạ 14 vật thể là nạp đầy → bấm nút ⚡ (hoặc phím <kbd>E</kbd>) để <b>nổ sạch cả sân</b>.</span>
+          <span data-i18n-html="how8">🔧 <b>Pháo tự nâng cấp</b> theo điểm: 150 điểm → 2 tia, 400 điểm → 3 tia và bắn nhanh hơn.</span>
         </div>
         <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
         <div class="acts"><button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button></div>
@@ -113,7 +126,7 @@
         <div class="paid" id="paid"></div>
         <div class="acts">
           <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>5</b></button>
-          <button id="hub-btn" data-i18n="to_hub">Về Sảnh Game</button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
           <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
         </div>
       </div>
@@ -127,7 +140,7 @@
         <p id="need-body"></p>
         <div class="acts">
           <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
-          <button id="need-hub" data-i18n="to_hub">Về Sảnh Game</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
         </div>
       </div>
     </div>
@@ -137,10 +150,10 @@
       <div class="ov-card">
         <div class="ov-ic">⏸️</div>
         <h2 data-i18n="pause_title">Tạm dừng</h2>
-        <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Sảnh Game?</p>
+        <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?</p>
         <div class="acts">
           <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
-          <button id="pause-hub" data-i18n="to_hub">Về Sảnh Game</button>
+          <button id="pause-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
         </div>
       </div>
     </div>
@@ -193,8 +206,32 @@
        thế sẽ khiến vật thể "lọt vào trong khiên" mà chưa mất giáp — trông như lỗi. */
     shieldR: 31,                // vòng khiên = mức giáp còn lại (cung sáng)
 
-    fireInterval: 0.13,         // giây giữa 2 phát
     bulletSpeed: 700, bulletR: 4.5,
+
+    /* ══ NÂNG CẤP PHÁO THEO ĐIỂM ═══════════════════════════════════════════════
+       Thêm 08/08/2026. `at` = điểm để mở cấp pháo. Mỗi cấp đổi ĐÚNG HAI thứ (nhịp
+       bắn + số tia) nên trẻ nhận ra ngay cái vừa mạnh lên.
+       ⚠️ ĐỪNG CHO CẤP 3 BẮN 5 TIA GÓC RỘNG: sân phòng thủ 360° mà một cú bấm quét
+          cả một góc lớn thì việc NGẮM mất ý nghĩa, và ngắm là toàn bộ kỹ năng của
+          game này. Ba tia lệch 0,10 rad ≈ 5,7° chỉ giúp bắn trúng chắc hơn ở tầm xa,
+          không thay việc phải hướng nòng đúng phía. */
+    guns: [
+      { at:0,   interval:0.13,  shots:1, spread:0    },
+      { at:150, interval:0.105, shots:2, spread:0.06 },
+      { at:400, interval:0.085, shots:3, spread:0.10 }
+    ],
+
+    /* ══ XUNG KÍCH EMP — nổ sạch mọi thứ đang trong sân ════════════════════════
+       Nạp bằng CHÍNH VIỆC BẮN HẠ, không phải bằng thời gian: nó là phần thưởng cho
+       việc chơi tốt, không phải một cái nút cứ đợi là có.
+       ⚠️ VÒNG SÓNG LAN RA CHỨ KHÔNG XOÁ TỨC THÌ. Xoá tức thì thì trẻ bấm xong thấy
+          màn hình trống trơn và không hiểu vừa xảy ra chuyện gì — mất luôn phần
+          "mình vừa làm được một việc lớn". Sóng lan 900px/s nên phủ hết sân trong
+          ~0,5 giây: đủ chậm để thấy từng hòn nổ, đủ nhanh để không thành thời gian chờ.
+       ⚠️ EMP KHÔNG MỞ CÂU ĐỐ dù có quét trúng thạch vàng — xem `killFoe`. */
+    empNeed: 14,                // số vật thể phải hạ để nạp đầy
+    empSpeed: 900,              // px/s vòng sóng lan ra
+    empMax: 470,                // lan tới đây thì tắt (nửa đường chéo sân = 424)
 
     spawnR: 440,                // sinh vật thể ngoài mép (nửa đường chéo sân = 424)
     spawn0: 1.15,               // giãn cách sinh lúc đầu (giây)
@@ -242,15 +279,21 @@
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
-      title:"AstroQ — Space Defender", back:"Về Sảnh", to_hub:"Về Sảnh Game", home_btn:"Trung Tâm Điều Hướng",
+      title:"AstroQ — Phòng Thủ Không Gian", back:"Về Khu Huấn Luyện", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
       hull:"Giáp trạm", score_lbl:"Điểm", mined_lbl:"Đã thu", held_lbl:"Trụ được", best_lbl:"Kỷ lục", unit_s:"s",
-      start_title:"Space Defender",
+      start_title:"Phòng Thủ Không Gian",
       how1:"🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ (bàn phím: <kbd>◀</kbd> <kbd>▶</kbd>).",
       how2:"🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.",
       how3:"☄️ <b>Thiên thạch xám</b> chịu 2 phát · <b>rác đỏ</b> bay nhanh, 1 phát.",
       how4:"💜 <b>Thiên thạch tím</b>: +"+TYPES.purple.score+" điểm & +1 "+TT+" vào ví tạm.",
       how5:"⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.",
+      how7:"⚡ <b>Xung kích EMP</b>: hạ "+CONFIG.empNeed+" vật thể là nạp đầy → bấm nút ⚡ (hoặc phím <kbd>E</kbd>) để <b>nổ sạch cả sân</b>.",
+      how8:"🔧 <b>Pháo tự nâng cấp</b> theo điểm: "+CONFIG.guns[1].at+" điểm → 2 tia, "+CONFIG.guns[2].at+" điểm → 3 tia và bắn nhanh hơn.",
+      gun_lbl:"Pháo", emp_aria:"Xung kích EMP",
+      gun_up:"PHÁO CẤP {n} · {s}",
+      gun1:"Một tia", gun2:"Hai tia, bắn nhanh hơn", gun3:"Ba tia, bắn nhanh nhất",
+      emp_go:"⚡ XUNG KÍCH EMP — nổ sạch cả sân!",
       cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Bắt đầu", over_title:"Trạm đã bị phá huỷ!",
       again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
@@ -262,13 +305,13 @@
       reward_toast:"+{n} {tt} vào ví!", paid_lbl:"Đã cộng {n} {tt} vào ví",
       paid_none:"Lượt này chưa thu được Thiên thạch tím",
       newbest:"🏆 Kỷ lục mới!",
-      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Sảnh Game?",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?",
       resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
       aim_hint:"RÊ CHUỘT ĐỂ NGẮM · GIỮ CHUỘT/SPACE ĐỂ BẮN"
     },
     en:{
       tt_name:"Purple Meteor",
-      title:"AstroQ — Space Defender", back:"Arcade", to_hub:"Back to Arcade", home_btn:"Navigation Hub",
+      title:"AstroQ — Space Defender", back:"Training Simulator", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
       hull:"Hull", score_lbl:"Score", mined_lbl:"Collected", held_lbl:"Held for", best_lbl:"Best", unit_s:"s",
       start_title:"Space Defender",
       how1:"🎯 <b>Aim</b>: move the mouse around — the cannon spins a full 360° to follow it (keyboard: <kbd>◀</kbd> <kbd>▶</kbd>).",
@@ -277,6 +320,12 @@
       how4:"💜 <b>Purple Meteors</b>: +"+TYPES.purple.score+" points & +1 "+TT+" to your run pouch.",
       how5:"⭐ <b>Gold meteors</b>: open a quiz — get it right for +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Anything that rams the Station at the centre costs you hull. Hull gone = game over.",
+      how7:"⚡ <b>EMP blast</b>: take down "+CONFIG.empNeed+" objects to charge it → hit the ⚡ button (or the <kbd>E</kbd> key) to <b>wipe the whole field</b>.",
+      how8:"🔧 <b>The cannon upgrades itself</b> as you score: "+CONFIG.guns[1].at+" points → twin shot, "+CONFIG.guns[2].at+" points → triple shot and faster fire.",
+      gun_lbl:"Gun", emp_aria:"EMP blast",
+      gun_up:"GUN LEVEL {n} · {s}",
+      gun1:"Single shot", gun2:"Twin shot, faster", gun3:"Triple shot, fastest",
+      emp_go:"⚡ EMP BLAST — field wiped!",
       cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Start", over_title:"Station destroyed!",
       again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
@@ -288,7 +337,7 @@
       reward_toast:"+{n} {tt} added!", paid_lbl:"Added {n} {tt} to your wallet",
       paid_none:"No Purple Meteors collected this run",
       newbest:"🏆 New best!",
-      pause_title:"Paused", pause_body:"Continue playing or return to the arcade?",
+      pause_title:"Paused", pause_body:"Continue playing or return to the Training Simulator?",
       resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
       aim_hint:"MOVE MOUSE TO AIM · HOLD CLICK/SPACE TO FIRE"
     }
@@ -342,6 +391,13 @@
       boom :function(){ beep(170,0.14,"sawtooth",0.045); beep(95,0.18,"sawtooth",0.04,0.05); },
       gem  :function(){ beep(880,0.06,"triangle",0.05); beep(1320,0.09,"triangle",0.045,0.05); },
       gold :function(){ beep(880,0.08,"triangle",0.05); beep(1174,0.1,"triangle",0.05,0.08); },
+      /* Xung kích EMP: một tiếng trầm dài + hai nốt cao — nghe ra "một cú lớn",
+         khác hẳn tiếng bắn thường. */
+      emp  :function(){ beep(70,0.42,"sawtooth",0.06); beep(180,0.3,"triangle",0.05,0.02);
+                        beep(1320,0.18,"triangle",0.04,0.06); },
+      /* Nâng cấp pháo: ba nốt đi LÊN — nghe ra là "được thêm", không phải "bị trừ" */
+      upgrade:function(){ beep(587,0.07,"square",0.045); beep(784,0.07,"square",0.045,0.07);
+                          beep(1046,0.13,"square",0.05,0.14); },
       hurt :function(){ beep(180,0.2,"sawtooth",0.06); beep(110,0.26,"sawtooth",0.055,0.08); },
       heal :function(){ beep(660,0.09,"triangle",0.045); beep(990,0.12,"triangle",0.04,0.09); },
       start:function(){ beep(440,0.08,"square",0.04); beep(660,0.1,"square",0.04,0.08); },
@@ -405,7 +461,44 @@
   var shake=0, flash=0, dieT=0, quizIdx=0, radar=0;
   var pointerX=CX, pointerY=CY-120, pointerIn=false;
   var hudCache={}, lastPaid=0;
+  /* Nâng cấp pháo + Xung kích EMP (thêm 08/08/2026 — xem `guns`/`empNeed` ở CONFIG) */
+  var foeSeq=0;              // số hiệu tăng dần cho mỗi vật thể (bề mặt cho bộ kiểm)
+  var gunIdx=0;              // cấp pháo hiện tại (chỉ số trong CONFIG.guns)
+  var empCharge=0;           // số vật thể đã hạ kể từ lần dùng EMP gần nhất
+  var wave=null;             // vòng sóng EMP đang lan: { r } hoặc null
   var best=0; try{ best=parseInt(localStorage.getItem(BEST_KEY)||"0",10)||0; }catch(e){}
+
+  /* ===== Pháo ===== */
+  function gunAt(sc){
+    var k=0, G=CONFIG.guns;
+    for(var i=0;i<G.length;i++) if(sc >= G[i].at) k=i;
+    return k;
+  }
+  function gun(){ return CONFIG.guns[gunIdx]; }
+  /* Câu mô tả từng cấp pháo.
+     ⚠️ BA KHOÁ VIẾT THẲNG, KHÔNG ghép `t("gun"+n)`. Phép kiểm i18n quét `t("khoá")`
+        dạng chữ nên ghép động là ba khoá này bị báo *"khai mà không dùng"* — cùng bài
+        học đã ghi cho `s1_hit1/2/3` (mission-earth) và `cat_*` (codex). */
+  function gunText(n){
+    if(n===1) return t("gun1");
+    if(n===2) return t("gun2");
+    return t("gun3");
+  }
+  function empReady(){ return empCharge >= CONFIG.empNeed; }
+
+  /* ===== Xung kích EMP =====
+     ⚠️ CHỈ NẠP KHI ĐANG CHƠI và chỉ nổ khi đã đầy. Cho bấm lúc chưa đầy rồi "không
+        có gì xảy ra" là một cái nút nói dối; nút bị vô hiệu + có lời nhắc thì trẻ
+        biết mình cần làm gì để có nó. */
+  function fireEmp(){
+    if(state!=="play" || !empReady() || wave) return;
+    empCharge=0;
+    wave={ r:CONFIG.stationR };
+    SFX.emp();
+    if(!REDUCE){ shake=Math.min(22,shake+14); flash=Math.min(1,flash+0.55); }
+    toast(t("emp_go"));
+    paintHud();
+  }
 
   function initStars(){
     stars=[];
@@ -439,6 +532,9 @@
     var b=$("btn-pause");
     b.classList.toggle("is-hidden", !(state==="play"||state==="paused"));
     b.classList.toggle("off", state==="paused");
+    /* Nút EMP chỉ có nghĩa khi đang chơi — ở màn brief / bảng kết quả / câu đố thì
+       bấm nó chẳng làm gì, đúng lý do nút Pause cũng tự ẩn. */
+    $("btn-emp").classList.toggle("is-hidden", state!=="play" && state!=="paused");
   }
 
   /* ===== Bắt đầu / kết thúc lượt ===== */
@@ -453,6 +549,7 @@
     Economy.spend("defender"); paintBalance(); bumpGem();
     bullets=[]; foes=[]; parts=[];
     hull=CONFIG.hullStart; score=0; meteors=0; elapsed=0;
+    gunIdx=0; empCharge=0; wave=null;
     spawnT=0.6; goldT=CONFIG.quizCooldown*0.5; fireCd=0; firing=false;
     shake=0; flash=0; dieT=0; aim=-Math.PI/2;
     hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause"); hideOv("ov-quiz");
@@ -537,6 +634,16 @@
       wrap.classList.toggle("low", h<=30);
       hudCache.h=h;
     }
+    var gl=t("gun_lbl")+" "+(gunIdx+1);
+    if(hudCache.g!==gl){ $("gunlvl").textContent=gl; hudCache.g=gl; }
+    var pc=Math.min(100, Math.round(empCharge/CONFIG.empNeed*100));
+    if(hudCache.e!==pc){
+      $("emp-fill").style.width = pc+"%";           // giá trị động → inline là đúng
+      var eb=$("btn-emp");
+      eb.classList.toggle("ready", pc>=100);
+      eb.disabled = pc<100;
+      hudCache.e=pc;
+    }
   }
 
   /* ===== Sinh vật thể tấn công =====
@@ -562,6 +669,7 @@
     /* Hướng bay: dồn thẳng vào tâm */
     var dx=CX-x, dy=CY-y, d=Math.hypot(dx,dy)||1;
     foes.push({
+      n:++foeSeq,                     // số hiệu: bề mặt cho bộ kiểm, xem window.__dbg
       key:key, hp:T.hp, r:T.r, x:x, y:y,
       vx:dx/d*sp, vy:dy/d*sp,
       rot:Math.random()*TAU, spin:(Math.random()-0.5)*2.2, ph:Math.random()*TAU,
@@ -570,11 +678,17 @@
     if(key==="gold") goldT=CONFIG.quizCooldown;
   }
 
-  /* ===== Bắn ===== */
+  /* ===== Bắn =====
+     Số tia và độ loe do CẤP PHÁO quyết (xem `CONFIG.guns`). Các tia đều xuất phát
+     từ MIỆNG NÒNG, không phải từ tâm Trạm — mũi tàu chính là nòng. */
   function shoot(){
-    var md=muzzleDist();
+    var md=muzzleDist(), g=gun();
     var mx=CX+Math.cos(aim)*md, my=CY+Math.sin(aim)*md;
-    bullets.push({ x:mx, y:my, vx:Math.cos(aim)*CONFIG.bulletSpeed, vy:Math.sin(aim)*CONFIG.bulletSpeed });
+    for(var k=0;k<g.shots;k++){
+      var a=aim + (k-(g.shots-1)/2)*g.spread;
+      bullets.push({ x:mx, y:my,
+                     vx:Math.cos(a)*CONFIG.bulletSpeed, vy:Math.sin(a)*CONFIG.bulletSpeed });
+    }
     muzzle=0.07; SFX.shoot();
   }
 
@@ -660,9 +774,28 @@
     if(aimKeyL) aim-=CONFIG.aimKeySpeed*dt;
     if(aimKeyR) aim+=CONFIG.aimKeySpeed*dt;
 
+    /* --- nâng cấp pháo: lên cấp thì NÓI RA (đổi lặng lẽ thì trẻ không biết mình
+           vừa được gì, và cái được sẽ không thành động lực bắn tiếp) --- */
+    var gk=gunAt(score);
+    if(gk!==gunIdx){
+      gunIdx=gk; SFX.upgrade();
+      toast(t("gun_up").replace("{n}", gk+1).replace("{s}", gunText(gk+1)));
+      paintHud();
+    }
+
     /* --- bắn liên tục --- */
     fireCd-=dt;
-    if(firing && fireCd<=0){ shoot(); fireCd=CONFIG.fireInterval; }
+    if(firing && fireCd<=0){ shoot(); fireCd=gun().interval; }
+
+    /* --- vòng sóng EMP: lan ra, quét sạch mọi thứ nó chạm tới --- */
+    if(wave){
+      wave.r += CONFIG.empSpeed*dt;
+      for(var q=foes.length-1;q>=0;q--){
+        var fw=foes[q], wdx=fw.x-CX, wdy=fw.y-CY;
+        if(Math.hypot(wdx,wdy) <= wave.r + fw.r) killFoe(q, fw, true);
+      }
+      if(wave.r >= CONFIG.empMax) wave=null;
+    }
 
     /* --- sinh vật thể --- */
     spawnT-=dt;
@@ -717,17 +850,31 @@
     paintHud();
   }
 
-  /* Vật thể bị hạ: cộng điểm / Thiên thạch tím, hoặc mở câu đố nếu là thạch vàng */
-  function killFoe(index, f){
+  /**
+   * Vật thể bị hạ: cộng điểm / Thiên thạch tím, hoặc mở câu đố nếu là thạch vàng.
+   * `byWave` = bị vòng sóng EMP quét, KHÔNG phải bị bắn.
+   *
+   * ⚠️ EMP KHÔNG MỞ CÂU ĐỐ. Một cú EMP có thể quét 2–3 thạch vàng cùng lúc, mà
+   *    `openQuiz()` đổi hẳn trạng thái sang "quiz" — mở liên tiếp là câu đố chồng
+   *    câu đố và vòng sóng thì vẫn đang lan trong lúc game đã dừng. Đổi lại thạch
+   *    vàng bị EMP quét vẫn cho điểm, chỉ mất phần thưởng câu đố; đó là cái giá hợp
+   *    lý của việc dùng nút "nổ sạch".
+   * ⚠️ EMP CŨNG KHÔNG NẠP LẠI CHÍNH NÓ: nạp thêm khi bị sóng quét thì một cú EMP
+   *    quét 14 vật thể là nạp đầy ngay, thành ra bấm được vô hạn.
+   */
+  function killFoe(index, f, byWave){
     var T=TYPES[f.key];
     foes.splice(index,1);
     score+=T.score;
+    if(!byWave && !empReady()){ empCharge++; paintHud(); }
     if(f.key==="purple"){
       meteors+=T.tt;
       SFX.gem(); burst(f.x,f.y,"#c084fc",REDUCE?7:18,210);
     } else if(f.key==="gold"){
       SFX.gold(); burst(f.x,f.y,"#ffd166",REDUCE?8:20,200);
-      paintHud(); openQuiz(); return;
+      paintHud();
+      if(!byWave) openQuiz();
+      return;
     } else if(f.key==="junk"){
       SFX.boom(); burst(f.x,f.y,"#ff8a8a",REDUCE?6:15,200);
     } else {
@@ -774,6 +921,7 @@
     drawPerimeter();
     for(var i=0;i<foes.length;i++) drawEnemy(foes[i]);
     drawBullets();
+    if(wave) drawWave();
     if(state!=="over") drawStation();
     drawParts();
 
@@ -793,6 +941,26 @@
       ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
     }
     ctx.globalAlpha=1;
+  }
+
+  /* Vòng sóng Xung kích EMP đang lan ra.
+     ⚠️ KHÔNG dùng `shadowBlur` — luật cũ của cả 3 mini-game (blur mỗi khung rất đắt).
+        Hào quang làm bằng gradient toả + một nét sáng ở đúng mép sóng, và vẽ bằng
+        `"lighter"` để nó CỘNG vào cảnh chứ không che mất đá đang nổ phía sau. */
+  function drawWave(){
+    var r=wave.r, k=Math.max(0, 1 - r/CONFIG.empMax);   // càng ra xa càng nhạt
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    var g=ctx.createRadialGradient(CX,CY,Math.max(1,r*0.72),CX,CY,r);
+    g.addColorStop(0,"rgba(56,189,248,0)");
+    g.addColorStop(0.72,"rgba(56,189,248,"+(0.10*k).toFixed(3)+")");
+    g.addColorStop(1,"rgba(191,240,255,"+(0.34*k).toFixed(3)+")");
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(CX,CY,r,0,TAU); ctx.fill();
+    ctx.strokeStyle="rgba(214,247,255,"+(0.85*k).toFixed(3)+")";
+    ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.arc(CX,CY,r,0,TAU); ctx.stroke();
+    ctx.restore();
   }
 
   /* Vòng cảnh giới + tia radar quét — nhắc người chơi đây là phòng thủ 360° */
@@ -1129,6 +1297,9 @@
     if(tag==="BUTTON"||tag==="A"||tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA") return;
     if(k==="p"){ togglePause(); return; }
     if(k==="m"){ toggleSfx(); return; }
+    /* E = Xung kích EMP. Cố ý KHÔNG dùng Shift: Shift-click là "mở cửa sổ mới" của
+       trình duyệt, và dự án đã ghi luật tôn trọng mọi cách mở của trình duyệt. */
+    if(k==="e"){ fireEmp(); return; }
     if(k==="arrowleft"||k==="a"){ aimKeyL=true; e.preventDefault(); }
     if(k==="arrowright"||k==="d"){ aimKeyR=true; e.preventDefault(); }
     if(k===" "||k==="spacebar"||k==="enter"){
@@ -1150,6 +1321,7 @@
   /* ===== Nút HUD ===== */
   function toggleSfx(){ $("btn-sfx").classList.toggle("off", SFX.toggle()); }
   /* blur() sau khi bấm: nếu nút còn được focus thì Space sẽ bấm lại nút đó thay vì bắn */
+  $("btn-emp").addEventListener("click", function(){ this.blur(); fireEmp(); });
   $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
   $("btn-sfx").addEventListener("click", function(){ this.blur(); toggleSfx(); });
 
@@ -1176,6 +1348,32 @@
   fit(); initStars(); syncBtns();
   $("btn-sfx").classList.toggle("off", SFX.isMuted());
   applyLang(LANG);
+
+  /* Bề mặt điều khiển cho bộ kiểm tự động (`scratchpad/shoot_defender.py`).
+     CHỈ để ĐỌC trạng thái và nạp sẵn EMP — KHÔNG cấp điểm, không cấp thưởng: thưởng
+     vẫn do server quyết. Nếu không có nó thì phép kiểm "EMP nổ sạch sân" phải ngồi
+     bắn hạ 14 vật thể bằng autopilot rồi mới bấm được — một phép kiểm dài và chập
+     chờn, mà cái cần đo chỉ là *nổ rồi thì sân có sạch không*.
+     Cùng khuôn `window.__mission` của mission-earth.html. */
+  window.__dbg = {
+    get foes()  { return foes.length; },
+    /* Số hiệu từng vật thể đang trong sân. Phép kiểm "EMP nổ sạch sân" PHẢI hỏi
+       bằng số hiệu, không hỏi bằng `foes.length === 0`: bộ sinh vẫn chạy trong lúc
+       sóng lan (0,5 giây) nên luôn có vật thể MỚI, và đếm số lượng thì phép kiểm
+       báo hỏng trong khi cú nổ đã làm đúng việc của nó. */
+    get serials() { return foes.map(function(f){ return f.n; }); },
+    get gun()   { return gunIdx; },
+    get emp()   { return empCharge; },
+    get wave()  { return wave ? wave.r : -1; },
+    get state() { return state; },
+    /** Nạp đầy EMP để đo cú nổ. KHÔNG nổ hộ — phép kiểm phải tự bấm như trẻ. */
+    chargeEmp: function(){ empCharge = CONFIG.empNeed; paintHud(); return empCharge; },
+    /** Gieo thêm vật thể để có cái mà nổ (dùng đúng đường sinh của game). */
+    spawn: function(n){ for(var i=0;i<(n|0);i++) spawnFoe(); return foes.length; },
+    /** Đặt điểm để đo cú lên cấp pháo — không cộng vào ví, không đụng thưởng. */
+    setScore: function(v){ score = Math.max(0, v|0); paintHud(); return score; }
+  };
+
   requestAnimationFrame(frame);
 })();
 </script>

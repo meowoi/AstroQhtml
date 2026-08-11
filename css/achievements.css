@@ -25,6 +25,77 @@
 .gchip .ic{font-size:14px;line-height:1;}
 .gchip b{font-family:var(--font-display);color:#fff;}
 
+/* Con số ở cuối dòng <h2> của panel (0/8 hành tinh · 10 bậc · …). Trước 08/08/2026
+   đây là `style="flex:none;margin-left:auto"` lặp ở 2 chỗ — inline style tĩnh là
+   trái quy tắc 1 mục 2 của CLAUDE.md, và chỗ thứ ba sắp thêm vào. */
+.h2-count{flex:none;margin-left:auto;}
+
+/* ============ LỘ TRÌNH HUẤN LUYỆN ============
+   10 bậc × 5 cấp. Ba trạng thái: `done` đã qua · `now` đang ở · `off` chưa tới.
+   ⚠️ KHÔNG dùng `filter:grayscale()` cho bậc chưa tới — trên nền gradient sáng nó
+      cho ra khối xám SÁNG HƠN hàng bình thường, tức hút mắt vào đúng thứ chưa đạt
+      được (bài học đã ghi 3 lần trong CLAUDE.md: nút Mặt Trăng, card HUD "sắp ra
+      mắt", bóng mẫu vật trong khoang khoá). Làm mờ bằng opacity + màu chữ. */
+.ladder{margin-top:26px;}
+.ranks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;
+  counter-reset:rk;}
+.rk{position:relative;display:flex;align-items:center;gap:12px;padding:11px 13px;
+  border-radius:14px;border:1px solid var(--brd);background:rgba(15,23,42,.42);
+  transition:border-color .25s,background .25s,transform .3s var(--jelly);}
+/* `position:relative` là để dấu ✓ của bậc đã qua neo vào mề đay này — không có nó
+   thì dấu neo theo `.rk` và trôi sang giữa hàng. */
+.rk .ic{position:relative;width:36px;height:36px;flex:none;border-radius:11px;
+  display:grid;place-items:center;font-size:18px;line-height:1;
+  border:1px solid var(--brd);background:rgba(8,14,38,.6);}
+.rk .b{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1;}
+.rk .nm{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.25;
+  color:var(--ink-soft);}
+.rk .mt{display:flex;flex-wrap:wrap;gap:5px 12px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);}
+/* Khoảng cấp là thông tin CHÍNH của hàng (trẻ đối chiếu với chip CẤP ở hồ sơ),
+   mốc XP là phụ — nên `.lv` sáng hơn `.xp` một nấc. */
+.rk .lv{color:var(--ink-soft);}
+.rk .xp{color:#a5b4fc;}
+
+/* ĐÃ QUA — xanh dịu, có dấu ✓ ở mề đay. Vẫn đọc rõ (đây là thành tích, không phải
+   thứ cần làm mờ), nhưng nhạt hơn hàng "đang ở" để mắt tìm ra chỗ mình đứng. */
+.rk.done{border-color:rgba(74,222,128,.34);background:rgba(10,32,24,.4);}
+.rk.done .nm{color:#c9f5dd;}
+.rk.done .ic{border-color:rgba(74,222,128,.5);background:rgba(10,40,28,.7);}
+.rk.done .ic::after{content:"✓";position:absolute;top:-5px;right:-5px;
+  font-family:var(--font-mono);font-size:10px;line-height:1;color:var(--green);
+  padding:2px 3px;border-radius:999px;background:rgba(6,12,28,.92);
+  text-shadow:0 0 6px rgba(74,222,128,.9);}
+
+/* ĐANG Ở — bậc của người xem. Đây là hàng phải nổi nhất cả bảng. */
+.rk.now{border-color:rgba(56,189,248,.62);background:rgba(12,32,58,.62);
+  box-shadow:0 0 30px -10px rgba(56,189,248,.72);}
+.rk.now .nm{color:#fff;font-size:15.5px;}
+.rk.now .ic{border-color:rgba(56,189,248,.7);font-size:20px;
+  background:radial-gradient(circle at 40% 30%, rgba(56,189,248,.42), rgba(143,123,255,.16) 70%, transparent);
+  box-shadow:inset 0 0 16px -5px rgba(56,189,248,.95);}
+.rk.now .here{flex:none;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;color:#04060f;padding:5px 10px;border-radius:999px;
+  background:linear-gradient(120deg,var(--cyan),var(--purple));white-space:nowrap;}
+
+/* CHƯA TỚI — mờ ĐÚNG MỘT LỚP.
+   ⚠️ Bản đầu còn `.rk.off .ic{opacity:.5}` cộng dồn với .62 của hàng, ra 0,31 —
+      đo trên ảnh chụp thì các biểu tượng 🧭🗺️🔬⚓👑 gần như không nhìn ra hình gì.
+      Mà biểu tượng của bậc phía trước CHÍNH LÀ thứ tạo động lực ("mình sẽ thành
+      Thuyền Trưởng ⚓"); làm mờ nó thêm một lớp là làm yếu đúng chỗ nên mạnh.
+      Chữ đã nhạt sẵn nên hàng vẫn phân biệt rõ với `now`/`done`. */
+.rk.off{opacity:.62;}
+
+.ld-note{margin:12px 0 0;font-size:12.5px;line-height:1.55;color:var(--ink-faint);}
+
+/* Điện thoại: nhãn "Bạn đang ở đây" xuống hàng riêng thay vì bóp cột tên còn vài
+   ký tự (cột chữ ở 390px chỉ còn ~200px sau icon + nhãn). */
+@media (max-width:520px){
+  .rk{flex-wrap:wrap;}
+  .rk .b{flex-basis:calc(100% - 48px);}
+  .rk.now .here{margin-left:48px;}
+}
+
 /* Hàng bộ lọc (.filters + .lbl) đã chuyển sang css/page-shell.css ngày 29/07/2026
    vì specimen-vault.html dùng đúng hàng đó — copy sang trang thứ hai là trái quy
    tắc 2 mục 6 của CLAUDE.md. */

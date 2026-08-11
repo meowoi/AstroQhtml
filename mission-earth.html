@@ -645,7 +645,11 @@ const I18N = {
     win_awards: '[ 🏆 Xem Kho Thành Tích ]',
     win_home: '[ 🚀 Về Trung Tâm Điều Hướng ]',
     win_auto: 'Tự về sau {n} giây — chạm vào đâu cũng dừng đếm.',
-    saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.'
+    saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.',
+    /* ⚠️ PHẢI NÓI RA RẰNG ĐANG CHƠI TIẾP. Mở nhiệm vụ mà thấy bước 4/7 chứ không phải
+       bước 1 thì trẻ cần biết vì sao — im lặng thì nó tưởng mình bị bỏ mất mấy bước
+       đầu. Câu này nói cả bước thứ mấy để đối chiếu được với dãy chấm trên đầu trang. */
+    resumed: 'Chơi tiếp từ bước {n}/{t} — những bước trước bạn đã làm xong rồi!'
   },
   en: {
     title: 'AstroQ — Mission 01: The Blue Planet',
@@ -796,7 +800,8 @@ const I18N = {
     win_awards: '[ 🏆 Open Trophy Hold ]',
     win_home: '[ 🚀 Back to Navigation Hub ]',
     win_auto: 'Returning automatically in {n}s — touch anything to stay.',
-    saved_off: 'Not signed in — rewards are queued and will sync later.'
+    saved_off: 'Not signed in — rewards are queued and will sync later.',
+    resumed: 'Picking up at step {n}/{t} — you already finished the earlier ones!'
   }
 };
 let LANG = AstroQ.getLang();
@@ -2656,6 +2661,40 @@ applyLang(LANG);
 AstroQ.initLang(applyLang);
 RUN.paint();
 
+/* ───────────────── VÀO CHƠI TIẾP TỪ BƯỚC CÒN DỞ ─────────────────
+   Vào từ Sảnh Nhiệm Vụ (nút "Tiếp tục nhiệm vụ") hay từ modal cổng lộ trình ở
+   `explorer.html` thì phải mở đúng bước đang dở, KHÔNG bắt chơi lại từ bước ①.
+
+   ⚠️ ĐỌC CACHE, KHÔNG GỌI API — và đó là bắt buộc, không phải tối ưu: trang này
+      **cố ý không nạp** `js/firebase-auth.js` (`check_pages` mục [3b] canh chuyện
+      đó) nên nó KHÔNG có token để hỏi `GET /me/missions`. Trang có token
+      (`missions.html`, `dashboard.html`) ghi cache; ở đây chỉ đọc. Đúng khuôn
+      `astroq-route-gate` mà `explorer.html` đang dùng. Luật vẫn ở server: cache chỉ
+      chứa **id bước**, không chứa một con số thưởng nào.
+
+   ⚠️ CHƯA ĐỌC ĐƯỢC SERVER LẦN NÀO (`known:false`) → MỞ TỪ BƯỚC ①. Đoán bằng bản
+      sao trong máy là chuyện dự án đã cố ý không làm cho nhiệm vụ; thà chơi lại một
+      bước còn hơn bỏ qua một bước trẻ chưa từng học.
+   ⚠️ Xong cả nhiệm vụ → cũng từ bước ①: đó là lượt "Chơi lại" mà `missions.html`
+      đang mời (nhãn `replay`), không phải lượt tiếp tục.
+   `?restart=1` để xem lại cả nhiệm vụ từ đầu mà không phải xoá tiến độ thật. */
+function resumeSteps() {
+  try {
+    if (new URLSearchParams(location.search).get('restart') === '1') return;
+    if (!window.AstroQProgress || !AstroQProgress.missionSteps) return;
+    const p = AstroQProgress.missionSteps('earth');
+    if (!p.known || p.complete) return;
+    const at = RUN.resume(p.done);
+    if (at > 0) {
+      toast(t('resumed').replace('{n}', at + 1).replace('{t}', RUN.total));
+    }
+  } catch (e) {
+    /* Cache hỏng / localStorage bị chặn → mở từ bước ①. Không được để việc đọc một
+       bản sao tuỳ chọn làm vỡ cả nhiệm vụ. */
+    console.warn('[AstroQ] Không đọc được tiến độ nhiệm vụ:', e && e.message);
+  }
+}
+
 /* ⚠️ CHỈ CÒN MỘT CẢNH: 2D. three.js và `js/earth3d.js` đã bỏ hẳn ngày 31/07/2026,
    sau khi bản 2D đạt 154/154 trên ĐÚNG bộ kiểm thử của bản 3D — và so cả danh sách
    nhãn: không phép kiểm nào chỉ có ở một bên. Cờ `?scene=2d|3d` là giàn giáo của
@@ -2764,7 +2803,8 @@ RUN.paint();
     world
   };
 
-  await steps.scan.enter();
+  resumeSteps();
+  await RUN.enter();
 })();
 </script>
 </body>

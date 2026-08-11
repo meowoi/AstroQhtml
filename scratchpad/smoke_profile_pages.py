@@ -59,7 +59,13 @@ BADGES = [
     {"id": "level-20", "group": "level", "goal": 20, "current": 7, "earned": False,
      "earnedAt": None},
 ]
+# `levels` = bang moc XP cua CA thang cap, server them tu 08/08/2026 cho khoi
+# "Lo trinh huan luyen" o achievements.html. Giu o day de ban gia khop response
+# THAT — mot ban gia mo ta response da loi thoi thi no dang do mot thu khong con
+# ton tai. Bo do rieng cho khoi lo trinh la scratchpad/smoke_ladder.py.
+_XP_LADDER = [0 if n == 1 else 100 * (n - 1) * n // 2 for n in range(1, 51)]
 ACH = {"level": SERVER["level"], "progress": SERVER["progress"], "newBadges": [],
+       "levels": {"maxLevel": 50, "xp": _XP_LADDER},
        "achievements": {"summary": {"earned": 6, "total": len(BADGES)}, "badges": BADGES}}
 
 
@@ -514,7 +520,7 @@ def main():
         check("Bam avatar -> profile.html",
               page.get_attribute(".user", "href") == "profile.html")
         check("Co nut mo Kho Thanh Tich",
-              page.get_attribute(".sh-link", "href") == "achievements.html")
+              page.get_attribute(".ptile.pt-awards", "href") == "achievements.html")
         check("The MOD-02 doi ten thanh Khu Huan Luyen",
               "Khu Huấn Luyện" in txt(page, ".card--game"), txt(page, ".card--game")[:60])
         page.screenshot(path="scratchpad/p04-dashboard.png", full_page=True)

@@ -2,8 +2,15 @@
    Khung chung (header, HUD, overlay, nut, toast) o css/game-shell.css.
    Nap: css/common.css -> css/game-shell.css -> css/game-dodge.css */
 
-/* Sân bay ngang: tỉ lệ 800×500 cố định → khe hẹp so với chiều cao sân luôn như nhau */
+/* Sân bay ngang: tỉ lệ 800×500 cố định → làn đá so với chiều cao sân luôn như nhau */
 .field{max-width:800px;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19,#1e1b4b);}
+
+/* Chip CẤP: tông hổ phách để tách khỏi 4 chip số liệu (điểm/quãng đường/tt/kỷ lục)
+   — nó nói "bạn đang ở bậc nào", không phải một con số đang chạy.
+   ⚠️ Nhãn nằm TRONG `.v` (JS ghi "Cấp 3"), không dùng `.k`: `css/game-shell.css`
+      ẩn mọi `.chip .k` ở màn ≤560px, và một chip chỉ còn số "3" thì vô nghĩa. */
+.chip.lvl{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.42);}
+.chip.lvl .v{color:#fde68a;font-size:13px;letter-spacing:.04em;}
 
 /* 3 ngôi sao chấm điểm ở bảng kết quả */
 .stars{display:flex;justify-content:center;gap:8px;margin:14px 0 4px;}

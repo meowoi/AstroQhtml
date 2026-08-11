@@ -40,12 +40,74 @@
   var LS_QUEUE = "astroq-progress-queue";  // việc chưa gửi được
   var MAX_QUEUE = 40;                      // đủ cho vài ngày offline, không phình vô hạn
 
+  /* ⚠️ DANH SÁCH BƯỚC ĐÃ XONG — CHỈ ĐỂ BIẾT VÀO CHƠI TIẾP TỪ ĐÂU, KHÔNG PHẢI THƯỞNG.
+     Điều 1 ở đầu file vẫn nguyên: ở đây **không** lưu meteors/xp/huy hiệu nào, chỉ
+     lưu id bước + tổng số bước + cờ "xong cả nhiệm vụ", và chỉ ghi từ CÂU TRẢ LỜI
+     CỦA SERVER (không bao giờ ghi từ việc còn nằm trong hàng chờ). Nên nó không thể
+     làm trang hiện một phần thưởng chưa có thật — đúng lý do khiến `bumpLocal()` cố
+     ý bỏ qua `type:"mission"`.
+
+     ⚠️ VÌ SAO PHẢI CÓ, KHÔNG PHẢI TỐI ƯU: `mission-earth.html` **cố ý không nạp**
+     `js/firebase-auth.js` (check_pages mục [4]) nên tự nó KHÔNG có token để hỏi
+     `GET /me/missions` — mà không hỏi được thì nó luôn mở lại từ bước 1, kể cả khi
+     `missions.html` vừa hiện đúng chữ "Tiếp tục nhiệm vụ". Cầu nối: trang CÓ token
+     (dashboard, missions) ghi cache; trang nhiệm vụ đọc. Đúng khuôn `astroq-route-gate`
+     đã dùng cho `explorer.html`. */
+  var LS_MSTEPS = "astroq-mission-steps";
+
   /** Mã lượt duy nhất, sinh MỘT LẦN lúc tạo việc (xem điều 4 ở đầu file). */
   function newOpId() {
     try {
       if (global.crypto && global.crypto.randomUUID) return global.crypto.randomUUID();
     } catch (e) {}
     return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  /* ---------------- Bước nhiệm vụ đã xong (xem LS_MSTEPS) ---------------- */
+
+  /** Ai đang dùng máy này. Rỗng = chưa đăng nhập. */
+  function uidNow() {
+    try {
+      var u = global.AstroQ && global.AstroQ.getUser ? global.AstroQ.getUser() : null;
+      return u && u.uid ? String(u.uid) : "";
+    } catch (e) { return ""; }
+  }
+
+  /**
+   * Rót khối `missions` của một câu trả lời server vào cache. Trả true nếu ghi được.
+   * Gọi ở MỌI chỗ nhận được `data.missions` (`missions()`, báo bước xong, gửi lại
+   * hàng chờ) — thiếu một chỗ là cache cũ hơn server và trẻ phải chơi lại một bước
+   * nó vừa làm.
+   *
+   * ⚠️ GỘP theo từng nhiệm vụ, không ghi đè cả bảng: `POST /me/missions/step` chỉ
+   *    trả về khối của nhiệm vụ vừa báo, ghi đè cả bảng là xoá tiến độ nhiệm vụ khác.
+   * ⚠️ ĐÓNG DẤU `uid`: hai đứa trẻ dùng chung một máy thì tiến độ của đứa trước không
+   *    được đưa đứa sau vào chơi tiếp giữa nhiệm vụ.
+   */
+  function absorbMissions(data) {
+    var ms = data && data.missions;
+    if (!ms || typeof ms !== "object") return false;
+    var uid = uidNow();
+    var box = read(LS_MSTEPS, null);
+    if (!box || typeof box !== "object" || box.uid !== uid || typeof box.m !== "object") {
+      box = { uid: uid, m: {} };
+    }
+    var got = false;
+    for (var k in ms) {
+      if (!Object.prototype.hasOwnProperty.call(ms, k)) continue;
+      var m = ms[k];
+      // Đòi `steps` là mảng: server cũ (hoặc dữ liệu cắt cụt) thì thà không ghi gì
+      // còn hơn ghi `total:0` rồi trang nhiệm vụ tưởng nhiệm vụ không có bước nào.
+      if (!m || !Array.isArray(m.steps)) continue;
+      box.m[k] = {
+        done: (Array.isArray(m.doneSteps) ? m.doneSteps : []).map(String),
+        total: m.steps.length,
+        complete: !!m.done
+      };
+      got = true;
+    }
+    if (got) write(LS_MSTEPS, box);
+    return got;
   }
 
   /** Số dư ví thật từ server → ghi đè cache của economy.js. */
@@ -175,6 +237,11 @@
             return false;
           }
           syncWallet(r.data);
+          /* Bước nhiệm vụ chơi lúc mất mạng / ở trang không có token được gửi ở ĐÂY,
+             nên cache "đã xong bước nào" cũng phải cập nhật ở đây. Chỉ dựa vào
+             `missions()` thì có một khe: dashboard vừa gọi `/me/missions` xong TRƯỚC
+             khi hàng chờ gửi hết → cache thiếu đúng mấy bước trẻ vừa chơi. */
+          absorbMissions(r.data);
           i++;
           return step();
         });
@@ -192,6 +259,7 @@
       return send(a, ev).then(function (r) {
         if (!r || !r.ok) { enqueue(ev); return { ok: false, reason: (r && r.reason) || "http", queued: true }; }
         syncWallet(r.data);
+        absorbMissions(r.data);   // chỉ có tác dụng với ev.type === "mission"
         return r;
       });
     }).catch(function () {
@@ -235,11 +303,15 @@
   var AstroQProgress = {
     /**
      * Xong một lượt Quiz.
-     * @param {{correct:number,total:number,meteors:number,terms?:string[]}} o
+     * @param {{correct:number,total:number,meteors:number,terms?:string[],wrong?:string[]}} o
      *   `terms` = khoá thuật ngữ ĐÃ TRẢ LỜI ĐÚNG (khoá `term` của
-     *   js/quiz-questions.js). Đây là DÂY NỐI để Sổ Tay Thuật Ngữ biết thẻ nào đã
+     *   js/quiz-index.js). Đây là DÂY NỐI để Sổ Tay Thuật Ngữ biết thẻ nào đã
      *   giải mã — thiếu nó thì mọi thẻ khoá vĩnh viễn, đúng tình trạng trước
      *   30/07/2026.
+     *
+     *   `wrong` = khoá đã TRẢ LỜI SAI. ⚠️ HAI TRƯỜNG NÀY ĐI HAI ĐƯỜNG KHÁC NHAU ở
+     *   server: `terms` vào `PROGRESS.terms` (mở Sổ Tay) **và** vào nhật ký; `wrong`
+     *   CHỈ vào nhật ký. Gộp chúng lại là giải mã một thẻ bằng một câu trả lời sai.
      */
     quiz: function (o) {
       o = o || {};
@@ -249,6 +321,7 @@
          KHÔNG nhận tập rỗng — server đã chặn nhưng gửi thừa một trường rỗng trong
          mỗi lượt là mời lỗi. */
       if (o.terms && o.terms.length) ev.terms = o.terms.slice();
+      if (o.wrong && o.wrong.length) ev.wrong = o.wrong.slice();
       return report(ev);
     },
     /** Xong một lượt game. `game` là khoá kỷ lục: "dodge" | "defender" | "constellation". */
@@ -326,8 +399,34 @@
     missions: function () {
       return waitAuth(2500).then(function (a) {
         if (!a || !a.getMissions) return { ok: false, reason: "auth" };
-        return a.getMissions();
+        return a.getMissions().then(function (r) {
+          /* Ghi cache "đã xong bước nào" cho trang nhiệm vụ đọc — nó không có token
+             nên không tự hỏi được. Xem khối chú thích ở `LS_MSTEPS`. */
+          if (r && r.ok) absorbMissions(r.data);
+          return r;
+        });
       }).catch(function () { return { ok: false, reason: "error" }; });
+    },
+
+    /**
+     * Bước nào của một nhiệm vụ đã xong, theo lần cuối SERVER trả lời.
+     * → { known, done:string[], total:number, complete:boolean }
+     *
+     * `known:false` = chưa từng đọc được server (chưa đăng nhập / máy sạch) → trang
+     * gọi phải mở nhiệm vụ **từ bước đầu**, đừng đoán. Đây là bản sao chỉ-đọc dùng để
+     * biết vào chơi tiếp từ đâu; nguồn sự thật vẫn là DynamoDB.
+     */
+    missionSteps: function (mission) {
+      var box = read(LS_MSTEPS, null);
+      // Cache của người khác (hoặc của lượt chưa đăng nhập) thì coi như không có.
+      if (!box || typeof box !== "object" || box.uid !== uidNow() || !box.m) {
+        return { known: false, done: [], total: 0, complete: false };
+      }
+      var m = box.m[String(mission || "")];
+      if (!m || !Array.isArray(m.done) || !(m.total > 0)) {
+        return { known: false, done: [], total: 0, complete: false };
+      }
+      return { known: true, done: m.done.slice(), total: m.total | 0, complete: !!m.complete };
     },
 
     /**
@@ -375,9 +474,15 @@
 
     flush: flush,
 
-    /** Xoá bản sao + hàng chờ trong máy (dùng khi đăng xuất / khi thử nghiệm). */
+    /** Xoá bản sao + hàng chờ trong máy (dùng khi đăng xuất / khi thử nghiệm).
+     *  ⚠️ PHẢI xoá cả cache bước nhiệm vụ: giữ lại là người đăng nhập sau ở cùng máy
+     *     được đưa vào chơi tiếp từ tiến độ của người trước. */
     clearLocal: function () {
-      try { localStorage.removeItem(LS_LOCAL); localStorage.removeItem(LS_QUEUE); } catch (e) {}
+      try {
+        localStorage.removeItem(LS_LOCAL);
+        localStorage.removeItem(LS_QUEUE);
+        localStorage.removeItem(LS_MSTEPS);
+      } catch (e) {}
     }
   };
 

@@ -14,7 +14,14 @@ AUTOPILOT = r"""
 () => {
   const cv = document.getElementById('cv'), g = cv.getContext('2d');
   const SX = () => cv.width/800, SY = () => cv.height/500;
-  const isRock = (r,gg,b) => r>46 && gg>52 && Math.abs(r-gg)<32 && b>=gg-14;
+  /* ⚠️ PHAI CHAN NGOI SAO NEN. Sao gan trang (#eaf1ff -> 234,241,255) va sao xa
+     (#c7d6ff) THOA het dieu kien mau cua da (xam-lam nhat). Ban cu song sot voi
+     chuyen do vi `gapAt` doi HON NUA hang la da; ban gop dai cua toi chi doi MOT
+     pixel nen moi ngoi sao chan mot hang -> bot tuong ca man hinh la da, nham vao
+     cho khong ton tai va chet trong 1,8s. Da sang nhat trong gradient la #8291b0
+     (max 176), nen chan o 200 la du rong ma vua loai het sao. */
+  const isRock = (r,gg,b) => r>46 && gg>52 && Math.abs(r-gg)<32 && b>=gg-14
+                             && Math.max(r,gg,b) < 200;
 
   function byteY(){    // tim Byte = HANG co nhieu pixel sang nhat (sao nen chi 1-3 px/hang,
                        // than Byte 20-40 px/hang) -> khong bi sao keo lech nhu khi lay trung binh
@@ -35,26 +42,54 @@ AUTOPILOT = r"""
     for(let y=Math.max(0,py-rad); y<Math.min(cnt.length,py+rad); y++){ sum+=y*cnt[y]; n+=cnt[y]; }
     return (sum/n)/sy;
   }
-  function gapAt(vx){                     // tim khe hep tai cot x=vx (toa do ao)
+  /* Khoang trong DOC rong nhat trong CA MOT DAI x [vx0,vx1] (toa do ao).
+     ⚠️ BAN CU DO TREN MOT LAT x DAY 7px, va do la cach dung cho VAT CAN HINH COT.
+        Tu 08/08/2026 vat can la DA ROI rai lech nhau theo x trong cung mot dot, nen
+        mot lat mong thuong chi cat qua MOT hon da -> no bao "cho nay trong" trong khi
+        lan do bi mot hon khac cua CUNG DOT chan o x lech 40px. Bot vi the nham vao
+        cho khong di qua duoc va song sot chi 3,9-11,2s that thuong. Nay gop ca dai:
+        chieu doc nao bi da chan o BAT KY x nao trong dai thi coi la bi chan. */
+  function gapBand(vx0, vx1){
     const sx=SX(), sy=SY();
-    const x0=Math.round(vx*sx), w=Math.max(2,Math.round(7*sx));
-    if(x0+w>cv.width) return null;
+    const x0=Math.max(0,Math.round(vx0*sx)), x1=Math.min(cv.width,Math.round(vx1*sx));
+    if(x1-x0 < 2) return null;
+    const w=x1-x0;
     const d=g.getImageData(x0,0,w,cv.height).data;
-    const rock=[];
+    const rock=new Uint8Array(cv.height);
+    let any=false;
+    const stepX=Math.max(1,Math.round(3*sx));
     for(let y=0;y<cv.height;y++){
-      let hit=0;
-      for(let x=0;x<w;x++){ const i=(y*w+x)*4; if(isRock(d[i],d[i+1],d[i+2])) hit++; }
-      rock.push(hit > w/2);
+      // Doi >=3 pixel da tren hang: mot pixel don le van co the la sao/nhieu nen,
+      // ma da thi rong 30-78px nen o buoc 3px luon cho hang chuc pixel.
+      let n=0;
+      for(let x=0;x<w;x+=stepX){
+        const i=(y*w+x)*4;
+        if(isRock(d[i],d[i+1],d[i+2])){ if(++n>=3){ rock[y]=1; any=true; break; } }
+      }
     }
-    if(!rock.some(Boolean)) return null;   // khong co cot o day
+    if(!any) return null;
     let best=null, s=-1;
     for(let y=0;y<rock.length;y++){
       if(!rock[y]){ if(s<0) s=y; }
       else { if(s>=0 && (!best || y-s>best[1]-best[0])) best=[s,y]; s=-1; }
     }
     if(s>=0 && (!best || rock.length-s>best[1]-best[0])) best=[s,rock.length];
-    if(!best || best[1]-best[0] < 40) return null;
+    if(!best || (best[1]-best[0])/sy < 34) return null;   // hep hon tau thi bo
     return ((best[0]+best[1])/2)/sy;
+  }
+  /** x ao cua hon da gan nhat con o phia truoc mui tau (null = truoc mat trong tron). */
+  function nextRockX(){
+    const sx=SX();
+    for(let vx=232; vx<=770; vx+=14){
+      const x0=Math.round(vx*sx), w=Math.max(2,Math.round(6*sx));
+      if(x0+w>cv.width) break;
+      const d=g.getImageData(x0,0,w,cv.height).data;
+      let n=0;
+      for(let k=0;k<d.length;k+=4){
+        if(isRock(d[k],d[k+1],d[k+2]) && ++n>=14) return vx;   // 14 px: khong phai nhieu nen
+      }
+    }
+    return null;
   }
 
   function gemAhead(){          // tim vien Thien thach tim gan nhat o phia truoc
@@ -80,9 +115,11 @@ AUTOPILOT = r"""
   function tick(){
     st.frames++;
     const now=performance.now();
-    // Cot GAN NHAT truoc mat moi la thu phai ne. Tim tu trai sang phai.
+    // DOT DA GAN NHAT truoc mat moi la thu phai ne: tim hon da dau tien roi do
+    // khoang trong tren CA DAI rong 120px cua dot do (mot dot rai ~110px theo x).
     let gap=null, gapX=null;
-    for(let vx=248; vx<=760; vx+=28){ const r=gapAt(vx); if(r!=null){ gap=r; gapX=vx; break; } }
+    const rx=nextRockX();
+    if(rx!=null){ gapX=rx; gap=gapBand(rx-12, rx+120); }
     const gem=gemAhead();
     // Chi nham vien tt neu no thuoc DUNG cot gan nhat, khong thi lai lao vao cot truoc no
     if(gem && gapX!=null && Math.abs(gem.x-gapX)<90){ st.target=gem.y; st.gemSeen++; st.src="gem"; st.latch=now+1400; }
@@ -101,8 +138,14 @@ AUTOPILOT = r"""
       // Nhin truoc 0.10s + le 6px: nhin xa hon (0.22s) thi bot luon thay "sap vuot qua"
       // nen khong bao gio ha xuong tram, treo lo lung tren muc tieu ~150px.
       // Giu phim 30ms = mot cu "cham nhe" (~55px), giu lau hon se bay vut ~140px.
-      const pred = y + (st.vy||0)*0.10;
-      if(pred > st.target+6 && now>holdUntil){ key('keydown'); st.taps++; holdUntil=now+30; }
+      /* ⚠️ CHI BAM KHI DANG THAT SU TUT XUONG DUOI DICH, VA CHUA BAY LEN.
+         Ban cu bam theo VI TRI DU DOAN (y + vy*0.10) nen no bam ca khi tau dang o
+         TREN dich ma roi nhanh -> cu bam cong don thanh cu vot ~77px, du de len dung
+         mep tren. `sim_dodge2.py` do duoc dung loi nay: song sot 4,3s -> 19,7s sau
+         khi doi sang luat duoi day. Mot cu bat nhac tau 53px (flapV²/2·gravity). */
+      if(y > st.target+6 && (st.vy||0) > -80 && now>holdUntil){
+        key('keydown'); st.taps++; holdUntil=now+30;
+      }
     }
     if(now>holdUntil) key('keyup');
     if(window.__autoOn) requestAnimationFrame(tick);
@@ -277,7 +320,11 @@ with sync_playwright() as pw:
     print("  ", en); shot(page, "07-over-en.png")
     check("Asteroid Dodge" in en["title"] and "ASTEROID DODGE" in en["tag"].upper(), "tieu de + tag doi sang EN")
     check("Score" in en["k"] and "Distance" in en["k"], "nhan HUD doi sang EN")
-    check(en["hub"] == "Back to Arcade", "nut hub doi sang EN")
+    # ⚠️ Ten khu doi 08/08/2026: "Arcade Bay" -> "Training Simulator" (khop the MOD-02
+    #    o dashboard va bang ten chinh thuc o CLAUDE.md muc 2). Phep kiem cu ghim
+    #    nguyen van "Back to Arcade" nen no bao hong dung luc san pham lam dung —
+    #    cung loai loi "phep kiem bao ve trang thai cu" da ghi nhieu lan trong du an.
+    check(en["hub"] == "Back to Training Simulator", "nut hub doi sang EN")
     # dong thuong do JS sinh -> phai duoc dich lai khi doi ngon ngu giua bang ket qua
     check(not any(ch in en["paid"] for ch in "ạợđếươ") and en["paid"] != "",
           "dong 'da cong vao vi' cung doi sang EN: %r" % en["paid"])

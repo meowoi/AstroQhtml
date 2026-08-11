@@ -27,7 +27,9 @@
        onBalance: paintBalance,        // gọi sau mỗi lần báo bước
        onWin   : showWin               // hết bước cuối
      });
-     RUN.paint();  await RUN.enter();  // vào bước đầu
+     RUN.paint();
+     RUN.resume(doneStepsTuServer);   // TUỲ CHỌN — vào chơi tiếp từ bước còn dở
+     await RUN.enter();               // vào bước đang trỏ tới
 
    MỘT BƯỚC là một object, mọi móc đều TUỲ CHỌN:
      enter()        dựng cảnh + mục tiêu khi vào bước
@@ -118,6 +120,34 @@
       });
     }
 
+    /**
+     * VÀO CHƠI TIẾP: nhận danh sách bước SERVER nói là đã xong, rồi trỏ vào bước
+     * còn dở đầu tiên. Trả về vị trí bước sẽ mở (0 = mở lại từ đầu).
+     * Phải gọi TRƯỚC `enter()`.
+     *
+     * ⚠️ CHỈ NHẬN MỘT ĐOẠN ĐẦU LIỀN MẠCH, và đó không phải chuyện làm cho gọn:
+     *    `finish(id)` thoát ngay nếu `id` đã nằm trong `done` — tức là **không gọi
+     *    `next()`**. Nên nếu đánh dấu một bước NẰM SAU bước đang chơi là đã xong thì
+     *    lúc trẻ chơi tới đó, nhiệm vụ **đứng lại vĩnh viễn**: bước hoàn thành mà
+     *    không có bước kế. Gặp lỗ giữa danh sách (dữ liệu cũ, id bước đã bỏ) thì mở
+     *    lại từ đúng cái lỗ đó — chơi lại một bước đã xong là vô hại (server tính
+     *    một lần), còn kẹt cứng thì không.
+     * ⚠️ Xong HẾT thì trả 0 và KHÔNG đánh dấu gì: đó là lượt "chơi lại", phải đi từ
+     *    bước đầu và dãy chấm phải trắng, không thì trẻ mở ra đã thấy màn tổng kết.
+     */
+    function resume(doneIds) {
+      if (!Array.isArray(doneIds) || !doneIds.length) return idx;
+      var have = {};
+      doneIds.forEach(function (id) { have[String(id)] = true; });
+      var n = 0;
+      while (n < stepIds.length && have[stepIds[n]]) n++;
+      if (n >= stepIds.length) return 0;      // xong cả nhiệm vụ → chơi lại từ đầu
+      done = new Set(stepIds.slice(0, n));
+      idx = n;
+      paint();
+      return idx;
+    }
+
     /** Vào bước đang trỏ tới (gọi một lần lúc mở màn). */
     function enter() {
       var st = current();
@@ -164,6 +194,7 @@
       get total()  { return stepIds.length; },
       current: current,
       paint: paint,
+      resume: resume,
       enter: enter,
       finish: finish,
       next: next,
