@@ -49,6 +49,10 @@
      viết CHO TRẺ EM, đúng độ tuổi 8–15; science.nasa.gov không có trang định
      nghĩa lực hấp dẫn tương đương). */
   var SRC = {
+    nasaWhatIsAi:  { label: "NASA — What is AI? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/what-is-ai-grades-5-8/" },
+    aiHubble:      { label: "NASA Science — AI and Hubble Science", url: "https://science.nasa.gov/mission/hubble/science/ai-hubble-science/" },
+    mitAlgorithms: { label: "MIT Media Lab — AI + Ethics for Middle School", url: "https://www.media.mit.edu/projects/ai-ethics-for-middle-school/overview/" },
+    astrobee:      { label: "NASA — Astrobee", url: "https://www.nasa.gov/astrobee/" },
     stars:    { label: "NASA Science — Stars",            url: "https://science.nasa.gov/universe/stars/" },
     planets:  { label: "NASA Science — About the Planets", url: "https://science.nasa.gov/solar-system/planets/" },
     dwarf:    { label: "NASA Science — Dwarf Planets",    url: "https://science.nasa.gov/dwarf-planets/" },
@@ -396,6 +400,91 @@
             def: "A lunar eclipse happens at full moon, when Earth sits directly between the Sun and the Moon. Earth's shadow falls across the Moon, dimming it and often turning it a deep orange-red. Unlike a solar eclipse, which is visible only along a narrow track, a lunar eclipse can be seen from the whole night side of Earth at once.",
             gr: "Why does the Moon turn red instead of going black? Sunlight bending around the edge of Earth is filtered by our atmosphere, which scatters the blue away and lets the red through. So what you are looking at is every sunrise and every sunset happening on Earth at that moment, all projected onto one moon.",
             dg: ["Sun", "Earth — in between", "Earth's shadow falling on the Moon"] }
+    },
+
+    /* ═══════ ĐỢT AI & ROBOT · 09/08/2026 · 4 thẻ ═══════
+       ⚠️⚠️ ĐÂY LÀ MỞ LẠI QUYẾT ĐỊNH 05/08/2026, có dữ kiện mới.
+       Đề bài vòng 2 ghi *"KHÔNG làm AI · Lượng tử · Lập trình · CNTT ở vòng này"* — lý
+       do khi đó là **thiếu nguồn** (4 thẻ AI/Lượng tử bản nháp không có nguồn nên cố ý
+       không phát hành). Dữ kiện mới: NASA có trang *What is AI?* viết cho học sinh
+       lớp 5–8, và MIT Media Lab có chương trình AI+Đạo đức cho trung học cơ sở — MIT
+       vốn đã là nguồn tin cậy của dự án (`wiki/` dẫn `media.mit.edu`). Nên bốn thẻ này
+       KHÔNG phải nới lỏng luật nguồn; mọi câu đều có `srcQuote` nguyên văn.
+       ⚠️ `term_algorithm` và `term_sensor` NHẬN 5 CÂU LẬP TRÌNH MỒ CÔI của bank
+          (`algorithm` · `sequence` · `loop` · `condition` · `sensor`) — khai từ
+          25/07/2026 mà **không thẻ nào nhận**, tức chưa bao giờ được rút ra hỏi. Vì thế
+          `def`/`gr` của hai thẻ đó phải THẬT SỰ dạy trình tự / vòng lặp / điều kiện /
+          cảm biến — nhận một câu mà thẻ không dạy là để trẻ đọc xong vẫn không có gì
+          để dựa vào (đúng lý do `loop` từng bị để trống ở bài đọc).
+       ⚠️ 5 câu đó CỐ Ý không có `src` (câu khái niệm của bài học, không phải số liệu) —
+          `check_quiz_bank` đã miễn trừ đúng 5 khoá này. Thẻ thì vẫn có `src` tử tế. */
+    {
+      id: "term_ai", cat: "ai", ic: "cx-ai",
+      q: ["ai-what-is", "ai-can-do-what"],
+      src: [SRC.nasaWhatIsAi],
+      vi: { t: "Trí Tuệ Nhân Tạo", an: "Cái máy học được cách nhận ra mọi thứ",
+            sum: "Một loại công nghệ giúp máy có được những khả năng “suy nghĩ” giống con người.",
+            def: "NASA định nghĩa trí tuệ nhân tạo — hay AI — là một loại công nghệ giúp máy móc và máy tính có những khả năng “suy nghĩ” giống con người. Hãy để ý hai chữ “giống”: không phải là con người. Thiết bị dùng AI có thể học từ ngữ và khái niệm, nhận ra vật thể, thấy được các mẫu, hoặc đưa ra dự đoán. AI là một CÁCH LÀM, không phải một cái máy — nên nó nằm được trong rover, trong điện thoại, hay trong một chương trình xử lý ảnh.",
+            gr: "Người ta hay nghĩ AI là con robot trong phim. Nhưng ba thứ AI bạn gặp nhiều nhất lại chẳng giống robot chút nào: trợ lý giọng nói, danh sách video được gợi ý, và danh sách nhạc tự phát. Cả ba làm cùng một việc — chúng CHỌN HỘ bạn. Robot là cái thân; AI là phần quyết định. Nhiều robot không có AI, và phần lớn AI không có robot nào.",
+            dg: ["Dữ liệu đi vào", "Máy tìm ra mẫu", "Dự đoán đi ra"] },
+      en: { t: "Artificial Intelligence", an: "A machine that learns to recognise things",
+            sum: "A type of technology giving machines human-like “thinking” abilities.",
+            def: "NASA defines artificial intelligence — AI — as a type of technology that helps machines and computers have “thinking” abilities similar to humans. Note the word “similar”: not the same as. Devices using AI can learn words and concepts, recognize objects, see patterns, or make predictions. AI is a METHOD, not a machine — which is why it can sit inside a rover, a phone, or an image-processing program.",
+            gr: "People picture AI as the robot from a film. Yet the three kinds of AI you meet most look nothing like robots: a voice assistant, a list of recommended videos, a playlist that starts on its own. All three do the same job — they CHOOSE on your behalf. A robot is the body; AI is the deciding part. Many robots have no AI, and most AI has no robot.",
+            dg: ["Data goes in", "Machine finds a pattern", "A prediction comes out"] }
+    },
+
+    {
+      id: "term_machine_learning", cat: "ai", ic: "cx-machine-learning",
+      q: ["ml-learns-from-data", "ml-humans-still-check"],
+      src: [SRC.nasaWhatIsAi, SRC.aiHubble],
+      vi: { t: "Học Máy", an: "Không dạy luật — cho xem ví dụ",
+            sum: "Máy xem rất nhiều dữ liệu rồi tự tìm ra luật để đưa ra dự đoán.",
+            def: "NASA mô tả học máy là loại AI xem một lượng lớn dữ liệu rồi học cách đưa ra những dự đoán nhanh và chính xác dựa trên dữ liệu đó. Chỗ khác biệt với một chương trình thông thường không nằm ở tốc độ mà ở chỗ LUẬT ĐẾN TỪ ĐÂU: chương trình thường thì người viết từng luật; học máy thì người cho xem rất nhiều ví dụ, còn luật là thứ máy tự tìm ra. Vì thế dữ liệu không phải thứ phụ — dữ liệu chính là bài học.",
+            gr: "Các nhà thiên văn cho máy tìm vệt tiểu hành tinh trong hơn 30.000 tấm ảnh Hubble và tìm ra 1.031 tiểu hành tinh chưa ai biết. Nhưng chi tiết đáng nhớ hơn con số đó: kết quả ấy đến từ AI CỘNG VỚI công sức của khoảng 11.000 tình nguyện viên là người thường. Máy làm phần nhìn thật nhanh; con người vẫn kiểm và xác nhận.",
+            dg: ["Rất nhiều ví dụ", "Máy tự rút ra luật", "Người vẫn kiểm lại"] },
+      en: { t: "Machine Learning", an: "Don't teach the rules — show examples",
+            sum: "A machine reads lots of data and works out its own rules for predicting.",
+            def: "NASA describes machine learning as the kind of AI that looks at large amounts of data and learns how to make fast and accurate predictions based on that data. What separates it from an ordinary program is not speed but WHERE THE RULES COME FROM: an ordinary program has every rule written by people; machine learning is shown many examples and works the rules out itself. So the data is not a side detail — the data is the lesson.",
+            gr: "Astronomers had machines hunt asteroid streaks across more than 30,000 Hubble images and turned up 1,031 previously unknown asteroids. But the detail that matters more than the number: that result came from AI COMBINED WITH the efforts of some 11,000 citizen scientist volunteers. The machine did the looking, fast; people still checked and confirmed.",
+            dg: ["Many examples", "Machine derives the rule", "People still check"] }
+    },
+
+    {
+      id: "term_algorithm", cat: "ai", ic: "cx-algorithm",
+      /* ⚠️ `algorithm-is-an-opinion` KHÔNG phải câu thêm cho đủ số: nó là câu DUY NHẤT
+         của thẻ này có `src`. Bốn khoá kia là câu khái niệm không nguồn, nên nếu thiếu
+         nó thì URL của MIT chỉ nằm ở `SRC` của sổ tay mà **không có mặt trong bank** —
+         và luật "mọi URL sổ tay đều được kiểm 200 một lần qua bank" bị hở. Chính phép
+         kiểm đó đã bắt, chứ không phải tôi nghĩ ra. */
+      q: ["algorithm-is-an-opinion", "algorithm", "sequence", "loop", "condition"],
+      src: [SRC.mitAlgorithms],
+      vi: { t: "Thuật Toán", an: "Một dãy bước — và cũng là một ý kiến",
+            sum: "Bộ các bước mà máy làm theo; dựng từ trình tự, vòng lặp và điều kiện.",
+            def: "Thuật toán là bộ các bước một cái máy làm theo để xong một việc. Gần như mọi thuật toán đều dựng từ ba khối: TRÌNH TỰ (làm việc này rồi mới việc kia, đúng thứ tự), VÒNG LẶP (làm lặp lại một việc nhiều lần thay vì viết lại nhiều lần), và ĐIỀU KIỆN — “nếu… thì…” (chỉ làm khi một chuyện nào đó đúng). Ba khối ấy đủ để tả một robot đi từ chỗ này tới chỗ kia mà biết tránh vật cản.",
+            gr: "MIT Media Lab dạy học sinh trung học cơ sở nghĩ về thuật toán như những Ý KIẾN. Vì mỗi thuật toán đều do người viết, và người viết phải chọn: cái gì quan trọng, xếp cái nào lên trước. Thuật toán gợi ý video nên phục vụ ai — người xem, người làm video, hay công ty? Ba câu trả lời cho ra ba thuật toán khác nhau. Đó chính là chỗ nó thành một ý kiến.",
+            dg: ["Trình tự — theo thứ tự", "Vòng lặp — làm lại", "Điều kiện — nếu… thì…"] },
+      en: { t: "Algorithm", an: "A list of steps — and also an opinion",
+            sum: "The steps a machine follows; built from sequence, loops and conditions.",
+            def: "An algorithm is the set of steps a machine follows to finish a job. Almost every algorithm is built from three blocks: SEQUENCE (do this, then that, in order), LOOPS (repeat one step many times instead of writing it many times), and CONDITIONS — “if… then…” (only act when something is true). Those three are enough to describe a robot travelling from here to there while avoiding obstacles.",
+            gr: "MIT Media Lab teaches middle-school students to think of algorithms as OPINIONS. Because every algorithm is written by people, and those people must choose: what counts as important, what gets ranked first. Who should a video recommendation serve — the viewer, the creator, or the company? Three answers give three different algorithms. That is exactly where it becomes an opinion.",
+            dg: ["Sequence — in order", "Loop — repeat", "Condition — if… then…"] }
+    },
+
+    {
+      id: "term_sensor", cat: "robot", ic: "cx-sensor",
+      q: ["sensor", "sensor-robot-sees"],
+      src: [SRC.astrobee],
+      vi: { t: "Cảm Biến", an: "Giác quan của một cỗ máy",
+            sum: "Bộ phận cho robot biết chuyện gì đang xảy ra quanh nó.",
+            def: "Cảm biến là bộ phận biến một thứ ngoài đời — ánh sáng, âm thanh, khoảng cách, nhiệt độ — thành con số mà máy đọc được. Nếu mắt, tai và da là giác quan của bạn thì cảm biến là giác quan của robot. Ba con robot Astrobee bay bên trong Trạm Vũ trụ Quốc tế dùng camera và các cảm biến để “nhìn” và định hướng trong môi trường quanh chúng. Không có cảm biến thì mọi phần thông minh phía sau cũng không có gì để suy nghĩ về.",
+            gr: "Hãy thử bịt mắt rồi đi qua một căn phòng có ghế. Bạn vẫn biết đi, vẫn biết tránh — nhưng chỉ khi tay đã chạm vào ghế. Robot cũng vậy: nó không thiếu “bộ não”, nó thiếu thông tin. Thêm một cảm biến khoảng cách là nó biết cái ghế ở đó TRƯỚC KHI đụng vào.",
+            dg: ["Thế giới thật", "Cảm biến đo", "Số liệu cho máy"] },
+      en: { t: "Sensor", an: "A machine's sense organs",
+            sum: "The part that tells a robot what is happening around it.",
+            def: "A sensor turns something in the real world — light, sound, distance, temperature — into numbers a machine can read. If your eyes, ears and skin are your senses, sensors are a robot's. The three Astrobee robots flying inside the International Space Station use cameras and sensors to “see” and navigate their surroundings. Without sensors, all the clever parts behind have nothing to think about.",
+            gr: "Try crossing a room with a chair in it, blindfolded. You can still walk and still dodge — but only once your hand touches the chair. A robot is the same: it is not short of a “brain”, it is short of information. Add one distance sensor and it knows the chair is there BEFORE it bumps into it.",
+            dg: ["The real world", "Sensor measures", "Numbers for the machine"] }
     }
   ];
 

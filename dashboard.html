@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
 <link rel="stylesheet" href="css/mascot.css" />
@@ -20,6 +21,7 @@
 <link rel="stylesheet" href="css/warp-screen.css" />
 <script src="js/icons.js"></script>
 <script src="js/ui-common.js"></script>
+<script src="js/locks.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
 <script src="js/badges.js"></script>
 <script src="js/ranks.js"></script>
@@ -141,17 +143,83 @@
         </div>
       </div>
 
-      <!-- Cột phải: 3 mini stat tiles + đường vào Kho Thành Tích.
-           data-tour="awards" đặt trên cả cột để Comet chiếu sáng đúng khu vực
-           "Kho Thành Tích" gồm cả ô Huy hiệu và nút dẫn sang trang. -->
-      <div class="sh-right" data-tour="awards">
+      <!-- Cột phải: 3 mini stat tiles (xem nhanh). Đường vào các khu đã chuyển
+           xuống hàng "bảng phi hành gia" bên dưới — xem lý do ở đó.
+           ⚠️ `data-tour="awards"` ĐÃ DỜI từ cả cột này sang đúng ô Thành tích
+              (08/08/2026). Trước đó nó bọc cả cột để ô sáng gồm "ô Huy hiệu + nút
+              dẫn sang trang"; nay nút không còn trong cột, mà Comet ở bước đó đang
+              giới thiệu ĐƯỜNG ĐI — nên chiếu đúng đường đi. Ô sáng nhỏ hơn (54px
+              thay vì ~250px) cũng cho box thoại dư chỗ ở cả nhánh trên và dưới. -->
+      <div class="sh-right">
         <div id="stat-tiles"></div>
-        <a class="sh-link" href="achievements.html" data-i18n="open_awards">🏆 Mở Kho Thành Tích</a>
-        <!-- Kho Mẫu Vật đặt cạnh Kho Thành Tích vì cùng là "bộ sưu tập", và cùng
-             đọc từ bộ đếm tiến độ. CỐ Ý không thêm card HUD thứ 4: 3 card là bố cục
-             Comet đang dẫn tham quan (js/onboard-tour.js), thêm card là phải sửa tour. -->
-        <a class="sh-link" href="specimen-vault.html" data-i18n="open_vault">📦 Mở Kho Mẫu Vật</a>
+
       </div>
+
+
+      <!-- ============ BẢNG PHI HÀNH GIA — 3 ô nhỏ nằm ngang ============
+           Đường vào cho 3 khu "xem lại mình": Hồ sơ · Kho Thành Tích · Kho Mẫu Vật.
+
+           ⚠️ CỐ Ý KHÔNG làm card HUD thứ 7–8 trong lưới MOD (chốt 08/08/2026,
+              chủ dự án hỏi thẳng "cần card HUD cho hồ sơ và khu thành tích ko?"):
+              ① `MOD-01…06` là các KHOANG của tàu — nơi đi tới để LÀM gì đó; ba khu
+              này là giấy tờ và tủ kính của chính phi hành gia — nơi XEM LẠI mình.
+              Trộn vào lưới là làm loãng nghĩa của cả lưới. ② Lưới 6 đang chia đẹp
+              3×2; thành 8 thì hoặc 4×2 (card hẹp đi 25%) hoặc 3+3+2 lệch hàng cuối,
+              và cả 8 đều `ready` nên mất luôn cảm giác "còn khu chưa mở" mà MOD-05
+              đang giữ. ③ Thêm card là phải đo lại chỗ đặt box thoại của màn Comet
+              dẫn tham quan (thẻ HUD ~375px + box ~245px đã vượt màn 900px — chính
+              lý do tour vẫn 7 bước dù dashboard đã lên 6 card).
+
+           ⚠️ Thay 2 nút chữ xếp DỌC của bản cũ, KHÔNG thêm chiều cao nào cho trang.
+              Và nó sửa một bất đối xứng đang có: Kho Thành Tích + Kho Mẫu Vật có
+              nút, còn Hồ sơ chỉ có chip avatar nhỏ ở header — ba khu cùng loại mà
+              hai kiểu đường vào, cái nhỏ nhất lại là cái quan trọng nhất.
+              Chip avatar VẪN GIỮ (chủ dự án chốt): bấm ảnh mình để xem hồ sơ là
+              thói quen phổ biến, và hai chỗ này không phải hai nơi phải sửa mỗi lần
+              đổi tên — khác ca Sổ Tay Thuật Ngữ ngày 04/08.
+
+           ⚠️ Ô Mẫu Vật CỐ Ý KHÔNG có số. Số mẫu đã thu nằm ở `GET /me/specimens`,
+              mà dashboard chỉ gọi `GET /me/achievements` — thêm một vòng mạng chỉ
+              để lấy một con số là đi ngược `missionsShared()`, còn gõ "n/21" vào
+              đây là gán cứng con số mà server mới là nguồn sự thật (lỗi đã trả giá
+              5 lần). Thà thiếu một con số hơn bịa hoặc phình đường mạng. -->
+      <div class="ptiles">
+        <a class="ptile pt-profile" href="profile.html">
+          <span class="pt-ic" aria-hidden="true">👨‍🚀</span>
+          <span class="pt-b">
+            <span class="pt-nm" data-i18n="pt_profile">Hồ sơ</span>
+            <span class="pt-sub" id="pt-rank">—</span>
+          </span>
+        </a>
+        <a class="ptile pt-awards" href="achievements.html" data-tour="awards">
+          <span class="pt-ic" aria-hidden="true">🏆</span>
+          <span class="pt-b">
+            <span class="pt-nm" data-i18n="pt_awards">Thành tích</span>
+            <span class="pt-sub" id="pt-badges">—</span>
+          </span>
+        </a>
+        <a class="ptile pt-vault" href="specimen-vault.html">
+          <span class="pt-ic" aria-hidden="true">📦</span>
+          <span class="pt-b">
+            <span class="pt-nm" data-i18n="pt_vault">Mẫu vật</span>
+            <span class="pt-sub" data-i18n="pt_vault_sub">Bộ sưu tập</span>
+          </span>
+        </a>
+      </div>
+
+      <!-- ⚠️ CỐ Ý KHÔNG LÀM Ô THỨ TƯ TRONG `.ptiles`. Hai lý do:
+           ① `.ptiles` khai `repeat(3,1fr)` cố định — ô thứ tư rơi xuống một hàng
+              lẻ; đổi sang 4 cột thì phải đo lại bề rộng, mà chính hàng này đã một
+              lần bị cắt tên ở 124px (xem ghi chú "BẢNG PHI HÀNH GIA" ở CLAUDE.md).
+           ② Ba ô kia là giấy tờ và tủ kính của CHÍNH phi hành gia — nơi trẻ xem
+              lại mình. Cái này là bảng cho NGƯỜI KHÁC đọc (bố mẹ). Trộn vào là làm
+              loãng nghĩa cả hàng, đúng lỗi đã tránh khi không nhét Hồ sơ/Thành tích
+              vào lưới MOD. -->
+      <a class="pt-parent" href="parent.html">
+        <span aria-hidden="true">👨‍👩‍👧</span>
+        <span data-i18n="pt_parent">Dành cho bố mẹ: xem báo cáo tuần của con</span>
+        <span class="ar" aria-hidden="true">›</span>
+      </a>
     </div>
   </section>
 
@@ -254,17 +322,25 @@
     </article>
 
     <!-- Phòng Nghiên Cứu — CHƯA CÓ TRANG.
-         Nút để `disabled` chứ KHÔNG dẫn đi đâu, và đèn báo là `standby` màu hổ
-         phách chứ không phải `ok` màu xanh: dẫn vào một trang không tồn tại còn tệ
-         hơn nói thẳng "sắp ra mắt". Cùng cách đã dùng cho nút Mặt Trăng ở màn tổng
-         kết nhiệm vụ. -->
+         Đèn báo là `standby` màu hổ phách chứ không phải `ok` màu xanh: dẫn vào
+         một trang không tồn tại còn tệ hơn nói thẳng "sắp ra mắt".
+
+         ⚠️ NÚT ĐỔI TỪ `disabled` SANG BẤM ĐƯỢC (09/08/2026) — và đó không phải
+            nới lỏng nguyên tắc cũ. Nguyên tắc là "nút bấm được thì phải có gì đó
+            xảy ra"; nút này nay MỞ MODAL nói vì sao khoá + khi mở sẽ được gì, tức
+            có xảy ra thật. Trước đó nó là một ngõ cụt: trẻ bấm không ăn và chỉ
+            tưởng mình bấm trượt (đúng bài học `#loader` của explorer).
+         ⚠️ HUY HIỆU LÀ "SẮP RA MẮT", KHÔNG PHẢI "TRẢ PHÍ" — khu này chưa có nội
+            dung, gắn nhãn trả phí là hứa rằng trả tiền sẽ mở được. Xem ba trạng
+            thái ở js/locks.js. -->
     <article class="hud card--lab soon">
       <div class="hud-line top"><span><span class="led standby"></span>MOD-05</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
+      <span class="lk-badge soon lk-pin" id="lab-badge"></span>
       <div class="ic">🔬</div>
       <span class="tag" data-i18n="lab_tag">Thí nghiệm ảo</span>
       <h3 data-i18n="lab_title">Phòng Nghiên Cứu</h3>
       <p data-i18n="lab_desc">Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.</p>
-      <button class="jelly-btn" data-i18n="soon_btn" disabled>Sắp ra mắt</button>
+      <button class="jelly-btn lk-open" id="lab-btn" type="button" data-i18n="lab_why">Vì sao chưa mở?</button>
       <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
     </article>
 
@@ -313,8 +389,9 @@
       a_xp:"Điểm kinh nghiệm",
       a_coord:"Tọa độ",
       banner_eyebrow:"🧭 Trung Tâm Điều Hướng", welcome_pre:"Chào mừng trở lại,",
-      open_profile:"Mở Hồ sơ Phi Hành Gia", open_awards:"🏆 Mở Kho Thành Tích",
-      open_vault:"📦 Mở Kho Mẫu Vật",
+      open_profile:"Mở Hồ sơ Phi Hành Gia",
+      pt_profile:"Hồ sơ", pt_awards:"Thành tích", pt_vault:"Mẫu vật",
+      pt_vault_sub:"Bộ sưu tập", pt_badges_unit:"huy hiệu",
       unit_hour:"giờ", unit_min:"phút",
       log_badge:"Mở khoá huy hiệu ‘{n}’",
       log_empty:"Chưa có hoạt động nào, hãy tham gia khám phá hoặc huấn luyện nhé",
@@ -344,7 +421,8 @@
       codex_tag:"Tra cứu thuật ngữ", codex_title:"Sổ Tay Thuật Ngữ",
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
-      soon_btn:"Sắp ra mắt", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
+      pt_parent:"Dành cho bố mẹ: xem báo cáo tuần của con",
+      lab_why:"Vì sao chưa mở?", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -359,8 +437,9 @@
       a_xp:"Experience points",
       a_coord:"Coordinates",
       banner_eyebrow:"🧭 Navigation Hub", welcome_pre:"Welcome back,",
-      open_profile:"Open Astronaut Profile", open_awards:"🏆 Open Trophy Hold",
-      open_vault:"📦 Open Specimen Vault",
+      open_profile:"Open Astronaut Profile",
+      pt_profile:"Profile", pt_awards:"Badges", pt_vault:"Specimens",
+      pt_vault_sub:"Collection", pt_badges_unit:"badges",
       unit_hour:"h", unit_min:"min",
       log_badge:"Unlocked ‘{n}’ badge",
       log_empty:"No activity yet — go explore or start training!",
@@ -390,7 +469,8 @@
       codex_tag:"Term reference", codex_title:"Terminology Codex",
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
-      soon_btn:"Coming soon", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
+      pt_parent:"For parents: see your child's weekly report",
+      lab_why:"Why is it locked?", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       need_title:"Not enough Purple Asteroids!",
       need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
       need_go:"Do Quiz now", need_later:"Later",
@@ -529,10 +609,33 @@
     }
     var poly=vpts.map(function(q){return q[0].toFixed(1)+","+q[1].toFixed(1);}).join(" ");
     var dots=vpts.map(function(q){return '<circle class="rr-dot" cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="2.2"/>';}).join("");
-    var w=polar(cx,cy,R,0.5,n); // cạnh quạt quét
-    var sweep='<g class="rr-sweep-g"><polygon class="rr-wedge" points="'+cx+','+cy+' '+cx+','+(cy-R)+' '+w[0].toFixed(1)+','+w[1].toFixed(1)+'"/>'+
-              '<line class="rr-sweep" x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-R)+'"/></g>';
-    return '<svg class="radar-svg" viewBox="0 0 200 200" role="img" aria-label="Radar">'+rings+axes+labels+'<polygon class="rr-fill" points="'+poly+'"/>'+dots+sweep+'</svg>';
+    /* ---- Quạt quét ----
+       ⚠️⚠️ THANH ĐẬM PHẢI ĐI TRƯỚC, VỆT MỜ THEO SAU — sửa 09/08/2026.
+       `@keyframes radarSweep` chạy `rotate(0deg → 360deg)`, mà trong SVG trục y hướng
+       XUỐNG nên góc dương là quay THEO CHIỀU KIM ĐỒNG HỒ. Quay theo chiều đó thì cạnh
+       ĐI TRƯỚC là cạnh có góc LỚN HƠN.
+       Bản cũ đặt đỉnh quạt ở `polar(...,+0.5,...)` = **−54°** trong khi thanh sáng ở
+       **−90°** ⇒ mép mờ dẫn đầu, thanh sáng bị kéo theo sau. Nhìn ra như vệt sáng đang
+       bị đẩy ngược, không như một chùm radar đang quét.
+       Nay đỉnh quạt lùi sang `−0.5` = **−126°**, tức phía NGƯỢC chiều quay ⇒ thanh sáng
+       ở −90° dẫn đầu, đuôi mờ trải lại phía sau.
+       ⚠️ HAI THỨ NÀY DÍNH NHAU: đổi chiều quay trong `radarSweep` thì PHẢI đổi dấu ở
+          đây, không thì lỗi quay trở lại y nguyên. Có phép kiểm canh cả hai cùng lúc
+          (`check_pages` mục [18]). */
+    var lead=[cx, cy-R];                  // cạnh DẪN ĐẦU — trùng thanh sáng
+    var tail=polar(cx,cy,R,-0.5,n);       // cạnh ĐUÔI — lùi ngược chiều quay
+    /* Đuôi phải MỜ DẦN mới ra vệt lưu ảnh; `fill` phẳng thì nó chỉ là một miếng quạt
+       đục, và lúc đó "đậm trước mờ sau" chỉ đúng trên giấy chứ mắt không đọc ra. */
+    var grad='<defs><linearGradient id="rr-tail" gradientUnits="userSpaceOnUse"'+
+             ' x1="'+tail[0].toFixed(1)+'" y1="'+tail[1].toFixed(1)+'"'+
+             ' x2="'+lead[0]+'" y2="'+lead[1]+'">'+
+             '<stop offset="0" stop-color="#5ff0c0" stop-opacity="0"/>'+
+             '<stop offset="1" stop-color="#5ff0c0" stop-opacity=".26"/>'+
+             '</linearGradient></defs>';
+    var sweep='<g class="rr-sweep-g"><polygon class="rr-wedge" points="'+cx+','+cy+' '+
+              lead[0]+','+lead[1]+' '+tail[0].toFixed(1)+','+tail[1].toFixed(1)+'"/>'+
+              '<line class="rr-sweep" x1="'+cx+'" y1="'+cy+'" x2="'+lead[0]+'" y2="'+lead[1]+'"/></g>';
+    return '<svg class="radar-svg" viewBox="0 0 200 200" role="img" aria-label="Radar">'+grad+rings+axes+labels+'<polygon class="rr-fill" points="'+poly+'"/>'+dots+sweep+'</svg>';
   }
 
   /* ---- Vẽ toàn bộ thống kê (gọi lại khi đổi ngôn ngữ hoặc dữ liệu về) ---- */
@@ -550,6 +653,22 @@
     if($("gx-unlocked"))$("gx-unlocked").textContent = planets;
     if($("gx-total"))   $("gx-total").textContent = gTotal;
     if($("gx-pips")){ var s=""; for(var k=0;k<gTotal;k++) s+='<span class="'+(k<planets?"on":"")+'"></span>'; $("gx-pips").innerHTML=s; }
+
+    /* BẢNG PHI HÀNH GIA — dòng phụ của 2 ô có số thật.
+       ⚠️ Chưa đọc được server thì hiện dấu "—", KHÔNG hiện "Cấp 1" hay "0/22":
+          đó là lời khẳng định SAI về tiến độ của trẻ. Cùng nguyên tắc với
+          missions.html và specimen-vault.html.
+       ⚠️ Tên bậc dùng `AstroQRanks.short()` (chỉ "Học Viên", không kèm tên gốc
+          tiếng Anh) — ô này rộng ~1/3 cột nên bản đầy đủ "Học Viên (Cadet)" xuống
+          2 dòng và làm ba ô lệch chiều cao nhau. */
+    var known = !!(STATS.level && STATS.level.level);
+    if($("pt-rank")) $("pt-rank").textContent = known
+      ? t("prog_level") + " " + n0(lv.level) +
+        (window.AstroQRanks ? " · " + AstroQRanks.short(lv.level, LANG) : "")
+      : "—";
+    if($("pt-badges")) $("pt-badges").textContent = STATS.total > 0
+      ? STATS.earned + "/" + STATS.total + " " + t("pt_badges_unit")
+      : "—";
 
     // Thời gian bay: dưới 1 giờ hiện phút, đủ 1 giờ mới hiện giờ — "0.1 Giờ" khó đọc
     var sec = n0(p.flightSeconds);
@@ -603,6 +722,24 @@
     // Màn giới thiệu / màn loading đang mở thì dịch theo luôn (chúng tự vẽ lại).
     if(window.AstroQTour){ AstroQTour.setLang(LANG); AstroQTour.setName(name); }
     if(window.AstroQWarp) AstroQWarp.setLang(LANG);
+    paintLockBadge();
+  }
+
+  /* Huy hiệu khoá của thẻ MOD-05. Chữ nằm ở js/locks.js (chỗ duy nhất khai), nên
+     vẽ lại trong applyLang — đổi VI/EN ở tab khác cũng dịch theo.
+
+     ⚠️ CHỮ VÀ MÀU SUY TỪ `state`, KHÔNG GÕ CỨNG `badge_soon`. Bản đầu gõ cứng, và
+        phép thử phá hoại (đổi `lab` sang `pro`) cho thấy hậu quả: thẻ vẫn ghi "SẮP
+        RA MẮT" trong khi modal đã nói "thuộc gói Phi Hành Gia" — hai thông điệp
+        ngược nhau, và nó xảy ra ĐÚNG LÚC cơ chế này được dùng tới (ngày bật cờ).
+        missions.html và games.html vốn đã suy từ `lk.state`; chỉ chỗ này lệch. */
+  function paintLockBadge(){
+    var b = $("lab-badge");
+    if(!b || !window.AstroQLocks) return;
+    var it = AstroQLocks.get("lab");
+    if(!it) return;
+    b.textContent = AstroQLocks.text(it.state === "soon" ? "badge_soon" : "badge_pro");
+    b.className = "lk-badge lk-pin " + it.state;
   }
 
   /* ---- Modal ---- */
@@ -635,6 +772,9 @@
   applyLang(LANG);
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
   tickTelemetry(); setInterval(tickTelemetry, 2500);
+
+  // Thẻ MOD-05 bị khoá: bấm là mở modal giải thích (js/locks.js)
+  if(window.AstroQLocks) AstroQLocks.wire($("lab-btn"), "lab");
 
   AstroQ.initLang(applyLang);
 

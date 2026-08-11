@@ -2,8 +2,8 @@
    Luat + bang nguon S (`src` la KHOA, khong phai URL): js/quiz-index.js */
 export default {
   term: "loop",
-  topic: { vi: "VÒNG LẶP",
-           en: "LOOPS" },
+  topic: { vi: "THUẬT TOÁN",
+           en: "ALGORITHMS" },
   q: { vi: "Byte cần nhặt 3 tinh thể giống nhau. Nên dùng cấu trúc nào?",
        en: "Byte must collect 3 identical crystals. Which structure fits best?" },
   opts: [

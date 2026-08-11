@@ -48,6 +48,10 @@ PAGES = [
     ("missions.html",      "h1",              None),
     ("profile.html",       "h1",              None),
     ("achievements.html",  "h1",              None),
+    # pricing.html them 09/08/2026 — trang Goi & Uu dai
+    ("pricing.html",       "h1",              None),
+    # parent.html them 09/08/2026 — bang theo doi cho bo me
+    ("parent.html",        "h1",              None),
     ("specimen-vault.html", "h1",             None),
     ("game-dodge.html",    None,              None),
     ("game-defender.html", None,              None),

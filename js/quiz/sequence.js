@@ -2,8 +2,8 @@
    Luat + bang nguon S (`src` la KHOA, khong phai URL): js/quiz-index.js */
 export default {
   term: "sequence",
-  topic: { vi: "TRÌNH TỰ",
-           en: "SEQUENCING" },
+  topic: { vi: "THUẬT TOÁN",
+           en: "ALGORITHMS" },
   q: { vi: "Để tới đích: tiến 2 ô rồi rẽ phải. Trình tự lệnh đúng là?",
        en: "To reach the goal: go 2 tiles then turn right. Correct order?" },
   opts: [

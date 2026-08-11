@@ -12,6 +12,7 @@ Bắt những lỗi mà mở trình duyệt chưa chắc thấy ngay:
 
     python scratchpad/check_pages.py
 """
+import glob
 import io
 import json
 import os
@@ -174,15 +175,26 @@ def assets(html):
 
 # ══════════════════════════════════════════════════════════════
 print("=== [1] Trang moi: cu phap + id + i18n + asset ===")
-for page, css in (("profile.html", ["css/common.css", "css/page-shell.css", "css/profile.css"]),
-                  ("achievements.html", ["css/common.css", "css/page-shell.css", "css/achievements.css"]),
-                  # missions.html them 29/07/2026 — cung khuon page-shell nen soi
-                  # duoc bang dung bo phep kiem nay, khong phai viet rieng.
-                  ("missions.html", ["css/common.css", "css/page-shell.css", "css/missions.css"]),
-                  # codex.html them 30/07/2026 — cung khuon page-shell nen soi duoc
-                  # bang dung bo phep kiem nay (i18n vi/en khop · moi $("id") ton tai
-                  # · moi class co CSS · asset khong hong).
-                  ("codex.html", ["css/common.css", "css/page-shell.css", "css/codex.css"])):
+# ⚠️ DANH SACH CSS SUY TU CHINH THE <link> CUA TRANG (page_css), KHONG GAN CUNG.
+#    Truoc 09/08/2026 muc nay gan cung ["common","page-shell","<trang>"] — dung cai
+#    anti-pattern ma docstring cua `page_css()` da dat ten tu 31/07 nhung chi moi ap
+#    cho mission-earth.html. Hau qua that: them css/locks.css vao missions.html la
+#    phep kiem bao "thieu CSS: ['lk-badge']" trong khi trang nap dung file. Doc tu
+#    <link> thi them stylesheet KHONG BAO GIO phai sua phep kiem nua.
+for page in ("profile.html",
+             "achievements.html",
+             # missions.html them 29/07/2026 — cung khuon page-shell nen soi
+             # duoc bang dung bo phep kiem nay, khong phai viet rieng.
+             "missions.html",
+             # codex.html them 30/07/2026 — cung khuon page-shell nen soi duoc
+             # bang dung bo phep kiem nay (i18n vi/en khop · moi $("id") ton tai
+             # · moi class co CSS · asset khong hong).
+             "codex.html",
+             # pricing.html them 09/08/2026 — trang Goi & Uu dai.
+             "pricing.html",
+             # parent.html them 09/08/2026 — bang theo doi cho bo me.
+             "parent.html"):
+    css = page_css(page)
     html = rd(page)
     js = inline_js(html)
     bad = balanced(js)
@@ -215,7 +227,26 @@ for page, css in (("profile.html", ["css/common.css", "css/page-shell.css", "css
         # nguyên. Trang nào có thì khai họ khoá ở đây, và phải có một phép kiểm RIÊNG
         # chứng minh đủ bộ (xem mục [7c] cho missions.html) — bỏ qua mà không kiểm bù
         # thì mất luôn tác dụng canh thiếu khoá.
-        DYN = {"missions.html": [r"^m_[a-z]+_(tag|name|desc)$"]}
+        # Khoá ghép động HỢP LỆ — dự án ưu tiên khoá literal (xem `cat_*` ở
+        # codex.html, `tier1..5` ở game-dodge), nhưng khi khoá do MỘT MẢNG DỮ LIỆU
+        # sinh ra thì viết literal nghĩa là chép lại chính mảng đó. Danh sách này
+        # phải HẸP: một mẫu quá rộng là phép kiểm thôi bắt được khoá gõ sai.
+        DYN = {
+            "missions.html": [r"^m_[a-z]+_(tag|name|desc)$"],
+            # pricing.html: giá/so sánh/quyền lợi/ưu đãi/FAQ đều đổ từ PLANS, CMP,
+            # WHO, PERKS, FAQ — xem chính các mảng đó trong trang.
+            # parent.html: nhan chon tuan sinh tu vong lap `t("w_"+i)`, va tieu de
+            # o so lieu doi theo tuan dang xem `t("sum_h"+WEEK)`.
+            "parent.html": [r"^w_[0-9]$", r"^sum_h[0-9]$"],
+            "pricing.html": [r"^pl_(free|astro|crew|found)_[nd]$",
+                             r"^c_[a-z0-9]+$",
+                             r"^w_[kp][0-9]+$",
+                             r"^who_(kid|parent)$",
+                             r"^p_[a-z]+$",
+                             r"^q_[a-z]+$",
+                             r"^badge_(popular|limited)$",
+                             r"^st_(have|soon)$"],
+        }
         dyn_pat = DYN.get(page, [])
         unused = sorted(k for k in (vi - used)
                         if not any(re.match(p, k) for p in dyn_pat))
@@ -897,8 +928,11 @@ print("\n=== [4] Chi cac trang noi dung duoc nap SDK Firebase ===")
 # bắt buộc cần token để đọc `progress.terms` (thuật ngữ đã trả lời đúng). Không có
 # token thì trang phải hiện MỌI thẻ ở trạng thái chưa giải mã, nên nạp SDK ở đây là
 # đánh đổi có ý thức chứ không phải quên.
+# parent.html them 09/08/2026: bao cao tuan doc `GET /me/report` nen BAT BUOC co
+# token. Cung danh doi co y thuc nhu specimen-vault/codex — day la trang noi dung
+# cho PHU HUYNH doc, khong phai man choi can muot.
 allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.html",
-           "specimen-vault.html", "missions.html", "codex.html"}
+           "specimen-vault.html", "missions.html", "codex.html", "parent.html"}
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue
@@ -1045,9 +1079,28 @@ for mod in ("MOD-01", "MOD-02", "MOD-03"):
 # Thien Van" (chua co trang) sang So Tay Thuat Ngu (codex.html, da chay that) ngay
 # 04/08/2026. Con so 1 nay la phep kiem CO RANG: them mot card khoa nua ma khong
 # ghi vao day thi no bao hong.
-check("dashboard.html: dung 1 card 'soon' co nut disabled",
-      dash_nc.count('data-i18n="soon_btn" disabled') == 1,
-      str(dash_nc.count('data-i18n="soon_btn" disabled')))
+# ⚠️ PHEP KIEM NAY DA DOI PHAT BIEU 09/08/2026 — no tung doi nut cua card 'soon'
+#    phai `disabled`, nen no bao hong DUNG LUC san pham lam dung. Nguyen tac cu
+#    ("nut bam duoc thi phai co gi do xay ra") KHONG bi noi long: nut nay nay MO
+#    MODAL noi vi sao khoa + khi mo se duoc gi, tuc co xay ra that. Nut `disabled`
+#    la mot ngo cut — tre bam khong an va chi tuong minh bam truot.
+check("dashboard.html: dung 1 card 'soon'",
+      dash_nc.count(" soon\">") == 1, str(dash_nc.count(" soon\">")))
+check("dashboard.html: nut cua card 'soon' BAM DUOC (khong disabled)",
+      'data-i18n="lab_why"' in dash_nc and "disabled" not in dash_nc,
+      "con `disabled`" if "disabled" in dash_nc else "ok")
+check("dashboard.html: nut do noi vao AstroQLocks",
+      'AstroQLocks.wire($("lab-btn"), "lab")' in dash_nc)
+# ⚠️ Huy hieu la SAP RA MAT, KHONG phai TRA PHI: Phong Nghien Cuu chua co noi dung,
+#    gan nhan tra phi la hua rang tra tien se mo duoc. Xem ba trang thai o js/locks.js.
+# ⚠️ Huy hieu phai SUY TU `state` chu khong go cung `badge_soon`: go cung thi ngay
+#    bat co sang `pro`, the van ghi "SAP RA MAT" trong khi modal noi "thuoc goi ..."
+#    — hai thong diep nguoc nhau, dung luc co che nay duoc dung toi. Phep thu pha
+#    hoai 09/08/2026 da lo ra dung cho nay.
+check("dashboard.html: huy hieu suy tu state, khong go cung",
+      'it.state === "soon" ? "badge_soon" : "badge_pro"' in dash_nc)
+check("dashboard.html: class huy hieu cung suy tu state",
+      '"lk-badge lk-pin " + it.state' in dash_nc)
 check("dashboard.html: card 'soon' KHONG dan sang trang khong ton tai",
       'href="research-lab.html"' not in dash and 'href="star-archive.html"' not in dash)
 # MOD-06 phai la duong vao THAT su bam duoc, khong con la o "sap ra mat"
@@ -1352,9 +1405,27 @@ check("codex.html CHUA co bo loc phan loai (co y, doi Dot 3)",
 # (a) 5 cau lap trinh cua bank la cau KHAI NIEM, khong co `src`, va khong thuoc thuat
 #     ngu thien van nao. Thuat ngu nhan bua mot trong 5 khoa do la giai ma sai bang
 #     mot cau khong lien quan.
-PROG_KEYS = {"algorithm", "loop", "condition", "sensor", "sequence"}
-check("5 cau lap trinh KHONG bi thuat ngu nao nhan bua",
-      not (set(_qmap) & PROG_KEYS), f"{sorted(set(_qmap) & PROG_KEYS)}")
+# ⚠️⚠️ PHEP KIEM NAY DA DOI PHAT BIEU 09/08/2026, va day la mot doi CO LY DO chu khong
+#     phai noi long. Ban cu doi 5 khoa do KHONG the nao nhan — dung khi chua co the AI/
+#     Robot nao, vi luc do the duy nhat co the nhan chung la mot the thien van, tuc giai
+#     ma sai bang mot cau khong lien quan. Nay `term_algorithm` va `term_sensor` nhan
+#     chung MOT CACH CO CHU DICH: `def`/`gr` cua hai the do day dung trinh tu / vong lap
+#     / dieu kien / cam bien. Dieu can bao ve KHONG doi: chung khong duoc roi vao mot the
+#     KHONG day chung. Nen nay canh DUNG THE thay vi canh "khong the nao".
+PROG_OWNER = {"algorithm": "term_algorithm", "sequence": "term_algorithm",
+              "loop": "term_algorithm", "condition": "term_algorithm",
+              "sensor": "term_sensor"}
+# ⚠️ `_qmap[k]` la mot LIST (no dung de bat mot khoa bi HAI the nhan), khong phai chuoi
+#    — ban dau toi so thang voi chuoi nen phep kiem bao hong oan het 5 khoa.
+_prog_bad = {k: _qmap.get(k) for k, want in PROG_OWNER.items()
+             if _qmap.get(k) != [want]}
+check("5 cau lap trinh thuoc DUNG the day chung (algorithm/sensor), khong the nao khac",
+      not _prog_bad, f"lech: {_prog_bad}")
+# ⛔ Va khong the THIEN VAN nao duoc nhan chung — do van la giai ma sai.
+_astro_grab = sorted(k for k, v in _qmap.items()
+                     if k in PROG_OWNER
+                     and any(t not in ("term_algorithm", "term_sensor") for t in v))
+check("khong the thien van nao nhan cau lap trinh", not _astro_grab, f"{_astro_grab}")
 check("codex.html co trang thai thu BA cho thuat ngu chua co cau hoi",
       '"soon"' in _cxp and "soon_hint" in _cxp)
 check("codex.html KHONG dan sang Quiz khi chua co cau hoi",
@@ -1367,8 +1438,21 @@ check("codex.html KHONG dan sang Quiz khi chua co cau hoi",
 #      · `AstroQProgress.lesson(id)` gui hai dang khoa cho cung mot kho
 #    Bank cu dung kebab (`lib-nebula`); dot noi dung moi de nghi `article_x_y` (gach
 #    duoi). Chot MOT kieu roi canh bang may.
-_art = rd("js/articles.js")
-_aids = re.findall(r'id:\s*"([^"]+)"', _art)
+# ⚠️ KHO BAI DOC DA CHIA 09/08/2026 — `js/articles.js` khong con. Nguon su that la
+#    `js/article/<id>.js` (mot bai mot file), muc luc `js/articles-index.js` SINH RA.
+#    Nen id bai doc nay doc tu TEN FILE, chac chan hon regex tren mot file gop.
+_afiles = sorted(glob.glob(os.path.join(ROOT, "js", "article", "*.js")))
+check("doc duoc kho bai doc da chia", len(_afiles) >= 39, f"{len(_afiles)} file")
+_art = "\n".join(rd("js/article/" + os.path.basename(p)) for p in _afiles)
+_aids = [os.path.splitext(os.path.basename(p))[0] for p in _afiles]
+# ⛔ Muc luc phai la BAN CHIEU cua cac file — lech nghia la ai do sua tay muc luc
+#    hoac quen chay lai bo sinh, va bai do se KHONG hien ra o luoi.
+_aidx = rd("js/articles-index.js")
+_missing = [i for i in _aids if '"%s"' % i not in _aidx]
+check("moi file bai deu co trong muc luc (chay lai split_articles.py neu lech)",
+      not _missing, f"thieu: {_missing[:4]}")
+check("khong con js/articles.js mot-file",
+      not os.path.exists(os.path.join(ROOT, "js", "articles.js")))
 _bad_id = [i for i in _aids if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", i)]
 check("id bai doc deu la kebab-case (khong gach duoi, khong chu hoa)",
       not _bad_id, f"sai kieu: {_bad_id}")
@@ -1431,14 +1515,112 @@ check("js/progress.js CHI gui khi co (SS cua DynamoDB khong nhan tap rong)",
 check("server: ProgressRequest nhan `Terms`", "string[]? Terms," in _mep)
 check("server: LOC khoa bang Clean (du lieu client khong tin duoc)",
       "Clean(t, 40)" in _mep)
+# ⚠️ PHAT BIEU LAI 09/08/2026: phep kiem cu ghim nguyen van
+#    `Math.Min(correct, MaxTermsPerQuiz)`, nen khi hai duong loc (dung / sai) duoc
+#    gom vao ham `CleanTerms(src, cap, exclude)` thi no bao hong dung luc code lam
+#    dung. Nay hoi DIEU MUON BIET: tran cua danh sach DUNG la `correct`.
 check("server: KEP so khoa theo so cau DUNG (1 cau dung khong mo ca so tay)",
-      "Math.Min(correct, MaxTermsPerQuiz)" in _mep)
+      "CleanTerms(req.Terms, correct, null)" in _mep
+      and "Math.Min(Math.Max(cap, 0), MaxTermsPerQuiz)" in _mep)
 check("server: truyen terms vao BumpProgressAsync",
       "constellation, okTerms)" in _mep)
 check("server: luu bang ADD tren string set (hop, khong trung, khong mat khi song song)",
       'adds.Add("#terms :terms")' in _dyn)
 check("server: chan tap rong truoc khi ghi SS", "terms.Count > 0" in _dyn)
 check("server: tra `terms` ve trong snapshot", "terms          = p.Terms," in _mep)
+
+# ══════════ (5b) CAU SAI -> cot "con vuong chu de nao" (09/08/2026) ══════════
+# Truoc do cau SAI khong duoc luu o dau ca: `PROGRESS.terms` chi nhan cau DUNG (no la
+# chia khoa mo So Tay), con bo dem thi chi co tong so. Nen loi hua o `pricing.html`
+# ("Thay ro con vung chu de nao, con vuong cho nao") khong co nguyen lieu de tra loi.
+print("\n[12b] Cau SAI -> bao cao chu de cho phu huynh")
+_rep_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Report.cs"))
+_mail_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/EmailService.cs"))
+_par = strip_comments(rd("parent.html"))
+_parcss = re.sub(r"/\*.*?\*/", " ", rd("css/parent.css"), flags=re.S)
+
+check("quiz.html gom khoa tra loi SAI", "noTerms.push(it.term)" in _qz)
+# ⚠️ Ghi CA khi het gio va ca khi Khien Tim giu chuoi: khien chi cuu CHUOI, khong
+#    doi viec tre chua nam duoc cau do. Nhanh `else` cua `reveal` phu ca hai ca.
+check("quiz.html gui `wrong` len server", "wrong: noTerms" in _qz)
+check("quiz.html xoa danh sach SAI khi lam lai", "noTerms=[]" in _qz)
+check("js/progress.js chuyen tiep `wrong`", "ev.wrong = o.wrong.slice()" in _prog)
+check("js/progress.js CHI gui `wrong` khi co", "if (o.wrong && o.wrong.length)" in _prog)
+
+check("server: ProgressRequest nhan `Wrong`", "string[]? Wrong," in _mep)
+# ⚠️ Sai khong the nhieu hon so cau KHONG dung — thieu chot nay thi
+#    `{correct:5,total:5,wrong:[…20 khoa…]}` ve ra mot tuan bet bat cho dua tre lam
+#    dung het.
+check("server: KEP so khoa SAI theo `total - correct`",
+      "CleanTerms(req.Wrong, total - correct, okTerms)" in _mep)
+# ⚠⚠ PHEP KIEM QUAN TRONG NHAT CUA MUC NAY: cau SAI KHONG duoc di vao
+#    `PROGRESS.terms` — tap do la chia khoa mo So Tay Thuat Ngu, nhet cau sai vao la
+#    giai ma mot the bang mot cau tra loi SAI.
+# ⚠️ LAY CA CAU LENH (toi `);`), KHONG dung `\([^)]*\)`. Ban dau toi viet
+#    `[^)]*` va phep pha hoai `(okTerms ?? []).Concat(wrongTerms ?? [])` LOT qua —
+#    regex dung o dau `)` dau tien nen doan cat ra khong he chua chu "wrongTerms".
+#    Mot phep kiem cat nham pham vi thi no dang do mot cau lenh khong ton tai.
+_bump = re.search(r"BumpProgressAsync\(.*?\);", _mep, re.S)
+check("server: cau SAI KHONG di vao BumpProgressAsync (khong mo So Tay bang cau sai)",
+      _bump is not None and "wrongTerms" not in _bump.group(0),
+      _bump.group(0) if _bump else "khong tim thay loi goi")
+check("server: truyen ca hai danh sach vao NHAT KY",
+      "okTerms: okTerms" in _mep and "wrongTerms: wrongTerms" in _mep)
+check("server: chan tap rong truoc khi ghi SS `wrong` (SS rong lam hong CA dong)",
+      "wrongTerms is { Count: > 0 }" in _dyn and "okTerms    is { Count: > 0 }" in _dyn)
+check("server: doc lai `ok`/`wrong` khi query nhat ky",
+      'SS("ok"), SS("wrong")' in _dyn)
+
+check("Report gom dung/sai theo TUNG KHOA cau", "termOk" in _rep_cs and "termNo" in _rep_cs)
+check("Report tra `Terms` + `WeakCount`",
+      "Terms: terms, WeakCount:" in _rep_cs)
+# Cau sai nhieu nhat len truoc — do la thu phu huynh mo bao cao de tim.
+check("Report xep chu de CAN LUYEN len truoc",
+      "OrderByDescending(t => t.Wrong)" in _rep_cs)
+
+# ⚠️⚠️ SERVER KHONG DUOC GIU TEN CHU DE. Ten song ngu nam o `js/quiz-index.js`
+#    (server giu moc, client giu ten). Chep sang server la ban sao thu hai cua mot
+#    bang ten, va no se lech dung vao ngay ai do doi ten mot the — tuc la thu noi
+#    SAI ten bai hoc cua mot dua tre.
+_topic_names = re.findall(r't:\s*\{\s*vi:\s*"([^"]+)"', rd("js/quiz-index.js"))
+check("doc duoc bang ten chu de o client", len(_topic_names) >= 10,
+      f"{len(_topic_names)} chu de")
+# ⚠️ QUET TREN BAN DA BOC CHU THICH — lan chay dau bao hong vi tieu de mot khoi
+#    comment o MeEndpoints viet "VI THIEN THACH TIM" (ten TIEN TE), trung voi ten
+#    chu de "THIEN THACH" cua the `term_meteorite`. Day la loi "dem ca chu trong ghi
+#    chu cua chinh minh" — da lap lai nhieu lan trong du an, moi phep kiem dang
+#    "khong duoc chua X" deu phai boc comment truoc.
+def _no_cs_comments(src):
+    src = re.sub(r"/\*.*?\*/", " ", src, flags=re.S)
+    return re.sub(r"//[^\n]*", " ", src)
+
+_leak = [n for n in _topic_names
+         if n in _no_cs_comments(_rep_cs) or n in _no_cs_comments(_mail_cs)
+         or n in _no_cs_comments(_mep)]
+check("server KHONG chep ten chu de nao (client giu ten)", not _leak, str(_leak[:3]))
+# Email vi the dem chu de chu khong goi ten, va co duong dan sang trang phu huynh.
+check("email dem so chu de can luyen", "cur.WeakCount > 0" in _mail_cs)
+check("email co duong dan sang trang phu huynh (cho DUY NHAT goi duoc ten)",
+      "/parent.html" in _mail_cs)
+
+check("parent.html nap muc luc ngan hang cau hoi de lay TEN chu de",
+      'src="js/quiz-index.js"' in rd("parent.html"))
+check("parent.html gom khoa cau thanh the bang groupOf()",
+      "AstroQQuestions.groupOf(x.term)" in _par)
+check("parent.html KHONG go cung ten chu de nao",
+      not [n for n in _topic_names if n in _par],
+      str([n for n in _topic_names if n in _par][:3]))
+# Khoa khong con trong bank (cau da bi go) van phai hien: bo qua no la am tham nuot
+# mat mot phan ket qua cua tre.
+check("parent.html van hien khoa khong con trong bank", "g ? (g.c || g.q[0]) : x.term" in _par)
+check("parent.html xep chu de CAN LUYEN len truoc", "(b.no - a.no)" in _par)
+# ⚠️ HO PHACH, KHONG PHAI DO. Day la bao cao hoc tap cua mot dua tre; mau do doc ra
+#    thanh "con ban sai roi". Cung ly do da chot cho `.sum-note` va cho xu huong GIAM.
+_weak_css = re.search(r"\.pt-topic\.weak[^}]*\}", _parcss)
+check("chu de 'can luyen' to HO PHACH, khong to do",
+      _weak_css is not None and "255,207,107" in _weak_css.group(0)
+      and "ff8a8a" not in _weak_css.group(0),
+      _weak_css.group(0)[:60] if _weak_css else "khong co rule")
 
 # --- (6) codex.html KHONG bia trang thai giai ma ---
 check("codex.html doc `progress.terms` tu SERVER", "p.terms" in _cxp)
@@ -1497,7 +1679,7 @@ _VI_CAM = [
 ]
 # ⚠️ Quet tren code DA BOC COMMENT — chinh khoi ghi chu giai thich "vi sao khong dung
 #    X" se bi dem la vi pham. Du an da mac loi nay 10 lan.
-_dot1_src = strip_comments(_bank) + "\n" + strip_comments(_cx) + "\n" + strip_comments(rd("js/articles.js"))
+_dot1_src = strip_comments(_bank) + "\n" + strip_comments(_cx) + "\n" + strip_comments(_art)
 for _c, _ly in _VI_CAM:
     check(f"khong con chuoi \"{_c}\" trong bank/so tay/bai doc",
           _c.lower() not in _dot1_src.lower(), f"— {_ly}")
@@ -2283,6 +2465,238 @@ if _m_at and _m_vi:
     _srv = (_m_vi.group(1), _m_vi.group(2), _m_vi.group(3))
     check("ngay ra mat trong thu SES khop LAUNCH_AT cua trang chu",
           _cli == _srv, f"client {_cli} vs server {_srv}")
+
+# ============================================================================
+# [17] LO TRINH HUAN LUYEN — server giu MOC, client giu TEN
+#
+# Khoi "Lo trinh huan luyen" o achievements.html la cho DUY NHAT trong app cho
+# xem CA thang cap bac (dashboard/profile chi hien bac hien tai). Muc nay canh
+# dung mot loai loi da xay ra 5 lan trong du an: HAI NOI CUNG GIU MOT LUAT.
+#
+# ⚠️ Truoc 08/08/2026 KHONG co phep kiem nao doi chieu `MAX_LEVEL` cua
+#    js/ranks.js voi `Achievements.MaxLevel` cua server, du chinh chu thich trong
+#    ranks.js ghi "co phep kiem doi chieu". Con so 50 dung canh server 8 ngay ma
+#    khong ai canh.
+# ============================================================================
+print("\n=== [17] Lo trinh huan luyen: server giu moc, client giu ten ===")
+
+_ach_sv = rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Services", "Achievements.cs"))
+_me_sv = rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Endpoints", "MeEndpoints.cs"))
+_rk_js = rd("js/ranks.js")
+_aw_html = rd("achievements.html")
+_aw_code = _no_comments(inline_js(_aw_html))
+
+# --- (a) MAX_LEVEL client == MaxLevel server ---
+_m_cli = re.search(r"var\s+MAX_LEVEL\s*=\s*(\d+)", _rk_js)
+_m_srv = re.search(r"MaxLevel\s*=\s*(\d+)", _ach_sv)
+check("doc duoc so cap toi da o CA hai ben", bool(_m_cli) and bool(_m_srv),
+      (_m_cli and _m_cli.group(1), _m_srv and _m_srv.group(1)))
+if _m_cli and _m_srv:
+    check("MAX_LEVEL cua js/ranks.js khop Achievements.MaxLevel cua server",
+          _m_cli.group(1) == _m_srv.group(1),
+          f"client={_m_cli.group(1)} server={_m_srv.group(1)}")
+
+# --- (b) 10 bac, moi bac du vi + en + icon ---
+_rk_block = _rk_js.split("var R = [", 1)[1].split("\n  ];", 1)[0]
+_rk_rows = re.findall(r'\{\s*key:\s*"([a-z-]+)",\s*vi:\s*"([^"]+)",\s*en:\s*"([^"]+)",\s*ic:\s*"([^"]+)"',
+                      _rk_block)
+check("doc duoc danh sach bac huan luyen", len(_rk_rows) > 0, len(_rk_rows))
+if _rk_rows:
+    check("moi bac du ca ten VI, ten EN va icon",
+          all(all(x.strip() for x in r) for r in _rk_rows),
+          str([r[0] for r in _rk_rows if not all(x.strip() for x in r)]))
+    check("khoa bac khong trung nhau",
+          len({r[0] for r in _rk_rows}) == len(_rk_rows), len(_rk_rows))
+    # Bac chia DEU thi hang cuoi moi phu het thang cap. 50/10 = 5; neu doi
+    # MAX_LEVEL hoac them mot bac thu 11 ma khong chia het thi bang lo trinh se
+    # co mot bac dai/ngan hon han cac bac khac ma khong ai noi ra.
+    if _m_cli:
+        check("so cap chia DEU cho so bac (khong con bac le)",
+              int(_m_cli.group(1)) % len(_rk_rows) == 0,
+              f"{_m_cli.group(1)} / {len(_rk_rows)}")
+
+# --- (c) client KHONG nhan ban cong thuc XP ---
+# Cong thuc `100·(n-1)·n/2` la LUAT CHOI cua server. Chep sang JS la ngay doi do
+# kho thi bang o client noi con so cu — tuc noi SAI voi phu huynh.
+check("server co ham tra ca bang moc XP (XpLadder)", "XpLadder" in _ach_sv)
+check("GET /me/achievements tra bang moc XP cho client",
+      bool(re.search(r"levels\s*=\s*new\s*\{[^}]*XpLadder", _me_sv, re.S)))
+check("achievements.html doc bang moc tu server (d.levels.xp)",
+      "levels" in _aw_code and "ladder" in _aw_code)
+for _bad in ("100 *", "100*", "(lv - 1) * lv", "(lv-1)*lv", "XpForLevel"):
+    check(f"achievements.html KHONG tu tinh moc XP ({_bad!r})", _bad not in _aw_code)
+check("js/ranks.js KHONG chua cong thuc XP nao",
+      not re.search(r"100\s*\*\s*\(", _no_comments(_rk_js)))
+
+# --- (d) client khong gan cung so cap moi bac ---
+# `PER_RANK` suy ra tu MAX_LEVEL; go so 5 vao trang la mot ban sao thu hai.
+check("achievements.html doc PER_RANK/levelOf thay vi go so cap moi bac",
+      ("levelOf" in _aw_code) and ("PER_RANK" in _aw_code or "MAX_LEVEL" in _aw_code))
+
+# --- (e) khong bia bac khi chua doc duoc cap do ---
+# Cung nguyen tac da ghi cho missions.html / specimen-vault.html: chua dang nhap
+# thi hien dau "—", KHONG hien 0. O day: khong danh dau bac nao la cua nguoi xem.
+check("VIEW.level mac dinh null (chua biet), khong phai 1",
+      bool(re.search(r"level\s*:\s*null", _aw_code)))
+check("nhanh mat mang/chua dang nhap dat lai level = null",
+      bool(re.search(r"VIEW\.level\s*=\s*null", _aw_code)))
+check("chua biet cap do thi KHONG danh dau bac 'now'",
+      bool(re.search(r"cur\s*===?\s*0\s*\?\s*[\"']off[\"']", _aw_code)))
+_i18n_vi, _i18n_en = i18n_dicts(inline_js(_aw_html))
+for _k in ("tag_ladder", "ladder_h", "ladder_p", "ld_count", "ld_range",
+           "ld_xp", "ld_here", "ld_unknown"):
+    check(f"khoa i18n '{_k}' co o CA vi va en",
+          _k in (_i18n_vi or set()) and _k in (_i18n_en or set()))
+
+# --- (f) trang thuc su nap ranks.js VA thuc su ve khoi do ---
+check("achievements.html nap js/ranks.js",
+      'src="js/ranks.js"' in _aw_html)
+# ⚠️ Phep kiem nay sinh ra tu mot phep thu pha hoai BI LOT: bo `renderLadder()`
+#    khoi `render()` thi HTML, CSS, i18n va ca 10 bac van con nguyen — chi co bang
+#    la RONG, va khong phep kiem tinh nao noi gi. Mot khoi khai day du ma khong ai
+#    goi la dung loai loi da lam `AstroQRanks.ALL/levelOf/next` ngu 8 ngay.
+check("render() thuc su goi renderLadder()",
+      bool(re.search(r"function\s+render\s*\(\s*\)\s*\{[^}]*renderLadder\s*\(", _aw_code, re.S)))
+check("applyLang() ve lai khoi lo trinh (doi VI/EN phai dich theo)",
+      bool(re.search(r"function\s+applyLang[^}]*?\brender\s*\(\s*\)", _aw_code, re.S)))
+
+# --- (f2) profile.html noi ra DICH BAC ke tiep, khong chi "len cap k" ---
+# Truoc 08/08/2026 trang chi noi "Con n XP nua len cap 8" — mot con so khong noi len
+# dieu gi voi tre, vi cai no muon la CAI TEN cua bac ke tiep.
+_pf_html = rd("profile.html")
+_pf_code = _no_comments(inline_js(_pf_html))
+check("profile.html nap js/ranks.js", 'src="js/ranks.js"' in _pf_html)
+check("profile.html dung AstroQRanks.next() cho dich bac",
+      "AstroQRanks.next(" in _pf_code)
+check("ten bac lay tu ranks.js, KHONG go lai o profile.html",
+      not any(x in _pf_code for x in ("Chuyên Gia", "Specialist", "Hoa Tiêu", "Navigator")))
+check("moc cap ke tiep KHONG go cung (dung nx.level)",
+      "nx.level" in _pf_code)
+_pf_vi, _pf_en = i18n_dicts(inline_js(_pf_html))
+for _k in ("rank_next", "rank_soon"):
+    check(f"khoa i18n '{_k}' co o CA vi va en",
+          _k in (_pf_vi or set()) and _k in (_pf_en or set()))
+check("bac cuoi thi AN dong dich (khong hua bac khong ton tai)",
+      bool(re.search(r"else\s*\{[^}]*rank-goal|goal\.style\.display\s*=\s*[\"']none[\"']",
+                     _pf_code, re.S)))
+check("co CSS cho .xp .goal va trang thai .soon",
+      ".goal" in _aw_css_pf_marker if (_aw_css_pf_marker := rd("css/profile.css")) else False)
+check("co CSS cho trang thai '.goal.soon'", ".goal.soon" in _aw_css_pf_marker)
+
+# --- (f3) BANG PHI HANH GIA o dashboard: 3 duong vao, khong bia so ---
+_db_html = rd("dashboard.html")
+_db_code = _no_comments(inline_js(_db_html))
+_db_css = rd("css/dashboard.css")
+check("dashboard co bang phi hanh gia (.ptiles)", 'class="ptiles"' in _db_html)
+for _href, _cls in (("profile.html", "pt-profile"), ("achievements.html", "pt-awards"),
+                    ("specimen-vault.html", "pt-vault")):
+    check(f"co o dan sang {_href}",
+          bool(re.search(r'class="ptile %s"[^>]*href="%s"' % (_cls, _href), _db_html)
+               or re.search(r'class="ptile %s" href="%s"' % (_cls, _href), _db_html)))
+check("2 nut chu xep doc cua ban cu da bo han",
+      "sh-link" not in _no_comments(_db_html) and "sh-link" not in _no_comments(_db_css))
+# ⚠️ Hang FULL-WIDTH, khong nam trong cot phai: do duoc trong cot phai moi o chi
+#    124px va bi cat chu ca o ban VI lan EN.
+check("bang phi hanh gia la hang FULL-WIDTH cua panel",
+      bool(re.search(r"\.ptiles\{[^}]*grid-column:\s*1\s*/\s*-1", _db_css)))
+# ⚠️ ĐỪNG dùng `[^:]*` giữa `?` và `:` — hai nhánh nay co ternary LONG BEN TRONG
+#    (`window.AstroQRanks ? ... : ""`) nen `[^:]*` dung som va phep kiem bao hong oan.
+#    Dem so nhanh else tra ve dau "—" trong chinh than renderStats.
+_rs = _db_code.split("function renderStats", 1)[-1].split("\n  function ", 1)[0]
+check("KHONG bia so khi chua doc duoc server (dung dau '—')",
+      _rs.count(': "—"') >= 2 and "known" in _rs, _rs.count(': "—"'))
+# ⚠️ So mau vat nam o GET /me/specimens ma dashboard khong goi -> o do KHONG co so,
+#    va tuyet doi khong go cung tong so mau (server moi la nguon su that).
+check("o Mau vat KHONG go cung tong so mau",
+      not re.search(r"/2[01]\b", _db_code.split("ptiles")[-1][:2000] if "ptiles" in _db_code
+                    else ""))
+check("dashboard KHONG goi them route chi de lay so mau vat",
+      "getSpecimens" not in _db_code and "/me/specimens" not in _db_code)
+check("ten bac o o Ho so dung ranks.js (short), khong go tay",
+      "AstroQRanks.short(" in _db_code)
+for _k in ("pt_profile", "pt_awards", "pt_vault", "pt_vault_sub", "pt_badges_unit"):
+    _dvi, _den = i18n_dicts(inline_js(_db_html))
+    check(f"khoa i18n '{_k}' co o CA vi va en",
+          _k in (_dvi or set()) and _k in (_den or set()))
+check("vung cham >= 48px tren thiet bi cam ung",
+      bool(re.search(r"\.ptile\{min-height:4[89]px", _db_css)))
+check("man hep thi 3 o xep DOC (khong bop con ~95px)",
+      bool(re.search(r"max-width:520px\)\s*\{\s*\.ptiles\{grid-template-columns:1fr", _db_css)))
+# data-tour phai TON TAI dung mot cho — thieu la Comet chieu sang vao khoang khong
+# ⚠️ Dem tren ban DA BOC COMMENT: chinh chu thich giai thich viec doi data-tour
+#    cung chua chuoi do -> dem tren van ban tho la bao hong oan (loi "dem ca chu
+#    trong ghi chu cua chinh minh", lan thu 14).
+#    Dung `strip_comments()` (bo CA comment HTML) chu khong `_no_comments()` — ham
+#    kia chi bo comment JS nen `<!-- ... data-tour="awards" ... -->` van con.
+_db_nc = strip_comments(_db_html)
+check("data-tour='awards' ton tai dung MOT lan",
+      _db_nc.count('data-tour="awards"') == 1, _db_nc.count('data-tour="awards"'))
+check("data-tour='awards' nam tren o Thanh tich",
+      bool(re.search(r'class="ptile pt-awards"[^>]*data-tour="awards"', _db_html)))
+
+# --- (g) bac chua toi KHONG lam mo bang grayscale ---
+# Bai hoc da ghi 3 lan trong CLAUDE.md: tren nen gradient sang, `grayscale()` cho
+# ra khoi xam SANG HON hang binh thuong — hut mat vao dung thu chua dat duoc.
+_aw_css = rd("css/achievements.css")
+# ⚠️ BO COMMENT TRUOC ROI MOI CAT KHOI — dung cat theo tieu de comment.
+#    Ban dau muc nay cat tu chuoi "LO TRINH HUAN LUYEN" (nam TRONG mot comment),
+#    nen doan con lai bat dau o GIUA comment do: khong con `/*` mo cap voi `*/`
+#    dong, `re.sub` khong khop, va chu "grayscale" trong chinh loi canh bao
+#    "KHONG dung grayscale" bi tinh la vi pham. Loi "dem ca chu trong ghi chu cua
+#    chinh minh" — lan thu 13 trong du an. Nay lay khoi bang SELECTOR.
+_aw_css_nc = re.sub(r"/\*.*?\*/", " ", _aw_css, flags=re.S)
+_rk_rules = re.findall(r"(?m)^(\.(?:rk|ranks|ladder|ld-note)[^{]*)\{([^}]*)\}", _aw_css_nc)
+check("doc duoc cac rule CSS cua khoi lo trinh", len(_rk_rules) >= 8, len(_rk_rules))
+_rk_css_body = "\n".join(sel + "{" + body + "}" for sel, body in _rk_rules)
+check("khoi lo trinh KHONG dung filter:grayscale",
+      "grayscale" not in _rk_css_body,
+      str([s for s, b in _rk_rules if "grayscale" in b]))
+for _cls in (".rk.now", ".rk.done", ".rk.off", ".ranks", ".ld-note"):
+    check(f"co CSS cho {_cls}", _cls in _rk_css_body)
+
+# --- (h) inline style tinh da don sach ---
+check("achievements.html khong con inline style tinh flex:none;margin-left:auto",
+      "flex:none;margin-left:auto" not in _aw_html)
+check("co class .h2-count thay the", ".h2-count" in _aw_css)
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [18] Radar ky nang: CHIEU QUET (thanh dam di truoc) ===")
+# ⚠️⚠️ CHIEU QUAY va DAU CUA DINH DUOI LA MOT CAP — doi mot cai ma quen cai kia thi loi
+#    09/08/2026 quay tro lai: quat quay ma thanh dam bi keo THEO SAU.
+#    Trong SVG truc y huong XUONG nen `rotate(+deg)` la quay theo chieu kim dong ho, va
+#    canh DI TRUOC la canh co goc LON HON. Thanh sang o -90 deg (dinh 12h), nen dinh duoi
+#    PHAI o goc NHO HON -90 => chi so am trong `polar(cx,cy,R,-0.5,n)`.
+#    Ban cu dung `+0.5` (= -54 deg) nen mep mo dan dau.
+#    ⚠️ Phep kiem nay chi doc VAN BAN. Thu do that su chieu quet la `smoke_radar.py`
+#       (doc DOMMatrix dang chay tren Chromium, 16 phep kiem).
+_dash = rd("dashboard.html")
+_dash_js = strip_comments(inline_js(_dash))
+_dcss = rd("css/dashboard.css")
+
+_m_rot = re.search(r"@keyframes\s+radarSweep\s*\{([^}]*\}[^}]*)\}", _dcss)
+check("doc duoc @keyframes radarSweep", bool(_m_rot))
+_cw = bool(_m_rot) and "rotate(-" not in _m_rot.group(1)
+check("radarSweep quay THEO chieu kim dong ho (khong co rotate(-...))", _cw,
+      _m_rot.group(1).strip() if _m_rot else "")
+
+_m_tail = re.search(r"var\s+tail\s*=\s*polar\(\s*cx\s*,\s*cy\s*,\s*R\s*,\s*(-?[\d.]+)\s*,\s*n\s*\)",
+                    _dash_js)
+check("buildRadar khai dinh DUOI cua quat (var tail=polar(...))", bool(_m_tail))
+if _m_tail:
+    _sign = float(_m_tail.group(1))
+    # quay thuan chieu kim dong ho <=> dinh duoi phai o phia NGUOC lai, tuc chi so AM
+    check("dinh duoi nam NGUOC chieu quay (thanh dam di truoc)",
+          (_sign < 0) if _cw else (_sign > 0),
+          f"tail index = {_sign}, chieu quay = {'CW' if _cw else 'CCW'}")
+
+_m_line = re.search(r'class="rr-sweep"(.{0,160}?)/></g>', _dash_js, re.S)
+check("doc duoc the <line class=rr-sweep>", bool(_m_line))
+check("thanh sang ket thuc o canh DAN DAU (`lead`), khong gan cung toa do",
+      bool(_m_line) and "lead" in _m_line.group(1),
+      (_m_line.group(1).strip()[:70] if _m_line else ""))
+# ⚠️ Duoi phai MO DAN — `fill` phang thi "dam truoc mo sau" chi dung tren giay.
+check("duoi quat to bang gradient #rr-tail", "fill:url(#rr-tail)" in _dcss.replace(" ", ""))
+check("gradient #rr-tail duoc dung trong buildRadar", 'id="rr-tail"' in _dash_js)
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

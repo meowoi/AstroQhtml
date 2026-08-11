@@ -129,7 +129,7 @@
       none:"Không có thuật ngữ nào ở mục này.",
       note:"* Nội dung do đội ngũ AstroQ biên soạn lại cho trẻ em từ nguồn NASA, chưa qua rà soát chuyên môn.",
       st_done:"Đã giải mã", st_lock:"Chưa giải mã", st_soon:"Sắp có câu hỏi",
-      cat_space:"Không gian", cat_earth:"Trái Đất", cat_other:"Khác",
+      cat_space:"Không gian", cat_earth:"Trái Đất", cat_ai:"AI", cat_robot:"Robot", cat_other:"Khác",
       h_def:"Định nghĩa", h_gr:"Ví dụ dễ hiểu",
       open:"Mở sổ tay", how:"Cách mở khoá",
       lock_hint:"Trả lời đúng câu hỏi về thuật ngữ này trong Quiz là thẻ được giải mã ngay.",
@@ -149,7 +149,7 @@
       none:"No terms in this group.",
       note:"* Content rewritten for children by the AstroQ team from NASA sources; not yet reviewed by a subject expert.",
       st_done:"Decoded", st_lock:"Not decoded", st_soon:"Questions coming",
-      cat_space:"Space", cat_earth:"Earth", cat_other:"Other",
+      cat_space:"Space", cat_earth:"Earth", cat_ai:"AI", cat_robot:"Robots", cat_other:"Other",
       h_def:"Definition", h_gr:"An easy example",
       open:"Open codex", how:"How to unlock",
       lock_hint:"Answer a Quiz question about this term correctly and the card is decoded right away.",
@@ -197,6 +197,8 @@
   function catLabel(c){
     if(c==="space") return t("cat_space");
     if(c==="earth") return t("cat_earth");
+    if(c==="ai") return t("cat_ai");
+    if(c==="robot") return t("cat_robot");
     return t("cat_other");
   }
 

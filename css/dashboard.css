@@ -131,15 +131,46 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 /* --- Cột phải: 3 mini stat tiles + đường vào Kho Thành Tích --- */
 .sh-right{display:flex;flex-direction:column;gap:10px;}
 .sh-right #stat-tiles{display:grid;grid-template-columns:1fr;gap:10px;}
-/* Nút dẫn sang achievements.html — nằm ngay dưới ô Huy hiệu để hai thứ đọc
-   như một khu: xem nhanh ở đây, xem đầy đủ thì bấm vào. */
-.sh-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;
-  padding:10px 14px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:13.5px;
-  color:#ffe9bd;border:1px solid rgba(255,207,107,.42);background:rgba(38,28,8,.5);
-  transition:background .18s,border-color .18s,transform .12s,box-shadow .2s;}
-.sh-link:hover{background:rgba(58,42,12,.66);border-color:rgba(255,207,107,.8);
-  box-shadow:0 0 22px -8px rgba(255,207,107,.85);}
-.sh-link:active{transform:scale(.96);}
+/* ============ BẢNG PHI HÀNH GIA — 3 ô nhỏ nằm ngang ============
+   Đường vào Hồ sơ · Kho Thành Tích · Kho Mẫu Vật. Thay 2 nút `.sh-link` xếp DỌC
+   của bản cũ (bỏ hẳn 08/08/2026) nên KHÔNG thêm chiều cao nào cho trang.
+   Lý do không làm card HUD thứ 7–8: ghi ở chính khối markup trong dashboard.html. */
+/* ⚠️ HÀNG FULL-WIDTH của panel, KHÔNG nằm trong cột phải — đây là số đo, không
+      phải sở thích bố cục. Bản đầu đặt 3 ô trong `.sh-right`: panel rộng
+      `min(880px,100%)` chia 2 cột `1.12fr 1fr` rồi chia 3 nữa ⇒ mỗi ô còn **124px**,
+      đo được "Thành tích" (VI) và "Specimens" (EN) bị cắt tên, "Cấp 7 · Học Viên"
+      và "1/2 huy hiệu" bị cắt dòng phụ. Full-width thì mỗi ô ~285px, dư chỗ. */
+.ptiles{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;
+  margin-top:4px;padding-top:14px;border-top:1px dashed rgba(150,180,255,.18);}
+@media(max-width:640px){ .ptiles{padding-top:12px;} }
+.ptile{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:13px;min-width:0;
+  border:1px solid var(--pt-brd,rgba(120,160,255,.2));background:var(--pt-bg,rgba(15,23,42,.44));
+  transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s,background .2s;}
+.ptile:hover{transform:translateY(-3px);border-color:var(--pt-on,rgba(120,160,255,.55));
+  box-shadow:0 12px 26px -14px rgba(0,0,0,.7), 0 0 22px -6px var(--pt-glow,rgba(120,160,255,.5));}
+.ptile:active{transform:scale(.96);}
+.ptile .pt-ic{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;
+  font-size:17px;line-height:1;border:1px solid var(--pt-brd,rgba(120,160,255,.2));
+  background:rgba(8,14,38,.55);}
+.ptile .pt-b{display:flex;flex-direction:column;line-height:1.2;min-width:0;}
+/* `nowrap` + ellipsis cho CẢ hai dòng: ô chỉ rộng ~1/3 cột, mà "Thành tích" ở bản VI
+   và "Specimens" ở bản EN đều sát mép — để xuống dòng là ba ô lệch chiều cao nhau. */
+.ptile .pt-nm{font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ptile .pt-sub{font-family:var(--font-mono);font-size:8.6px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Ba tông khác nhau để ba ô không đọc thành một khối, và khớp màu của trang đích:
+   hồ sơ cyan (thẻ ID) · thành tích hổ phách (mề đay) · mẫu vật tím (khoang kính). */
+.pt-profile{--pt-brd:rgba(56,189,248,.38);--pt-on:rgba(56,189,248,.75);
+  --pt-glow:rgba(56,189,248,.6);--pt-bg:rgba(8,26,46,.5);}
+.pt-awards{--pt-brd:rgba(255,207,107,.4);--pt-on:rgba(255,207,107,.8);
+  --pt-glow:rgba(255,207,107,.7);--pt-bg:rgba(38,28,8,.5);}
+.pt-awards .pt-nm{color:#ffe9bd;}
+.pt-vault{--pt-brd:rgba(192,132,252,.38);--pt-on:rgba(192,132,252,.78);
+  --pt-glow:rgba(192,132,252,.62);--pt-bg:rgba(26,12,44,.5);}
+/* Màn hẹp: 3 ô ngang còn ~95px mỗi ô thì chữ bị cắt hết — xếp dọc lại, mỗi ô một hàng. */
+@media (max-width:520px){ .ptiles{grid-template-columns:1fr;} }
 .stat-tile{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;
   border:1px solid rgba(120,160,255,.18);background:rgba(15,23,42,.44);
   transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
@@ -176,7 +207,10 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .rr-dot{fill:#c084fc;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
 .rr-label{fill:#9fe9d4;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;}
 .rr-sweep-g{transform-box:view-box;transform-origin:100px 100px;animation:radarSweep 4s linear infinite;}
-.rr-wedge{fill:rgba(95,240,192,.14);}
+/* Đuôi quạt mờ dần về phía SAU thanh sáng — gradient `#rr-tail` do buildRadar() dựng
+   trong chính SVG (toạ độ userSpaceOnUse nên nó quay cùng nhóm). Xem ghi chú ở
+   buildRadar: dấu của đỉnh đuôi dính với chiều quay của `radarSweep`. */
+.rr-wedge{fill:url(#rr-tail);}
 .rr-sweep{stroke:rgba(120,255,210,.9);stroke-width:1.4;filter:drop-shadow(0 0 6px rgba(95,240,192,.95));}
 @keyframes radarSweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 /* Nhật ký */
@@ -336,5 +370,22 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
    Đo trên iPad: "Đăng xuất" cao 34px, "🏆 Mở Kho Thành Tích" cao 41px. */
 @media (pointer: coarse){
   .logout-btn{min-height:44px;}
-  .sh-link{min-height:44px;}
+  .ptile{min-height:48px;}   /* 48 chu khong 44: 44 la moc TOI THIEU cua WCAG 2.5.5,
+                                dat dung moc la khong con bien an toan nao (CLAUDE.md
+                                quy tac 10 muc 6 — nut VI/EN cua explorer da chap chon
+                                683/1 roi 684/0 voi cung mot ma vi ly do do). */
 }
+
+/* ── Đường vào Bảng theo dõi cho bố mẹ ──
+   Đặt DƯỚI `.ptiles`, không nằm trong lưới đó: ba ô kia là của trẻ, cái này là
+   của phụ huynh (xem ghi chú ở dashboard.html). Vẻ ngoài cũng khác hẳn — một
+   dòng liên kết, không phải một ô — để mắt trẻ không nhầm là chỗ mình cần bấm.
+   ⚠️ min-height 48px: đây là vùng chạm thật, và 44 là mốc TỐI THIỂU của WCAG. */
+.pt-parent{grid-column:1 / -1;display:flex;align-items:center;gap:8px;min-height:48px;
+  margin-top:9px;padding:9px 12px;border-radius:12px;text-decoration:none;
+  font-size:12.8px;line-height:1.45;color:var(--ink-soft);
+  border:1px dashed rgba(150,180,255,.28);background:rgba(150,180,255,.05);
+  transition:border-color .18s ease,color .18s ease;}
+.pt-parent .ar{margin-left:auto;font-size:15px;opacity:.7;}
+.pt-parent:hover{color:var(--ink);border-color:rgba(150,180,255,.5);}
+.pt-parent:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}

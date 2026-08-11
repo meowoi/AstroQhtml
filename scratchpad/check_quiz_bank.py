@@ -204,9 +204,15 @@ def main():
         #                             400x cua nhat thuc va bai "eclipse in a cup".
         #    ⛔ Them ten mien moi thi PHAI ghi mot dong ly do o day. Danh sach khong ly do
         #       la danh sach se bi noi rong tuy tien cho tien viec.
+        # ⚠️ `media.mit.edu` them 09/08/2026 cho the `term_algorithm` — KHONG phai noi
+        #    long chinh sach nguon: MIT da la nguon tin cay cua du an (bo `wiki/` dan
+        #    `media.mit.edu` · `scratch.mit.edu` · `appinventor.mit.edu`, muc 2 CLAUDE.md
+        #    ghi nguon wiki la "NASA/ESA/MIT"). Can no vi NASA gan nhu khong co noi dung
+        #    ve AI trong DOI SONG (thuat toan de xuat, thien lech) — thu tre gap moi ngay.
         OK_HOSTS = ("https://science.nasa.gov/", "https://spaceplace.nasa.gov/",
                     "https://www.nasa.gov/", "https://lco.global/",
-                    "https://scied.ucar.edu/", "https://www.exploratorium.edu/")
+                    "https://scied.ucar.edu/", "https://www.exploratorium.edu/",
+                    "https://www.media.mit.edu/")
         bad_host = sorted(u for u in srcs if not u.startswith(OK_HOSTS))
         check("moi URL nguon thuoc danh sach ten mien da duyet, qua https",
               not bad_host, f"{bad_host}")

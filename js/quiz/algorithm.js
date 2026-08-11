@@ -2,8 +2,8 @@
    Luat + bang nguon S (`src` la KHOA, khong phai URL): js/quiz-index.js */
 export default {
   term: "algorithm",
-  topic: { vi: "TRÍ TUỆ NHÂN TẠO",
-           en: "ARTIFICIAL INTELLIGENCE" },
+  topic: { vi: "THUẬT TOÁN",
+           en: "ALGORITHMS" },
   q: { vi: "Thuật toán nào giúp Byte rẽ trái để né thiên thạch?",
        en: "Which command turns Byte left to dodge the asteroid?" },
   opts: [

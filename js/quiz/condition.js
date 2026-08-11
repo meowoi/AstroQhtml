@@ -2,8 +2,8 @@
    Luat + bang nguon S (`src` la KHOA, khong phai URL): js/quiz-index.js */
 export default {
   term: "condition",
-  topic: { vi: "ĐIỀU KIỆN",
-           en: "CONDITIONS" },
+  topic: { vi: "THUẬT TOÁN",
+           en: "ALGORITHMS" },
   q: { vi: "“NẾU phía trước có thiên thạch THÌ dừng lại.” Đây là loại lệnh gì?",
        en: "“IF an asteroid is ahead THEN stop.” What kind of command is this?" },
   opts: [

@@ -130,10 +130,21 @@ def dump_old():
     return data["all"], card
 
 
+SRC_FILE = os.path.join(ROOT, "js", "quiz-sources.js")
+
+
 def parse_sources():
-    """Boc bang `S` tu bank cu de LAY LAI TEN KHOA (`S.star` -> "star").
-    Chromium chi tra ve object {name,url}, khong tra ve ten khoa."""
-    src = io.open(OLD, encoding="utf-8").read()
+    """Doc bang nguon. Tra ve {khoa: {name, url}}.
+
+    ⚠️ TRUOC 09/08/2026 ham nay doc `js/quiz-questions.js` — file mot-bank DA BI XOA
+       ngay 07/08 khi chia ngan hang. Tu hom do script NEM FileNotFoundError, tuc
+       khong ai them duoc mot cau hoi nao, va loi do im lang 2 ngay vi khong ai chay
+       script. Nay ban nguon la `js/quiz-sources.js` (sua bang tay), con bank cu chi
+       dung o che do `--from-old`."""
+    path = OLD if os.path.exists(OLD) else SRC_FILE
+    if not os.path.exists(path):
+        sys.exit("HONG: khong thay bang nguon %s" % SRC_FILE)
+    src = io.open(path, encoding="utf-8").read()
     out = {}
     pat = r'(?:^\s*|S\.)([A-Za-z][A-Za-z0-9]*)\s*[:=]\s*\{\s*name:\s*"([^"]*)"\s*,\s*url:\s*"([^"]*)"\s*\}'
     for m in re.finditer(pat, src, re.M):
@@ -359,7 +370,17 @@ TAIL_INDEX = r"""
 """
 
 
-def write_index(qs, card):
+def write_index(qs, card, card_order=None, card_q=None):
+    """`card_order` = danh sach the theo THU TU KHAI BAO trong codex-terms.js.
+    `card_q`       = {the: [khoa cau theo thu tu the khai]}.
+
+    ⚠️⚠️ VI SAO CAN HAI THAM SO NAY: `qs` den tu `glob` (xep a-b-c), nen khong truyen
+       thu tu vao thi muc luc sinh ra xep nhom theo BANG CHU CAI — khac han ban 07/08
+       (xep theo thu tu khai bao the: NGOI SAO, HANH TINH, HANH TINH LUN...). Do la mot
+       thay doi AM THAM: file sinh ra khac hoan toan ma khong phep kiem nao noi gi, va
+       moi lan chay lai se sinh ra mot dien mao khac tuy ai dat ten file the nao.
+       Cung lop loi da gap o kho bai doc cung ngay (thu tu curation -> a-b-c)."""
+    pos = {c: i for i, c in enumerate(card_order or [])}
     # nhom theo the; cau khong the nao nhan thi thanh nhom rieng (moi cau mot
     # khai niem — `algorithm`, `loop`… la 5 thu khac nhau, gop lam mot nhom thi
     # phep chong trung se coi chung la cung mot khai niem).
@@ -375,6 +396,18 @@ def write_index(qs, card):
             sys.exit("HONG: the %s co HAI topic khac nhau (%s vs %s) — topic phai "
                      "hang so trong mot the" % (gid, g["t"], q["topic"]))
         g["q"].append(q["term"])
+
+    # Xep NHOM theo thu tu khai bao the; nhom cau le xuong cuoi, giu thu tu gap.
+    if pos:
+        _seen = {gid: i for i, gid in enumerate(order)}
+        order.sort(key=lambda g: (0, pos[g]) if g in pos else (1, _seen[g]))
+    # Xep CAU trong moi nhom theo thu tu the khai `q`; cau la khong co trong `q` thi
+    # xuong cuoi (giu thu tu file) — nho vay muc luc doc ra cung mot mach voi the.
+    if card_q:
+        for gid, g in groups.items():
+            want = card_q.get(gid) or []
+            rank = {k: i for i, k in enumerate(want)}
+            g["q"].sort(key=lambda k: (rank.get(k, len(rank)), k))
 
     used = set()
     for q in qs:
@@ -476,17 +509,38 @@ def main():
         # map khoa -> the, doc tu codex-terms.js bang Chromium o read_split? khong —
         # doc lai bang regex o day thi du: `q: ["a", "b"]` la mang chuoi phang.
         txt = io.open(card_src, encoding="utf-8").read()
-        card = {}
-        for m in re.finditer(r'id:\s*"(term_[a-z0-9_]+)"(.*?)\n\s*\}\s*(?=,\s*\n\s*\{|\s*\];)',
-                             txt, re.S):
-            cid, body = m.group(1), m.group(2)
-            qm = re.search(r'\bq:\s*\[([^\]]*)\]', body)
+        # ⚠️⚠️ CAT THEO `id:`, KHONG dung lookahead doi `};` hay `, {` NGAY SAU khoi.
+        #    Ban cu doi dieu do va no BO DUNG MOT THE: `term_earth_atmosphere` — the co
+        #    20 cau — vi sau khoi do co mot COMMENT chen vao truoc `{` ke tiep nen
+        #    lookahead truot. Hau qua: 20 cau atmo mat the, moi cau thanh MOT nhom
+        #    `c: null`, badge doi tu "TRAI DAT & KHI QUYEN" sang nhom le. Loi IM LANG.
+        #    ⚠️ Nhanh nay CHUA TUNG chay thanh cong truoc 09/08/2026: lan chia 07/08 dung
+        #       `--from-old` (card dung tu dump_old), con o nhanh nay `parse_sources()`
+        #       nem FileNotFoundError truoc khi toi day. Khong chay thi khong ai thay.
+        _ids = re.findall(r'id:\s*"(term_[a-z0-9_]+)"', txt)
+        _blocks = re.split(r'id:\s*"term_[a-z0-9_]+"', txt)[1:]
+        card, card_q, _with_q = {}, {}, 0
+        for cid, body in zip(_ids, _blocks):
+            qm = re.search(r'\bq:\s*\[([^\]]*)\]', body, re.S)
             if not qm:
                 continue
-            for k in re.findall(r'"([a-z0-9][a-z0-9-]*)"', qm.group(1)):
+            keys = re.findall(r'"([a-z0-9][a-z0-9-]*)"', qm.group(1))
+            if keys:
+                _with_q += 1
+            for k in keys:
                 card[k] = cid
+            card_q[cid] = keys
+        # ⛔ HANG RAO: so THE map duoc phai bang so the CO khai `q` khong rong. Thieu mot
+        #    the la mat ca nhom cau cua no, ma muc luc van sinh ra "thanh cong".
+        _n_decl = sum(1 for b in _blocks if re.search(r'\bq:\s*\[\s*"', b, re.S))
+        if _with_q != _n_decl:
+            sys.exit("HONG: map duoc %d/%d the co khai `q` — mot the bi bo, dung sinh "
+                     "muc luc" % (_with_q, _n_decl))
+        print("  the map duoc     : %d/%d (khoa cau: %d)" % (_with_q, _n_decl, len(card)))
 
-    groups, order, nolv = write_index(qs, card)
+    groups, order, nolv = write_index(
+        qs, card,
+        card_order=locals().get("_ids"), card_q=locals().get("card_q"))
 
     print("=== KET QUA ===")
     print("  cau              : %d" % len(qs))

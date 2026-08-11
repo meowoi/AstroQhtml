@@ -56,6 +56,10 @@ PAGES = [
     "learn.html", "library.html", "codex.html", "quiz.html",
     "games.html", "missions.html", "profile.html", "achievements.html",
     "specimen-vault.html",
+    # pricing.html them 09/08/2026 — bang gia co luoi `auto-fit` va bang so sanh
+    # 3 cot, hai thu de tran ngang nhat tren man hep.
+    "pricing.html",
+    "parent.html",
     # Mini-game + 2 trang 3D: sân chơi khoá theo `aspect-ratio` nên đây là chỗ
     # dễ tràn ngang nhất khi màn thấp (Win 1366x768, iPad ngang).
     "game-dodge.html", "game-defender.html", "game-constellation.html",

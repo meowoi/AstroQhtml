@@ -53,6 +53,16 @@
     'cx-supernova':'<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.9v3.4M12 18.7v3.4M1.9 12h3.4M18.7 12h3.4"/><path d="M4.9 4.9l2.4 2.4M16.7 16.7l2.4 2.4M19.1 4.9l-2.4 2.4M7.3 16.7l-2.4 2.4"/><circle cx="12" cy="12" r="6.4" stroke-dasharray="1.8 2.6"/>',
     'cx-cmb':'<ellipse cx="12" cy="12" rx="9" ry="6.2"/><circle cx="8.2" cy="10.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.8" cy="9.8" r="0.75" fill="currentColor" stroke="none"/><circle cx="11.4" cy="14" r="0.85" fill="currentColor" stroke="none"/><circle cx="16.4" cy="13.6" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.4" cy="13.4" r="0.6" fill="currentColor" stroke="none"/>',
 
+    /* ── 4 icon của Đợt AI/Robot (09/08/2026) ───────────────────────────
+       ⚠️ Cùng luật hai chiều như 4 icon Đợt 1: mọi `ic` của thẻ phải có bản vẽ,
+          và không bản vẽ nào được bỏ không — nên bốn cái này chỉ hợp lệ khi 4 thẻ
+          `term_ai` · `term_machine_learning` · `term_algorithm` · `term_sensor`
+          cùng có mặt trong `js/codex-terms.js`. */
+    'cx-ai':'<rect x="4.6" y="4.6" width="14.8" height="14.8" rx="3.2"/><circle cx="12" cy="12" r="3.1"/><path d="M12 4.6V2.4M12 21.6v-2.2M4.6 12H2.4M21.6 12h-2.2M7.2 7.2 5.6 5.6M18.4 18.4l-1.6-1.6M16.8 7.2l1.6-1.6M5.6 18.4l1.6-1.6"/>',
+    'cx-machine-learning':'<circle cx="5.4" cy="7" r="1.7"/><circle cx="5.4" cy="17" r="1.7"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.6" cy="7.6" r="1.7"/><circle cx="18.6" cy="16.4" r="1.7"/><path d="M7 7.7l3.3 3.1M7 16.3l3.3-3.1M13.8 11.2l3.1-2.7M13.8 12.9l3.1 2.6"/>',
+    'cx-algorithm':'<rect x="8.6" y="2.8" width="6.8" height="4" rx="1.1"/><path d="M12 6.8v3.1"/><path d="M12 9.9 8.4 13.4h7.2z"/><path d="M12 13.4v3.2"/><rect x="8.6" y="16.6" width="6.8" height="4.2" rx="1.1"/><path d="M15.4 18.7h3.4v-9.1"/>',
+    'cx-sensor':'<circle cx="12" cy="17.6" r="2.4"/><path d="M12 15.2V9.4"/><path d="M8.1 9.1a5.6 5.6 0 0 1 7.8 0M5.5 6.3a9.4 9.4 0 0 1 13 0"/>',
+
     /* ── 4 icon của Đợt 1 (06/08/2026) ──────────────────────────────────
        ⚠️ Phép kiểm `check_pages` mục [12] canh icon HAI CHIỀU: mọi `ic` của thẻ
           phải có bản vẽ, VÀ không bản vẽ nào được bỏ không. Nên bốn icon này chỉ
