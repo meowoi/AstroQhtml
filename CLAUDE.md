@@ -336,6 +336,15 @@
 ## 7. Nhật ký yêu cầu (Requirement Log)
 > Ghi mới nhất lên trên.
 
+### 2026-08-11
+- ✅ **ĐÃ PUSH — 4 commit, `4f45c3e` → `83c644e`, bản dựng `2026.08.11.1`.** Gói này gồm **toàn bộ việc từ 08/08 tới nay chưa từng push** (commit gần nhất trước đó là 07/08): `8d3ed1d` lộ trình huấn luyện + bảng phi hành gia + 3 mini-game + vào chơi tiếp · `32c55b0` khoá tính năng trả phí + bảng giá + trang phụ huynh + báo cáo tuần · `9f3fc1e` kho bài đọc 14→39 bài rồi chia một file mỗi bài · `83c644e` khu AI/Robot có thẻ + câu hỏi, sửa bộ sinh mục lục, radar quét đúng chiều. Đóng dấu bản dựng bằng `stamp_version.py` **trước** khi commit.
+  - **Kiểm `.gitignore` TRƯỚC `git add -A`** (bài học 30/07): 0 file ảnh/zip lọt, tổng thêm **656 KB toàn văn bản**.
+  - ⚠️ `scratchpad/check_pages.py`, `js/ui-common.js` và `CLAUDE.md` nằm ở commit cuối nhưng mang thay đổi của **cả bốn** đợt việc — bốn đợt chưa từng commit riêng nên git không tách được theo hunk (đã ghi rõ trong thông điệp commit, đúng tiền lệ 01/08 và 07/08).
+  - ⚠️ **PAGES CHƯA BUILD Ở LƯỢT ĐO ĐẦU:** lần 1 đọc ra `VERSION = 2026.08.07.5` và `js/articles-index.js` **404**; lần 2 (sau ~25s) mới đúng. Đây chính là lý do huy hiệu bản dựng tồn tại — **đo trước khi Pages build xong thì mọi kết luận đều sai**, và 06/08/2026 bản thật từng đứng ở bản cũ gần một ngày.
+  - **ĐO TRÊN BẢN THẬT SAU KHI BUILD — 12/12 đạt, và nó trả lời đúng câu chủ dự án hỏi trước lúc push (*"người dùng thật có xem được không?"*):** ① `library.html` trên `astroq.org` → mục lục **39 bài**, mở bài Ganymede thì **thân bài hiện đủ 4 đoạn**, 2 file `/js/article/*.js` tải về **đều 200**, **0 pageerror**, và **không** hiện câu "không tải được" · ② `needsServer()` = **false** (https) · ③ Sổ Tay **23 thẻ**, nhãn **AI + Robot** hiện ra, **0 thẻ "sắp có"** · ④ `quiz.html?terms=sensor,algorithm,loop` rút **đủ 5 câu** · ⑤ radar: đỉnh đuôi ở `56.5,40.1` (= −126°, thanh đậm dẫn đầu) và đuôi tô bằng gradient.
+  - **MIME đúng trên Pages: `Content-Type: application/javascript; charset=utf-8`** cho `js/article/*.js` — điều kiện sống còn của ES module (`text/plain` là `import()` từ chối), nên phải đo chứ không giả định. **File đã xoá trả 404 đúng** (`js/articles.js`, `scratchpad/sim_dodge.py`).
+  - ⚠️ **CÒN TREO:** ① 25 bài Đợt A+B và 4 thẻ AI/Robot **chưa qua rà soát chuyên môn** · ② thêm thẻ robot (mới 1 thẻ) · ③ bộ lọc phân loại + ô tìm kiếm ở `codex.html` (đáng làm khi mỗi nhóm ~5 thẻ) · ④ email tuần **tự động** vẫn chưa có (cần EventBridge + `sam`, máy chưa cài) · ⑤ khoá `loop` đã có thẻ nhận nhưng **chưa có bài đọc nào dạy vòng lặp**. — `git`, `js/ui-common.js`, `CLAUDE.md`
+
 ### 2026-08-09
 - **TRÌNH ĐỌC BÁO "KHÔNG TẢI ĐƯỢC · KIỂM TRA KẾT NỐI" KHI MỞ BẰNG `file://` — câu đó NÓI SAI NGUYÊN NHÂN.** Chủ dự án gửi ảnh chụp trình đọc ở `library.html`: khung hiện đủ (tiêu đề · badge NASA · emoji) nhưng thân bài là dòng lỗi.
   - **Kiểm thử: `smoke_library_featured` 51 → 55/0** (thêm mục **[9]**) **· `check_pages` 810/0 · `smoke_lang_switch` 204/0 · `smoke_codex` 40/0 · `audit_viewports` (library+learn) 38/0.** Chỉ đổi client.
