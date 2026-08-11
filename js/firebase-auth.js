@@ -487,7 +487,12 @@ const AstroQAuth = {
       → { ok:false, reason:"http", status:403 } khi không phải admin
       `refresh` = true thì BẮT server quét lại bảng (server tự chặn bấm liên tục). */
   async getAdminStats(refresh){
-    const q = refresh ? "?refresh=1" : "";
+    /* ⚠️ GỬI `true`, KHÔNG GỬI `1`. Minimal API của server bind cờ query bằng
+       `bool.TryParse`, mà `TryParse` từ chối "1" — bản đầu gửi `?refresh=1` và cả
+       request trả **400 với thân rỗng**, tức nút "Tính lại ngay" hỏng hoàn toàn trong
+       khi dải nhắc lại báo "không gọi được server". Server nay cũng nhận "1" cho ai gõ
+       tay vào thanh địa chỉ, nhưng client thì gửi đúng dạng. */
+    const q = refresh ? "?refresh=true" : "";
     const r = await this._authed(t => apiGetAuth("/admin/stats" + q, t));
     return r.ok ? { ok:true, data:r.data } : r;
   },

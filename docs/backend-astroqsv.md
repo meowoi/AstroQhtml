@@ -417,6 +417,27 @@ serialize:
 thay chỗ **ghi** snapshot bằng một job EventBridge chạy đêm. Route đọc và cả trang admin
 không phải sửa gì — chúng chỉ biết tới bản chụp.
 
+### ⚠️ `?refresh=1` trả 400 — minimal API bind `bool?` bằng `bool.TryParse`
+
+Đã xảy ra thật ngày 11/08/2026, ngay trên lượt deploy đầu tiên. Handler khai
+`bool? refresh`, client gửi `?refresh=1` → **400 Bad Request với thân rỗng**, tức nút
+"Tính lại ngay" hỏng hoàn toàn trong khi dải nhắc ở client lại báo *"không gọi được
+server"*. `bool.TryParse` CHỈ nhận `"true"`/`"false"`; `"1"` và `"0"` đều trượt.
+
+Không phép kiểm nào trước đó bắt được, và lý do đáng ghi lại:
+* bộ kiểm `Insights` chạy trên dữ liệu bịa nên **không đi qua tầng bind**;
+* test frontend **giả luôn `AstroQAuth`** nên không bao giờ dựng URL thật;
+* `curl` lúc kiểm cổng gọi `/admin/stats` **không kèm tham số** (401 xảy ra trước bind).
+
+Chỉ một lượt gọi thật với token thật + tham số thật mới lộ ra. **Sau mỗi lần deploy,
+gọi endpoint mới bằng token thật kèm ĐỦ các tham số nó nhận** — không chỉ kiểm mã trạng
+thái của đường trống.
+
+Nay `refresh` nhận `string?` và tự đọc (`Truthy`): nhận `1` / `true` / `yes` / `on`,
+mọi thứ khác là false. Cố ý dễ tính — trả 400 vì người ta gõ `1` thay vì `true` là bắt
+người dùng học cú pháp bind của ASP.NET. Đọc không ra thì **không** tính lại: hướng hỏng
+an toàn (dùng bản chụp) chứ không phải hướng đắt tiền (quét cả bảng).
+
 **③ Báo cáo KHÔNG chứa email, tên hay avatar của ai**
 
 Bảng người dùng chỉ có **8 ký tự đầu của uid**. Dữ liệu ở đây là của trẻ em, và một trang
