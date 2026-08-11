@@ -931,8 +931,16 @@ print("\n=== [4] Chi cac trang noi dung duoc nap SDK Firebase ===")
 # parent.html them 09/08/2026: bao cao tuan doc `GET /me/report` nen BAT BUOC co
 # token. Cung danh doi co y thuc nhu specimen-vault/codex — day la trang noi dung
 # cho PHU HUYNH doc, khong phai man choi can muot.
+# admin-report.html them 11/08/2026: doc `GET /admin/stats` nen BAT BUOC co token.
+# Day la trang QUAN TRI, chi mot nguoi doc va khong nam tren luong choi nao — 233 KB
+# o day khong lam cham trai nghiem cua tre. Trang cung `noindex,nofollow` va khong
+# duoc noi tu dau ca (vao bang duong dan hoac muc trong trang Ho so).
+#   ⚠️ Phep kiem nay da BAT DUOC dung viec no sinh ra de bat: `admin-report.html`
+#      duoc them va push 5 lan ma khong ai them vao danh sach nay. Danh sach trang
+#      khong tu suy ra duoc — no la QUYET DINH, nen phai viet ra.
 allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.html",
-           "specimen-vault.html", "missions.html", "codex.html", "parent.html"}
+           "specimen-vault.html", "missions.html", "codex.html", "parent.html",
+           "admin-report.html"}
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue
