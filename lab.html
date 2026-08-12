@@ -48,6 +48,14 @@
       <h1 data-i18n="h1">Phòng Nghiên Cứu</h1>
       <p class="hero-sub" data-i18n="sub">Tự tay làm thí nghiệm rồi tự tìm ra câu trả lời.</p>
     </div>
+    <!-- ⚠️ Dải nhắc PHẢI THẤY ĐƯỢC: một trạng thái khác hẳn bản thật mà không nói ra
+         thì chính người thử sẽ kết luận sai về sản phẩm. Cùng lý do có `.env-badge`
+         khi `?api=local`. Nó tự hiện/ẩn theo cờ, không phải gõ tay. -->
+    <div class="lab-dev" id="lab-dev" hidden>
+      <span aria-hidden="true">🔧</span>
+      <span id="lab-dev-txt"></span>
+      <a href="lab.html?unlock=0" id="lab-dev-off"></a>
+    </div>
     <div class="lgrid" id="lgrid"></div>
   </section>
 
@@ -117,12 +125,16 @@
   var VI = {
     back:"Về Trung Tâm Điều Hướng",
     h1:"Phòng Nghiên Cứu",
-    sub:"Tự tay làm thí nghiệm rồi tự tìm ra câu trả lời."
+    sub:"Tự tay làm thí nghiệm rồi tự tìm ra câu trả lời.",
+    dev_note:"CHẾ ĐỘ THỬ — đang mở cả thẻ trả phí. Đây không phải thứ trẻ nhìn thấy.",
+    dev_off:"Tắt chế độ thử"
   };
   var EN = {
     back:"Back to Navigation Hub",
     h1:"Research Lab",
-    sub:"Run the experiment yourself and find the answer yourself."
+    sub:"Run the experiment yourself and find the answer yourself.",
+    dev_note:"TEST MODE — paid cards are open. This is not what a child sees.",
+    dev_off:"Turn test mode off"
   };
   /* Khoá giao diện của lab nằm ở js/lab-catalog.js (một chỗ khai) — hai từ điển
      trên chỉ giữ phần RIÊNG của trang này. `t()` tra lab trước, rồi mới tới đây. */
@@ -133,6 +145,34 @@
     return (d[k] != null) ? d[k] : k;
   }
 
+  /* ══════════════════ CHẾ ĐỘ THỬ ══════════════════
+     `?unlock=1` cho MỞ các thẻ trả phí để chủ dự án chơi thử; `?unlock=0` tắt.
+     Nhớ trong `sessionStorage` nên tải lại trang không phải gõ lại, và đóng tab là
+     hết — đúng khuôn `?api=prod|local` · `?onboard=1` · `?restart=1` · `?step=`
+     mà dự án đã dùng, và cùng lối `sessionStorage` của lời nhắc xoay ngang.
+
+     ⚠️⚠️ ĐÂY KHÔNG PHẢI MỘT LỖ HỔNG THANH TOÁN, VÀ CŨNG KHÔNG PHẢI LỚP BẢO VỆ.
+        Nội dung của lab nằm HẾT trong `js/lab-catalog.js` gửi tới máy khách, nên ai
+        mở DevTools cũng chơi được LAB-02/03 dù không có cờ này — cờ chỉ làm việc đó
+        tiện hơn. Nghĩa là hàng rào `pro` của lab hôm nay là một LỜI NÓI THẬT về việc
+        "cái này thuộc gói nào", KHÔNG phải một cái khoá. Muốn nó thành khoá thật thì
+        nội dung phải chuyển sang server sau một phép kiểm token — một việc backend
+        riêng, chưa làm. Ghi ra đây để không ai tưởng nó đã được bảo vệ.
+
+     ⚠️ Cờ CHỈ mở thẻ `pro`, KHÔNG mở thẻ `soon`: mấy thẻ đó chưa có nội dung nên
+        mở ra là một màn trống — đúng cái bẫy `soon`/`pro` mà js/locks.js sinh ra để
+        tránh. */
+  var UNLOCK_KEY = "astroq-lab-unlock";
+  (function readFlag(){
+    try{
+      if (/[?&]unlock=1/.test(location.search)) sessionStorage.setItem(UNLOCK_KEY, "1");
+      if (/[?&]unlock=0/.test(location.search)) sessionStorage.removeItem(UNLOCK_KEY);
+    }catch(e){}
+  })();
+  function devUnlock(){
+    try{ return sessionStorage.getItem(UNLOCK_KEY) === "1"; }catch(e){ return false; }
+  }
+
   var view = null;          // null = lưới, hoặc id thẻ đang mở
   var scene = null;         // AstroQLabDrop
   var place = "earth";
@@ -141,10 +181,19 @@
   /* ══════════════════ LƯỚI THẺ ══════════════════ */
   function cardState(c){
     if (!c.lock) return "free";
-    return AstroQLocks.state(c.lock);        // "soon" | "pro"
+    var st = AstroQLocks.state(c.lock);      // "soon" | "pro"
+    // Chế độ thử: mở thẻ `pro`, giữ nguyên thẻ `soon` (chúng chưa có nội dung).
+    if (st === "pro" && devUnlock()) return "free";
+    return st;
   }
 
   function renderGrid(){
+    var dev = $("lab-dev");
+    dev.hidden = !devUnlock();
+    if (devUnlock()){
+      $("lab-dev-txt").textContent = t("dev_note");
+      $("lab-dev-off").textContent = t("dev_off");
+    }
     var host = $("lgrid");
     host.innerHTML = "";
     LAB.CARDS.forEach(function(c){

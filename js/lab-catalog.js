@@ -71,11 +71,21 @@
              "Mercury. If, on the other hand, you were on heavy Jupiter, you would " +
              "weigh a whopping 253 pounds!"
     },
+    /* ⚠️⚠️ URL CŨ ĐÃ CHẾT — `nasa.gov/audience/foreducators/microgravity/index.html`
+       trả **404** (kiểm 12/08/2026). Đây là lần thứ hai dự án gặp một nguồn NASA tự
+       chết sau lượt dời cấu trúc site của họ (lần đầu: bảng NSSDC Planetary Fact
+       Sheet trả 307 về www.nasa.gov/nssdc/). ⇒ Mọi URL nguồn phải KIỂM 200 LẠI, đừng
+       tin một URL đã từng đúng: `scratchpad/check_lab_sources.py` làm việc đó.
+       ⚠️ VÀ TRANG MỚI KHÔNG NÓI "90%". Bản đầu của `more_float` khẳng định *"trọng
+       lực Trái Đất vẫn còn khoảng 90%"* — con số đó lấy từ trang ĐÃ CHẾT và trang
+       sống KHÔNG phát biểu nó, nên đã bỏ. Thay bằng đúng câu trang nói: trường hấp
+       dẫn ở đó *"still quite strong"*, và độ cao **120–360 dặm**. */
     micro: {
-      url: "https://www.nasa.gov/audience/foreducators/microgravity/index.html",
-      quote: "The spacecraft, its crew and any objects aboard are all falling toward " +
-             "but around Earth. Since they are all falling together, the crew and " +
-             "objects appear to float."
+      url: "https://www.nasa.gov/general/what-is-microgravity/",
+      quote: "That's because they're all falling together: the apple, the astronaut " +
+             "and the station. But they're not falling towards Earth, they're falling " +
+             "around it. Because they're all falling at the same rate, objects inside " +
+             "of the station appear to float."
     }
   };
 
@@ -104,7 +114,7 @@
     vi: {
       /* ── tên nơi + vật ── */
       p_earth: "Trái Đất", p_moon: "Mặt Trăng", p_mercury: "Sao Thuỷ", p_jupiter: "Sao Mộc",
-      o_hammer: "Búa", o_feather: "Lông chim", o_ball: "Quả bóng", o_pen: "Cây bút",
+      o_hammer: "Búa", o_feather: "Lông chim", o_ball: "Quả bóng", o_apple: "Quả táo",
 
       /* ── LAB-01 ── */
       t_tower: "Tháp thả rơi",
@@ -117,10 +127,10 @@
 
       /* ── LAB-02 ── */
       t_float: "Vì sao phi hành gia trôi",
-      d_float: "Buông một vật trong trạm vũ trụ. Nó sẽ rơi xuống chứ?",
-      q_float: "Trong trạm vũ trụ, em buông cây bút ra. Em nghĩ nó làm gì?",
-      say_float: "Nó trôi cạnh em! Không phải vì hết trọng lực — mà vì em VÀ cây bút đang rơi cùng nhau.",
-      more_float: "Ở độ cao của trạm, trọng lực Trái Đất vẫn còn khoảng 90% so với trên mặt đất. Trạm không hề đứng yên: nó lao đi rất nhanh — 17.500 dặm một giờ — nên nó rơi về phía Trái Đất mà cứ đi vòng quanh chứ không chạm xuống. Phi hành gia, cây bút và cả cái trạm đều rơi cùng nhau, nên nhìn nhau thì thấy như đang trôi.",
+      d_float: "Buông một quả táo trong trạm vũ trụ. Nó sẽ rơi xuống chứ?",
+      q_float: "Trong trạm vũ trụ, em buông một quả táo ra. Em nghĩ nó làm gì?",
+      say_float: "Nó trôi cạnh em! Không phải vì hết trọng lực — mà vì em VÀ quả táo đang rơi cùng nhau.",
+      more_float: "Rất nhiều người tưởng trong không gian không có trọng lực. Nhưng trạm chỉ bay cách mặt đất khoảng 120–360 dặm, và ở đó lực hấp dẫn vẫn còn rất mạnh. Trạm cũng không hề đứng yên: nó lao đi 17.500 dặm một giờ, nên nó rơi mà cứ đi VÒNG QUANH Trái Đất chứ không chạm xuống. Em, quả táo và cả cái trạm đều rơi cùng một nhịp — nên nhìn nhau thì thấy như đang trôi. Khối lượng của em không đổi một chút nào; chỉ có cái cân là chỉ số 0.",
       find_float: "Trôi trong không gian là đang rơi cùng nhau, không phải hết trọng lực.",
 
       /* ── LAB-03 ── */
@@ -161,7 +171,7 @@
     },
     en: {
       p_earth: "Earth", p_moon: "the Moon", p_mercury: "Mercury", p_jupiter: "Jupiter",
-      o_hammer: "Hammer", o_feather: "Feather", o_ball: "Ball", o_pen: "Pen",
+      o_hammer: "Hammer", o_feather: "Feather", o_ball: "Ball", o_apple: "Apple",
 
       t_tower: "The drop tower",
       d_tower: "Drop a hammer and a feather together. Which one lands first?",
@@ -172,10 +182,10 @@
       find_tower: "With no air, everything falls at the same rate.",
 
       t_float: "Why astronauts float",
-      d_float: "Let go of something inside a space station. Will it drop?",
-      q_float: "Inside the station you let go of a pen. What do you think it does?",
-      say_float: "It floats beside you! Not because gravity is gone — because you AND the pen are falling together.",
-      more_float: "At the station's altitude, Earth's gravity is still about 90 percent of what it is at the surface. The station isn't parked up there: it's moving very fast — 17,500 miles per hour — so it falls toward Earth but keeps going around instead of hitting it. The astronauts, the pen and the station are all falling together, so to each other they look like they're floating.",
+      d_float: "Let go of an apple inside a space station. Will it drop?",
+      q_float: "Inside the station you let go of an apple. What do you think it does?",
+      say_float: "It floats beside you! Not because gravity is gone — because you AND the apple are falling together.",
+      more_float: "Lots of people think there is no gravity in space. But the station orbits only about 120–360 miles above Earth's surface, and the gravitational field is still quite strong up there. The station isn't parked either: it travels at 17,500 miles per hour, so it falls but keeps going AROUND Earth instead of hitting it. You, the apple and the whole station all fall at the same rate — so to each other you look like you're floating. Your mass doesn't change at all; it's only a scale that would read zero.",
       find_float: "Floating in space means falling together, not gravity switching off.",
 
       t_weigh: "What you weigh, and where",

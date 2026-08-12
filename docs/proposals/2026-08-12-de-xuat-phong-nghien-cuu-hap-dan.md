@@ -598,3 +598,66 @@ lặp lại đúng lỗi của `f_lab_2`.
 6. *(Kèm theo khi MOD-05 mở)* `check_pages.py` mục **[7b]** đang canh **đúng 1** card khoá trên
    dashboard — mở MOD-05 là con số đó về **0**, phải đổi phát biểu phép kiểm cùng lúc, không thì
    nó báo hỏng đúng lúc sản phẩm làm đúng (lỗi này đã lặp nhiều lần trong dự án).
+
+
+---
+
+# BẢN CẬP NHẬT 3 — 12/08/2026: đã dựng, và một nguồn CHẾT lọt tới bản thật
+
+## 22. ⚠️⚠️ URL nguồn của LAB-02 trả **404** — đã lọt lên `astroq.org`
+
+`nasa.gov/audience/foreducators/microgravity/index.html` (nguồn ghi ở mục 7, bảng "đã tra và
+xác minh") **trả 404** khi kiểm lại ngày 12/08/2026. Nó đã kịp lên bản thật ở dòng *"Nguồn:"*
+của LAB-02, tức trẻ bấm vào là rơi vào một trang không tồn tại — thứ tệ nhất có thể xảy ra với
+một khu mà cả lý do tồn tại là **dẫn nguồn**.
+
+**Đây là lần thứ HAI trong cùng một tài liệu**, sau bảng NSSDC Planetary Fact Sheet (307 về
+`www.nasa.gov/nssdc/`). Cả hai là nạn nhân của cùng một lượt dời cấu trúc site của NASA.
+⇒ **Một URL đã từng đúng KHÔNG có nghĩa là nó còn đúng.** Nay có
+**`scratchpad/check_lab_sources.py`** đọc URL thẳng từ `js/lab-catalog.js` rồi kiểm 200, cộng
+một danh sách **ghim những URL đã chết** để không ai "khôi phục" lại chúng. 12/0.
+
+### 22.1 Và trang sống KHÔNG nói "90%" — đã bỏ con số đó
+
+Mục 15 dẫn *"At that altitude, Earth's gravity is about 90 percent of what it is on the
+planet's surface."* Câu đó ở trang **đã chết**; trang sống
+(`www.nasa.gov/general/what-is-microgravity/`, kiểm 200) **không phát biểu nó** — tôi đã tìm
+`90`, `percent of what`, `surface of the Earth`: **0 lần**. Nên `more_float` đã bỏ con số 90%.
+
+**Trang sống cho ba thứ tốt hơn**, tất cả nguyên văn:
+
+| Dùng vào | Nguyên văn |
+|---|---|
+| Phá quan niệm sai, **không cần con số** | *"Many people mistakenly think that gravity does not exist in space. However, typical orbital altitudes for human spaceflight vary between 120 – 360 miles above Earth's surface. The gravitational field is still quite strong in these regions"* |
+| Hạt nhân của LAB-02 | *"That's because they're all falling together: the apple, the astronaut and the station. But they're not falling towards Earth, they're falling around it."* |
+| Nối LAB-02 sang LAB-03 | *"The object's mass is the same, but it would register "0" on a scale."* |
+
+⚠️ **Và nó trả lại một thứ mục 15 đã bỏ oan.** Mục đó ghi *"HAI THỨ TÔI ĐÃ BỎ vì trang KHÔNG
+nói"*, trong đó có **ví dụ quả táo** — cỗ máy tìm kiếm đưa nó ra, trang cũ không có, nên tôi
+bỏ. Nó **có thật, ở trang sống**. Nên LAB-02 nay buông **quả táo** đúng như nguồn, không phải
+cây bút tôi tự chọn. ⇒ *Bỏ một chi tiết vì trang không nói là đúng; nhưng khi nguồn đổi thì
+kiểm lại, đừng để lệnh cấm cũ sống mãi.*
+
+## 23. Đã dựng xong — và LAB-02/03 hôm nay không ai chơi được
+
+`lab.html` · `css/lab.css` · `js/lab-catalog.js` · `js/lab-drop.js` đã lên bản thật (bản dựng
+`2026.08.12.3`). LAB-01 miễn phí chơi được; **LAB-02 và LAB-03 là `pro` mà `SALE_OPEN` đang
+tắt nên không đứa trẻ nào vào được** — hệ quả trực tiếp của quyết định 1+3, và mở bán là chúng
+sống ngay, không phải sửa code.
+
+⚠️ **Vì thế chúng cũng suýt không bao giờ được chạy thử.** Tôi dựng xong hai thẻ đó mà **chưa
+từng mở chúng một lần nào** — chính câu hỏi của chủ dự án (*"không mở thì tôi test kiểu gì?"*)
+lộ ra lỗ đó. Nay có cờ **`?unlock=1`** (nhớ trong `sessionStorage`, có dải nhắc **thấy được**,
+`?unlock=0` để tắt), và `smoke_lab.py` chơi cả ba thẻ qua nó: **83/0**.
+
+⚠️⚠️ **CỜ ĐÓ KHÔNG PHẢI MỘT LỖ HỔNG, VÀ HÀNG RÀO `pro` CỦA LAB CŨNG KHÔNG PHẢI MỘT CÁI KHOÁ.**
+Nội dung của lab nằm **hết** trong `js/lab-catalog.js` gửi tới máy khách, nên ai mở DevTools
+cũng chơi được LAB-02/03 dù không có cờ. Nghĩa là `pro` ở đây là một **lời nói thật** về việc
+"cái này thuộc gói nào", không phải một phép chặn. **Muốn nó thành khoá thật thì nội dung phải
+chuyển sang server sau một phép kiểm token** — một việc backend riêng, chưa làm, và cần chốt
+trước khi bán: bán một thứ mà ai cũng lấy được miễn phí là một quyết định kinh doanh, không
+phải một chi tiết kỹ thuật.
+
+⚠️ Kèm một phép đo YẾU tôi đã siết: `ink()` đếm pixel có mực = **đúng diện tích canvas**, nên
+nó cho **cùng một con số ở cả ba cảnh** (417998) — nó chứng minh "có tô gì đó", **không** chứng
+minh ba cảnh khác nhau. Nay có phép bấm ảnh từng cảnh rồi so: ba con số phải khác nhau.

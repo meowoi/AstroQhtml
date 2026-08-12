@@ -165,3 +165,17 @@
 @media (prefers-reduced-motion: reduce){
   .lcard, .lcard:hover{ transition:none; transform:none; }
 }
+
+/* ── Dải nhắc CHẾ ĐỘ THỬ (`?unlock=1`) ────────────────────────────────────
+   ⚠️ Phải THẤY ĐƯỢC và phải khác hẳn tông của sản phẩm: một trạng thái không
+   giống bản thật mà không nói ra thì chính người thử sẽ kết luận sai về sản phẩm.
+   Cùng lý do `.env-badge` tồn tại khi `?api=local`. */
+.lab-dev{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin-top:14px; padding:11px 14px; border-radius:12px;
+  background:rgba(255,207,107,.12); border:1px dashed rgba(255,207,107,.55);
+  font:600 12.5px/1.45 Inter, sans-serif; color:#ffcf6b;
+}
+.lab-dev[hidden]{ display:none; }   /* BẮT BUỘC: `display` tác giả thắng [hidden] */
+.lab-dev a{ margin-left:auto; color:#ffcf6b; text-decoration:underline; min-height:44px;
+            display:inline-flex; align-items:center; }

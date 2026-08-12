@@ -226,10 +226,10 @@
       var bob = reduced() ? 0 : Math.sin(floatT * 1.6) * 4;
       ctx.font = "44px system-ui, sans-serif"; ctx.textAlign = "center";
       ctx.fillText("🧑‍🚀", -34, 26 + bob);
-      ctx.fillText("🖊️", 46, 20 + bob);
+      ctx.fillText("🍎", 46, 20 + bob);
       ctx.restore();
 
-      label(sx, sy + 96, tx("o_pen"));
+      label(sx, sy + 96, tx("o_apple"));
       return !reduced();
     }
 

@@ -203,6 +203,113 @@ with sync_playwright() as pw:
     ctx.close()
 
     # ══════════════════════════════════════════════════════════ [4] Doi ngon ngu
+    # ══════════════════════════════════ [3d] LAB-02 + LAB-03 qua che do thu
+    # ⚠️ Hai the nay la `pro` + SALE_OPEN dang tat nen KHONG AI CHOI DUOC o ban that.
+    #    Khong co duong mo chung ra thi chung la noi dung KHONG BAO GIO duoc chay
+    #    thu — va do dung la lo hong da co that: LAB-02/03 dung xong ma chua tung
+    #    mo mot lan nao. `?unlock=1` la duong do.
+    print("\n[3d] LAB-02 + LAB-03 (che do thu ?unlock=1)")
+    ctx, pg = mk(br)
+    pg.goto(URL + "?unlock=1", wait_until="load")
+    pg.wait_for_selector(".lcard", timeout=8000)
+    check("dai nhac CHE DO THU hien ra (khong am tham doi trang thai)",
+          pg.is_visible("#lab-dev"))
+    check("dai nhac noi ro day khong phai thu tre thay",
+          "trẻ" in pg.inner_text("#lab-dev"), pg.inner_text("#lab-dev")[:60])
+    tags2 = pg.eval_on_selector_all(".lc-tag", "e => e.map(x => x.className)")
+    check("che do thu MO the tra phi", all("free" in t for t in tags2[:3]),
+          " | ".join(t.replace("lc-tag ", "") for t in tags2))
+    # ⚠️ VA KHONG mo the `soon`: chung chua co noi dung, mo ra la mot man trong —
+    #    dung cai bay `soon`/`pro` ma js/locks.js sinh ra de tranh.
+    check("che do thu KHONG mo the 'soon'", all("soon" in t for t in tags2[3:]),
+          " | ".join(t.replace("lc-tag ", "") for t in tags2[3:]))
+
+    def stamp(pg):
+        """Bam mot con so tu anh canvas — de so HAI CANH co khac nhau khong."""
+        return pg.evaluate("""() => {
+            const c = document.getElementById('cv');
+            const g = c.getContext('2d');
+            const d = g.getImageData(0, 0, c.width, c.height).data;
+            let h = 2166136261;
+            for (let i = 0; i < d.length; i += 997) { h ^= d[i]; h = (h * 16777619) >>> 0; }
+            return h;
+        }""")
+
+    shots = {}
+    for cid, code in (("tower", "LAB-01"), ("float", "LAB-02"), ("weigh", "LAB-03")):
+        pg.goto(URL + "?unlock=1", wait_until="load")
+        pg.wait_for_selector(".lcard", timeout=8000)
+        pg.click(".lcard[data-card='%s']" % cid)
+        opened = True
+        try:
+            pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+        except Exception:
+            opened = False
+        check("%s MO DUOC man thi nghiem" % code, opened)
+        if not opened:
+            continue
+        pg.wait_for_timeout(700)
+        check("%s hien dung ma the" % code, pg.inner_text("#exp-code") == code,
+              pg.inner_text("#exp-code"))
+        check("%s canh 2D duoc ve" % code, ink(pg) > 20000)
+        shots[code] = stamp(pg)
+        check("%s co dan nguon NASA" % code,
+              len(pg.eval_on_selector_all("#srcs a", "e => e.map(x => x.href)")) >= 1)
+
+    # ⚠️ Phep kiem nay la thu `ink()` KHONG lam duoc: ba canh phai la ba hinh khac
+    #    nhau. Thieu no thi `setScene` co the ve sai canh ma bo do van xanh.
+    check("BA CANH KHAC NHAU (khong phai cung mot hinh)",
+          len(set(shots.values())) == 3, str(shots))
+
+    print("\n[3e] LAB-02: buong qua tao ra thi no TROI")
+    pg.goto(URL + "?unlock=1", wait_until="load")
+    pg.wait_for_selector(".lcard", timeout=8000)
+    pg.click(".lcard[data-card='float']")
+    pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+    check("co 2 nut doan", len(pg.query_selector_all("#guess button")) == 2)
+    check("chua doan thi chua he lo", not pg.is_visible("#finding"))
+    pg.click("#guess button:nth-child(1)")          # "Roi xuong san" — doan sai
+    pg.wait_for_timeout(300)
+    check("doan roi thi he lo ngay (the nay khong can nut Tha)",
+          pg.is_visible("#finding"))
+    say2 = pg.inner_text("#say")
+    check("noi ro KHONG phai vi het trong luc",
+          "hết trọng lực" in say2.casefold(), say2[-70:])
+    pg.click("#more-btn"); pg.wait_for_timeout(250)
+    mf = pg.inner_text("#more-box")
+    # ⚠️ Con so 90% DA BO: URL nguon cu tra 404, va trang song KHONG phat bieu no.
+    #    Phep kiem nay giu no khong quay lai.
+    check("do sau thu hai KHONG con con so 90% khong nguon", "90" not in mf)
+    check("do sau thu hai dung con so CO NGUON 17.500",
+          "17.500" in mf or "17,500" in mf, mf[:60])
+    check("do sau thu hai noi truong hap dan VAN CON MANH",
+          "vẫn còn rất mạnh" in mf.casefold(), mf[:80])
+
+    print("\n[3f] LAB-03: doi noi thi CAN doi so")
+    pg.goto(URL + "?unlock=1", wait_until="load")
+    pg.wait_for_selector(".lcard", timeout=8000)
+    pg.click(".lcard[data-card='weigh']")
+    pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+    places_txt = pg.inner_text("#places").replace("\n", " ")
+    check("co du 4 noi", len(pg.query_selector_all("#places button")) == 4, places_txt)
+    # ⚠️ SAO HOA KHONG duoc co mat: nguon chi chong lung 4 noi va Sao Hoa khong nam
+    #    trong do (Space Place chi nhac Sao Hoa khi noi ve KHOI LUONG, khong cho ti
+    #    le CAN NANG nao). Them Sao Hoa la bia mot con so.
+    check("KHONG co Sao Hoa trong danh sach noi",
+          "Hoả" not in places_txt and "Hỏa" not in places_txt, places_txt)
+    pg.wait_for_timeout(500)
+    s_earth = stamp(pg)
+    pg.click("#places button:nth-child(2)")         # Mat Trang
+    pg.wait_for_timeout(600)
+    s_moon = stamp(pg)
+    check("doi noi thi so tren can doi (canh ve lai khac han)",
+          s_earth != s_moon, "%s vs %s" % (s_earth, s_moon))
+    mw = pg.inner_text("#fi-t")
+    check("phat hien: can nang doi, khoi luong khong",
+          "khối lượng" in mw.casefold(), mw[:60])
+    check("khong loi trang", pg.perr == [], "; ".join(pg.perr[:2]))
+    ctx.close()
+
     print("\n[4] Ban EN")
     ctx, pg = mk(br, "en")
     pg.goto(URL, wait_until="load")
