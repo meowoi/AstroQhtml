@@ -14,7 +14,6 @@
 
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/sticker-icons.css" />
-<link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
 <link rel="stylesheet" href="css/mascot.css" />
@@ -23,7 +22,6 @@
 <script src="js/icons.js"></script>
 <script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
-<script src="js/locks.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
 <script src="js/badges.js"></script>
 <script src="js/ranks.js"></script>
@@ -347,15 +345,23 @@
          ⚠️ HUY HIỆU LÀ "SẮP RA MẮT", KHÔNG PHẢI "TRẢ PHÍ" — khu này chưa có nội
             dung, gắn nhãn trả phí là hứa rằng trả tiền sẽ mở được. Xem ba trạng
             thái ở js/locks.js. -->
-    <article class="hud card--lab soon">
-      <div class="hud-line top"><span><span class="led standby"></span>MOD-05</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
-      <span class="lk-badge soon lk-pin" id="lab-badge"></span>
+    <!-- ⚠️ MỞ KHOÁ 12/08/2026: khu này nay có trang thật `lab.html`, nên bỏ hẳn
+         `.soon`, đèn về `ok` và nhãn về SYS.ONLINE. `SYS.STANDBY` màu hổ phách
+         cạnh một cái nút bấm được là hai thông điệp ngược nhau.
+         ⚠️ Huy hiệu `.lk-badge` và hàm `paintLockBadge()` ĐÃ BỎ THEO: mục `"lab"`
+         không còn trong js/locks.js (khoá nay theo TỪNG THẺ bên trong lab), nên
+         `AstroQLocks.get("lab")` trả null và huy hiệu sẽ đứng RỖNG.
+         ⚠️ `lab_desc` GIỮ NGUYÊN lời hứa cũ — "trộn nguyên tố" là thẻ LAB-06 ở
+         trạng thái `soon` bên trong, nên câu này vẫn đúng; xem mục 12 của đề xuất.
+         ⚠️ Dashboard giờ còn 0 card khoá → `check_pages` mục [7b] đã đổi phát biểu. -->
+    <article class="hud card--lab">
+      <div class="hud-line top"><span><span class="led ok"></span>MOD-05</span><span data-i18n="sys_online">SYS.ONLINE</span></div>
       <div class="ic" data-sic="flask"></div>
       <span class="tag" data-i18n="lab_tag">Thí nghiệm ảo</span>
       <h3 data-i18n="lab_title">Phòng Nghiên Cứu</h3>
       <p data-i18n="lab_desc">Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.</p>
-      <button class="jelly-btn lk-open" id="lab-btn" type="button" data-i18n="lab_why">Xem trước</button>
-      <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
+      <button class="jelly-btn" id="lab-btn" type="button" data-i18n="lab_open">Vào phòng thí nghiệm</button>
+      <div class="hud-line bot"><span>LAB: ONLINE</span><span data-i18n="lab_ready">SẴN SÀNG</span></div>
     </article>
 
   </section>
@@ -436,7 +442,8 @@
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
       pt_parent:"Dành cho bố mẹ: xem báo cáo tuần của con",
-      lab_why:"Xem trước", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
+      lab_open:"Vào phòng thí nghiệm", lab_ready:"SẴN SÀNG",
+      soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -484,7 +491,8 @@
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
       pt_parent:"For parents: see your child's weekly report",
-      lab_why:"Sneak peek", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
+      lab_open:"Enter the lab", lab_ready:"READY",
+      soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       need_title:"Not enough Purple Asteroids!",
       need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
       need_go:"Do Quiz now", need_later:"Later",
@@ -736,7 +744,6 @@
     // Màn giới thiệu / màn loading đang mở thì dịch theo luôn (chúng tự vẽ lại).
     if(window.AstroQTour){ AstroQTour.setLang(LANG); AstroQTour.setName(name); }
     if(window.AstroQWarp) AstroQWarp.setLang(LANG);
-    paintLockBadge();
   }
 
   /* Huy hiệu khoá của thẻ MOD-05. Chữ nằm ở js/locks.js (chỗ duy nhất khai), nên
@@ -747,18 +754,18 @@
         RA MẮT" trong khi modal đã nói "thuộc gói Phi Hành Gia" — hai thông điệp
         ngược nhau, và nó xảy ra ĐÚNG LÚC cơ chế này được dùng tới (ngày bật cờ).
         mission-map.html và games.html vốn đã suy từ `lk.state`; chỉ chỗ này lệch. */
-  function paintLockBadge(){
-    var b = $("lab-badge");
-    if(!b || !window.AstroQLocks) return;
-    var it = AstroQLocks.get("lab");
-    if(!it) return;
-    b.textContent = AstroQLocks.text(it.state === "soon" ? "badge_soon" : "badge_pro");
-    b.className = "lk-badge lk-pin " + it.state;
-  }
+  /* ⚠️ `paintLockBadge()` ĐÃ BỎ 12/08/2026 cùng lúc mở khoá MOD-05: mục `"lab"`
+     không còn trong js/locks.js nên `AstroQLocks.get("lab")` trả null, và một
+     huy hiệu không bao giờ được điền chữ là một huy hiệu RỖNG nằm trên thẻ.
+     Dashboard hiện KHÔNG còn card nào bị khoá; ngày có card khoá thứ hai thì
+     dựng lại theo đúng khuôn cũ — suy chữ và class TỪ `state`, đừng gõ cứng. */
 
   /* ---- Modal ---- */
   function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
   function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
+
+  /* ---- Phòng Nghiên Cứu (MOD-05) → lab.html ---- */
+  $("lab-btn").addEventListener("click", function(){ window.location.href="lab.html"; });
 
   /* ---- Khu Huấn Luyện → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
   $("btn-game").addEventListener("click", function(){ window.location.href="games.html"; });
@@ -786,9 +793,6 @@
   applyLang(LANG);
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
   tickTelemetry(); setInterval(tickTelemetry, 2500);
-
-  // Thẻ MOD-05 bị khoá: bấm là mở modal giải thích (js/locks.js)
-  if(window.AstroQLocks) AstroQLocks.wire($("lab-btn"), "lab");
 
   AstroQ.initLang(applyLang);
 

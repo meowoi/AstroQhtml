@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     follow = vẫn cho bot đi theo link. XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Phòng Nghiên Cứu</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/mascot.css" />
+<link rel="stylesheet" href="css/locks.css" />
+<link rel="stylesheet" href="css/lab.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/lab-catalog.js"></script>
+<script src="js/lab-drop.js"></script>
+<script src="js/locks.js"></script>
+<!-- ⚠️ CỐ Ý KHÔNG nạp js/firebase-auth.js (SDK 64,2 KB gzip): phiên bản đầu của
+     Phòng Nghiên Cứu KHÔNG ghi gì lên server, nên nó không cần token. Lý do đầy
+     đủ ở docs/proposals/2026-08-12-… mục 5: `POST /me/progress` trả 400 với
+     `reason` lạ (Wallet không có mục nào cho `lab`), và mẫu codex thì gắn với
+     BƯỚC NHIỆM VỤ. Lab là chỗ chơi tự do, không phải chỗ kiếm Thiên thạch tím.
+     ⚠️ `GET /billing/catalog` là route CÔNG KHAI nên không cần token — nạp
+     js/api.js bằng import ĐỘNG lúc cần, không đặt thẻ <script>. -->
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ RESEARCH_LAB ]</span>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- ══ LƯỚI THẺ ══ -->
+  <section id="grid-view">
+    <div class="hero">
+      <h1 data-i18n="h1">Phòng Nghiên Cứu</h1>
+      <p class="hero-sub" data-i18n="sub">Tự tay làm thí nghiệm rồi tự tìm ra câu trả lời.</p>
+    </div>
+    <div class="lgrid" id="lgrid"></div>
+  </section>
+
+  <!-- ══ MÀN THÍ NGHIỆM ══ -->
+  <section class="exp" id="exp-view" hidden>
+    <button class="pbtn ghost" id="to-grid" type="button">
+      <span>&lt;</span> <span data-i18n="ui_back_grid">Về Phòng Nghiên Cứu</span>
+    </button>
+
+    <div class="exp-head">
+      <span class="exp-name" id="exp-name"></span>
+      <span class="exp-code" id="exp-code"></span>
+    </div>
+
+    <div class="stage"><canvas id="cv"></canvas></div>
+
+    <!-- Chọn nơi (LAB-01 và LAB-03) -->
+    <div class="exp-ctl" id="ctl-places" hidden>
+      <span class="ctl-lbl" data-i18n="ui_pick_place">Chọn nơi:</span>
+      <div class="places seg" id="places"></div>
+    </div>
+
+    <!-- Comet đặt câu hỏi / giải thích. Vỏ box lấy từ css/mascot.css. -->
+    <div class="aq-say lab-say" id="say">
+      <img class="aq-ava" id="say-ava" src="ava/avam.png" alt="Comet" />
+      <div>
+        <span class="aq-nm" id="say-nm">Comet</span>
+        <p id="say-txt"></p>
+      </div>
+    </div>
+
+    <!-- Trẻ đoán TRƯỚC khi thấy kết quả — đoán sai KHÔNG phạt gì. -->
+    <div class="guess" id="guess"></div>
+
+    <div class="exp-ctl" id="ctl-run" hidden>
+      <button class="pbtn" id="run" type="button" data-i18n="ui_drop">Thả!</button>
+      <button class="pbtn ghost" id="again" type="button" data-i18n="ui_again">Làm lại</button>
+    </div>
+
+    <!-- Hai độ sâu lời giải thích -->
+    <div class="more-wrap" id="more-wrap" hidden>
+      <button class="more-btn" id="more-btn" type="button">
+        <span data-i18n="ui_more">Tìm hiểu thêm</span> <span aria-hidden="true">›</span>
+      </button>
+      <div class="more-box" id="more-box" hidden></div>
+    </div>
+
+    <div class="finding" id="finding" hidden>
+      <span class="fi-ic" aria-hidden="true">🔎</span>
+      <span>
+        <span class="fi-h" id="fi-h">PHÁT HIỆN CỦA EM</span>
+        <span class="fi-t" id="fi-t"></span>
+      </span>
+    </div>
+
+    <div class="srcs" id="srcs"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+  var LANG = AstroQ.getLang();
+  var LAB = window.AstroQLab;
+
+  var VI = {
+    back:"Về Trung Tâm Điều Hướng",
+    h1:"Phòng Nghiên Cứu",
+    sub:"Tự tay làm thí nghiệm rồi tự tìm ra câu trả lời."
+  };
+  var EN = {
+    back:"Back to Navigation Hub",
+    h1:"Research Lab",
+    sub:"Run the experiment yourself and find the answer yourself."
+  };
+  /* Khoá giao diện của lab nằm ở js/lab-catalog.js (một chỗ khai) — hai từ điển
+     trên chỉ giữ phần RIÊNG của trang này. `t()` tra lab trước, rồi mới tới đây. */
+  function t(k){
+    var v = LAB.text(k, LANG);
+    if (v !== k) return v;
+    var d = (LANG === "en") ? EN : VI;
+    return (d[k] != null) ? d[k] : k;
+  }
+
+  var view = null;          // null = lưới, hoặc id thẻ đang mở
+  var scene = null;         // AstroQLabDrop
+  var place = "earth";
+  var guessed = false;
+
+  /* ══════════════════ LƯỚI THẺ ══════════════════ */
+  function cardState(c){
+    if (!c.lock) return "free";
+    return AstroQLocks.state(c.lock);        // "soon" | "pro"
+  }
+
+  function renderGrid(){
+    var host = $("lgrid");
+    host.innerHTML = "";
+    LAB.CARDS.forEach(function(c){
+      var st = cardState(c);
+      var open = (st === "free");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "lcard t-" + c.tone + (st === "soon" ? " soon" : "");
+      b.setAttribute("data-card", c.id);
+
+      var tag = open ? "free" : (st === "pro" ? "pro" : "soon");
+      var tagTxt = open ? t("ui_free_badge")
+                 : (st === "pro" ? AstroQLocks.text("badge_pro", LANG)
+                                 : t("ui_soon_badge"));
+      b.innerHTML =
+        '<span class="lc-top">' +
+          '<span class="lc-ic" aria-hidden="true">' + c.ic + '</span>' +
+          '<span class="lc-code">' + c.code + '</span>' +
+        '</span>' +
+        '<span class="lc-name">' + AstroQ.esc(t("t_" + c.id)) + '</span>' +
+        '<span class="lc-desc">' + AstroQ.esc(t("d_" + c.id)) + '</span>' +
+        '<span class="lc-tag ' + tag + '">' + AstroQ.esc(tagTxt) + '</span>';
+
+      /* ⚠️ Thẻ bị khoá VẪN BẤM ĐƯỢC — nó mở hộp nói vì sao khoá. Nút `disabled`
+         mới là ngõ cụt: trẻ bấm không ăn và chỉ tưởng mình bấm trượt (bài học
+         #loader của explorer). Luật "nút bấm được thì phải có gì đó xảy ra"
+         KHÔNG bị nới lỏng — có xảy ra thật, là cái hộp. */
+      if (open) {
+        b.addEventListener("click", function(){ openCard(c.id); });
+      } else {
+        AstroQLocks.wire(b, c.lock);
+      }
+      host.appendChild(b);
+    });
+  }
+
+  /* ══════════════════ MÀN THÍ NGHIỆM ══════════════════ */
+  function say(txt){ $("say-txt").textContent = txt; }
+
+  function mascotFor(c){
+    // Comet dẫn phần quan sát; Byte dẫn phần số liệu — khớp cách hai linh vật
+    // đã được dùng ở mission-earth (Comet kể, Byte báo số).
+    return (c.kind === "weight")
+      ? { img:"ava/avab.png", nm:"Byte" }
+      : { img:"ava/avam.png", nm:"Comet" };
+  }
+
+  function renderPlaces(c){
+    var wrap = $("ctl-places");
+    if (!c.places || c.places.length < 2){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    var host = $("places");
+    host.innerHTML = "";
+    c.places.forEach(function(pid){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = t("p_" + pid);
+      b.className = (pid === place) ? "on" : "";
+      b.addEventListener("click", function(){
+        place = pid;
+        renderPlaces(c);
+        scene.setPlace(pid);
+        afterPlace(c);
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function renderSrcs(c){
+    var host = $("srcs");
+    if (!c.src || !c.src.length){ host.innerHTML = ""; return; }
+    var h = '<span class="src-h">' + AstroQ.esc(t("ui_source")) + '</span>';
+    c.src.forEach(function(k){
+      var s = LAB.SRC[k];
+      if (!s) return;
+      h += '<a href="' + s.url + '" target="_blank" rel="noopener">' + s.url + '</a>';
+    });
+    host.innerHTML = h;
+  }
+
+  function resetOutcome(){
+    $("finding").hidden = true;
+    $("more-wrap").hidden = true;
+    $("more-box").hidden = true;
+    guessed = false;
+  }
+
+  /* Sau khi hé lộ: câu giải thích ngắn + mở nút "Tìm hiểu thêm" + phát hiện */
+  function reveal(c, key){
+    say(t(key));
+    $("more-box").textContent = t("more_" + c.id);
+    $("more-wrap").hidden = false;
+    $("fi-h").textContent = t("ui_finding").toUpperCase();
+    $("fi-t").textContent = t("find_" + c.id);
+    $("finding").hidden = false;
+  }
+
+  function renderGuess(c){
+    var host = $("guess");
+    host.innerHTML = "";
+    if (guessed) return;
+    var opts = [];
+    if (c.kind === "drop")  opts = ["ui_guess_same","ui_guess_hammer","ui_guess_feather"];
+    if (c.kind === "float") opts = ["ui_guess_fall","ui_guess_float"];
+    opts.forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "pbtn ghost";
+      b.textContent = t(k);
+      b.addEventListener("click", function(){
+        /* ⚠️ ĐOÁN SAI KHÔNG PHẠT GÌ — không điểm, không đúng/sai, không đỏ.
+           Đây là chỗ khám phá; cùng nguyên tắc "thả sai KHÔNG trừ điểm" của ba
+           bảng kéo-thả ở mission-earth. */
+        guessed = true;
+        renderGuess(c);
+        if (c.kind === "drop"){ $("ctl-run").hidden = false; say(t("q_tower")); }
+        else if (c.kind === "float"){ reveal(c, "say_float"); }
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function afterPlace(c){
+    resetOutcome();
+    if (c.kind === "drop"){
+      $("ctl-run").hidden = !guessed;
+      say(guessed ? t("q_tower") : t("q_tower"));
+      renderGuess(c);
+    } else if (c.kind === "weight"){
+      // Cảnh cân: không cần đoán, đổi nơi là thấy ngay
+      reveal(c, "say_weigh");
+      $("say-txt").textContent = t("say_weigh");
+    }
+  }
+
+  function openCard(id){
+    var c = LAB.card(id);
+    if (!c || !c.kind) return;
+    view = id;
+    place = (c.places && c.places[0]) || "earth";
+
+    $("grid-view").hidden = true;
+    $("exp-view").hidden = false;
+    $("exp-name").textContent = t("t_" + id);
+    $("exp-code").textContent = c.code;
+
+    var m = mascotFor(c);
+    $("say-ava").src = m.img; $("say-ava").alt = m.nm; $("say-nm").textContent = m.nm;
+
+    if (!scene) scene = AstroQLabDrop.create($("cv"));
+    scene.setScene(c.kind, { place: place });
+    scene.onDone(function(res){
+      reveal(c, res.same ? "say_tower_moon" : "say_tower_earth");
+    });
+
+    resetOutcome();
+    renderPlaces(c);
+    renderSrcs(c);
+    $("ctl-run").hidden = true;
+
+    if (c.kind === "drop")       { say(t("q_tower")); }
+    else if (c.kind === "float") { say(t("q_float")); }
+    else if (c.kind === "weight"){ say(t("q_weigh")); }
+    renderGuess(c);
+    if (c.kind === "weight") reveal(c, "say_weigh");
+
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  function toGrid(){
+    view = null;
+    $("exp-view").hidden = true;
+    $("grid-view").hidden = false;
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  /* ══════════════════ Nối dây ══════════════════ */
+  $("back").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("to-grid").addEventListener("click", toGrid);
+  $("run").addEventListener("click", function(){ scene.drop(); });
+  $("again").addEventListener("click", function(){
+    resetOutcome(); guessed = true; scene.reset(); renderGuess(LAB.card(view));
+  });
+  $("more-btn").addEventListener("click", function(){
+    var box = $("more-box");
+    box.hidden = !box.hidden;
+    $("more-btn").querySelector("span").textContent = box.hidden ? t("ui_more") : t("ui_less");
+  });
+  window.addEventListener("resize", function(){ if (scene) scene.resize(); });
+
+  function applyLang(lang){
+    LANG = lang;
+    /* ⚠️ `applyTexts` nhận một HÀM, không phải từ điển (xem js/ui-common.js).
+       Truyền `t` của trang này thì mọi khoá `data-i18n` đều tra được — kể cả khoá
+       khai ở js/lab-catalog.js (ui_drop · ui_more · ui_back_grid…), vì `t()` tra
+       lab trước rồi mới tới hai từ điển riêng ở đây. */
+    AstroQ.applyTexts(t);
+    // Chữ do JS sinh phải vẽ lại — applyTexts không với tới nó.
+    renderGrid();
+    if (view){
+      var c = LAB.card(view);
+      $("exp-name").textContent = t("t_" + view);
+      renderPlaces(c); renderSrcs(c); renderGuess(c);
+      $("fi-h").textContent = t("ui_finding").toUpperCase();
+      $("fi-t").textContent = t("find_" + view);
+      $("more-box").textContent = t("more_" + view);
+      $("more-btn").querySelector("span").textContent =
+        $("more-box").hidden ? t("ui_more") : t("ui_less");
+      if (scene) scene.resize();          // nhãn trong cảnh cũng đổi ngôn ngữ
+    }
+    $("run").textContent = t("ui_drop");
+    $("again").textContent = t("ui_again");
+  }
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+
+  /* ⚠️ Đọc cờ "đã mở bán chưa" rồi truyền vào js/locks.js. Mặc định của locks là
+     `false` (fail-closed) nên nếu lời gọi này hỏng thì trẻ thấy câu "chưa mở bán"
+     — không bao giờ bị mời mua một thứ không mua được.
+     Nạp js/api.js bằng import ĐỘNG: chỉ trang này cần, và nó ~4 KB. */
+  /* ⚠️ `import()` trong script CỔ ĐIỂN giải theo URL của TÀI LIỆU, không phải của
+     script. Trang này luôn nằm ở gốc nên "./js/api.js" ra đúng /js/api.js — nhưng
+     nếu có ngày lab.html được đặt vào một thư mục con thì phải sửa dòng này, đúng
+     lỗi đã giết form waitlist khi trang chủ có thêm bản /en/ (07/08/2026). */
+  (function loadSale(){
+    import("./js/api.js").then(function(m){
+      return m.apiGet ? m.apiGet("/billing/catalog") : null;
+    }).then(function(r){
+      if (r && r.ok && r.data && r.data.saleOpen === true){
+        AstroQLocks.setSaleOpen(true);
+        renderGrid();                     // nhãn thẻ có thể đổi theo
+      }
+    }).catch(function(){ /* giữ fail-closed, không nói gì */ });
+  })();
+})();
+</script>
+</body>
+</html>

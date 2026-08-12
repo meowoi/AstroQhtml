@@ -1142,23 +1142,62 @@ for mod in ("MOD-01", "MOD-02", "MOD-03"):
 #    ("nut bam duoc thi phai co gi do xay ra") KHONG bi noi long: nut nay nay MO
 #    MODAL noi vi sao khoa + khi mo se duoc gi, tuc co xay ra that. Nut `disabled`
 #    la mot ngo cut — tre bam khong an va chi tuong minh bam truot.
-check("dashboard.html: dung 1 card 'soon'",
-      dash_nc.count(" soon\">") == 1, str(dash_nc.count(" soon\">")))
-check("dashboard.html: nut cua card 'soon' BAM DUOC (khong disabled)",
-      'data-i18n="lab_why"' in dash_nc and "disabled" not in dash_nc,
-      "con `disabled`" if "disabled" in dash_nc else "ok")
-check("dashboard.html: nut do noi vao AstroQLocks",
-      'AstroQLocks.wire($("lab-btn"), "lab")' in dash_nc)
+# ⚠️⚠️ DOI PHAT BIEU 12/08/2026 — MOD-05 DA MO KHOA (lab.html co that), nen ba
+#    phep kiem cu ("dung 1 card soon" · "nut cua card soon bam duoc" · "noi vao
+#    AstroQLocks") khang dinh dung trang thai CU va bao hong dung luc san pham lam
+#    dung. Dieu chung bao ve — *dashboard noi that ve khu nao chua dung xong* —
+#    KHONG doi, chi doi cach hoi. Va ban moi MANH HON: no doi moi card MOD dan sang
+#    mot FILE CO THAT, tuc bat duoc ca ca "mo khoa mot khu ma tro vao trang khong
+#    ton tai" — thu ma ban cu khong he hoi toi.
+_soon_cards = dash_nc.count(" soon\">")
+check("dashboard.html: 0 card 'soon' (moi khu deu co trang that)",
+      _soon_cards == 0, "con %d card khoa" % _soon_cards)
+# Neu ngay nao co card khoa tro lai thi ba luat cu song lai NGUYEN VEN:
+if _soon_cards:
+    check("dashboard.html: nut card 'soon' BAM DUOC (khong disabled)",
+          "disabled" not in dash_nc,
+          "con `disabled`" if "disabled" in dash_nc else "ok")
+    check("dashboard.html: card 'soon' noi vao AstroQLocks",
+          "AstroQLocks.wire(" in dash_nc)
+    check("dashboard.html: huy hieu khoa suy tu state, khong go cung",
+          '+ it.state' in dash_nc)
+else:
+    # 0 card khoa => khong duoc con di tich cua co che khoa dashboard, khong thi
+    # do la ma chet: mot huy hieu khong bao gio duoc dien chu, hoac mot loi goi
+    # wire() tro vao mot khoa da bi xoa khoi js/locks.js (tra null, im lang).
+    check("dashboard.html: KHONG con huy hieu khoa rong",
+          'id="lab-badge"' not in dash_nc)
+    check("dashboard.html: KHONG con wire() tro vao khoa da xoa",
+          'AstroQLocks.wire($("lab-btn"), "lab")' not in dash_nc)
+    check("dashboard.html: khoa 'lab' da bo khoi js/locks.js",
+          '"lab":' not in strip_comments(rd("js/locks.js")))
+    # ⚠️ Khong con muc khoa nao thi THOI NAP locks.js/locks.css — ~7 KB khong lam
+    #    gi ca. Cung ly le da cat bo icon sticker khoi 4 trang khong dung (12/08).
+    # ⚠️ SOI THE, KHONG SOI VAN BAN: `dash` con nhac "js/locks.js" trong GHI CHU
+    #    lich su (giai thich vi sao mo khoa), nen `"js/locks.js" not in dash` la
+    #    dem ca chu trong ghi chu cua chinh minh — loi da lap nhieu lan trong du an.
+    _tags_js = re.findall(r'<script[^>]+src="([^"]+)"', dash)
+    _tags_css = re.findall(r'<link[^>]+href="([^"]+\.css)"', dash)
+    check("dashboard.html: thoi nap locks.js va locks.css (khong con muc khoa)",
+          "js/locks.js" not in _tags_js and "css/locks.css" not in _tags_css,
+          "js=%s css=%s" % ([x for x in _tags_js if "locks" in x],
+                            [x for x in _tags_css if "locks" in x]))
+
+# ⚠️ MOI CARD MOD PHAI DAN SANG MOT FILE CO THAT. Mot nut bam duoc ma tro vao 404
+#    la ngo cut te hon ca mot nut `disabled` — tre khong hieu vi sao trang trong.
+_dests = set(re.findall(r'location\.href\s*=\s*"([a-z0-9-]+\.html)"', dash_nc))
+_dests |= set(re.findall(r'href="([a-z0-9-]+\.html)"', dash_nc))
+for _d in sorted(_dests):
+    check("dashboard.html: dich '%s' co that tren dia" % _d,
+          os.path.isfile(os.path.join(ROOT, _d)))
+check("dashboard.html: MOD-05 dan sang lab.html",
+      'location.href="lab.html"' in dash_nc.replace(" ", ""))
 # ⚠️ Huy hieu la SAP RA MAT, KHONG phai TRA PHI: Phong Nghien Cuu chua co noi dung,
 #    gan nhan tra phi la hua rang tra tien se mo duoc. Xem ba trang thai o js/locks.js.
 # ⚠️ Huy hieu phai SUY TU `state` chu khong go cung `badge_soon`: go cung thi ngay
 #    bat co sang `pro`, the van ghi "SAP RA MAT" trong khi modal noi "thuoc goi ..."
 #    — hai thong diep nguoc nhau, dung luc co che nay duoc dung toi. Phep thu pha
 #    hoai 09/08/2026 da lo ra dung cho nay.
-check("dashboard.html: huy hieu suy tu state, khong go cung",
-      'it.state === "soon" ? "badge_soon" : "badge_pro"' in dash_nc)
-check("dashboard.html: class huy hieu cung suy tu state",
-      '"lk-badge lk-pin " + it.state' in dash_nc)
 check("dashboard.html: card 'soon' KHONG dan sang trang khong ton tai",
       'href="research-lab.html"' not in dash and 'href="star-archive.html"' not in dash)
 # MOD-06 phai la duong vao THAT su bam duoc, khong con la o "sap ra mat"

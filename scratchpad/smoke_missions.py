@@ -160,10 +160,18 @@ def main():
         mission_card = next(h for h in hud if "Nhiệm Vụ" in h["name"])
         chk(mission_card["href"] == "missions.html",
             "card Mission Control dan sang missions.html", str(mission_card["href"]))
-        # Card chua co trang: nut PHAI disabled. Tu 04/08/2026 chi con MOT
-        # (Phong Nghien Cuu) — MOD-06 da thanh So Tay Thuat Ngu, bam duoc that.
+        # ⚠️ DOI PHAT BIEU 12/08/2026: tu 04/08 chi con MOT card khoa (Phong Nghien
+        #    Cuu), va tu 12/08 thi con SO KHONG — MOD-05 da co trang that (lab.html).
+        #    Con so 1 cu bao hong dung luc san pham lam dung. Dieu can bao ve doi
+        #    thanh mot cau manh hon: MOI card MOD phai dan sang mot trang CO THAT,
+        #    tuc khong card nao la ngo cut. `check_pages` muc [7b] doi chieu tren dia.
         soons = [h for h in hud if h["soon"]]
-        chk(len(soons) == 1, "co dung 1 card 'Sap ra mat'", str([h["name"] for h in soons]))
+        chk(len(soons) == 0, "0 card 'Sap ra mat' (moi khu deu co trang that)",
+            str([h["name"] for h in soons]))
+        # ⚠️ KHONG them mot phep kiem "moi card co duong di" o day: ban dau toi viet
+        #    `chk(... or True, ...)` — mot TAUTOLOGY khong bao gio do duoc, tuc mot
+        #    phep kiem DAT MOT CACH RONG. Viec do da co cho lam that: `check_pages`
+        #    muc [7b] doi chieu TUNG dich voi file tren dia.
         # ⚠️ DOI PHAT BIEU 09/08/2026 — nguyen tac KHONG bi noi long.
         #    Luat cu: "nut bam duoc thi phai co gi do xay ra", nen nut cua khu chua
         #    co trang phai `disabled`. Nay nut do MO MODAL noi vi sao khoa + khi mo
@@ -172,15 +180,22 @@ def main():
         #    no doi nut phai bam duoc VA phai that su mo duoc modal.
         chk(not any(h["disabled"] for h in soons),
             "card 'Sap ra mat': nut BAM DUOC (khong con disabled)")
-        pg.click(".card--lab .jelly-btn")
-        pg.wait_for_selector("#aq-lock.show", timeout=6000)
-        chk(pg.locator("#aq-lock.show").count() == 1,
-            "bam nut do thi MO MODAL giai thich")
-        lk_title = pg.inner_text("#lk-title")
-        chk("xây" in lk_title, "modal noi dang XAY chu khong doi tien", lk_title)
-        chk(pg.locator("#lab-badge").inner_text().strip() != "",
-            "the co huy hieu khoa")
-        pg.keyboard.press("Escape")
+        # ⚠️⚠️ DOI PHAT BIEU 12/08/2026: MOD-05 DA MO KHOA (lab.html co that), nen ba
+        #    phep kiem cu ("bam nut mo modal" · "modal noi dang xay" · "the co huy hieu
+        #    khoa") khang dinh dung trang thai CU. Dieu can bao ve doi thanh: nut do
+        #    phai dan sang MOT TRANG CO THAT, khong phai vao ngo cut.
+        #    Khoa nay chuyen xuong tung THE trong lab.html — smoke_lab.py va
+        #    smoke_locks.py muc [1] do phan do.
+        lab_href = pg.eval_on_selector(
+            ".card--lab .jelly-btn",
+            """b => { const s = document.documentElement.innerHTML;
+                      return /lab-btn[\s\S]{0,200}?lab\.html/.test(s)
+                          || /location\.href\s*=\s*"lab\.html"/.test(s); }""")
+        chk(lab_href, "nut MOD-05 dan sang lab.html")
+        chk(pg.locator(".card--lab.soon").count() == 0,
+            "card MOD-05 KHONG con o trang thai 'soon'")
+        chk(pg.locator("#lab-badge").count() == 0,
+            "KHONG con huy hieu khoa rong tren card MOD-05")
         # ⚠️ DUA CHUOT RA KHOI NUT truoc khi do bo cuc phia duoi. Cu `pg.click` o tren
         #    de lai con tro DUNG TREN nut, ma `.jelly-btn:hover` co `translateY(-2px)`
         #    — phep do "nut trong cung mot hang thang hang tuyet doi" se doc ra lech
@@ -188,11 +203,16 @@ def main():
         #    thai nguoi dung khong o trong luc doc bo cuc.
         pg.mouse.move(2, 2)
         pg.wait_for_timeout(350)          # transform co transition .3s
-        chk(all(h["href"] is None for h in soons),
-            "card 'Sap ra mat' KHONG dan sang trang nao")
-        # Card do phai xuong CUOI luoi (ready truoc, soon sau)
-        chk(min(h["top"] for h in soons) >= max(h["top"] for h in hud if not h["soon"]),
-            "card 'Sap ra mat' nam o hang duoi cung")
+        # ⚠️ Hai phep kiem duoi day chi co nghia KHI CON card khoa. Dashboard hien
+        #    khong con card nao — de nguyen la chung chay tren mot danh sach RONG va
+        #    "dat" mot cach rong (all([]) la True, min([]) thi nem loi).
+        if soons:
+            chk(all(h["href"] is None for h in soons),
+                "card 'Sap ra mat' KHONG dan sang trang nao")
+            chk(min(h["top"] for h in soons) >= max(h["top"] for h in hud if not h["soon"]),
+                "card 'Sap ra mat' nam o hang duoi cung")
+        else:
+            chk(True, "dashboard 0 card 'Sap ra mat' (moi khu deu co trang that)")
         # MOD-06 la duong vao THAT: co the bam, dan sang codex.html
         codex_card = next((h for h in hud if "Sổ Tay" in h["name"]), None)
         chk(codex_card is not None and codex_card["href"] == "codex.html",
