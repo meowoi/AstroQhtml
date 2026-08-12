@@ -127,13 +127,24 @@
       var g = ctx.createLinearGradient(0, GROUND_Y, 0, VH);
       if (place === "moon") { g.addColorStop(0, "#6b7288"); g.addColorStop(1, "#3a3f4f"); }
       else if (place === "mercury") { g.addColorStop(0, "#7a6f78"); g.addColorStop(1, "#413a41"); }
-      else if (place === "jupiter") { g.addColorStop(0, "#b08a5a"); g.addColorStop(1, "#5d452c"); }
+      /* ⚠️ Sao Mộc KHÔNG có mặt đất thật (NASA Jupiter Facts) — vẽ nó thành dải mây
+         cuộn, đừng vẽ thành đất. Một mảng nâu ở đáy khung đọc ra thành "mặt đất",
+         tức dạy một điều sai ngay ở phần hình. */
+      else if (place === "jupiter") { g.addColorStop(0, "#d8b48a"); g.addColorStop(1, "#8a6440"); }
       else { g.addColorStop(0, "#3f7a4a"); g.addColorStop(1, "#20402a"); }
       ctx.fillStyle = g;
       ctx.fillRect(0, GROUND_Y, VW, VH - GROUND_Y);
-      ctx.strokeStyle = "rgba(234,241,255,.28)";
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(VW, GROUND_Y); ctx.stroke();
+      if (place === "jupiter") {
+        // Dải mây: các vạch ngang mờ, KHÔNG có đường ranh giới "mặt đất" cứng.
+        for (var bi = 0; bi < 5; bi++) {
+          ctx.fillStyle = bi % 2 ? "rgba(255,240,215,.16)" : "rgba(90,55,30,.22)";
+          ctx.fillRect(0, GROUND_Y + bi * 14, VW, 14);
+        }
+      } else {
+        ctx.strokeStyle = "rgba(234,241,255,.28)";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(VW, GROUND_Y); ctx.stroke();
+      }
     }
 
     /* ── hai vật của LAB-01 ─────────────────────────────────────────────── */
@@ -361,6 +372,55 @@
     }
 
     /* ── LAB-03: cái cân ────────────────────────────────────────────────── */
+    /* ── NGƯỜI ĐỨNG (vector, có thân và CHÂN) ──────────────────────────────
+       ⚠️ Cố ý KHÔNG dùng emoji 🧒: nó chỉ là MỘT CÁI ĐẦU, nên "đứng trên cân"
+       không đọc ra được gì — chính chỗ chủ dự án hỏi *"phần trống trắng dưới cái
+       đầu để làm gì?"*. Vẽ vector thì có chân, và chân đặt đúng lên mặt cân.
+       `suit` = nơi không có khí quyển thở được → thêm mũ phi hành gia. Đó là một
+       chi tiết MANG NGHĨA (không mặc thì không sống được), không phải trang trí. */
+    function person(x, footY, h, suit) {
+      var s = h / 100;                       // h = chiều cao toàn thân
+      var headR = 15 * s;
+      var hipY = footY - 42 * s;
+      var shY = footY - 74 * s;              // vai
+      var headY = shY - headR - 3 * s;
+
+      ctx.save();
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 3 * s;
+
+      // hai chân
+      ctx.beginPath();
+      ctx.moveTo(x - 9 * s, footY); ctx.lineTo(x - 5 * s, hipY);
+      ctx.moveTo(x + 9 * s, footY); ctx.lineTo(x + 5 * s, hipY);
+      ctx.strokeStyle = "#5f7fc7"; ctx.lineWidth = 9 * s; ctx.stroke();
+
+      // thân
+      ctx.beginPath();
+      ctx.moveTo(x, hipY); ctx.lineTo(x, shY);
+      ctx.strokeStyle = suit ? "#dfe7f7" : "#7fd3ff"; ctx.lineWidth = 20 * s; ctx.stroke();
+
+      // hai tay
+      ctx.beginPath();
+      ctx.moveTo(x - 10 * s, shY + 4 * s); ctx.lineTo(x - 20 * s, hipY + 6 * s);
+      ctx.moveTo(x + 10 * s, shY + 4 * s); ctx.lineTo(x + 20 * s, hipY + 6 * s);
+      ctx.strokeStyle = suit ? "#dfe7f7" : "#7fd3ff"; ctx.lineWidth = 8 * s; ctx.stroke();
+
+      // đầu
+      ctx.beginPath(); ctx.arc(x, headY, headR, 0, Math.PI * 2);
+      ctx.fillStyle = "#f2c9a0"; ctx.fill();
+      ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 2.4 * s; ctx.stroke();
+
+      if (suit) {
+        // Mũ phi hành gia: vòng kính trong + vành trắng
+        ctx.beginPath(); ctx.arc(x, headY, headR + 6 * s, 0, Math.PI * 2);
+        ctx.strokeStyle = "#dfe7f7"; ctx.lineWidth = 5 * s; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, headY, headR + 6 * s, Math.PI * 1.05, Math.PI * 1.75);
+        ctx.strokeStyle = "rgba(143,215,255,.85)"; ctx.lineWidth = 5 * s; ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     function drawWeight() {
       var place = opt.place || "earth";
       var L = (global.AstroQ && AstroQ.getLang && AstroQ.getLang() === "en") ? "en" : "vi";
@@ -372,31 +432,54 @@
 
       sky(place); ground(place);
 
-      /* ⚠️⚠️ BỐ CỤC TÍNH TỪ DƯỚI LÊN, KHÔNG GÕ MỐC RỜI. Bản đầu vẽ số ở
-         `GROUND_Y - 128` = 302 trong khi đứa trẻ vẽ ở `GROUND_Y - 74` với font 84px
-         nên nó chiếm ~272..356 ⇒ SỐ ĐÈ LÊN HÌNH. Đọc code thì hai con số đều "hợp
-         lý"; chỉ soi ảnh chụp mới thấy. Nay mỗi tầng suy ra từ tầng dưới nó, nên
-         đổi cỡ chữ hay cỡ hình thì bố cục tự giãn theo. */
-      var KID = 84;                                     // cỡ hình đứa trẻ
-      var plateY = GROUND_Y - 30;                       // mặt cân
-      var kidBase = plateY - 18;                        // chân đứa trẻ đứng trên cân
-      var kidTop = kidBase - KID;                       // đỉnh đầu
-      var workY = kidTop - 26;                          // dòng phép tính
-      var bigY = workY - 46;                            // số to
+      /* ⚠️⚠️ SAO MỘC KHÔNG CÓ MẶT ĐẤT ĐỂ ĐỨNG, nên KHÔNG vẽ người đứng trên "đất"
+         Sao Mộc — đó là dạy một điều sai. Nguồn: NASA Jupiter Facts, nguyên văn
+         *"As a gas giant, Jupiter doesn't have a true surface. The planet is mostly
+         swirling gases and liquids."* ⇒ Sao Mộc vẽ thành DẢI MÂY và người LƠ LỬNG,
+         kèm một câu nói thẳng rằng đây là thí nghiệm TƯỞNG TƯỢNG. Chính nguồn Space
+         Place cũng viết ở thể điều kiện: *"If ... you were on heavy Jupiter"*. */
+      var noGround = (place === "jupiter");
+      /* Nơi không có khí quyển thở được thì người mang mũ phi hành gia — một chi
+         tiết MANG NGHĨA. Trái Đất thì không. */
+      var suit = (place !== "earth");
 
-      // Mặt cân
+      /* ⚠️ BỐ CỤC TÍNH TỪ DƯỚI LÊN, KHÔNG GÕ MỐC RỜI. Bản đầu vẽ số ở
+         `GROUND_Y - 128` trong khi hình người chiếm ~272..356 ⇒ SỐ ĐÈ LÊN HÌNH.
+         Nay mỗi tầng suy ra từ tầng dưới nó, nên đổi cỡ chữ hay cỡ hình thì bố cục
+         tự giãn theo. */
+      /* ⚠️ Cân cao 62px tính TỪ `plateY`, nên `GROUND_Y - 16` làm nó chạm tới
+         `GROUND_Y + 46` và ĐÈ LÊN tên nơi ở `GROUND_Y + 36` — ảnh chụp cho thấy
+         "Trái Đất" và "Mặt Trăng" bị che một nửa. Nhấc lên để đáy cân đúng bằng
+         mặt đất. */
+      var plateY = noGround ? GROUND_Y - 96 : GROUND_Y - 62;   // mặt cân
+      var H = 150;                                            // chiều cao người
+      var footY = plateY - 15;                                // chân đứng trên cân
+      var headTop = footY - H;
+      var workY = headTop - 22;                               // dòng phép tính
+      var bigY = workY - 40;                                  // số to
+
+      person(VW * 0.5, footY, H, suit);
+
+      /* ── CÁI CÂN, VÀ SỐ NẰM TRONG NÓ ──
+         ⚠️ Bản đầu là một hình chữ nhật sáng RỖNG với số nằm ở tít trên, nên nó đọc
+         ra thành "phần trống trắng" — đúng như chủ dự án hỏi. Đặt số VÀO ô hiển thị
+         của cân thì cái ô đó có việc, và nó giống một cái cân thật. */
       ctx.save(); ctx.translate(VW * 0.5, plateY);
-      ctx.fillStyle = "#cfd7ea"; ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(-96, -14, 192, 30, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#b9c4dc"; ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(-118, -13, 236, 62, 12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#0d1426";                              // ô hiển thị
+      ctx.beginPath(); ctx.roundRect(-84, 6, 168, 34, 8); ctx.fill();
+      ctx.strokeStyle = "rgba(143,215,255,.5)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.font = "800 25px 'Space Grotesk', ui-monospace, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#7fe3a0";
+      ctx.fillText(num(kg) + " kg", 0, 24);
+      ctx.textBaseline = "alphabetic";
       ctx.restore();
 
-      // Đứa trẻ đứng trên cân
-      ctx.font = KID + "px system-ui, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("🧒", VW * 0.5, kidBase);
-
-      // Số trên cân — thứ ĐỔI theo nơi
+      // Số to phía trên — cùng con số, đọc được từ xa
       ctx.save();
-      ctx.font = "800 54px 'Space Grotesk', Inter, sans-serif";
+      ctx.font = "800 50px 'Space Grotesk', Inter, sans-serif";
       ctx.textAlign = "center";
       ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.9)";
       var s = num(kg) + " kg";
@@ -412,7 +495,11 @@
         ctx.save();
         ctx.font = "600 22px ui-monospace, 'Space Grotesk', monospace";
         ctx.textAlign = "center";
-        var w = num(base) + " × " + num(Math.round(r * 100) / 100) + " = " + num(kg);
+        /* ⚠️ Tỉ lệ lấy từ `ratioLabel`, KHÔNG làm tròn `ratio`: xem cảnh báo ở
+           PLACES của js/lab-catalog.js — làm tròn thì "30 × 0,17 = 5" là một phép
+           tính SAI hiện trên màn hình. */
+        var rl = global.AstroQLab ? AstroQLab.ratioLabel(place, L) : "1";
+        var w = num(base) + " × " + rl + " = " + num(kg);
         ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)";
         ctx.strokeText(w, VW * 0.5, workY);
         ctx.fillStyle = "#8fd7ff";
@@ -421,7 +508,13 @@
       }
 
       // Khối lượng: KHÔNG đổi — vẽ cạnh nhau mới thấy được điều đó
-      label(VW * 0.5, 46, tx("ui_mass") + " " + num(base) + " kg — " + tx("ui_unchanged"));
+      label(VW * 0.5, 40, tx("ui_mass") + " " + num(base) + " kg — " + tx("ui_unchanged"));
+      // Tên nơi, dưới chân — để "ở đâu" luôn đọc được ngay trên cảnh
+      label(VW * 0.5, GROUND_Y + 30, tx("p_" + place));
+      /* ⚠️ Dòng "không có mặt đất" đặt TRÊN mặt đất, không đặt dưới tên nơi: ở
+         `GROUND_Y + 62` = 492 nó sát mép khung 500px và bị cắt trên màn thấp. Với
+         Sao Mộc thì cân nhấc lên tận `GROUND_Y - 96` nên khoảng dưới nó đang trống. */
+      if (noGround) label(VW * 0.5, GROUND_Y - 8, tx("ui_no_ground"));
       return false;                                     // cảnh tĩnh
     }
 

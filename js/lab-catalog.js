@@ -45,11 +45,21 @@
      "cân của em"; không bao giờ in ra dưới dạng m/s².
      ⚠️ Mặt Trăng khai `1/6` bằng phép chia, KHÔNG gõ 0.1667 — nguồn nói "một
         phần sáu", nên giữ đúng hình dạng con số của nguồn. */
+  /* ⚠️⚠️ `rlabel` = tỉ lệ VIẾT RA CHO TRẺ ĐỌC, và nó KHÔNG PHẢI là `ratio` làm tròn.
+     Đây là một lỗi THẬT đã sửa sau khi soi ảnh chụp: bản đầu hiện phép tính bằng
+     `Math.round(ratio*100)/100`, nên Mặt Trăng ra "30 × 0,17 = 5" — mà 30 × 0,17 =
+     **5,1**, không phải 5. Tức PHÉP TÍNH TRÊN MÀN HÌNH KHÔNG KHỚP, đúng ngay chỗ
+     lời giải thích vừa mời trẻ *"tự nhân xem có khớp không"*. Một đứa trẻ làm theo
+     sẽ ra số khác và kết luận là mình sai.
+     ⇒ Mặt Trăng viết **1/6** — vừa khớp phép tính, vừa đúng hình dạng con số của
+       nguồn (NASA Moon Facts nói "one-sixth", không nói 0,17).
+     ⚠️ Thêm một nơi mới thì `rlabel` phải TÁI TẠO ĐƯỢC kết quả: có phép kiểm ở
+       `smoke_lab.py` mục [3g] đối chiếu `base × rlabel` với `weighAt()`. */
   var PLACES = [
-    { id: "earth",   ratio: 1,        base: true,  src: null },
-    { id: "moon",    ratio: 1 / 6,    src: "moonfacts" },
-    { id: "mercury", ratio: 0.38,     src: "weigh" },   // 100 lb → 38 lb
-    { id: "jupiter", ratio: 2.53,     src: "weigh" }    // 100 lb → 253 lb
+    { id: "earth",   ratio: 1,      rlabel: "1",    base: true, src: null },
+    { id: "moon",    ratio: 1 / 6,  rlabel: "1/6",  src: "moonfacts" },
+    { id: "mercury", ratio: 0.38,   rlabel: "0,38", src: "weigh" },   // 100 lb → 38 lb
+    { id: "jupiter", ratio: 2.53,   rlabel: "2,53", src: "weigh" }    // 100 lb → 253 lb
   ];
 
   /* ── NGUỒN: khoá → URL. Câu trích nguyên văn để trong `quote` (không dịch —
@@ -69,7 +79,11 @@
       url: "https://spaceplace.nasa.gov/planets-weight/en/",
       quote: "If you weigh 100 pounds on Earth, you would weigh only 38 pounds on " +
              "Mercury. If, on the other hand, you were on heavy Jupiter, you would " +
-             "weigh a whopping 253 pounds!"
+             "weigh a whopping 253 pounds! ... The heavier the planet, the stronger " +
+             "it tugs on nearby objects — like moons or visiting spacecraft. That " +
+             "tug is what we call gravitational pull. ... An object's weight is " +
+             "dependent on its mass and how strongly gravity pulls on it. The " +
+             "strength of gravity depends on how far away one object is from another."
     },
     /* ⚠️⚠️ URL CŨ ĐÃ CHẾT — `nasa.gov/audience/foreducators/microgravity/index.html`
        trả **404** (kiểm 12/08/2026). Đây là lần thứ hai dự án gặp một nguồn NASA tự
@@ -96,6 +110,16 @@
              "fresh water we can drink. And most of that fresh water, 68 percent, is " +
              "trapped in ice and glaciers."
     },
+    /* Vì sao cần nguồn NÀY cho một thẻ về cân nặng: LAB-03 cho chọn Sao Mộc, mà
+       Sao Mộc KHÔNG có mặt đất để đứng — vẽ người đứng trên "đất" Sao Mộc là dạy
+       một điều sai. Kiểm 200 ngày 12/08/2026. */
+    jupiter: {
+      url: "https://science.nasa.gov/jupiter/jupiter-facts/",
+      quote: "As a gas giant, Jupiter doesn't have a true surface. The planet is " +
+             "mostly swirling gases and liquids. While a spacecraft would have " +
+             "nowhere to land on Jupiter, it wouldn't be able to fly through " +
+             "unscathed either."
+    },
     micro: {
       url: "https://www.nasa.gov/general/what-is-microgravity/",
       quote: "That's because they're all falling together: the apple, the astronaut " +
@@ -120,7 +144,7 @@
       lock: "lab:float",    src: ["micro"] },
     { code: "LAB-03", id: "weigh",  kind: "weight", ic: "⚖️", tone: "gold",
       lock: "lab:weigh",    places: ["earth", "moon", "mercury", "jupiter"],
-      src: ["moonfacts", "weigh"] },
+      src: ["moonfacts", "weigh", "jupiter"] },
     /* ⚠️ LAB-07 và LAB-08 KHÔNG phải về hấp dẫn — chúng là vật lý ánh sáng và
        nước/hoá học ở mức trẻ em. Lưới thẻ chịu được điều đó: mỗi thẻ MỘT loại hoạt
        động, nên thêm môn mới không phải đổi tên khu ngoài (chính lý do chủ dự án
@@ -162,7 +186,7 @@
       d_weigh: "Cùng một em, bốn nơi khác nhau. Cân chỉ số khác nhau.",
       q_weigh: "Chọn một nơi rồi xem cái cân nói gì.",
       say_weigh: "Cân đổi, nhưng lượng vật chất trong người em thì KHÔNG đổi.",
-      more_weigh: "Cân nặng là lực mà một nơi kéo em xuống, nên nó đổi theo nơi. Khối lượng là lượng vật chất làm nên em, và nó ở đâu cũng vậy — trên Sao Hoả hay Sao Mộc thì khối lượng của em vẫn y như trên Trái Đất. Đó là lý do phi hành gia không hề gầy đi khi bay lên trạm, dù cái cân ở đó chỉ số 0.\n\nCÓ MỘT CÔNG THỨC, và nó chỉ là một phép nhân:\n\n    cân nặng ở đó = cân nặng ở Trái Đất × tỉ lệ trọng lực của nơi đó\n\nMặt Trăng có tỉ lệ 1/6, Sao Thuỷ 0,38 và Sao Mộc 2,53. Nên nếu ở Trái Đất em nặng 30 kg thì trên Sao Mộc cái cân chỉ 30 × 2,53 = 75,9 kg — em thử gõ cân nặng thật của mình vào ô bên trên rồi tự nhân xem có khớp không nhé. Chính NASA cũng làm đúng phép nhân này: họ viết nếu em nặng 100 pound ở Trái Đất thì ở Sao Thuỷ em nặng 38 pound (100 × 0,38), còn ở Sao Mộc là 253 pound (100 × 2,53).",
+      more_weigh: "Cân nặng là lực mà một nơi kéo em xuống, nên nó đổi theo nơi. Khối lượng là lượng vật chất làm nên em, và nó ở đâu cũng vậy — trên Sao Hoả hay Sao Mộc thì khối lượng của em vẫn y như trên Trái Đất. Đó là lý do phi hành gia không hề gầy đi khi bay lên trạm, dù cái cân ở đó chỉ số 0.\n\nCÓ MỘT CÔNG THỨC, và nó chỉ là một phép nhân:\n\n    cân nặng ở đó = cân nặng ở Trái Đất × tỉ lệ trọng lực của nơi đó\n\nSỐ ĐÓ LÀ GÌ? Nó là ĐỘ MẠNH CỦA CÁI KÉO ở nơi đó, so với Trái Đất. Mặt Trăng kéo bằng 1/6 Trái Đất, Sao Thuỷ 0,38 lần, Sao Mộc 2,53 lần. Coi Trái Đất là mốc 1 thì mấy con số kia chỉ nói một điều: nơi đó kéo mạnh hơn hay yếu hơn Trái Đất mấy lần.\n\nVÌ SAO LẠI NHÂN? Vì cân nặng CHÍNH LÀ độ mạnh của cái kéo lên người em — cái cân đo đúng cái kéo đó. Nên nếu cái kéo yếu đi 6 lần thì số trên cân cũng nhỏ đi 6 lần, và \"nhỏ đi 6 lần\" viết bằng phép nhân là × 1/6. Nhân không phải một mẹo tính; nó chỉ là cách viết gọn của \"mạnh hơn/yếu hơn mấy lần\".\n\nSỐ ĐÓ TỪ ĐÂU RA? Từ hai thứ. Một: nơi đó có bao nhiêu vật chất — NASA viết \"hành tinh càng nặng thì nó càng kéo mạnh những thứ ở gần\". Hai: em đứng cách tâm nó bao xa — \"độ mạnh của lực hấp dẫn phụ thuộc vào việc hai vật cách nhau bao xa\". Sao Mộc kéo mạnh vì nó có RẤT nhiều vật chất; Mặt Trăng kéo yếu vì nó nhỏ.\n\nNên nếu ở Trái Đất em nặng 30 kg thì trên Sao Mộc cái cân chỉ 30 × 2,53 = 75,9 kg — em thử gõ cân nặng thật của mình vào ô bên trên rồi tự nhân xem có khớp không nhé. Chính NASA cũng làm đúng phép nhân này: họ viết nếu em nặng 100 pound ở Trái Đất thì ở Sao Thuỷ em nặng 38 pound (100 × 0,38), còn ở Sao Mộc là 253 pound (100 × 2,53).\n\n⚠️ MỘT ĐIỀU THẬT VỀ SAO MỘC: nó KHÔNG có mặt đất để đứng. NASA viết Sao Mộc là một hành tinh khí, \"không có bề mặt thật, phần lớn là khí và chất lỏng cuộn xoáy\", và một con tàu sẽ không có chỗ nào để đáp. Nên con số 75,9 kg kia là một thí nghiệm TƯỞNG TƯỢNG — chính NASA cũng viết ở thể điều kiện: \"NẾU em ở trên Sao Mộc thì...\".",
       find_weigh: "Cân nặng đổi theo nơi; khối lượng thì không.",
 
       /* ── LAB-07 · vật lý ánh sáng ── */
@@ -213,6 +237,7 @@
       ui_finding: "Phát hiện của em",
       ui_source: "Nguồn:",
       ui_scale: "Cân chỉ",
+      ui_no_ground: "(Sao Mộc không có mặt đất để đứng — đây là tưởng tượng)",
       ui_your_kg: "Cân nặng của em ở Trái Đất:",
       ui_kg: "kg",
       ui_mass: "Khối lượng",
@@ -244,7 +269,7 @@
       d_weigh: "The same you, four different places. The scale reads differently.",
       q_weigh: "Pick a place and see what the scale says.",
       say_weigh: "The scale changes, but how much stuff you're made of does NOT.",
-      more_weigh: "Weight is the pull a place has on you, so it changes from place to place. Mass is how much stuff you are made of, and that is the same everywhere — on Mars or on Jupiter your mass is exactly what it is on Earth. That's why astronauts don't get thinner on the way up, even though a scale up there would read zero.\n\nTHERE IS A FORMULA, and it is just a multiplication:\n\n    weight there = weight on Earth × that place's gravity ratio\n\nThe Moon's ratio is 1/6, Mercury's is 0.38 and Jupiter's is 2.53. So if you weigh 30 kg on Earth, a scale on Jupiter reads 30 × 2.53 = 75.9 kg — type your own weight in the box above and do the multiplication yourself to check. NASA does this very multiplication: they write that if you weigh 100 pounds on Earth you would weigh 38 pounds on Mercury (100 × 0.38) and 253 pounds on Jupiter (100 × 2.53).",
+      more_weigh: "Weight is the pull a place has on you, so it changes from place to place. Mass is how much stuff you are made of, and that is the same everywhere — on Mars or on Jupiter your mass is exactly what it is on Earth. That's why astronauts don't get thinner on the way up, even though a scale up there would read zero.\n\nTHERE IS A FORMULA, and it is just a multiplication:\n\n    weight there = weight on Earth × that place's gravity ratio\n\nWHAT IS THAT NUMBER? It is HOW STRONG THE PULL IS there, compared with Earth. The Moon pulls 1/6 as hard as Earth, Mercury 0.38 times, Jupiter 2.53 times. Treat Earth as 1 and those numbers say just one thing: how many times harder or softer that place pulls than Earth does.\n\nWHY MULTIPLY? Because your weight IS the strength of the pull on you — that is exactly what a scale measures. So if the pull gets 6 times weaker, the number on the scale gets 6 times smaller, and \"6 times smaller\" written as multiplication is × 1/6. Multiplying isn't a trick; it is just shorthand for \"how many times stronger or weaker\".\n\nWHERE DOES THE NUMBER COME FROM? Two things. One: how much stuff that place is made of — NASA writes that \"the heavier the planet, the stronger it tugs on nearby objects\". Two: how far you are from its centre — \"the strength of gravity depends on how far away one object is from another\". Jupiter pulls hard because it has an enormous amount of stuff; the Moon pulls gently because it is small.\n\nSo if you weigh 30 kg on Earth, a scale on Jupiter reads 30 × 2.53 = 75.9 kg — type your own weight in the box above and do the multiplication yourself to check. NASA does this very multiplication: they write that if you weigh 100 pounds on Earth you would weigh 38 pounds on Mercury (100 × 0.38) and 253 pounds on Jupiter (100 × 2.53).\n\n⚠️ ONE TRUE THING ABOUT JUPITER: it has no ground to stand on. NASA writes that as a gas giant Jupiter \"doesn't have a true surface\" and is \"mostly swirling gases and liquids\", and a spacecraft would have nowhere to land. So that 75.9 kg is an IMAGINED experiment — NASA writes it conditionally too: \"IF you were on heavy Jupiter...\".",
       find_weigh: "Weight changes with where you are; mass does not.",
 
       p_noon: "Midday", p_evening: "Late afternoon", p_horizon: "At the horizon",
@@ -291,6 +316,7 @@
       ui_finding: "What you found",
       ui_source: "Source:",
       ui_scale: "Scale reads",
+      ui_no_ground: "(Jupiter has no ground to stand on — this is imagined)",
       ui_your_kg: "Your weight on Earth:",
       ui_kg: "kg",
       ui_mass: "Mass",
@@ -320,6 +346,12 @@
     var p = place(id);
     return p ? p.ratio : 1;
   }
+  /* Tỉ lệ VIẾT RA cho trẻ đọc — xem cảnh báo ở PLACES. Bản EN dùng dấu chấm. */
+  function ratioLabel(id, L) {
+    var p = place(id);
+    var s = p && p.rlabel ? p.rlabel : "1";
+    return ((L || lang()) === "en") ? s.replace(",", ".") : s;
+  }
   /* Cân nặng ở một nơi, làm tròn tới 0,1 kg. Mốc 30 kg là một đứa trẻ, và nó
      chỉ là VÍ DỤ nên không cần nguồn — thứ cần nguồn là TỈ LỆ, đã có ở PLACES. */
   function weighAt(id, kgOnEarth) {
@@ -328,7 +360,7 @@
 
   window.AstroQLab = {
     CARDS: CARDS, PLACES: PLACES, SRC: SRC,
-    card: card, place: place, ratio: ratio, weighAt: weighAt,
+    card: card, place: place, ratio: ratio, ratioLabel: ratioLabel, weighAt: weighAt,
     text: t, dict: T
   };
 })();

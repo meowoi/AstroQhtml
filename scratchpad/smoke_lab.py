@@ -335,6 +335,32 @@ with sync_playwright() as pw:
     check("cong thuc DUNG voi moi noi va moi can nang: can = can_TraiDat x ti le",
           _bad == [], "; ".join(_bad[:3]))
 
+    # ⚠️⚠️ PHEP TINH HIEN RA PHAI TAI TAO DUOC KET QUA. Ban dau hien ti le da LAM
+    #    TRON (`round(ratio*100)/100`) nen Mat Trang ra "30 × 0,17 = 5" — ma
+    #    30 × 0,17 = 5,1. Mot dua tre lam theo se ra so khac va ket luan la minh sai,
+    #    dung ngay cho loi giai thich moi no "tu nhan xem co khop khong".
+    _mism = pg.evaluate("""() => {
+        const out = [];
+        [30, 42, 50, 7.5].forEach(base => {
+            AstroQLab.PLACES.forEach(p => {
+                const lab = AstroQLab.ratioLabel(p.id, 'vi');
+                // doc lai chinh CHUOI hien ra: "1/6" hoac "0,38"
+                let v;
+                if (lab.indexOf('/') > 0) {
+                    const ab = lab.split('/'); v = parseFloat(ab[0]) / parseFloat(ab[1]);
+                } else { v = parseFloat(lab.replace(',', '.')); }
+                const fromLabel = Math.round(base * v * 10) / 10;
+                const shown = AstroQLab.weighAt(p.id, base);
+                if (Math.abs(fromLabel - shown) > 0.05)
+                    out.push(p.id + '@' + base + ': ' + base + ' x ' + lab +
+                             ' = ' + fromLabel + ' nhung hien ' + shown);
+            });
+        });
+        return out;
+    }""")
+    check("ti le VIET RA tai tao dung ket qua (tre tu nhan thi khop)",
+          _mism == [], "; ".join(_mism[:3]))
+
     # Go so khac thi canh phai VE LAI KHAC
     pg.click("#places button:nth-child(4)")            # Sao Moc
     pg.wait_for_timeout(400)
