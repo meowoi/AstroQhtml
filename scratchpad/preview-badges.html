@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Mề đay huy hiệu — bản thử</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/page-shell.css">
+<link rel="stylesheet" href="../css/sticker-icons.css">
+<link rel="stylesheet" href="../css/achievements.css">
+<link rel="stylesheet" href="preview-badges.css">
+</head>
+<body>
+  <div class="wrap">
+    <h2 class="ph">Đã mở (.badge.on) — 22 huy hiệu thật của js/badges.js</h2>
+    <div class="badges" id="on"></div>
+    <h2 class="ph">Chưa mở (.badge.off) — bảng màu sic--off, KHÔNG grayscale</h2>
+    <div class="badges" id="off"></div>
+  </div>
+<script src="../js/sticker-icons.js"></script>
+<script src="../js/badges.js"></script>
+<script>
+(function(){
+  function row(earned){
+    return AstroQBadges.ids().map(function(id){
+      return '<article class="badge '+(earned?'on':'off')+'">'+
+        '<span class="medal" aria-hidden="true">'+
+          sic(AstroQBadges.sicName(id), earned ? '' : 'sic--off')+'</span>'+
+        '<span class="body"><span class="nm">'+AstroQBadges.name(id,"vi")+'</span>'+
+        '<span class="ds">'+id+'</span></span></article>';
+    }).join("");
+  }
+  document.getElementById("on").innerHTML  = row(true);
+  document.getElementById("off").innerHTML = row(false);
+})();
+</script>
+</body>
+</html>

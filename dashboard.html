@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/sticker-icons.css" />
 <link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
@@ -20,6 +21,7 @@
 <link rel="stylesheet" href="css/onboard-tour.css" />
 <link rel="stylesheet" href="css/warp-screen.css" />
 <script src="js/icons.js"></script>
+<script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
 <script src="js/locks.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
@@ -189,21 +191,21 @@
               5 lần). Thà thiếu một con số hơn bịa hoặc phình đường mạng. -->
       <div class="ptiles">
         <a class="ptile pt-profile" href="profile.html">
-          <span class="pt-ic" aria-hidden="true">👨‍🚀</span>
+          <span class="pt-ic" aria-hidden="true" data-sic="astronaut"></span>
           <span class="pt-b">
             <span class="pt-nm" data-i18n="pt_profile">Hồ sơ</span>
             <span class="pt-sub" id="pt-rank">—</span>
           </span>
         </a>
         <a class="ptile pt-awards" href="achievements.html" data-tour="awards">
-          <span class="pt-ic" aria-hidden="true">🏆</span>
+          <span class="pt-ic" aria-hidden="true" data-sic="trophy"></span>
           <span class="pt-b">
             <span class="pt-nm" data-i18n="pt_awards">Thành tích</span>
             <span class="pt-sub" id="pt-badges">—</span>
           </span>
         </a>
         <a class="ptile pt-vault" href="specimen-vault.html">
-          <span class="pt-ic" aria-hidden="true">📦</span>
+          <span class="pt-ic" aria-hidden="true" data-sic="crate"></span>
           <span class="pt-b">
             <span class="pt-nm" data-i18n="pt_vault">Mẫu vật</span>
             <span class="pt-sub" data-i18n="pt_vault_sub">Bộ sưu tập</span>
@@ -253,7 +255,8 @@
        thà đừng dẫn. Mission Control và Sổ Tay Thuật Ngữ cũng chưa vào tour: thêm
        bước là phải kiểm lại chỗ đặt box thoại trên màn 390px. -->
   <section class="cards">
-    <!-- Trung Tâm Nhiệm Vụ → missions.html (Sảnh Nhiệm Vụ) -->
+    <!-- Trung Tâm Nhiệm Vụ → missions.html (CỬA TRƯỚC của khu nhiệm vụ 4 tầng:
+         missions → bản đồ → hành tinh → cây chặng → màn chơi; xem docs/decisions/008) -->
     <!-- ⚠️ `data-tour="missions"` (SỐ NHIỀU) — chốt 30/07/2026. Ghi chú trong
          js/onboard-tour.js từng hướng dẫn `data-tour="mission"` số ít; hai tên cho
          một thẻ thì màn chỉ đường bắt trượt và trẻ chỉ thấy trang tối đi.
@@ -261,7 +264,7 @@
          nhưng màn Comet chúc mừng xong nhiệm vụ thì chiếu sáng đúng nó. -->
     <article class="hud card--mission" data-tour="missions">
       <div class="hud-line top"><span><span class="led"></span>MOD-04</span><span class="ok">SYS.ONLINE</span></div>
-      <div class="ic">🎯</div>
+      <div class="ic" data-sic="target"></div>
       <span class="tag" data-i18n="mission_tag">Nhiệm vụ có cốt truyện</span>
       <h3 data-i18n="mission_title">Trung Tâm Nhiệm Vụ</h3>
       <p data-i18n="mission_desc">Nhận lệnh bay tới một hành tinh và hoàn thành từng bước nhiệm vụ. Tiến độ được lưu lại.</p>
@@ -272,7 +275,7 @@
     <!-- Trạm Tri Thức -->
     <article class="hud card--quiz" data-tour="learn">
       <div class="hud-line top"><span><span class="led"></span>MOD-01</span><span class="ok">SYS.ONLINE</span></div>
-      <div class="ic">🧠</div>
+      <div class="ic" data-sic="brain"></div>
       <span class="tag" data-i18n="quiz_tag">Học &amp; Quiz</span>
       <h3 data-i18n="quiz_title">Trạm Tri Thức</h3>
       <p data-i18n="quiz_desc">Học kiến thức thiên văn và trả lời quiz để kiếm thêm Thiên thạch tím.</p>
@@ -286,7 +289,7 @@
          css/dashboard.css) -->
     <article class="hud card--game" data-tour="train">
       <div class="hud-line top"><span><span class="led"></span>MOD-02</span><span class="ok">SYS.ONLINE</span></div>
-      <div class="ic">🎮</div>
+      <div class="ic" data-sic="gamepad"></div>
       <span class="tag" data-i18n="game_tag">Game 2D</span>
       <h3 data-i18n="game_title">Khu Huấn Luyện</h3>
       <p data-i18n="game_desc">Thử thách phản xạ trong game 2D. Mỗi lượt chơi tốn một ít Thiên thạch tím.</p>
@@ -305,7 +308,7 @@
     <!-- Bản Đồ Thiên Hà -->
     <article class="hud card--map" data-tour="map">
       <div class="hud-line top"><span><span class="led"></span>MOD-03</span><span class="ok">SYS.ONLINE</span></div>
-      <div class="ic">🌌</div>
+      <div class="ic" data-sic="galaxy"></div>
       <span class="tag" data-i18n="map_tag">Khám phá 3D</span>
       <h3 data-i18n="map_title">Bản Đồ Thiên Hà</h3>
       <p data-i18n="map_desc">Bay giữa Hệ Mặt Trời và các vùng sao lân cận trong không gian 3D thời gian thực.</p>
@@ -324,7 +327,7 @@
          `card--codex` (trước: `card--archive`) — CSS ở css/dashboard.css. -->
     <article class="hud card--codex">
       <div class="hud-line top"><span><span class="led"></span>MOD-06</span><span class="ok">SYS.ONLINE</span></div>
-      <div class="ic">📖</div>
+      <div class="ic" data-sic="book"></div>
       <span class="tag" data-i18n="codex_tag">Tra cứu thuật ngữ</span>
       <h3 data-i18n="codex_title">Sổ Tay Thuật Ngữ</h3>
       <p data-i18n="codex_desc">Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.</p>
@@ -347,11 +350,11 @@
     <article class="hud card--lab soon">
       <div class="hud-line top"><span><span class="led standby"></span>MOD-05</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
       <span class="lk-badge soon lk-pin" id="lab-badge"></span>
-      <div class="ic">🔬</div>
+      <div class="ic" data-sic="flask"></div>
       <span class="tag" data-i18n="lab_tag">Thí nghiệm ảo</span>
       <h3 data-i18n="lab_title">Phòng Nghiên Cứu</h3>
       <p data-i18n="lab_desc">Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.</p>
-      <button class="jelly-btn lk-open" id="lab-btn" type="button" data-i18n="lab_why">Vì sao chưa mở?</button>
+      <button class="jelly-btn lk-open" id="lab-btn" type="button" data-i18n="lab_why">Xem trước</button>
       <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
     </article>
 
@@ -433,7 +436,7 @@
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
       pt_parent:"Dành cho bố mẹ: xem báo cáo tuần của con",
-      lab_why:"Vì sao chưa mở?", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
+      lab_why:"Xem trước", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -481,7 +484,7 @@
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
       pt_parent:"For parents: see your child's weekly report",
-      lab_why:"Why is it locked?", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
+      lab_why:"Sneak peek", soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       need_title:"Not enough Purple Asteroids!",
       need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
       need_go:"Do Quiz now", need_later:"Later",
@@ -743,7 +746,7 @@
         phép thử phá hoại (đổi `lab` sang `pro`) cho thấy hậu quả: thẻ vẫn ghi "SẮP
         RA MẮT" trong khi modal đã nói "thuộc gói Phi Hành Gia" — hai thông điệp
         ngược nhau, và nó xảy ra ĐÚNG LÚC cơ chế này được dùng tới (ngày bật cờ).
-        missions.html và games.html vốn đã suy từ `lk.state`; chỉ chỗ này lệch. */
+        mission-map.html và games.html vốn đã suy từ `lk.state`; chỉ chỗ này lệch. */
   function paintLockBadge(){
     var b = $("lab-badge");
     if(!b || !window.AstroQLocks) return;

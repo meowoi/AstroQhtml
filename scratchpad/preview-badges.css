@@ -1,0 +1,5 @@
+/* Chỉ dùng cho trang soi thử ở scratchpad — không phải asset của sản phẩm. */
+body{background:#0b1020;padding:20px}
+.wrap{max-width:1180px;margin:0 auto}
+.ph{font-size:13px;color:#a5b4fc;text-transform:uppercase;letter-spacing:.08em;margin:18px 0 10px}
+.badges{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}

@@ -11,8 +11,10 @@
 
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/sticker-icons.css" />
 <link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/achievements.css" />
+<script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
 <script src="js/badges.js"></script>
 <!-- Tên 10 bậc huấn luyện — dùng chung với dashboard.html / profile.html -->
@@ -398,7 +400,11 @@
       }
       return '<article class="'+cls+'">'+
         '<span class="gtag" aria-hidden="true">'+AstroQBadges.groupIcon(b.group)+'</span>'+
-        '<span class="medal" aria-hidden="true">'+AstroQBadges.icon(b.id)+'</span>'+
+        '<span class="medal" aria-hidden="true">'+
+          /* Me day la o 54px/26px — o duy nhat cua trang du lon cho icon sticker.
+             Chua mo thi dung bang mau `sic--off` chu KHONG dung filter:grayscale()
+             (bai hoc da tra gia 3 lan: tren nen sang no cho ra khoi xam SANG HON). */
+          sic(AstroQBadges.sicName(b.id), b.earned ? '' : 'sic--off')+'</span>'+
         '<span class="body">'+
           '<span class="nm">'+AstroQ.esc(AstroQBadges.name(b.id, LANG))+'</span>'+
           '<span class="ds">'+AstroQ.esc(AstroQBadges.desc(b.id, LANG))+'</span>'+

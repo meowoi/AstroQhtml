@@ -1,0 +1,102 @@
+/* ============================================================
+   sticker-icons.css — 4 lớp của bộ icon sticker (`js/sticker-icons.js`).
+   Nạp SAU `css/common.css`, TRƯỚC `css/<trang>.css` (để trang override được cỡ).
+
+   ⚠️ Bảng màu lấy từ chính art nhân vật + thiên thạch tím, không tự chọn:
+      tím #8b5cf6→#a855f7 · hồng #e879f9 · navy viền #1b1038 · cyan #22d3ee
+      (màn hình Byte) · lime #a3e635 (đèn đáy Byte) · magenta #ec4899 (lửa Luna).
+   ============================================================ */
+
+.sic {
+  /* Bảng màu mặc định: TÍM — tông của thiên thạch tím và của Quark.
+     BA nấc, không phải hai: `img/tt.png` sáng gần trắng ở mặt hứng sáng rồi mới
+     xuống tím đậm, nên gradient 2 nấc cho ra một mảng phẳng, không ra chất đá quý. */
+  --sic-a: #f0d9ff;     /* mặt hứng sáng — lilac gần trắng */
+  --sic-b: #a855f7;     /* thân */
+  --sic-c: #5b21b6;     /* mặt tối */
+  --sic-ink: #1b1038;   /* navy viền, KHÔNG dùng đen thuần: art dùng navy nên đen
+                           thuần đặt cạnh sẽ đọc ra như một icon của bộ khác */
+  --sic-rim: #fff;
+
+  width: 1em;
+  height: 1em;
+  display: block;
+  flex: none;
+}
+
+/* ⓞ Nét ngoài cùng — thứ làm sticker đọc được trên nền SÁNG (xem ghi chú đầu
+      `js/sticker-icons.js`). Tô luôn màu navy để hình không bị rỗng ruột ở khe. */
+.sic-edge {
+  fill: var(--sic-ink);
+  stroke: var(--sic-ink);
+  stroke-width: 13;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* ① Rìa sticker — tô đặc + nét dày cùng màu để thành một khối trắng liền,
+      không phải một đường viền rỗng (art là sticker cắt rời, không phải outline). */
+.sic-rim {
+  fill: var(--sic-rim);
+  stroke: var(--sic-rim);
+  stroke-width: 9;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* ② Thân — `paint-order:stroke` cho nét navy vẽ TRƯỚC rồi phần tô đè lên nửa
+      trong của nét, nên mép trong sắc gọn và nét mỏng đi một nửa về phía trong.
+      Không có nó thì nét 4 ăn vào hình, chi tiết nhỏ bị bịt. */
+.sic-ink {
+  stroke: var(--sic-ink);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+.sic-ink .f-w    { fill: #fff; }
+.sic-ink .f-lt   { fill: var(--sic-a); }  /* cùng họ màu, sáng hơn thân — dùng cho vành
+                                             Sao Thổ: xem ghi chú "vành mũ" trong JS */
+.sic-ink .f-dk   { fill: #3b2a63; }   /* hố lõm / lỗ khoá — sẫm hơn thân, không phải đen */
+.sic-ink .f-cy   { fill: #22d3ee; }
+.sic-ink .f-lime { fill: #a3e635; }
+.sic-ink .f-mag  { fill: #ec4899; }
+
+/* ③ Nét chi tiết bên trong — mảnh hơn nét bao, không tô. */
+.sic-line {
+  fill: none;
+  stroke: var(--sic-ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: .85;
+}
+
+/* ④ Gloss + sparkle — trắng, KHÔNG nét: thêm nét vào đây là mất cảm giác
+      "ánh sáng phản chiếu", nó thành một cái hình dán lên. */
+.sic-lite {
+  fill: #fff;
+  stroke: none;
+  opacity: .82;
+}
+
+/* ── Bảng màu phụ, đổi bằng class ở ngoài ────────────────────────────────
+   Chỉ đổi hai stop; nét navy và rìa trắng GIỮ NGUYÊN ở mọi bảng màu — đó là
+   thứ làm cả bộ đọc ra là một bộ. */
+.sic--cyan { --sic-a: #d5fbff; --sic-b: #22d3ee; --sic-c: #0e7490; }
+.sic--gold { --sic-a: #fff3c4; --sic-b: #fbbf24; --sic-c: #b45309; }
+.sic--lime { --sic-a: #eafcc0; --sic-b: #a3e635; --sic-c: #3f6212; }
+.sic--mag  { --sic-a: #ffd9ee; --sic-b: #ec4899; --sic-c: #9d174d; }
+.sic--slate{ --sic-a: #f1f5f9; --sic-b: #94a3b8; --sic-c: #334155; }
+
+/* Trạng thái KHOÁ / CHƯA MỞ — bạc xám + nhạt bớt.
+   ⚠️ KHÔNG dùng `filter:grayscale()` (bài học đã trả giá 3 lần trong dự án: trên
+      nền gradient sáng nó cho ra một khối xám SÁNG HƠN icon bình thường). */
+.sic--off { --sic-a: #e2e8f0; --sic-b: #94a3b8; --sic-c: #475569; opacity: .55; }
+.sic--off .sic-lite { opacity: .4; }
+
+/* Giảm chuyển động: bộ này không có animation nào, nhưng khai ở đây để lượt sau
+   ai thêm sparkle nhấp nháy thì đã có chỗ đúng để tắt. */
+@media (prefers-reduced-motion: reduce) {
+  .sic * { animation: none !important; }
+}

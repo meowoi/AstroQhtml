@@ -125,7 +125,13 @@
   color:#eaa668;margin-top:8px;}
 
 /* CHƯA MỞ — xám, mề đay mờ, có thanh tiến độ */
-.badge.off .medal{filter:grayscale(1);opacity:.4;}
+/* ⚠️ ĐÃ BỎ `filter:grayscale(1);opacity:.4` (12/08/2026). Mề đay nay là icon
+   sticker nhiều màu, và `grayscale` trên nó cho ra một khối xám đục — đúng lỗi
+   dự án đã trả giá 3 lần. Việc bạc màu nay do bảng màu `sic--off` của
+   `css/sticker-icons.css` lo, tức làm ở ĐÚNG chỗ khai màu. Ô vẫn mờ đi nhẹ để
+   khác hẳn mề đay đã mở, nhưng biểu tượng còn đọc được hình — đó là thứ tạo
+   động lực (cùng lý do đã siết độ mờ ở bảng Lộ Trình Huấn Luyện). */
+.badge.off .medal{opacity:.72;}
 .badge.off .nm{color:var(--ink-soft);}
 /* `display:block` là BẮT BUỘC: cả .prog và .bar đều là <span>, mà <span> mặc
    định inline nên `height:6px` bị bỏ qua — thanh tiến độ tụt về 0px và biến mất

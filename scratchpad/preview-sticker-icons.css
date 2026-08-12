@@ -1,0 +1,18 @@
+/* Chỉ dùng cho trang soi thử ở scratchpad — không phải asset của sản phẩm. */
+body{margin:0;padding:24px 28px 60px;background:#0b1020;color:#e6ecff;
+  font:14px/1.5 system-ui,Segoe UI,sans-serif}
+h1{font-size:19px;margin:0 0 14px}
+h2{font-size:14px;margin:30px 0 10px;color:#a5b4fc;text-transform:uppercase;letter-spacing:.08em}
+.ref{display:flex;gap:22px;align-items:flex-end;padding:14px 16px;border-radius:14px;
+  background:rgba(148,163,184,.08)}
+.ref img{height:96px;width:auto;display:block}
+.ref .mine .big{font-size:96px;display:block}
+.grid{display:grid;gap:14px 10px;grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+.grid figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 4px;border-radius:12px;background:rgba(148,163,184,.07)}
+figcaption{font-size:10px;color:#94a3b8;font-family:ui-monospace,Consolas,monospace}
+.big .sic{font-size:56px}
+.mid .sic{font-size:36px}
+.sml .sic{font-size:24px}
+.light figure{background:#f1f5f9}
+.light figcaption{color:#475569}

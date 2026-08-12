@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Bộ icon sticker — bản thử</title>
+<link rel="stylesheet" href="../css/sticker-icons.css">
+<link rel="stylesheet" href="preview-sticker-icons.css">
+</head>
+<body>
+  <h1>Bộ icon sticker — đặt cạnh art gốc để soi</h1>
+
+  <section class="ref">
+    <figure><img src="../img/tt.png" alt=""><figcaption>tt.png (gốc)</figcaption></figure>
+    <figure><img src="../img/q1.png" alt=""><figcaption>q1.png (gốc)</figcaption></figure>
+    <figure><img src="../img/luna1.png" alt=""><figcaption>luna1.png (gốc)</figcaption></figure>
+    <figure class="mine"><span class="big" id="ref-meteor"></span><figcaption>sic("meteor")</figcaption></figure>
+  </section>
+
+  <h2>Cỡ 56px — như thẻ HUD dashboard</h2>
+  <div class="grid big" id="g56"></div>
+
+  <h2>Cỡ 36px — như tiêu đề khu / nhóm mẫu vật</h2>
+  <div class="grid mid" id="g36"></div>
+
+  <h2>Cỡ 24px — cỡ nhỏ nhất còn đọc được?</h2>
+  <div class="grid sml" id="g24"></div>
+
+  <h2>Bảng màu phụ + trạng thái khoá</h2>
+  <div class="grid big" id="gpal"></div>
+
+  <h2>Trên nền sáng (kiểm rìa trắng còn tách khỏi nền không)</h2>
+  <div class="grid big light" id="glight"></div>
+
+<script src="../js/sticker-icons.js"></script>
+<script>
+(function(){
+  /* Đọc thẳng từ bộ icon — gõ lại danh sách ở đây là thêm một chỗ phải nhớ
+     cập nhật, và icon mới sẽ không bao giờ lên trang soi. */
+  var NAMES = Object.keys(AstroQSticker);
+  function fill(el, cls){
+    el.innerHTML = NAMES.map(function(n){
+      return '<figure>' + sic(n, cls||"") + '<figcaption>'+n+'</figcaption></figure>';
+    }).join("");
+  }
+  document.getElementById("ref-meteor").innerHTML = sic("meteor");
+  fill(document.getElementById("g56"));
+  fill(document.getElementById("g36"));
+  fill(document.getElementById("g24"));
+  fill(document.getElementById("glight"));
+
+  var PAL = [["meteor",""],["target","sic--cyan"],["trophy","sic--gold"],
+             ["gamepad","sic--lime"],["rocket","sic--mag"],["crate","sic--slate"],
+             ["flask","sic--off"],["lock","sic--off"]];
+  document.getElementById("gpal").innerHTML = PAL.map(function(p){
+    return '<figure>' + sic(p[0], p[1]) + '<figcaption>'+(p[1]||"mặc định")+'</figcaption></figure>';
+  }).join("");
+})();
+</script>
+</body>
+</html>
