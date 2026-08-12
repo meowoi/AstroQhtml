@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-constellation.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
 </head>
 <body>
 
@@ -331,6 +332,7 @@
       pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?",
       resume:"Chơi tiếp", pause_aria:"Tạm dừng", sfx_aria:"Bật/tắt âm thanh",
       hint_first:"NỐI SAO 1 → 2 ĐỂ BẮT ĐẦU", hint_next:"TIẾP THEO: NỐI {a} → {b}",
+      lv_links:"đã nối {a}/{b} đường",
       done_hint:"CHÒM SAO HOÀN CHỈNH!"
     },
     en:{
@@ -353,6 +355,7 @@
       pause_title:"Paused", pause_body:"Continue playing or return to the Training Simulator?",
       resume:"Keep playing", pause_aria:"Pause", sfx_aria:"Toggle sound",
       hint_first:"LINK STAR 1 → 2 TO BEGIN", hint_next:"NEXT: LINK {a} → {b}",
+      lv_links:"{a}/{b} lines linked",
       done_hint:"CONSTELLATION COMPLETE!"
     }
   };
@@ -412,7 +415,10 @@
   function fit(){
     var r=cv.getBoundingClientRect();
     var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
-    DPR=Math.min(2, window.devicePixelRatio||1);
+    /* Trần pixel do js/game-shell.js giữ — lý do và con số ghi ở đó.
+       Thiếu file đó thì lùi về đúng hành vi cũ, trang không vỡ. */
+    DPR=(window.AstroQGameShell && AstroQGameShell.dpr)
+      ? AstroQGameShell.dpr(w,h) : Math.min(2, window.devicePixelRatio||1);
     cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
     ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
     bgGrad=ctx.createLinearGradient(0,0,0,VH);
@@ -605,6 +611,18 @@
 
   /* ===== HUD (chỉ ghi DOM khi giá trị thay đổi) ===== */
   var hudCache={};
+  /* ── Thanh tiến độ (js/game-shell.js dựng) ────────────────────────────────
+     ⚠️ Game này KHÔNG CÓ CẤP ĐỘ, nên đừng bịa ra một cái. Thứ tiến triển thật là
+        SỐ ĐƯỜNG ĐÃ NỐI trên tổng số đường của chòm sao đang chơi — và đó cũng là
+        thứ trẻ đang thật sự làm, nên thanh này nói đúng việc nó vừa làm xong. */
+  function paintLevelBar(){
+    if(!window.AstroQGameShell || !AstroQGameShell.setLevel) return;
+    var total = cons && cons.stars ? cons.stars.length - 1 : 0;
+    if(total <= 0){ AstroQGameShell.setLevel(null); return; }
+    AstroQGameShell.setLevel({ pct: progress / total,
+      caption: t("lv_links").replace("{a}", progress).replace("{b}", total) });
+  }
+
   function paintHud(){
     var nm = cons ? L(cons.name) : "—", sb = cons ? L(cons.sub) : "—";
     /* Chip tt = phần thưởng ĐANG chờ nhận: bắt đầu ở mức tối đa rồi tụt dần theo
@@ -614,6 +632,7 @@
     if(hudCache.sb!==sb){ $("hb-sub").textContent=sb;  hudCache.sb=sb; }
     if(hudCache.tm!==tm){ $("hb-time").textContent=tm; hudCache.tm=tm; }
     if(hudCache.rw!==rw){ $("hb-mtr").textContent=rw;  hudCache.rw=rw; }
+     paintLevelBar();
   }
 
   /* ============================================================

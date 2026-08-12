@@ -5,7 +5,14 @@
 /* Sân VUÔNG 600×600: phòng thủ 360° thì sân chữ nhật khiến vật thể bay từ trái/phải
    phải đi xa hơn từ trên/dưới → cùng một cú bắn mà bên khó bên dễ. Vuông = công bằng
    mọi hướng. cursor:none vì con trỏ được vẽ bằng reticle "+" trên canvas. */
-.field{max-width:600px;aspect-ratio:1/1;background:#0b0f19;cursor:none;}
+/* ⚠️ `--ar` là tỉ lệ sân ở dạng SỐ để `js/game-shell.js` đọc được; `aspect-ratio`
+   ngay cạnh là đường lùi khi thiếu file JS đó. Hai giá trị phải khớp nhau —
+   khai cùng một chỗ để lệch là thấy ngay. `max-width` bằng pixel ĐÃ BỎ: lý do
+   và số đo ghi ở khối "Khung sân" trong css/game-shell.css. */
+/* Sân VUÔNG nên nó bị chiều cao khung nhìn chặn trước, không bao giờ tới 1120px.
+   Trần nhóm = 964 (sân cao nhất thực tế) + 150 + 128 + 28 khe. */
+.stage{--stage-max:1270px;}
+.field{--ar:1;aspect-ratio:1/1;background:#0b0f19;cursor:none;}
 
 /* ===== Thanh Giáp Trạm (Hull Integrity) ===== */
 .hullwrap{display:flex;align-items:center;gap:8px;padding:5px 11px;border-radius:11px;

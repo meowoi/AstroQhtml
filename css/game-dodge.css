@@ -3,7 +3,11 @@
    Nap: css/common.css -> css/game-shell.css -> css/game-dodge.css */
 
 /* Sân bay ngang: tỉ lệ 800×500 cố định → làn đá so với chiều cao sân luôn như nhau */
-.field{max-width:800px;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19,#1e1b4b);}
+/* ⚠️ `--ar` là tỉ lệ sân ở dạng SỐ để `js/game-shell.js` đọc được; `aspect-ratio`
+   ngay cạnh là đường lùi khi thiếu file JS đó. Hai giá trị phải khớp nhau —
+   khai cùng một chỗ để lệch là thấy ngay. `max-width` bằng pixel ĐÃ BỎ: lý do
+   và số đo ghi ở khối "Khung sân" trong css/game-shell.css. */
+.field{--ar:1.6;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19,#1e1b4b);}
 
 /* Chip CẤP: tông hổ phách để tách khỏi 4 chip số liệu (điểm/quãng đường/tt/kỷ lục)
    — nó nói "bạn đang ở bậc nào", không phải một con số đang chạy.

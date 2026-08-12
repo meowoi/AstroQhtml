@@ -5,7 +5,11 @@
 
 /* Sân bay ngang 800×500 cố định → toạ độ chòm sao trong dữ liệu luôn rơi đúng chỗ
    trên mọi màn hình (đổi tỉ lệ là hình chòm sao bị bóp méo, sai cả thiên văn). */
-.field{max-width:800px;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19 0%,#141033 58%,#1a103c 100%);}
+/* ⚠️ `--ar` là tỉ lệ sân ở dạng SỐ để `js/game-shell.js` đọc được; `aspect-ratio`
+   ngay cạnh là đường lùi khi thiếu file JS đó. Hai giá trị phải khớp nhau —
+   khai cùng một chỗ để lệch là thấy ngay. `max-width` bằng pixel ĐÃ BỎ: lý do
+   và số đo ghi ở khối "Khung sân" trong css/game-shell.css. */
+.field{--ar:1.6;aspect-ratio:8/5;background:linear-gradient(180deg,#0b0f19 0%,#141033 58%,#1a103c 100%);}
 /* Con trỏ đổi thành bàn tay khi ở trên một ngôi sao — JS bật/tắt class .hot */
 canvas.hot{cursor:pointer;}
 
@@ -13,6 +17,12 @@ canvas.hot{cursor:pointer;}
    flex:0 1 auto — co theo nội dung; để nó giãn (flex:1) thì trên màn rộng chip
    thành một hộp trống dài nửa thanh HUD, trông như lỗi bố cục. */
 .chip.cons{flex:0 1 auto;max-width:46%;min-width:0;align-items:flex-start;flex-direction:column;gap:1px;}
+/* ⚠️ `max-width:46%` được đặt cho THANH NGANG (46% của 800px = 368px). Từ 12/08/2026
+   màn rộng đổi sang CONSOLE DỌC 150px, và 46% của 150 là **69px** — chip bị cắt mất
+   tên chòm sao (đo được: 'Cassiopeia · the W shape' tràn ở 1366px). Sửa ở ĐÂY chứ
+   không ở `css/game-shell.css`: chip này là của riêng game Ghép Chòm Sao, nhét một
+   class riêng vào file dùng chung là mở đường cho mọi game khác làm thế. */
+@media (min-width:901px){ .chip.cons{max-width:none;} }
 .chip.cons .v{font-size:13.5px;line-height:1.2;white-space:normal;}
 .chip.cons .sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;}
 

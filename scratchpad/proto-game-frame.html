@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu — khung trang trí quanh sân game</title>
+<link rel="stylesheet" href="proto-game-frame.css">
+</head>
+<body>
+  <!-- ⚠️ BẢN MẪU, KHÔNG PHẢI SẢN PHẨM. Không có logic game; sân là một canvas vẽ
+       sao + vài hòn đá tĩnh, chỉ để soi TỈ LỆ và BỐ CỤC. Đổi bản: ?v=1 hoặc ?v=2 -->
+  <header class="top">
+    <span class="back">&lt; Về Khu Huấn Luyện</span>
+    <span class="gtag">[ Né Thiên Thạch ]</span>
+    <span class="wallet"><img src="../img/tt.png" alt=""><b>885</b></span>
+  </header>
+
+  <div class="deck">
+    <!-- Console TRÁI: số liệu (bản 1) -->
+    <aside class="side left">
+      <div class="panel lv"><div class="lb">Cấp độ</div><div class="vl">1</div></div>
+      <div class="panel"><div class="lb">Điểm</div><div class="vl">128</div></div>
+      <div class="panel"><div class="lb">Quãng đường</div><div class="vl">128<small>m</small></div></div>
+      <div class="panel mtr"><div class="lb">Thiên thạch</div><div class="vl">3</div></div>
+      <div class="panel"><div class="lb">Kỷ lục</div><div class="vl">1610</div></div>
+    </aside>
+
+    <!-- Ô CỬA -->
+    <div class="play">
+      <div class="hudbar">
+        <span class="chip"><span class="lb">Cấp</span><span class="vl">1</span></span>
+        <span class="chip"><span class="lb">Điểm</span><span class="vl">128</span></span>
+        <span class="chip"><span class="lb">Quãng đường</span><span class="vl">128m</span></span>
+        <span class="chip"><span class="lb">Thiên thạch</span><span class="vl">3</span></span>
+        <span class="chip"><span class="lb">Kỷ lục</span><span class="vl">1610</span></span>
+        <!-- ⚠️ Bản mẫu nên nhân đôi nhân vật cho nhanh; bản THẬT phải DI CHUYỂN
+             một nút duy nhất, không giữ hai bản (một chỗ sửa, không phải hai). -->
+        <span class="mate-mini" id="mate-mini"><img src="../ava/avab.png" alt=""><span class="nm">BYTE</span></span>
+        <span class="chip ib-wrap"><span class="ib">🔊</span></span>
+        <span class="chip ib-wrap"><span class="ib">⏸</span></span>
+      </div>
+      <div class="port"><i class="cnr"></i><div class="field"><canvas id="cv"></canvas></div></div>
+      <div class="lvbar"><i></i></div>
+      <div class="lvcap">CẤP 1 · còn 46m nữa lên Cấp 2</div>
+    </div>
+
+    <!-- Console PHẢI: bạn đồng hành + nút (bản 1) -->
+    <aside class="side right">
+      <div class="panel mate" id="mate">
+        <img src="../ava/avab.png" alt="">
+        <span class="nm">BYTE</span>
+        <span class="say" id="say">Cẩn thận, vành đai dày lên rồi!</span>
+      </div>
+      <div class="panel btns"><span class="ib">🔊</span><span class="ib">⏸</span></div>
+    </aside>
+  </div>
+
+  <span class="vlab" id="vlab"></span>
+
+<script>
+(function(){
+  /* Bản nào: ?v=1 (ô cửa + console) | ?v=2 (khung dày, bố cục như hôm nay) */
+  var v = (location.search.match(/v=(\d)/) || [])[1] || "1";
+  if(v === "2") document.body.classList.add("v2");
+  document.getElementById("vlab").textContent = "bản mẫu v" + v;
+
+  /* Sân TĨNH: chỉ vẽ sao + vài hòn đá để soi tỉ lệ. Vẫn dùng hệ ảo 800×500 và
+     `setTransform` y như game thật, để cỡ vật thể trên ảnh chụp là cỡ THẬT. */
+  var VW = 800, VH = 500;
+  var cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  function draw(){
+    var r = cv.getBoundingClientRect();
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    ctx.setTransform(cv.width / VW, 0, 0, cv.height / VH, 0, 0);
+    var g = ctx.createLinearGradient(0, 0, 0, VH);
+    g.addColorStop(0, "#0b0f19"); g.addColorStop(.55, "#141539"); g.addColorStop(1, "#1e1b4b");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+    var i, x, y, s = 1;
+    for(i = 0; i < 140; i++){
+      x = (i * 137.5) % VW; y = (i * 89.3) % VH; s = (i % 3) ? 1 : 1.8;
+      ctx.fillStyle = "rgba(226,236,255," + (0.25 + (i % 5) * 0.14) + ")";
+      ctx.beginPath(); ctx.arc(x, y, s, 0, 6.284); ctx.fill();
+    }
+    /* Tàu Luna ở 1/4 bên trái, cỡ THẬT: 56,5 × 30 đơn vị ảo */
+    var img = new Image();
+    img.onload = function(){ ctx.drawImage(img, 200 - 28, 250 - 15, 56.5, 30); };
+    img.src = "../img/luna-side.png";
+    /* Ba hòn đá, bán kính thật ~22–34 đơn vị ảo */
+    [[560, 120, 30], [610, 300, 24], [700, 200, 34]].forEach(function(a){
+      ctx.fillStyle = "#6b7796"; ctx.strokeStyle = "#2b3550"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(a[0], a[1], a[2], 0, 6.284); ctx.fill(); ctx.stroke();
+    });
+  }
+  if(window.ResizeObserver) new ResizeObserver(draw).observe(cv); else addEventListener("resize", draw);
+  draw();
+
+  /* Trạng thái của bạn đồng hành — bấm vào sân để xem hai phản ứng.
+     ⚠️ Làm bằng transform + hào quang, KHÔNG đổi biểu cảm: chỉ có MỘT ảnh mỗi nhân
+        vật, muốn mặt vui / mặt lo thì phải có ảnh gốc. */
+  var mate = document.getElementById("mate"), say = document.getElementById("say"), n = 0;
+  document.querySelector(".field").addEventListener("click", function(){
+    n++;
+    var cl = n % 2 ? "cheer" : "ouch";
+    mate.className = "panel mate " + cl;
+    var mm = document.getElementById("mate-mini"); if(mm) mm.className = "mate-mini " + cl;
+    say.textContent = n % 2 ? "Tuyệt! +1 thiên thạch tím!" : "Ui! Suýt thì trúng rồi…";
+    setTimeout(function(){ mate.className = "panel mate";
+      if(mm) mm.className = "mate-mini"; }, 1100);
+  });
+})();
+</script>
+</body>
+</html>

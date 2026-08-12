@@ -123,10 +123,23 @@
         thứ mọi trang có nút đổi ngôn ngữ đều gọi. Gọi ngay một lần theo ngôn ngữ
         đang lưu (vì phần lớn trang gọi `applyLang(LANG)` TRỰC TIẾP chứ không qua
         đây), rồi bọc `applyLang` để mọi lần đổi sau cũng cập nhật theo. */
+  /* Ai cần vẽ lại khi đổi ngôn ngữ thì đăng ký ở đây (`AstroQ.onLang(fn)`).
+     ⚠️ Có sổ đăng ký để KHÔNG phải nhét thêm lời gọi vào `setDocLang` mỗi lần có
+        một thứ dùng chung cần dịch — `paintVersion` đang là lời gọi gõ cứng như thế,
+        và cái thứ hai (lời nhắc xoay ngang của `js/game-shell.js`) là lúc đúng để
+        dựng sổ. Chuỗi dịch nằm ở phía đăng ký, không phải ở đây.
+     ⚠️ Callback hỏng thì KHÔNG được làm chết cả chuỗi đổi ngôn ngữ — một thứ phụ
+        không dịch được còn hơn cả trang đứng lại ở tiếng cũ. */
+  var LANG_CBS = [];
+  function onLang(fn){ if(typeof fn === "function") LANG_CBS.push(fn); }
+
   function setDocLang(lang){
     try{ document.documentElement.setAttribute("lang", lang==="en" ? "en" : "vi"); }
     catch(e){}
     paintVersion(lang);
+    for(var i=0;i<LANG_CBS.length;i++){
+      try{ LANG_CBS[i](lang); }catch(e){}
+    }
   }
 
   /* ---------------- Số hiệu bản dựng ----------------
@@ -142,7 +155,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.11.4";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.08.12.1";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 
@@ -267,7 +280,7 @@
 
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
               getLang:getLang, guessLang:guessLang, setLang:setLang, markLangButtons:markLangButtons,
-              initLang:initLang, setDocLang:setDocLang,
+              initLang:initLang, setDocLang:setDocLang, onLang:onLang,
               applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,
               getPerf:getPerf, setPerf:setPerf, slowLink:slowLink,
               VERSION:VERSION,

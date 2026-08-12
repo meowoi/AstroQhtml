@@ -52,6 +52,9 @@ PAGES = [
     ("pricing.html",       "h1",              None),
     # parent.html them 09/08/2026 — bang theo doi cho bo me
     ("parent.html",        "h1",              None),
+    # checkout.html them 11/08/2026 — trang thanh toan. Do `h2` chu khong phai `h1`:
+    # trang nay khong co h1, tieu de lon nhat la ten buoc dang mo.
+    ("checkout.html",      ".co-card:not([hidden]) h2", None),
     ("specimen-vault.html", "h1",             None),
     ("game-dodge.html",    None,              None),
     ("game-defender.html", None,              None),
@@ -89,6 +92,21 @@ with sync_playwright() as p:
         ctx = br.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
         seed(ctx, "vi")
         pg = ctx.new_page()
+        # ⚠️ CHAN /billing/catalog VA TRA MOT PHAN HOI CO DINH.
+        #    `pricing.html` va `checkout.html` hoi route CONG KHAI nay ngay khi mo
+        #    trang. Bo do chay o cong 8123 — KHONG nam trong ALLOWED_ORIGINS — nen
+        #    loi goi that bi CORS chan va TRINH DUYET TU GHI mot dong do vao
+        #    console; khong `catch` nao chan duoc, va phep kiem "0 loi console" bao
+        #    hong oan.
+        #    ⚠️ CO Y KHONG them 8123 vao ALLOWED_ORIGINS: do la cong cua bo kiem
+        #       thu, mo them mot origin tren API THAT chi de lam xanh mot phep kiem
+        #       la doi cau hinh san xuat vi mot ly do khong thuoc san xuat.
+        #    `saleOpen:false` la trang thai THAT cua hom nay.
+        pg.route("**/billing/catalog*", lambda r: r.fulfill(
+            status=200, content_type="application/json",
+            headers={"access-control-allow-origin": "*"},
+            body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
+                 '"trialDays":14,"graceDays":7,"offers":[]}'))
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)

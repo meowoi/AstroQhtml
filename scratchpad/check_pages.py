@@ -193,7 +193,15 @@ for page in ("profile.html",
              # pricing.html them 09/08/2026 — trang Goi & Uu dai.
              "pricing.html",
              # parent.html them 09/08/2026 — bang theo doi cho bo me.
-             "parent.html"):
+             "parent.html",
+             # checkout.html them 11/08/2026 — trang thanh toan.
+             "checkout.html",
+             # Ba tang cua khu nhiem vu, them 12/08/2026 (`docs/decisions/008`):
+             # ban do (chon NOI) → hanh tinh (chon NHIEM VU) → cay chang (chon CHANG).
+             # Cung khuon page-shell nen soi duoc bang dung bo phep kiem nay.
+             "mission-map.html",
+             "mission-planet.html",
+             "mission-tree.html"):
     css = page_css(page)
     html = rd(page)
     js = inline_js(html)
@@ -238,6 +246,16 @@ for page in ("profile.html",
             # parent.html: nhan chon tuan sinh tu vong lap `t("w_"+i)`, va tieu de
             # o so lieu doi theo tuan dang xem `t("sum_h"+WEEK)`.
             "parent.html": [r"^w_[0-9]$", r"^sum_h[0-9]$"],
+            # checkout.html: ten goi / chu ky / trang thai don deu ghep tu du lieu
+            # server tra ve (`t("pl_"+plan)`, `t("cyc_"+cycle)`, `t("st_"+status)`),
+            # va bo loi bao loi tra qua bang `key` trong ham fail().
+            "checkout.html": [r"^pl_(free|astro|crew|found)$",
+                              r"^for_(free|astro|crew|found)$",
+                              r"^cyc_(month|year|once)(_sub)?$",
+                              r"^st_(paid|pending|failed|cancelled|expired)$",
+                              r"^res_(failed|cancelled|expired)_[hp]$",
+                              r"^err_[a-z]+$",
+                              r"^term_(trial|cycle|once|cancel)$"],
             "pricing.html": [r"^pl_(free|astro|crew|found)_[nd]$",
                              r"^c_[a-z0-9]+$",
                              r"^w_[kp][0-9]+$",
@@ -938,9 +956,19 @@ print("\n=== [4] Chi cac trang noi dung duoc nap SDK Firebase ===")
 #   ⚠️ Phep kiem nay da BAT DUOC dung viec no sinh ra de bat: `admin-report.html`
 #      duoc them va push 5 lan ma khong ai them vao danh sach nay. Danh sach trang
 #      khong tu suy ra duoc — no la QUYET DINH, nen phai viet ra.
+# checkout.html them 11/08/2026: mo mot don thanh toan phai co token — don gan voi
+# TAI KHOAN, va server lay uid TU TOKEN chu khong bao gio tu than request. Day cung
+# la trang cho NGUOI LON doc, khong nam tren luong choi nao.
+# mission-tree.html them 12/08/2026: no la CHO TU CHUA cua ca luong nhiem vu.
+# `mission-earth.html` co y KHONG nap SDK, nen MOI buoc no choi deu nam trong HANG
+# CHO cua js/progress.js; cay chang la man tre quay lai ngay sau khi choi, va no phai
+# doc duoc `GET /me/missions` de (a) gui not hang cho, (b) ve dung chang dang mo.
+# Khong co token o day thi tre choi xong mot chang, quay lai va van thay dung chang
+# vua choi dang sang — mot loi IM LANG. Ban do va man hanh tinh thi KHONG nap: chung
+# doc cache ma trang nay vua ghi.
 allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.html",
            "specimen-vault.html", "missions.html", "codex.html", "parent.html",
-           "admin-report.html"}
+           "admin-report.html", "checkout.html", "mission-tree.html"}
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue
@@ -1047,6 +1075,25 @@ check("dashboard.html: the MOD-01 goi dung 'Tram Tri Thuc'",
       "Trạm Tri Thức" in dash)
 check("learn.html: tu goi minh la 'Tram Tri Thuc'", "Trạm Tri Thức" in rd("learn.html"))
 
+# ⚠️ MOI TRANG PHAI GOI DUNG TEN CHA CUA NO — khong phai "cha nao cung duoc".
+#    Truoc 12/08/2026 muc nay chi co MOT ngoai le (library.html) va moi trang con lai
+#    deu phai noi "Trung Tam Dieu Huong". Khu nhiem vu nay co 5 tang
+#      Trung Tam Nhiem Vu -> ban do -> (hanh tinh) -> cay chang -> man choi
+#    nen nut quay lai o do lui DUNG MOT TANG; nhay thang ve dashboard la bo qua ba
+#    tang va tre mat luon cho nhin thay minh vua di duoc toi dau.
+#    ⚠️ Khai bang BANG chu khong bang `continue`: bo qua thi khong con phep kiem nao
+#       canh, ma cai can canh (nut quay lai noi dung ten noi no se toi) van nguyen.
+BACK_PARENT = {
+    # library.html la trang CON cua khu Tri Thuc (mo tu learn.html) nen nut quay lai
+    # tro ve do. ⚠️ codex.html DA RA KHOI danh sach nay (04/08/2026): So Tay mo tu the
+    # MOD-06 o dashboard, nen "mot buoc len cha" CHINH LA hub.
+    "library.html":        ("Tri Thức", "Knowledge"),
+    "mission-map.html":    ("Trung Tâm Nhiệm Vụ", "Mission Control"),
+    "mission-planet.html": ("bản đồ nhiệm vụ", "mission map"),
+    "mission-tree.html":   ("Về bản đồ", "Back to map"),
+    "mission-earth.html":  ("Về đường đi", "Back to the path"),
+}
+
 # Mọi trang có nút quay lại đều phải trỏ về ĐÚNG một cái tên
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
@@ -1058,7 +1105,10 @@ for f in sorted(os.listdir(ROOT)):
     # tro ve do, khong ve hub — di mot buoc len cha la dung hon la nhay hai buoc ve
     # goc. ⚠️ codex.html DA RA KHOI danh sach nay (04/08/2026): So Tay nay mo tu the
     # MOD-06 o dashboard, nen "mot buoc len cha" CHINH LA hub.
-    if f in ("library.html",):
+    want = BACK_PARENT.get(f)
+    if want:
+        check(f"{f}: nut quay lai goi dung ten CHA cua no",
+              all(w in s_nc for w in want), str(want))
         continue
     check(f"{f}: nut quay lai goi dung ten hub",
           "Trung Tâm Điều Hướng" in s_nc and "Navigation Hub" in s_nc)
@@ -1124,27 +1174,21 @@ check("dashboard.html: card Mission Control dan sang missions.html",
 print("\n=== [7c] Sanh Nhiem Vu: khop server + khong bia tien do ===")
 mis = rd("missions.html")
 mis_js = inline_js(mis)
-# `key` cua MISSIONS phai la id nhiem vu THAT o server (hoac nhiem vu chua co =
-# status "soon"). Dat key sai thi GET /me/missions tra ve khong co khoa do → trang
-# im lang hien 0/8 nhu the nguoi choi chua lam gi.
-mis_keys = re.findall(r'\{\s*key:"([a-z]+)"[^}]*status:"(ready|soon)"', mis_js, re.S)
-mi_cs2 = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Missions.cs"),
-                 encoding="utf-8").read()
-sv_mission_ids = set(re.findall(r'new\("([a-z]+)",\s*"[a-z]+",\s*\[', mi_cs2))
-ready_keys = {k for k, st in mis_keys if st == "ready"}
-check("missions.html: co ca 2 nhiem vu (earth + moon)", len(mis_keys) == 2, str(mis_keys))
-check("missions.html: moi nhiem vu 'ready' deu co that o Missions.cs",
-      ready_keys <= sv_mission_ids, str(sorted(ready_keys - sv_mission_ids)))
-check("missions.html: nhiem vu server co ma sanh chua liet ke",
-      sv_mission_ids <= {k for k, _ in mis_keys},
-      str(sorted(sv_mission_ids - {k for k, _ in mis_keys})))
-# Du bo khoa i18n cho tung nhiem vu (khoa ghep dong, xem ghi chu o muc [1])
-mis_vi, _mis_en = i18n_dicts(mis_js)
-if mis_vi:
-    want_keys = {f"m_{k}_{sfx}" for k, _ in mis_keys for sfx in ("tag", "name", "desc")}
-    check("missions.html: du khoa i18n ghep dong cho tung nhiem vu",
-          want_keys <= mis_vi, str(sorted(want_keys - mis_vi)))
-# Mat mang / chua dang nhap → hien dau "—", KHONG hien 0/8 (0/8 la mot loi khang
+# ⚠️ DOI PHAT BIEU 12/08/2026 (`docs/decisions/008`, viec con treo so 1).
+#    Truoc do trang nay la mot LUOI THE NHIEM VU va muc [7c] doi `MISSIONS` khai du
+#    2 nhiem vu (earth + moon) khop `Missions.cs`. Nay luoi the da chuyen xuong dung
+#    tang cua no (`mission-planet.html`), con trang nay la CUA TRUOC dan sang ban do.
+#    Dieu can bao ve KHONG doi va nay do muc [20] canh CHAT HON: danh muc nhiem vu o
+#    client phai khop `Missions.cs` — chi la no doc `js/mission-catalog.js` thay vi
+#    doc mot mang nam trong HTML.
+check("missions.html: KHONG con luoi the nhiem vu (mot duong vao, khong hai)",
+      "mcard" not in strip_comments(mis))
+check("missions.html: dan sang ban do nhiem vu", 'href="mission-map.html"' in mis)
+check("missions.html: co dong 'Choi tiep' va mac dinh AN",
+      'id="resume"' in mis and re.search(r'id="resume"[^>]*\shidden', mis) is not None)
+check("missions.html: doc danh muc tu js/mission-catalog.js",
+      'src="js/mission-catalog.js"' in mis and "AstroQCatalog.missions()" in mis_js)
+# Mat mang / chua dang nhap → hien dau "—", KHONG hien 0/7 (0/7 la mot loi khang
 # dinh SAI ve tien do cua nguoi choi). Cung nguyen tac achievements/specimen-vault.
 check("missions.html: co dai nhac khi khong doc duoc tien do", 'id="offline"' in mis)
 check("missions.html: dung dau gach ngang thay vi 0 khi chua co du lieu",
@@ -2705,6 +2749,425 @@ check("thanh sang ket thuc o canh DAN DAU (`lead`), khong gan cung toa do",
 # ⚠️ Duoi phai MO DAN — `fill` phang thi "dam truoc mo sau" chi dung tren giay.
 check("duoi quat to bang gradient #rr-tail", "fill:url(#rr-tail)" in _dcss.replace(" ", ""))
 check("gradient #rr-tail duoc dung trong buildRadar", 'id="rr-tail"' in _dash_js)
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [19] Duong thanh toan: gia · quyen · chu ky · cong tac ban ===")
+# ⚠️ GIA NAM O BA NOI: docs/decisions/009 (quyet dinh) · Services/Billing.cs (so tien
+#    server THAT SU thu) · pricing.html (con so phu huynh DOC). 009 la van ban nen
+#    khong doi chieu tu dong duoc, nhung hai noi CHAY thi phai khop tuyet doi — lech
+#    nghia la trang noi mot dang va thu mot neo. Cung khuon doi chieu
+#    `Wallet.Fees` <-> `economy.js FEES` o muc [9].
+_bill_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Billing.cs"))
+_pay_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Payments.cs"))
+_bep_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/BillingEndpoints.cs"))
+_ord_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.Orders.cs"))
+_tmpl    = rd_abs(os.path.join(SV, "template.yaml"))
+_co      = rd("checkout.html")
+_co_js   = inline_js(_co)
+_pr_js   = inline_js(rd("pricing.html"))
+_bep_nc  = strip_comments(_bep_cs)
+_bep_1l  = re.sub(r"\s+", " ", _bep_cs)
+
+# Bang gia server: ["astro:month"] = (99_000, 4.99m)
+_sv_price = {}
+for _m in re.finditer(r'\["([a-z]+):([a-z]+)"\]\s*=\s*\(([0-9_]+),\s*([0-9.]+)m\)', _bill_cs):
+    _sv_price[(_m.group(1), _m.group(2))] = (int(_m.group(3).replace("_", "")), float(_m.group(4)))
+
+# Bang gia client: { key:"astro", vnd:{m:99000, y:790000}, usd:{m:4.99, y:39.99} }
+def _money_pairs(s):
+    return dict((k, float(v)) for k, v in re.findall(r'(\w+):\s*([0-9.]+)', s))
+
+_cl_price = {}
+for _m in re.finditer(r'\{\s*key:"([a-z]+)"[^}]*?vnd:\{([^}]*)\}[^}]*?usd:\{([^}]*)\}', _pr_js):
+    _v, _u = _money_pairs(_m.group(2)), _money_pairs(_m.group(3))
+    for _short, _cycle in (("m", "month"), ("y", "year"), ("once", "once")):
+        if _short in _v and _short in _u:
+            _cl_price[(_m.group(1), _cycle)] = (int(_v[_short]), _u[_short])
+
+check("doc duoc bang gia cua server", len(_sv_price) == 5, str(len(_sv_price)))
+check("doc duoc bang gia cua pricing.html", len(_cl_price) >= 5, str(len(_cl_price)))
+# Goi `free` co o client (de ve cot mien phi) nhung KHONG duoc co o server — mot muc
+# gia 0 ben server la mot don 0d tao duoc, tuc mot duong mo goi ma khong tra tien.
+check("server KHONG co muc gia nao cho goi 'free'",
+      not any(k[0] == "free" for k in _sv_price))
+_paid_cl = dict((k, v) for k, v in _cl_price.items() if k[0] != "free")
+check("gia client == gia server (ca VND lan USD)", _paid_cl == _sv_price,
+      f"client={_paid_cl} server={_sv_price}")
+
+# ── Cong tac ban: mac dinh DONG, va o SERVER ──
+check("Billing.SaleOpen doc tu cau hinh (khong phai hang so bien dich)",
+      'cfg["SALE_OPEN"]' in _bill_cs)
+check("SALE_OPEN vang mat = DONG (so bang 'true', khong phai != 'false')",
+      'Equals(cfg["SALE_OPEN"], "true"' in _bill_cs)
+# ⚠️ template.yaml quyet dinh bien nao co tren AWS. Khai SALE_OPEN=true o do la mo
+#    ban that. Day la chot chan cuoi cung truoc khi tien that chay.
+# ⚠️ Do "co DAT bien khong", khong do "co nhac ten khong" — template.yaml PHAI duoc
+#    phep ghi chu ve hai bien nay (nguoi mo ban can biet bat o dau), nhung KHONG
+#    duoc dat gia tri cho chung.
+check("template.yaml KHONG dat SALE_OPEN (ban that phai dong)",
+      re.search(r"^\s*SALE_OPEN\s*:", _tmpl, re.M) is None)
+check("template.yaml KHONG dat PAY_PROVIDER (chua chon cong)",
+      re.search(r"^\s*PAY_PROVIDER\s*:", _tmpl, re.M) is None)
+check("template.yaml KHONG dat PAY_WEBHOOK_SECRET (khoa phai o Secrets Manager)",
+      re.search(r"^\s*PAY_WEBHOOK_SECRET\s*:", _tmpl, re.M) is None)
+
+# ── Quyen ──
+check("nhom /me/billing doi dang nhap DA XAC MINH email",
+      'MapGroup("/me/billing").RequireAuthorization("verified")' in _bep_cs)
+check("uid lay TU TOKEN, khong tu than request",
+      'u.FindFirst("user_id")' in _bep_cs and "req.Uid" not in _bep_cs)
+# ⚠️ 404 chu KHONG phai 403: 403 noi rang ma don do CO THAT, tuc mot duong do xem
+#    ai da mua gi.
+check("don cua nguoi khac -> 404, khong phai 403",
+      "o.Uid != uid) return Results.NotFound" in _bep_1l)
+
+# ── So tien do server quyet ──
+check("CheckoutRequest KHONG co truong so tien",
+      not re.search(r'record CheckoutRequest\([^)]*(Amount|Price|Total)', _bep_nc, re.S))
+check("so tien lay tu Billing.Find (bang gia server)", "offer.Amount, provider.Name" in _bep_nc)
+check("client KHONG gui so tien len",
+      not re.search(r'startCheckout\(\{[^}]*amount', _co_js, re.I | re.S))
+
+# ── `paid` chi dat duoc bang webhook ──
+check("webhook doc THAN THO (chu ky ky tren chuoi byte goc)",
+      "new StreamReader(ctx.Request.Body)" in _bep_nc)
+check("chu ky sai -> 400 va KHONG xu ly tiep",
+      "ev is null" in _bep_nc and '"bad-signature"' in _bep_nc)
+check("so chu ky bang FixedTimeEquals (khong so bang ==)",
+      "CryptographicOperations.FixedTimeEquals" in _pay_cs)
+# ⚠️ Duong DUY NHAT ghi "paid". Co cho thu hai ghi trang thai nay thi phep kiem duoi
+#    day bao hong — va do dung la luc phai dung lai ma doc lai.
+check("chi MOT cho ghi trang thai don (SettleOrderAsync)",
+      _ord_cs.count("public async Task<bool> SettleOrderAsync") == 1)
+check("chot don CHI di tu 'pending' (webhook gui lai khong lat trang thai)",
+      "#s = :p" in _ord_cs and '[":p"]   = S("pending")' in _ord_cs)
+check("checkout.html hoi lai SERVER thay vi doc trang thai tu URL", "a.getOrder(" in _co_js)
+check("checkout.html KHONG lay trang thai tu query string",
+      not re.search(r'(status|paid|success)\s*=\s*Q\.get\(', _co_js))
+
+# ── Don hang la chung tu tien: khong TTL ──
+# Cung bai hoc voi ban ghi WAITLIST# ("dat nham TTL vao day la DynamoDB am tham xoa
+# mat khach"); o day thu bi xoa la mot khoan tien da thu.
+check("ban ghi don KHONG dat ttl", '"ttl"' not in _ord_cs)
+# ⚠️ QUET TREN CODE DA BOC COMMENT. Chinh ghi chu trong file do GIAI THICH vi sao
+#    KHONG dung `TryBeginOpAsync`, nen quet ca comment la bao vi pham oan. Day la
+#    lan thu MUOI LAM cung loai loi nay trong du an — moi phep kiem dang "khong
+#    duoc chua X" deu phai boc comment truoc.
+check("chong trung don KHONG dung TryBeginOpAsync (ham do co ttl 7 ngay)",
+      "TryBeginOpAsync" not in strip_comments(_ord_cs))
+check("chong trung bang ban ghi ORDERKEY co dieu kien",
+      "ORDERKEY#" in _ord_cs and "attribute_not_exists(PK)" in _ord_cs)
+
+# ── Khong co form the ──
+# ⚠️ Moi cong ma 009 de xuat (payOS/SePay/VNPay/MoMo/Paddle) deu nhan the tren trang
+#    cua CHINH CONG. Dung form the o day la keo ca du an vao pham vi PCI-DSS.
+_co_low = _co.lower()
+for _w in ("card-number", "cardnumber", "cvv", "cvc", 'autocomplete="cc-'):
+    check(f"checkout.html KHONG co truong the ({_w})", _w not in _co_low)
+check("checkout.html noi ro cong thanh toan giu the",
+      "không lưu số thẻ" in _co and "never stores card" in _co)
+
+# ── Cong gia lap chi song khi duoc chon ──
+check("duong sandbox chi mount khi PAY_PROVIDER=mock", "is MockPaymentProvider" in _bep_nc)
+check("cong mac dinh la `none` (khong khai PAY_PROVIDER -> khong ban duoc)",
+      'cfg["PAY_PROVIDER"] ?? "none"' in _pay_cs)
+check("cong `none` khong bao gio Ready", "Ready => false;" in _pay_cs)
+
+# ── returnUrl: chong open redirect ──
+check("returnUrl doi chieu allowlist origin",
+      "Origins.IsAllowed" in _bep_cs and "IsAllowedReturn" in _bep_cs)
+check("so theo ORIGIN, khong phai StartsWith tren chuoi", "u.Authority" in _bep_cs)
+
+# ── pricing.html: nut dan di dau do SERVER quyet ──
+check("pricing.html hoi /billing/catalog", "/billing/catalog" in _pr_js)
+check("pricing.html mac dinh DONG (mang hong thi giu hanh vi hom nay)",
+      "var SALE = { open:false }" in _pr_js)
+check("pricing.html chi dan sang checkout khi SALE.open",
+      re.search(r'SALE\.open\)\s*\{[^}]*checkout\.html', _pr_js, re.S) is not None)
+check("pricing.html dung import DONG cho api.js (khong them the <script>)",
+      'import(new URL("js/api.js"' in _pr_js)
+
+# ══════════════════════════════════════════════════════════════
+# [20] KHU NHIEM VU 4 TANG — danh muc client PHAI khop luat server
+#      (`docs/decisions/008`, viec con treo so 1, dung that 12/08/2026)
+#
+#      Trung Tam Nhiem Vu → ban do → (hanh tinh) → cay chang → man choi
+#
+# ⚠️ MUC NAY THAY CHO PHAN "MISSIONS array" CU CUA [7c] VA CHAT HON NO: truoc day
+#    chi mot mang trong `missions.html` phai khop `Missions.cs`; nay CA DANH MUC
+#    (`js/mission-catalog.js`) phai khop, va `STEP_IDS` cua trang choi phai khop
+#    danh muc. Ba noi, mot su that.
+print("\n=== [20] Khu nhiem vu: danh muc client khop Missions.cs ===")
+
+_cat_src = rd("js/mission-catalog.js")
+_cat = strip_comments(_cat_src)
+_mi_cs = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Missions.cs"),
+                 encoding="utf-8").read()
+
+# ── Server: id nhiem vu + id buoc, DUNG THU TU ──
+_sv_ids = re.findall(r'new\("([a-z0-9-]+)",\s*"[a-z0-9-]+",\s*\[', _mi_cs)
+_sv_steps = re.findall(r'new\("([a-z0-9-]+)",\s*\d+,\s*\d+,', _mi_cs)
+
+# ── Client: danh muc ──
+_cat_ids = re.findall(r'^\s{6}id: "([a-z0-9-]+)", world: "([a-z0-9-]+)", file: "([^"]+)"',
+                      _cat, re.M)
+_cat_mids = [m[0] for m in _cat_ids]
+check("[20] danh muc doc ra duoc it nhat 1 nhiem vu", len(_cat_mids) > 0,
+      str(_cat_mids))
+check("[20] id nhiem vu client == server", _cat_mids == _sv_ids,
+      f"client={_cat_mids} server={_sv_ids}")
+
+# Buoc cua tung nhiem vu: cat doan tu id nhiem vu nay toi id nhiem vu ke tiep
+def _cat_steps(mid):
+    i = _cat.find('id: "%s", world:' % mid)
+    if i < 0:
+        return []
+    j = len(_cat)
+    for other in _cat_mids:
+        if other == mid:
+            continue
+        k = _cat.find('id: "%s", world:' % other)
+        if i < k < j:
+            j = k
+    return re.findall(r'\{ id: "([a-z0-9-]+)", ic:', _cat[i:j])
+
+_all_cat_steps = []
+for _m in _cat_mids:
+    _all_cat_steps += _cat_steps(_m)
+check("[20] id chang client == id buoc server, DUNG THU TU",
+      _all_cat_steps == _sv_steps,
+      f"client={_all_cat_steps} server={_sv_steps}")
+
+# ── `STEP_IDS` cua trang choi == danh muc ──
+_me_src = rd("mission-earth.html")
+_m_step_ids = re.search(r"const STEP_IDS = \[([^\]]+)\]", _me_src)
+_me_steps = re.findall(r"'([a-z0-9-]+)'", _m_step_ids.group(1)) if _m_step_ids else []
+check("[20] STEP_IDS cua mission-earth == danh muc chang cua 'earth'",
+      _me_steps == _cat_steps("earth"),
+      f"STEP_IDS={_me_steps} catalog={_cat_steps('earth')}")
+
+# ⚠️⚠️ DANH MUC KHONG DUOC CHUA MOT CON SO THUONG NAO.
+#    `GET /me/missions` khong tra thuong theo tung buoc, nen ve duoc day chip
+#    "+20 tt · +30 XP" thi phai CHEP bang thuong cua `Services/Missions.cs` vao
+#    client — hai noi giu mot luat, va ban o client se noi con so cu vao dung ngay
+#    server doi. Cung phan cong da dung cho huy hieu / mau vat / bac: server giu
+#    MOC, client giu TEN.
+_pay = [w for w in ("tt:", "xp:", "meteors", "reward", "codex:")
+        if w in _cat]
+check("[20] danh muc KHONG chua con so thuong nao", not _pay, str(_pay))
+
+# ── Nhiem vu khai ra thi PHAI co trang choi that ──
+_no_file = [f for _, _, f in _cat_ids if not os.path.exists(os.path.join(ROOT, f))]
+check("[20] moi nhiem vu trong danh muc deu co trang choi that", not _no_file,
+      str(_no_file))
+
+# ── WORLD-ID KHAC PLANET-ID: Mat Trang KHONG duoc lot vao js/planets.js ──
+#    `js/planets.js` la cho ghi "da ghe hanh tinh nao" cho ho so + huy hieu
+#    (`planet-3`/`planet-8`). Nhet Mat Trang vao do la ho so dem sai va hai huy hieu
+#    kia thanh bat kha thi.
+_planets = set(re.findall(r'\{ id:"([a-z]+)"', rd("js/planets.js")))
+# ⚠️ `\s+` chu khong phai mot dau cach: bang khai bao co CAN COT nen giua dau phay va
+#    `planet:` co the la 1..5 dau cach. Ban dau muc nay doi dung mot dau cach va no
+#    doc ra 3/9 diem den roi bao "Mat Trang khong khai planet:null" — mot phep kiem
+#    BAO OAN vi no doc thieu du lieu, khong phai vi san pham sai.
+_cat_worlds = re.findall(r'\{ id: "([a-z0-9-]+)",\s+planet: (null|"[a-z0-9-]+")', _cat)
+_bad_planet = [w for w, p in _cat_worlds
+               if p != "null" and p.strip('"') not in _planets]
+check("[20] moi `planet` cua diem den deu co that trong js/planets.js",
+      not _bad_planet, str(_bad_planet))
+check("[20] Mat Trang KHONG nam trong js/planets.js (world-id != planet-id)",
+      "moon" not in _planets)
+check("[20] Mat Trang khai `planet: null`",
+      ("moon", "null") in _cat_worlds, str(_cat_worlds))
+# Moi noi nhiem vu tro toi phai la mot diem den co that tren ban do
+_wids = {w for w, _ in _cat_worlds}
+_bad_w = [w for _, w, _ in _cat_ids if w not in _wids]
+check("[20] moi nhiem vu tro toi mot diem den co that", not _bad_w, str(_bad_w))
+
+# ── Song ngu day du ──
+_n_mis, _n_step = len(_cat_mids), len(_all_cat_steps)
+check("[20] du khoi `vi`/`en` cho moi nhiem vu va moi chang",
+      _cat.count("vi: {") == _n_mis + _n_step
+      and _cat.count("en: {") == _n_mis + _n_step,
+      f"vi={_cat.count('vi: {')} en={_cat.count('en: {')} can={_n_mis + _n_step}")
+
+# ── Ban do: cong lo trinh do SERVER quyet, client khong tu tinh ──
+_map_src = rd("mission-map.html")
+_map_js = strip_comments(inline_js(_map_src))
+check("[20] ban do doc cong qua AstroQGate (khong tu tinh ti le)",
+      "AstroQGate.canVisit(" in _map_js and "AstroQGate.load()" in _map_js)
+check("[20] ban do KHONG tu tinh nguong cong",
+      "0.7" not in _map_js and "Math.ceil" not in _map_js)
+check("[20] ban do KHONG nap SDK Firebase (doc cache)",
+      'src="js/firebase-auth.js"' not in _map_src)
+# `mission:moon` khai o js/locks.js phai co NGUOI DOC — mot muc khai ma 0 cho doc la
+# mot loi khai sai (bai hoc `lv` / `AstroQRanks.ALL`).
+check("[20] ban do dung js/locks.js cho noi 'sap co nhiem vu'",
+      'AstroQLocks.open("mission:" + id' in _map_js)
+
+# ── Cay chang ──
+_tr_src = rd("mission-tree.html")
+_tr_js = strip_comments(inline_js(_tr_src))
+check("[20] cay chang doc danh muc, khong go lai ten chang",
+      "AstroQCatalog.find(" in _tr_js and 'src="js/mission-catalog.js"' in _tr_src)
+check("[20] cay chang doc tien do that qua AstroQProgress.missions()",
+      "AstroQProgress.missions()" in _tr_js)
+# Chan hAN o chinh cai nut, khong chan bang mot cau `if` — chan bang `if` thi nut van
+# nhan tieu diem ban phim va van bao voi trinh doc man hinh rang no bam duoc.
+check("[20] chang chua mo bi chan bang `disabled` o chinh cai nut",
+      "st === \"lock\" ? \" disabled\" : \"\"" in _tr_js)
+# Chan hAN thi phai tra lai cho noi ly do — bo bang chi tiet ma khong thay bang gi la
+# dung bay cua cong lo trinh (*"im lang thi tre chi tuong minh bam truot"*).
+check("[20] co cau noi ra dieu kien mo, doc duoc ma khong phai cham vao dau",
+      'id="rule"' in _tr_src and 'data-i18n="rule"' in _tr_src)
+check("[20] cay chang KHONG tu cong thuong",
+      "addAsteroids" not in _tr_js)
+
+# ── Man hanh tinh ──
+_pl_src = rd("mission-planet.html")
+_pl_js = strip_comments(inline_js(_pl_src))
+check("[20] man hanh tinh doc danh muc theo noi",
+      "AstroQCatalog.byWorld(" in _pl_js)
+check("[20] noi chua co nhiem vu thi noi that mot cau, khong ve danh sach rong",
+      'id="empty"' in _pl_src and 'data-i18n="emp_h"' in _pl_src)
+
+# ── Trang choi: `?step=` + hop "tiep hay dung" ──
+_me_js = strip_comments(inline_js(_me_src))
+check("[20] mission-earth doc `?step=` va mo dung chang do",
+      "q.get('step')" in _me_js and "RUN.openAt(" in _me_js)
+check("[20] khai moc onStepDone cho trinh dieu phoi",
+      "onStepDone: afterStep" in _me_js)
+# ⚠️ DIEU KIEN CUA `008`: "tat dong ho ve tu dong 5 giay khi con chang sau".
+#    No duoc thoa BANG CAU TRUC: dong ho chi song trong man tong ket, ma man tong ket
+#    chi mo khi HET chang (`afterStep` tra `false` dung o chang cuoi). Hai phep kiem
+#    duoi day canh dung hai chan do.
+check("[20] hop hoi KHONG mo o chang cuoi (de man tong ket mo)",
+      re.search(r"if \(last\) return false;", _me_js) is not None)
+# ⚠️ Dem LOI GOI, khong dem so lan xuat hien: `function startAuto() {` cung chua
+#    chuoi `startAuto()`, nen dem tho ra 2 va phep kiem bao hong oan.
+check("[20] dong ho ve tu dong chi khoi dong tu man tong ket",
+      len(re.findall(r"(?<!function )startAuto\(\)", _me_js)) == 1,
+      str(re.findall(r".{22}startAuto\(\)", _me_js)))
+check("[20] duong ve cua trang choi la cay chang",
+      "function treeUrl()" in _me_js and "mission-tree.html?m=earth" in _me_js)
+check("[20] on lai mot chang cu thi NOI RO khong co thuong them",
+      "serverDone.has(id)" in _me_js and "replayed" in _me_js)
+
+# ── Dong "Choi tiep" dung chung, khong chep hai ban ──
+check("[20] dong 'Choi tiep' o mot file CSS dung chung",
+      os.path.exists(os.path.join(ROOT, "css/resume.css"))
+      and 'href="css/resume.css"' in rd("missions.html")
+      and 'href="css/resume.css"' in _map_src)
+check("[20] bang chi tiet o mot file CSS dung chung",
+      'href="css/mission-sheet.css"' in _map_src
+      and 'href="css/mission-sheet.css"' in _tr_src)
+
+# ══════════════════════════════════════════════════════════════════════════════
+print("\n=== [21] Bo icon sticker: hai chieu + danh sach icon ngu ===")
+# ⚠️ VI SAO CAN: `sic(name)` tra ve chuoi RONG khi ten sai — icon thieu thi ra mot
+#    o SVG trong, KHONG loi, KHONG canh bao. Day dung ly do phep kiem hai chieu cua
+#    bo `cx-*` da ton tai; bo nay can y nguyen.
+_sic_js  = rd("js/sticker-icons.js")
+_sic_css = rd("css/sticker-icons.css")
+_sic_code = strip_comments(_sic_js)
+
+SIC_NAMES = set(re.findall(r'^\s{4}([A-Za-z_][\w]*):\s*\{', _sic_code, re.M))
+check("[21] doc duoc bo icon sticker", len(SIC_NAMES) >= 20, str(len(SIC_NAMES)) + " icon")
+if not SIC_NAMES:
+    print("  !! khong boc duoc icon nao — cac phep kiem duoi day se dat MOT CACH RONG")
+    sys.exit(1)
+
+# Ten icon dang duoc goi tu moi noi: `data-sic="x"` trong HTML, `sic("x")` trong JS,
+# truong `sic:"x"` cua js/badges.js, va `icon:"x"` cua bang GAMES.
+_sic_pages = sorted(f for f in os.listdir(ROOT)
+                    if f.endswith(".html") and 'js/sticker-icons.js' in rd(f))
+USED = set()
+for _f in _sic_pages:
+    _src = strip_comments(rd(_f))
+    USED |= set(re.findall(r'data-sic="([a-z-]+)"', _src))
+    USED |= set(re.findall(r'sic\("([a-z-]+)"', _src))
+_badges_code = strip_comments(rd("js/badges.js"))
+BADGE_SIC = dict(re.findall(r'"([\w-]+)":\s*\{\s*ic:"[^"]*",\s*sic:"([a-z-]+)"', _badges_code))
+USED |= set(BADGE_SIC.values())
+USED |= set(re.findall(r'icon:"([a-z-]+)"', strip_comments(rd("games.html"))))
+# `sicName()` lui ve icon nay khi huy hieu chua khai — nen no luon la ten dang dung.
+USED |= set(re.findall(r'B\[id\]\.sic\) \|\| "([a-z-]+)"', _badges_code))
+
+check("[21] moi ten icon duoc goi deu CO ban ve", not (USED - SIC_NAMES),
+      str(sorted(USED - SIC_NAMES)))
+
+# ⚠️ DANH SACH ICON NGU LA MOT DANH SACH KIN, ghim y nhu `LEGACY_SRC`/`PENDING_BANK`:
+#    ve them mot icon roi de do la them mot mang ma chet, ma du an da tra gia nhieu
+#    lan cho chuyen do. Ly do tung cai ghi trong `js/sticker-icons.js`.
+SIC_IDLE = {"globe", "map", "lock", "wave", "leaf", "rock"}
+check("[21] tap icon CHUA ai dung dung bang danh sach da ghim",
+      (SIC_NAMES - USED) == SIC_IDLE,
+      "ngu=" + str(sorted(SIC_NAMES - USED)) + " ghim=" + str(sorted(SIC_IDLE)))
+
+# Moi huy hieu phai co ca `ic` (emoji, cho cho chi nhan van ban) va `sic`.
+_bids = set(re.findall(r'^\s{4}"([\w-]+)":\s*\{\s*ic:', _badges_code, re.M))
+check("[21] moi huy hieu khai du ca `ic` lan `sic`",
+      bool(_bids) and set(BADGE_SIC) == _bids,
+      "thieu sic=" + str(sorted(_bids - set(BADGE_SIC))))
+# ⚠️ Emoji KHONG duoc bo: js/viz.js dat nhan bang textContent (co y), nen
+#    js/admin-report.js nhet SVG vao la in ra nguyen chuoi <svg…> cho nguoi doc thay.
+check("[21] js/viz.js van dat nhan bang textContent (ly do giu emoji)",
+      ".textContent" in rd("js/viz.js"))
+check("[21] admin-report + parent van dung emoji, KHONG dung sic()",
+      "AstroQBadges.icon(" in rd("js/admin-report.js")
+      and "AstroQBadges.icon(" in rd("parent.html")
+      and "sicName" not in rd("js/admin-report.js"))
+
+# Lop ve va lop mau: hai chieu voi CSS.
+_f_used = set(re.findall(r'class=\\?"(f-[a-z]+)\\?"', _sic_code))
+_f_have = set(re.findall(r'\.sic-ink \.(f-[a-z]+)', _sic_css))
+check("[21] moi lop mau `f-*` deu co CSS", not (_f_used - _f_have), str(sorted(_f_used - _f_have)))
+check("[21] khong lop mau `f-*` nao bo khong", not (_f_have - _f_used), str(sorted(_f_have - _f_used)))
+_lay_used = set(re.findall(r'class="(sic-[a-z]+)"', _sic_code))
+_lay_have = set(re.findall(r'\.(sic-[a-z]+)\s*\{', _sic_css))
+check("[21] du 5 lop ve", len(_lay_used) == 5, str(sorted(_lay_used)))
+check("[21] moi lop ve deu co CSS", not (_lay_used - _lay_have), str(sorted(_lay_used - _lay_have)))
+
+# ⚠️ Lop ngoai cung la thu lam sticker doc duoc tren nen SANG — xem ghi chu dau file.
+check("[21] con lop `sic-edge` (net navy NGOAI ria trang)",
+      "sic-edge" in _sic_code and ".sic-edge" in _sic_css
+      and _sic_code.index("sic-edge") < _sic_code.index("sic-rim"))
+# viewBox phai noi rong: 3 net ve ra ngoai duong bao (13 + 9 + 4).
+check("[21] viewBox noi rong cho 3 net ve ra ngoai", 'viewBox="-8 -8 80 80"' in _sic_code)
+
+# Trang nao goi sic() thi phai nap CA css lan js — thieu css la 5 lop mat mau.
+for _f in _sic_pages:
+    _src = rd(_f)
+    check("[21] " + _f + " nap ca css lan js cua bo icon",
+          'href="css/sticker-icons.css"' in _src and 'src="js/sticker-icons.js"' in _src)
+
+# ⚠️ VA CHIEU NGUOC LAI: trang KHONG dung thi KHONG duoc nap. Bo nay ~9 KB (js+css)
+#    va no khong lam gi ca neu khong co `data-sic` hay loi goi `sic(...)` — dung loai
+#    byte chet ma du an da cat nhieu lan (font 621→101 KB, anh nen 6,9 MB→99 KB).
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _src = rd(_f)
+    _loads = 'src="js/sticker-icons.js"' in _src
+    # ⚠️ Phai bat CA loi goi khong-phai-chuoi-tho: `achievements.html` goi
+    #    `sic(AstroQBadges.sicName(id), …)` va `games.html` goi `sic(g.icon, …)`.
+    #    Chi do `sic("` thi hai trang do bi doc thanh "khong dung" — phep kiem bao
+    #    hong dung luc trang lam dung. Lookbehind loai `.sic`/`sicName`/`sicPaint`.
+    _uses = bool(re.search(r'data-sic="|\bAstroQ\.sic\(|(?<![A-Za-z0-9_.$])sic\(',
+                           strip_comments(_src)))
+    check("[21] " + _f + ": nap bo icon <=> co dung no",
+          _loads == _uses, "nap=" + str(_loads) + " dung=" + str(_uses))
+
+# ⚠️ Me day o achievements.html KHONG duoc quay lai `filter:grayscale()` — bai hoc da
+#    tra gia 3 lan; trang thai chua mo do bang mau `sic--off` lo.
+# ⚠️ Phai cat DUNG rule `.badge.off .medal`, dung `split(".badge.off")[-1]`: co nhieu
+#    rule bat dau bang `.badge.off` (`.nm`, `.prog`…) nen cua so roi vao rule CUOI va
+#    phep kiem tro nen MU — phep thu pha hoai da lot dung o day mot lan.
+_ach_css = strip_comments(rd("css/achievements.css"))
+_medal_off = re.search(r'\.badge\.off\s+\.medal\s*\{([^}]*)\}', _ach_css)
+check("[21] con rule `.badge.off .medal`", bool(_medal_off))
+check("[21] me day chua mo dung `sic--off`, khong dung grayscale",
+      "sic--off" in strip_comments(rd("achievements.html"))
+      and bool(_medal_off) and "grayscale" not in _medal_off.group(1),
+      _medal_off.group(1).strip() if _medal_off else "khong tim thay rule")
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

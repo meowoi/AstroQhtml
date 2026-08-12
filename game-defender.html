@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-defender.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
 </head>
 <body>
 
@@ -292,6 +293,7 @@
       how8:"🔧 <b>Pháo tự nâng cấp</b> theo điểm: "+CONFIG.guns[1].at+" điểm → 2 tia, "+CONFIG.guns[2].at+" điểm → 3 tia và bắn nhanh hơn.",
       gun_lbl:"Pháo", emp_aria:"Xung kích EMP",
       gun_up:"PHÁO CẤP {n} · {s}",
+      lv_max:"cấp cao nhất", lv_next:"còn {s} điểm nữa lên PHÁO {n}",
       gun1:"Một tia", gun2:"Hai tia, bắn nhanh hơn", gun3:"Ba tia, bắn nhanh nhất",
       emp_go:"⚡ XUNG KÍCH EMP — nổ sạch cả sân!",
       cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
@@ -324,6 +326,7 @@
       how8:"🔧 <b>The cannon upgrades itself</b> as you score: "+CONFIG.guns[1].at+" points → twin shot, "+CONFIG.guns[2].at+" points → triple shot and faster fire.",
       gun_lbl:"Gun", emp_aria:"EMP blast",
       gun_up:"GUN LEVEL {n} · {s}",
+      lv_max:"top level", lv_next:"{s} pts to GUN {n}",
       gun1:"Single shot", gun2:"Twin shot, faster", gun3:"Triple shot, fastest",
       emp_go:"⚡ EMP BLAST — field wiped!",
       cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
@@ -445,7 +448,10 @@
   function fit(){
     var r=cv.getBoundingClientRect();
     var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
-    DPR=Math.min(2, window.devicePixelRatio||1);
+    /* Trần pixel do js/game-shell.js giữ — lý do và con số ghi ở đó.
+       Thiếu file đó thì lùi về đúng hành vi cũ, trang không vỡ. */
+    DPR=(window.AstroQGameShell && AstroQGameShell.dpr)
+      ? AstroQGameShell.dpr(w,h) : Math.min(2, window.devicePixelRatio||1);
     cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
     ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
   }
@@ -479,6 +485,18 @@
      ⚠️ BA KHOÁ VIẾT THẲNG, KHÔNG ghép `t("gun"+n)`. Phép kiểm i18n quét `t("khoá")`
         dạng chữ nên ghép động là ba khoá này bị báo *"khai mà không dùng"* — cùng bài
         học đã ghi cho `s1_hit1/2/3` (mission-earth) và `cat_*` (codex). */
+  /* Thanh tiến độ CẤP PHÁO — mốc là ĐIỂM (`CONFIG.guns[].at`), không phải thời gian. */
+  function paintLevelBar(){
+    if(!window.AstroQGameShell || !AstroQGameShell.setLevel) return;
+    var k = gunIdx, nx = CONFIG.guns[k+1];
+    var cur = t("gun_lbl")+" "+(k+1);
+    if(!nx){ AstroQGameShell.setLevel({ pct:1, caption:cur+" · "+t("lv_max") }); return; }
+    var from = CONFIG.guns[k].at, span = nx.at - from;
+    var pct = span > 0 ? (score - from) / span : 1;
+    AstroQGameShell.setLevel({ pct:pct, caption:cur+" · "+
+      t("lv_next").replace("{s}", Math.max(0, nx.at - score)).replace("{n}", k+2) });
+  }
+
   function gunText(n){
     if(n===1) return t("gun1");
     if(n===2) return t("gun2");
@@ -644,6 +662,7 @@
       eb.disabled = pc<100;
       hudCache.e=pc;
     }
+     paintLevelBar();
   }
 
   /* ===== Sinh vật thể tấn công =====

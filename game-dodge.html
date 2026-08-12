@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-dodge.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
 </head>
 <body>
 
@@ -276,6 +277,7 @@
       how3:"💎 <b>Thu</b> Thiên thạch tím trên đường trống: +"+CONFIG.gemScore+" điểm và +1 "+TT+" mỗi viên.",
       how4:"📈 Càng bay xa càng lên <b>cấp</b>: đá dày hơn, trôi dọc, rồi có cả đá lớn. Cấp "+CONFIG.tiers.length+" là cao nhất.",
       tier_up:"CẤP {n} · {s}",
+      lv_max:"cấp cao nhất", lv_next:"còn {s} giây nữa lên CẤP {n}",
       tier1:"Vành đai thưa", tier2:"Đá bắt đầu trôi dọc",
       tier3:"Xuất hiện đá lớn", tier4:"Dày hơn và nhanh hơn",
       tier5:"Cấp cao nhất — giữ vững!",
@@ -302,6 +304,7 @@
       how3:"💎 <b>Collect</b> Purple Meteors along the clear lane: +"+CONFIG.gemScore+" points and +1 "+TT+" each.",
       how4:"📈 The further you fly, the higher the <b>level</b>: denser rocks, drifting rocks, then big ones. Level "+CONFIG.tiers.length+" is the highest.",
       tier_up:"LEVEL {n} · {s}",
+      lv_max:"top level", lv_next:"{s}s to LEVEL {n}",
       tier1:"Thin belt", tier2:"Rocks start drifting",
       tier3:"Big rocks appear", tier4:"Denser and faster",
       tier5:"Top level — hold on!",
@@ -384,7 +387,10 @@
   function fit(){
     var r=cv.getBoundingClientRect();
     var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
-    DPR=Math.min(2, window.devicePixelRatio||1);
+    /* Trần pixel do js/game-shell.js giữ — lý do và con số ghi ở đó.
+       Thiếu file đó thì lùi về đúng hành vi cũ, trang không vỡ. */
+    DPR=(window.AstroQGameShell && AstroQGameShell.dpr)
+      ? AstroQGameShell.dpr(w,h) : Math.min(2, window.devicePixelRatio||1);
     cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
     ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
     bgGrad=ctx.createLinearGradient(0,0,0,VH);
@@ -568,6 +574,7 @@
        một con số không ai biết của cái gì. */
     var lv=t("lvl_lbl")+" "+(tierIdx+1);
     if(hudCache.lv!==lv){ $("lvl").textContent=lv; hudCache.lv=lv; }
+    paintLevelBar();
   }
 
   /* ============================================================
@@ -583,6 +590,24 @@
   function laneY(i){ return CONFIG.laneMargin + laneH()*(i + 0.5); }
 
   /** Cấp theo giây đã chơi. */
+  /* ── Thanh tiến độ cấp (js/game-shell.js dựng, khung dùng chung) ──────────
+     ⚠️ CẤP CỦA GAME NÀY TÍNH BẰNG GIÂY, KHÔNG PHẢI MÉT: `CONFIG.tiers[].at` là
+        mốc `elapsed`. Bản mẫu đầu tiên viết "còn 46m nữa lên Cấp 2" và đó là một
+        câu SAI — trẻ sẽ ngồi đợi quãng đường trong khi thứ quyết định là thời gian.
+     ⚠️ CẤP CUỐI thì nói "cấp cao nhất" và để thanh đầy, KHÔNG hứa một cấp tiếp
+        theo không tồn tại (cùng luật với dòng đích bậc ở profile.html). */
+  function paintLevelBar(){
+    if(!window.AstroQGameShell || !AstroQGameShell.setLevel) return;
+    var k = tierIdx, nx = CONFIG.tiers[k+1];
+    var cur = t("lvl_lbl")+" "+(k+1);
+    if(!nx){ AstroQGameShell.setLevel({ pct:1, caption:cur+" · "+t("lv_max") }); return; }
+    var from = CONFIG.tiers[k].at, span = nx.at - from;
+    var pct = span > 0 ? (elapsed - from) / span : 1;
+    var left = Math.max(0, Math.ceil(nx.at - elapsed));
+    AstroQGameShell.setLevel({ pct:pct,
+      caption:cur+" · "+t("lv_next").replace("{s}", left).replace("{n}", k+2) });
+  }
+
   function tierAt(sec){
     var k = 0, T = CONFIG.tiers;
     for(var i=0;i<T.length;i++) if(sec >= T[i].at) k = i;

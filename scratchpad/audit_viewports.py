@@ -60,6 +60,8 @@ PAGES = [
     # 3 cot, hai thu de tran ngang nhat tren man hep.
     "pricing.html",
     "parent.html",
+    # checkout.html them 11/08/2026 — trang thanh toan, bo cuc 2 cot + o nhap
+    "checkout.html",
     # Mini-game + 2 trang 3D: sân chơi khoá theo `aspect-ratio` nên đây là chỗ
     # dễ tràn ngang nhất khi màn thấp (Win 1366x768, iPad ngang).
     "game-dodge.html", "game-defender.html", "game-constellation.html",
@@ -162,6 +164,14 @@ PROBE = """
     const p = e.parentElement;
     if (p && cs.display.indexOf('inline') === 0 &&
         [...p.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+    // Ngoai le thu hai: mot <input> BOC TRONG <label> thi vung cham THAT SU la ca
+    // cai label (bam vao chu cung bat/tat duoc o danh dau) — do rieng cai input la
+    // do mot thu khong phai target. Chi mien khi CHINH cai label du 44px.
+    const lab = e.closest && e.closest('label');
+    if (lab && lab !== e) {
+      const lr = lab.getBoundingClientRect();
+      if (lr.width >= 44 && lr.height >= 44) continue;
+    }
     out.tiny.push({ t:(e.textContent||e.getAttribute('aria-label')||
                        e.getAttribute('placeholder')||'').trim().slice(0,26),
                     w:Math.round(r.width), h:Math.round(r.height),
@@ -198,6 +208,26 @@ with sync_playwright() as p:
         )
         for page in PAGES:
             pg = ctx.new_page()
+            # ⚠️ CHAN MOI LOI GOI API VA TRA MOT PHAN HOI CO DINH.
+            #    Bo do nay do BO CUC, khong do ket noi. Hai ly do phai chan:
+            #    ① Bo do chay o cong 8123, KHONG nam trong ALLOWED_ORIGINS, nen moi
+            #      loi goi that deu bi CORS chan va trinh duyet TU GHI mot dong do
+            #      vao console — khong `catch` nao chan duoc — lam phep kiem
+            #      "0 loi console" bao hong oan.
+            #    ② De trang goi API that la de ket qua bo do phu thuoc vao viec
+            #      Lambda co song hay khong. Mot phep do bo cuc khong duoc phep do.
+            #    `saleOpen:false` la trang thai THAT cua hom nay, nen trang van ve
+            #    ra dung thu nguoi dung dang thay.
+            pg.route("**/billing/catalog*", lambda r: r.fulfill(
+                status=200, content_type="application/json",
+                headers={"access-control-allow-origin": "*"},
+                body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
+                     '"trialDays":14,"graceDays":7,"offers":['
+                     '{"plan":"astro","cycle":"month","currency":"VND","amount":99000},'
+                     '{"plan":"astro","cycle":"year","currency":"VND","amount":790000},'
+                     '{"plan":"crew","cycle":"month","currency":"VND","amount":169000},'
+                     '{"plan":"crew","cycle":"year","currency":"VND","amount":1290000},'
+                     '{"plan":"found","cycle":"once","currency":"VND","amount":1490000}]}'))
             errs, bad404 = [], []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)

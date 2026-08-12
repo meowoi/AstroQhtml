@@ -33,12 +33,25 @@ body{height:100vh;overflow:hidden;background:radial-gradient(ellipse at 50% -10%
 
 /* ===== Khung sân =====
    .stage xếp dọc: thanh HUD ở trên, .play (sân + overlay) chiếm phần còn lại.
-   Sân (.field) có tỉ lệ CỐ ĐỊNH do từng game tự đặt (aspect-ratio + max-width),
-   nhờ vậy độ khó giống nhau trên mọi màn hình. */
+   Sân (.field) có TỈ LỆ cố định do từng game khai (`aspect-ratio` + `--ar`), nhờ vậy
+   độ khó giống nhau trên mọi màn hình.
+
+   ⚠️⚠️ BỀ RỘNG SÂN KHÔNG CÒN BỊ CHẶN BẰNG PIXEL (đổi 12/08/2026). Trước đó mỗi game
+      khai `.field{max-width:800px}` (defender 600px) — chính ĐỘ PHÂN GIẢI ẢO của
+      game rò vào bố cục. Đo bằng `scratchpad/probe_field_space.py`: trên Full HD sân
+      đứng ở 800×500 trong khi vừa được 1530×956, tức **bỏ không 73% diện tích dùng
+      được**; MacBook Air 64%; iPad Pro ngang 63%.
+      Phóng to KHÔNG đổi độ khó: `fit()` của cả 3 game scale toàn bộ thế giới ảo ra
+      cỡ phần tử (`setTransform(cv.width/VW, …)`), mọi phép va chạm vẫn tính trong hệ
+      ảo. `--field-w` do `js/game-shell.js` đo và ghi — lý do không làm bằng CSS
+      thuần ghi trong file đó.
+   ⚠️ Thiếu `js/game-shell.js` thì `--field-w` không tồn tại và cả hai chỗ dưới lùi
+      về đúng hành vi cũ (sân 100% bề rộng, HUD chặn 800px) — trang không vỡ. */
 .stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;
   margin:0 clamp(12px,3vw,24px) clamp(12px,3vw,24px);}
 .play{position:relative;flex:1;min-height:0;display:grid;place-items:center;}
-.field{position:relative;width:100%;max-height:100%;border-radius:18px;overflow:hidden;
+.field{position:relative;width:var(--field-w,100%);max-width:100%;max-height:100%;
+  border-radius:18px;overflow:hidden;
   border:1px solid rgba(56,189,248,.3);
   box-shadow:0 24px 60px -28px rgba(0,0,0,.8), 0 0 40px -16px rgba(56,189,248,.4), inset 0 0 40px -20px rgba(120,220,255,.5);
   touch-action:none;}
@@ -47,7 +60,13 @@ canvas{width:100%;height:100%;}
 /* ===== Thanh HUD =====
    BẮT BUỘC nằm ngoài .play. Nếu để đè lên sân thì chip số liệu che mất vật thể
    đang bay tới mà hitbox vẫn ở đó → người chơi chết vào thứ họ không nhìn thấy. */
-.hud{display:flex;gap:7px;flex-wrap:wrap;align-items:center;max-width:800px;width:100%;margin:0 auto;}
+/* ⚠️ HUD rộng THEO SÂN, và chỉ được rộng RA, không bao giờ hẹp đi so với bản cũ:
+   `max(800px, …)` giữ đúng bề rộng cũ ở mọi màn nhỏ. Không có phép `max` đó thì trên
+   màn hẹp HUD co lại → nó xuống thêm một dòng → `.play` thấp đi → sân hẹp hơn → HUD
+   co nữa: một vòng dao động thấy được bằng mắt. Chỉ nới ra thì vòng đó đơn điệu tăng
+   và tự dừng khi bề rộng bị khung nhìn kẹp. */
+.hud{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 auto;
+  width:min(100%, max(800px, var(--field-w, 800px)));}
 .chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:11px;
   background:rgba(9,14,28,.6);border:1px solid var(--brd);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 .chip .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--ink-faint);text-transform:uppercase;}
@@ -141,3 +160,169 @@ canvas{width:100%;height:100%;}
 @media (pointer: coarse){
   .iconbtn{min-width:44px;min-height:44px;}
 }
+
+/* ===== Lời nhắc XOAY NGANG (js/game-shell.js dựng, dùng chung cả 3 game) =====
+   Dùng lại đúng vỏ `.ov` + `.ov-card` nên nó trông y như mọi lớp phủ khác của game —
+   trẻ gặp lại một thứ nó đã biết, không phải học một kiểu hộp thoại thứ hai.
+
+   ⚠️ z-index 8: TRÊN mọi `.ov` khác (z-index 6) để nó không bị màn brief che, nhưng
+      DƯỚI toast (20). Và nó chỉ phủ `.play` — nút "Về Khu Huấn Luyện" ở header vẫn
+      bấm được, nên trẻ không bao giờ kẹt trong game.
+   ⚠️ Chỉ tồn tại trên máy CẢM ỨNG đang để DỌC; điều kiện nằm trong JS
+      (`(orientation: portrait) and (pointer: coarse)`) chứ không ở đây, vì còn phải
+      xét "đang chơi hay không" — xem ghi chú trong js/game-shell.js. */
+.rot{z-index:8;}
+.rot-card{max-width:360px;}
+/* Khung điện thoại đang nghiêng dần sang ngang — nói bằng hình thay vì bằng chữ. */
+.rot-ic{width:74px;height:74px;margin:2px auto 12px;display:grid;place-items:center;
+  border-radius:20px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4);}
+.rot-ic span{display:block;width:30px;height:50px;border-radius:7px;
+  border:2.5px solid var(--cyan);animation:rotTilt 2.4s ease-in-out infinite;}
+.rot-h{font-family:var(--font-display);font-weight:700;font-size:20px;margin:0 0 8px;}
+.rot-p{color:var(--ink-soft);font-size:13.5px;line-height:1.6;margin:0 0 18px;}
+/* Đường ra BẮT BUỘC — rất nhiều máy đang bật khoá xoay, và người dùng đó xoay máy
+   thì màn hình không xoay. Cố ý làm nút PHỤ (chữ, không phải nút chính) để nó không
+   tranh với lời mời xoay, nhưng vẫn ≥44px cho ngón tay. */
+.rot-ok{background:none;border:none;color:var(--ink-faint);cursor:pointer;
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;
+  text-decoration:underline;text-underline-offset:3px;padding:14px 16px;min-height:48px;}
+/* ⚠️ 48px chu KHONG phai 44: 44 la moc TOI THIEU cua WCAG 2.5.5, dat dung moc thi
+   sai so duoi pixel lam phep kiem khi dat khi hong — du an da co mot ca chap chon
+   that vi ly do do (nut VI/EN cua explorer.html do ra dung 44x44). */
+.rot-ok:hover{color:var(--ink-soft);}
+
+@keyframes rotTilt{
+  0%,42%   { transform:rotate(0deg); }
+  62%,100% { transform:rotate(-90deg); }
+}
+/* Giảm chuyển động: khung đứng yên ở TRẠNG THÁI NGANG — đó mới là thứ nó đang bảo
+   trẻ làm. Đứng yên ở trạng thái dọc thì hình nói ngược lại lời văn. */
+@media (prefers-reduced-motion: reduce){
+  .rot-ic span{animation:none;transform:rotate(-90deg);}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Ô CỬA BUỒNG LÁI — sân vừa phải, console hai bên (thêm 12/08/2026)
+   Chủ dự án chốt sau khi soi bản mẫu `scratchpad/proto-game-frame.html?v=1`.
+
+   ⚠️ KHÔNG ĐỔI MỘT DÒNG MARKUP NÀO của 3 game. Bố cục làm bằng `grid-template-areas`
+      trên `.stage`, còn console phải + thanh cấp do `js/game-shell.js` DỰNG — cùng
+      lối đã dùng cho lời nhắc xoay ngang. Sửa markup 3 trang là ba chỗ phải nhớ.
+   ⚠️ `.hud` GIỮ NGUYÊN vai trò của nó, chỉ xoay thành CỘT: nó vẫn là thanh số liệu
+      nằm NGOÀI `.play` (luật đã trả giá bằng lỗi thật: chip đè lên sân thì trẻ chết
+      vào vật thể nó không nhìn thấy).
+   ⚠️ Nút 🔊/⏸ nằm ở ĐÁY CONSOLE TRÁI, không phải console phải như bản mẫu vẽ — chúng
+      là con của `.hud` trong markup, và dời chúng sang phải thì phải sửa markup cả 3
+      game. Đổi chỗ hai cái nút không đáng cái giá đó.
+   ══════════════════════════════════════════════════════════════════════════════ */
+/* ⚠️ KHAI TRƯỚC media query. Cùng độ ưu tiên thì rule ĐỨNG SAU thắng, nên để
+   `display:none` xuống dưới là nó đè mất `display:flex` của media query và console
+   phải KHÔNG BAO GIỜ hiện — đo được `display:none` trên cả 3 game. Cùng lỗi này đã
+   xảy ra một lần ở bản mẫu với `.mate-mini`, tức đây là lần thứ hai. */
+.gs-side{display:none;flex-direction:column;gap:8px;justify-content:center;}
+
+@media (min-width: 901px){
+  .stage{
+    display:grid;
+    grid-template-columns:150px minmax(0,1fr) 128px;
+    grid-template-rows:minmax(0,1fr) auto;
+    grid-template-areas:"hud play side" "hud bar side";
+    gap:10px 14px;
+    /* ⚠️⚠️ CHẶN BỀ RỘNG CẢ NHÓM, KHÔNG CHẶN RIÊNG SÂN. 1426 = 1120 (trần sân) + 150
+       (console trái) + 128 (console phải) + 28 (hai khe). Nhờ vậy cột giữa TỰ bằng
+       1120px trên màn rộng và console dính sát hai mép sân.
+       Bản đầu để `minmax(0,1fr)` cho cột giữa rồi `justify-content:center`: cột giữa
+       nuốt hết chỗ trống nên không còn gì để canh, và đo được HUD ở x=43 · sân x=411 ·
+       console phải x=1768 — ba khối rời nhau, đúng lỗi "hai bảng rời" mà bản mẫu đã
+       mắc một lần. Cách này còn tự đúng ở màn hẹp hơn 1426: cột giữa co lại và sân
+       theo, không cần thêm mốc nào. */
+    /* ⚠️⚠️ `align-self:center` + BỀ RỘNG XÁC ĐỊNH, tuyệt đối KHÔNG dùng `margin:auto`.
+       `.stage` là flex item của body (flex column); auto margin trên trục ngang TẮT
+       stretch, nên nó co về theo nội dung — và nội dung của cột giữa lại là chính cái
+       sân mà bề rộng sân được tính TỪ cột đó. Đo được vòng lặp đó sập xuống: stage
+       608px · cột giữa 302px · sân 302px. Bề rộng xác định thì cột giữa là một con số
+       độc lập, không còn vòng nào. */
+    /* ⚠️ Trần là BIẾN: sân vuông của defender chỉ cao bằng khung nhìn nên nó không bao
+       giờ đạt 1120px, và giữ trần 1426 thì console dạt ra xa mép sân. Từng
+       `css/<game>.css` tự đặt `--stage-max` — cùng chỗ đã khai `--ar`. */
+    width:min(100% - 48px, var(--stage-max, 1426px));
+    margin-left:0; margin-right:0;
+    align-self:center;
+  }
+  .hud{grid-area:hud;flex-direction:column;align-items:stretch;width:100%;
+       justify-content:center;flex-wrap:nowrap;}   /* `width:100%` để chip lấp kín
+       cột 150px; để `auto` thì chip chỉ rộng theo chữ và chừa ~55px hở giữa
+       console với sân, đọc ra như hai khối rời. */
+  .hud .chip{justify-content:space-between;padding:8px 11px;}
+  .hud .chip .k{display:block;}   /* cột thì có chỗ cho nhãn, luôn hiện */
+  .hud .chip .v{font-size:19px;}
+  .hud-btns{margin-left:0;margin-top:10px;justify-content:center;}
+  .play{grid-area:play;}
+  .gs-bar{grid-area:bar;}
+  .gs-side{grid-area:side;display:flex;}
+  /* ⚠️⚠️ LỚP PHỦ PHẢI TRÙM ĐÚNG SÂN, KHÔNG TRÙM CẢ `.play`. Từ khi sân bị chặn ở
+     1120px thì `.play` cao hơn sân (965 vs 700 trên Full HD), mà `.ov{inset:0}` neo
+     theo `.play` — đo được lớp tối tràn 132px trên và dưới mép sân, tức nó xoá luôn
+     cảm giác 'ô cửa' mà cả bố cục này dựng ra. `--field-w`/`--fh` do
+     js/game-shell.js đo, nên chỉ cần neo lại theo hai biến đó.
+     ⚠️ Bo góc 16px cho khớp `.field`, không thì lớp phủ vuông góc chìa ra bốn góc. */
+  .ov{inset:auto;left:50%;top:50%;width:var(--field-w,100%);height:var(--fh,100%);
+      transform:translate(-50%,-50%);border-radius:16px;}
+}
+
+/* Vành kim loại 4 GÓC quanh ô cửa.
+   ⚠️ Đủ BỐN góc: bản hai góc chéo nhau render ra đọc như hai vệt lỗi chứ không ra
+      một cái vành — mắt chỉ nhận ra "khung" khi bốn góc cùng có.
+   ⚠️ Vẽ trên `.play` chứ không trên `.field`: `.field` có `overflow:hidden` (bắt buộc,
+      để canvas không tràn góc bo) nên mọi thứ vẽ ra ngoài nó đều bị cắt. */
+.play::before,.play::after{content:"";position:absolute;width:52px;height:52px;
+  pointer-events:none;border:3px solid rgba(120,160,255,.5);z-index:1;}
+.gs-cnr{position:absolute;inset:0;pointer-events:none;}
+.gs-cnr::before,.gs-cnr::after{content:"";position:absolute;width:52px;height:52px;
+  pointer-events:none;border:3px solid rgba(120,160,255,.5);}
+.play::before{border-right:0;border-bottom:0;border-radius:16px 0 0 0;}
+.play::after{border-left:0;border-top:0;border-radius:0 0 16px 0;}
+.gs-cnr::before{border-left:0;border-bottom:0;border-radius:0 16px 0 0;}
+.gs-cnr::after{border-right:0;border-top:0;border-radius:0 0 0 16px;}
+.gs-cnr::before{left:calc(50% + var(--field-w,100%)/2 - 42px);
+                top:calc(50% - var(--fh,0px)/2 - 10px);}
+.gs-cnr::after{ left:calc(50% - var(--field-w,100%)/2 - 10px);
+                top:calc(50% + var(--fh,0px)/2 - 42px);}
+
+/* ⚠️ Bốn góc phải neo theo SÂN, không theo `.play`: `.play` cao hơn sân (nó canh giữa
+   sân theo trục dọc), nên neo vào `.play` là góc trôi ra xa mép sân cả trăm pixel.
+   `--fh` do js/game-shell.js đo và ghi cùng lúc với `--field-w`. */
+.play::before{left:calc(50% - var(--field-w,100%)/2 - 10px);
+              top:calc(50% - var(--fh,0px)/2 - 10px);}
+.play::after{ left:calc(50% + var(--field-w,100%)/2 - 42px);
+              top:calc(50% + var(--fh,0px)/2 - 42px);}
+
+/* ===== Thanh tiến độ cấp — "tiến độ thấy được" =====
+   Dữ liệu đã có ở cả 3 game (dodge: `tiers[].at` theo GIÂY · defender: `guns[].at`
+   theo ĐIỂM · constellation: số đường đã nối). Game gọi `AstroQGameShell.setLevel()`.
+   ⚠️ Ẩn hẳn khi chưa có dữ liệu — một thanh rỗng 0% đứng đó nói rằng trẻ chưa làm
+      được gì, trong khi thật ra game chưa bắt đầu. */
+.gs-bar{display:none;flex-direction:column;align-items:center;gap:5px;
+  width:var(--field-w,100%);margin:0 auto;}
+.gs-bar.on{display:flex;}
+.gs-track{width:100%;height:8px;border-radius:999px;overflow:hidden;
+  background:rgba(9,14,28,.8);border:1px solid var(--brd);}
+.gs-track i{display:block;height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  box-shadow:0 0 14px -2px var(--cyan);transition:width .35s ease;}
+.gs-cap{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  color:var(--ink-faint);text-align:center;}
+
+/* ===== Console phải: bạn đồng hành ===== */
+.gs-mate{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;
+  border-radius:14px;background:rgba(9,14,28,.6);border:1px solid var(--brd);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.gs-mate img{width:76px;height:76px;object-fit:contain;
+  filter:drop-shadow(0 0 14px rgba(56,189,248,.45));animation:gsFloat 4.2s ease-in-out infinite;}
+.gs-mate .nm{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);}
+@keyframes gsFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+/* ⚠️ CHỈ có nhịp trôi, KHÔNG có câu thoại đổi theo việc trẻ làm và KHÔNG có phản ứng
+   (chủ dự án chưa chọn món đó). Một câu cố định đứng mãi ở đó thì tệ hơn không nói —
+   nó hứa một sự tương tác không tồn tại. Móc để thêm phản ứng về sau: gắn class
+   `cheer`/`ouch` lên `.gs-mate`, và lúc đó CẦN ẢNH GỐC cho biểu cảm. */
+@media (prefers-reduced-motion: reduce){ .gs-mate img{animation:none;} }
