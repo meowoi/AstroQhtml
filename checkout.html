@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- ⚠️ noindex — mọi trang app đều noindex (chỉ index.html + wiki/ được lập chỉ mục),
+     và đây là trang thanh toán: cho Google lập chỉ mục một trang mua hàng chưa mở bán
+     là dẫn người ta tới một ngõ cụt. Xem thêm ghi chú cùng loại ở pricing.html. -->
+<meta name="robots" content="noindex,nofollow" />
+<title>AstroQ — Thanh toán</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/checkout.css" />
+<script src="js/ui-common.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap co-wrap">
+  <!-- ============ HEADER ============ -->
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về bảng giá</span></button>
+    <span class="hub-tag">[ CHECKOUT ]</span>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- ============ BA BƯỚC ============ -->
+  <nav class="co-steps" id="steps" aria-label="Các bước">
+    <span class="st" data-step="gate"><span class="n">1</span><span data-i18n="s_gate">Xác nhận người lớn</span></span>
+    <span class="sep" aria-hidden="true"></span>
+    <span class="st" data-step="review"><span class="n">2</span><span data-i18n="s_review">Xem lại đơn</span></span>
+    <span class="sep" aria-hidden="true"></span>
+    <span class="st" data-step="pay"><span class="n">3</span><span data-i18n="s_pay">Thanh toán</span></span>
+  </nav>
+
+  <!-- ⚠️ DẢI NÓI THẬT — hiện khi CHƯA MỞ BÁN. Trang này có thể tới từ pricing.html
+       mà TRẺ bấm vào, nên phải nói ngay là chưa bán và việc mua là của người lớn.
+       Trạng thái do SERVER quyết (`/billing/catalog` → saleOpen), không phải một cờ
+       ở client — cờ ở client thì bỏ qua nó chỉ mất một dòng trong DevTools. -->
+  <div class="co-state bad" id="closed" hidden>
+    <span class="ic" aria-hidden="true">🚧</span>
+    <span class="tx">
+      <b data-i18n="closed_h">astroQ chưa mở bán</b>
+      <span data-i18n="closed_p">Giá đã chốt nhưng chưa tới ngày mở cửa. Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</span>
+    </span>
+  </div>
+
+  <div class="co-grid">
+    <!-- ══════════ CỘT TRÁI: các bước ══════════ -->
+    <div>
+      <!-- ---- Bước 1: cổng phụ huynh ---- -->
+      <section class="co-card co-gate" id="card-gate" hidden>
+        <h2><span aria-hidden="true">👨‍👩‍👧</span><span data-i18n="gate_h">Bạn là bố mẹ chứ?</span></h2>
+        <p class="sub" data-i18n="gate_p">Việc mua gói là của người lớn. Trả lời giúp một phép tính nhỏ rồi mình đi tiếp nhé.</p>
+
+        <p class="q" id="gate-q" aria-live="polite">7 × 8 = ?</p>
+        <label class="sr-only" for="gate-a" data-i18n="gate_label">Kết quả phép tính</label>
+        <input type="text" id="gate-a" inputmode="numeric" autocomplete="off" maxlength="6" />
+
+        <label class="co-check">
+          <input type="checkbox" id="gate-ok" />
+          <span data-i18n="gate_confirm">Tôi là bố mẹ hoặc người giám hộ, từ 18 tuổi trở lên, và tôi đồng ý thanh toán cho tài khoản này.</span>
+        </label>
+
+        <div class="co-state bad" id="gate-err" hidden>
+          <span class="ic" aria-hidden="true">🤔</span>
+          <span class="tx"><span data-i18n="gate_wrong">Chưa đúng rồi. Thử lại nhé — hoặc nhờ bố mẹ giúp một tay.</span></span>
+        </div>
+
+        <div class="co-acts">
+          <button class="co-btn primary" id="gate-go" type="button" data-i18n="gate_btn">Tiếp tục</button>
+        </div>
+      </section>
+
+      <!-- ---- Bước 2: xem lại đơn ---- -->
+      <section class="co-card" id="card-review" hidden>
+        <h2><span aria-hidden="true">🧾</span><span data-i18n="rev_h">Chọn chu kỳ</span></h2>
+        <p class="sub" data-i18n="rev_p">Đổi giữa trả tháng và trả năm bất cứ lúc nào trước khi thanh toán.</p>
+
+        <div class="co-cycles" id="cycles"></div>
+
+        <!-- ⚠️ 009 mục 6: "Ghi rõ chu kỳ, ngày thu tiếp theo, và cách huỷ NGAY TẠI
+             trang giá. Không giấu." Ba dòng dưới đây là chỗ giữ lời hứa đó. -->
+        <div class="co-state wait" id="terms-box">
+          <span class="ic" aria-hidden="true">📌</span>
+          <span class="tx">
+            <b data-i18n="terms_h">Trước khi bấm, đọc giúp ba dòng này</b>
+            <span id="terms-lines"></span>
+          </span>
+        </div>
+
+        <div class="co-acts">
+          <button class="co-btn primary" id="pay-go" type="button" data-i18n="pay_btn">Tới trang thanh toán</button>
+          <!-- Thay chỗ nút trên khi CHƯA MỞ BÁN. Khai sẵn ở đây chứ không dựng bằng
+               JS: phép kiểm "mọi $("id") đều tồn tại" của check_pages soi MARKUP,
+               nên một nút chỉ sinh ra lúc chạy là một nút không ai gác. -->
+          <a class="co-btn primary" id="wait-go" href="/" data-i18n="closed_btn" hidden>Báo tôi khi mở cửa</a>
+          <a class="co-btn" href="pricing.html" data-i18n="pay_back">Xem lại các gói</a>
+        </div>
+
+        <!-- Chỉ có nghĩa khi sắp trả tiền thật; chưa mở bán thì đây là một câu
+             nói về một việc không diễn ra. -->
+        <p class="co-secure" id="secure-note"><span class="ic" aria-hidden="true">🔒</span>
+          <span data-i18n="secure">Thẻ của bạn do cổng thanh toán nhận, astroQ không lưu số thẻ.</span></p>
+      </section>
+
+      <!-- ---- Bước 3: kết quả ---- -->
+      <section class="co-card" id="card-result" hidden>
+        <h2><span aria-hidden="true">💳</span><span data-i18n="res_h">Kết quả thanh toán</span></h2>
+
+        <div class="co-state wait" id="res-wait" hidden>
+          <span class="co-spin" aria-hidden="true"></span>
+          <span class="tx">
+            <b data-i18n="res_wait_h">Đang xác nhận với ngân hàng…</b>
+            <span data-i18n="res_wait_p">Việc này thường mất vài giây. Đừng đóng trang nhé.</span>
+          </span>
+        </div>
+
+        <div class="co-state ok" id="res-ok" hidden>
+          <span class="ic" aria-hidden="true">🎉</span>
+          <span class="tx">
+            <b data-i18n="res_ok_h">Xong rồi! Gói đã kích hoạt</b>
+            <span data-i18n="res_ok_p">Cảm ơn bạn. Biên nhận sẽ được gửi vào email của tài khoản.</span>
+          </span>
+        </div>
+
+        <div class="co-state bad" id="res-bad" hidden>
+          <span class="ic" aria-hidden="true">💛</span>
+          <span class="tx">
+            <b id="res-bad-h"></b>
+            <span id="res-bad-p"></span>
+          </span>
+        </div>
+
+        <div class="co-acts" id="res-acts"></div>
+      </section>
+
+      <!-- ---- Đơn đã có ---- -->
+      <section class="co-card" id="card-orders" hidden>
+        <h2><span aria-hidden="true">📚</span><span data-i18n="ord_h">Đơn của bạn</span></h2>
+        <div class="co-orders" id="orders"></div>
+      </section>
+    </div>
+
+    <!-- ══════════ CỘT PHẢI: tóm tắt đơn ══════════ -->
+    <aside class="co-card co-sum" id="summary">
+      <p class="plan-name" id="sum-name">—</p>
+      <p class="plan-for"  id="sum-for"></p>
+
+      <div class="co-line"><span class="k" data-i18n="sum_cycle">Chu kỳ</span><span class="v" id="sum-cycle">—</span></div>
+      <div class="co-line" id="line-trial"><span class="k" data-i18n="sum_trial">Dùng thử</span><span class="v" id="sum-trial">—</span></div>
+      <div class="co-line" id="line-first"><span class="k" data-i18n="sum_first">Ngày thu đầu tiên</span><span class="v" id="sum-first">—</span></div>
+      <div class="co-line total"><span class="k" data-i18n="sum_total">Tổng</span><span class="v" id="sum-total">—</span></div>
+
+      <p class="co-fine" id="sum-fine"></p>
+    </aside>
+  </div>
+
+  <!-- ⚠️ Cả câu nằm trong MỘT khoá `data-i18n-html`, không tách "chữ" + "link" thành
+       hai phần tử. Lý do là vùng chạm: WCAG 2.5.5 miễn trừ một link nằm GIỮA MỘT CÂU,
+       và `audit_viewports.py` nhận ra điều đó bằng cách hỏi "thẻ cha có chữ trực tiếp
+       bao quanh không". Bọc phần chữ vào một <span> là mất luôn miễn trừ đó, và bộ đo
+       báo một link cao 15px — đúng, nhưng là một cái đúng vô ích. -->
+  <p class="co-fine" data-i18n-html="fine">Mọi gói đều do người lớn đăng ký và thanh toán.
+    <a href="pricing.html">Xem lại bảng giá và ưu đãi</a></p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/firebase-auth.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRANG THANH TOÁN — luồng: cổng phụ huynh → xem lại đơn → cổng thanh toán →
+     quay về → hỏi SERVER xem đã trả tiền chưa.
+
+     ⚠️⚠️ BỐN CHỐT CHẶN, đọc trước khi sửa:
+
+     ① KHÔNG CÓ Ô NHẬP THẺ Ở TRANG NÀY, và đừng thêm. Mọi cổng mà
+        docs/decisions/009 đề xuất (payOS · SePay · VNPay · MoMo · Paddle) đều
+        nhận thẻ trên trang của CHÍNH CỔNG. Nhờ vậy số thẻ không đi qua astroQ,
+        tức dự án nằm ngoài phạm vi PCI-DSS. Tự dựng form thẻ là vứt bỏ đúng
+        điều đó — trên một sản phẩm cho trẻ em thì không có lý do gì để nhận
+        rủi ro ấy.
+
+     ② KHÔNG BAO GIỜ ĐỌC "ĐÃ TRẢ TIỀN" TỪ QUERY STRING. Cổng đưa người dùng về
+        bằng một URL mà chính mình đã đưa cho nó, nên URL đó ai cũng gõ lại
+        được. Trang này chỉ nhận `?order=<id>` rồi HỎI LẠI
+        `GET /me/billing/order/{id}`; server là nơi duy nhất biết sự thật.
+
+     ③ KHÔNG GỬI SỐ TIỀN LÊN. Client chỉ nói mua GÓI nào, chu kỳ nào. Bảng giá ở
+        `AstroqSV/Services/Billing.cs`. Con số hiện trên trang này là con số
+        SERVER trả về qua `/billing/catalog`, không phải bản sao gõ tay — vì nếu
+        gõ tay thì ngày đổi giá sẽ có một trang nói một đằng và thu một nẻo.
+
+     ④ TRẠNG THÁI MỞ BÁN DO SERVER QUYẾT (`saleOpen`). Chưa mở thì nút thanh
+        toán không tồn tại, chứ không phải bị ẩn bằng CSS.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 3000);
+
+  /* Tiền tệ đi theo NGÔN NGỮ, đúng như pricing.html — `guessLang` đã đoán theo múi
+     giờ nên bảng giá tự đúng vùng mà không cần cơ chế dò vị trí thứ hai. */
+  function cur(){ return LANG === "en" ? "USD" : "VND"; }
+  function money(n, c){
+    if(c === "USD") return "$" + (n % 1 === 0 ? n : Number(n).toFixed(2));
+    return Math.round(n).toLocaleString("vi-VN") + "₫";
+  }
+  function day(iso){
+    if(!iso) return "—";
+    var d = new Date(iso);
+    if(isNaN(d)) return "—";
+    return d.toLocaleDateString(LANG === "en" ? "en-GB" : "vi-VN",
+                                { day:"2-digit", month:"2-digit", year:"numeric" });
+  }
+
+  /* ══════════ Trạng thái trang ══════════ */
+  var VIEW = {
+    plan:  "astro",
+    cycle: "year",
+    cat:   null,       // phản hồi /billing/catalog
+    order: null,       // đơn đang xem
+    gate:  false,      // đã qua cổng phụ huynh chưa
+    opId:  null
+  };
+
+  /* ══════════ Cổng phụ huynh ══════════
+     ⚠️ ĐÂY LÀ GỜ GIẢM TỐC, KHÔNG PHẢI MỘT LỚP BẢO MẬT — và phải nói thẳng ra như
+     vậy để không ai sau này tưởng nó xác minh được tuổi. Một đứa trẻ 12 tuổi giải
+     được 7×8. Thứ thật sự chặn là: đơn phải đi kèm một tài khoản đã kích hoạt
+     email, và tiền đi qua ngân hàng — nơi vốn đòi giấy tờ người lớn.
+     Việc của gờ này là làm đúng yêu cầu 009 mục 5: không đặt một lời chào mời
+     trả tiền ngay trước mặt trẻ trong lúc chơi.
+     Kết quả lưu ở sessionStorage: hết phiên là hỏi lại, và nó KHÔNG phải nguồn
+     sự thật của bất cứ điều gì (server không đọc nó). */
+  var GATE_KEY = "astroq-adult-gate";
+  var gateAns = 0;
+
+  function newGate(){
+    var a = 3 + Math.floor(Math.random() * 7);     // 3..9
+    var b = 4 + Math.floor(Math.random() * 6);     // 4..9
+    gateAns = a * b;
+    $("gate-q").textContent = a + " × " + b + " = ?";
+  }
+  function gatePassed(){
+    try{ return sessionStorage.getItem(GATE_KEY) === "1"; }catch(e){ return false; }
+  }
+  function markGate(){
+    VIEW.gate = true;
+    try{ sessionStorage.setItem(GATE_KEY, "1"); }catch(e){}
+  }
+
+  /* ══════════ opId — chống tạo hai đơn cho một lần mua ══════════
+     Sinh MỘT LẦN cho mỗi bộ (gói, chu kỳ) và giữ qua lượt tải lại: bấm "Thanh
+     toán" rồi mạng chậm rồi bấm lại, hoặc F5 giữa chừng, đều phải ra ĐÚNG một
+     đơn. Server chốt chuyện này bằng bản ghi ORDERKEY (xem DynamoContext.Orders.cs),
+     nhưng nó chỉ chống được khi client gửi cùng một opId. */
+  function opIdFor(plan, cycle){
+    var k = "astroq-checkout-op:" + plan + ":" + cycle;
+    var v = null;
+    try{ v = sessionStorage.getItem(k); }catch(e){}
+    if(!v){
+      v = "co-" + Date.now().toString(36) + "-" +
+          Math.random().toString(36).slice(2, 10);
+      try{ sessionStorage.setItem(k, v); }catch(e){}
+    }
+    return v;
+  }
+  function clearOpId(plan, cycle){
+    try{ sessionStorage.removeItem("astroq-checkout-op:" + plan + ":" + cycle); }catch(e){}
+  }
+
+  /* ══════════ Đọc tham số URL ══════════ */
+  var Q = new URLSearchParams(location.search);
+  (function readQuery(){
+    var p = (Q.get("plan")  || "").trim().toLowerCase();
+    var c = (Q.get("cycle") || "").trim().toLowerCase();
+    if(p === "astro" || p === "crew" || p === "found") VIEW.plan = p;
+    if(c === "month" || c === "year" || c === "once")  VIEW.cycle = c;
+    // Vé Sáng Lập chỉ có một chu kỳ — đừng để một URL sai đưa ra một chu kỳ không bán
+    if(VIEW.plan === "found") VIEW.cycle = "once";
+  })();
+
+  /* ══════════ Bước hiện tại ══════════ */
+  function paintSteps(step){
+    var order = ["gate", "review", "pay"];
+    var at = order.indexOf(step);
+    Array.prototype.forEach.call(document.querySelectorAll("#steps .st"), function(el){
+      var i = order.indexOf(el.getAttribute("data-step"));
+      el.classList.toggle("on",   i === at);
+      el.classList.toggle("done", i < at);
+    });
+  }
+
+  function show(which){
+    $("card-gate").hidden   = which !== "gate";
+    $("card-review").hidden = which !== "review";
+    $("card-result").hidden = which !== "result";
+    paintSteps(which === "result" ? "pay" : which);
+  }
+
+  /* ══════════ Bảng chu kỳ ══════════ */
+  function offersFor(plan){
+    var all = (VIEW.cat && VIEW.cat.offers) || [];
+    return all.filter(function(o){ return o.plan === plan; });
+  }
+  function offerNow(){
+    return offersFor(VIEW.plan).filter(function(o){ return o.cycle === VIEW.cycle; })[0] || null;
+  }
+
+  function renderCycles(){
+    var list = offersFor(VIEW.plan);
+    var box  = $("cycles");
+    // Một chu kỳ duy nhất (Vé Sáng Lập) thì không có gì để chọn — ẩn hẳn khối,
+    // một dãy "lựa chọn" chỉ có một mục đọc ra như giao diện bị lỗi.
+    if(list.length < 2){ box.hidden = true; box.innerHTML = ""; return; }
+    box.hidden = false;
+
+    var monthly = list.filter(function(o){ return o.cycle === "month"; })[0];
+    box.innerHTML = list.map(function(o){
+      var save = "";
+      if(o.cycle === "year" && monthly){
+        // % tính RA từ chính hai con số của server, không gõ tay
+        var off = Math.round((1 - (o.amount / (monthly.amount * 12))) * 100);
+        if(off > 0) save = '<span class="co-save">' +
+                           AstroQ.esc(t("save").replace("{n}", off)) + '</span>';
+      }
+      return '<button class="co-cyc" type="button" data-cycle="' + o.cycle + '"' +
+             ' aria-pressed="' + (o.cycle === VIEW.cycle) + '">' +
+               '<span class="dot" aria-hidden="true"></span>' +
+               '<span class="lb"><b>' + AstroQ.esc(t("cyc_" + o.cycle)) + '</b>' +
+                 '<span>' + AstroQ.esc(t("cyc_" + o.cycle + "_sub")) + '</span>' + save +
+               '</span>' +
+               '<span class="pr">' + AstroQ.esc(money(o.amount, o.currency)) + '</span>' +
+             '</button>';
+    }).join("");
+
+    Array.prototype.forEach.call(box.querySelectorAll(".co-cyc"), function(b){
+      b.addEventListener("click", function(){
+        VIEW.cycle = b.getAttribute("data-cycle");
+        renderCycles(); renderSummary();
+      });
+    });
+  }
+
+  /* ══════════ Tóm tắt đơn ══════════ */
+  function renderSummary(){
+    var o = offerNow();
+    $("sum-name").textContent = t("pl_" + VIEW.plan);
+    $("sum-for").textContent  = t("for_" + VIEW.plan);
+
+    if(!o){
+      $("sum-cycle").textContent = "—";
+      $("sum-total").textContent = "—";
+      return;
+    }
+    $("sum-cycle").textContent = t("cyc_" + o.cycle);
+    $("sum-total").textContent = money(o.amount, o.currency);
+
+    var trial = (VIEW.cat && VIEW.cat.trialDays) || 0;
+    /* ⚠️ `trialDays` do SERVER trả (Billing.TrialDays). Gõ 14 vào đây là một BẢN SAO
+       của một con số về TIỀN — ngày đổi thời gian dùng thử thì trang sẽ nói sai
+       ngày thu đầu tiên cho người thật.
+
+       ⚠️⚠️ CHƯA MỞ BÁN THÌ KHÔNG HIỆN NGÀY THU. "Ngày thu đầu tiên: 25/08/2026" là
+       một ngày CỤ THỂ cho một giao dịch không thể xảy ra — nói ra là nói sai, dù
+       phép tính đúng. Giá thì vẫn hiện được: nó đã công khai ở pricing.html. */
+    var open = !!(VIEW.cat && VIEW.cat.saleOpen);
+    $("line-trial").hidden = !trial || !open;
+    $("line-first").hidden = !trial || !open;
+    if(trial && open){
+      $("sum-trial").textContent = t("n_days").replace("{n}", trial);
+      var first = new Date(Date.now() + trial * 86400000);
+      $("sum-first").textContent = day(first.toISOString());
+    }
+
+    $("sum-fine").textContent = o.cycle === "once" ? t("fine_once") : t("fine_sub");
+    renderTerms(o, trial);
+  }
+
+  /* Ba dòng "nói thật" mà 009 mục 6 đòi phải có ngay tại chỗ mua. */
+  function renderTerms(o, trial){
+    var lines = [];
+    if(trial) lines.push(t("term_trial").replace("{n}", trial));
+    lines.push(o.cycle === "once"
+      ? t("term_once")
+      : t("term_cycle").replace("{c}", t("cyc_" + o.cycle).toLowerCase())
+                       .replace("{v}", money(o.amount, o.currency)));
+    lines.push(t("term_cancel"));
+    $("terms-lines").innerHTML = lines.map(function(s){
+      return "• " + AstroQ.esc(s);
+    }).join("<br/>");
+  }
+
+  /* ══════════ Chưa mở bán ══════════ */
+  function paintClosed(){
+    var open = !!(VIEW.cat && VIEW.cat.saleOpen);
+    $("closed").hidden = open;
+    /* ⚠️ Không để một nút bấm-không-ăn: luật của dự án là "nút bấm được thì phải
+       có gì đó xảy ra". Chưa mở bán thì ĐỔI HẲN nút sang đường dẫn về form
+       waitlist — một việc có thật để làm — chứ không phải làm mờ nút cũ. */
+    $("pay-go").hidden  = !open;
+    $("wait-go").hidden = open;
+    $("pay-go").textContent  = t("pay_btn");
+    $("wait-go").textContent = t("closed_btn");
+    // Hai khối dưới chỉ có nghĩa khi sắp trả tiền thật
+    $("terms-box").hidden   = !open;
+    $("secure-note").hidden = !open;
+  }
+
+  /* ══════════ Mở lượt thanh toán ══════════ */
+  function pay(){
+    var o = offerNow();
+    if(!o) return;
+    var btn = $("pay-go");
+    btn.disabled = true;
+    btn.textContent = t("pay_wait");
+
+    VIEW.opId = opIdFor(VIEW.plan, VIEW.cycle);
+
+    auth().then(function(a){
+      if(!a) return fail("need-login");
+      return a.startCheckout({
+        plan: VIEW.plan, cycle: VIEW.cycle, currency: cur(),
+        opId: VIEW.opId,
+        // Cổng đưa người dùng về đúng trang này, kèm mã đơn
+        returnUrl: location.origin + location.pathname
+      }).then(function(r){
+        var d = r && r.data;
+        if(!r || !r.ok || !d)          return fail("net");
+        if(d.ok === false)             return fail(d.reason || "unknown");
+        if(d.order && d.order.status === "paid"){
+          // Đơn này đã trả tiền rồi (bấm lại sau khi xong) — đưa thẳng tới kết quả
+          VIEW.order = d.order; return renderResult();
+        }
+        if(!d.payUrl)                  return fail("no-payurl");
+        // Rời trang: từ đây trở đi mọi thứ diễn ra ở phía cổng
+        location.href = d.payUrl;
+      });
+    }).catch(function(){ fail("net"); });
+  }
+
+  function fail(reason){
+    var btn = $("pay-go");
+    btn.disabled = false;
+    btn.textContent = t("pay_btn");
+    /* Nói ĐÚNG lý do. Gộp mọi thứ thành "có lỗi xảy ra" là bắt người dùng đi sửa
+       một thứ không hỏng — cùng bài học với ba lý do `sent:false` của email tuần. */
+    var key = ({
+      "sale-closed": "err_closed", "no-provider": "err_closed",
+      "need-login":  "err_login",  "unknown-offer": "err_offer",
+      "provider-error": "err_gate", "provider-not-configured": "err_closed"
+    })[reason] || "err_net";
+    toast(t(key), "bad");
+    if(reason === "sale-closed" || reason === "no-provider"){
+      // Server vừa nói là chưa mở bán → cập nhật lại cả trang cho khớp
+      if(VIEW.cat) VIEW.cat.saleOpen = false;
+      paintClosed();
+    }
+  }
+
+  /* ══════════ Quay về từ cổng ══════════ */
+  var pollN = 0;
+
+  function renderResult(){
+    show("result");
+    var o = VIEW.order || {};
+    $("res-wait").hidden = true;
+    $("res-ok").hidden   = true;
+    $("res-bad").hidden  = true;
+    $("res-acts").innerHTML = "";
+
+    function act(label, href, primary){
+      var a = document.createElement("a");
+      a.className = "co-btn" + (primary ? " primary" : "");
+      a.href = href; a.textContent = label;
+      $("res-acts").appendChild(a);
+    }
+
+    if(o.status === "paid"){
+      $("res-ok").hidden = false;
+      clearOpId(o.plan, o.cycle);      // lượt mua đã xong — lần sau là một đơn mới
+      act(t("go_dash"), "dashboard.html", true);
+      act(t("go_price"), "pricing.html");
+      return;
+    }
+    if(o.status === "pending"){
+      /* ⚠️ ĐANG CHỜ KHÔNG PHẢI LÀ HỎNG. Cổng gọi webhook về mất vài giây, nên
+         trang hỏi lại vài lần rồi mới kết luận. Nói "thất bại" ở giây thứ nhất
+         là nói sai với một người vừa trả tiền xong. */
+      $("res-wait").hidden = false;
+      if(pollN < 8){ pollN++; setTimeout(poll, 1500); }
+      else{
+        $("res-wait").hidden = true;
+        $("res-bad").hidden  = false;
+        $("res-bad-h").textContent = t("res_slow_h");
+        $("res-bad-p").textContent = t("res_slow_p");
+        act(t("res_recheck"), location.pathname + location.search, true);
+        act(t("go_dash"), "dashboard.html");
+      }
+      return;
+    }
+    // failed | cancelled | expired
+    $("res-bad").hidden = false;
+    $("res-bad-h").textContent = t("res_" + (o.status || "failed") + "_h");
+    $("res-bad-p").textContent = t("res_" + (o.status || "failed") + "_p");
+    clearOpId(o.plan, o.cycle);        // cho phép mở một lượt mới
+    act(t("res_retry"), "checkout.html?plan=" + o.plan + "&cycle=" + o.cycle, true);
+    act(t("go_price"), "pricing.html");
+  }
+
+  function poll(){
+    var id = VIEW.order && VIEW.order.orderId;
+    if(!id) return;
+    auth().then(function(a){
+      if(!a) return;
+      return a.getOrder(id).then(function(r){
+        if(r && r.ok && r.data && r.data.order){
+          VIEW.order = r.data.order;
+          renderResult();
+        }
+      });
+    }).catch(function(){});
+  }
+
+  /* ══════════ Danh sách đơn ══════════ */
+  function renderOrders(list){
+    if(!list || !list.length){ $("card-orders").hidden = true; return; }
+    $("card-orders").hidden = false;
+    $("orders").innerHTML = list.map(function(o){
+      return '<div class="co-order">' +
+        '<span class="who"><b>' + AstroQ.esc(t("pl_" + o.plan)) + " · " +
+          AstroQ.esc(t("cyc_" + o.cycle)) + '</b>' +
+          '<span>' + AstroQ.esc(day(o.createdAt)) + " · " +
+          AstroQ.esc(money(o.amount, o.currency)) + '</span></span>' +
+        '<span class="co-badge ' + AstroQ.esc(o.status) + '">' +
+          AstroQ.esc(t("st_" + o.status)) + '</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  /* ══════════ Lớp đăng nhập ══════════
+     `js/firebase-auth.js` là ES module nên nó có thể chưa nạp xong lúc script này
+     chạy. Chờ có hạn rồi mới kết luận — đúng khuôn `waitAuth` của js/progress.js. */
+  function auth(){
+    return new Promise(function(res){
+      var t0 = Date.now();
+      (function tick(){
+        if(window.AstroQAuth && window.AstroQAuth.startCheckout) return res(window.AstroQAuth);
+        if(Date.now() - t0 > 3000) return res(null);
+        setTimeout(tick, 60);
+      })();
+    });
+  }
+
+  /* ══════════ Khởi động ══════════ */
+  function boot(){
+    var backTo = Q.get("order") ? "pricing.html" : "pricing.html";
+    $("back").addEventListener("click", function(){ location.href = backTo; });
+
+    $("gate-go").addEventListener("click", function(){
+      var v = ($("gate-a").value || "").trim();
+      var okAge = $("gate-ok").checked;
+      if(String(gateAns) !== v || !okAge){
+        $("gate-err").hidden = false;
+        if(String(gateAns) !== v){ newGate(); $("gate-a").value = ""; $("gate-a").focus(); }
+        return;
+      }
+      $("gate-err").hidden = true;
+      markGate();
+      show("review");
+    });
+    $("gate-a").addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); $("gate-go").click(); }
+    });
+    $("pay-go").addEventListener("click", pay);
+
+    newGate();
+
+    // Bảng giá — CÔNG KHAI, không cần đăng nhập, nên hỏi ngay
+    auth().then(function(a){
+      if(!a){ VIEW.cat = { saleOpen:false, offers:[], trialDays:0 }; return; }
+      return a.getCatalog(cur()).then(function(r){
+        VIEW.cat = (r && r.ok && r.data) ? r.data : { saleOpen:false, offers:[], trialDays:0 };
+      });
+    }).then(function(){
+      renderCycles(); renderSummary(); paintClosed();
+
+      var back = Q.get("order");
+      if(back){
+        // Vừa từ cổng quay về: hỏi SERVER, không tin query string
+        show("result");
+        $("res-wait").hidden = false;
+        VIEW.order = { orderId: back, status: "pending" };
+        poll();
+      }else if(!VIEW.cat.saleOpen){
+        /* ⚠️ CHƯA MỞ BÁN THÌ BỎ HẲN CỔNG PHỤ HUYNH. Cổng đó tồn tại để không đặt
+           một lời chào mời trả tiền trước mặt trẻ (009 mục 5) — mà lúc chưa bán
+           thì KHÔNG CÓ lời chào mời nào để chắn. Giữ nó lại chỉ là bắt bố mẹ giải
+           một phép tính trước khi được nhìn thấy dòng "chưa mở bán" và cái nút
+           duy nhất bấm được. Bảng giá vốn đã công khai ở pricing.html nên phần
+           tóm tắt ở đây không lộ thêm gì.
+           Phép kiểm của smoke_checkout bắt đúng chỗ này. */
+        show("review");
+        $("steps").hidden = true;   // không có luồng 3 bước nào để chỉ
+      }else{
+        show(gatePassed() ? "review" : "gate");
+        if(gatePassed()) markGate();
+      }
+
+      // Đơn cũ — chỉ khi đã đăng nhập
+      auth().then(function(a){
+        if(!a) return;
+        a.getOrders().then(function(r){
+          if(r && r.ok && r.data) renderOrders(r.data.orders);
+        }).catch(function(){});
+      });
+    });
+  }
+
+  /* ══════════ i18n ══════════ */
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", title:"AstroQ — Thanh toán", back:"Về bảng giá",
+      s_gate:"Xác nhận người lớn", s_review:"Xem lại đơn", s_pay:"Thanh toán",
+
+      closed_h:"astroQ chưa mở bán",
+      closed_p:"Giá đã chốt nhưng chưa tới ngày mở cửa. Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.",
+      closed_btn:"Báo tôi khi mở cửa",
+
+      gate_h:"Bạn là bố mẹ chứ?",
+      gate_p:"Việc mua gói là của người lớn. Trả lời giúp một phép tính nhỏ rồi mình đi tiếp nhé.",
+      gate_label:"Kết quả phép tính",
+      gate_confirm:"Tôi là bố mẹ hoặc người giám hộ, từ 18 tuổi trở lên, và tôi đồng ý thanh toán cho tài khoản này.",
+      gate_wrong:"Chưa đúng rồi. Thử lại nhé — hoặc nhờ bố mẹ giúp một tay.",
+      gate_btn:"Tiếp tục",
+
+      rev_h:"Chọn chu kỳ", rev_p:"Đổi giữa trả tháng và trả năm bất cứ lúc nào trước khi thanh toán.",
+      cyc_month:"Hằng tháng", cyc_month_sub:"Huỷ lúc nào cũng được",
+      cyc_year:"Hằng năm",    cyc_year_sub:"Thu một lần mỗi năm",
+      cyc_once:"Trả một lần", cyc_once_sub:"Dùng mãi, không thu lại",
+      save:"tiết kiệm {n}%",
+
+      terms_h:"Trước khi bấm, đọc giúp ba dòng này",
+      term_trial:"{n} ngày đầu miễn phí — hôm nay chưa trừ tiền.",
+      term_cycle:"Sau đó thu {v} mỗi {c}, tự động gia hạn.",
+      term_once:"Trả đúng một lần, không có kỳ thu nào tiếp theo.",
+      term_cancel:"Huỷ bất cứ lúc nào trong trang tài khoản; gói đã trả vẫn dùng hết kỳ.",
+
+      pay_btn:"Tới trang thanh toán", pay_wait:"Đang mở…", pay_back:"Xem lại các gói",
+      secure:"Thẻ của bạn do cổng thanh toán nhận, astroQ không lưu số thẻ.",
+
+      sum_cycle:"Chu kỳ", sum_trial:"Dùng thử", sum_first:"Ngày thu đầu tiên", sum_total:"Tổng",
+      n_days:"{n} ngày",
+      fine_sub:"Giá đã gồm thuế nếu có. Huỷ bất cứ lúc nào.",
+      fine_once:"Trả một lần, dùng mãi. Không có kỳ thu tiếp theo.",
+
+      pl_astro:"Phi Hành Gia", pl_crew:"Phi Hành Đoàn", pl_found:"Vé Sáng Lập", pl_free:"Phi Hành Gia Tập Sự",
+      for_astro:"Cho một bạn nhỏ", for_crew:"Cả nhà tới 4 bạn nhỏ", for_found:"Trả một lần, dùng mãi", for_free:"Miễn phí mãi mãi",
+
+      res_h:"Kết quả thanh toán",
+      res_wait_h:"Đang xác nhận với ngân hàng…",
+      res_wait_p:"Việc này thường mất vài giây. Đừng đóng trang nhé.",
+      res_ok_h:"Xong rồi! Gói đã kích hoạt",
+      res_ok_p:"Cảm ơn bạn. Biên nhận sẽ được gửi vào email của tài khoản.",
+      res_failed_h:"Lần này chưa thanh toán được",
+      res_failed_p:"Ngân hàng chưa duyệt giao dịch. Tiền chưa bị trừ — bạn thử lại giúp nhé.",
+      res_cancelled_h:"Bạn đã dừng giữa chừng",
+      res_cancelled_p:"Không sao cả, chưa có khoản nào bị trừ. Muốn quay lại thì bấm bên dưới.",
+      res_expired_h:"Lượt thanh toán đã quá hạn",
+      res_expired_p:"Bạn để trang mở hơi lâu. Mở lại một lượt mới giúp mình nhé.",
+      res_slow_h:"Ngân hàng đang xác nhận hơi lâu",
+      res_slow_p:"Chưa có khoản nào bị trừ oan đâu. Bấm kiểm tra lại sau ít phút, hoặc mở trang này lần nữa.",
+      res_recheck:"Kiểm tra lại", res_retry:"Thử lại",
+      go_dash:"Vào Trung Tâm Điều Hướng", go_price:"Xem các gói",
+
+      ord_h:"Đơn của bạn",
+      st_paid:"ĐÃ THANH TOÁN", st_pending:"ĐANG CHỜ", st_failed:"CHƯA XONG",
+      st_cancelled:"ĐÃ HUỶ", st_expired:"QUÁ HẠN",
+
+      err_closed:"astroQ chưa mở bán — chưa thu của bạn đồng nào.",
+      err_login:"Bạn cần đăng nhập trước khi thanh toán.",
+      err_offer:"Không tìm thấy gói này. Chọn lại ở bảng giá giúp mình nhé.",
+      err_gate:"Cổng thanh toán chưa phản hồi. Thử lại sau ít phút nhé.",
+      err_net:"Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.",
+
+      fine:'Mọi gói đều do người lớn đăng ký và thanh toán. <a href="pricing.html">Xem lại bảng giá và ưu đãi</a>'
+    },
+    en:{
+      a_lang:"Language", title:"AstroQ — Checkout", back:"Back to plans",
+      s_gate:"Grown-up check", s_review:"Review", s_pay:"Payment",
+
+      closed_h:"astroQ isn't on sale yet",
+      closed_p:"Prices are final but we haven't opened yet. Leave your email on the home page and we'll tell you the moment we do — Founder seats included.",
+      closed_btn:"Tell me when it opens",
+
+      gate_h:"Are you the grown-up?",
+      gate_p:"Buying a plan is a grown-up job. Solve this little sum and we'll move on.",
+      gate_label:"Answer",
+      gate_confirm:"I am a parent or guardian, at least 18, and I agree to pay for this account.",
+      gate_wrong:"Not quite. Try again — or ask a grown-up to help.",
+      gate_btn:"Continue",
+
+      rev_h:"Pick a billing cycle", rev_p:"Switch between monthly and yearly any time before you pay.",
+      cyc_month:"Monthly", cyc_month_sub:"Cancel whenever you like",
+      cyc_year:"Yearly",   cyc_year_sub:"Charged once a year",
+      cyc_once:"One-time", cyc_once_sub:"Yours for good, never charged again",
+      save:"save {n}%",
+
+      terms_h:"Three lines to read before you tap",
+      term_trial:"First {n} days free — nothing is charged today.",
+      term_cycle:"After that {v} every {c}, renewing automatically.",
+      term_once:"A single payment. There is no next charge.",
+      term_cancel:"Cancel any time from the account page; a paid term runs to its end.",
+
+      pay_btn:"Go to payment", pay_wait:"Opening…", pay_back:"Back to plans",
+      secure:"Your card is handled by the payment gateway — astroQ never stores card numbers.",
+
+      sum_cycle:"Cycle", sum_trial:"Free trial", sum_first:"First charge", sum_total:"Total",
+      n_days:"{n} days",
+      fine_sub:"Tax included where applicable. Cancel any time.",
+      fine_once:"Pay once, keep it for good. There is no next charge.",
+
+      pl_astro:"Astronaut", pl_crew:"Crew", pl_found:"Founder Pass", pl_free:"Rookie",
+      for_astro:"For one child", for_crew:"Up to 4 children", for_found:"Pay once, keep forever", for_free:"Free forever",
+
+      res_h:"Payment result",
+      res_wait_h:"Confirming with your bank…",
+      res_wait_p:"This usually takes a few seconds. Please don't close the page.",
+      res_ok_h:"All done! Your plan is active",
+      res_ok_p:"Thank you. A receipt is on its way to your account email.",
+      res_failed_h:"That payment didn't go through",
+      res_failed_p:"Your bank declined it. Nothing was charged — please try again.",
+      res_cancelled_h:"You stopped partway",
+      res_cancelled_p:"No problem, nothing was charged. Tap below if you'd like to go back.",
+      res_expired_h:"That payment session expired",
+      res_expired_p:"The page sat open a little too long. Start a fresh one below.",
+      res_slow_h:"Your bank is taking a while",
+      res_slow_p:"Nothing has been charged by mistake. Check again in a few minutes, or reopen this page.",
+      res_recheck:"Check again", res_retry:"Try again",
+      go_dash:"Go to Navigation Hub", go_price:"See the plans",
+
+      ord_h:"Your orders",
+      st_paid:"PAID", st_pending:"PENDING", st_failed:"NOT DONE",
+      st_cancelled:"CANCELLED", st_expired:"EXPIRED",
+
+      err_closed:"astroQ isn't on sale yet — you haven't been charged anything.",
+      err_login:"Please sign in before paying.",
+      err_offer:"We couldn't find that plan. Pick one again from the pricing page.",
+      err_gate:"The payment gateway didn't answer. Please try again in a few minutes.",
+      err_net:"Couldn't reach the server. Check your connection and try again.",
+
+      fine:'Every plan is signed up and paid for by an adult. <a href="pricing.html">See plans and perks</a>'
+    }
+  };
+
+  function applyLang(lang){
+    if(lang === "en" || lang === "vi") LANG = lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    // Bốn khối dưới do JS sinh nên applyTexts không với tới — phải vẽ LẠI
+    renderCycles(); renderSummary(); paintClosed();
+    if(!$("card-result").hidden) renderResult();
+  }
+
+  boot();
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+})();
+</script>
+</body>
+</html>

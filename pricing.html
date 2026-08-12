@@ -39,8 +39,8 @@
   <!-- ============ HERO ============ -->
   <section class="hero">
     <span class="eyebrow" data-i18n="eyebrow">💳 Gói &amp; Ưu đãi</span>
-    <h1 data-i18n="title_h">Mở toàn bộ hành trình cho con</h1>
-    <p data-i18n="intro">astroQ luôn có một phần miễn phí vĩnh viễn. Gói trả phí mở thêm nhiệm vụ ở các hành tinh khác, Phòng Nghiên Cứu, và bảng theo dõi việc học dành cho bố mẹ.</p>
+    <h1 data-i18n="title_h">Mở cả thiên hà cho con khám phá</h1>
+    <p data-i18n="intro">Phần miễn phí luôn còn đó, không bao giờ mất. Gói trả phí mở thêm các hành tinh khác, Phòng Nghiên Cứu và bản tin hằng tuần về việc học của con.</p>
   </section>
 
   <!-- ⚠️ DẢI NÓI THẬT — ĐỪNG GỠ KHI CHƯA CHỐT GIÁ.
@@ -49,7 +49,7 @@
        yêu cầu không hiển thị lời chào mời trả tiền trực tiếp cho trẻ. -->
   <div class="banner pr-note" role="status">
     <span class="ic" aria-hidden="true">👨‍👩‍👧</span>
-    <span data-i18n-html="parent_banner">Trang này dành cho <b>bố mẹ</b>. Bảng giá dưới đây <b>đã chốt</b>; astroQ <b>chưa mở bán</b> nên hiện chưa có nút thanh toán nào.</span>
+    <span data-i18n-html="parent_banner">Trang này dành cho <b>bố mẹ</b>. Giá dưới đây <b>đã chốt</b>, nhưng astroQ <b>chưa mở bán</b> nên chưa có nút thanh toán nào.</span>
   </div>
 
   <!-- ============ BẢNG GÓI (đổ từ JS) ============ -->
@@ -59,7 +59,7 @@
   <section class="panel">
     <span class="panel-tag"><span class="led"></span><span data-i18n="tag_cmp">SO SÁNH</span></span>
     <h2><span class="ic" aria-hidden="true">⚖️</span><span data-i18n="cmp_h">Miễn phí có gì, trả phí thêm gì</span></h2>
-    <p class="panel-sub" data-i18n="cmp_sub">Phần miễn phí không bao giờ bị lấy đi. Hết hạn gói thì huy hiệu, mẫu vật, tiến độ và Thiên thạch tím con đã kiếm được vẫn còn nguyên — chỉ nội dung mới là khoá lại.</p>
+    <p class="panel-sub" data-i18n="cmp_sub">Những gì con kiếm được là của con: huy hiệu, mẫu vật, tiến độ và Thiên thạch tím giữ nguyên kể cả khi hết hạn gói. Chỉ nội dung mới là khoá lại.</p>
     <div class="cmp" id="cmp"></div>
   </section>
 
@@ -86,10 +86,10 @@
 
   <!-- ============ CTA ============ -->
   <section class="pr-cta">
-    <h2 data-i18n="cta_h">Muốn biết khi nào mở bán?</h2>
-    <p data-i18n="cta_p">Để lại email ở trang chủ — chúng tôi báo ngay khi các gói mở, kèm suất Vé Sáng Lập giới hạn.</p>
+    <h2 data-i18n="cta_h">Muốn biết khi nào mở cửa?</h2>
+    <p data-i18n="cta_p">Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</p>
     <div class="pr-acts">
-      <a class="pbtn primary" href="/" data-i18n="cta_btn">Nhận thông báo khi mở bán</a>
+      <a class="pbtn primary" href="/" data-i18n="cta_btn">Báo tôi khi mở cửa</a>
       <a class="pbtn ghost" href="parent.html" data-i18n="cta_parent">Xem bảng theo dõi</a>
       <a class="pbtn ghost" href="dashboard.html" data-i18n="cta_back">Quay lại khám phá</a>
     </div>
@@ -150,21 +150,42 @@
   var PERKS = ["p_founder","p_year","p_ref","p_trial","p_refund","p_season","p_school","p_grant"];
   var FAQ   = ["q_when","q_pay","q_expire","q_ads","q_cancel"];
 
+  /* ⚠️ TRẠNG THÁI MỞ BÁN — hỏi server, mặc định ĐÓNG.
+     Mặc định đóng là hướng nghiêng đúng: mạng hỏng / API chưa deploy thì trang
+     giữ nguyên hành vi hôm nay (dẫn về waitlist) thay vì mời người ta vào một
+     trang thanh toán không dùng được. */
+  var SALE = { open:false };
+
+  /* Nạp `js/api.js` bằng IMPORT ĐỘNG, không đặt thẻ <script>: trang này chỉ cần
+     4 KB đó đúng một lần để hỏi bảng giá, và nó KHÔNG cần lớp đăng nhập
+     (`/billing/catalog` là route công khai) nên cũng không kéo theo firebase-auth.
+     ⚠️ Đường dẫn suy từ `location.href` chứ không viết `"./js/api.js"` — dự án đã
+        mất 6 ngày vì đúng lớp lỗi này ở `js/index.js` (từ `/en/` nó thành
+        `/en/api.js` và form waitlist chết câm). */
+  function askSale(){
+    return import(new URL("js/api.js", location.href).href)
+      .then(function(m){ return m.apiGet("/billing/catalog?cur=" + (LANG === "en" ? "USD" : "VND")); })
+      .then(function(r){
+        if(r && r.ok && r.data && r.data.saleOpen === true) SALE.open = true;
+      })
+      .catch(function(){ /* không hỏi được thì giữ nguyên: đóng */ });
+  }
+
   /* ================= i18n ================= */
   var I18N = {
     vi:{
       a_lang:"Ngôn ngữ", title:"AstroQ — Gói & Ưu đãi", back:"Về Trung Tâm Điều Hướng",
-      eyebrow:"💳 Gói & Ưu đãi", title_h:"Mở toàn bộ hành trình cho con",
-      intro:"astroQ luôn có một phần miễn phí vĩnh viễn. Gói trả phí mở thêm nhiệm vụ ở các hành tinh khác, Phòng Nghiên Cứu, và bảng theo dõi việc học dành cho bố mẹ.",
-      parent_banner:"Trang này dành cho <b>bố mẹ</b>. Bảng giá dưới đây <b>đã chốt</b>; astroQ <b>chưa mở bán</b> nên hiện chưa có nút thanh toán nào.",
+      eyebrow:"💳 Gói & Ưu đãi", title_h:"Mở cả thiên hà cho con khám phá",
+      intro:"Phần miễn phí luôn còn đó, không bao giờ mất. Gói trả phí mở thêm các hành tinh khác, Phòng Nghiên Cứu và bản tin hằng tuần về việc học của con.",
+      parent_banner:"Trang này dành cho <b>bố mẹ</b>. Giá dưới đây <b>đã chốt</b>, nhưng astroQ <b>chưa mở bán</b> nên chưa có nút thanh toán nào.",
 
-      cta_h:"Muốn biết khi nào mở bán?",
-      cta_p:"Để lại email ở trang chủ — chúng tôi báo ngay khi các gói mở, kèm suất Vé Sáng Lập giới hạn.",
-      cta_btn:"Nhận thông báo khi mở bán", cta_back:"Quay lại khám phá",
+      cta_h:"Muốn biết khi nào mở cửa?",
+      cta_p:"Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.",
+      cta_btn:"Báo tôi khi mở cửa", cta_back:"Quay lại khám phá",
       cta_parent:"Xem bảng theo dõi",
       fine:"Giá đã chốt. Mọi gói đều do người lớn đăng ký và thanh toán.",
       tag_cmp:"So sánh", cmp_h:"Miễn phí có gì, trả phí thêm gì",
-      cmp_sub:"Phần miễn phí không bao giờ bị lấy đi. Hết hạn gói thì huy hiệu, mẫu vật, tiến độ và Thiên thạch tím con đã kiếm được vẫn còn nguyên — chỉ nội dung mới là khoá lại.",
+      cmp_sub:"Những gì con kiếm được là của con: huy hiệu, mẫu vật, tiến độ và Thiên thạch tím giữ nguyên kể cả khi hết hạn gói. Chỉ nội dung mới là khoá lại.",
       tag_who:"Quyền lợi", who_h:"Ai nhận được gì",
       tag_perk:"Ưu đãi", perk_h:"Ưu đãi đi kèm",
       tag_faq:"Hỏi đáp", faq_h:"Bố mẹ hay hỏi",
@@ -176,12 +197,12 @@
       per_month:"/tháng", per_year:"/năm", once:"trả một lần",
       save:"tiết kiệm {n}%", free_price:"0₫", month_eq:"≈ {v}/tháng",
       badge_popular:"PHỔ BIẾN NHẤT", badge_limited:"GIỚI HẠN 500 SUẤT",
-      cta_plan:"Nhận thông báo", cta_free:"Đang dùng",
+      cta_plan:"Nhận thông báo", cta_free:"Đang dùng", cta_buy:"Chọn gói này",
 
-      pl_free_n:"Phi Hành Gia Tập Sự", pl_free_d:"Miễn phí vĩnh viễn, không cần thẻ.",
-      pl_astro_n:"Phi Hành Gia", pl_astro_d:"Cho 1 trẻ. Mở toàn bộ nhiệm vụ và Phòng Nghiên Cứu.",
-      pl_crew_n:"Phi Hành Đoàn", pl_crew_d:"Tới 4 trẻ, mỗi bé một hồ sơ riêng.",
-      pl_found_n:"Vé Sáng Lập", pl_found_d:"Trả một lần, dùng trọn đời. Chỉ bán trong 60 ngày đầu.",
+      pl_free_n:"Phi Hành Gia Tập Sự", pl_free_d:"Miễn phí mãi mãi. Không cần thẻ.",
+      pl_astro_n:"Phi Hành Gia", pl_astro_d:"Cho một bạn nhỏ. Mở hết nhiệm vụ và Phòng Nghiên Cứu.",
+      pl_crew_n:"Phi Hành Đoàn", pl_crew_d:"Cả nhà tới 4 bạn nhỏ, mỗi bạn một hồ sơ riêng.",
+      pl_found_n:"Vé Sáng Lập", pl_found_d:"Trả một lần, dùng mãi. Chỉ có trong 60 ngày đầu.",
 
       c_mission1:"Nhiệm vụ 01 — Hành Tinh Xanh (7 bước)",
       c_map:"Bản Đồ Thiên Hà 3D, đủ 8 hành tinh",
@@ -190,50 +211,50 @@
       c_awards:"Huy hiệu, cấp bậc, lộ trình huấn luyện",
       c_quiz:"Đấu Trường Kiến Thức",
       c_missions:"Nhiệm vụ ở 7 hành tinh còn lại",
-      c_lab:"Phòng Nghiên Cứu (thí nghiệm ảo)",
-      c_level:"Quiz không giới hạn + luyện theo cấp độ",
-      c_report:"Báo cáo tiến bộ hằng tuần cho bố mẹ",
-      c_kids:"Nhiều hồ sơ trẻ trên một tài khoản",
-      c_cert:"Chứng chỉ hoàn thành nhiệm vụ (in được)",
+      c_lab:"Phòng Nghiên Cứu — tự tay làm thí nghiệm",
+      c_level:"Quiz thoải mái, đề vừa sức con",
+      c_report:"Bản tin hằng tuần gửi bố mẹ",
+      c_kids:"Nhiều hồ sơ con trên một tài khoản",
+      c_cert:"Chứng chỉ in ra được sau mỗi nhiệm vụ",
       c_quiz_lim:"3 lượt/ngày",
 
-      w_k1:"Nhiệm vụ mới ở từng hành tinh, mỗi nhiệm vụ nhiều bước",
-      w_k2:"Mẫu vật hiếm và huy hiệu chỉ có trong khu trả phí",
-      w_k3:"Làm Quiz thoải mái, đề ra theo đúng sức của mình",
-      w_k4:"Chứng chỉ in ra được sau mỗi nhiệm vụ hoàn thành",
-      w_p1:"Email tóm tắt cuối tuần: con học bao lâu, làm bao nhiêu câu",
+      w_k1:"Mỗi hành tinh một nhiệm vụ mới để khám phá",
+      w_k2:"Mẫu vật hiếm và huy hiệu chỉ khu này mới có",
+      w_k3:"Làm Quiz thoải mái, đề vừa sức mình",
+      w_k4:"Chứng chỉ mang tên mình sau mỗi nhiệm vụ",
+      w_p1:"Cuối tuần một email ngắn: con học bao lâu, làm được bao nhiêu",
       w_p2:"Thấy rõ con vững chủ đề nào, còn vướng chỗ nào",
-      w_p3:"Tới 4 hồ sơ riêng cho các con, tiến độ không lẫn nhau",
-      w_p4:"Không quảng cáo, không bán vật phẩm cho trẻ — bao giờ cũng vậy",
+      w_p3:"Tới 4 hồ sơ riêng, tiến độ các con không lẫn nhau",
+      w_p4:"Không quảng cáo, không bán vật phẩm cho con — mãi mãi",
 
-      p_founder:"<b>Người Sáng Lập</b> — 500 người đăng ký sớm nhận 3 tháng gói Phi Hành Gia miễn phí, huy hiệu 🏅 riêng vĩnh viễn và tên trong danh sách phi hành đoàn đầu tiên.",
-      p_year:"<b>Gói năm rẻ hơn 33–36%</b> so với trả từng tháng.",
-      p_ref:"<b>Giới thiệu bạn</b> — mỗi người bạn kích hoạt, cả hai nhà cùng được thêm 1 tháng.",
-      p_trial:"<b>Dùng thử 14 ngày, không cần nhập thẻ.</b>",
-      p_refund:"<b>Hoàn tiền trong 14 ngày</b>, không hỏi lý do.",
-      p_season:"<b>Gói Hè và gói Tết</b> — 3 tháng tính giá 2 tháng.",
+      p_founder:"<b>Vé Sáng Lập</b> — 500 người đầu tiên nhận thêm 3 tháng Phi Hành Gia, huy hiệu 🏅 riêng và tên trong danh sách phi hành đoàn đầu tiên.",
+      p_year:"<b>Gói năm tiết kiệm 33–36%</b> so với trả từng tháng.",
+      p_ref:"<b>Rủ bạn cùng bay</b> — bạn kích hoạt gói, cả hai nhà thêm 1 tháng.",
+      p_trial:"<b>Dùng thử 14 ngày</b>, không cần nhập thẻ.",
+      p_refund:"<b>Đổi ý trong 14 ngày</b> thì hoàn tiền, không hỏi lý do.",
+      p_season:"<b>Gói Hè và gói Tết</b> — 3 tháng, tính tiền 2 tháng.",
       p_school:"<b>Gói lớp học</b> cho trung tâm và CLB thiên văn, từ 20 chỗ.",
-      p_grant:"<b>Học bổng</b> — 50 suất miễn phí mỗi tháng cho trẻ hoàn cảnh khó khăn, đăng ký qua nhà trường.",
+      p_grant:"<b>Học bổng</b> — 50 suất miễn phí mỗi tháng cho các bạn nhỏ khó khăn, đăng ký qua nhà trường.",
 
-      q_when:"Khi nào mở bán?|Khi nội dung đủ dày đã. Chúng tôi chỉ bật gói trả phí khi có ít nhất 3 nhiệm vụ hoàn chỉnh và 300 câu hỏi — bán trước rồi bắt chờ nội dung là điều chúng tôi không làm.",
-      q_pay:"Trả tiền xong là con vào được ngay chứ?|Những mục ghi <b>“đang phát triển”</b> thì chưa. Chúng tôi ghi rõ trạng thái từng mục ở bảng trên đúng để bố mẹ biết mình đang mua cái gì đã có và cái gì đang tới.",
-      q_expire:"Hết hạn gói thì con mất tiến độ không?|Không. Huy hiệu, mẫu vật, cấp bậc, Thiên thạch tím và tiến độ nhiệm vụ là của con vĩnh viễn. Chỉ nội dung mới bị khoá lại.",
-      q_ads:"Có quảng cáo hay bán vật phẩm trong game không?|Không, và sẽ không bao giờ có. Thiên thạch tím chỉ kiếm được bằng cách làm Quiz đạt và chơi mini-game — <b>không bán bằng tiền thật</b>, vì như thế là trả tiền để khỏi phải học.",
-      q_cancel:"Huỷ có dễ không?|Huỷ bất cứ lúc nào, ngay trong trang tài khoản, không cần gọi ai. Gói đã trả vẫn dùng hết kỳ."
+      q_when:"Khi nào mở bán?|Khi nội dung đủ dày. Chúng tôi chỉ bật gói trả phí khi đã có ít nhất 3 nhiệm vụ hoàn chỉnh và 300 câu hỏi.",
+      q_pay:"Trả tiền là con vào được ngay chứ?|Những mục ghi <b>“đang phát triển”</b> thì chưa. Bảng trên ghi rõ trạng thái từng mục để bố mẹ biết mình đang mua gì.",
+      q_expire:"Hết hạn gói thì con mất tiến độ không?|Không. Huy hiệu, mẫu vật, cấp bậc, Thiên thạch tím và tiến độ nhiệm vụ là của con mãi mãi. Chỉ nội dung mới khoá lại.",
+      q_ads:"Có quảng cáo hay bán vật phẩm trong game không?|Không, và sẽ không bao giờ có. Thiên thạch tím chỉ kiếm được bằng cách làm Quiz đạt và chơi mini-game — <b>không bán bằng tiền thật</b>.",
+      q_cancel:"Huỷ có dễ không?|Huỷ bất cứ lúc nào ngay trong trang tài khoản, không cần gọi ai. Gói đã trả vẫn dùng hết kỳ."
     },
     en:{
       a_lang:"Language", title:"AstroQ — Plans & Perks", back:"Back to Navigation Hub",
-      eyebrow:"💳 Plans & Perks", title_h:"Open the whole journey for your child",
-      intro:"astroQ always keeps a free tier. Paid plans add missions on the other planets, the Research Lab, and a weekly learning report for parents.",
-      parent_banner:"This page is for <b>parents</b>. The prices below are <b>final</b>; astroQ is <b>not on sale yet</b>, so there is no payment button anywhere.",
+      eyebrow:"💳 Plans & Perks", title_h:"Open the whole galaxy for your child",
+      intro:"The free tier stays free, always. Paid plans add the other planets, the Research Lab, and a short weekly note on how your child is doing.",
+      parent_banner:"This page is for <b>parents</b>. The prices below are <b>final</b>, but astroQ is <b>not on sale yet</b>, so there is no payment button anywhere.",
 
-      cta_h:"Want to know when it opens?",
-      cta_p:"Leave your email on the home page — we'll tell you the moment plans go live, Founder seats included.",
-      cta_btn:"Notify me at launch", cta_back:"Back to exploring",
+      cta_h:"Want to know when we open?",
+      cta_p:"Leave your email on the home page and we'll tell you the moment we open — Founder seats included.",
+      cta_btn:"Tell me when it opens", cta_back:"Back to exploring",
       cta_parent:"Open parent dashboard",
       fine:"Prices are final. Every plan is signed up and paid for by an adult.",
       tag_cmp:"Compare", cmp_h:"What's free, what a plan adds",
-      cmp_sub:"The free tier is never taken away. If a plan lapses, your child keeps every badge, specimen, rank, meteor and step already earned — only new content locks.",
+      cmp_sub:"What your child earns stays theirs: badges, specimens, rank, meteors and progress all survive a lapsed plan. Only new content locks.",
       tag_who:"Benefits", who_h:"Who gets what",
       tag_perk:"Perks", perk_h:"Perks included",
       tag_faq:"FAQ", faq_h:"Parents often ask",
@@ -245,12 +266,12 @@
       per_month:"/mo", per_year:"/yr", once:"one-time",
       save:"save {n}%", free_price:"$0", month_eq:"≈ {v}/mo",
       badge_popular:"MOST POPULAR", badge_limited:"LIMITED — 500 SEATS",
-      cta_plan:"Notify me", cta_free:"You're on it",
+      cta_plan:"Notify me", cta_free:"You're on it", cta_buy:"Choose this plan",
 
-      pl_free_n:"Rookie", pl_free_d:"Free forever, no card needed.",
-      pl_astro_n:"Astronaut", pl_astro_d:"For 1 child. Unlocks every mission and the Research Lab.",
+      pl_free_n:"Rookie", pl_free_d:"Free forever. No card needed.",
+      pl_astro_n:"Astronaut", pl_astro_d:"For one child. Opens every mission and the Research Lab.",
       pl_crew_n:"Crew", pl_crew_d:"Up to 4 children, each with their own profile.",
-      pl_found_n:"Founder Pass", pl_found_d:"Pay once, keep forever. Sold only in the first 60 days.",
+      pl_found_n:"Founder Pass", pl_found_d:"Pay once, keep it for good. Only in the first 60 days.",
 
       c_mission1:"Mission 01 — The Blue Planet (7 steps)",
       c_map:"3D Galaxy Map, all 8 planets",
@@ -259,35 +280,35 @@
       c_awards:"Badges, ranks, training ladder",
       c_quiz:"Knowledge Arena",
       c_missions:"Missions on the other 7 planets",
-      c_lab:"Research Lab (virtual experiments)",
-      c_level:"Unlimited quizzes + level-matched questions",
-      c_report:"Weekly progress report for parents",
-      c_kids:"Multiple child profiles on one account",
-      c_cert:"Printable mission certificates",
+      c_lab:"Research Lab — run your own experiments",
+      c_level:"Quiz as much as you like, matched to your level",
+      c_report:"A weekly note for parents",
+      c_kids:"Several child profiles on one account",
+      c_cert:"A printable certificate after each mission",
       c_quiz_lim:"3 rounds/day",
 
-      w_k1:"New multi-step missions on every planet",
-      w_k2:"Rare specimens and badges found only in paid areas",
-      w_k3:"Unlimited quizzes, matched to their own level",
-      w_k4:"A printable certificate after each mission",
-      w_p1:"A weekend email: how long they studied, how many questions",
+      w_k1:"A new mission to explore on every planet",
+      w_k2:"Rare specimens and badges only found here",
+      w_k3:"Quiz as much as you like, at your own level",
+      w_k4:"A certificate with your name after each mission",
+      w_p1:"A short weekend email: how long they studied, how much they got through",
       w_p2:"See which topics are solid and which still need work",
       w_p3:"Up to 4 separate profiles, progress never mixed up",
       w_p4:"No ads, nothing sold to your child — ever",
 
-      p_founder:"<b>Founding members</b> — the first 500 sign-ups get 3 months of Astronaut free, a permanent 🏅 badge and their name on the first-crew roster.",
-      p_year:"<b>Yearly is 33–36% cheaper</b> than paying monthly.",
-      p_ref:"<b>Refer a friend</b> — when they activate, both families get an extra month.",
-      p_trial:"<b>14-day trial, no card required.</b>",
-      p_refund:"<b>14-day refund</b>, no questions asked.",
+      p_founder:"<b>Founder Pass</b> — the first 500 get 3 extra months of Astronaut, their own 🏅 badge and a place on the first-crew roster.",
+      p_year:"<b>Yearly saves 33–36%</b> against paying monthly.",
+      p_ref:"<b>Bring a friend along</b> — when they activate, both families get an extra month.",
+      p_trial:"<b>14-day trial</b>, no card required.",
+      p_refund:"<b>Change your mind within 14 days</b> and we refund it, no questions asked.",
       p_season:"<b>Summer and Tet bundles</b> — 3 months for the price of 2.",
       p_school:"<b>Classroom plans</b> for centres and astronomy clubs, from 20 seats.",
       p_grant:"<b>Scholarships</b> — 50 free seats a month for children in need, arranged through schools.",
 
-      q_when:"When does it go on sale?|Once there is enough to sell. We only switch plans on when there are at least 3 complete missions and 300 questions — selling first and asking families to wait is not something we do.",
-      q_pay:"If I pay, can my child use it right away?|Not the items marked <b>“in development”</b>. We label the status of every item in the table above precisely so you know what exists today and what is still coming.",
-      q_expire:"If the plan lapses, does my child lose progress?|No. Badges, specimens, ranks, meteors and mission progress are theirs permanently. Only new content locks again.",
-      q_ads:"Are there ads or in-game purchases?|No, and there never will be. Purple Meteors are earned only by passing quizzes and playing mini-games — <b>never sold for real money</b>, because that would mean paying to skip the learning.",
+      q_when:"When does it go on sale?|Once there is enough to sell. We only switch the plans on when there are at least 3 complete missions and 300 questions.",
+      q_pay:"If I pay, can my child use it right away?|Not the items marked <b>“in development”</b>. The table above labels every item so you know exactly what you are buying.",
+      q_expire:"If the plan lapses, does my child lose progress?|No. Badges, specimens, ranks, meteors and mission progress are theirs for good. Only new content locks again.",
+      q_ads:"Are there ads or in-game purchases?|No, and there never will be. Purple Meteors are earned only by passing quizzes and playing mini-games — <b>never sold for real money</b>.",
       q_cancel:"Is cancelling easy?|Cancel any time from the account page, no phone call. A plan you've paid for runs to the end of its term."
     }
   };
@@ -314,24 +335,44 @@
       } else {
         // Giảm % tính RA từ chính hai con số, không gõ tay — gõ tay là sớm muộn lệch.
         var off = Math.round((1 - (v.y / (v.m * 12))) * 100);
+        /* ⚠️ LÀM TRÒN THEO TỪNG LOẠI TIỀN, không dùng một phép cho cả hai.
+           `Math.round(x*100)/100` là đúng cho USD (39,99/12 → $3,33) nhưng SAI cho
+           VND: đồng không có đơn vị nhỏ hơn, nên nó in ra "≈ 65.833,33₫/tháng" —
+           một con số không tồn tại trên bất cứ hoá đơn nào, và là chỗ phụ huynh
+           đọc kỹ nhất trên cả trang. */
+        var eq = LANG === "en" ? Math.round(v.y / 12 * 100) / 100
+                               : Math.round(v.y / 12);
         rows = '<div class="p-main"><b>'+money(v.m)+'</b>'+
                  '<span class="p-per">'+AstroQ.esc(t("per_month"))+'</span></div>'+
                '<div class="p-alt">'+money(v.y)+' '+AstroQ.esc(t("per_year"))+
                  ' <span class="p-off">'+AstroQ.esc(t("save").replace("{n}", off))+'</span></div>'+
                '<div class="p-eq">'+
-                 AstroQ.esc(t("month_eq").replace("{v}", money(Math.round(v.y/12*100)/100)))+
+                 AstroQ.esc(t("month_eq").replace("{v}", money(eq)))+
                '</div>';
       }
 
       var badge = p.badge
         ? '<span class="p-badge '+p.badge+'">'+AstroQ.esc(t("badge_"+p.badge))+'</span>' : '';
 
-      /* ⚠️ Nút của gói trả phí KHÔNG dẫn tới thanh toán — chưa chốt cổng, chưa
-         chốt giá. Nó dẫn về form waitlist ở trang chủ. Một nút "Mua ngay" không
-         mua được gì là ngõ cụt tệ hơn cả không có nút. */
-      var act = p.key === "free"
-        ? '<span class="p-cta cur">'+AstroQ.esc(t("cta_free"))+'</span>'
-        : '<a class="p-cta" href="/">'+AstroQ.esc(t("cta_plan"))+'</a>';
+      /* ⚠️⚠️ NÚT DẪN ĐI ĐÂU LÀ DO **SERVER** QUYẾT, KHÔNG PHẢI MỘT CỜ Ở ĐÂY.
+         Chưa mở bán (hôm nay) → về form waitlist ở trang chủ; một nút "Mua ngay"
+         không mua được gì là ngõ cụt tệ hơn cả không có nút. Đã mở bán → sang
+         `checkout.html` kèm gói + chu kỳ.
+
+         `SALE_OPEN` nằm ở server (AstroqSV/Services/Billing.cs) và mặc định ĐÓNG,
+         nên ngày bật bán thì trang này tự đúng mà không phải sửa dòng nào — còn
+         đặt cờ ở client thì vừa phải nhớ sửa hai nơi, vừa bỏ qua được bằng
+         DevTools. `SALE.open` chỉ là bản sao của câu trả lời server vừa nói. */
+      var act;
+      if(p.key === "free"){
+        act = '<span class="p-cta cur">'+AstroQ.esc(t("cta_free"))+'</span>';
+      }else if(SALE.open){
+        var cyc = v.once != null ? "once" : "year";     // mặc định mời gói rẻ hơn/năm
+        act = '<a class="p-cta" href="checkout.html?plan='+encodeURIComponent(p.key)+
+              '&cycle='+cyc+'">'+AstroQ.esc(t("cta_buy"))+'</a>';
+      }else{
+        act = '<a class="p-cta" href="/">'+AstroQ.esc(t("cta_plan"))+'</a>';
+      }
 
       return '<article class="plan'+(p.badge?" has-badge":"")+(p.key==="astro"?" hot":"")+'">'+
         badge+
@@ -410,6 +451,12 @@
 
   applyLang(LANG);
   AstroQ.initLang(applyLang);
+
+  /* Hỏi server rồi VẼ LẠI bảng gói — chỉ khối đó phụ thuộc trạng thái bán.
+     Vẽ trước rồi mới hỏi (thay vì chờ mạng xong mới vẽ) để trang có nội dung
+     ngay: bảng giá là thứ người ta tới đây để đọc, không nên đứng chờ một lời
+     gọi mạng mà phần lớn thời gian trả lời "chưa mở bán". */
+  askSale().then(function(){ if(SALE.open) renderPlans(); });
 })();
 </script>
 </body>

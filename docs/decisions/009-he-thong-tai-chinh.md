@@ -278,6 +278,34 @@ Nên lá thư ghi *"Chủ đề cần luyện thêm: 3"* + một đường dẫn
 
 ⚠️ **`pricing.html` VẪN `noindex` dù giá đã chốt** — lý do đổi chứ quyết định không đổi: ① mọi trang app đều `noindex` (chỉ `index.html` + `wiki/` được lập chỉ mục) và trang này link sang `dashboard.html`; ② **app chưa mở bán**, cho Google lập chỉ mục một bảng giá không mua được là dẫn người ta tới ngõ cụt. **Bỏ `noindex` không phải sửa một dòng**: còn phải thêm URL vào `sitemap.xml`, dựng bản `/en/` và khai `hreflang` chéo — đúng khuôn `wiki/` và trang chủ đã làm. Đó là một việc riêng, làm khi mở bán.
 
+### Đường thanh toán đã dựng, và nó CỐ Ý bị khoá ở server *(11/08/2026)*
+
+Toàn bộ đường tiền đã có hình dạng thật và chạy được đầu-cuối, **nhưng bản thật không thu của ai một đồng nào** — vì `SALE_OPEN` không được khai trong `template.yaml` và `PAY_PROVIDER` mặc định là `none`. Đo trên bản thật sau khi deploy: `GET /billing/catalog` trả `saleOpen:false, provider:"none"`, và `POST /me/billing/checkout` trả `sale-closed` **mà không ghi một dòng nào vào DB**.
+
+| Thứ | Ở đâu |
+|---|---|
+| Bảng giá phía server (**nguồn của số tiền THẬT SỰ thu**) | `Services/Billing.cs` |
+| Lớp chuyển tiếp tới cổng (`none` · `mock`) | `Services/Payments.cs` |
+| Đơn hàng trong DynamoDB | `Data/DynamoContext.Orders.cs` |
+| 6 route | `Endpoints/BillingEndpoints.cs` |
+| Trang thanh toán | `checkout.html` · `css/checkout.css` |
+| Bộ đo | `scratchpad/test_billing.py` (61) · `scratchpad/smoke_checkout.py` (51) · `check_pages` mục [19] (41) |
+
+**Bốn chốt chặn, mỗi cái có phép kiểm và một phép thử phá hoại:**
+
+1. ⚠️⚠️ **SỐ TIỀN DO SERVER TRA.** Body của `/checkout` chỉ có `{plan, cycle, currency, opId, returnUrl}`. Đo được: gửi kèm `amount:1` thì đơn vẫn là **790.000₫**. Cùng bài học đã ghi ở `Wallet.Fees` (*"cho client gửi số tiền thì ai cũng chơi miễn phí bằng cách gửi 0"*).
+2. ⚠️⚠️ **`paid` CHỈ ĐẶT ĐƯỢC BẰNG WEBHOOK CÓ CHỮ KÝ ĐÚNG.** Trình duyệt quay về bằng một URL mình tự đưa cho cổng, nên URL đó ai cũng gõ lại được. `checkout.html` chỉ nhận `?order=<id>` rồi **hỏi lại server**; mở `?order=…&status=paid` giả mạo thì trang vẫn hiện "đang xác nhận".
+3. ⚠️ **Đơn hàng KHÔNG có `ttl`.** Nó là chứng từ tiền, phải sống lâu hơn mọi lần đối soát. Bản ghi `WAITLIST#` đã dạy bài này một lần (*"đặt nhầm TTL vào đây là DynamoDB âm thầm xoá mất khách"*); ở đây thứ bị xoá là một khoản tiền đã thu.
+4. ⚠️ **Webhook gửi lại không lật được trạng thái.** Mọi cổng đều gửi lại khi không nhận 200, nên `SettleOrderAsync` chỉ đi **từ `pending`**. Không có chốt này thì một webhook `cancelled` đến muộn lật một đơn đã `paid`.
+
+⚠️⚠️ **KHÔNG CÓ Ô NHẬP THẺ, VÀ ĐỪNG THÊM.** Mọi cổng đề xuất ở trên (payOS · SePay · VNPay · MoMo · Paddle) đều nhận thẻ trên trang của **chính cổng**. Nhờ vậy số thẻ không đi qua máy chủ hay mã nguồn của astroQ, tức dự án nằm ngoài phạm vi PCI-DSS. Trên một sản phẩm cho trẻ em thì không có lý do gì để nhận rủi ro đó. `check_pages` mục [19] quét `checkout.html` tìm `cvv`/`cardnumber`/`autocomplete="cc-`.
+
+⚠️ **Cổng `mock` là cổng GIẢ LẬP dùng cho kiểm thử, chỉ sống khi `PAY_PROVIDER=mock`.** Nó đi đúng nhịp của cổng thật (tạo đơn → rời sang trang cổng → cổng gọi webhook về qua mạng → đơn đổi trạng thái), nên ngày cắm cổng thật vào thì phần còn lại đã được đo rồi. Đo trên bản thật: `/billing/mock/pay` trả **404** — đường sandbox không tồn tại ở bản thật.
+
+**Cắm một cổng thật = viết một lớp cài `IPaymentProvider` rồi khai vào `PaymentProviders.Resolve`.** Không phải sửa endpoint, không phải sửa client.
+
+⚠️ **`pricing.html` chỉ dẫn sang `checkout.html` khi SERVER nói đã mở bán** — hôm nay vẫn dẫn về form waitlist. Ngày bật `SALE_OPEN` thì trang tự đúng, không phải sửa dòng nào.
+
 ⚠️ **Chưa có nút thanh toán nào**, và đó là chủ đích: **giá đã chốt nhưng cổng thanh toán thì chưa chọn**, và ba điều kiện bật Pha 1 chưa đạt. Mọi CTA dẫn về form waitlist ở trang chủ.
 
 ---
@@ -288,7 +316,9 @@ Nên lá thư ghi *"Chủ đề cần luyện thêm: 3"* + một đường dẫn
 2. **Chưa đạt điều kiện bật Pha 1**: mới **1/3 nhiệm vụ**, **100/300 câu quiz**, D30 chưa đo được. Đây là thứ quyết định *ngày mở bán*, không phải giá.
 3. ~~Trang phụ huynh + email tuần chưa làm~~ — **đã làm 09/08/2026.** Nhưng email mới là **gửi theo yêu cầu**; lên lịch tự động hàng tuần cần EventBridge + sửa `template.yaml` → cần `sam`, mà máy chưa cài. ⚠️ Đừng tạo rule bằng CLI ngoài luồng: nó nằm ngoài stack CloudFormation nên `sam deploy` sau này không biết tới.
 3b. ~~Cột "yếu ở chủ đề nào" chưa làm được~~ — **đã làm 09/08/2026**, xem mục *Con vững chỗ nào, vướng chỗ nào* ở trên. Còn lại: nhật ký **không backfill được**, nên cột này chỉ có dữ liệu từ 09/08/2026 trở đi.
-4. **Chưa chọn cổng thanh toán**; chưa đọc biểu phí hợp đồng thật. Đây là chốt chặn thật của việc mở bán.
-5. Chưa có **cổng phụ huynh** (bước xác nhận người lớn) trước màn thanh toán — cần trước khi có nút mua đầu tiên.
+4. **Chưa chọn cổng thanh toán**; chưa đọc biểu phí hợp đồng thật. Đây vẫn là chốt chặn thật của việc mở bán — nhưng từ 11/08/2026 **chỗ để cắm nó đã có sẵn** (`IPaymentProvider`), nên việc còn lại là đọc hợp đồng và viết một lớp adapter.
+5. ~~Chưa có **cổng phụ huynh** trước màn thanh toán~~ — **đã làm 11/08/2026** (`checkout.html` bước 1: một phép nhân + xác nhận ≥18 tuổi). ⚠️ Nó là **gờ giảm tốc, không phải lớp bảo mật** — một đứa trẻ 12 tuổi giải được 7×8. Thứ thật sự chặn là: đơn phải gắn một tài khoản đã kích hoạt email, và tiền đi qua ngân hàng. Việc của nó là làm đúng mục 5 phần *Hệ quả*: không đặt lời chào mời trả tiền ngay trước mặt trẻ. ⚠️ Và **chưa mở bán thì bỏ hẳn cổng này** — lúc đó không có lời chào mời nào để chắn, giữ nó lại chỉ là bắt bố mẹ giải toán trước khi được nhìn thấy dòng *chưa mở bán*.
 6. Chưa hỏi kế toán về thuế/hoá đơn.
+6b. **Chưa có cơ chế THU LẠI theo chu kỳ và GỠ GÓI khi hết hạn.** `Billing.NextChargeAt` tính được ngày thu kế tiếp nhưng không có gì tự thu vào ngày đó (cần cổng hỗ trợ token định kỳ + EventBridge), nên `GraceDays` cũng chưa có cơ chế nào dùng. ⚠️ Khi làm: hết hạn thì **chỉ khoá nội dung mới**, không thu lại huy hiệu/mẫu vật/tiến độ/Thiên thạch tím của trẻ (mục 3 phần *Hệ quả*).
+6c. **[Chưa kiểm chứng]** Email của tài khoản có phải email PHỤ HUYNH không. Đơn hàng và biên nhận đang gắn vào email tài khoản; nếu đó là email của trẻ thì cần thêm một trường "email bố mẹ" trước khi thu tiền thật.
 7. Bỏ `noindex` cho `pricing.html` + thêm vào `sitemap.xml` + bản `/en/` + `hreflang` — làm khi mở bán.

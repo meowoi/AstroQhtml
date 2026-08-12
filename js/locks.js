@@ -2,7 +2,10 @@
    AstroQLocks — CHỖ DUY NHẤT khai trạng thái khoá của các khu/nhiệm vụ,
    và modal giải thích "vì sao khoá · cần làm gì để mở".
 
-   Dùng chung bởi dashboard.html · missions.html · games.html.
+   Dùng chung bởi dashboard.html · mission-map.html · games.html.
+   ⚠️ `mission:moon` ĐỔI CHỖ ĐỌC 12/08/2026: Mặt Trăng không còn là một THẺ ở
+      `missions.html` (trang đó nay là cửa trước, không còn lưới thẻ) mà là một
+      ĐIỂM ĐẾN trên bản đồ nhiệm vụ. Mục khai ở đây giữ nguyên — chỉ người đọc đổi.
    Nạp SAU js/ui-common.js (cần AstroQ.getLang/esc) và cần css/locks.css.
 
    ⚠️⚠️ BA TRẠNG THÁI, KHÔNG PHẢI HAI. Đây là chốt chặn quan trọng nhất của file:
@@ -56,18 +59,21 @@
   var T = {
     vi: {
       badge_soon: "SẮP RA MẮT",
-      badge_pro: "GÓI TRẢ PHÍ",
-      title_soon: "Khu này đang được xây",
-      title_pro: "Khu này thuộc gói {plan}",
+      badge_pro: "GÓI PHI HÀNH GIA",
+      /* ⚠️ Câu chữ ở đây phải đọc được cho CẢ một khu (Phòng Nghiên Cứu) và một
+         NHIỆM VỤ (Mặt Trăng) — cùng một bảng chữ phục vụ hai loại. Vì thế không
+         gọi tên loại ("khu này" cho một nhiệm vụ là câu sai). */
+      title_soon: "Đang được xây, sắp xong rồi",
+      title_pro: "Dành cho gói {plan}",
 
       /* ⚠️ Câu `soon` KHÔNG được hứa mở bằng tiền — nó chưa tồn tại. */
-      body_soon_plan: "Đội ngũ astroQ đang dựng khu này. Khi xong, nó sẽ nằm trong gói {plan}.",
-      body_soon_free: "Đội ngũ astroQ đang dựng trò này. Khi xong, ai cũng chơi được — không mất phí.",
-      body_pro: "Bạn cần gói {plan} để vào khu này.",
+      body_soon_plan: "Bọn mình đang dựng nốt. Xong rồi thì nó nằm trong gói {plan}.",
+      body_soon_free: "Bọn mình đang dựng nốt. Xong rồi thì ai cũng chơi được — không mất phí.",
+      body_pro: "Mở gói {plan} là vào được ngay.",
 
-      will_get: "Khi mở, bạn sẽ được:",
-      parent_note: "Việc mua gói là của người lớn — bạn nhờ bố mẹ xem giúp trang này nhé.",
-      founder_note: "Bố mẹ đăng ký Vé Sáng Lập bây giờ thì có sẵn khu này ngay ngày nó mở.",
+      will_get: "Trong này sẽ có:",
+      parent_note: "Chuyện gói và giá là việc của người lớn — rủ bố mẹ xem cùng nhé.",
+      founder_note: "Bố mẹ lấy Vé Sáng Lập từ bây giờ là có sẵn ngay hôm mở cửa.",
 
       cta_pricing: "Xem các gói",
       cta_close: "Đã hiểu",
@@ -75,26 +81,26 @@
       plan_astronaut: "Phi Hành Gia",
       plan_crew: "Phi Hành Đoàn",
 
-      f_lab_1: "Tự tay làm thí nghiệm trộn nguyên tố",
-      f_lab_2: "Thả rơi vật thể ở trọng lực của 8 hành tinh",
-      f_lab_3: "Ghi kết quả vào sổ nghiên cứu riêng",
-      f_moon_1: "Nhiệm vụ nhiều bước ở Mặt Trăng",
-      f_moon_2: "Mẫu vật và huy hiệu chỉ có ở đây",
-      f_moon_3: "Mở tiếp đường bay tới hành tinh sau"
+      f_lab_1: "Trộn nguyên tố xem ra chất gì",
+      f_lab_2: "Thả rơi đồ vật trên cả 8 hành tinh",
+      f_lab_3: "Sổ nghiên cứu của riêng bạn",
+      f_moon_1: "Cả một nhiệm vụ dài trên Mặt Trăng",
+      f_moon_2: "Mẫu vật và huy hiệu chỉ Mặt Trăng mới có",
+      f_moon_3: "Mở đường bay tới hành tinh kế tiếp"
     },
     en: {
       badge_soon: "COMING SOON",
-      badge_pro: "PAID PLAN",
-      title_soon: "This area is being built",
-      title_pro: "This area is part of {plan}",
+      badge_pro: "ASTRONAUT PLAN",
+      title_soon: "Still being built — almost there",
+      title_pro: "Part of the {plan} plan",
 
-      body_soon_plan: "The astroQ team is building this area. When it lands, it will be part of {plan}.",
-      body_soon_free: "The astroQ team is building this game. When it lands, everyone can play — free.",
-      body_pro: "You need the {plan} plan to enter this area.",
+      body_soon_plan: "We're still putting this together. Once it lands, it comes with the {plan} plan.",
+      body_soon_free: "We're still putting this together. Once it lands, everyone can play — free.",
+      body_pro: "Open the {plan} plan and you're straight in.",
 
-      will_get: "When it opens, you get:",
-      parent_note: "Buying a plan is a grown-up job — ask a parent to look at this page with you.",
-      founder_note: "If a parent gets the Founder Pass now, this area is included the day it opens.",
+      will_get: "Inside you'll find:",
+      parent_note: "Plans and prices are a grown-up thing — ask a parent to look with you.",
+      founder_note: "If a parent grabs the Founder Pass now, it's included the day it opens.",
 
       cta_pricing: "See the plans",
       cta_close: "Got it",
@@ -102,12 +108,12 @@
       plan_astronaut: "Astronaut",
       plan_crew: "Crew",
 
-      f_lab_1: "Run your own element-mixing experiments",
-      f_lab_2: "Drop objects at the gravity of all 8 planets",
-      f_lab_3: "Record results in your own research log",
-      f_moon_1: "A multi-step mission on the Moon",
-      f_moon_2: "Specimens and badges found only here",
-      f_moon_3: "Unlocks the route to the next planet"
+      f_lab_1: "Mix elements and see what you get",
+      f_lab_2: "Drop things at the gravity of all 8 planets",
+      f_lab_3: "A research log that's all yours",
+      f_moon_1: "A whole mission up on the Moon",
+      f_moon_2: "Specimens and badges only the Moon has",
+      f_moon_3: "Opens the route to the next planet"
     }
   };
 

@@ -1,0 +1,233 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   checkout.html — TRANG THANH TOÁN.
+   Nạp sau css/common.css và css/page-shell.css; chỉ giữ phần RIÊNG.
+
+   ⚠️ KHÔNG có ô nhập thẻ nào ở đây, và đừng thêm — số thẻ do trang của cổng
+      thanh toán nhận (xem AstroqSV/Services/Payments.cs). Nếu một ngày file này
+      có `input[type=...]` cho số thẻ thì tức là ai đó đã đi sai đường.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.co-wrap{
+  max-width:960px; margin:0 auto; padding:0 16px 56px;
+  display:grid; gap:18px;
+}
+
+/* ── Các bước ────────────────────────────────────────────── */
+.co-steps{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  flex-wrap:wrap; margin:2px 0 4px;
+}
+.co-steps .st{
+  display:flex; align-items:center; gap:7px;
+  font:600 11px/1 "Space Grotesk", system-ui, sans-serif;
+  letter-spacing:.08em; text-transform:uppercase;
+  color:rgba(226,236,255,.42);
+}
+.co-steps .st .n{
+  width:22px; height:22px; border-radius:999px; display:grid; place-items:center;
+  border:1px solid rgba(120,150,210,.35); background:rgba(13,20,48,.7);
+  font-size:11px; color:rgba(226,236,255,.6);
+}
+.co-steps .st.on{ color:#bfe3ff; }
+.co-steps .st.on .n{
+  border-color:rgba(56,189,248,.75); background:rgba(56,189,248,.16); color:#eaf6ff;
+}
+.co-steps .st.done .n{
+  border-color:rgba(74,222,128,.6); background:rgba(74,222,128,.14); color:#c9f7d8;
+}
+.co-steps .sep{ width:18px; height:1px; background:rgba(120,150,210,.3); }
+
+/* ── Bố cục 2 cột: nội dung | tóm tắt đơn ───────────────── */
+.co-grid{ display:grid; gap:16px; grid-template-columns:1fr; align-items:start; }
+@media (min-width:880px){
+  .co-grid{ grid-template-columns:1.25fr .95fr; }
+  /* Tóm tắt bám theo khi cuộn — nó là thứ người mua cần nhìn thấy suốt. */
+  .co-sum{ position:sticky; top:16px; }
+}
+
+.co-card{
+  border:1px solid rgba(120,150,210,.26);
+  border-radius:18px; padding:20px;
+  background:rgba(13,20,48,.62);
+  backdrop-filter:blur(14px);
+}
+.co-card h2{
+  margin:0 0 6px; font:700 18px/1.3 "Space Grotesk", system-ui, sans-serif;
+  color:#eaf1ff; display:flex; align-items:center; gap:9px;
+}
+.co-card .sub{ margin:0 0 14px; font-size:13.5px; line-height:1.65; color:rgba(226,236,255,.7); }
+
+/* ── Tóm tắt đơn ─────────────────────────────────────────── */
+.co-sum .plan-name{
+  font:700 20px/1.25 "Space Grotesk", system-ui, sans-serif; color:#eaf1ff; margin:0;
+}
+.co-sum .plan-for{ margin:4px 0 14px; font-size:13px; color:rgba(226,236,255,.62); }
+
+.co-line{
+  display:flex; justify-content:space-between; gap:14px; align-items:baseline;
+  padding:9px 0; border-top:1px solid rgba(120,150,210,.16);
+  font-size:13.5px; color:rgba(226,236,255,.78);
+}
+.co-line .v{ color:#eaf1ff; font-weight:600; text-align:right; }
+.co-line.total{
+  border-top:1px solid rgba(120,150,210,.4); margin-top:4px; padding-top:13px;
+}
+.co-line.total .k{ font-weight:700; color:#eaf1ff; font-size:15px; }
+.co-line.total .v{
+  font:800 22px/1.1 "Space Grotesk", system-ui, sans-serif;
+  color:#ffcf6b; letter-spacing:-.01em;
+}
+.co-line .note{ display:block; font-weight:400; font-size:11.5px; color:rgba(226,236,255,.5); margin-top:3px; }
+
+/* ── Đổi chu kỳ ──────────────────────────────────────────── */
+.co-cycles{ display:grid; gap:9px; margin:2px 0 16px; }
+.co-cyc{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  padding:13px 15px; border-radius:14px; cursor:pointer;
+  border:1px solid rgba(120,150,210,.3); background:rgba(9,14,34,.5);
+  color:#e2ecff; font:inherit;
+  min-height:48px;   /* 44 là mốc TỐI THIỂU của WCAG 2.5.5 — 48 để còn biên */
+  transition:border-color .18s, background .18s;
+}
+.co-cyc:hover{ border-color:rgba(56,189,248,.5); }
+.co-cyc[aria-pressed="true"]{
+  border-color:rgba(56,189,248,.8); background:rgba(56,189,248,.12);
+}
+.co-cyc .dot{
+  width:17px; height:17px; flex:none; border-radius:999px;
+  border:2px solid rgba(120,150,210,.5); position:relative;
+}
+.co-cyc[aria-pressed="true"] .dot{ border-color:#38bdf8; }
+.co-cyc[aria-pressed="true"] .dot::after{
+  content:""; position:absolute; inset:3px; border-radius:999px; background:#38bdf8;
+}
+.co-cyc .lb{ flex:1; min-width:0; }
+.co-cyc .lb b{ display:block; font-size:14.5px; font-weight:700; }
+.co-cyc .lb span{ display:block; font-size:12px; color:rgba(226,236,255,.6); margin-top:2px; }
+.co-cyc .pr{ text-align:right; font-weight:700; font-size:14.5px; white-space:nowrap; }
+/* ⚠️ Phải viết đủ `.co-cyc .lb span.co-save`: rule `.co-cyc .lb span{display:block}`
+   ngay trên có độ ưu tiên CAO HƠN `.co-save` đứng một mình, nên cái nhãn nhỏ bị
+   kéo dài thành một thanh xanh chiếm cả bề ngang. Chỉ soi ảnh chụp mới thấy. */
+.co-cyc .lb span.co-save{
+  display:inline-block; margin-top:3px; padding:2px 7px; border-radius:999px;
+  font:700 10.5px/1.5 "Space Grotesk", system-ui, sans-serif; letter-spacing:.04em;
+  background:rgba(74,222,128,.16); color:#9df3bb; border:1px solid rgba(74,222,128,.3);
+}
+
+/* ── Cổng phụ huynh ──────────────────────────────────────── */
+.co-gate .q{
+  font:800 26px/1.2 "Space Grotesk", system-ui, sans-serif;
+  color:#ffcf6b; text-align:center; margin:14px 0 12px; letter-spacing:.02em;
+}
+.co-gate input[type="text"]{
+  width:100%; max-width:190px; margin:0 auto; display:block;
+  padding:12px 14px; border-radius:12px; text-align:center;
+  border:1px solid rgba(120,150,210,.4); background:rgba(9,14,34,.65);
+  color:#eaf1ff; font:700 19px/1 "Space Grotesk", system-ui, sans-serif;
+  min-height:48px;
+}
+.co-gate input[type="text"]:focus{ outline:2px solid rgba(56,189,248,.6); outline-offset:2px; }
+/* ⚠️ `min-height` trên CHÍNH cái <label>, không phải trên ô đánh dấu. Vùng chạm
+   thật của một ô đánh dấu bọc trong label là cả cái label (bấm vào chữ cũng bật
+   tắt được), nhưng trên màn rộng câu này gói gọn MỘT dòng nên label chỉ cao 23px —
+   đo được. 48px là sàn dự án đã chốt (44 là mốc TỐI THIỂU của WCAG 2.5.5, đặt
+   đúng mốc là không còn biên an toàn nào). */
+.co-check{
+  display:flex; gap:11px; align-items:center; margin:16px 0 4px;
+  min-height:48px; padding:6px 0;
+  font-size:13.5px; line-height:1.6; color:rgba(226,236,255,.82); cursor:pointer;
+}
+.co-check input{ width:19px; height:19px; flex:none; accent-color:#38bdf8; }
+
+/* ── Nút ─────────────────────────────────────────────────── */
+.co-acts{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.co-btn{
+  flex:1 1 190px; min-height:52px; padding:14px 20px; border-radius:14px;
+  border:1px solid rgba(120,150,210,.35); background:rgba(13,20,48,.7);
+  color:#e2ecff; cursor:pointer; text-decoration:none;
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  font:700 15px/1 "Space Grotesk", system-ui, sans-serif;
+  transition:transform .16s, box-shadow .16s, border-color .16s;
+}
+.co-btn:hover{ transform:translateY(-1px); border-color:rgba(56,189,248,.55); }
+.co-btn.primary{
+  border:none; color:#04121f;
+  background:linear-gradient(120deg,#5fd3ff,#8f7bff);
+  box-shadow:0 10px 26px -12px rgba(95,211,255,.8);
+}
+.co-btn.primary:hover{ box-shadow:0 14px 30px -12px rgba(95,211,255,.95); }
+.co-btn[disabled], .co-btn[aria-disabled="true"]{
+  opacity:.5; cursor:not-allowed; transform:none; box-shadow:none;
+}
+
+/* ── Dải trạng thái ──────────────────────────────────────── */
+.co-state{
+  display:flex; gap:13px; align-items:flex-start;
+  padding:15px 17px; border-radius:15px;
+  border:1px solid rgba(120,150,210,.3); background:rgba(9,14,34,.55);
+}
+.co-state .ic{ font-size:24px; line-height:1.1; flex:none; }
+.co-state .tx{ min-width:0; }
+.co-state .tx b{ display:block; font-size:15px; color:#eaf1ff; margin-bottom:4px; }
+.co-state .tx span{ display:block; font-size:13.5px; line-height:1.65; color:rgba(226,236,255,.72); }
+.co-state.ok   { border-color:rgba(74,222,128,.45); background:rgba(74,222,128,.09); }
+/* ⚠️ Hỏng thì HỔ PHÁCH, không đỏ chói — đây là trang bố mẹ đang lo về tiền của
+   mình; đỏ đọc ra thành "đã mất tiền" trong khi phần lớn ca là chưa trừ gì. */
+.co-state.bad  { border-color:rgba(255,207,107,.45); background:rgba(255,207,107,.08); }
+.co-state.wait { border-color:rgba(56,189,248,.4);  background:rgba(56,189,248,.08); }
+
+/* Vòng quay lúc chờ xác nhận */
+.co-spin{
+  width:20px; height:20px; flex:none; border-radius:999px;
+  border:2px solid rgba(56,189,248,.25); border-top-color:#38bdf8;
+  animation:coSpin .8s linear infinite;
+}
+@keyframes coSpin{ to{ transform:rotate(360deg); } }
+
+/* ── Dòng nói thật ở chân trang ──────────────────────────── */
+.co-fine{
+  margin:2px 0 0; font-size:12px; line-height:1.7; text-align:center;
+  color:rgba(226,236,255,.5);
+}
+.co-fine a{ color:rgba(159,214,255,.85); }
+
+.co-secure{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:14px; font-size:12px; color:rgba(226,236,255,.55);
+}
+.co-secure .ic{ font-size:14px; }
+
+/* ── Danh sách đơn cũ ────────────────────────────────────── */
+.co-orders{ display:grid; gap:8px; margin-top:4px; }
+.co-order{
+  display:flex; justify-content:space-between; gap:12px; align-items:center;
+  padding:11px 14px; border-radius:12px;
+  border:1px solid rgba(120,150,210,.22); background:rgba(9,14,34,.45);
+  font-size:13px;
+}
+.co-order .who{ min-width:0; }
+.co-order .who b{ display:block; color:#eaf1ff; }
+.co-order .who span{ font-size:11.5px; color:rgba(226,236,255,.5); }
+.co-badge{
+  padding:3px 9px; border-radius:999px; white-space:nowrap;
+  font:700 10.5px/1.6 "Space Grotesk", system-ui, sans-serif; letter-spacing:.05em;
+}
+.co-badge.paid     { background:rgba(74,222,128,.16); color:#9df3bb; }
+.co-badge.pending  { background:rgba(56,189,248,.14); color:#a8ddff; }
+.co-badge.failed,
+.co-badge.cancelled,
+.co-badge.expired  { background:rgba(255,207,107,.14); color:#ffd98a; }
+
+/* `[hidden]` phải thắng `display` của tác giả — dự án đã trả giá BỐN lần vì luật
+   này (#time-ok · .lk-btn · .pt-empty · …): `display` khai ở đây có độ ưu tiên cao
+   hơn `display:none` mà trình duyệt áp cho [hidden], nên phải khai lại tường minh. */
+.co-card[hidden], .co-state[hidden], .co-line[hidden], .co-steps[hidden],
+.co-btn[hidden], .co-cycles[hidden], .co-orders[hidden],
+.co-secure[hidden]{ display:none !important; }
+
+@media (max-width:560px){
+  .co-card{ padding:17px 15px; }
+  .co-line.total .v{ font-size:20px; }
+  .co-steps .st{ font-size:10px; }
+  .co-steps .sep{ width:12px; }
+}

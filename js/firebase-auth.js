@@ -23,7 +23,7 @@
    để phía giao diện tự lùi về chế độ demo cũ. Trang không bao giờ vỡ.
    ============================================================ */
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
-import { apiPost, apiGetAuth, apiPutAuth, apiPostAuth, isApiConfigured } from "./api.js";
+import { apiPost, apiGet, apiGetAuth, apiPutAuth, apiPostAuth, isApiConfigured } from "./api.js";
 
 /* SDK Firebase TỰ HOST, không còn gstatic.com (07/08/2026). Tải lại/nâng cấp
    bằng `python scratchpad/vendor_deps.py` — đừng tải tay.
@@ -437,6 +437,49 @@ const AstroQAuth = {
     if(r.ok) return { ok:true, data:r.data };
     // Kèm số dư server báo về để phía gọi chỉnh lại cache ngay
     return Object.assign({}, r, { meteors: r.data && r.data.meteors, need: r.data && r.data.need });
+  },
+
+  /* ══════════════════════════════════════════════════════════════════════
+     THANH TOÁN — xem AstroqSV/src/AstroqSV.Api/Endpoints/BillingEndpoints.cs
+
+     ⚠️⚠️ KHÔNG hàm nào ở đây gửi SỐ TIỀN lên. Client chỉ nói mua GÓI nào, chu kỳ
+        nào; server tra bảng giá của nó (Services/Billing.cs). Cùng phân công đã
+        dùng cho phí mini-game ở `spendWallet` ngay phía trên — và ở đây thì
+        "client gửi số tiền" nghĩa là ai cũng mua gói năm bằng 1₫.
+     ⚠️⚠️ KHÔNG có hàm nào đánh dấu đơn "đã trả tiền". Trạng thái đó chỉ do webhook
+        của cổng đặt; trang thanh toán chỉ ĐỌC bằng `getOrder`.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /** Bảng giá + trạng thái bán. CÔNG KHAI — không cần đăng nhập.
+      → { ok:true, data:{ saleOpen, provider, currency, trialDays, offers[] } } */
+  async getCatalog(cur){
+    const q = cur ? "?cur=" + encodeURIComponent(cur) : "";
+    const r = await apiGet("/billing/catalog" + q);
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Mở một lượt thanh toán. body = { plan, cycle, currency, opId, returnUrl }.
+      → { ok:true, data:{ ok:true, order, payUrl, firstChargeAt } }
+      → data.ok === false kèm `reason`: "sale-closed" | "no-provider" | …
+        ⚠️ `reason:"sale-closed"` KHÔNG phải lỗi — đó là câu trả lời thật của hôm
+           nay (chưa chọn cổng thanh toán). Giao diện phải phân biệt hai thứ đó,
+           đúng như `sendReportEmail` đã phải làm với `sent:false`. */
+  async startCheckout(body){
+    const r = await this._authed(t => apiPostAuth("/me/billing/checkout", body || {}, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Trạng thái MỘT đơn của chính mình. Đây là NGUỒN SỰ THẬT duy nhất về việc đã
+      trả tiền hay chưa — đừng đọc trạng thái từ query string lúc cổng trả về. */
+  async getOrder(id){
+    const r = await this._authed(t => apiGetAuth("/me/billing/order/" + encodeURIComponent(id), t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** 20 đơn gần nhất của chính mình. */
+  async getOrders(){
+    const r = await this._authed(t => apiGetAuth("/me/billing/orders", t));
+    return r.ok ? { ok:true, data:r.data } : r;
   },
 
   /**
