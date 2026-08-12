@@ -152,3 +152,18 @@
 @media (prefers-reduced-motion:reduce){
   .p-cta:hover{filter:none;}
 }
+
+/* ── Dải XEM TRƯỚC (`?sale=1`) ─────────────────────────────────────────────
+   ⚠️ Phải THẤY ĐƯỢC và khác hẳn tông của dải thường: một trạng thái không giống
+   bản thật mà không nói ra thì chính người xem sẽ kết luận sai. Cùng lý do
+   `.lab-dev` của css/lab.css và `.env-badge` khi `?api=local`. */
+.pr-prev{
+  background:rgba(255,207,107,.12) !important;
+  border:1px dashed rgba(255,207,107,.55) !important;
+  color:#ffcf6b;
+}
+.pr-prev a{ margin-left:auto; color:#ffcf6b; text-decoration:underline;
+            min-height:44px; display:inline-flex; align-items:center; }
+/* ⚠️ BẮT BUỘC: `display` của tác giả thắng `display:none` mà trình duyệt áp cho
+   [hidden] — lỗi này đã trả giá 6 lần trong dự án. `.banner` có khai display. */
+.pr-note[hidden]{ display:none !important; }

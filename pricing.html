@@ -47,9 +47,24 @@
        Trang này có thể tới từ modal khoá mà TRẺ bấm, nên phải nói rõ ngay từ đầu
        là chưa bán và việc mua là của người lớn. docs/decisions/009 mục "Hệ quả"
        yêu cầu không hiển thị lời chào mời trả tiền trực tiếp cho trẻ. -->
-  <div class="banner pr-note" role="status">
+  <!-- ⚠️ HAI dải, và CHỈ MỘT hiện tại một lúc — chọn theo `SALE.open` do SERVER trả.
+       Trước đây dải này gõ cứng câu "chưa mở bán", tức ngày bật bán là phải sửa tay
+       đúng lúc dễ quên nhất. Nay nó đi cùng cơ chế mà bảng gói vốn đã dùng, nên trang
+       không bao giờ phải sửa lại nữa. -->
+  <div class="banner pr-note" id="pr-note-closed" role="status">
     <span class="ic" aria-hidden="true">👨‍👩‍👧</span>
     <span data-i18n-html="parent_banner">Trang này dành cho <b>bố mẹ</b>. Giá dưới đây <b>đã chốt</b>, nhưng astroQ <b>chưa mở bán</b> nên chưa có nút thanh toán nào.</span>
+  </div>
+  <div class="banner pr-note" id="pr-note-open" role="status" hidden>
+    <span class="ic" aria-hidden="true">👨‍👩‍👧</span>
+    <span data-i18n-html="parent_banner_open">Trang này dành cho <b>bố mẹ</b>. Chọn gói rồi bấm là sang bước thanh toán — <b>thẻ do cổng thanh toán giữ</b>, astroQ không lưu số thẻ.</span>
+  </div>
+  <!-- Dải XEM TRƯỚC (`?sale=1`) — phải THẤY ĐƯỢC, cùng lý do `.lab-dev` của lab.html:
+       một trạng thái khác bản thật mà không nói ra thì chính người xem kết luận sai. -->
+  <div class="banner pr-note pr-prev" id="pr-preview" role="status" hidden>
+    <span class="ic" aria-hidden="true">🔧</span>
+    <span data-i18n="prev_note">XEM TRƯỚC lời văn đã-mở-bán. Bản thật vẫn chưa mở bán.</span>
+    <a href="pricing.html?sale=0" data-i18n="prev_off">Tắt xem trước</a>
   </div>
 
   <!-- ============ BẢNG GÓI (đổ từ JS) ============ -->
@@ -86,10 +101,13 @@
 
   <!-- ============ CTA ============ -->
   <section class="pr-cta">
-    <h2 data-i18n="cta_h">Muốn biết khi nào mở cửa?</h2>
-    <p data-i18n="cta_p">Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</p>
+    <h2 id="cta-h" data-i18n="cta_h">Muốn biết khi nào mở cửa?</h2>
+    <p id="cta-p" data-i18n="cta_p">Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</p>
     <div class="pr-acts">
-      <a class="pbtn primary" href="/" data-i18n="cta_btn">Báo tôi khi mở cửa</a>
+      <!-- ⚠️ Nút này đổi CẢ CHỮ LẪN ĐÍCH theo `SALE.open`: chưa bán thì về form
+           waitlist ở trang chủ, đã bán thì sang chính bảng gói phía trên. Gõ cứng một
+           trong hai là ngày bật bán có một nút nói sai việc nó làm. -->
+      <a class="pbtn primary" id="cta-btn" href="/" data-i18n="cta_btn">Báo tôi khi mở cửa</a>
       <a class="pbtn ghost" href="parent.html" data-i18n="cta_parent">Xem bảng theo dõi</a>
       <a class="pbtn ghost" href="dashboard.html" data-i18n="cta_back">Quay lại khám phá</a>
     </div>
@@ -162,6 +180,54 @@
      ⚠️ Đường dẫn suy từ `location.href` chứ không viết `"./js/api.js"` — dự án đã
         mất 6 ngày vì đúng lớp lỗi này ở `js/index.js` (từ `/en/` nó thành
         `/en/api.js` và form waitlist chết câm). */
+  /* ══ CỜ XEM TRƯỚC `?sale=1` ══════════════════════════════════════════════
+     Cho chủ dự án xem lời văn ĐÃ-MỞ-BÁN ngay hôm nay; `?sale=0` tắt. Nhớ ở
+     `sessionStorage` nên tải lại không phải gõ lại, đóng tab là hết — cùng khuôn
+     `?unlock=1` của lab.html và `?api=prod|local` của js/api.js.
+     ⚠️ Nó CHỈ đổi LỜI VĂN ở client. Nó KHÔNG mở bán được: `/checkout` vẫn trả
+        `sale-closed` vì `SALE_OPEN` nằm ở server và không khai trong `template.yaml`.
+        Nên nút "Chọn gói này" ở chế độ xem trước vẫn dẫn tới một trang nói chưa bán
+        được — đó là đúng, và đó cũng là lý do dải nhắc phải THẤY ĐƯỢC. */
+  var PREVIEW_KEY = "astroq-sale-preview";
+  (function readSaleFlag(){
+    try{
+      if(/[?&]sale=1/.test(location.search)) sessionStorage.setItem(PREVIEW_KEY, "1");
+      if(/[?&]sale=0/.test(location.search)) sessionStorage.removeItem(PREVIEW_KEY);
+    }catch(e){}
+  })();
+  function previewOn(){
+    try{ return sessionStorage.getItem(PREVIEW_KEY) === "1"; }catch(e){ return false; }
+  }
+
+  /* Vẽ lại phần LỜI VĂN phụ thuộc trạng thái bán. Gọi sau mỗi lần đổi ngôn ngữ và
+     sau khi server trả lời — hai chỗ đó là hai lúc duy nhất nó có thể đổi. */
+  function paintSaleCopy(){
+    var open = SALE.open;
+    $("pr-note-closed").hidden = open;
+    $("pr-note-open").hidden = !open;
+    $("pr-preview").hidden = !previewOn();
+    /* ⚠️ Đổi CẢ CHỮ LẪN ĐÍCH của nút chính: chưa bán thì về form waitlist ở trang chủ,
+       đã bán thì cuộn lại bảng gói. Một cái nút nói "Báo tôi khi mở cửa" trong lúc đã
+       mở bán là một câu sai, và ngược lại là một ngõ cụt. */
+    /* ⚠️ SÁU KHOÁ VIẾT LITERAL, KHÔNG ghép `t(open ? "cta_h_open" : "cta_h")`.
+       Phép kiểm i18n của `check_pages` quét `t("khoá")` dạng CHỮ, nên khoá ghép động
+       bị báo "khai mà bỏ không" — và lỗi đó im lặng. Cùng bài học đã ghi cho
+       `s1_hit1/2/3` (mission-earth) · `tier1..5` (dodge) · `gun1..3` (defender) ·
+       `cat_*` (codex). Đó là lý do khối này dài hơn một dòng ternary. */
+    var b = $("cta-btn");
+    if(open){
+      $("cta-h").textContent = t("cta_h_open");
+      $("cta-p").textContent = t("cta_p_open");
+      b.textContent = t("cta_btn_open");
+      b.setAttribute("href", "#plans");
+    }else{
+      $("cta-h").textContent = t("cta_h");
+      $("cta-p").textContent = t("cta_p");
+      b.textContent = t("cta_btn");
+      b.setAttribute("href", "/");
+    }
+  }
+
   function askSale(){
     return import(new URL("js/api.js", location.href).href)
       .then(function(m){ return m.apiGet("/billing/catalog?cur=" + (LANG === "en" ? "USD" : "VND")); })
@@ -178,6 +244,15 @@
       eyebrow:"💳 Gói & Ưu đãi", title_h:"Mở cả thiên hà cho con khám phá",
       intro:"Phần miễn phí luôn còn đó, không bao giờ mất. Gói trả phí mở thêm các hành tinh khác, Phòng Nghiên Cứu và bản tin hằng tuần về việc học của con.",
       parent_banner:"Trang này dành cho <b>bố mẹ</b>. Giá dưới đây <b>đã chốt</b>, nhưng astroQ <b>chưa mở bán</b> nên chưa có nút thanh toán nào.",
+      /* Lời văn cho trạng thái ĐÃ MỞ BÁN. ⚠️ Nói ngay chuyện thẻ do cổng giữ: đó là
+         câu phụ huynh cần nhất trước khi bấm, và nó đúng theo kiến trúc đã chốt ở
+         `docs/decisions/009` (astroQ nằm ngoài phạm vi PCI-DSS, không có ô nhập thẻ). */
+      parent_banner_open:"Trang này dành cho <b>bố mẹ</b>. Chọn gói rồi bấm là sang bước thanh toán — <b>thẻ do cổng thanh toán giữ</b>, astroQ không lưu số thẻ.",
+      prev_note:"XEM TRƯỚC lời văn đã-mở-bán. Bản thật vẫn chưa mở bán.",
+      prev_off:"Tắt xem trước",
+      cta_h_open:"Sẵn sàng mở cả thiên hà cho con?",
+      cta_p_open:"Chọn gói ở bảng trên. Huỷ lúc nào cũng được, và những gì con kiếm được vẫn là của con.",
+      cta_btn_open:"Xem lại các gói",
 
       cta_h:"Muốn biết khi nào mở cửa?",
       cta_p:"Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.",
@@ -247,6 +322,12 @@
       eyebrow:"💳 Plans & Perks", title_h:"Open the whole galaxy for your child",
       intro:"The free tier stays free, always. Paid plans add the other planets, the Research Lab, and a short weekly note on how your child is doing.",
       parent_banner:"This page is for <b>parents</b>. The prices below are <b>final</b>, but astroQ is <b>not on sale yet</b>, so there is no payment button anywhere.",
+      parent_banner_open:"This page is for <b>parents</b>. Pick a plan and you go straight to checkout — <b>your card stays with the payment provider</b>; astroQ never stores card numbers.",
+      prev_note:"PREVIEW of the on-sale wording. The live site is still not on sale.",
+      prev_off:"Turn preview off",
+      cta_h_open:"Ready to open the whole galaxy?",
+      cta_p_open:"Pick a plan in the table above. Cancel any time — and whatever your child has earned stays theirs.",
+      cta_btn_open:"Back to the plans",
 
       cta_h:"Want to know when we open?",
       cta_p:"Leave your email on the home page and we'll tell you the moment we open — Founder seats included.",
@@ -449,6 +530,14 @@
 
   $("back").addEventListener("click", function(){ location.href="dashboard.html"; });
 
+  /* Nút chính khi đã mở bán trỏ `#plans` — cuộn mượt về bảng gói thay vì nhảy giật. */
+  $("cta-btn").addEventListener("click", function(e){
+    if(($("cta-btn").getAttribute("href") || "") !== "#plans") return;
+    e.preventDefault();
+    var el = document.getElementById("plans");
+    if(el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+
   applyLang(LANG);
   AstroQ.initLang(applyLang);
 
@@ -456,7 +545,13 @@
      Vẽ trước rồi mới hỏi (thay vì chờ mạng xong mới vẽ) để trang có nội dung
      ngay: bảng giá là thứ người ta tới đây để đọc, không nên đứng chờ một lời
      gọi mạng mà phần lớn thời gian trả lời "chưa mở bán". */
-  askSale().then(function(){ if(SALE.open) renderPlans(); });
+  /* ⚠️ Cờ xem trước áp NGAY, trước khi hỏi server: nó là lựa chọn của người đang
+     xem, không phải một câu trả lời từ mạng. */
+  if(previewOn()) SALE.open = true;
+  paintSaleCopy();
+  renderPlans();
+
+  askSale().then(function(){ paintSaleCopy(); renderPlans(); });
 })();
 </script>
 </body>

@@ -295,9 +295,10 @@ def main():
         #    Chrome roi ve `textContent` voi phan tu khong duoc ve. Doc duoc chu
         #    KHONG chung minh nguoi dung nhin thay chu.
         check("Dai nhac PHAI HIEN RA THAT (khong bi display:none)",
-              pg.locator(".pr-note").is_visible())
+              pg.locator("#pr-note-closed").is_visible())
         check("Dai nhac 'danh cho bo me' + 'chua mo ban'",
-              "bố mẹ" in pg.inner_text(".pr-note") and "chưa mở bán" in pg.inner_text(".pr-note"))
+              "bố mẹ" in pg.inner_text("#pr-note-closed")
+              and "chưa mở bán" in pg.inner_text("#pr-note-closed"))
 
         # ⚠️ GIA DA CHOT 09/08/2026 (docs/decisions/009 -> `da chot`), NHUNG CHOT GIA
         #    va MO BAN la HAI viec. Trang phai bo chu "du kien" MA VAN noi ro chua ban
@@ -306,7 +307,12 @@ def main():
         #    ban mot thu chua ban duoc.
         body_txt = pg.inner_text("body")
         check("KHONG con noi gia la 'du kien'", "dự kiến" not in body_txt)
-        check("Dai noi ro gia DA CHOT", "đã chốt" in pg.inner_text(".pr-note"))
+        check("Dai noi ro gia DA CHOT", "đã chốt" in pg.inner_text("#pr-note-closed"))
+        # ⚠️ Dai cua trang thai DA MO BAN phai dang AN o ban that — hai dai cung hien
+        #    la hai cau noi nguoc nhau tren cung mot trang.
+        check("dai 'da mo ban' dang AN", not pg.locator("#pr-note-open").is_visible())
+        check("dai XEM TRUOC dang AN (khong co co)",
+              not pg.locator("#pr-preview").is_visible())
         check("VAN noi ro CHUA MO BAN", "chưa mở bán" in body_txt)
 
         # FAQ mo ra doc duoc
@@ -330,6 +336,47 @@ def main():
         check("Ban EN: gia la 'final', khong con 'planned prices'",
               "final" in en_txt and "planned price" not in en_txt.lower())
         check("Ban EN: van noi 'not on sale yet'", "not on sale yet" in en_txt)
+
+        # ══════════ pricing.html o trang thai DA MO BAN (co `?sale=1`) ══════════
+        # ⚠️ Loi van nay se hien ra o ban that NGAY BAT CO `SALE_OPEN` o server, nen no
+        #    phai duoc gac tu bay gio. Khong co phep kiem thi no la loi van khong ai
+        #    kiem duoc — dung lo hong da gap voi LAB-02/03.
+        print("\n[5b] pricing.html — loi van DA MO BAN (`?sale=1`)")
+        pg.goto(f"{BASE}/pricing.html?sale=1", wait_until="domcontentloaded")
+        pg.wait_for_selector(".plan", timeout=8000)
+        pg.wait_for_timeout(400)
+        check("dai 'da mo ban' HIEN", pg.locator("#pr-note-open").is_visible())
+        check("dai 'chua mo ban' AN", not pg.locator("#pr-note-closed").is_visible())
+        # ⚠️ Dai XEM TRUOC phai THAY DUOC: mot trang thai khac ban that ma khong noi ra
+        #    thi chinh nguoi xem se ket luan sai ve san pham.
+        check("dai XEM TRUOC hien ra", pg.locator("#pr-preview").is_visible())
+        _open_note = pg.inner_text("#pr-note-open")
+        check("noi ro THE do CONG THANH TOAN giu (astroQ khong luu so the)",
+              "cổng thanh toán" in _open_note and "không lưu" in _open_note,
+              _open_note[:80])
+        # Nut cua tung goi phai dan sang checkout kem GOI + CHU KY
+        _ctas = pg.eval_on_selector_all(
+            ".p-cta", "els => els.map(e => e.getAttribute('href') || '')")
+        _buy = [h for h in _ctas if "checkout.html" in h]
+        check("moi goi tra phi dan sang checkout.html kem plan + cycle",
+              len(_buy) >= 3 and all("plan=" in h and "cycle=" in h for h in _buy),
+              " | ".join(_buy))
+        # ⚠️ Goi mien phi KHONG duoc co nut mua — khong co gi de mua.
+        check("goi mien phi khong dan sang checkout",
+              not any("plan=free" in h for h in _ctas), " | ".join(_ctas))
+        check("nut CTA duoi trang doi CA CHU LAN DICH",
+              pg.eval_on_selector("#cta-btn", "e => e.getAttribute('href')") == "#plans"
+              and "gói" in pg.inner_text("#cta-btn").casefold(),
+              pg.inner_text("#cta-btn"))
+        # ⚠️ Van la trang cho BO ME, nen van khong duoc hoi thuc kieu "mua ngay".
+        _pl = pg.inner_text("body").casefold()
+        check("KHONG hoi thuc 'mua ngay' / 'chi con hom nay'",
+              "mua ngay" not in _pl and "chỉ còn hôm nay" not in _pl)
+        pg.goto(f"{BASE}/pricing.html?sale=0", wait_until="domcontentloaded")
+        pg.wait_for_timeout(400)
+        check("`?sale=0` tra lai loi van chua-mo-ban",
+              pg.locator("#pr-note-closed").is_visible()
+              and not pg.locator("#pr-note-open").is_visible())
 
         # Dien thoai
         ctx2 = br.new_context(viewport={"width": 390, "height": 844})
