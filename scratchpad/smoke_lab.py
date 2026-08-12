@@ -201,7 +201,11 @@ with sync_playwright() as pw:
     # Hai do sau loi giai thich
     print("\n[3b] Hai do sau loi giai thich")
     check("co nut 'Tim hieu them'", pg.is_visible("#more-btn"))
-    check("phan sau con DONG luc dau", not pg.is_visible("#more-box"))
+    # ⚠️ "DONG luc dau" nay la hanh vi cua bac `junior` — tu 12/08/2026 bac quyet
+    #    cai MAC DINH (xem js/depth.js). Bo do khong gieo `depth` nen ho so o day
+    #    la "chua khai" → lui ve `junior`, dung nhu san pham. Ca `senior` (phan sau
+    #    MO SAN) do o `scratchpad/smoke_depth.py` muc [3].
+    check("phan sau con DONG luc dau (bac junior / chua khai)", not pg.is_visible("#more-box"))
     pg.click("#more-btn")
     pg.wait_for_timeout(200)
     check("bam thi mo ra phan sau", pg.is_visible("#more-box"))

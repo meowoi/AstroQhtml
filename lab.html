@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/lab.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/depth.js"></script>
 <script src="js/lab-catalog.js"></script>
 <script src="js/lab-drop.js"></script>
 <!-- Bộ âm thanh dùng chung: nó tôn trọng ĐÚNG một lựa chọn tắt tiếng
@@ -305,10 +306,17 @@
     guessed = false;
   }
 
-  /* Sau khi hé lộ: câu giải thích ngắn + mở nút "Tìm hiểu thêm" + phát hiện */
+  /* Sau khi hé lộ: câu giải thích ngắn + mở nút "Tìm hiểu thêm" + phát hiện.
+     ⚠️ ĐỘ SÂU CHỈ QUYẾT CÁI MẶC ĐỊNH, KHÔNG KHOÁ GÌ. Bậc `senior` (trẻ khai 11+)
+        thì phần dài mở sẵn; `junior` thì gấp lại và nút vẫn ở đó. Cả hai bậc đều
+        lật được sang bản kia — máy đoán sai tuổi thì trẻ sửa bằng một cú bấm.
+        Xem `js/depth.js` (và vì sao KHÔNG suy bậc từ `level`). */
   function reveal(c, key){
     say(t(key));
     $("more-box").textContent = t("more_" + c.id);
+    $("more-box").hidden = !(window.AstroQDepth && AstroQDepth.isSenior());
+    $("more-btn").querySelector("span").textContent =
+      $("more-box").hidden ? t("ui_more") : t("ui_less");
     $("more-wrap").hidden = false;
     $("fi-h").textContent = t("ui_finding").toUpperCase();
     $("fi-t").textContent = t("find_" + c.id);

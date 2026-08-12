@@ -17,19 +17,27 @@
          name_label:"TÊN PHI HÀNH GIA", name_ph:"Nhập tên của bạn…", start:"BẮT ĐẦU HÀNH TRÌNH",
          choose:"CHỌN NHÂN VẬT", role:"CHỨC VỤ", trait:"TÍNH CÁCH", s_pow:"NĂNG LƯỢNG", s_spd:"TỐC ĐỘ", s_iq:"TRÍ TUỆ",
          err_name:"Hãy nhập tên phi hành gia!", clearance:"QUYỀN: TÂN BINH", tap:"Chạm vào một nhân vật để xem thông tin",
-         mystery_toast:"Nhân vật bí ẩn — sắp mở khoá!" },
+         mystery_toast:"Nhân vật bí ẩn — sắp mở khoá!",
+         err_age:"Bạn bao nhiêu tuổi? Chọn một ô nhé!" },
     en:{
       a_lang:"Language", title:"ASTRONAUT ID ISSUE", subtitle:"Pick a character & name to begin", pilot:"PILOT",
          name_label:"PILOT NAME", name_ph:"Enter your name…", start:"START THE JOURNEY",
          choose:"CHOOSE YOUR CHARACTER", role:"ROLE", trait:"PERSONALITY", s_pow:"POWER", s_spd:"SPEED", s_iq:"INTELLECT",
          err_name:"Please enter a pilot name!", clearance:"CLEARANCE: ROOKIE", tap:"Tap a character to view its stats",
-         mystery_toast:"Mystery character — unlocking soon!" }
+         mystery_toast:"Mystery character — unlocking soon!",
+         err_age:"How old are you? Pick one!" }
   };
   var LANG = AstroQ.getLang();
   function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
 
   var getUser = AstroQ.getUser;
   var selected = null;
+
+  /* Độ sâu lời giải thích — `null` = trẻ chưa chọn ô nào ở lượt này.
+     ⚠️ CỐ Ý KHÔNG đặt sẵn `junior`: một ô đã sáng sẵn thì trẻ đi qua mà không
+        đọc câu hỏi, và ta có một hồ sơ "đã khai" mà thật ra chưa ai khai. Thà
+        nhắc một câu (`err_age`) như đang làm với tên phi hành gia. */
+  var depth = null;
 
   function applyLang(lang){
     if(lang==="en"||lang==="vi") LANG=lang;
@@ -39,6 +47,31 @@
     var np=$("pilot-name"); if(np) np.placeholder = t("name_ph");
     document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
     if(selected) fillHud(selected);
+    paintAge();
+  }
+
+  /* ---- ĐỘ SÂU LỜI GIẢI THÍCH ----
+     Nhãn khoảng tuổi + câu phụ lấy từ `js/depth.js` (chỗ duy nhất khai), nên
+     đổi VI/EN ở tab khác cũng dịch theo. Không gõ lại chữ ở đây. */
+  function paintAge(){
+    if(!global_depth()) return;
+    var D = window.AstroQDepth;
+    var lb=$("age-label"); if(lb) lb.textContent = D.t("ask_h", LANG);
+    var bj=$("age-junior"), bs=$("age-senior");
+    if(bj) bj.textContent = D.ageLabel(D.JUNIOR, LANG);
+    if(bs) bs.textContent = D.ageLabel(D.SENIOR, LANG);
+    if(bj) bj.classList.toggle("active", depth===D.JUNIOR);
+    if(bs) bs.classList.toggle("active", depth===D.SENIOR);
+    var nt=$("age-note");
+    if(nt) nt.textContent = depth ? D.hint(depth, LANG) : D.t("ask_p", LANG);
+  }
+
+  function global_depth(){ return !!window.AstroQDepth; }
+
+  function pickAge(band){
+    if(!global_depth()) return;
+    depth = window.AstroQDepth.norm(band);
+    paintAge();
   }
 
   function renderRoster(){
@@ -86,6 +119,9 @@
   function startJourney(){
     var name=($("pilot-name").value||"").trim();
     if(!name){ $("pilot-name").focus(); toast(t("err_name")); return; }
+    /* ⚠️ Chặn ở đây thay vì đặt sẵn một bậc: bậc này quyết độ sâu của MỌI nội
+       dung về sau, nên một lựa chọn do máy đoán hộ thì tệ hơn một câu nhắc. */
+    if(global_depth() && !depth){ var aj=$("age-junior"); if(aj) aj.focus(); toast(t("err_age")); return; }
     if(!selected) selected=CHARACTERS[0];
     var existing=getUser()||{};
     // Lưu hồ sơ phi hành gia (kèm alias theo yêu cầu: pilotName / selectedCharacter / purpleAsteroids)
@@ -97,7 +133,11 @@
       avatar:selected.ava, avatarZoom:selected.zoom||1,
       email: existing.email||"", purpleAsteroids: existing.purpleAsteroids||0
     });
+    if(depth) profile.depth = depth;
     try{ localStorage.setItem(LS_USER, JSON.stringify(profile)); }catch(e){}
+    /* ⚠️ KHÔNG gửi bậc lên server ở đây được: `select.html` CỐ Ý không nạp SDK
+       Firebase nên trang này không có token. `dashboard.html` (có token) đẩy lên
+       một lần qua `AstroQDepth.syncUp()` — đúng khuôn `astroq-map01-seen`. */
     // Chỉ khởi tạo số dư cho pilot MỚI. Người cũ đổi nhân vật không bị mất Thiên thạch tím.
     try{ if(localStorage.getItem(LS_AST)===null) localStorage.setItem(LS_AST, "0"); }catch(e){}
 
@@ -129,6 +169,12 @@
     var u=getUser();
     if(u && (u.pilotName||u.name)) $("pilot-name").value = u.pilotName||u.name;
     select((u && u.character) || CHARACTERS[0].id);   // mặc định chọn nhân vật đầu / đã chọn trước đó
+    /* Đã khai bậc ở lượt trước (đổi nhân vật, hay đăng nhập lại) thì hiện lại
+       đúng ô đó — đừng bắt trẻ trả lời hai lần cùng một câu. */
+    if(global_depth() && window.AstroQDepth.declared()) depth = window.AstroQDepth.get();
+    var aj=$("age-junior"), as=$("age-senior");
+    if(aj) aj.addEventListener("click", function(){ pickAge("junior"); });
+    if(as) as.addEventListener("click", function(){ pickAge("senior"); });
     applyLang(LANG);
     var sb=$("start-journey"); if(sb) sb.addEventListener("click", startJourney);
     var ni=$("pilot-name"); if(ni) ni.addEventListener("keydown", function(e){ if(e.key==="Enter") startJourney(); });

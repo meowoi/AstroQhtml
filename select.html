@@ -11,6 +11,7 @@
 <title>AstroQ — Cấp Thẻ ID</title>
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/cockpit.css" />
 <link rel="stylesheet" href="css/select.css" />
 </head>
 <body>
@@ -39,6 +40,18 @@
       <div class="ava-frame"><img id="card-ava" src="ava/avam.png" alt="Avatar" /></div>
       <div class="idcard-name-label" data-i18n="name_label">TÊN PHI HÀNH GIA</div>
       <input id="pilot-name" type="text" maxlength="24" autocomplete="off" data-i18n-ph="name_ph" placeholder="Nhập tên của bạn…" />
+
+      <!-- ĐỘ SÂU LỜI GIẢI THÍCH — hỏi TUỔI, lưu BẬC.
+           ⚠️ Chỉ lưu "junior"/"senior", KHÔNG lưu tuổi (xem js/depth.js).
+           ⚠️ Đổi lại bất cứ lúc nào ở profile.html — nên đây không phải một
+              lựa chọn khoá cứng, và câu phụ nói rõ điều đó. -->
+      <div class="idcard-name-label" id="age-label">BẠN BAO NHIÊU TUỔI?</div>
+      <div class="agepick" id="agepick" role="group" aria-labelledby="age-label">
+        <button type="button" class="age-btn" id="age-junior" data-band="junior">8–10</button>
+        <button type="button" class="age-btn" id="age-senior" data-band="senior">11+</button>
+      </div>
+      <p class="age-note" id="age-note"></p>
+
       <div class="idcard-meta"><span data-i18n="clearance">QUYỀN: TÂN BINH</span><span>ASTROQ · 2087</span></div>
       <button id="start-journey" class="start-btn" type="button" data-i18n="start">BẮT ĐẦU HÀNH TRÌNH</button>
       <div class="stamp" id="stamp">APPROVED</div>
@@ -71,6 +84,8 @@
 <script src="js/ui-common.js"></script>
 <!-- Roster nhân vật dùng chung với profile.html — phải nạp TRƯỚC auth-flow.js -->
 <script src="js/characters.js"></script>
+<script src="js/depth.js"></script>
+<script src="js/cosmetics.js"></script>
 <script src="js/auth-flow.js"></script>
 </body>
 </html>
