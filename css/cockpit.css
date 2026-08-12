@@ -1,0 +1,88 @@
+/* ============================================================
+   css/cockpit.css — BUỒNG LÁI CỦA CON: tông đèn + khung thẻ ID.
+   Nạp SAU css/common.css và TRƯỚC css/<trang>.css ở những trang có buồng lái
+   (dashboard · profile · shop). Tên món khai ở js/cosmetics.js, GIÁ ở server.
+
+   ⚠️ GHI ĐÈ Ở `:root[data-cockpit=…]`, KHÔNG ở `body`: biến màu của dự án khai ở
+      `:root`, nên chỗ ghi đè phải cùng cấp mới thắng mà KHÔNG cần `!important`.
+      (`js/cosmetics.js` gán thuộc tính đó lên `<html>`.)
+
+   ⚠️ CHỈ ĐỔI MÀU, KHÔNG ĐỔI BỐ CỤC. Một tông đèn làm dịch một khối là một món
+      trang trí phá giao diện — và nó sẽ phá ở đúng trang trẻ dùng nhiều nhất.
+
+   ⚠️ TÔNG MẶC ĐỊNH KHÔNG KHAI Ở ĐÂY. `cockpit-cyan` chính là màu gốc trong
+      css/common.css + css/dashboard.css; khai lại là hai nơi giữ một màu, và
+      ngày đổi màu thương hiệu thì bản ở đây nói màu cũ.
+   ============================================================ */
+
+/* ───────── TÔNG ĐÈN BUỒNG LÁI ─────────
+   Hai biến này là thứ dashboard/profile dùng cho mọi vệt sáng, viền và gradient
+   (đo được: `--accent` xuất hiện ở cả HUD, nút, đèn LED và vòng cấp độ). */
+:root[data-cockpit="cockpit-amber"]{
+  --accent:#ffcf6b; --accent-2:#ff9d5c;
+  --cyan:#ffcf6b; --purple:#ff9d5c;
+}
+:root[data-cockpit="cockpit-violet"]{
+  --accent:#c084fc; --accent-2:#7c5cff;
+  --cyan:#c084fc; --purple:#7c5cff;
+}
+:root[data-cockpit="cockpit-mint"]{
+  --accent:#63e6a8; --accent-2:#38bdf8;
+  --cyan:#63e6a8; --purple:#38bdf8;
+}
+:root[data-cockpit="cockpit-rose"]{
+  --accent:#ff9db4; --accent-2:#c084fc;
+  --cyan:#ff9db4; --purple:#c084fc;
+}
+
+/* ───────── KHUNG THẺ ID ─────────
+   Áp lên `.ava-frame` (select.html) và `.avatar-ring .shot` (profile.html). Chỉ đổi viền
+   và quầng sáng — KHÔNG đổi kích cỡ, vì ảnh nhân vật đã được canh theo `--z`.
+
+   ⚠️ `.avatar-ring .shot` KHÔNG có `border` nào ở css/profile.css (đã đọc, không
+      đoán), nên chỉ đặt `border-color` là **không hiện gì**. Phải khai cả bề dày —
+      đúng loại lỗi "có CSS không chứng minh được người dùng thấy gì". Bề dày để 2px
+      cho khớp `.ava-frame` của select.html. */
+:root:not([data-frame="frame-steel"]) .avatar-ring .shot{border:2px solid transparent;}
+:root[data-frame="frame-gold"] .ava-frame,
+:root[data-frame="frame-gold"] .avatar-ring .shot{
+  border-color:rgba(255,207,107,.9);
+  box-shadow:0 0 26px -6px rgba(255,207,107,.75), inset 0 0 18px -8px rgba(255,207,107,.6);
+}
+:root[data-frame="frame-nebula"] .ava-frame,
+:root[data-frame="frame-nebula"] .avatar-ring .shot{
+  border-color:rgba(192,132,252,.9);
+  box-shadow:0 0 28px -6px rgba(192,132,252,.8), inset 0 0 20px -8px rgba(56,189,248,.55);
+}
+:root[data-frame="frame-ice"] .ava-frame,
+:root[data-frame="frame-ice"] .avatar-ring .shot{
+  border-color:rgba(190,232,255,.92);
+  box-shadow:0 0 26px -6px rgba(190,232,255,.8), inset 0 0 18px -8px rgba(120,200,255,.6);
+}
+
+/* ───────── TÊN PHI THUYỀN (dashboard) ─────────
+   Chưa đặt tên thì KHÔNG hiện khối này (JS gắn `hidden`) — một dòng trống có nhãn
+   đọc ra như chỗ bị lỗi. */
+.ship-name{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);text-transform:uppercase;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:min(46vw,260px);
+}
+.ship-name[hidden]{display:none;}
+
+/* ───────── Ô XEM TRƯỚC (dùng ở cửa hàng và ở hồ sơ) ─────────
+   Xem trước bằng CLASS chứ không bằng style inline do JS sinh: quy tắc 1 mục 2. */
+.cos-sw{width:100%;height:52px;border-radius:12px;border:1px solid var(--brd,rgba(148,163,184,.28));}
+.cos-sw--cockpit-cyan  {background:linear-gradient(120deg,#38bdf8,#8f7bff);}
+.cos-sw--cockpit-amber {background:linear-gradient(120deg,#ffcf6b,#ff9d5c);}
+.cos-sw--cockpit-violet{background:linear-gradient(120deg,#c084fc,#7c5cff);}
+.cos-sw--cockpit-mint  {background:linear-gradient(120deg,#63e6a8,#38bdf8);}
+.cos-sw--cockpit-rose  {background:linear-gradient(120deg,#ff9db4,#c084fc);}
+.cos-sw--frame-steel   {background:radial-gradient(circle at 50% 45%,#1b2540 58%,transparent 59%),
+                        linear-gradient(120deg,#94a3b8,#64748b);}
+.cos-sw--frame-gold    {background:radial-gradient(circle at 50% 45%,#1b2540 58%,transparent 59%),
+                        linear-gradient(120deg,#ffcf6b,#e0a63c);}
+.cos-sw--frame-nebula  {background:radial-gradient(circle at 50% 45%,#1b2540 58%,transparent 59%),
+                        linear-gradient(120deg,#c084fc,#38bdf8);}
+.cos-sw--frame-ice     {background:radial-gradient(circle at 50% 45%,#1b2540 58%,transparent 59%),
+                        linear-gradient(120deg,#bee8ff,#7cc4ff);}

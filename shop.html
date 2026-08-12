@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex để Google không đưa vào
+     kết quả tìm kiếm khi thông điệp chính thức vẫn là "sắp ra mắt".
+     XOÁ dòng robots này khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Kho Trang Trí</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/cockpit.css" />
+<link rel="stylesheet" href="css/shop.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/cosmetics.js"></script>
+<script src="economy.js"></script>
+<!-- ⚠️ Trang này PHẢI có token: mua hàng là trừ ví thật, và server là nơi tra giá
+     (AstroqSV/Services/Cosmetics.cs). Cùng đánh đổi có ý thức như checkout.html và
+     specimen-vault.html — SDK 64,2 KB gzip đổi lấy một đường tiêu tiền an toàn.
+     ⚠️ TUYỆT ĐỐI KHÔNG gửi số tiền lên; client chỉ gửi id món. -->
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ COCKPIT_DECK ]</span>
+    <div class="head-right">
+      <span class="currency" title="Thiên thạch tím" data-i18n-title="tt_name">
+        <img class="tt-inline" src="img/tt.png" alt="Thiên thạch tím" data-i18n-alt="tt_name" />
+        <b id="bal">0</b>
+      </span>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang="vi">VI</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h1 data-i18n="h1">Kho Trang Trí</h1>
+    <p class="hero-sub" data-i18n="sub">Buồng lái là của bạn — chọn tông đèn và khung thẻ ID bạn thích.</p>
+  </div>
+
+  <!-- ⚠️ NÓI THẲNG LUẬT NGAY ĐẦU TRANG: ở đây chỉ có đồ trang trí. Trẻ (và phụ
+       huynh) phải biết tiền này KHÔNG mua được lợi thế học tập nào. -->
+  <p class="shop-rule" data-i18n="rule">Ở đây chỉ có đồ trang trí. Không có món nào giúp bạn làm quiz dễ hơn hay chơi game giỏi hơn.</p>
+
+  <div class="banner" id="offline"><span aria-hidden="true">⚠️</span><span id="offline-txt"></span></div>
+
+  <!-- TÊN PHI THUYỀN — miễn phí, chỉ là chữ -->
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_ship">SHIP</span></span>
+    <h2><span class="ic" aria-hidden="true">🚀</span><span data-i18n="ship_h">Tên phi thuyền</span></h2>
+    <p class="panel-sub" data-i18n="ship_hint">Đặt tên cho con tàu của bạn. Nó hiện ở buồng lái. Miễn phí, đổi lúc nào cũng được.</p>
+    <div class="ship-row">
+      <label class="sr-only" for="ship-in" data-i18n="ship_label">Tên phi thuyền</label>
+      <input id="ship-in" type="text" maxlength="24" autocomplete="off"
+             data-i18n-ph="ship_ph" placeholder="Ví dụ: Luna Một" />
+      <button class="pbtn" id="ship-save" type="button" data-i18n="ship_save">Lưu</button>
+    </div>
+  </section>
+
+  <!-- LƯỚI MÓN, mỗi loại một khối -->
+  <div id="kinds"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="toast-msg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+  var LANG = AstroQ.getLang();
+
+  var I18N = {
+    vi: {
+      back:"Về Trung Tâm Điều Hướng", tt_name:"Thiên thạch tím",
+      h1:"Kho Trang Trí", sub:"Buồng lái là của bạn — chọn tông đèn và khung thẻ ID bạn thích.",
+      rule:"Ở đây chỉ có đồ trang trí. Không có món nào giúp bạn làm quiz dễ hơn hay chơi game giỏi hơn.",
+      tag_ship:"PHI THUYỀN", ship_h:"Tên phi thuyền",
+      ship_hint:"Đặt tên cho con tàu của bạn. Nó hiện ở buồng lái. Miễn phí, đổi lúc nào cũng được.",
+      ship_label:"Tên phi thuyền", ship_ph:"Ví dụ: Luna Một", ship_save:"Lưu",
+      ship_saved:"Đã đặt tên tàu: {n}", ship_cleared:"Đã bỏ tên tàu",
+      buy:"Mua", equip:"Dùng", using:"Đang dùng", owned:"Đã có",
+      free:"Có sẵn", need:"Cần thêm {n} ☄️",
+      bought:"Đã mua {n} — đang dùng luôn!", equipped:"Đang dùng {n}",
+      err_net:"Không kết nối được máy chủ. Thử lại sau nhé.",
+      err_guest:"Bạn cần <a href=\"landing-app.html\">đăng nhập</a> để mua và lưu đồ trang trí.",
+      err_money:"Chưa đủ Thiên thạch tím. Làm quiz đạt hoặc chơi game để kiếm thêm nhé!",
+      title:"AstroQ — Kho Trang Trí"
+    },
+    en: {
+      back:"Back to Navigation Hub", tt_name:"Purple Meteor",
+      h1:"Decoration Deck", sub:"The cockpit is yours — pick the light colour and ID frame you like.",
+      rule:"Decorations only. Nothing here makes quizzes easier or games easier to win.",
+      tag_ship:"SHIP", ship_h:"Ship name",
+      ship_hint:"Name your ship. It shows up in the cockpit. Free, change it any time.",
+      ship_label:"Ship name", ship_ph:"e.g. Luna One", ship_save:"Save",
+      ship_saved:"Ship named: {n}", ship_cleared:"Ship name removed",
+      buy:"Buy", equip:"Use", using:"In use", owned:"Owned",
+      free:"Included", need:"Need {n} more ☄️",
+      bought:"Bought {n} — now in use!", equipped:"Now using {n}",
+      err_net:"Can't reach the server. Try again later.",
+      err_guest:"You need to <a href=\"landing-app.html\">sign in</a> to buy and keep decorations.",
+      err_money:"Not enough Purple Meteors. Pass a quiz or play a game to earn more!",
+      title:"AstroQ — Decoration Deck"
+    }
+  };
+  function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
+
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  /* Trạng thái: GIÁ và KHO ĐỒ đều do server trả — trang này không có bản sao nào. */
+  var SHOP = { items:[], kinds:[], owned:[], equipped:{}, ship:"", ready:false };
+  var busy = false;
+
+  function auth(){ return window.AstroQAuth; }
+
+  function opId(){
+    /* Mã một lượt mua, sinh MỘT LẦN rồi giữ nguyên khi gửi lại: gửi lại cùng mã
+       thì server không trừ tiền lần hai (xem /me/shop/buy). */
+    return "shop-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function priceOf(id){
+    for (var i=0;i<SHOP.items.length;i++) if (SHOP.items[i].id===id) return SHOP.items[i].price;
+    return null;
+  }
+  function has(id){ return SHOP.owned.indexOf(id) >= 0 || priceOf(id) === 0; }
+
+  function banner(msgKey){
+    var el = $("offline");
+    if(!msgKey){ el.classList.remove("show"); return; }
+    $("offline-txt").innerHTML = t(msgKey);
+    el.classList.add("show");
+  }
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  function render(){
+    var host = $("kinds");
+    host.innerHTML = "";
+    (SHOP.kinds.length ? SHOP.kinds : ["theme","frame"]).forEach(function(kind){
+      var items = SHOP.items.filter(function(i){ return i.kind === kind; });
+      if(!items.length) return;
+      var sec = document.createElement("section");
+      sec.className = "panel";
+      var cur = SHOP.equipped[kind] || AstroQCos.DEFAULTS[kind];
+      sec.innerHTML =
+        '<span class="panel-tag"><span class="led"></span><span>' +
+          AstroQ.esc(kind.toUpperCase()) + '</span></span>' +
+        '<h2><span class="ic" aria-hidden="true">' + (kind==="theme" ? "💡" : "🖼️") + '</span>' +
+          '<span>' + AstroQ.esc(AstroQCos.kindName(kind, LANG)) + '</span></h2>' +
+        '<div class="cgrid">' + items.map(function(it){
+          var mine = has(it.id), on = (it.id === cur);
+          var badge = it.price === 0 ? t("free")
+                    : (mine ? t("owned") : it.price + " ☄️");
+          var label = on ? t("using") : (mine ? t("equip") : t("buy"));
+          return '<div class="citem' + (on ? " on" : "") + '">' +
+                   '<div class="cos-sw cos-sw--' + AstroQ.esc(it.id) + '"></div>' +
+                   '<div class="cnm">' + AstroQ.esc(AstroQCos.name(it.id, LANG)) + '</div>' +
+                   '<div class="cprice">' + AstroQ.esc(badge) + '</div>' +
+                   '<button type="button" class="pbtn cbtn' + (on ? " ghost" : "") + '"' +
+                     ' data-item="' + AstroQ.esc(it.id) + '"' +
+                     ' data-act="' + (mine ? "equip" : "buy") + '"' +
+                     (on ? ' disabled aria-disabled="true"' : '') + '>' +
+                     AstroQ.esc(label) + '</button>' +
+                 '</div>';
+        }).join("") + '</div>';
+      host.appendChild(sec);
+    });
+
+    Array.prototype.forEach.call(host.querySelectorAll(".cbtn"), function(b){
+      if(b.disabled) return;
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-item");
+        if(b.getAttribute("data-act") === "buy") buy(id); else equip(id);
+      });
+    });
+  }
+
+  function absorb(d){
+    if(!d) return;
+    if(d.items) SHOP.items = d.items;
+    if(d.kinds) SHOP.kinds = d.kinds;
+    if(d.owned) SHOP.owned = d.owned;
+    if(d.equipped) SHOP.equipped = d.equipped;
+    if(typeof d.ship === "string") SHOP.ship = d.ship;
+    /* ⚠️ SỐ DƯ ĐẾN TỪ HAI HÌNH DẠNG KHÁC NHAU, và bỏ sót một cái là lỗi im lặng:
+       `GET /me/shop` trả `{ wallet:{ meteors } }`, còn `POST /me/shop/buy` trả
+       `{ meteors }` ở gốc. Bản đầu chỉ đọc dạng thứ nhất, nên mua xong **số dư trên
+       HUD vẫn là số cũ** cho tới khi tải lại trang — trẻ vừa trả tiền mà không thấy
+       tiền trừ. Bộ smoke bắt được đúng chỗ này. */
+    var bal = (d.wallet && typeof d.wallet.meteors === "number") ? d.wallet.meteors
+            : (typeof d.meteors === "number" ? d.meteors : null);
+    if(bal != null) Economy.setFromServer(bal);
+    /* Ghi món đang đeo + tên tàu xuống cache để dashboard vẽ đúng tông ngay cả khi
+       nó chưa gọi được server (xem js/cosmetics.js). */
+    AstroQCos.absorb(SHOP.equipped, SHOP.ship);
+    if($("ship-in") && !$("ship-in").value) $("ship-in").value = SHOP.ship;
+    paintBalance();
+    render();
+  }
+
+  function load(){
+    var a = auth();
+    if(!a || !a.getShop){ banner("err_guest"); render(); return; }
+    a.getShop().then(function(r){
+      if(r && r.ok){ SHOP.ready = true; banner(null); absorb(r.data); }
+      else banner(r && r.reason === "auth" ? "err_guest" : "err_net");
+    });
+  }
+
+  function buy(id){
+    if(busy) return;
+    var a = auth();
+    if(!a || !a.buyCosmetic){ banner("err_guest"); return; }
+    var p = priceOf(id);
+    if(p != null && Economy.getAsteroids() < p){
+      /* Nói RÕ còn thiếu bao nhiêu và kiếm thêm bằng cách nào — "không đủ tiền"
+         trơn là một cửa đóng không có đường đi tiếp. */
+      toast(t("need").replace("{n}", p - Economy.getAsteroids()), "bad");
+      return;
+    }
+    busy = true;
+    a.buyCosmetic(id, opId()).then(function(r){
+      busy = false;
+      if(r && r.ok && r.data && r.data.bought){
+        toast(t("bought").replace("{n}", AstroQCos.name(id, LANG)), "ok");
+        absorb(r.data);
+        return;
+      }
+      var code = (r && r.data && r.data.code) || (r && r.code) || "";
+      if(code === "insufficient") toast(t("err_money"), "bad");
+      else if(code === "owned"){ toast(t("owned"), "ok"); load(); }
+      else toast(t("err_net"), "bad");
+    });
+  }
+
+  function equip(id){
+    if(busy) return;
+    var a = auth();
+    if(!a || !a.equipCosmetic){ banner("err_guest"); return; }
+    busy = true;
+    /* Đổi ngay ở giao diện rồi mới chờ mạng — chờ xong mới nhấp nháy thì cảm giác
+       như bấm không ăn (bài học đổi trang phục ở profile.html). */
+    var kind = null;
+    for (var i=0;i<SHOP.items.length;i++) if (SHOP.items[i].id===id) kind = SHOP.items[i].kind;
+    if(kind){ SHOP.equipped[kind] = id; AstroQCos.setEquipped(kind, id); render(); }
+    a.equipCosmetic(id).then(function(r){
+      busy = false;
+      if(r && r.ok){ toast(t("equipped").replace("{n}", AstroQCos.name(id, LANG)), "ok"); absorb(r.data); }
+      else { toast(t("err_net"), "bad"); load(); }
+    });
+  }
+
+  function saveShip(){
+    var a = auth();
+    var v = ($("ship-in").value || "").trim();
+    if(!a || !a.updateProfile){ banner("err_guest"); return; }
+    a.updateProfile({ ship: v }).then(function(r){
+      if(r && r.ok){
+        SHOP.ship = v;
+        AstroQCos.absorb(SHOP.equipped, v);
+        toast(v ? t("ship_saved").replace("{n}", v) : t("ship_cleared"), "ok");
+      } else toast(t("err_net"), "bad");
+    });
+  }
+
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    if($("offline").classList.contains("show")) banner(SHOP.ready ? "err_net" : "err_guest");
+    render();     // chữ do JS sinh không được applyTexts dịch → vẽ lại
+  }
+
+  $("back").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
+  $("ship-save").addEventListener("click", saveShip);
+  $("ship-in").addEventListener("keydown", function(e){ if(e.key === "Enter") saveShip(); });
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  paintBalance();
+  render();
+  load();
+})();
+</script>
+<script type="module" src="js/firebase-auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+/* ============================================================
+   css/shop.css — KHO TRANG TRÍ. Phần RIÊNG của trang; khung chung ở
+   css/page-shell.css, tông đèn + ô xem trước ở css/cockpit.css.
+   ============================================================ */
+
+/* Hàng phải của header: số dư + đổi ngôn ngữ (giống learn/library). */
+.head-right{display:flex;align-items:center;gap:10px;}
+
+/* ⚠️ LUẬT NÓI NGAY ĐẦU TRANG, không nhét xuống chân: trẻ và phụ huynh phải biết
+   tiền này KHÔNG mua được lợi thế học tập. Tông hổ phách chứ không đỏ — đây là
+   một lời nói rõ, không phải một cảnh báo lỗi. */
+.shop-rule{
+  margin:0 0 16px;padding:11px 14px;border-radius:13px;
+  border:1px solid rgba(255,207,107,.34);background:rgba(255,207,107,.07);
+  color:var(--ink-soft);font-size:12.6px;line-height:1.55;
+}
+
+/* ── Tên phi thuyền ── */
+.ship-row{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap;}
+/* ⚠️ `min-width:0` là BẮT BUỘC: `<input>` có bề rộng mặc định ~20 ký tự và nó KHÔNG
+   co xuống dưới mức đó trong flex — đúng lỗi ô tìm kiếm của library.html đã tràn
+   ngang trên điện thoại (sửa 29/07/2026). */
+.ship-row input{
+  flex:1;min-width:0;border:1px solid var(--brd,rgba(148,163,184,.28));
+  background:rgba(255,255,255,.06);color:var(--ink);border-radius:12px;
+  padding:12px 13px;font-size:15px;font-family:var(--font-body);
+}
+.ship-row input:focus{outline:none;border-color:var(--accent);background:rgba(56,189,248,.08);}
+
+/* ── Lưới món ──
+   `auto-fill minmax(...)` cho ra 1 CỘT trên điện thoại nếu mốc quá lớn (bài học
+   lưới khoang mẫu vật 30/07/2026: 196px cần 406px mà `.wrap` ở 390px chỉ còn
+   ~362px). 132px thì màn 390px vẫn ra 2 cột. */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:11px;}
+.citem{
+  display:flex;flex-direction:column;gap:7px;padding:11px;border-radius:15px;
+  border:1px solid var(--brd,rgba(148,163,184,.28));background:rgba(15,23,42,.44);
+}
+.citem.on{
+  border-color:var(--accent);background:rgba(56,189,248,.1);
+  box-shadow:0 0 22px -8px var(--accent);
+}
+.citem .cnm{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--ink);}
+.citem .cprice{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-faint);}
+/* ⚠️ Vùng chạm 48px, không phải 44 (quy tắc 10 mục 6 CLAUDE.md). `.pbtn` của
+   page-shell đo ra 40–42px trên màn 390px, và đây là nút chính của cả trang. */
+.citem .cbtn{min-height:48px;width:100%;}
+.citem .cbtn:disabled{opacity:.72;cursor:default;}
+
+@media (max-width:520px){
+  .ship-row .pbtn{width:100%;}
+}

@@ -332,6 +332,63 @@ def main():
               str(xp["xpForNext"]))
         check("Phan tram trong 0..100", 0 <= xp["pct"] <= 100, str(xp["pct"]))
 
+        # ══════════════════════════════════════════════════════════════════
+        # [14b] DO SAU LOI GIAI THICH (`depth`) — hai bac, do TRE khai
+        #
+        # ⚠️ Server chi GIU CHO: no khong duoc suy bac tu `level` (level do thoi
+        #    gian da choi, khong do tuoi). Va no phai TU CHOI moi gia tri la —
+        #    mot chuoi rac ghi vao ho so thi client se lui ve `junior` am tham
+        #    va khong ai biet vi sao tre 15 tuoi nhan ban viet cho tre 8 tuoi.
+        # ══════════════════════════════════════════════════════════════════
+        print("\n[14b] Do sau loi giai thich (depth)")
+
+        st, d = call("GET", "/me/profile", token=token)
+        check("ho so moi CHUA co bac (rong = chua khai)",
+              st == 200 and (d.get("profile", {}).get("depth") or "") == "",
+              str(d.get("profile", {}).get("depth")))
+
+        st, d = call("PUT", "/me/profile", token=token, body={"depth": "senior"})
+        check("dat bac 'senior' → 200", st == 200, f"{st}")
+        check("PUT tra lai bac vua dat",
+              d.get("profile", {}).get("depth") == "senior",
+              str(d.get("profile", {}).get("depth")))
+
+        st, d = call("GET", "/me/profile", token=token)
+        check("GET /me/profile doc lai dung bac",
+              d.get("profile", {}).get("depth") == "senior")
+
+        # dashboard doc bac tu /me/achievements (no la trang co token ma tre di
+        # qua truoc khi vao Phong Nghien Cuu; lab.html KHONG co token).
+        st, d = call("GET", "/me/achievements", token=token)
+        check("GET /me/achievements CUNG tra bac", st == 200 and d.get("depth") == "senior",
+              str(d.get("depth")))
+
+        for bad in ["adult", "JUNIOR", "", "  ", "senior;drop", "1", "true"]:
+            st, d = call("PUT", "/me/profile", token=token, body={"depth": bad})
+            check(f"bac la '{bad}' → 400", st == 400 and d.get("code") in ("bad-depth", "nothing-to-do"),
+                  f"{st} {d.get('code')}")
+
+        st, d = call("GET", "/me/profile", token=token)
+        check("gia tri la KHONG lam hong bac dang co",
+              d.get("profile", {}).get("depth") == "senior",
+              str(d.get("profile", {}).get("depth")))
+
+        # PUT chi co depth phai di qua duoc — day chinh la loi goi ma
+        # `AstroQDepth.syncUp()` ban ra tu dashboard. `nothing-to-do` khong tinh
+        # depth thi loi goi do bi 400 va viec dong bo am tham khong bao gio chay.
+        st, d = call("PUT", "/me/profile", token=token, body={"depth": "junior"})
+        check("PUT CHI co depth van di qua (khong bi 'nothing-to-do')", st == 200, f"{st}")
+
+        # Doi bac KHONG duoc dung toi ten / nhan vat
+        st, d = call("GET", "/me/profile", token=token)
+        p = d.get("profile", {})
+        check("doi bac khong lam mat ten", bool(p.get("name")), str(p.get("name")))
+        check("doi bac khong lam mat nhan vat", bool(p.get("character")), str(p.get("character")))
+
+        st, d = call("PUT", "/me/profile", token=token, body={})
+        check("body rong van → 400 nothing-to-do",
+              st == 400 and d.get("code") == "nothing-to-do", f"{st} {d.get('code')}")
+
         print("\n[15] Khong doc/ghi duoc du lieu nguoi khac")
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 1, "total": 1, "uid": "nguoi-khac"})
