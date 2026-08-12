@@ -49,6 +49,11 @@
   var GROUND_Y = 430;       // mặt đất trong hệ ảo
   var TOP_Y = 96;           // độ cao thả
 
+  /* Viết số cho người Việt đọc (dấu phẩy thập phân). ⚠️ Ở tầm MODULE chứ không khai
+     cục bộ trong từng cảnh: bản đầu khai trong `drawWeight` rồi `drawDrops` cũng gọi
+     → `num is not defined` giết cả cảnh. Một cách viết số cho cả file. */
+  function num(v) { return String(v).replace(".", ","); }
+
   function reduced() {
     try {
       return global.matchMedia &&
@@ -428,8 +433,6 @@
       var base = opt.kg || 30;                          // cân nặng ở Trái Đất, trẻ tự nhập
       var r = global.AstroQLab ? AstroQLab.ratio(place) : 1;
       var kg = global.AstroQLab ? AstroQLab.weighAt(place, base) : base;
-      var num = function (v) { return String(v).replace(".", ","); };
-
       sky(place); ground(place);
 
       /* ⚠️⚠️ SAO MỘC KHÔNG CÓ MẶT ĐẤT ĐỂ ĐỨNG, nên KHÔNG vẽ người đứng trên "đất"
@@ -587,37 +590,69 @@
       g.addColorStop(0, "#071026"); g.addColorStop(1, "#0d1b3a");
       ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
 
-      var cols = 20, rows = 5, gap = 30;
-      var x0 = (VW - (cols - 1) * gap) / 2, y0 = 150;
+      var W = global.AstroQLab ? AstroQLab.waterStep(step)
+                               : { a: 0, b: 100, n: 100, kind: "all" };
+      var TONE = { all: "#5fd3ff", salt: "#8f7bff", fresh: "#86efac", ice: "#eaf1ff" };
+      var tone = TONE[W.kind] || TONE.all;
+
+      var cols = 20, gap = 30, R = 9;
+      var x0 = (VW - (cols - 1) * gap) / 2, y0 = 176;
       for (var i = 0; i < 100; i++) {
         var cx = x0 + (i % cols) * gap, cy = y0 + Math.floor(i / cols) * gap;
-        // 96,5% mặn → 96 giọt đầu là mặn (làm tròn xuống, phần lẻ không vẽ được)
-        var salt = i < 96;
-        var fresh = !salt;
-        // 68% của 3,5 giọt ngọt ≈ 2/4 giọt còn lại nằm trong băng
-        var ice = fresh && i >= 98;
-        var on = (step === "all") ||
-                 (step === "salt" && salt) ||
-                 (step === "fresh" && fresh) ||
-                 (step === "ice" && ice);
-        ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2);
-        if (!on) { ctx.fillStyle = "rgba(143,182,255,.14)"; }
-        else if (step === "all") { ctx.fillStyle = "#5fd3ff"; }
-        else if (salt) { ctx.fillStyle = "#8f7bff"; }
-        else if (ice) { ctx.fillStyle = "#eaf1ff"; }
-        else { ctx.fillStyle = "#86efac"; }
-        ctx.fill();
+
+        /* ⚠️⚠️ VẼ CẢ GIỌT LẺ. Bản đầu làm tròn ngầm (bật sáng 96 hoặc 4 giọt) nên cái
+           HÌNH không bao giờ khớp con SỐ — chính chỗ sinh ra cảm giác "vô lý". Phần
+           phủ của giọt thứ i là độ chồng giữa [i, i+1) và đoạn [a, b) của nấc, nên
+           96,5 ra đúng 96 giọt đầy + MỘT NỬA giọt. */
+        var f = Math.max(0, Math.min(W.b, i + 1) - Math.max(W.a, i));
+
+        // Giọt "tắt" vẽ trước, luôn đủ 100 giọt để mắt còn thấy MẪU SỐ.
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(143,182,255,.14)"; ctx.fill();
+
+        if (f > 0.001) {
+          ctx.save();
+          if (f < 0.999) {               // giọt LẺ: chỉ tô phần bên trái theo tỉ lệ
+            ctx.beginPath();
+            ctx.rect(cx - R, cy - R, 2 * R * f, 2 * R);
+            ctx.clip();
+          }
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.fillStyle = tone; ctx.fill();
+          ctx.restore();
+        }
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
         ctx.strokeStyle = "rgba(5,8,18,.55)"; ctx.lineWidth = 1.5; ctx.stroke();
       }
-      var n = (step === "all") ? "100" : (step === "salt") ? "96,5"
-            : (step === "fresh") ? "3,5" : "68%";
+
+      /* ⚠️⚠️ SỐ TO PHẢI CÙNG ĐƠN VỊ VỚI CÁI HÌNH — SỐ GIỌT, không phải phần trăm.
+         Bản đầu in "68%" trên một cái hình 100 giọt có 2 giọt sáng: 68% là của NƯỚC
+         NGỌT (3,5 giọt) chứ không phải của 100 giọt, nên số và hình nói hai điều khác
+         nhau (2/100 mới là 2%). Chủ dự án bắt được ngay ở ảnh chụp. */
       ctx.save();
-      ctx.font = "800 46px 'Space Grotesk', Inter, sans-serif"; ctx.textAlign = "center";
+      ctx.font = "800 44px 'Space Grotesk', Inter, sans-serif"; ctx.textAlign = "center";
       ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.9)";
-      ctx.strokeText(n, VW / 2, 108); ctx.fillStyle = "#ffcf6b";
-      ctx.fillText(n, VW / 2, 108);
+      var big = num(W.n) + " " + tx("ui_drops_unit");
+      ctx.strokeText(big, VW / 2, 94); ctx.fillStyle = "#ffcf6b";
+      ctx.fillText(big, VW / 2, 94);
       ctx.restore();
-      label(VW / 2, 360, tx("p_" + step));
+
+      /* Dòng phép tính cho nấc "băng" — cùng khuôn với "50 × 2,53 = 126,5" của
+         LAB-03, và đây là chỗ con số 68% được NÓI RÕ là 68% CỦA CÁI GÌ. */
+      if (W.kind === "ice" && global.AstroQLab) {
+        ctx.save();
+        ctx.font = "600 21px ui-monospace, 'Space Grotesk', monospace";
+        ctx.textAlign = "center";
+        var line = AstroQLab.WATER.iceOfFresh + "% × " + num(AstroQLab.WATER.fresh) +
+                   " = " + num(W.n) + " " + tx("ui_drops_unit");
+        ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)";
+        ctx.strokeText(line, VW / 2, 128); ctx.fillStyle = "#8fd7ff";
+        ctx.fillText(line, VW / 2, 128);
+        ctx.restore();
+      }
+
+      // Nhãn nấc + MẪU SỐ nói ra bằng chữ, để "trên 100" không phải suy từ hình.
+      label(VW / 2, 372, tx("p_" + step) + " — " + tx("ui_of_100"));
       return false;
     }
 

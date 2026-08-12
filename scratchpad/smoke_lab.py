@@ -420,6 +420,57 @@ with sync_playwright() as pw:
     ctx.close()
     ctx, pg = mk(br)
 
+    print("\n[3h] LAB-08: SO hien ra phai CUNG DON VI voi cai hinh")
+    pg.goto(URL + "?unlock=1", wait_until="load")
+    pg.wait_for_selector(".lcard", timeout=8000)
+    pg.click(".lcard[data-card='drops']")
+    pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+    pg.wait_for_timeout(400)
+    # ⚠️ Loi da ship: canh ve 100 giot (= TAT CA nuoc) roi in "68%", trong khi 68% la
+    #    cua NUOC NGOT (3,5 giot). 2 giot tren 100 moi la 2%, nen so va hinh noi hai
+    #    dieu khac nhau — lech hon 28 lan. Phep kiem nay doi MOI nac quy ve CUNG DON VI.
+    _w = pg.evaluate("""() => {
+        const out = [];
+        const W = AstroQLab.WATER;
+        ['all','salt','fresh','ice'].forEach(k => {
+            const s = AstroQLab.waterStep(k);
+            if (Math.abs((s.b - s.a) - s.n) > 0.051)
+                out.push(k + ': doan ' + (s.b - s.a) + ' != n ' + s.n);
+            if (s.a < -0.001 || s.b > 100.001) out.push(k + ': doan ra ngoai 0..100');
+        });
+        if (Math.abs(W.salt + W.fresh - 100) > 0.001) out.push('man+ngot != 100');
+        const fr = AstroQLab.waterStep('fresh'), ic = AstroQLab.waterStep('ice');
+        if (ic.a < fr.a - 0.001 || ic.b > fr.b + 0.001)
+            out.push('bang khong nam trong nuoc ngot');
+        const want = Math.round(W.fresh * W.iceOfFresh / 100 * 10) / 10;
+        if (Math.abs(ic.n - want) > 0.001)
+            out.push('bang ' + ic.n + ' != 68% cua ngot ' + want);
+        if (Math.abs(ic.n - W.iceOfFresh) < 0.001)
+            out.push('bang lay 68% cua CA 100 giot');
+        return out;
+    }""")
+    check("moi nac quy ve CUNG DON VI (so giot) va hinh khop so",
+          _w == [], "; ".join(_w[:3]))
+    _ice = pg.evaluate("() => AstroQLab.waterStep('ice').n")
+    check("nac bang la 2,4 giot (KHONG phai 68 giot)", abs(_ice - 2.4) < 0.001, str(_ice))
+
+    pg.click("#places button:nth-child(4)")
+    pg.wait_for_timeout(450)
+    _sy = pg.inner_text("#say-txt")
+    check("loi Comet noi ro 68% la cua NUOC NGOT",
+          "nuoc ngot" in _sy.replace("ướ", "uo").replace("ọ", "o").casefold()
+          or "nước ngọt" in _sy.casefold(), _sy[:80])
+    check("loi Comet noi ca SO GIOT", "2,4" in _sy, _sy[:80])
+    pg.click("#more-btn")
+    pg.wait_for_timeout(250)
+    _mb = pg.inner_text("#more-box")
+    check("do sau thu hai canh bao dung cho de nham",
+          "de nham" in _mb.casefold() or "DỄ NHẦM" in _mb, _mb[:60])
+    check("va noi ro lay 68% cua ca 100 giot thi SAI", "68 giot" in _mb or "68 giọt" in _mb)
+    check("khong loi trang", pg.perr == [], "; ".join(pg.perr[:2]))
+    ctx.close()
+    ctx, pg = mk(br)
+
     print("\n[3e] LAB-02: buong qua tao ra thi no TROI")
     pg.goto(URL + "?unlock=1", wait_until="load")
     pg.wait_for_selector(".lcard", timeout=8000)

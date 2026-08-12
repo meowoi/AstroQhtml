@@ -62,6 +62,29 @@
     { id: "jupiter", ratio: 2.53,   rlabel: "2,53", src: "weigh" }    // 100 lb → 253 lb
   ];
 
+  /* ── NƯỚC CỦA TRÁI ĐẤT (LAB-08) — CHỖ DUY NHẤT khai mấy con số này ──────────
+     Mọi con số nguyên văn nguồn `spaceplace.nasa.gov/water/en/`.
+     ⚠️⚠️ `iceOfFresh` LÀ PHẦN TRĂM CỦA NƯỚC NGỌT, KHÔNG PHẢI CỦA TẤT CẢ NƯỚC. Đây
+        chính là lỗi đã ship: cảnh vẽ 100 giọt (= tất cả nước) rồi in "68%", trong khi
+        68% là của 3,5 giọt nước ngọt — 2 giọt trên 100 mới là 2%. Số và hình nói hai
+        điều khác nhau. ⇒ Mọi thứ hiện ra phải quy về CÙNG ĐƠN VỊ với cái hình: SỐ GIỌT.
+     ⚠️ VÀ ĐỪNG THÊM `groundwater`/`rivers` VÀO ĐÂY DƯỚI DẠNG PHẦN TRĂM: nguồn ghi
+        "68 percent" + "a third" + "the last two percent", cộng lại là **103%** (nguồn
+        viết lỏng, "a third" là xấp xỉ). Xếp ba con số đó cạnh nhau là để một đứa trẻ
+        cộng lại rồi tưởng mình tính sai. Hai thứ đó nói ĐỊNH TÍNH trong `more_drops`. */
+  var WATER = { total: 100, salt: 96.5, fresh: 3.5, iceOfFresh: 68 };
+
+  /* Đoạn [a,b) tính bằng GIỌT của một nấc, kèm số giọt. Nước ngọt đặt ở CUỐI dãy để
+     phần băng (tập con của nước ngọt) nằm gọn trong nó — nhờ vậy hai nấc không bao
+     giờ vẽ ra hai vùng rời nhau. */
+  function waterStep(step) {
+    var ice = Math.round(WATER.fresh * WATER.iceOfFresh / 100 * 10) / 10;   // 3,5×68% → 2,4
+    if (step === "salt")  return { a: 0, b: WATER.salt, n: WATER.salt, kind: "salt" };
+    if (step === "fresh") return { a: WATER.salt, b: 100, n: WATER.fresh, kind: "fresh" };
+    if (step === "ice")   return { a: 100 - ice, b: 100, n: ice, kind: "ice" };
+    return { a: 0, b: 100, n: WATER.total, kind: "all" };
+  }
+
   /* ── NGUỒN: khoá → URL. Câu trích nguyên văn để trong `quote` (không dịch —
      nó là bằng chứng, dịch là mất tư cách bằng chứng). Cả 4 URL kiểm 200 ngày
      12/08/2026. ── */
@@ -208,8 +231,10 @@
       say_drops_all: "Nước phủ 71% bề mặt Trái Đất. Coi tất cả nước đó là 100 giọt nhé.",
       say_drops_salt: "96,5 giọt là nước MẶN — chủ yếu là muối natri clorua, đúng thứ muối ta cho vào thức ăn.",
       say_drops_fresh: "Chỉ 3,5 giọt là nước ngọt uống được. Ít đến thế thôi.",
-      say_drops_ice: "Và 68% chỗ nước ngọt đó lại đang đóng thành băng và sông băng.",
-      more_drops: "Nước ở khắp nơi: trong đất, trong đại dương, trong khí quyển, và trong cả cơ thể sống — người em phần lớn là nước. Nước phủ 71% bề mặt Trái Đất, nhưng gần như tất cả — 96,5% — là nước mặn. Muối trong đó chủ yếu là natri clorua, cùng loại muối ta rắc vào thức ăn. Chỉ 3,5% lượng nước trên Trái Đất là nước ngọt uống được, mà phần lớn chỗ đó — 68% — lại bị giữ trong băng và sông băng.",
+      /* ⚠️ Nói bằng SỐ GIỌT trước, rồi mới nói 68% VÀ nói rõ 68% CỦA CÁI GÌ. Câu cũ chỉ
+         có "68%" nên nó đọc như 68% của 100 giọt đang vẽ — lệch hơn 28 lần. */
+      say_drops_ice: "Trong 3,5 giọt nước ngọt đó, 68% đang đóng thành băng và sông băng — tức khoảng 2,4 giọt trên 100.",
+      more_drops: "Nước ở khắp nơi: trong đất, trong đại dương, trong khí quyển, và trong cả cơ thể sống — người em phần lớn là nước. Nước phủ 71% bề mặt Trái Đất, nhưng gần như tất cả — 96,5% — là nước mặn. Muối trong đó chủ yếu là natri clorua, cùng loại muối ta rắc vào thức ăn. Chỉ 3,5% lượng nước trên Trái Đất là nước ngọt uống được.\n\nCHÚ Ý CHỖ NÀY, RẤT DỄ NHẦM: NASA viết 68% nước ngọt bị giữ trong băng và sông băng. 68% đó là phần trăm CỦA NƯỚC NGỌT, không phải của tất cả nước. Tính ra giọt thì 68% của 3,5 giọt ≈ 2,4 giọt trên 100. Nếu lấy 68% của cả 100 giọt thì ra 68 giọt — lệch hơn 28 lần.\n\nPhần nước ngọt còn lại nằm trong đất (ta gọi là nước ngầm) và trong sông, hồ, suối; một lượng rất nhỏ ở trong khí quyển dưới dạng hơi nước — mây chính là nó.\n\nVà một con số để em hình dung: nếu gom TẤT CẢ nước trên Trái Đất lại thành một quả cầu, quả cầu đó rộng khoảng 860 dặm.",
       find_drops: "Trong 100 giọt nước của Trái Đất, chỉ hơn 3 giọt là uống được.",
 
       /* ── ba thẻ chưa dựng ── */
@@ -237,6 +262,8 @@
       ui_finding: "Phát hiện của em",
       ui_source: "Nguồn:",
       ui_scale: "Cân chỉ",
+      ui_drops_unit: "giọt",
+      ui_of_100: "trên 100 giọt nước của Trái Đất",
       ui_no_ground: "(Sao Mộc không có mặt đất để đứng — đây là tưởng tượng)",
       ui_your_kg: "Cân nặng của em ở Trái Đất:",
       ui_kg: "kg",
@@ -289,8 +316,8 @@
       say_drops_all: "Water covers 71% of Earth's surface. Let's call all of it 100 drops.",
       say_drops_salt: "96.5 drops are SALT water — mostly sodium chloride, the very salt we put on our food.",
       say_drops_fresh: "Only 3.5 drops are fresh water you could drink. That little.",
-      say_drops_ice: "And 68% of that fresh water is locked up in ice and glaciers.",
-      more_drops: "Water is everywhere: in the ground, in the oceans, in the atmosphere, and in living things — your body is mostly water. Water covers 71 percent of Earth's surface, but almost all of it — 96.5 percent — is salt water. That salt is mostly sodium chloride, the same salt we add to our food. Just 3.5 percent of Earth's water is fresh water we can drink, and most of that, 68 percent, is trapped in ice and glaciers.",
+      say_drops_ice: "Of those 3.5 drops of fresh water, 68% is locked in ice and glaciers — about 2.4 drops out of 100.",
+      more_drops: "Water is everywhere: in the ground, in the oceans, in the atmosphere, and in living things — your body is mostly water. Water covers 71 percent of Earth's surface, but almost all of it — 96.5 percent — is salt water. That salt is mostly sodium chloride, the same salt we add to our food. Just 3.5 percent of Earth's water is fresh water we can drink.\n\nWATCH OUT HERE, IT IS EASY TO MIX UP: NASA writes that 68 percent of fresh water is trapped in ice and glaciers. That 68 percent is a percentage OF THE FRESH WATER, not of all the water. In drops: 68% of 3.5 drops is about 2.4 drops out of 100. Take 68% of all 100 drops instead and you get 68 drops — off by more than 28 times.\n\nThe rest of the fresh water sits in the ground (we call it groundwater) and in rivers, lakes and streams; a very small amount is up in the atmosphere as water vapour — that is what clouds are made of.\n\nAnd one number to picture it by: if you gathered ALL the water on Earth into a single ball, that ball would be about 860 miles wide.",
       find_drops: "Of Earth's 100 drops of water, only about 3 are drinkable.",
 
       t_throw: "Throwing distance", d_throw: "The same throw, different gravity, different distance.",
@@ -316,6 +343,8 @@
       ui_finding: "What you found",
       ui_source: "Source:",
       ui_scale: "Scale reads",
+      ui_drops_unit: "drops",
+      ui_of_100: "out of Earth's 100 drops of water",
       ui_no_ground: "(Jupiter has no ground to stand on — this is imagined)",
       ui_your_kg: "Your weight on Earth:",
       ui_kg: "kg",
@@ -361,6 +390,7 @@
   window.AstroQLab = {
     CARDS: CARDS, PLACES: PLACES, SRC: SRC,
     card: card, place: place, ratio: ratio, ratioLabel: ratioLabel, weighAt: weighAt,
+    WATER: WATER, waterStep: waterStep,
     text: t, dict: T
   };
 })();
