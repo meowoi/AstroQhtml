@@ -14,8 +14,12 @@
 <link rel="stylesheet" href="css/page-shell.css" />
 <!-- Dòng "Chơi tiếp" dùng chung với bản đồ nhiệm vụ — xem đầu css/resume.css -->
 <link rel="stylesheet" href="css/resume.css" />
+<!-- Bảng "Việc hôm nay" + chuỗi ngày — xem đầu css/daily.css -->
+<link rel="stylesheet" href="css/daily.css" />
 <link rel="stylesheet" href="css/missions.css" />
 <script src="js/ui-common.js"></script>
+<!-- Tên việc hằng ngày: chỗ duy nhất khai TÊN (server giữ MỐC và TIỀN) -->
+<script src="js/daily.js"></script>
 <!-- Tên hành tinh song ngữ — CHỖ DUY NHẤT khai báo (js/planets.js) -->
 <script src="js/planets.js"></script>
 <!-- Danh mục nhiệm vụ + chặng: chỗ duy nhất khai TÊN (server giữ MỐC) -->
@@ -77,6 +81,21 @@
     </div>
   </section>
 
+  <!-- ============ VIỆC HÔM NAY + CHUỖI NGÀY ============
+       ⚠️ ĐẶT Ở TRANG NÀY, KHÔNG Ở DASHBOARD — chỗ đã dành sẵn. Việc còn treo của
+          `missions.html` ghi từ 12/08/2026: *"việc hàng ngày chưa dựng — cửa trước hôm
+          nay chỉ có một lối đi… Đây là thứ làm cửa trước dày dặn lên"*. Dashboard thì
+          ngược lại: 6 thẻ MOD đã kín, và màn Comet dẫn tham quan đo chỗ đặt box thoại
+          theo đúng bố cục đó (thêm một khối là phải đo lại cả 7 bước).
+       ⚠️ ĐẶT SAU dòng "Chơi tiếp", TRƯỚC bảng tổng quan. Thứ tự có chủ đích: việc đang
+          dở là thứ trẻ bỏ giữa (ưu tiên cao nhất), rồi mới tới việc mới của hôm nay,
+          rồi mới tới con số tổng. -->
+  <section class="panel" id="daily-panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="dl_tag">VIỆC HÔM NAY</span></span>
+    <h2><span class="ic" aria-hidden="true">📅</span><span data-i18n="dl_h">Bảng việc trong ngày</span></h2>
+    <div id="daily"></div>
+  </section>
+
   <!-- ============ TỔNG QUAN ============ -->
   <section class="panel">
     <span class="panel-tag"><span class="led"></span><span data-i18n="tag_ov">TỔNG QUAN</span></span>
@@ -117,6 +136,7 @@
       title:"AstroQ — Trung Tâm Nhiệm Vụ", back:"Về Trung Tâm Điều Hướng",
       eyebrow:"🎯 Trung Tâm Nhiệm Vụ", title_h:"Bạn muốn làm gì hôm nay?",
       intro:"Mỗi nơi trong Hệ Mặt Trời có nhiệm vụ riêng, và mỗi nhiệm vụ chia thành nhiều chặng. Làm xong chặng nào là tiến độ được ghi lại, lần sau vào chơi tiếp từ đó.",
+      dl_tag:"Việc hôm nay", dl_h:"Bảng việc trong ngày",
       tag_ov:"Tổng quan", ov_h:"Bảng điều phối",
       ov_done:"Nhiệm vụ hoàn thành", ov_steps:"Chặng đã xong", ov_codex:"Mẫu dữ liệu",
       sec_main:"Chính tuyến",
@@ -131,6 +151,7 @@
       title:"AstroQ — Mission Control", back:"Back to Navigation Hub",
       eyebrow:"🎯 Mission Control", title_h:"What would you like to do today?",
       intro:"Every place in the Solar System has its own missions, and each mission is split into stages. Every stage you finish is saved, so next time you pick up where you left off.",
+      dl_tag:"Today's tasks", dl_h:"Daily task board",
       tag_ov:"Overview", ov_h:"Dispatch board",
       ov_done:"Missions complete", ov_steps:"Stages finished", ov_codex:"Data samples",
       sec_main:"Main route",
@@ -149,6 +170,10 @@
      achievements.html và specimen-vault.html đang làm. */
   var VIEW = { ok:false, reason:"net", data:{} };
   var DASH = "—";
+
+  /* Bảng việc hôm nay: `null` = CHƯA ĐỌC ĐƯỢC (hiện dấu "—" + nói lý do), không phải
+     "chưa làm việc nào". Hai thứ đó khác nhau, và nhầm là nói sai về hôm nay của trẻ. */
+  var DAILY = null;
 
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
   function pad(n){ return n < 10 ? "0" + n : String(n); }
@@ -250,8 +275,25 @@
     el.classList.add("show");
   }
 
+  /* ================= Việc hôm nay ================= */
+  function renderDaily(){
+    if(window.AstroQDaily) AstroQDaily.paint($("daily"), DAILY, LANG);
+  }
+
   /* ================= Nạp ================= */
+  /* ⚠️ HAI LỜI GỌI SONG SONG, KHÔNG NỐI TIẾP. `/me/missions` và `/me/daily` trả hai
+     tập dữ liệu khác nhau nên không gộp được như `missionsShared()` đã làm ở dashboard;
+     nhưng chạy song song thì thời gian chờ vẫn xấp xỉ một vòng mạng. Gọi nối tiếp là
+     nhân đôi quãng chờ ở đúng trang trẻ đáp xuống đầu tiên. */
+  function loadDaily(){
+    AstroQProgress.daily().then(function(r){
+      DAILY = (r && r.ok && r.data) ? (r.data.daily || null) : null;
+      renderDaily();
+    });
+  }
+
   function load(){
+    loadDaily();
     AstroQProgress.missions().then(function(r){
       if(r && r.ok && r.data){
         VIEW.ok = true;
@@ -269,7 +311,13 @@
     });
   }
 
-  function paintAll(){ renderOverview(); renderResume(); renderMain(); paintBanner(); }
+  /* ⚠️ `renderDaily` PHẢI nằm trong đây, không chỉ gọi lúc dữ liệu về: `applyLang`
+     cũng gọi `paintAll`, mà chữ trên bảng do JS sinh nên đổi VI/EN ở tab khác thì nó
+     phải dịch theo. Thiếu chỗ này là bảng đứng lại ở tiếng cũ — đúng lỗi đã trả giá
+     với nhãn ống khói ở bước ④ của nhiệm vụ Trái Đất. */
+  function paintAll(){
+    renderOverview(); renderResume(); renderMain(); renderDaily(); paintBanner();
+  }
 
   /* ================= Ngôn ngữ ================= */
   function applyLang(lang){

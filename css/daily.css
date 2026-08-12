@@ -1,0 +1,137 @@
+/* css/daily.css — bảng "Việc hôm nay" + chuỗi ngày (js/daily.js).
+   Nạp SAU css/page-shell.css: vỏ `.panel` / `.panel-tag` lấy từ khung chung, ở đây
+   chỉ có phần RIÊNG của bảng.
+
+   ⚠️ KHÔNG CÓ MÀU ĐỎ NÀO TRONG FILE NÀY, cố ý. Một việc chưa làm không phải một lỗi;
+      tô đỏ nó là biến bảng gợi ý thành bảng điểm trừ. Việc đã xong dùng xanh dịu,
+      việc chưa xong để nguyên tông chữ thường.
+   ⚠️ KHÔNG có `animation` nhấp nháy hay rung ở hàng chưa xong — đó là hình thức giục
+      bằng thị giác, cùng loại với thông báo mà điều ④ đã cấm. */
+
+/* ── Đầu bảng: chuỗi ngày ── */
+.dl-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.dl-fire { font-size: 20px; line-height: 1; }
+.dl-cur {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffcf6b;
+}
+.dl-best {
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: #9fb0d0;
+  border: 1px solid rgba(255, 207, 107, .28);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.dl-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9fb0d0;
+}
+
+/* ── Ba hàng việc ── */
+.dl-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.dl-row {
+  display: grid;
+  /* icon · chữ (giãn hết chỗ) · bộ đếm · phần thưởng */
+  grid-template-columns: 30px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  /* ⚠️ 48px, KHÔNG phải 44: 44 là mốc TỐI THIỂU của WCAG 2.5.5 nên đặt đúng 44 là
+     không còn biên an toàn nào, và dự án đã có một ca chập chờn thật vì lý do đó
+     (nút VI/EN của explorer.html đo ra đúng 44×44). */
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid rgba(120, 150, 200, .18);
+  border-radius: 12px;
+  background: rgba(13, 20, 48, .5);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .18s, background .18s, transform .18s;
+}
+a.dl-row:hover,
+a.dl-row:focus-visible {
+  border-color: rgba(95, 211, 255, .5);
+  background: rgba(20, 30, 66, .66);
+  transform: translateY(-1px);
+}
+.dl-row.is-done {
+  border-color: rgba(74, 222, 128, .3);
+  background: rgba(22, 48, 38, .38);
+}
+.dl-ic { font-size: 19px; text-align: center; }
+.dl-txt { display: grid; gap: 2px; min-width: 0; }
+.dl-txt b { font-size: 14px; font-weight: 600; }
+.dl-txt span { font-size: 11.5px; color: #8ea1c2; }
+.dl-n {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 13px;
+  color: #9fb0d0;
+  white-space: nowrap;
+}
+.dl-ok {
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #4ade80;
+  white-space: nowrap;
+}
+.dl-tt {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 13px;
+  color: #c9a7ff;
+  white-space: nowrap;
+}
+.dl-tt img { width: 14px; height: 14px; }
+
+/* ── Chân bảng ── */
+.dl-got {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 12px 0 0;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 13px;
+  color: #cfe0ff;
+}
+.dl-got img { width: 14px; height: 14px; }
+/* Luật in ra ngay trên bảng — điều ⑤ (nói trước luật). Nhỏ nhưng đọc được:
+   11px là mức mà audit_viewports đã đo không bị cắt trên màn 390px. */
+.dl-rule {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #8ea1c2;
+}
+.dl-rule b { color: #ffcf6b; font-weight: 600; }
+.dl-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9fb0d0;
+}
+
+/* Màn hẹp: bộ đếm và phần thưởng xuống hàng dưới thay vì bóp cột chữ.
+   Ở 390px cột chữ chỉ còn ~150px nếu giữ 4 cột, và tên việc bị cắt đuôi. */
+@media (max-width: 560px) {
+  .dl-row {
+    grid-template-columns: 30px 1fr auto;
+    padding: 10px 12px;
+  }
+  .dl-tt { grid-column: 2 / -1; }
+}

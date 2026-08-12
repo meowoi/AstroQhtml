@@ -15,6 +15,9 @@ Tự tạo tài khoản Firebase tạm, tự dọn mọi bản ghi trong `finall
 """
 import concurrent.futures as cf
 import json
+import re
+import os
+import io
 import subprocess
 import sys
 import urllib.error
@@ -113,6 +116,31 @@ def wipe(uid):
 
 def bal(token):
     return call("GET", "/me/wallet", token=token)[1].get("meteors")
+
+
+# ⚠️ Doc bang thuong viec hang ngay TU MA NGUON, khong gan cung: tu 12/08/2026
+#    `POST /me/progress` cong ca thuong viec ngay, nen vi tang `awarded + dailyPaid`.
+#    Gan cung 6/8/5 o day la mot qua min hen gio — doi bang viec la test do oan.
+def daily_tts():
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "..", "..", "AstroqSV", "src", "AstroqSV.Api", "Services", "Daily.cs")
+    try:
+        src = io.open(p, encoding="utf-8").read()
+    except OSError:
+        return None
+    return [int(m.group(1)) for m in re.finditer(r'new\("[a-z]+",\s*\d+,\s*(\d+)\)', src)]
+
+
+def legit_daily(paid, tts):
+    """`paid` co phai mot TONG HOP LE cua bang thuong viec ngay khong (0 = khong tra)."""
+    if paid == 0:
+        return True
+    if not tts:
+        return paid > 0            # khong doc duoc bang thi chi doi "co tra mot khoan"
+    ok = {0}
+    for v in tts:
+        ok |= {x + v for x in ok}
+    return paid in ok
 
 
 def main():
@@ -219,14 +247,22 @@ def main():
         b0 = bal(token)
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 3, "total": 5, "meteors": 60})
-        check("Quiz 60 tt -> cong dung 60", d.get("awarded") == 60
-              and d["wallet"]["meteors"] == b0 + 60, f"awarded={d.get('awarded')} {d.get('wallet')}")
+        _dtts = daily_tts()
+        _dp = d.get("dailyPaid", 0)
+        check("Quiz 60 tt -> cong dung 60 (+ thuong viec ngay)",
+              d.get("awarded") == 60 and d["wallet"]["meteors"] == b0 + 60 + _dp,
+              f"awarded={d.get('awarded')} dailyPaid={_dp} {d.get('wallet')}")
+        check("Phan cong THEM chi den tu bang viec ngay cua server",
+              legit_daily(_dp, _dtts), f"dailyPaid={_dp} bang={_dtts}")
         b0 = d["wallet"]["meteors"]
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 5, "total": 5, "meteors": 999999})
+        _dp = d.get("dailyPaid", 0)
         check("Quiz doi 999999 tt -> kep con 220 (tran quiz)",
-              d.get("awarded") == 220 and d["wallet"]["meteors"] == b0 + 220,
-              f"awarded={d.get('awarded')}")
+              d.get("awarded") == 220 and d["wallet"]["meteors"] == b0 + 220 + _dp,
+              f"awarded={d.get('awarded')} dailyPaid={_dp}")
+        check("Phan cong THEM chi den tu bang viec ngay cua server (2)",
+              legit_daily(_dp, _dtts), f"dailyPaid={_dp} bang={_dtts}")
         b0 = d["wallet"]["meteors"]
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "game", "game": "dodge", "score": 100, "meteors": 999})
