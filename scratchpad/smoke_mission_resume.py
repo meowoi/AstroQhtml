@@ -259,9 +259,16 @@ def run(pw):
     raw = json.dumps(box)
     chk(not any(k in raw for k in ("meteors", "xp", "badges", "awarded")),
         "cache KHONG chua so thuong nao", raw[:120])
-    # Nút trên thẻ nhiệm vụ phải nói "Tiếp tục" — chữ và hành vi phải khớp nhau.
-    lbl = pg.locator("#missions .play-btn").first.inner_text()
-    chk("iếp tục" in lbl or "Resume" in lbl, "nut o Sanh noi 'Tiep tuc'", repr(lbl))
+    # ⚠️ DOI PHAT BIEU 12/08/2026: Trung Tam Nhiem Vu khong con luoi the nhiem vu
+    #    (xem `docs/decisions/008`). Loi tat "choi tiep" nay nam o dong `#resume`, va
+    #    dieu can bao ve KHONG doi: chu tren man PHAI khop hanh vi — no goi dung ten
+    #    chang dang do va dan dung vao chang do.
+    pg.wait_for_selector("#resume:not([hidden])", timeout=15000)
+    lbl = pg.locator("#r-nm").inner_text()
+    chk(lbl.strip() != "" and lbl.strip() != "—",
+        "dong 'Choi tiep' goi dung ten chang dang do", repr(lbl))
+    sub = pg.locator("#r-sub").inner_text()
+    chk("03 / %02d" % len(STEPS) in sub, "dong phu noi dung chang thu may", repr(sub))
     ctx.close()
 
     # ── [9] Bản EN: lời nhắc cũng phải dịch ───────────────────────────────────

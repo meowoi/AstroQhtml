@@ -105,8 +105,12 @@ def main():
         title = pg.inner_text("#lk-title")
         body = pg.inner_text("#lk-body")
         check("Modal mo ra", pg.locator("#aq-lock.show").count() == 1)
+        # ⚠️ So bang casefold(): tieu de co the mo dau bang cum nay (chu HOA) hoac
+        #    dat no giua cau. Ghim dung mot cach viet hoa la phep kiem bao hong oan
+        #    ngay lan doi cau chu dau tien — du an da tra gia BA lan vi loai loi nay
+        #    (xem quy tac 8 muc 6 cua CLAUDE.md).
         check("Tieu de noi DANG XAY, khong noi 'da khoa vi chua tra tien'",
-              "đang được xây" in title, title)
+              "đang được xây" in title.casefold(), title)
         check("Than bai nhac ten goi", "Phi Hành Gia" in body, body[:70])
         # ⚠️ Phep kiem quan trong nhat ca bo
         low = (title + " " + body + " " + pg.inner_text("#lk-go")).lower()
@@ -142,28 +146,44 @@ def main():
         check("0 loi console/pageerror o dashboard", not errs, str(errs[:2]))
         ctx.close()
 
-        # ══════════════ [2] missions.html — MISSION-02 Mat Trang ══════════════
-        print("\n[2] missions.html — the MISSION-02")
+        # ══════════════ [2] mission-map.html — diem den Mat Trang ══════════════
+        # ⚠️ DOI CHO 12/08/2026 (`docs/decisions/008`): Mat Trang khong con la mot THE
+        #    o `missions.html` ma la mot DIEM DEN tren ban do nhiem vu. Dieu muc nay
+        #    bao ve KHONG doi: noi "sap ra mat" phai NOI RO no dang duoc xay va thuoc
+        #    goi nao, bang dung mot cai hop (`js/locks.js`) ma dashboard va Khu Huan
+        #    Luyen dang dung — mot cau tra loi, mot kieu hop.
+        #    ⚠️ Phai gieo tien do DU CONG (5/7 chang) thi Mat Trang moi la "sap co";
+        #       chua du thi no la "chua mo duong toi", mot cau tra loi KHAC.
+        print("\n[2] mission-map.html — diem den Mat Trang")
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         seed(ctx)
         pg = ctx.new_page(); errs = errors(pg)
-        pg.goto(f"{BASE}/missions.html", wait_until="domcontentloaded")
-        pg.wait_for_selector(".mcard.soon", timeout=8000)
+        pg.add_init_script("""
+          localStorage.setItem('astroq-route-gate', JSON.stringify({
+            open:['earth','moon'], route:['earth','moon'],
+            gate:5, done:5, total:7 }));
+        """)
+        pg.goto(f"{BASE}/mission-map.html", wait_until="domcontentloaded")
+        pg.wait_for_selector('.body[data-id="moon"].soon', timeout=8000)
 
-        card = pg.locator(".mcard.soon").first
-        check("The Mat Trang co huy hieu khoa", card.locator(".lk-badge").count() == 1)
-        check("Huy hieu la SAP RA MAT", "SẮP RA MẮT" in card.locator(".lk-badge").inner_text())
-        lbl = card.locator(".play-btn").inner_text()
-        check("Nhan nut moi bam (khong lap lai 'Sap ra mat')",
-              "Vì sao" in lbl, lbl.strip())
+        moon = pg.locator('.body[data-id="moon"]')
+        check("Mat Trang o trang thai 'sap co nhiem vu'",
+              "soon" in (moon.get_attribute("class") or ""))
+        st = moon.locator(".st").inner_text()
+        # ⚠️ SO BANG casefold(): `.body .st` co `text-transform:uppercase` nen
+        #    `inner_text()` tra ve "SẮP CÓ". Day la LAN THU NAM du an mac dung loi
+        #    "ghim mot cach viet hoa" (quy tac 8 muc 6 CLAUDE.md) — moi phep kiem dang
+        #    "chu nay phai co mat" deu phai case-fold truoc.
+        check("Nhan trang thai noi 'sap co'", "sắp có" in st.casefold(), st.strip())
 
-        open_modal(pg, ".mcard.soon .play-btn")
+        open_modal(pg, '.body[data-id="moon"]')
         body = pg.inner_text("#lk-body")
         check("Modal nhiem vu mo ra", pg.locator("#aq-lock.show").count() == 1)
         check("Noi dang xay + ten goi", "Phi Hành Gia" in body, body[:70])
         check("Co nut dan sang trang gia", pg.locator("#lk-go").is_visible())
+        check("KHONG mo them bang thu hai", pg.locator("#sheet[hidden]").count() == 1)
         pg.keyboard.press("Escape")
-        check("0 loi console/pageerror o missions", not errs, str(errs[:2]))
+        check("0 loi console/pageerror o ban do", not errs, str(errs[:2]))
         ctx.close()
 
         # ══════════════ [3] games.html — tro MIEN PHI sap ra mat ══════════════
@@ -192,6 +212,25 @@ def main():
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         seed(ctx)
         pg = ctx.new_page(); errs = errors(pg)
+        # ⚠️ CHAN /billing/catalog VA TRA PHAN HOI CO DINH — cung viec ma
+        #    `audit_viewports.py` va `smoke_lang_switch.py` da lam tu 11/08/2026.
+        #    `pricing.html` hoi route CONG KHAI do ngay khi mo trang, ma bo do chay o
+        #    cong 8123 — khong nam trong ALLOWED_ORIGINS — nen loi goi bi CORS chan va
+        #    TRINH DUYET TU ghi mot dong do vao console; khong `catch` nao chan duoc,
+        #    va phep kiem "0 loi console" bao hong OAN.
+        #    ⚠️ Co y KHONG them 8123 vao ALLOWED_ORIGINS: do la cong cua bo kiem thu,
+        #       mo them mot origin tren API THAT chi de lam xanh mot phep kiem la doi
+        #       cau hinh san xuat vi mot ly do khong thuoc san xuat.
+        pg.route("**/billing/catalog*", lambda r: r.fulfill(
+            status=200, content_type="application/json",
+            headers={"access-control-allow-origin": "*"},
+            body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
+                 '"trialDays":14,"graceDays":7,"offers":['
+                 '{"plan":"astro","cycle":"month","currency":"VND","amount":99000},'
+                 '{"plan":"astro","cycle":"year","currency":"VND","amount":790000},'
+                 '{"plan":"crew","cycle":"month","currency":"VND","amount":169000},'
+                 '{"plan":"crew","cycle":"year","currency":"VND","amount":1290000},'
+                 '{"plan":"found","cycle":"once","currency":"VND","amount":1490000}]}'))
         pg.goto(f"{BASE}/pricing.html", wait_until="domcontentloaded")
         pg.wait_for_selector(".plan", timeout=8000)
 

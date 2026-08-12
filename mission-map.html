@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Bản đồ nhiệm vụ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/resume.css" />
+<link rel="stylesheet" href="css/mission-sheet.css" />
+<link rel="stylesheet" href="css/locks.css" />
+<link rel="stylesheet" href="css/mission-map.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/mission-catalog.js"></script>
+<script src="js/locks.js"></script>
+<script src="js/progress.js"></script>
+<!-- ⚠️ TRANG NÀY KHÔNG NẠP SDK FIREBASE, CỐ Ý. Nó đọc tiến độ từ CACHE mà
+     `missions.html` (có token) vừa ghi — đúng khuôn `astroq-route-gate` đã dựng cho
+     `explorer.html`. Trẻ luôn đi qua Trung Tâm Nhiệm Vụ trước khi tới đây, nên cache
+     luôn mới. Xem check_pages.py mục [4]. -->
+<script src="js/route-gate.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <!-- ⚠️ Nút quay lại trỏ về TRUNG TÂM NHIỆM VỤ, không về dashboard. Bản đồ nằm
+       TRONG Trung Tâm Nhiệm Vụ; nhảy vượt một tầng khi quay lại là đưa trẻ tới một
+       màn nó không vừa rời khỏi. -->
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Nhiệm Vụ</span></button>
+    <span class="hub-tag">[ MISSION_CONTROL · MAP ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow" data-i18n="eyebrow">🗺️ Chính tuyến</span>
+    <h1 data-i18n="title_h">Chọn một nơi để tới</h1>
+    <p data-i18n="intro">Chạm vào một thiên thể để xem nhiệm vụ ở đó. Nơi đang phát sáng là nơi bạn chơi được ngay.</p>
+  </section>
+
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <!-- Lối tắt dùng chung với Trung Tâm Nhiệm Vụ — xem css/resume.css -->
+  <section class="panel resume" id="resume" hidden>
+    <span class="panel-tag"><span class="led"></span><span data-i18n="r_tag">ĐANG DỞ</span></span>
+    <div class="resume-in">
+      <span class="r-ic" id="r-ic" aria-hidden="true">⚡</span>
+      <div class="r-b">
+        <b id="r-nm">—</b>
+        <span id="r-sub">—</span>
+      </div>
+      <button class="pbtn" id="r-go" type="button" data-i18n="r_go">Chơi tiếp</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_map">HỆ MẶT TRỜI</span></span>
+    <h2><span class="ic" aria-hidden="true">🗺️</span><span data-i18n="map_h">Bản đồ nhiệm vụ</span></h2>
+
+    <!-- Quỹ đạo + thiên thể do JS đặt: toạ độ tính từ CÙNG một công thức ellipse nên
+         đĩa hành tinh luôn nằm ĐÚNG trên đường quỹ đạo ở mọi cỡ màn. -->
+    <div class="map" id="map"></div>
+
+    <div class="legend">
+      <span class="lg"><i class="dot open"></i><span data-i18n="lg_open">Có nhiệm vụ chơi được</span></span>
+      <span class="lg"><i class="dot soon"></i><span data-i18n="lg_soon">Sắp có nhiệm vụ</span></span>
+      <span class="lg"><i class="dot none"></i><span data-i18n="lg_none">Chưa có nhiệm vụ</span></span>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══ BẢNG CHI TIẾT MỘT THIÊN THỂ ═══
+     ⚠️ CHỈ DÀNH CHO NƠI KHÔNG VÀO ĐƯỢC. Nơi ĐÃ CÓ nhiệm vụ thì chạm là VÀO THẲNG —
+        cái bảng ở đó là một cửa không mở ra thông tin nào mới, chỉ nói lại đúng thứ
+        trẻ vừa bấm rồi bắt bấm thêm một nút nữa (chủ dự án chốt 04/08/2026).
+     ⚠️ NHƯNG GIỮ BẢNG cho nơi chưa vào được: đây là chỗ DUY NHẤT phân biệt "chưa có
+        nội dung" với "chưa mở được đường tới" — bỏ nó là trẻ bấm rồi không có gì xảy
+        ra, tức chỉ tưởng mình bấm trượt (bài học js/route-gate.js). -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" hidden>
+  <div class="sheet-in">
+    <button class="sh-x" id="sh-x" type="button" data-i18n-aria="a_close" aria-label="Đóng">✕</button>
+    <span class="sh-orb" id="sh-orb" aria-hidden="true"></span>
+    <span class="sh-tag" id="sh-tag"></span>
+    <h3 id="sh-h"></h3>
+    <p id="sh-p"></p>
+    <p class="sh-note" id="sh-note"></p>
+    <button class="pbtn" id="sh-go" type="button">—</button>
+  </div>
+</div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var $ = AstroQ.$;
+
+  /* ================= i18n ================= */
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", a_close:"Đóng", tt_name:"Thiên thạch tím",
+      title:"AstroQ — Bản đồ nhiệm vụ", back:"Về Trung Tâm Nhiệm Vụ",
+      eyebrow:"🗺️ Chính tuyến", title_h:"Chọn một nơi để tới",
+      intro:"Chạm vào một thiên thể để xem nhiệm vụ ở đó. Nơi đang phát sáng là nơi bạn chơi được ngay.",
+      tag_map:"Hệ Mặt Trời", map_h:"Bản đồ nhiệm vụ",
+      lg_open:"Có nhiệm vụ chơi được", lg_soon:"Sắp có nhiệm vụ", lg_none:"Chưa có nhiệm vụ",
+      r_tag:"Đang dở", r_go:"Chơi tiếp", r_sub:"{w} · chặng {n} / {t}",
+      sun_nm:"Mặt Trời",
+      st_open:"Có nhiệm vụ", st_soon:"Sắp có", st_none:"Chưa có", st_lock:"Chưa mở",
+      tag_none:"Chưa có nhiệm vụ", tag_lock:"Chưa mở điểm đến",
+      p_none:"Chưa có nhiệm vụ nào ở đây. Nhưng bạn vẫn ghé thăm và đọc bảng thông tin của nơi này trên Bản Đồ Thiên Hà.",
+      note_none:"Chưa có nhiệm vụ ở đây không có nghĩa là bị cấm tới — hai chuyện khác nhau.",
+      go_none:"Mở Bản Đồ Thiên Hà",
+      p_lock:"Còn {n} chặng nữa ở {w} là mở được điểm đến này.",
+      p_lock_off:"Chưa đọc được tiến độ của bạn nên chưa biết điểm đến này đã mở chưa.",
+      note_lock:"Đường đi mở dần: xong phần lớn chặng ở nơi đang chơi thì nơi tiếp theo hiện ra.",
+      go_lock:"Về nơi đang chơi",
+      off_net:"Chưa đọc được tiến độ nên bản đồ chỉ mở nơi đầu tiên. Ghé Trung Tâm Nhiệm Vụ một lần rồi quay lại nhé."
+    },
+    en:{
+      a_lang:"Language", a_close:"Close", tt_name:"Purple Meteor",
+      title:"AstroQ — Mission map", back:"Back to Mission Control",
+      eyebrow:"🗺️ Main route", title_h:"Pick a place to go",
+      intro:"Tap a body to see the missions there. The glowing one is where you can play right now.",
+      tag_map:"Solar System", map_h:"Mission map",
+      lg_open:"Missions you can play", lg_soon:"Missions coming soon", lg_none:"No missions yet",
+      r_tag:"In progress", r_go:"Continue", r_sub:"{w} · stage {n} / {t}",
+      sun_nm:"The Sun",
+      st_open:"Missions", st_soon:"Soon", st_none:"None yet", st_lock:"Locked",
+      tag_none:"No missions yet", tag_lock:"Destination locked",
+      p_none:"There are no missions here yet. You can still fly over and read this place's info panel on the Galaxy Map.",
+      note_none:"No missions here does not mean you are not allowed to go — those are two different things.",
+      go_none:"Open the Galaxy Map",
+      p_lock:"{n} more stages at {w} and this destination opens up.",
+      p_lock_off:"We couldn't read your progress, so we don't know yet whether this destination is open.",
+      note_lock:"The route opens step by step: finish most stages where you are now and the next place appears.",
+      go_lock:"Back to where you're playing",
+      off_net:"We couldn't read your progress, so only the first destination is open. Visit Mission Control once, then come back."
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  /* ================= Hệ toạ độ ảo =================
+     Mọi thứ tính theo 1000×760 rồi quy ra %, nên đĩa và quỹ đạo dùng CHUNG một phép
+     tính ellipse và không bao giờ lệch nhau ở bất kỳ cỡ màn nào. */
+  var VW = 1000, VH = 760;
+  var SUN = { x:55, y:715 };     // tâm Mặt Trời = tâm mọi quỹ đạo
+  var RY = 0.82;                 // quỹ đạo là ellipse: ry = rx × hằng số này
+
+  var GATE = null;               // AstroQGate.info() của lượt tải này
+  var picked = null;
+
+  function pct(v, total){ return (v / total * 100) + "%"; }
+  function pad(n){ return n < 10 ? "0" + n : String(n); }
+  function el(tag, cls){ var e = document.createElement(tag); e.className = cls; return e; }
+
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /* ================= Trạng thái một điểm đến =================
+     Bốn trạng thái, và chúng nói bốn điều KHÁC NHAU:
+       open — có nhiệm vụ, vào chơi được ngay
+       soon — tới được rồi, nhưng nhiệm vụ đang được làm
+       lock — chưa mở được ĐƯỜNG TỚI (cổng lộ trình)
+       none — không bị chặn gì cả, chỉ là chưa có nhiệm vụ nào ở đây
+
+     ⚠️ `lock` ở đây KHÁC cổng ở Bản Đồ Thiên Hà dù dùng chung dữ liệu: bên kia khoá
+        cả việc GHÉ THĂM nên mặc định tắt (bật vĩnh viễn là khoá chết 7 mẫu vật và 2
+        huy hiệu). Ở đây chỉ khoá việc CHƠI NHIỆM VỤ — không mẫu vật/huy hiệu nào phụ
+        thuộc — nên bật được. Cờ `active` chỉ sống trong lượt tải trang này. */
+  function stateOf(id){
+    var has = AstroQCatalog.byWorld(id).length > 0;
+    var can = !window.AstroQGate || AstroQGate.canVisit(id);
+    if(has) return can ? "open" : "lock";
+    /* Không có nhiệm vụ: nếu nơi này nằm trong lộ trình và ĐÃ tới được thì nội dung
+       đang được làm ("soon"); nếu chưa tới được thì là cổng ("lock"); còn lại là nơi
+       đơn giản chưa có nhiệm vụ nào ("none"). */
+    var onRoute = GATE && GATE.route.indexOf(id) >= 0;
+    if(!onRoute) return "none";
+    return can ? "soon" : "lock";
+  }
+
+  function stLabel(st){
+    return st === "open" ? t("st_open") : st === "soon" ? t("st_soon")
+         : st === "lock" ? t("st_lock") : t("st_none");
+  }
+
+  /* ================= Vẽ bản đồ ================= */
+  function body(o){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "body " + (o.cls || "") + (o.flip ? " flip" : "");
+    b.dataset.id = o.id;
+    b.style.left = pct(o.x, VW);
+    b.style.top  = pct(o.y, VH);
+    /* Bề rộng đặt ở CHÍNH cái nút; đĩa dùng `aspect-ratio:1` nên luôn tròn và luôn
+       nằm đúng tâm toạ độ (nhãn treo tuyệt đối, không kéo tâm đi). */
+    b.style.width = pct(o.d, VW);
+    b.setAttribute("aria-label", o.nm + (o.st ? " — " + o.st : ""));
+    if(o.deco) b.setAttribute("aria-disabled", "true");
+
+    var orb = el("span", "orb");
+    orb.style.background = "radial-gradient(circle at 36% 30%, " + o.c + ", " + o.c2 + " 78%)";
+    if(o.ring) orb.appendChild(el("span", "ring"));
+    b.appendChild(orb);
+
+    var lb = el("span", "lb");
+    var nm = el("span", "nm"); nm.textContent = o.nm; lb.appendChild(nm);
+    if(o.st){ var s = el("span", "st"); s.textContent = o.st; lb.appendChild(s); }
+    b.appendChild(lb);
+    return b;
+  }
+
+  function paintMap(){
+    var map = $("map");
+    map.innerHTML = "";
+    var worlds = AstroQCatalog.worlds();
+
+    // Quỹ đạo trước (nằm dưới), thiên thể sau
+    worlds.forEach(function(w){
+      if(!w.orbit) return;
+      var o = el("div", "orbit" + (stateOf(w.id) === "open" ? " on" : ""));
+      o.style.left   = pct(SUN.x, VW);
+      o.style.top    = pct(SUN.y, VH);
+      o.style.width  = pct(w.orbit.r * 2, VW);
+      o.style.height = pct(w.orbit.r * 2 * RY, VH);
+      map.appendChild(o);
+    });
+
+    // Mặt Trời — TRANG TRÍ, bấm không được
+    map.appendChild(body({ id:"sun", nm:t("sun_nm"), c:"#ffcf6b", c2:"#b45309",
+                           x:SUN.x, y:SUN.y, d:150, cls:"deco sun", deco:true }));
+
+    // Điểm đến có quỹ đạo
+    var at = {};
+    worlds.forEach(function(w){
+      if(!w.orbit) return;
+      var a = w.orbit.a * Math.PI / 180;
+      var info = AstroQCatalog.worldInfo(w.id, LANG);
+      var st = stateOf(w.id);
+      at[w.id] = { x: SUN.x + w.orbit.r * Math.cos(a),
+                   y: SUN.y - w.orbit.r * RY * Math.sin(a) };
+      map.appendChild(body({ id:w.id, nm:info.nm, c:info.c, c2:info.c2,
+                             x:at[w.id].x, y:at[w.id].y, d:w.orbit.d,
+                             ring:w.orbit.ring, flip:w.orbit.flip,
+                             cls:st, st:stLabel(st) }));
+    });
+
+    // Vệ tinh: bám cạnh điểm đến chủ của nó
+    worlds.forEach(function(w){
+      if(!w.moonOf) return;
+      var host = at[w.moonOf.world];
+      if(!host) return;
+      var info = AstroQCatalog.worldInfo(w.id, LANG);
+      var st = stateOf(w.id);
+      map.appendChild(body({ id:w.id, nm:info.nm, c:info.c, c2:info.c2,
+                             x:host.x + w.moonOf.dx, y:host.y + w.moonOf.dy,
+                             d:w.moonOf.d, cls:st, st:stLabel(st) }));
+    });
+  }
+
+  /* ================= Lối tắt "Chơi tiếp" =================
+     Đọc CÙNG một cache với `mission-tree.html`, và đếm theo CÙNG một luật (đoạn đầu
+     liền mạch) — hai màn nói hai con số khác nhau là lỗi trẻ nhìn thấy ngay. */
+  var resumeTo = null;
+  function firstRunning(){
+    var list = AstroQCatalog.missions();
+    for(var i=0;i<list.length;i++){
+      var p = AstroQProgress.missionSteps(list[i].id);
+      if(!p.known || p.complete) continue;
+      var ids = AstroQCatalog.stepIds(list[i].id);
+      var have = {};
+      p.done.forEach(function(id){ have[String(id)] = true; });
+      var n = 0;
+      while(n < ids.length && have[ids[n]]) n++;
+      if(n > 0 && n < ids.length) return { m:list[i], at:n, total:ids.length };
+    }
+    return null;
+  }
+
+  function renderResume(){
+    var r = firstRunning();
+    resumeTo = null;
+    $("resume").hidden = !r;
+    if(!r) return;
+    var st = r.m.steps[r.at];
+    resumeTo = { file:r.m.file, step:st.id };
+    $("r-ic").textContent = st.ic;
+    $("r-nm").textContent = st[LANG==="en"?"en":"vi"].nm;
+    $("r-sub").textContent = t("r_sub")
+      .replace("{w}", AstroQCatalog.worldInfo(r.m.world, LANG).nm)
+      .replace("{n}", pad(r.at + 1)).replace("{t}", pad(r.total));
+  }
+
+  /* ================= Dải nhắc ================= */
+  function paintBanner(){
+    var el2 = $("offline");
+    if(GATE && GATE.known){ el2.classList.remove("show"); return; }
+    $("offline-msg").innerHTML = t("off_net");
+    el2.classList.add("show");
+  }
+
+  /* ================= Bảng chi tiết ================= */
+  function openSheet(id){
+    picked = id;
+    var st = stateOf(id);
+    var info = AstroQCatalog.worldInfo(id, LANG);
+    $("sh-orb").style.background =
+      "radial-gradient(circle at 36% 30%, " + info.c + ", " + info.c2 + " 78%)";
+    $("sh-h").textContent = info.nm;
+
+    if(st === "lock"){
+      $("sh-tag").textContent = t("tag_lock");
+      $("sh-p").textContent = (GATE && GATE.known)
+        ? t("p_lock").replace("{n}", GATE.remaining)
+                     .replace("{w}", AstroQCatalog.worldInfo(GATE.first, LANG).nm)
+        : t("p_lock_off");
+      note(t("note_lock"));
+      btn(t("go_lock"));
+    } else {
+      $("sh-tag").textContent = t("tag_none");
+      $("sh-p").textContent = t("p_none");
+      note(t("note_none"));
+      btn(t("go_none"));
+    }
+    $("sheet").hidden = false;
+    $("sh-go").focus();
+  }
+  function note(txt){ var e = $("sh-note"); e.textContent = txt; e.hidden = !txt; }
+  function btn(lb){ $("sh-go").textContent = lb; }
+  function closeSheet(){ $("sheet").hidden = true; }
+
+  /* ================= Đi tới một nhiệm vụ =================
+     MỘT chỗ duy nhất quyết định "chạm vào nơi có nhiệm vụ thì đi đâu" — lối tắt
+     "Chơi tiếp" và cú chạm trên bản đồ phải dẫn tới cùng một chỗ. */
+  function goWorld(id){
+    var ms = AstroQCatalog.byWorld(id);
+    if(!ms.length) return;
+    /* Một nhiệm vụ → vào thẳng cây chặng của nó. Nhiều nhiệm vụ → màn hành tinh, vì
+       lúc đó câu hỏi "chơi cái nào" là câu hỏi thật. */
+    location.href = ms.length === 1
+      ? "mission-tree.html?m=" + encodeURIComponent(ms[0].id)
+      : "mission-planet.html?w=" + encodeURIComponent(id);
+  }
+
+  /* ================= Sự kiện ================= */
+  $("map").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest(".body") : null;
+    if(!b || b.classList.contains("deco")) return;
+    var id = b.dataset.id, st = stateOf(id);
+    if(st === "open"){ goWorld(id); return; }
+    /* "Sắp có nhiệm vụ" đi qua `js/locks.js` — CHỖ DUY NHẤT của dự án khai câu
+       "đang được xây / dành cho gói nào". Dashboard và Khu Huấn Luyện đã dùng đúng
+       hộp đó, nên trẻ gặp lại một thứ nó đã biết. */
+    if(st === "soon" && window.AstroQLocks && AstroQLocks.get("mission:" + id)){
+      if(AstroQLocks.open("mission:" + id, b)) return;
+    }
+    openSheet(id);
+  });
+
+  $("sh-x").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")) closeSheet(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && !$("sheet").hidden) closeSheet();
+  });
+
+  $("sh-go").addEventListener("click", function(){
+    if(picked && stateOf(picked) === "lock"){
+      /* Đưa trẻ về ĐÚNG nơi nó đang chơi dở — nói điều kiện mở rồi bỏ mặc nó tự tìm
+         đường là nửa vời. */
+      var first = (GATE && GATE.first) || "earth";
+      var ms = AstroQCatalog.byWorld(first);
+      location.href = ms.length ? "mission-tree.html?m=" + encodeURIComponent(ms[0].id)
+                                : "missions.html";
+      return;
+    }
+    location.href = "explorer.html";
+  });
+
+  $("r-go").addEventListener("click", function(){
+    if(!resumeTo) return;
+    location.href = resumeTo.file + "?step=" + encodeURIComponent(resumeTo.step);
+  });
+  $("back").addEventListener("click", function(){ location.href = "missions.html"; });
+
+  /* ================= Ngôn ngữ ================= */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG;
+    document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    paintAll();
+  }
+  function paintAll(){ paintMap(); renderResume(); paintBanner(); }
+
+  /* ================= Khởi động ================= */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+
+  /* ⚠️ `AstroQGate.load()` ÁP CACHE NGAY TRONG LỜI GỌI rồi mới đi hỏi server, nên
+     đọc `info()` ngay sau đó đã có số thật của lần trước. Nhờ vậy lần vẽ đầu không
+     phải là một bản đồ khoá sạch rồi mới nhấp một cái sang bản đúng — trẻ đọc cú
+     nhấp đó là trang bị lỗi. */
+  AstroQGate.setActive(true);
+  var loading = AstroQGate.load();
+  GATE = AstroQGate.info();
+
+  applyLang(LANG);            // applyLang tự gọi paintAll
+  AstroQ.initLang(applyLang);
+
+  loading.then(function(info){ GATE = info; paintAll(); });
+})();
+</script>
+</body>
+</html>

@@ -180,8 +180,19 @@ def wait_step(page, sid, timeout=30000):
        mat ~10 phut. Ban dau ham nay im lang va da dot mat hai luot vi the; chinh
        ban chan doan nay moi chi ra `finish('sun')` chua tung duoc goi.
     """
+    # ⚠️ TU 12/08/2026 GIUA HAI CHANG CO MOT HOP HOI "TIEP HAY DUNG"
+    #    (`docs/decisions/008`): xong mot chang thi trang KHONG tu sang chang ke nua,
+    #    no hoi. Bo do dong vai TRE va bam "Choi tiep" — dat o DAY vi moi cu chuyen
+    #    chang deu di qua `wait_step`, nen chi phai lo mot cho.
+    #    ⛔ Dung "chua" bang cach tat hop di trong san pham cho test de chay: cai hop
+    #       do CHINH LA thu can duoc do.
     try:
-        page.wait_for_function(f"() => window.__mission.step === '{sid}'", timeout=timeout)
+        page.wait_for_function(
+            f"() => window.__mission.step === '{sid}'"
+            " || (window.__mission.askOpen === true)", timeout=timeout)
+        if pass_ask(page):
+            page.wait_for_function(f"() => window.__mission.step === '{sid}'",
+                                   timeout=timeout)
     except Exception:
         st = page.evaluate("""() => {
           const m = window.__mission || {};
@@ -215,6 +226,25 @@ def say_through(page, limit=6):
             return
         page.evaluate("document.getElementById('say-next').click()")
         page.wait_for_timeout(120)
+
+
+def pass_ask(pg):
+    """Bấm "Chơi tiếp" nếu hộp "tiếp hay dừng" đang mở. Trả True nếu vừa bấm.
+
+    ⚠️ TU 12/08/2026 GIUA HAI CHANG CO MOT HOP HOI (`docs/decisions/008`): xong mot
+    chang thi trang KHONG tu sang chang ke nua, no HOI. Hop do la mot lop phu chan
+    het, nen moi vong lai nhiem vu deu phai di qua day — bo do dong vai TRE.
+    ⛔ Dung "chua" bang cach tat hop di trong san pham cho test de chay: cai hop do
+       CHINH LA thu can duoc do.
+    """
+    try:
+        if pg.evaluate("() => window.__mission && window.__mission.askOpen === true"):
+            pg.evaluate("() => window.__mission.askNext()")
+            pg.wait_for_timeout(150)
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def close_card(pg, timeout=6000):
@@ -1565,11 +1595,19 @@ def main():
                 #    đều không làm gì được. Trước đây `close_card` chỉ nằm TRONG vòng chạm
                 #    marker, nên thẻ hé lộ 71% (mở SAU khi marker đã bị xoá) không ai đóng.
                 close_card(pg)
+                # ⚠️ TU 12/08/2026 GIUA HAI CHANG CO HOP HOI "TIEP HAY DUNG"
+                #    (`docs/decisions/008`). No la mot lop phu CHAN HET va no CO Y
+                #    khong tu dong di tiep — bo do phai dong vai TRE va bam "Choi tiep".
+                #    ⛔ Dung "chua" bang cach tat hop di trong san pham cho test de chay:
+                #       cai hop do CHINH LA thu can duoc do.
+                if pass_ask(pg):
+                    continue
                 if _stall >= 25:
                     print("    ⛔ KET o buoc `%s` sau %d luot khong tien trien. Trang thai:"
                           % (sid, _stall))
                     print("       " + str(pg.evaluate("""() => ({
                       done: window.__mission.done, busy: window.__mission.busy,
+                      askOpen: window.__mission.askOpen,
                       bangDangMo: ['ask','time','energy','xsec','eco','core']
                         .filter(id => document.getElementById(id)
                           && document.getElementById(id).classList.contains('show')),
@@ -1771,6 +1809,8 @@ def main():
             sid = page.evaluate("window.__mission.step")
             say_through(page, 3)
             close_card(page)          # cùng lý do như `fast_play` — thẻ chặn hết
+            if pass_ask(page):        # hộp "tiếp hay dừng" cũng chặn hết
+                continue
             if sid in ("scan", "sun"):
                 for mid in page.evaluate("window.__mission.world.markers.map(m=>m.id)"):
                     try:

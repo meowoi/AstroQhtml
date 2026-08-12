@@ -1,0 +1,54 @@
+/* ==========================================================
+   mission-sheet.css — BẢNG CHI TIẾT TRƯỢT LÊN, dùng chung cho khu nhiệm vụ.
+
+   Nạp sau `css/page-shell.css` ở:
+     mission-map.html  (chạm một nơi CHƯA có nhiệm vụ → nói vì sao)
+     mission-tree.html (chạm một chặng → tên + nội dung + nút vào chơi)
+
+   ⚠️ TÁCH RA NGAY TỪ ĐẦU, KHÔNG CHỜ CHÉP RỒI MỚI GOM. Hai bản mẫu trong
+      `scratchpad/` đã có **hai bản `.sheet` gần giống nhau** (proto-mission-map.css
+      và proto-mission-tree.css) và chúng đã kịp trôi khỏi nhau: cỡ tiêu đề 20 vs
+      21px, cỡ chữ thân 14 vs 14.5px, ghi chú 12.6 vs 13px. Đúng thứ quy tắc 2 mục 2
+      CLAUDE.md cấm. Ở đây chốt MỘT bộ số; phần riêng của từng trang (`.sh-orb` của
+      bản đồ, `.sh-ic`/`.sh-kv` của cây chặng) nằm ở CSS của trang đó.
+
+   ⚠️ `.sheet[hidden]{display:none}` là BẮT BUỘC — `.sheet` khai `display:flex`, mà
+      `display` của tác giả THẮNG `display:none` trình duyệt áp cho `[hidden]`.
+      Thiếu dòng này là bảng hiện thường trực và phủ kín trang.
+   ========================================================== */
+.sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(4,7,18,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}
+.sheet[hidden]{display:none;}
+.sheet-in{position:relative;width:min(560px,100%);max-height:88vh;overflow:auto;
+  padding:26px 22px 22px;border-radius:22px 22px 0 0;
+  border:1px solid rgba(56,189,248,.32);border-bottom:none;
+  background:linear-gradient(180deg, rgba(19,28,54,.98), rgba(11,16,32,.99));
+  box-shadow:0 -22px 60px -20px rgba(0,0,0,.9);
+  animation:sheetUp .26s var(--ease);}
+@keyframes sheetUp{from{transform:translateY(26px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+/* Màn rộng thì bảng ra giữa; màn hẹp thì trượt lên từ đáy (ngón cái với tới được). */
+@media (min-width:640px){
+  .sheet{align-items:center;}
+  .sheet-in{border-radius:22px;border-bottom:1px solid rgba(56,189,248,.32);}
+}
+
+/* 48px, KHÔNG phải 44 — 44 là mốc TỐI THIỂU của WCAG 2.5.5 nên đặt đúng 44 là không
+   còn biên an toàn nào (dự án đã có một ca phép kiểm chập chờn vì đúng lý do đó). */
+.sh-x{position:absolute;top:12px;right:12px;width:48px;height:48px;min-width:48px;
+  border-radius:50%;cursor:pointer;border:1px solid var(--brd);background:rgba(8,14,38,.7);
+  color:var(--ink-soft);font-size:15px;line-height:1;}
+.sh-x:hover{color:var(--ink);border-color:var(--brd-on);}
+
+.sh-tag{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cyan);}
+.sheet h3{font-family:var(--font-display);font-weight:700;font-size:20px;margin:6px 0 8px;color:#fff;}
+.sheet p{color:var(--ink-soft);font-size:14.5px;line-height:1.62;margin:0 0 14px;}
+
+/* Câu nói thật (chơi lại không có thưởng · nơi này chưa có nội dung). Phải đọc được
+   TRƯỚC khi bấm — để trẻ tự phát hiện ở màn tổng kết bằng dòng "+0" là cách tệ nhất. */
+.sh-note{font-size:13px;line-height:1.55;padding:11px 13px;border-radius:12px;
+  border:1px solid rgba(251,146,60,.38);background:rgba(251,146,60,.09);color:#ffd9ae;}
+.sh-note[hidden]{display:none;}
+
+.sheet .pbtn{width:100%;margin-top:16px;min-height:48px;font-size:15px;}
+.sheet .pbtn[disabled]{opacity:.42;cursor:not-allowed;filter:none;transform:none;}

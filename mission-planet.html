@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Nhiệm vụ ở một nơi</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<!-- Dùng lại vốn từ hình thức của cây chặng: hàng `.node` · đầu khối `.head` · thẻ
+     kết `.finish`. Xem đầu css/mission-tree.css. -->
+<link rel="stylesheet" href="css/mission-tree.css" />
+<link rel="stylesheet" href="css/mission-planet.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/mission-catalog.js"></script>
+<script src="js/progress.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về bản đồ nhiệm vụ</span></button>
+    <span class="hub-tag" id="tag">[ MISSIONS ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow" id="eyebrow">—</span>
+    <h1 id="h1">—</h1>
+  </section>
+
+  <section class="panel">
+    <div class="head">
+      <p id="lead"></p>
+      <div class="bar"><i id="bar-fill"></i></div>
+    </div>
+
+    <ol class="tree" id="list"></ol>
+
+    <!-- Nơi chưa có nhiệm vụ nào: NÓI THẬT một câu và chỉ một đường đi có thật.
+         Một danh sách rỗng là một lời hứa treo lơ lửng. -->
+    <div class="empty" id="empty" hidden>
+      <span class="e-ic" aria-hidden="true">🛰️</span>
+      <div class="e-b">
+        <b data-i18n="emp_h">Chưa có nhiệm vụ nào ở đây</b>
+        <span data-i18n="emp_p">Bạn vẫn ghé thăm và đọc bảng thông tin của nơi này trên Bản Đồ Thiên Hà.</span>
+      </div>
+      <a class="pbtn" href="explorer.html" data-i18n="emp_go">Mở Bản Đồ Thiên Hà</a>
+    </div>
+
+    <div class="finish" id="finish" hidden>
+      <span class="f-ic" aria-hidden="true">🎉</span>
+      <div class="f-b">
+        <b id="fin-h">—</b>
+        <span data-i18n="fin_p">Quay lại bản đồ để chọn nơi tiếp theo.</span>
+      </div>
+      <a class="pbtn" href="mission-map.html" data-i18n="fin_go">Về bản đồ</a>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var $ = AstroQ.$;
+
+  /* ================= i18n ================= */
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím",
+      title:"AstroQ — Nhiệm vụ ở {w}", back:"Về bản đồ nhiệm vụ",
+      eyebrow:"{w}", h1:"Nhiệm vụ ở {w}",
+      lead_new:"{w} có {n} nhiệm vụ. Bắt đầu từ nhiệm vụ đang sáng.",
+      lead_mid:"Xong {d} trong {n} nhiệm vụ. Nhiệm vụ đang sáng là nhiệm vụ tiếp theo.",
+      lead_done:"Bạn đã xong cả {n} nhiệm vụ ở {w}.",
+      lead_empty:"{w} chưa có nhiệm vụ nào.",
+      sub_start:"Bắt đầu — {n} chặng →", sub_cont:"Chơi tiếp — chặng {d}/{n} →",
+      sub_next:"Nhiệm vụ kế tiếp", sub_done:"Đã xong — chơi lại được",
+      lock_toast:"🔒 Cần xong “{m}” trước đã.",
+      fin_h:"Xong hết nhiệm vụ ở {w}!", fin_p:"Quay lại bản đồ để chọn nơi tiếp theo.",
+      fin_go:"Về bản đồ",
+      emp_h:"Chưa có nhiệm vụ nào ở đây",
+      emp_p:"Bạn vẫn ghé thăm và đọc bảng thông tin của nơi này trên Bản Đồ Thiên Hà.",
+      emp_go:"Mở Bản Đồ Thiên Hà",
+      a_mission:"Nhiệm vụ {i}: {m}"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor",
+      title:"AstroQ — Missions at {w}", back:"Back to mission map",
+      eyebrow:"{w}", h1:"Missions at {w}",
+      lead_new:"{w} has {n} missions. Start with the glowing one.",
+      lead_mid:"{d} of {n} missions done. The glowing one is next.",
+      lead_done:"You've finished all {n} missions at {w}.",
+      lead_empty:"{w} has no missions yet.",
+      sub_start:"Start — {n} stages →", sub_cont:"Continue — stage {d}/{n} →",
+      sub_next:"Next mission", sub_done:"Done — you can replay it",
+      lock_toast:"🔒 Finish “{m}” first.",
+      fin_h:"Every mission at {w} is done!", fin_p:"Head back to the map to pick the next place.",
+      fin_go:"Back to map",
+      emp_h:"No missions here yet",
+      emp_p:"You can still fly over and read this place's info panel on the Galaxy Map.",
+      emp_go:"Open the Galaxy Map",
+      a_mission:"Mission {i}: {m}"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  /* ================= Nơi đang xem ================= */
+  var WID = (new URLSearchParams(location.search).get("w") || "earth").toLowerCase();
+  var LIST = AstroQCatalog.byWorld(WID);
+
+  function L(o){ return o[LANG === "en" ? "en" : "vi"]; }
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /* Tiến độ từng nhiệm vụ, đọc từ cache mà trang có token vừa ghi. Đếm theo ĐOẠN ĐẦU
+     LIỀN MẠCH, cùng luật với `js/mission-engine.js` và `mission-tree.html`. */
+  function progOf(m){
+    var p = AstroQProgress.missionSteps(m.id);
+    var ids = m.steps.map(function(s){ return s.id; });
+    var have = {};
+    (p.done||[]).forEach(function(id){ have[String(id)] = true; });
+    var n = 0;
+    while(n < ids.length && have[ids[n]]) n++;
+    return { known:p.known, at:n, total:ids.length, complete:!!p.complete };
+  }
+
+  /* ⚠️ MỘT NHIỆM VỤ MỞ KHI NHIỆM VỤ TRƯỚC ĐÃ XONG — luật tuyến tính, giống cây chặng.
+     Nhiệm vụ đầu tiên luôn mở. */
+  function stateOf(i, progs){
+    if(progs[i].complete) return "done";
+    if(i === 0 || progs[i-1].complete) return "now";
+    return "lock";
+  }
+
+  function paintHead(progs){
+    var wnm = AstroQCatalog.worldInfo(WID, LANG).nm;
+    var n = LIST.length;
+    var d = 0;
+    for(var i=0;i<progs.length;i++) if(progs[i].complete) d++;
+
+    document.title = t("title").replace("{w}", wnm);
+    $("tag").textContent = "[ " + WID.toUpperCase() + " · MISSIONS ]";
+    $("eyebrow").textContent = t("eyebrow").replace("{w}", wnm);
+    $("h1").textContent = t("h1").replace("{w}", wnm);
+    $("bar-fill").style.width = n ? Math.round(d / n * 100) + "%" : "0%";
+    $("lead").textContent =
+      n === 0   ? t("lead_empty").replace("{w}", wnm)
+      : d === n ? t("lead_done").replace("{n}", n).replace("{w}", wnm)
+      : d === 0 ? t("lead_new").replace("{w}", wnm).replace("{n}", n)
+                : t("lead_mid").replace("{d}", d).replace("{n}", n);
+    $("fin-h").textContent = t("fin_h").replace("{w}", wnm);
+  }
+
+  /* ⚠️ CHỈ VẼ HÀNG, CHƯA CÓ CƠ CHẾ GẤP — CỐ Ý.
+     Bản mẫu `scratchpad/proto-planet.js` có sẵn lời giải cho lúc một nơi có nhiều
+     nhiệm vụ (gấp phần đã xong thành một dải · chỉ hiện 2 nhiệm vụ kế · gấp phần còn
+     lại thành "còn N nhiệm vụ nữa"), và nó giữ chiều cao màn KHÔNG tăng theo số nhiệm
+     vụ. Nhưng hôm nay mỗi nơi có nhiều nhất MỘT nhiệm vụ, nên chép nó vào đây là ~80
+     dòng KHÔNG BAO GIỜ CHẠY: không phép kiểm nào đi qua được, và dự án đã trả giá
+     nhiều lần cho mã chết (`termsData.ts` phải sửa hai lần · trường `lv` khai ở 65 câu
+     mà 0 chỗ đọc · `AstroQRanks.ALL` ngủ 8 ngày). Thêm nhiệm vụ thứ hai ở một nơi thì
+     mang cơ chế gấp từ bản mẫu sang — nó đã có sẵn và đã được đo. */
+  function paintList(progs){
+    var html = "";
+    for(var i = 0; i < LIST.length; i++){
+      var m = LIST[i], st = stateOf(i, progs), p = progs[i];
+      var bdg = st === "done" ? '<span class="bdg">✓</span>'
+              : st === "lock" ? '<span class="bdg">🔒</span>' : "";
+      var extra = "";
+      if(st === "now"){
+        extra = '<span class="mini-bar"><i style="width:' +
+                  Math.round(p.at / p.total * 100) + '%"></i></span>' +
+                '<span class="sub">' +
+                  AstroQ.esc(p.at ? t("sub_cont").replace("{d}", p.at + 1).replace("{n}", p.total)
+                                  : t("sub_start").replace("{n}", p.total)) +
+                "</span>";
+      } else if(st === "done"){
+        extra = '<span class="sub">' + AstroQ.esc(t("sub_done")) + "</span>";
+      } else {
+        extra = '<span class="sub">' + AstroQ.esc(t("sub_next")) + "</span>";
+      }
+      var aria = t("a_mission").replace("{i}", i + 1).replace("{m}", L(m).nm);
+
+      html += '<li class="node ' + st + '" data-i="' + i + '">' +
+        '<button class="node-btn" type="button" aria-label="' + AstroQ.esc(aria) + '">' +
+          '<span aria-hidden="true">' + m.ic + "</span>" +
+          '<span class="num">' + (i + 1) + "</span>" + bdg +
+        "</button>" +
+        '<div class="node-lb"><b>' + AstroQ.esc(L(m).nm) + "</b>" + extra + "</div>" +
+        '<span class="chev" aria-hidden="true">›</span>' +
+      "</li>";
+    }
+    $("list").innerHTML = html;
+    $("empty").hidden = LIST.length > 0;
+    var all = LIST.length > 0 && progs.every(function(p){ return p.complete; });
+    $("finish").hidden = !all;
+  }
+
+  function paintAll(){
+    var progs = LIST.map(progOf);
+    paintHead(progs);
+    paintList(progs);
+    return progs;
+  }
+
+  /* ================= Sự kiện ================= */
+  $("list").addEventListener("click", function(e){
+    var li = e.target.closest ? e.target.closest(".node") : null;
+    if(!li) return;
+    var i = parseInt(li.dataset.i, 10);
+    var progs = LIST.map(progOf);
+    /* Chặn thì phải NÓI RA vì sao — im lặng khi bấm thì trẻ chỉ tưởng mình bấm trượt. */
+    if(stateOf(i, progs) === "lock"){
+      toast(t("lock_toast").replace("{m}", L(LIST[i-1]).nm));
+      return;
+    }
+    location.href = "mission-tree.html?m=" + encodeURIComponent(LIST[i].id);
+  });
+
+  $("back").addEventListener("click", function(){ location.href = "mission-map.html"; });
+
+  /* ================= Ngôn ngữ ================= */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG;
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    paintAll();
+  }
+
+  /* ================= Khởi động ================= */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+})();
+</script>
+</body>
+</html>

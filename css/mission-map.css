@@ -1,0 +1,160 @@
+/* ==========================================================
+   mission-map.css — phần RIÊNG của mission-map.html (bản đồ nhiệm vụ 2D).
+
+   Khung chung ở `css/common.css` + `css/page-shell.css`; dòng "Chơi tiếp" ở
+   `css/resume.css`; bảng chi tiết ở `css/mission-sheet.css`. ĐỪNG chép sang đây.
+
+   ⚠️ NỀN LÀ BẢN VẼ BẰNG CSS, KHÔNG PHẢI ẢNH. Quỹ đạo là ellipse, thiên thể là đĩa
+      gradient lấy đúng hai màu `c`/`c2` khai ở `js/planets.js`. Thay ảnh thật thì
+      đổi ba chỗ: `.map` thêm `background-image` · bỏ phần vẽ `.orbit` trong JS ·
+      chỉnh toạ độ trong `js/mission-catalog.js`. **Nhãn tên GIỮ NGUYÊN là phần tử
+      DOM** — chữ vẽ chết vào ảnh thì bản tiếng Anh vẫn hiện tiếng Việt và chữ không
+      co theo màn hình.
+
+   ⚠️ BẢN CANVAS ĐÃ BỊ BÁC 04/08/2026 (`scratchpad/proto-solar-map.js`, port từ một
+      bản mô phỏng hệ Mặt Trời): chủ dự án chơi thật rồi báo khó nhìn hơn bản này.
+      File đó còn trên đĩa nhưng KHÔNG trang nào nạp — đừng nối lại mà chưa hỏi.
+   ========================================================== */
+
+.panel + .panel{margin-top:26px;}
+.resume{margin-top:26px;}
+
+/* ============ BẢN ĐỒ ============
+   Tỉ lệ khoá cứng: mọi toạ độ trong JS tính theo hệ ảo 1000×760 rồi quy ra %, nên
+   đổi tỉ lệ ở đây là mọi thứ lệch khỏi quỹ đạo của nó. */
+.map{position:relative;width:100%;aspect-ratio:1000/760;margin:4px 0 0;
+  border-radius:18px;overflow:hidden;
+  border:1px solid rgba(120,160,255,.2);
+  background:
+    radial-gradient(ellipse at 6% 96%, rgba(255,190,90,.20), transparent 46%),
+    radial-gradient(ellipse at 78% 12%, rgba(143,123,255,.16), transparent 55%),
+    linear-gradient(160deg, #101a3d 0%, #0b1230 55%, #080d22 100%);}
+
+.map::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:
+    radial-gradient(1.2px 1.2px at 22% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 64% 32%, #cfe0ff, transparent),
+    radial-gradient(1.3px 1.3px at 41% 72%, #fff, transparent),
+    radial-gradient(1px 1px at 86% 62%, #bcd0ff, transparent),
+    radial-gradient(1.1px 1.1px at 12% 55%, #e6efff, transparent);
+  background-size:340px 340px;}
+
+/* ---- Quỹ đạo (ellipse, tâm ở Mặt Trời) ---- */
+.orbit{position:absolute;border-radius:50%;pointer-events:none;
+  border:1px solid rgba(146,180,255,.16);transform:translate(-50%,-50%);}
+.orbit.on{border-color:rgba(56,189,248,.34);border-style:dashed;}
+
+/* ---- Thiên thể ----
+   ⚠️ NÚT CHÍNH LÀ CÁI ĐĨA, nhãn treo tuyệt đối bên dưới. Hai lý do, cả hai là lỗi
+      thật đã đo được ở bản mẫu: ① để nhãn trong dòng chảy thì `translate(-50%,-50%)`
+      canh giữa CẢ CỤM lên toạ độ → đĩa trôi lên trên, không còn nằm trên quỹ đạo;
+      ② `.body` không có bề rộng xác định thì `height:%` của đĩa quy chiếu vào chiều
+      cao `auto` → ra 0px. Nay bề rộng là % của bản đồ, đĩa dùng `aspect-ratio:1`. */
+.body{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;
+  display:block;background:none;border:none;padding:0;cursor:pointer;
+  transition:transform .16s var(--jelly);}
+.body:hover{transform:translate(-50%,-50%) scale(1.07);}
+.body:active{transform:translate(-50%,-50%) scale(.96);}
+
+/* ⚠️⚠️ VÙNG CHẠM ≥48px BẤT KỂ ĐĨA VẼ TO BAO NHIÊU — SỐ ĐO, KHÔNG PHẢI PHÒNG XA.
+   Trên 390×844 khung bản đồ chỉ rộng ~330px, nên đo được: Sao Thuỷ vẽ ra **11px**,
+   Sao Kim 14px, Trái Đất 17px. Không ngón tay nào chạm trúng một đĩa 11px, và chính
+   Trái Đất — thứ trẻ phải bấm để bắt đầu — cũng chỉ 17px.
+   Nới bằng một lớp TRONG SUỐT neo vào TÂM nút: hit-test của pseudo-element tính cho
+   chính phần tử cha, nên không phải thêm phần tử nào và hình vẽ không đổi một pixel.
+   ⛔ KHÔNG chữa bằng cách phóng to đĩa: 9 thiên thể trong 330px thì phóng to là chúng
+      đè lên nhau, và bản đồ mất luôn hình dạng hệ Mặt Trời.
+   ⚠️ Vùng chạm CHỒNG NHAU ở cặp Trái Đất–Mặt Trăng (cách nhau ~25px trên màn hẹp) là
+      chấp nhận được, nhưng phải ĐO: `smoke_mission_flow` mục [7b] bắn `elementFromPoint`
+      vào TÂM từng đĩa và đòi trúng đúng thiên thể đó. Đọc CSS không trả lời được câu
+      hỏi "ngón tay chạm vào giữa Trái Đất thì trúng cái gì". */
+.body::after{content:"";position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);width:max(100%,48px);height:max(100%,48px);
+  border-radius:50%;}
+
+.body .orb{position:absolute;inset:0;border-radius:50%;
+  box-shadow:inset -5px -6px 14px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08);}
+
+.body .lb{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;}
+
+/* Vành Sao Thổ — một ellipse nghiêng, không dùng ảnh */
+.body .ring{position:absolute;left:50%;top:50%;width:190%;height:52%;
+  transform:translate(-50%,-50%) rotate(-18deg);border-radius:50%;
+  border:2px solid rgba(236,224,176,.72);border-top-color:rgba(236,224,176,.28);}
+
+.body .nm{font-family:var(--font-display);font-weight:700;font-size:12.5px;
+  color:var(--ink);text-shadow:0 2px 8px rgba(0,0,0,.85);white-space:nowrap;}
+.body .st{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;white-space:nowrap;}
+
+/* CÓ NHIỆM VỤ CHƠI ĐƯỢC — vòng sáng để ở rule GỐC, animation chỉ là phần THÊM.
+   `common.css` tắt mọi animation khi `prefers-reduced-motion`; để vòng sáng trong
+   keyframes thì lúc đó không còn gì chỉ đường (bài học js/onboard-tour.js). */
+.body.open .orb{box-shadow:inset -5px -6px 14px rgba(0,0,0,.5),
+  0 0 0 3px rgba(56,189,248,.4), 0 0 26px -3px rgba(56,189,248,.95);
+  animation:bodyPulse 2.4s ease-in-out infinite;}
+@keyframes bodyPulse{
+  0%,100%{box-shadow:inset -5px -6px 14px rgba(0,0,0,.5),0 0 0 3px rgba(56,189,248,.34),0 0 20px -4px rgba(56,189,248,.8);}
+  50%    {box-shadow:inset -5px -6px 14px rgba(0,0,0,.5),0 0 0 7px rgba(56,189,248,.12),0 0 34px 0 rgba(56,189,248,1);}}
+.body.open .st{color:var(--cyan);}
+
+/* SẮP CÓ NHIỆM VỤ — tới được rồi, nhưng nội dung đang được làm. */
+.body.soon .orb{box-shadow:inset -5px -6px 14px rgba(0,0,0,.5), 0 0 0 2px rgba(251,146,60,.5);}
+.body.soon .st{color:var(--amber);}
+
+/* CHƯA CÓ NHIỆM VỤ (`none`) và CHƯA MỞ ĐƯỢC ĐIỂM ĐẾN (`lock`) trông GIỐNG NHAU —
+   cùng là "không vào được lúc này", và ba mức màu trên một bản đồ cho trẻ 8–15 đã là
+   nhiều. Cái KHÁC nhau là CÂU NÓI khi chạm vào, và đó mới là chỗ phải phân biệt:
+   "chưa có nhiệm vụ ở đây" ≠ "chưa mở được đường tới đây".
+   ⛔ Mờ bằng `opacity`, KHÔNG dùng `filter:grayscale()` — bài học đã ghi 3 lần: trên
+      nền gradient sáng nó cho ra khối xám SÁNG HƠN, tức hút mắt vào cái không dùng được. */
+.body.none, .body.lock{opacity:.34;}
+.body.none .st, .body.lock .st{color:var(--ink-faint);}
+
+/* TRANG TRÍ — Mặt Trời không phải điểm đến. Phải nhìn ra ngay là bấm không được. */
+.body.deco{cursor:default;}
+.body.deco:hover, .body.deco:active{transform:translate(-50%,-50%);}
+.body.deco .nm{color:var(--ink-soft);font-weight:600;}
+
+.body.sun .orb{background:radial-gradient(circle at 42% 34%, #fff3c4, #ffcf6b 42%, #f59e0b 72%, #b45309 100%);
+  box-shadow:0 0 60px -6px rgba(255,190,90,.75), inset -4px -6px 16px rgba(120,60,0,.45);}
+/* Mặt Trời cố ý bị mép bản đồ cắt bớt — nhãn treo LÊN TRÊN, không thì nó rơi ra
+   ngoài khung và chữ "Mặt Trời" biến mất (đo được ở bản mẫu: dưới đáy 30px). */
+.body.sun .lb{top:auto;bottom:calc(100% + 8px);left:64%;}
+
+/* Thiên thể sát mép phải: kéo nhãn vào trong để chữ không bị bản đồ cắt mất */
+.body.flip .lb{transform:translateX(-82%);align-items:flex-end;}
+
+/* ============ CHÚ GIẢI ============ */
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;padding-top:14px;
+  border-top:1px solid var(--brd);}
+.legend .lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);}
+.legend .dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--brd);flex:none;}
+.legend .dot.open{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(56,189,248,.16);}
+.legend .dot.soon{border-color:rgba(251,146,60,.65);background:rgba(251,146,60,.22);}
+.legend .dot.none{opacity:.4;}
+
+/* ============ BẢNG CHI TIẾT — phần riêng của bản đồ ============ */
+.sh-orb{display:block;width:56px;height:56px;border-radius:50%;margin-bottom:12px;
+  box-shadow:inset -5px -6px 14px rgba(0,0,0,.5);}
+
+/* ============ MÀN HẸP — ĐÂY LÀ SỐ ĐO, KHÔNG PHẢI CẢM GIÁC ============
+   Trên 390×844 khung bản đồ chỉ rộng ~330px. Chín nhãn tên (8 hành tinh + Mặt Trăng)
+   trong bấy nhiêu chỗ thì CHẮC CHẮN đè nhau — đo trên ảnh chụp bản mẫu: "Sao Thổ"
+   chồng lên "Sao Thiên Vương", "Mặt Trăng" chồng lên "Trái Đất". Ba việc cùng lúc:
+
+   ① Khung CAO HƠN để các thiên thể giãn ra theo chiều dọc (rule ngay dưới).
+   ② CHỈ ghi tên nơi ĐI TỚI ĐƯỢC. Nơi chưa có nhiệm vụ vẫn hiện đĩa và vẫn bấm được
+      để hỏi "chỗ này có gì?" — chỉ là không ghi sẵn tên. Thứ trẻ cần đọc trên bản đồ
+      NHIỆM VỤ là *đi đâu được*, không phải một danh sách hành tinh.
+   ③ Bỏ dòng trạng thái dưới tên — màu vòng + chú giải đã nói đủ.
+   ⚠️ Đừng "chữa" bằng cách thu nhỏ chữ: 9 nhãn trong 330px thì cỡ chữ nào cũng đè,
+      và chữ nhỏ hơn 10px thì trẻ không đọc được. */
+@media (max-width:640px){
+  .map{aspect-ratio:1000/900;}
+  .body .nm{font-size:11px;}
+  .body .st{display:none;}
+  .body.none .nm, .body.lock .nm{display:none;}
+}

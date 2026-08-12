@@ -72,64 +72,39 @@ def main():
         br = pw.chromium.launch()
 
         # ══════════════════════════════════════════════════════════════
-        head("[1] missions.html — 2 nhiem vu, tien do THAT")
+        head("[1] missions.html — cua truoc, khong con luoi the nhiem vu")
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         pg, errs = newpage(ctx)
         pg.goto(BASE + "/missions.html", wait_until="load")
-        pg.wait_for_selector(".mcard", timeout=15000)
+        pg.wait_for_selector("#ov .cell", timeout=15000)
 
-        cards = pg.eval_on_selector_all(
-            ".mcard",
-            """es => es.map(e => ({
-                 code: e.querySelector('.hud-line.top span').textContent.trim(),
-                 name: e.querySelector('h3').textContent.trim(),
-                 soon: e.classList.contains('soon'),
-                 btn:  e.querySelector('.play-btn').textContent.trim(),
-                 locked: e.querySelector('.play-btn').classList.contains('locked'),
-                 prog: e.querySelector('.mprog .n') ? e.querySelector('.mprog .n').textContent.trim() : null
-               }))""")
-        chk(len(cards) == 2, "co dung 2 the nhiem vu", str([c["code"] for c in cards]))
-        earth = next((c for c in cards if "MISSION-01" in c["code"]), None)
-        moon = next((c for c in cards if "MISSION-02" in c["code"]), None)
-        chk(earth is not None, "co MISSION-01")
-        chk(moon is not None, "co MISSION-02")
-        if earth:
-            chk("Hành Tinh Xanh" in earth["name"], "MISSION-01 ten 'Hanh Tinh Xanh'", earth["name"])
-            chk(earth["soon"] is False and earth["locked"] is False,
-                "MISSION-01 bam duoc", earth["btn"])
-        if moon:
-            chk(moon["soon"] is True and moon["locked"] is True,
-                "MISSION-02 dang 'Sap ra mat', nut khoa", moon["btn"])
-            chk(moon["prog"] is None,
-                "MISSION-02 KHONG ve thanh tien do (chua co nhiem vu thi khong co tien do)")
-
-        # Ready truoc, soon sau — dung thu tu hien thi cua games.html
-        chk("MISSION-01" in cards[0]["code"],
-            "nhiem vu san sang xep TRUOC nhiem vu sap ra mat", cards[0]["code"])
+        # ⚠️ DOI PHAT BIEU 12/08/2026 (`docs/decisions/008`). Truoc do muc nay soi mot
+        #    LUOI THE NHIEM VU (`.mcard`) va doi dung 2 the (earth + moon). Luoi do da
+        #    chuyen xuong dung tang cua no (`mission-planet.html`), con trang nay thanh
+        #    CUA TRUOC dan sang ban do. Giu luoi o day nua la HAI DUONG VAO cho cung
+        #    mot nhiem vu — dung loi da tra gia o So Tay Thuat Ngu (04/08/2026).
+        #    Luong 4 tang co bo rieng: `scratchpad/smoke_mission_flow.py`.
+        chk(pg.locator(".mcard").count() == 0,
+            "KHONG con luoi the nhiem vu (mot duong vao, khong hai)")
+        chk(pg.locator('a[href="mission-map.html"]').count() == 1,
+            "co dung MOT duong sang ban do nhiem vu")
 
         # ── CHUA DANG NHAP: phai hien dau "—", khong hien so 0 ──
         pg.wait_for_selector("#offline.show", timeout=15000)
-        chk(True, "co dai nhac 'chua doc duoc tien do'")
         banner = pg.eval_on_selector("#offline-msg", "e => e.textContent")
-        chk("—" in banner or "—" in banner, "dai nhac noi ro dang hien dau gach ngang",
-            banner[:60])
+        chk("—" in banner, "dai nhac noi ro dang hien dau gach ngang", banner[:60])
         ov = pg.eval_on_selector_all("#ov .cell .v", "es => es.map(e => e.textContent.trim())")
         chk(len(ov) == 3, "bang dieu phoi co 3 o", str(ov))
         chk(all(v == "—" for v in ov),
             "chua dang nhap: ca 3 o hien dau '—', KHONG hien 0", str(ov))
-        if earth:
-            chk(earth["prog"].startswith("—"),
-                "MISSION-01: thanh tien do hien '—/8', khong phai '0/8'", earth["prog"])
-        barw = pg.eval_on_selector(".mcard .mprog .bar i", "e => e.getBoundingClientRect().width")
-        chk(barw < 1, "thanh tien do rong 0px khi chua biet tien do", f"{barw:.1f}px")
-
+        chk(pg.locator("#resume[hidden]").count() == 1,
+            "chua biet tien do thi AN dong 'Choi tiep'")
         chk(len(errs) == 0, "missions.html: 0 loi console", "; ".join(errs[:3]))
 
-        # ── Bam MISSION-01 → mission-earth.html ──
-        pg.click('.mcard:not(.soon) .play-btn')
-        pg.wait_for_url("**/mission-earth.html", timeout=15000)
-        chk(pg.url.endswith("mission-earth.html"), "bam MISSION-01 dan sang mission-earth.html",
-            pg.url)
+        # ── Bam the lon -> ban do ──
+        pg.click('a[href="mission-map.html"]')
+        pg.wait_for_url("**/mission-map.html", timeout=15000)
+        chk(pg.url.endswith("mission-map.html"), "the lon dan sang ban do", pg.url)
         ctx.close()
 
         # ══════════════════════════════════════════════════════════════
@@ -137,20 +112,12 @@ def main():
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         pg, errs2 = newpage(ctx, "en")
         pg.goto(BASE + "/missions.html", wait_until="load")
-        pg.wait_for_selector(".mcard", timeout=15000)
+        pg.wait_for_selector("#ov .cell", timeout=15000)
         chk(pg.evaluate("document.documentElement.lang") == "en", "the html lang=en")
         h1 = pg.eval_on_selector("h1", "e => e.textContent")
         chk(not any(c in h1 for c in "ệộứạảầ"), "tieu de dich sang tieng Anh", h1)
         back = pg.eval_on_selector("#back", "e => e.textContent")
         chk("Navigation Hub" in back, "nut quay lai: 'Back to Navigation Hub'", back.strip())
-        soon_btn = pg.eval_on_selector(".mcard.soon .play-btn", "e => e.textContent.trim()")
-        # ⚠️ DOI PHAT BIEU 09/08/2026: nhan nut cua the khoa nay la mot CAU HOI
-        #    bam duoc ("Why is it locked?"), khong con lap lai dung chu trang thai
-        #    "Coming soon" ngay phia tren. Nut mo modal giai thich, nen nhan phai
-        #    moi bam. Phep kiem cu khang dinh dung trang thai CU nen no bao hong
-        #    DUNG LUC san pham lam dung.
-        chk("locked" in soon_btn.lower(), "EN: nhan nut khoa moi bam", soon_btn)
-        chk(soon_btn != "Coming soon", "EN: nhan nut KHONG lap lai nhan trang thai", soon_btn)
         chk(len(errs2) == 0, "EN: 0 loi console", "; ".join(errs2[:3]))
         ctx.close()
 

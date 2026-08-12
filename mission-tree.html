@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Đường đi của nhiệm vụ</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/mission-sheet.css" />
+<link rel="stylesheet" href="css/mission-tree.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/planets.js"></script>
+<script src="js/mission-catalog.js"></script>
+<script src="js/progress.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+
+  <!-- ⚠️ Nút quay lại trỏ về BẢN ĐỒ, không về màn hành tinh: từ bản đồ vào thẳng đây
+       nên bản đồ mới là chỗ trẻ vừa rời khỏi. Màn hành tinh vẫn tới được, bằng dòng
+       ở CUỐI đường (`#more`). -->
+  <header class="hub-top" id="top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về bản đồ</span></button>
+    <span class="hub-tag" id="tag">[ MISSION ]</span>
+    <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+      <span class="c-val" id="bal">0</span>
+    </div>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- Thanh dính mang tên nhiệm vụ + tiến độ: khi nút trên đường không còn nhãn thì
+       đây là chỗ DUY NHẤT trả lời "mình đang ở nhiệm vụ nào, được bao nhiêu rồi". -->
+  <div class="mbar" id="mbar">
+    <span class="m-ic" id="m-ic" aria-hidden="true">🌍</span>
+    <span class="m-nm" id="m-nm">—</span>
+    <span class="m-ct" id="m-ct">—</span>
+    <span class="m-bar"><i id="m-fill"></i></span>
+  </div>
+
+  <section class="hero">
+    <span class="eyebrow" id="eyebrow">—</span>
+    <h1 id="h1">—</h1>
+  </section>
+
+  <div class="banner" id="offline" role="status">
+    <span class="ic" aria-hidden="true">📡</span>
+    <span id="offline-msg"></span>
+  </div>
+
+  <section class="panel">
+    <p class="lead" id="lead"></p>
+    <ol class="path" id="tree"></ol>
+
+    <!-- ⚠️ CÂU NÀY LÀ ĐIỀU KIỆN BẮT BUỘC CỦA VIỆC "CHẶN HẲN" chặng chưa mở. Bảng chi
+         tiết ĐANG là chỗ duy nhất nói ra vì sao khoá — chặn hẳn mà không thay bằng gì
+         là đúng cái bẫy của cổng lộ trình (`js/route-gate.js`): *"im lặng thì trẻ chỉ
+         tưởng mình bấm trượt"*. Ở cây chặng thì luật không đổi bao giờ (tuyến tính,
+         chặng sau mở khi xong chặng trước) nên MỘT câu cố định là đủ — và nó phải đọc
+         được mà không cần chạm vào đâu. Đặt ngay dưới đường vì chặng khoá luôn ở cuối. -->
+    <p class="rule" id="rule" hidden>
+      <span aria-hidden="true">🔒</span> <span data-i18n="rule">Chặng sau mở khi bạn xong chặng đang sáng.</span>
+    </p>
+
+    <!-- ⚠️ ĐƯỜNG TỚI DANH SÁCH NHIỆM VỤ, ĐẶT Ở CUỐI ĐƯỜNG — CÓ CHỦ ĐÍCH. Bản đồ nay
+         đi thẳng vào đây, nhưng màn hành tinh KHÔNG được biến mất: một nơi sẽ có
+         nhiệm vụ 02, 03… và phải có chỗ để tới. Đặt ở CUỐI vì "ở đây còn gì nữa" là
+         câu trẻ hỏi SAU khi đã xem hết đường của nhiệm vụ này. Đặt ở đầu là dựng lại
+         đúng cái cửa trung gian vừa bỏ đi. -->
+    <a class="more" id="more" href="mission-planet.html" data-i18n="more">Xem tất cả nhiệm vụ ở nơi này ›</a>
+
+    <div class="finish" id="finish" hidden>
+      <span class="f-ic" aria-hidden="true">🎉</span>
+      <div class="f-b">
+        <b id="fin-h">—</b>
+        <span id="fin-p">—</span>
+      </div>
+      <a class="pbtn" id="fin-go" href="mission-map.html" data-i18n="fin_go">Về bản đồ</a>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══ BẢNG CHI TIẾT MỘT CHẶNG ═══ -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" hidden>
+  <div class="sheet-in">
+    <button class="sh-x" id="sh-x" type="button" data-i18n-aria="a_close" aria-label="Đóng">✕</button>
+    <span class="sh-ic" id="sh-ic" aria-hidden="true">🛰️</span>
+    <span class="sh-tag" id="sh-tag"></span>
+    <h3 id="sh-h"></h3>
+    <p id="sh-p"></p>
+    <p class="sh-note" id="sh-note"></p>
+    <button class="pbtn" id="sh-go" type="button">—</button>
+  </div>
+</div>
+
+<button class="jump" id="jump" type="button" hidden>
+  <span class="j-ar" id="j-ar" aria-hidden="true">↓</span>
+  <span data-i18n="jump">Về chỗ đang chơi</span>
+</button>
+
+<script src="economy.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var $ = AstroQ.$;
+
+  /* ================= i18n ================= */
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", a_close:"Đóng", tt_name:"Thiên thạch tím",
+      title:"AstroQ — {m}", back:"Về bản đồ",
+      eyebrow:"{w} · {n} chặng",
+      lead_new:"{n} chặng khám phá. Chạm vào chặng đang sáng để bắt đầu.",
+      lead_mid:"Bạn đã đi {n} trong {t} chặng.",
+      lead_done:"Bạn đã đi hết {t} chặng của nhiệm vụ này.",
+      rule:"Chặng sau mở khi bạn xong chặng đang sáng.",
+      more:"Xem tất cả nhiệm vụ ở nơi này ›",
+      jump:"Về chỗ đang chơi",
+      fin_h:"Xong cả {t} chặng!", fin_p:"Quay lại bản đồ để chọn nơi tiếp theo.",
+      fin_go:"Về bản đồ",
+      bub_start:"Bắt đầu ở đây →", bub_cont:"Chơi tiếp →",
+      sh_tag:"Chặng {n} / {t}",
+      go_start:"Bắt đầu nhiệm vụ", go_play:"Chơi chặng này", go_replay:"Chơi lại chặng này",
+      note_replay:"Chặng này đã tính thưởng rồi. Chơi lại là để ôn — không nhận thêm Thiên thạch tím hay XP.",
+      a_done:"đã xong", a_now:"đang mở", a_lock:"chưa mở",
+      off_net:"Chưa đọc được tiến độ của bạn nên đường đi đang hiện từ chặng đầu. Đăng nhập rồi tải lại trang để xem tiến độ thật."
+    },
+    en:{
+      a_lang:"Language", a_close:"Close", tt_name:"Purple Meteor",
+      title:"AstroQ — {m}", back:"Back to map",
+      eyebrow:"{w} · {n} stages",
+      lead_new:"{n} stages to explore. Tap the glowing one to begin.",
+      lead_mid:"You've finished {n} of {t} stages.",
+      lead_done:"You've finished all {t} stages of this mission.",
+      rule:"The next stage opens when you finish the glowing one.",
+      more:"See every mission at this place ›",
+      jump:"Back to where you are",
+      fin_h:"All {t} stages done!", fin_p:"Head back to the map to pick the next place.",
+      fin_go:"Back to map",
+      bub_start:"Start here →", bub_cont:"Continue →",
+      sh_tag:"Stage {n} / {t}",
+      go_start:"Start the mission", go_play:"Play this stage", go_replay:"Replay this stage",
+      note_replay:"This stage has already paid out. Replaying is for practice — no extra Purple Meteors or XP.",
+      a_done:"done", a_now:"open", a_lock:"locked",
+      off_net:"We couldn't read your progress, so the path starts at stage one. Sign in and reload to see your real progress."
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  /* ================= Nhiệm vụ đang xem ================= */
+  var MID = (new URLSearchParams(location.search).get("m") || "earth").toLowerCase();
+  var M = AstroQCatalog.find(MID);
+  /* Nhiệm vụ lạ (URL gõ tay, dữ liệu cũ) → về bản đồ thay vì vẽ một trang rỗng. */
+  if(!M){ location.replace("mission-map.html"); return; }
+
+  var STEPS = M.steps;
+  var at = 0;            // số chặng đã xong, đếm theo ĐOẠN ĐẦU LIỀN MẠCH
+  var complete = false;
+  var known = false;     // đã đọc được tiến độ thật chưa
+  var picked = null, obs = null;
+  var SEEN = 0.6;        // ngưỡng "đang nhìn thấy" — DÙNG CHUNG, xem curInView()
+
+  var reduced = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function pad(n){ return n < 10 ? "0" + n : String(n); }
+  function L(o){ return o[LANG === "en" ? "en" : "vi"]; }
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /* ⚠️ ĐẾM THEO ĐOẠN ĐẦU LIỀN MẠCH, đúng luật `resume()` của js/mission-engine.js:
+     đánh dấu một chặng nằm SAU chặng đang chơi là nhiệm vụ kẹt cứng, nên chỗ nào nói
+     "đang ở chặng mấy" cũng phải đếm cùng một kiểu. Đếm tổng số phần tử `doneSteps`
+     thì trang này và trang nhiệm vụ nói hai con số khác nhau. */
+  function runFrom(doneIds){
+    var have = {};
+    (doneIds||[]).forEach(function(id){ have[String(id)] = true; });
+    var n = 0;
+    while(n < STEPS.length && have[STEPS[n].id]) n++;
+    return n;
+  }
+
+  function stateOf(i){
+    if(complete || i < at) return "done";
+    if(i === at) return "now";
+    return "lock";
+  }
+  function curNode(){ return $("tree").querySelector(".node.now"); }
+
+  /* ================= Đầu trang ================= */
+  function paintHead(){
+    var n = STEPS.length;
+    var wnm = AstroQCatalog.worldInfo(M.world, LANG).nm;
+    var mnm = L(M).nm;
+
+    document.title = t("title").replace("{m}", mnm);
+    $("tag").textContent = "[ " + M.id.toUpperCase() + " · " + wnm.toUpperCase() + " ]";
+    $("m-ic").textContent = M.ic;
+    $("m-nm").textContent = mnm;
+    $("h1").textContent = mnm;
+    $("eyebrow").textContent = M.ic + " " + t("eyebrow").replace("{w}", L(M).tag).replace("{n}", n);
+
+    var doneN = complete ? n : at;
+    $("m-ct").textContent = doneN + " / " + n;
+    $("m-fill").style.width = Math.round(doneN / n * 100) + "%";
+    $("lead").textContent =
+      complete   ? t("lead_done").replace("{t}", n)
+      : at === 0 ? t("lead_new").replace("{n}", n)
+                 : t("lead_mid").replace("{n}", at).replace("{t}", n);
+
+    $("fin-h").textContent = t("fin_h").replace("{t}", n);
+    $("fin-p").textContent = t("fin_p");
+    $("more").href = "mission-planet.html?w=" + encodeURIComponent(M.world);
+  }
+
+  /* ================= Một nút trên đường =================
+     Không có nhãn chữ cạnh nút. Tên chặng nằm ở `aria-label` (trình đọc màn hình đọc
+     đủ) và ở bong bóng của chặng đang mở — bỏ nhãn mà không có hai chỗ đó thì đúng là
+     lấy đi thông tin. */
+  function row(i){
+    var s = STEPS[i], st = stateOf(i);
+    var bdg = st === "done" ? '<span class="bdg">✓</span>'
+            : st === "lock" ? '<span class="bdg">🔒</span>' : "";
+    var bub = st === "now"
+      ? '<div class="bub" aria-hidden="true"><b>' + AstroQ.esc(L(s).nm) + "</b>" +
+        '<span class="go">' + AstroQ.esc(at === 0 ? t("bub_start") : t("bub_cont")) +
+        "</span></div>"
+      : "";
+
+    /* ⚠️ CHẶNG CHƯA MỞ THÌ CHẶN HẲN Ở CHÍNH CÁI NÚT (`disabled`), không chặn bằng một
+       câu `if` trong hàm xử lý bấm. Chặn bằng `if` thì nút vẫn nhận tiêu điểm bàn phím
+       và vẫn báo với trình đọc màn hình rằng nó bấm được — tức chặn cho chuột mà không
+       chặn cho người dùng bàn phím. */
+    var off = st === "lock" ? " disabled" : "";
+    var aria = t("sh_tag").replace("{n}", i + 1).replace("{t}", STEPS.length) +
+               ": " + L(s).nm + " — " +
+               (st === "done" ? t("a_done") : st === "now" ? t("a_now") : t("a_lock"));
+
+    return '<li class="node ' + st + '" data-i="' + i + '">' +
+      '<button class="node-btn" type="button"' + off + ' aria-label="' + AstroQ.esc(aria) + '">' +
+        '<span aria-hidden="true">' + s.ic + "</span>" +
+        '<span class="num">' + (i + 1) + "</span>" + bdg +
+      "</button>" + bub +
+    "</li>";
+  }
+
+  function paintTree(){
+    var html = "";
+    for(var i = 0; i < STEPS.length; i++) html += row(i);
+    $("tree").innerHTML = html;
+    $("finish").hidden = !complete;
+    /* Câu điều kiện mở chỉ hiện khi THẬT SỰ còn chặng khoá — xong hết mà vẫn treo một
+       dòng nói về chặng chưa mở là nói về thứ không còn tồn tại. */
+    $("rule").hidden = complete || at >= STEPS.length - 1;
+    watchCurrent();
+  }
+
+  /* ================= Tự cuộn tới chặng đang mở =================
+     ⚠️ Lúc MỞ TRANG thì cuộn TỨC THÌ, cố ý: một trang tự trôi ngay khi vừa mở đọc ra
+        như trang bị lỗi. Chỉ khi trẻ BẤM nút nhảy mới cuộn mượt — lúc đó nó là hệ quả
+        của một hành động. */
+  function goCurrent(smooth){
+    var el = curNode();
+    if(!el) return;
+    el.scrollIntoView({ block:"center",
+                        behavior:(smooth && !reduced) ? "smooth" : "auto" });
+  }
+
+  /* ⚠️ MỘT ĐỊNH NGHĨA "ĐANG NHÌN THẤY" CHO CẢ SẢN PHẨM LẪN PHÉP KIỂM. Bản mẫu lúc đầu
+     để phép kiểm đòi nút nằm TRỌN trong khung còn observer chỉ đòi 60% — trên desktop
+     một nút lộ 67% thì nút nhảy ẩn (đúng) mà phép kiểm báo hỏng. Hai định nghĩa cho
+     một câu hỏi thì sớm muộn có một cái sai. */
+  function curInView(){
+    var el = curNode();
+    if(!el) return false;
+    var r = el.getBoundingClientRect(), vh = window.innerHeight || 0;
+    var vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+    return r.height > 0 && vis / r.height >= SEEN;
+  }
+
+  function watchCurrent(){
+    if(obs){ obs.disconnect(); obs = null; }
+    var el = curNode();
+    if(!el){ $("jump").hidden = true; return; }
+    obs = new IntersectionObserver(function(ents){
+      var e = ents[0];
+      $("jump").hidden = e.isIntersecting;
+      $("j-ar").textContent = e.boundingClientRect.top > 0 ? "↓" : "↑";
+    }, { threshold: SEEN });
+    obs.observe(el);
+  }
+
+  /* ⚠️ Đo chiều cao THẬT của header rồi gán vào `--top`. Gán cứng là sai ở một khổ máy
+     nào đó — header tự xuống 2 hàng trên màn hẹp (bài học `#time-ghost`). */
+  function syncTop(){
+    var h = $("top").getBoundingClientRect().height;
+    document.documentElement.style.setProperty("--top", Math.round(h) + "px");
+  }
+
+  /* ================= Bảng chi tiết ================= */
+  function openSheet(i){
+    picked = i;
+    var s = STEPS[i], st = stateOf(i);
+    $("sh-ic").textContent = s.ic;
+    $("sh-tag").textContent = t("sh_tag").replace("{n}", i + 1).replace("{t}", STEPS.length);
+    $("sh-h").textContent = L(s).nm;
+    $("sh-p").textContent = L(s).p;
+
+    /* Không còn nhánh `lock`: chặng chưa mở KHÔNG mở được bảng (chủ dự án chốt
+       04/08/2026). Điều kiện mở nay nằm ở dòng `#rule` luôn hiển thị. */
+    if(st === "done"){
+      note(t("note_replay"));
+      $("sh-go").textContent = t("go_replay");
+    } else {
+      note("");
+      $("sh-go").textContent = at === 0 ? t("go_start") : t("go_play");
+    }
+    $("sheet").hidden = false;
+    $("sh-go").focus();
+  }
+  function note(txt){ var el = $("sh-note"); el.textContent = txt; el.hidden = !txt; }
+  function closeSheet(){ $("sheet").hidden = true; }
+
+  /* ================= Nạp tiến độ =================
+     ⚠️ TRANG NÀY CÓ TOKEN, CÓ CHỦ ĐÍCH (xem check_pages mục [4]). Nó là chỗ TỰ CHỮA
+        của cả luồng: `mission-earth.html` cố ý không nạp SDK nên mọi bước nó chơi đều
+        nằm trong HÀNG CHỜ; nạp `js/progress.js` ở một trang CÓ token thì hàng chờ được
+        gửi đi và cache cập nhật ngay. Không có nó thì trẻ chơi xong một chặng, quay
+        lại đây và vẫn thấy đúng chặng vừa chơi đang sáng — một lỗi im lặng. */
+  function absorb(p){
+    if(!p || !p.known) return false;
+    at = runFrom(p.done);
+    complete = !!p.complete;
+    known = true;
+    return true;
+  }
+
+  function load(){
+    // Bước 1: cache — vẽ ngay, không chờ mạng.
+    absorb(AstroQProgress.missionSteps(M.id));
+    paintAll();
+
+    // Bước 2: sự thật từ server (kèm gửi nốt hàng chờ).
+    AstroQProgress.missions().then(function(r){
+      if(r && r.ok && r.data && r.data.missions && r.data.missions[M.id]){
+        var m = r.data.missions[M.id];
+        at = runFrom(m.doneSteps);
+        complete = !!m.done;
+        known = true;
+      }
+      paintAll();
+      goCurrent(false);
+    });
+  }
+
+  function paintBanner(){
+    var el = $("offline");
+    if(known){ el.classList.remove("show"); return; }
+    $("offline-msg").textContent = t("off_net");
+    el.classList.add("show");
+  }
+
+  function paintAll(){ paintHead(); paintTree(); paintBanner(); syncTop(); }
+
+  /* ================= Sự kiện ================= */
+  $("tree").addEventListener("click", function(e){
+    var li = e.target.closest ? e.target.closest(".node") : null;
+    if(!li || li.classList.contains("lock")) return;   // chặn hẳn — xem ghi chú ở row()
+    openSheet(parseInt(li.dataset.i, 10));
+  });
+
+  /* MỘT chỗ duy nhất quyết định "vào chơi một chặng thì đi đâu". */
+  $("sh-go").addEventListener("click", function(){
+    if(picked === null) return;
+    location.href = M.file + "?step=" + encodeURIComponent(STEPS[picked].id);
+  });
+
+  $("jump").addEventListener("click", function(){ goCurrent(true); });
+  $("sh-x").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")) closeSheet(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && !$("sheet").hidden) closeSheet();
+  });
+  $("back").addEventListener("click", function(){ location.href = "mission-map.html"; });
+  window.addEventListener("resize", syncTop);
+
+  /* ================= Ngôn ngữ ================= */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang=LANG;
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    paintAll();
+  }
+
+  /* Bề mặt cho phép kiểm — chỉ ĐỌC trạng thái, không cấp thưởng gì. */
+  window.__tree = {
+    get mission(){ return M.id; },
+    get at(){ return at; },
+    get complete(){ return complete; },
+    get known(){ return known; },
+    get jumpVisible(){ return !$("jump").hidden; },
+    curInView: curInView
+  };
+
+  /* ================= Khởi động ================= */
+  paintBalance();
+  Economy.onAsteroidsChange(paintBalance);
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  load();
+})();
+</script>
+<!-- Nạp SAU phần trên. Trang này BẮT BUỘC cần token: nó đọc `GET /me/missions` và là
+     chỗ gửi nốt hàng chờ mà `mission-earth.html` để lại. Xem check_pages.py mục [4]. -->
+<script type="module" src="js/firebase-auth.js"></script>
+</body>
+</html>

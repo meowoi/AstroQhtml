@@ -215,8 +215,25 @@ Ba bất biến được **đo**, không chỉ được nói:
 
 ## Còn treo
 
-1. **Dựng thật**: `mission-tree.html` + `?step=` ở `mission-earth.html` + **tắt đồng hồ 5
-   giây** khi còn chặng sau.
+1. ~~**Dựng thật**: `mission-tree.html` + `?step=` ở `mission-earth.html` + **tắt đồng hồ 5
+   giây** khi còn chặng sau.~~ ✅ **XONG 12/08/2026.** Bốn trang thật:
+   `missions.html` (viết lại thành cửa trước) · `mission-map.html` · `mission-planet.html` ·
+   `mission-tree.html`, cộng `?step=` + hộp "tiếp hay dừng" ở `mission-earth.html`.
+   Danh mục nhiệm vụ tách ra `js/mission-catalog.js` — chỗ duy nhất khai TÊN, và
+   `check_pages` mục [20] đối chiếu nó với `Services/Missions.cs` **và** với `STEP_IDS`.
+   - ⚠️ **Điều kiện "tắt đồng hồ 5 giây khi còn chặng sau" hoá ra được thoả BẰNG CẤU
+     TRÚC, không cần một cái cờ.** Lúc viết `008` tôi tưởng màn tổng kết hiện sau MỖI
+     chặng; đọc lại mã thì `onWin` chỉ được gọi khi `idx` là chặng CUỐI, tức đồng hồ đó
+     chỉ sống ở màn "xong cả nhiệm vụ" — nơi không còn gì để hỏi. Hộp hỏi và đồng hồ
+     không bao giờ cùng lúc trên màn hình. Hai phép kiểm canh đúng hai chân đó.
+   - ⚠️ **Bảng chi tiết một chặng CỐ Ý KHÔNG có dãy chip phần thưởng** như bản mẫu
+     (`+20 tt · +30 XP · 1 mẫu dữ liệu`). `GET /me/missions` không trả thưởng theo từng
+     bước, nên vẽ được dãy đó thì phải CHÉP bảng của `Services/Missions.cs` vào client —
+     hai nơi giữ một luật. Muốn có lại thì **thêm `stepInfo` vào response trước**, đừng
+     gõ số vào danh mục.
+   - ⚠️ **Cơ chế GẤP của màn hành tinh chưa mang sang** (`scratchpad/proto-planet.js` có
+     sẵn): hôm nay mỗi nơi có nhiều nhất MỘT nhiệm vụ nên nó là ~80 dòng không bao giờ
+     chạy. Thêm nhiệm vụ thứ hai ở một nơi thì mang sang.
 2. **Hàng ngày / sự kiện chưa có backend**: `POST /me/progress` chỉ nhận
    `quiz`/`game`/`lesson`/`planet`; `Wallet` không có mục `daily` và `reason` lạ trả **400**.
    Cần hình dạng dữ liệu mới (`SK=DAILY#<ngày>` + TTL + chuỗi ngày) và một mục trần thưởng.

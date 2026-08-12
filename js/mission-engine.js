@@ -64,6 +64,12 @@
     var toast     = cfg.toast     || function () {};
     var onBalance = cfg.onBalance || function () {};
     var onWin     = cfg.onWin     || function () {};
+    /* ⚠️ MÓC "XONG MỘT CHẶNG" — trả `true` là ENGINE DỪNG, không tự sang chặng kế.
+       Sinh ra cho quyết định `docs/decisions/008`: *chơi xong một chặng thì HỎI
+       "tiếp hay dừng", đừng tự quyết*. Không khai móc thì hành vi y như cũ (tự đi
+       tiếp) — nhờ vậy nhiệm vụ nào chưa nối vào cây chặng vẫn chạy nguyên.
+       Chữ ký: onStepDone(id, isLast) → boolean | Promise<boolean>. */
+    var onStepDone = cfg.onStepDone || function () { return false; };
 
     var idx    = 0;
     var done   = new Set();
@@ -148,6 +154,30 @@
       return idx;
     }
 
+    /**
+     * MỞ THẲNG MỘT CHẶNG THEO VỊ TRÍ, không đụng tới danh sách đã xong.
+     * Dùng cho `?step=<id>`: cây chặng cho trẻ chạm vào một chặng cụ thể (chơi lại
+     * một chặng cũ, hoặc vào đúng chặng đang mở), nên trang nhiệm vụ phải mở được ở
+     * đó chứ không chỉ "bước còn dở đầu tiên".
+     * Gọi SAU `resume()` và TRƯỚC `enter()`. Trả về vị trí thật sự mở.
+     *
+     * ⚠️ KHÔNG cho nhảy tới chặng CHƯA MỞ: `i` lớn hơn số chặng đã mở nghĩa là vượt
+     *    qua một chặng trẻ chưa từng học. Kẹp lại thay vì tin URL — địa chỉ trên
+     *    thanh URL là thứ ai cũng sửa được.
+     * @param maxIdx vị trí xa nhất được phép mở. Bỏ trống thì lấy theo số bước đã
+     *        đánh dấu xong trong lượt này. Trang phải truyền vào khi nó biết rõ hơn
+     *        engine — ví dụ nhiệm vụ đã hoàn thành: lúc đó `resume()` cố ý KHÔNG
+     *        đánh dấu gì (để dãy chấm trắng cho lượt chơi lại), nên `done` rỗng
+     *        trong khi thực tế mọi chặng đều mở.
+     */
+    function openAt(i, maxIdx) {
+      if (!(i >= 0)) return idx;
+      var cap = (typeof maxIdx === "number") ? maxIdx : done.size;
+      idx = Math.min(i, Math.max(0, Math.min(cap, stepIds.length - 1)));
+      paint();
+      return idx;
+    }
+
     /** Vào bước đang trỏ tới (gọi một lần lúc mở màn). */
     function enter() {
       var st = current();
@@ -160,10 +190,17 @@
       done.add(id);
       paint();
       var st = steps[id];
+      /* Tính "đây có phải chặng cuối không" TRƯỚC khi bất cứ móc nào chạy — `idx`
+         không đổi trong chuỗi dưới đây, nhưng đọc nó ở cuối là mời một lỗi lặng lẽ
+         vào ngày ai đó thêm một móc có đụng `idx`. */
+      var last = idx >= stepIds.length - 1;
       return Promise.resolve(st && st.outro ? st.outro() : null)
         .then(function () { return report(id); })
         .then(function () { return st && st.afterReport ? st.afterReport() : null; })
-        .then(function () { return next(); });
+        .then(function () { return onStepDone(id, last); })
+        /* `true` = trang đã tự lo chuyện đi tiếp (hộp "tiếp hay dừng", hoặc điều
+           hướng đi chỗ khác). Mọi giá trị khác giữ nguyên hành vi cũ. */
+        .then(function (stop) { return stop === true ? null : next(); });
     }
 
     /** Sang bước kế; hết bước thì gọi `onWin`. */
@@ -195,6 +232,7 @@
       current: current,
       paint: paint,
       resume: resume,
+      openAt: openAt,
       enter: enter,
       finish: finish,
       next: next,

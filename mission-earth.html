@@ -25,6 +25,11 @@
      huy hiệu mà SERVER vừa mở — gõ lại tên ở trang này là hai chỗ sớm muộn lệch
      nhau, mà `js/badges.js` đã là chỗ duy nhất khai báo tên. -->
 <script src="js/badges.js"></script>
+<!-- TÊN CHẶNG (song ngữ). Hộp "tiếp hay dừng" phải gọi đúng tên chặng vừa xong và
+     chặng kế; gõ lại tên ở đây là hai chỗ sớm muộn lệch nhau, mà cây chặng
+     (`mission-tree.html`) đã đọc đúng file này. Nó cũng là chỗ `check_pages` [20]
+     đối chiếu với `STEP_IDS` và với `Services/Missions.cs`. -->
+<script src="js/mission-catalog.js"></script>
 <!-- Trình điều phối bước dùng chung cho mọi nhiệm vụ: vào bước, chốt bước, báo
      server, sang bước kế, vẽ dãy chấm tiến độ. Trang này chỉ còn khai NỘI DUNG
      của 8 bước và cảnh Trái Đất. Xem `docs/decisions/002`. -->
@@ -54,7 +59,7 @@
 <!-- ============ LỚP HUD ============ -->
 <div class="me-ui">
   <header class="me-top">
-    <button class="back hit" id="back" type="button">&lt; <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <button class="back hit" id="back" type="button">&lt; <span data-i18n="back">Về đường đi</span></button>
     <span class="me-tag" id="tag">[ MISSION_01 · HÀNH TINH XANH ]</span>
     <span class="me-steps" id="steps" role="img" aria-label="Tiến độ nhiệm vụ"></span>
     <span class="me-cur" data-i18n-title="tt_name" title="Thiên thạch tím">
@@ -318,6 +323,30 @@
   </div>
 </div>
 
+<!-- ============ XONG MỘT CHẶNG: HỎI TIẾP HAY DỪNG ============
+     `docs/decisions/008` quyết định 4: *chơi xong một chặng thì HỎI, đừng tự quyết*.
+     Trước đây trang này nối thẳng bảy chặng thành một lượt dài — trẻ không có chỗ nào
+     dừng lại mà không mất mạch.
+
+     ⚠️ HỘP NÀY KHÔNG BAO GIỜ HIỆN Ở CHẶNG CUỐI: hết chặng thì màn tổng kết mới là
+        thứ đúng để hiện, và ở đó không còn gì để hỏi. Nhờ vậy ĐỒNG HỒ VỀ TỰ ĐỘNG 5
+        GIÂY (chỉ có ở màn tổng kết) không bao giờ chạy trong lúc một câu hỏi hai lựa
+        chọn đang chờ trẻ trả lời — điều kiện mà `008` đặt ra được thoả **bằng cấu
+        trúc**, không phải bằng một cái cờ phải nhớ tắt.
+     ⚠️ Chơi LẠI một chặng cũ cũng không hiện hộp này: không có chặng nào vừa mở ra để
+        đi tiếp, và tiến độ không nhúc nhích. Ở đó trang đưa thẳng về đường đi.
+     Dùng lại nguyên vỏ `.me-win` — cùng một kiểu hộp thì trẻ chỉ phải học một lần. -->
+<div class="me-win me-next" id="after" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="me-win-card">
+    <h2><span aria-hidden="true">🎉</span> <span id="af-h">—</span></h2>
+    <p class="af-p" id="af-p">—</p>
+    <div class="acts">
+      <button type="button" class="go" id="af-next">—</button>
+      <button type="button" class="ghost" id="af-stop">—</button>
+    </div>
+  </div>
+</div>
+
 <div class="me-toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="economy.js"></script>
@@ -387,7 +416,7 @@ const I18N = {
   vi: {
     title: 'AstroQ — Nhiệm Vụ 01: Hành Tinh Xanh',
     a_lang: 'Ngôn ngữ', a_sfx: 'Bật/tắt âm thanh',
-    tt_name: 'Thiên thạch tím', back: 'Về Trung Tâm Điều Hướng',
+    tt_name: 'Thiên thạch tím', back: 'Về đường đi',
     tag: '[ MISSION_01 · HÀNH TINH XANH ]',
     load: 'ĐANG NẠP HỆ THỐNG QUÉT…',
     load_sub: 'Đang dựng bản đồ Trái Đất 3D. Lần đầu có thể mất vài giây.',
@@ -649,12 +678,19 @@ const I18N = {
     /* ⚠️ PHẢI NÓI RA RẰNG ĐANG CHƠI TIẾP. Mở nhiệm vụ mà thấy bước 4/7 chứ không phải
        bước 1 thì trẻ cần biết vì sao — im lặng thì nó tưởng mình bị bỏ mất mấy bước
        đầu. Câu này nói cả bước thứ mấy để đối chiếu được với dãy chấm trên đầu trang. */
-    resumed: 'Chơi tiếp từ bước {n}/{t} — những bước trước bạn đã làm xong rồi!'
+    resumed: 'Chơi tiếp từ bước {n}/{t} — những bước trước bạn đã làm xong rồi!',
+    /* Hộp "tiếp hay dừng" sau MỖI chặng (trừ chặng cuối) — xem `docs/decisions/008`. */
+    af_h: 'Xong chặng “{n}”!',
+    af_p: 'Chặng tiếp theo: “{n}”.',
+    af_next: '[ ▶ CHƠI TIẾP CHẶNG {n} ]',
+    af_stop: '[ ⏸ ĐỂ LẦN SAU ]',
+    af_back: '[ ↩ VỀ ĐƯỜNG ĐI ]',
+    replayed: 'Bạn vừa ôn lại chặng này. Chặng đã tính thưởng từ trước nên lần này không có thêm Thiên thạch tím hay XP.'
   },
   en: {
     title: 'AstroQ — Mission 01: The Blue Planet',
     a_lang: 'Language', a_sfx: 'Sound on/off',
-    tt_name: 'Purple Meteor', back: 'Back to Navigation Hub',
+    tt_name: 'Purple Meteor', back: 'Back to the path',
     tag: '[ MISSION_01 · THE BLUE PLANET ]',
     load: 'BOOTING SCAN SYSTEM…',
     load_sub: 'Building the 3D Earth map. The first load may take a few seconds.',
@@ -801,7 +837,13 @@ const I18N = {
     win_home: '[ 🚀 Back to Navigation Hub ]',
     win_auto: 'Returning automatically in {n}s — touch anything to stay.',
     saved_off: 'Not signed in — rewards are queued and will sync later.',
-    resumed: 'Picking up at step {n}/{t} — you already finished the earlier ones!'
+    resumed: 'Picking up at step {n}/{t} — you already finished the earlier ones!',
+    af_h: 'Stage “{n}” complete!',
+    af_p: 'Next stage: “{n}”.',
+    af_next: '[ ▶ PLAY STAGE {n} ]',
+    af_stop: '[ ⏸ ANOTHER TIME ]',
+    af_back: '[ ↩ BACK TO THE PATH ]',
+    replayed: 'You just practised this stage again. It already paid out earlier, so there are no extra Purple Meteors or XP this time.'
   }
 };
 let LANG = AstroQ.getLang();
@@ -1989,7 +2031,8 @@ RUN = AstroQMission.create({
   t: t,
   toast: toast,
   onBalance: paintBalance,
-  onWin: showWin
+  onWin: showWin,
+  onStepDone: afterStep
 });
 
 /* ───────────────────── Thẻ "vừa nhận được" ─────────────────────
@@ -2504,6 +2547,63 @@ function startAuto() {
   autoTimer = setTimeout(tick, 1000);
 }
 
+/* ─────────────── XONG MỘT CHẶNG: HỎI TIẾP HAY DỪNG ───────────────
+   `docs/decisions/008` quyết định 4: *chơi xong một chặng thì HỎI, đừng tự quyết*.
+
+   ⚠️ ĐIỀU KIỆN ĐI KÈM MÀ `008` NÊU — "phải TẮT đồng hồ về tự động 5 giây khi còn
+      chặng sau" — ĐƯỢC THOẢ BẰNG CẤU TRÚC, không phải bằng một cái cờ: đồng hồ đó
+      chỉ sống trong màn tổng kết (`startAuto` gọi từ `showWin`), mà màn tổng kết chỉ
+      mở khi ĐÃ HẾT chặng. Hộp hỏi và đồng hồ vì thế không bao giờ cùng lúc trên màn
+      hình. Đừng gọi `startAuto()` ở đâu khác.
+
+   ⚠️ CÁC CHẶNG SERVER ĐÃ GHI NHẬN lúc mở trang — dùng để phân biệt "vừa xong một
+      chặng mới" với "vừa ôn lại một chặng cũ". Hai việc đó đáng được nói hai câu
+      khác nhau, và chỉ việc thứ nhất mới có chặng kế để mời. */
+let serverDone = new Set();
+
+function treeUrl() { return 'mission-tree.html?m=earth'; }
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+function stepName(id) {
+  const s = window.AstroQCatalog ? AstroQCatalog.step('earth', id) : null;
+  return s ? s[LANG === 'en' ? 'en' : 'vi'].nm : id;
+}
+
+function openAsk(id, replay) {
+  const i = STEP_IDS.indexOf(id);
+  $('af-h').textContent = t('af_h').replace('{n}', stepName(id));
+  if (replay) {
+    $('af-p').textContent = t('replayed');
+    $('af-next').hidden = true;
+    $('af-stop').textContent = t('af_back');
+  } else {
+    $('af-p').textContent = t('af_p').replace('{n}', stepName(STEP_IDS[i + 1]));
+    $('af-next').hidden = false;
+    $('af-next').textContent = t('af_next').replace('{n}', pad2(i + 2));
+    $('af-stop').textContent = t('af_stop');
+  }
+  $('after').classList.add('show');
+  $('after').setAttribute('aria-hidden', 'false');
+  setTimeout(() => ($('af-next').hidden ? $('af-stop') : $('af-next')).focus(), 60);
+}
+
+function closeAsk() {
+  $('after').classList.remove('show');
+  $('after').setAttribute('aria-hidden', 'true');
+}
+
+/** Móc `onStepDone` của js/mission-engine.js. Trả `true` = engine ĐỪNG tự đi tiếp. */
+function afterStep(id, last) {
+  /* Ôn lại một chặng cũ: không có chặng nào vừa mở ra để đi tiếp và tiến độ không
+     nhúc nhích — hỏi "tiếp hay dừng" ở đó là hỏi một câu vô nghĩa. Vẫn MỞ HỘP (chứ
+     không lặng lẽ nhảy trang) để nói rõ vì sao lần này không có thưởng. */
+  if (serverDone.has(id)) { openAsk(id, true); return true; }
+  /* Chặng cuối → trả `false` để engine mở màn tổng kết. Ở đó không còn gì để hỏi. */
+  if (last) return false;
+  openAsk(id, false);
+  return true;
+}
+
 /* ───────────────────── Âm thanh ─────────────────────
    Gói một lớp mỏng quanh `AstroQSfx` để chỗ gọi không phải kiểm `if` mỗi lần, và
    để `prefers-reduced-motion` cũng làm nhẹ phần tiếng: trẻ chọn "giảm hiệu ứng"
@@ -2644,7 +2744,23 @@ function applyLang(lang) {
 }
 
 /* ───────────────────── Khởi động ───────────────────── */
-$('back').addEventListener('click', () => { location.href = 'dashboard.html'; });
+/* ⚠️ ĐƯỜNG VỀ LÀ CÂY CHẶNG, KHÔNG PHẢI DASHBOARD (đổi 12/08/2026). Cây chặng nay là
+   nhà của nhiệm vụ: từ đó về bản đồ → Trung Tâm Nhiệm Vụ → dashboard là một chuỗi
+   liền mạch, mỗi bước lùi một tầng. Nhảy thẳng về dashboard là bỏ qua ba tầng và trẻ
+   mất luôn chỗ nhìn thấy mình vừa đi được tới đâu. */
+$('back').addEventListener('click', () => { location.href = treeUrl(); });
+
+/* ── Hộp "tiếp hay dừng" ──
+   ⚠️ Bấm ra ngoài hộp và Escape đều là CHỌN DỪNG, cùng nghĩa với nút "Để lần sau" —
+      hai cách đóng cho ra hai kết quả khác nhau là chỗ trẻ học sai một lần rồi ngại
+      bấm mãi. Tiến độ đã ghi lên server TRƯỚC khi hộp mở (thứ tự trong
+      `js/mission-engine.js`), nên "dừng" không mất gì. */
+$('af-next').addEventListener('click', () => { closeAsk(); RUN.next(); });
+$('af-stop').addEventListener('click', () => { closeAsk(); location.href = treeUrl(); });
+$('after').addEventListener('click', (e) => { if (e.target === $('after')) $('af-stop').click(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('after').classList.contains('show')) $('af-stop').click();
+});
 /* Tắt đường về tự động khi trẻ tương tác. Gắn trên CẢ thẻ modal, không chỉ trên
    nút — trẻ di chuột vào để đọc cũng là một tín hiệu "tôi đang xem". */
 ['pointerdown', 'keydown', 'mouseenter', 'touchstart'].forEach(ev => {
@@ -2677,16 +2793,39 @@ RUN.paint();
       bước còn hơn bỏ qua một bước trẻ chưa từng học.
    ⚠️ Xong cả nhiệm vụ → cũng từ bước ①: đó là lượt "Chơi lại" mà `missions.html`
       đang mời (nhãn `replay`), không phải lượt tiếp tục.
-   `?restart=1` để xem lại cả nhiệm vụ từ đầu mà không phải xoá tiến độ thật. */
+   `?restart=1` để xem lại cả nhiệm vụ từ đầu mà không phải xoá tiến độ thật.
+
+   ⚠️ `?step=<id>` — CÂY CHẶNG (`mission-tree.html`) MỞ ĐÚNG MỘT CHẶNG. Trẻ chạm vào
+      một chặng cụ thể thì phải vào đúng chặng đó, kể cả khi đó là chặng cũ nó muốn
+      chơi lại. `RUN.openAt()` KẸP lại theo số bước đã xong, nên gõ tay một chặng chưa
+      mở vào thanh URL cũng không vượt được — địa chỉ là thứ ai cũng sửa được. */
 function resumeSteps() {
   try {
-    if (new URLSearchParams(location.search).get('restart') === '1') return;
+    const q = new URLSearchParams(location.search);
+    if (q.get('restart') === '1') return;
     if (!window.AstroQProgress || !AstroQProgress.missionSteps) return;
     const p = AstroQProgress.missionSteps('earth');
-    if (!p.known || p.complete) return;
-    const at = RUN.resume(p.done);
-    if (at > 0) {
-      toast(t('resumed').replace('{n}', at + 1).replace('{t}', RUN.total));
+    if (!p.known) return;
+    serverDone = new Set(p.done.map(String));
+
+    /* Số chặng ĐÃ MỞ = đoạn đầu liền mạch của danh sách server trả về. Cùng phép đếm
+       với `RUN.resume()` và với cây chặng — ba chỗ nói ba con số khác nhau là lỗi trẻ
+       nhìn thấy ngay. */
+    let unlocked = 0;
+    while (unlocked < STEP_IDS.length && serverDone.has(STEP_IDS[unlocked])) unlocked++;
+
+    const want = q.get('step');
+    const k = want ? STEP_IDS.indexOf(want) : -1;
+
+    /* Xong cả nhiệm vụ mà KHÔNG chỉ đích danh chặng nào → lượt "chơi lại" từ đầu,
+       dãy chấm phải trắng (không thì trẻ mở ra đã thấy màn tổng kết). Có `?step=` thì
+       vẫn mở đúng chặng đó: đó là cú chạm có chủ đích từ cây chặng. */
+    if (p.complete && k < 0) return;
+
+    let open = p.complete ? 0 : RUN.resume(p.done);
+    if (k >= 0) open = RUN.openAt(k, unlocked);
+    if (open > 0 && !serverDone.has(STEP_IDS[open])) {
+      toast(t('resumed').replace('{n}', open + 1).replace('{t}', RUN.total));
     }
   } catch (e) {
     /* Cache hỏng / localStorage bị chặn → mở từ bước ①. Không được để việc đọc một
@@ -2776,6 +2915,11 @@ function resumeSteps() {
     get placed() { return steps.life.got.size; },
     /** Giây còn lại của đường về tự động; `null` = đã tắt đếm. */
     get autoLeft() { return autoLeft; },
+    /** Hộp "tiếp hay dừng" đang mở hay không, và hai lựa chọn của nó. Chỉ là
+        ĐIỀU KHIỂN cho test — không cấp thưởng, không bỏ qua bước nào. */
+    get askOpen() { return $('after').classList.contains('show'); },
+    askNext: () => { $('af-next').click(); return true; },
+    askStop: () => { $('af-stop').click(); return true; },
     /* ⚠️ ĐỔI TỪ `fill(slot)` SANG `stamp()` 02/08/2026 — bước ⑦ không còn kéo ngọc
        vào ô mà chỉ còn MỘT cú đóng dấu. Giữ tên cũ là để lại một bề mặt test nói
        về cơ chế không còn tồn tại. Cùng quy tắc: KHÔNG trả Promise. */

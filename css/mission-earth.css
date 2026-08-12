@@ -655,6 +655,28 @@ a{text-decoration:none;color:inherit;}
   border:1px solid var(--brd);}
 .me-win .acts .ghost:hover{background:rgba(255,255,255,.14);}
 
+/* ============ HỘP "TIẾP HAY DỪNG" (`.me-next`) ============
+   ⚠️ TÊN LÀ `.me-next`, KHÔNG PHẢI `.me-ask` — VA CHẠM THẬT, BẮT ĐƯỢC TRƯỚC KHI NÓ
+   KỊP GÂY HẠI. `.me-ask` (dòng ~355) đã là bảng CÂU ĐỐ của bước ③ và nó khai ba biến
+   `--bd-brd`/`--bd-bg`/`--bd-k`; gắn cùng tên lên hộp này là ba biến đó chảy vào cả
+   cây con của một overlay hoàn toàn khác. Đúng lỗi `.hero` của `library.css` đã trả
+   giá (thẻ bài nổi bật trùng tên với tiêu đề canh giữa của khung chung).
+   Dùng lại nguyên vỏ `.me-win` (nền tối, thẻ kính, hai nút xếp dọc) và chỉ đổi ba
+   thứ: hẹp hơn, không có huân chương/phần thưởng, thêm một dòng dẫn.
+   ⚠️ Hẹp hơn là CÓ CHỦ ĐÍCH: hộp này chỉ hỏi MỘT câu. Để nguyên bề rộng 560px của
+      màn tổng kết thì một câu hỏi ngắn nằm giữa một tấm thẻ rộng đọc ra như trang
+      đang thiếu nội dung.
+   ⚠️ "Để lần sau" là một lựa chọn HỢP LỆ, không phải cú thoát hiểm — nó dùng đúng
+      `.ghost` như mọi nút phụ khác, không bị làm mờ thêm. */
+/* ⚠️ `[hidden]` phải khai lại ở đây. Nút "Chơi tiếp chặng sau" bị ẩn khi trẻ đang ÔN
+   LẠI một chặng cũ; `.acts` là flex nên con của nó là flex item, và dự án đã bị đúng
+   cái bẫy này 5 lần (`#time-ok` · `.lk-btn` · `.pt-empty` · `.co-steps` · `.pbtn`).
+   Khai tường minh thì không phải đoán quy tắc nào thắng. */
+.me-win .acts [hidden]{display:none;}
+.me-next .me-win-card{width:min(440px,100%);}
+.me-next .af-p{margin:12px 0 0;text-align:center;font-size:14px;line-height:1.6;
+  color:#f0e6cf;}
+
 /* Hai mascot nhảy ăn mừng */
 .me-cheer{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-top:14px;}
 /* Cao 96px, RỘNG TỰ ĐỘNG. Bản đầu để hộp vuông 58×58 + `object-fit:contain`, mà
