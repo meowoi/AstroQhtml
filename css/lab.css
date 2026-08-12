@@ -198,3 +198,19 @@
 .lab-dev[hidden]{ display:none; }   /* BẮT BUỘC: `display` tác giả thắng [hidden] */
 .lab-dev a{ margin-left:auto; color:#ffcf6b; text-decoration:underline; min-height:44px;
             display:inline-flex; align-items:center; }
+
+/* ── Ô nhập cân nặng của LAB-03 ───────────────────────────────────────────── */
+.kg-wrap{ display:inline-flex; align-items:center; gap:7px; }
+#kg{
+  width:96px; min-height:48px;           /* 48 chứ không 44 — xem ghi chú ở .places */
+  padding:0 12px; border-radius:12px;
+  background:rgba(13,20,48,.72); color:#eaf1ff;
+  border:1px solid rgba(143,182,255,.34);
+  font:700 17px/1 'Space Grotesk', Inter, sans-serif; text-align:center;
+}
+#kg:focus{ outline:2px solid var(--cyan,#38bdf8); outline-offset:2px; }
+.kg-unit{ font:600 14px/1 Inter, sans-serif; color:rgba(234,241,255,.72); }
+
+/* Dòng phép tính trong phần "Tìm hiểu thêm" phải giữ được thụt lề và ngắt dòng
+   đúng như viết trong `more_weigh` — nó là một CÔNG THỨC, không phải văn xuôi. */
+.more-box{ white-space:pre-line; }

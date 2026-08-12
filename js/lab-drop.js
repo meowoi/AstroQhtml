@@ -365,33 +365,63 @@
       var place = opt.place || "earth";
       var L = (global.AstroQ && AstroQ.getLang && AstroQ.getLang() === "en") ? "en" : "vi";
       var tx = function (k) { return global.AstroQLab ? AstroQLab.text(k, L) : k; };
-      var kg = global.AstroQLab ? AstroQLab.weighAt(place, 30) : 30;
+      var base = opt.kg || 30;                          // cân nặng ở Trái Đất, trẻ tự nhập
+      var r = global.AstroQLab ? AstroQLab.ratio(place) : 1;
+      var kg = global.AstroQLab ? AstroQLab.weighAt(place, base) : base;
+      var num = function (v) { return String(v).replace(".", ","); };
 
       sky(place); ground(place);
 
-      // Đứa trẻ đứng trên cân
-      ctx.font = "84px system-ui, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("🧒", VW * 0.5, GROUND_Y - 74);
+      /* ⚠️⚠️ BỐ CỤC TÍNH TỪ DƯỚI LÊN, KHÔNG GÕ MỐC RỜI. Bản đầu vẽ số ở
+         `GROUND_Y - 128` = 302 trong khi đứa trẻ vẽ ở `GROUND_Y - 74` với font 84px
+         nên nó chiếm ~272..356 ⇒ SỐ ĐÈ LÊN HÌNH. Đọc code thì hai con số đều "hợp
+         lý"; chỉ soi ảnh chụp mới thấy. Nay mỗi tầng suy ra từ tầng dưới nó, nên
+         đổi cỡ chữ hay cỡ hình thì bố cục tự giãn theo. */
+      var KID = 84;                                     // cỡ hình đứa trẻ
+      var plateY = GROUND_Y - 30;                       // mặt cân
+      var kidBase = plateY - 18;                        // chân đứa trẻ đứng trên cân
+      var kidTop = kidBase - KID;                       // đỉnh đầu
+      var workY = kidTop - 26;                          // dòng phép tính
+      var bigY = workY - 46;                            // số to
 
       // Mặt cân
-      ctx.save(); ctx.translate(VW * 0.5, GROUND_Y - 30);
+      ctx.save(); ctx.translate(VW * 0.5, plateY);
       ctx.fillStyle = "#cfd7ea"; ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect(-96, -14, 192, 30, 8); ctx.fill(); ctx.stroke();
       ctx.restore();
 
+      // Đứa trẻ đứng trên cân
+      ctx.font = KID + "px system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("🧒", VW * 0.5, kidBase);
+
       // Số trên cân — thứ ĐỔI theo nơi
       ctx.save();
-      ctx.font = "800 58px 'Space Grotesk', Inter, sans-serif";
+      ctx.font = "800 54px 'Space Grotesk', Inter, sans-serif";
       ctx.textAlign = "center";
       ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.9)";
-      var s = kg.toFixed(1).replace(".", ",") + " kg";
-      ctx.strokeText(s, VW * 0.5, GROUND_Y - 128);
+      var s = num(kg) + " kg";
+      ctx.strokeText(s, VW * 0.5, bigY);
       ctx.fillStyle = "#ffcf6b";
-      ctx.fillText(s, VW * 0.5, GROUND_Y - 128);
+      ctx.fillText(s, VW * 0.5, bigY);
       ctx.restore();
 
+      /* PHÉP TÍNH HIỆN RA — đây là chỗ công thức thành thứ trẻ KIỂM CHỨNG ĐƯỢC,
+         không phải một câu phải tin. Ở Trái Đất thì `× 1` là vô nghĩa nên bỏ dòng
+         này đi: một phép tính không nói thêm điều gì chỉ làm màn hình rối. */
+      if (place !== "earth") {
+        ctx.save();
+        ctx.font = "600 22px ui-monospace, 'Space Grotesk', monospace";
+        ctx.textAlign = "center";
+        var w = num(base) + " × " + num(Math.round(r * 100) / 100) + " = " + num(kg);
+        ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)";
+        ctx.strokeText(w, VW * 0.5, workY);
+        ctx.fillStyle = "#8fd7ff";
+        ctx.fillText(w, VW * 0.5, workY);
+        ctx.restore();
+      }
+
       // Khối lượng: KHÔNG đổi — vẽ cạnh nhau mới thấy được điều đó
-      label(VW * 0.5, 60, tx("ui_mass") + " 30 kg — " + tx("ui_unchanged"));
+      label(VW * 0.5, 46, tx("ui_mass") + " " + num(base) + " kg — " + tx("ui_unchanged"));
       return false;                                     // cảnh tĩnh
     }
 
@@ -525,6 +555,15 @@
         opt.place = id;
         clearRun(); running = false; done = false;
         fit(); paint();
+      },
+      /* Cân nặng ở Trái Đất do trẻ tự nhập. Kẹp ở tầng này NỮA (trang cũng kẹp) —
+         một giá trị vô lý lọt vào đây thì cảnh vẽ ra một con số vô nghĩa. */
+      setKg: function (v) {
+        var n = parseFloat(v);
+        if (!isFinite(n) || n <= 0) n = 30;
+        opt.kg = Math.min(200, Math.max(1, n));
+        paint();
+        return opt.kg;
       },
       drop: function () {
         if (scene !== "drop" || running) return;

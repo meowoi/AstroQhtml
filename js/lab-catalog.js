@@ -162,7 +162,7 @@
       d_weigh: "Cùng một em, bốn nơi khác nhau. Cân chỉ số khác nhau.",
       q_weigh: "Chọn một nơi rồi xem cái cân nói gì.",
       say_weigh: "Cân đổi, nhưng lượng vật chất trong người em thì KHÔNG đổi.",
-      more_weigh: "Cân nặng là lực mà một nơi kéo em xuống, nên nó đổi theo nơi. Khối lượng là lượng vật chất làm nên em, và nó ở đâu cũng vậy — trên Sao Hoả hay Sao Mộc thì khối lượng của em vẫn y như trên Trái Đất. Đó là lý do phi hành gia không hề gầy đi khi bay lên trạm, dù cái cân ở đó chỉ số 0.",
+      more_weigh: "Cân nặng là lực mà một nơi kéo em xuống, nên nó đổi theo nơi. Khối lượng là lượng vật chất làm nên em, và nó ở đâu cũng vậy — trên Sao Hoả hay Sao Mộc thì khối lượng của em vẫn y như trên Trái Đất. Đó là lý do phi hành gia không hề gầy đi khi bay lên trạm, dù cái cân ở đó chỉ số 0.\n\nCÓ MỘT CÔNG THỨC, và nó chỉ là một phép nhân:\n\n    cân nặng ở đó = cân nặng ở Trái Đất × tỉ lệ trọng lực của nơi đó\n\nMặt Trăng có tỉ lệ 1/6, Sao Thuỷ 0,38 và Sao Mộc 2,53. Nên nếu ở Trái Đất em nặng 30 kg thì trên Sao Mộc cái cân chỉ 30 × 2,53 = 75,9 kg — em thử gõ cân nặng thật của mình vào ô bên trên rồi tự nhân xem có khớp không nhé. Chính NASA cũng làm đúng phép nhân này: họ viết nếu em nặng 100 pound ở Trái Đất thì ở Sao Thuỷ em nặng 38 pound (100 × 0,38), còn ở Sao Mộc là 253 pound (100 × 2,53).",
       find_weigh: "Cân nặng đổi theo nơi; khối lượng thì không.",
 
       /* ── LAB-07 · vật lý ánh sáng ── */
@@ -213,6 +213,8 @@
       ui_finding: "Phát hiện của em",
       ui_source: "Nguồn:",
       ui_scale: "Cân chỉ",
+      ui_your_kg: "Cân nặng của em ở Trái Đất:",
+      ui_kg: "kg",
       ui_mass: "Khối lượng",
       ui_unchanged: "không đổi",
       ui_free_badge: "MIỄN PHÍ",
@@ -242,7 +244,7 @@
       d_weigh: "The same you, four different places. The scale reads differently.",
       q_weigh: "Pick a place and see what the scale says.",
       say_weigh: "The scale changes, but how much stuff you're made of does NOT.",
-      more_weigh: "Weight is the pull a place has on you, so it changes from place to place. Mass is how much stuff you are made of, and that is the same everywhere — on Mars or on Jupiter your mass is exactly what it is on Earth. That's why astronauts don't get thinner on the way up, even though a scale up there would read zero.",
+      more_weigh: "Weight is the pull a place has on you, so it changes from place to place. Mass is how much stuff you are made of, and that is the same everywhere — on Mars or on Jupiter your mass is exactly what it is on Earth. That's why astronauts don't get thinner on the way up, even though a scale up there would read zero.\n\nTHERE IS A FORMULA, and it is just a multiplication:\n\n    weight there = weight on Earth × that place's gravity ratio\n\nThe Moon's ratio is 1/6, Mercury's is 0.38 and Jupiter's is 2.53. So if you weigh 30 kg on Earth, a scale on Jupiter reads 30 × 2.53 = 75.9 kg — type your own weight in the box above and do the multiplication yourself to check. NASA does this very multiplication: they write that if you weigh 100 pounds on Earth you would weigh 38 pounds on Mercury (100 × 0.38) and 253 pounds on Jupiter (100 × 2.53).",
       find_weigh: "Weight changes with where you are; mass does not.",
 
       p_noon: "Midday", p_evening: "Late afternoon", p_horizon: "At the horizon",
@@ -289,6 +291,8 @@
       ui_finding: "What you found",
       ui_source: "Source:",
       ui_scale: "Scale reads",
+      ui_your_kg: "Your weight on Earth:",
+      ui_kg: "kg",
       ui_mass: "Mass",
       ui_unchanged: "unchanged",
       ui_free_badge: "FREE",

@@ -82,6 +82,18 @@
       <div class="places seg" id="places"></div>
     </div>
 
+    <!-- Ô nhập cân nặng — chỉ LAB-03 dùng. ⚠️ `type="number"` + `inputmode` để bàn
+         phím điện thoại mở đúng bàn số; `min/max` là lớp kẹp THỨ NHẤT, JS kẹp lần
+         nữa vì thuộc tính HTML thì ai cũng sửa được bằng DevTools. -->
+    <div class="exp-ctl" id="ctl-kg" hidden>
+      <label class="ctl-lbl" for="kg" data-i18n="ui_your_kg">Cân nặng của em ở Trái Đất:</label>
+      <span class="kg-wrap">
+        <input id="kg" type="number" min="1" max="200" step="0.5" value="30"
+               inputmode="decimal" aria-describedby="kg-unit" />
+        <span class="kg-unit" id="kg-unit" data-i18n="ui_kg">kg</span>
+      </span>
+    </div>
+
     <!-- Comet đặt câu hỏi / giải thích. Vỏ box lấy từ css/mascot.css. -->
     <!-- ⚠️ `.aq-ava` là thẻ BỌC chứa <img>, KHÔNG gắn thẳng vào <img>: rule
          `.aq-ava img{width:100%}` của css/mascot.css chỉ với tới ảnh khi có lớp bọc.
@@ -376,6 +388,7 @@
     // khác là một nút bấm không làm gì — đúng cái ngõ cụt luật của dự án cấm.
     $("slow").hidden = (c.kind !== "drop");
     $("again").hidden = (c.kind !== "drop");
+    $("ctl-kg").hidden = (c.kind !== "weight");
 
     if (c.kind === "drop")       { say(t("q_tower")); }
     else if (c.kind === "float") { say(t("q_float")); }
@@ -405,6 +418,25 @@
   $("again").addEventListener("click", function(){
     resetOutcome(); guessed = true; scene.reset(); renderGuess(LAB.card(view));
   });
+  /* ⚠️ Nghe `input` chứ không `change`: `change` chỉ nổ khi ô mất tiêu điểm, nên trẻ
+     gõ số rồi ngồi nhìn mà cảnh không đổi — đọc ra như trang bị treo.
+     ⚠️ Ô TRỐNG thì GIỮ NGUYÊN cảnh, đừng nhảy về 30: trẻ xoá để gõ số khác, mà mỗi
+     ký tự xoá lại vẽ lại một con số nó không hề nhập là một cảnh nhảy loạn. */
+  $("kg").addEventListener("input", function(){
+    var raw = $("kg").value.trim();
+    if (raw === "") return;
+    var kg = scene.setKg(raw);
+    var c = LAB.card(view);
+    if (c) reveal(c, sayKeyFor(c, place));
+    return kg;
+  });
+  /* Rời ô mới sửa lại giá trị hiển thị cho khớp thứ đã KẸP — sửa ngay lúc đang gõ
+     thì "1" thành "1" rồi "10" không gõ được nữa. */
+  $("kg").addEventListener("blur", function(){
+    var kg = scene.setKg($("kg").value);
+    $("kg").value = String(kg).replace(".", ",") === String(kg) ? kg : kg;
+  });
+
   $("slow").addEventListener("click", function(){
     var on = scene.toggleSlow();
     $("slow").textContent = on ? t("ui_slow_off") : t("ui_slow");

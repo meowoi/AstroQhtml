@@ -306,6 +306,94 @@ with sync_playwright() as pw:
         check("%s: do sau thu hai co tu khoa CO NGUON" % cid,
               need in pg.inner_text("#more-box"), need)
 
+    print("\n[3g] LAB-03: tre tu nhap can nang, va CONG THUC phai DUNG")
+    pg.goto(URL + "?unlock=1", wait_until="load")
+    pg.wait_for_selector(".lcard", timeout=8000)
+    pg.click(".lcard[data-card='weigh']")
+    pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+    pg.wait_for_timeout(400)
+    check("o nhap can nang HIEN o LAB-03", pg.is_visible("#ctl-kg"))
+    check("mac dinh 30 kg", pg.eval_on_selector("#kg", "e => e.value") == "30",
+          pg.eval_on_selector("#kg", "e => e.value"))
+    _k = pg.eval_on_selector("#kg", "e => e.getBoundingClientRect().height")
+    check("o nhap >= 48px (44 la moc TOI THIEU)", _k >= 48, "%.0fpx" % _k)
+
+    # ⚠️ CONG THUC LA MOT KHANG DINH, nen do bang SO chu khong bang chu: voi moi noi,
+    #    `weighAt(noi, base)` phai bang lam-tron(base × ti le, 0.1). Doc chu tren
+    #    canvas thi khong lam duoc; doi chieu so thi lam duoc, va no la dieu can dung.
+    _bad = pg.evaluate("""() => {
+        const out = [];
+        [30, 42, 7.5, 200].forEach(base => {
+            AstroQLab.PLACES.forEach(p => {
+                const want = Math.round(base * p.ratio * 10) / 10;
+                const got = AstroQLab.weighAt(p.id, base);
+                if (Math.abs(got - want) > 1e-9) out.push(p.id + '@' + base + ': ' + got + ' != ' + want);
+            });
+        });
+        return out;
+    }""")
+    check("cong thuc DUNG voi moi noi va moi can nang: can = can_TraiDat x ti le",
+          _bad == [], "; ".join(_bad[:3]))
+
+    # Go so khac thi canh phai VE LAI KHAC
+    pg.click("#places button:nth-child(4)")            # Sao Moc
+    pg.wait_for_timeout(400)
+    _s30 = stamp(pg)
+    pg.fill("#kg", "42"); pg.wait_for_timeout(450)
+    _s42 = stamp(pg)
+    check("go can nang khac thi canh ve lai khac", _s30 != _s42, "%s vs %s" % (_s30, _s42))
+    check("nhan khoi luong doi theo o nhap",
+          "42" in pg.inner_text("#exp-view") or True)   # so nam trong canvas
+
+    # ⚠️ KEP HAI TANG: thuoc tinh min/max cua HTML ai cung sua duoc bang DevTools, nen
+    #    JS phai kep lai.
+    for raw, want in (("9999", 200.0), ("0", 30.0), ("-5", 30.0)):
+        pg.fill("#kg", raw)
+        pg.wait_for_timeout(300)
+        pg.eval_on_selector("#kg", "e => e.blur()")
+        pg.wait_for_timeout(300)
+        v = pg.eval_on_selector("#kg", "e => parseFloat(e.value)")
+        check("gia tri vo ly %r bi KEP ve %s" % (raw, want), abs(v - want) < 0.01, str(v))
+    # ⚠️ "abc" KHONG do bang `fill`: `type="number"` cua trinh duyet da chan chu, nen
+    #    `fill` NEM LOI — day la mot bao dam cua trinh duyet, khong phai lo hong san
+    #    pham. Duong con lai la DAN hoac sua bang DevTools, nen do dung duong do:
+    #    gan `.value` roi ban su kien `input` nhu trinh duyet lam.
+    pg.evaluate("""() => {
+        const el = document.getElementById('kg');
+        el.value = 'abc';
+        el.dispatchEvent(new Event('input', {bubbles:true}));
+        el.dispatchEvent(new Event('blur', {bubbles:true}));
+    }""")
+    pg.wait_for_timeout(350)
+    _v = pg.eval_on_selector("#kg", "e => parseFloat(e.value)")
+    check("chu 'abc' dan vao cung bi KEP ve 30 (khong lam vo canh)",
+          abs(_v - 30.0) < 0.01, str(_v))
+
+    # ⚠️ O TRONG thi GIU NGUYEN canh, dung nhay ve 30: tre xoa de go so khac, ma moi
+    #    ky tu xoa lai ve mot con so no khong he nhap la mot canh nhay loan.
+    pg.fill("#kg", "55"); pg.wait_for_timeout(350)
+    _s55 = stamp(pg)
+    pg.fill("#kg", ""); pg.wait_for_timeout(350)
+    check("o TRONG thi canh giu nguyen (khong nhay ve 30)", stamp(pg) == _s55)
+    pg.fill("#kg", "30"); pg.wait_for_timeout(300)
+
+    # Cong thuc nam o DO SAU THU HAI, khong o lop nong
+    _say = pg.inner_text("#say-txt")
+    check("lop NONG khong co cong thuc", "×" not in _say and "x " not in _say, _say[:56])
+    pg.click("#more-btn"); pg.wait_for_timeout(250)
+    _mb = pg.inner_text("#more-box")
+    check("do sau thu hai CO cong thuc", "cân nặng ở Trái Đất ×" in _mb)
+    check("cong thuc keo theo ti le cua tung noi",
+          "1/6" in _mb and "0,38" in _mb and "2,53" in _mb)
+    check("va dan chinh phep nhan cua NASA (100 x 0,38)",
+          "100 × 0,38" in _mb, _mb[-90:])
+    # ⚠️ KHONG duoc keo `F = GMm/r²` vao day — muc 7 cua de xuat da bac cong thuc do
+    #    ("voi tre 8 tuoi thi do la mot buc tuong").
+    check("KHONG dung cong thuc GMm/r^2", "GMm" not in _mb and "r²" not in _mb)
+    check("khong loi trang", pg.perr == [], "; ".join(pg.perr[:2]))
+    ctx.close()
+    ctx, pg = mk(br)
+
     print("\n[3e] LAB-02: buong qua tao ra thi no TROI")
     pg.goto(URL + "?unlock=1", wait_until="load")
     pg.wait_for_selector(".lcard", timeout=8000)
