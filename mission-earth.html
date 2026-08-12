@@ -12,11 +12,13 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/mascot.css" />
 <link rel="stylesheet" href="css/pick-place.css" />
+<link rel="stylesheet" href="css/brag.css" />
 <link rel="stylesheet" href="css/mission-earth.css" />
 <script src="js/ui-common.js"></script>
 <!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js: trang này đã kéo
      three.js, thêm 233 KB SDK nữa thì vào chậm. Chưa đăng nhập → js/progress.js
      xếp việc vào hàng chờ, dashboard/profile sẽ gửi nốt. -->
+<script src="js/brag.js"></script>
 <script src="js/progress.js"></script>
 <!-- Âm thanh dựng bằng WebAudio, dùng chung với màn mở đầu; tôn trọng cùng một
      lựa chọn tắt tiếng `astroq-sfx` với 3 mini-game. -->
@@ -318,6 +320,10 @@
       <button type="button" class="go" id="win-home">—</button>
       <button type="button" class="ghost" id="win-missions">—</button>
       <button type="button" class="ghost" id="win-awards">—</button>
+      <!-- ⚠️ KHOE VOI BO ME, KHONG KHOE VOI NGUOI LA. The dung ngay trong may, khong
+           gui di dau ca (xem js/brag.js). Day la cach lay phan lon gia tri cua "khoe"
+           ma khong mo cua chat / ket ban / noi dung do nguoi dung dang. -->
+      <button type="button" class="ghost" id="win-brag">—</button>
     </div>
     <p class="autoline" id="win-auto" aria-live="polite"></p>
   </div>
@@ -672,6 +678,11 @@ const I18N = {
     win_next: 'Ghé Trung Tâm Nhiệm Vụ để xem các nhiệm vụ khác, và Kho Mẫu Vật để soi những mẫu vừa mở được.',
     win_missions: '[ 🎯 Tới Trung Tâm Nhiệm Vụ ]',
     win_awards: '[ 🏆 Xem Kho Thành Tích ]',
+    win_brag: '[ 👨‍👩‍👧 Cho bố mẹ xem ]',
+    brag_tag: 'SỨ MỆNH HOÀN THÀNH',
+    brag_note: 'Con vừa hoàn thành nhiệm vụ đầu tiên ở astroQ — bố mẹ xem thử nhé!',
+    brag_tt: 'Thiên thạch tím', brag_xp: 'Điểm kinh nghiệm',
+    brag_codex: 'Mẫu dữ liệu', brag_badge: 'Huy hiệu mới',
     win_home: '[ 🚀 Về Trung Tâm Điều Hướng ]',
     win_auto: 'Tự về sau {n} giây — chạm vào đâu cũng dừng đếm.',
     saved_off: 'Chưa đăng nhập nên phần thưởng đang chờ gửi lên máy chủ.',
@@ -834,6 +845,11 @@ const I18N = {
     win_next: 'Visit Mission Control for the other missions, and the Specimen Vault to study the samples you just unlocked.',
     win_missions: '[ 🎯 Go to Mission Control ]',
     win_awards: '[ 🏆 Open Trophy Hold ]',
+    win_brag: '[ 👨‍👩‍👧 Show a grown-up ]',
+    brag_tag: 'MISSION COMPLETE',
+    brag_note: 'I just finished my first mission on astroQ — take a look!',
+    brag_tt: 'Purple Meteors', brag_xp: 'Experience points',
+    brag_codex: 'Data samples', brag_badge: 'New badge',
     win_home: '[ 🚀 Back to Navigation Hub ]',
     win_auto: 'Returning automatically in {n}s — touch anything to stay.',
     saved_off: 'Not signed in — rewards are queued and will sync later.',
@@ -2500,6 +2516,7 @@ async function showWin() {
      nút bấm không được vẫn là một lời hứa về thứ chưa tồn tại. */
   $('win-missions').textContent = t('win_missions');
   $('win-awards').textContent = t('win_awards');
+  $('win-brag').textContent = t('win_brag');
   $('win').classList.add('show');
   $('win').setAttribute('aria-hidden', 'false');
   startAuto();
@@ -2768,6 +2785,28 @@ document.addEventListener('keydown', (e) => {
 });
 $('win-missions').addEventListener('click', () => { location.href = 'missions.html'; });
 $('win-awards').addEventListener('click', () => { location.href = 'achievements.html'; });
+/* ⚠️ SO LIEU LAY DUNG TU CAC O DA HIEN TREN MAN TONG KET (`win-rw-*`), khong tinh
+   lai: tinh lai la hai noi giu mot con so, va the khoe se noi khac bang tong ket
+   dung vao ngay ai do doi cach tinh. Cho nao chua doc duoc thi cac o do da la dau
+   "—" san — the cung se hien "—", khong bao gio bia mot con so 0. */
+$('win-brag').addEventListener('click', () => {
+  if (!window.AstroQBrag) return;
+  const txt = id => { const el = $(id); return el ? el.textContent.trim() : '—'; };
+  const badgeRow = $('win-rw-badges');
+  const lines = [
+    { ic: '☄️', k: t('brag_tt'),    v: txt('win-rw-tt') },
+    { ic: '⭐', k: t('brag_xp'),    v: txt('win-rw-xp') },
+    { ic: '📘', k: t('brag_codex'), v: txt('win-rw-codex') }
+  ];
+  if (badgeRow && !badgeRow.classList.contains('hide')) {
+    lines.push({ ic: '🏅', k: t('brag_badge'), v: txt('win-badges') });
+  }
+  AstroQBrag.open({
+    lang: LANG, tag: t('brag_tag'), badge: '🎖️',
+    title: txt('win-h'), sub: txt('win-badge-sub'),
+    lines, note: t('brag_note')
+  });
+});
 $('win-home').addEventListener('click', () => { location.href = 'dashboard.html'; });
 
 paintBalance();

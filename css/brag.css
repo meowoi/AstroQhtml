@@ -1,0 +1,76 @@
+/* ============================================================
+   css/brag.css — THẺ "CHO BỐ MẸ XEM" (js/brag.js). Lớp phủ dùng chung.
+   Nạp ở trang nào có nút khoe: mission-earth · achievements.
+
+   ⚠️ Thẻ CHÍNH LÀ canvas — CSS ở đây chỉ lo lớp phủ, khung và ba cái nút. Đừng vẽ
+      lại nội dung thẻ bằng HTML: hai nguồn sự thật cho một bố cục thì ảnh lưu ra
+      sớm muộn khác thứ trẻ vừa nhìn (ghi rõ ở đầu js/brag.js).
+   ============================================================ */
+
+.brag{
+  position:fixed;inset:0;z-index:120;                 /* trên mọi lớp phủ của trang */
+  display:grid;place-items:center;padding:16px;
+  background:rgba(4,7,18,.82);backdrop-filter:blur(6px);
+}
+.brag[hidden]{display:none;}   /* ⚠️ BẮT BUỘC: `display` của tác giả THẮNG `[hidden]`
+                                  mà trình duyệt áp — bẫy này đã trả giá 6 lần trong
+                                  dự án (#time-ok · .lk-btn · .pt-empty · .co-steps ·
+                                  #wl-done · .exp-ctl). */
+
+/* Khoá cuộn trang phía dưới trong lúc thẻ mở. */
+.brag-open, .brag-open body{overflow:hidden;}
+
+.brag-card{
+  width:min(420px,100%);max-height:calc(100vh - 32px);
+  display:flex;flex-direction:column;gap:10px;
+  padding:14px;border-radius:20px;
+  border:1px solid rgba(148,197,255,.3);background:rgba(10,16,38,.96);
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.9);
+}
+.brag-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.brag-h{font-family:var(--font-display,system-ui);font-weight:700;font-size:15px;color:var(--ink,#e8eefc);}
+/* Vùng chạm 48px, không phải 44 — 44 là mốc TỐI THIỂU của WCAG 2.5.5 (quy tắc 10). */
+.brag-x{
+  min-width:48px;min-height:48px;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(148,163,184,.28);background:rgba(255,255,255,.05);
+  color:var(--ink-soft,#c3d0e8);font-size:15px;
+}
+.brag-x:hover{border-color:rgba(148,197,255,.6);}
+
+/* Canvas 1080×1350 co theo bề rộng thẻ, GIỮ tỉ lệ. `max-height` để trên màn thấp
+   thẻ không đẩy hai cái nút ra ngoài khung nhìn — nút Lưu ảnh là lý do thẻ tồn tại. */
+.brag-cv{
+  width:100%;height:auto;aspect-ratio:1080 / 1350;
+  max-height:min(62vh,560px);object-fit:contain;
+  border-radius:14px;background:#0a1024;
+}
+
+.brag-note{
+  margin:0;font-size:11.5px;line-height:1.5;text-align:center;
+  color:var(--ink-faint,#93a4c4);
+}
+.brag-acts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.brag-acts button{
+  min-height:48px;border-radius:13px;cursor:pointer;
+  font-family:var(--font-display,system-ui);font-weight:700;font-size:14px;
+}
+.brag-save{
+  border:none;color:#04060f;
+  background:linear-gradient(120deg,var(--accent,#38bdf8),var(--accent-2,#8f7bff));
+}
+.brag-save:hover{filter:brightness(1.08);}
+.brag-close{
+  border:1px solid rgba(148,163,184,.3);background:rgba(255,255,255,.05);
+  color:var(--ink-soft,#c3d0e8);
+}
+.brag-close:hover{border-color:rgba(148,197,255,.55);}
+
+@media (max-width:420px){
+  .brag-acts{grid-template-columns:1fr;}
+}
+
+/* Nút MỞ thẻ (đặt ở trang gọi, không phải trong lớp phủ). Khai ở đây vì nó đi liền
+   với tính năng này — trang nào gắn nút cũng đã nạp css/brag.css.
+   ⚠️ Vùng chạm 48px: `.pbtn` của page-shell đo ra 40–42px trên màn 390px (đã trả giá
+      ở Phòng Nghiên Cứu), mà đây là nút chính của việc khoe. */
+.brag-open-btn{margin-top:12px;min-height:48px;width:100%;max-width:280px;}

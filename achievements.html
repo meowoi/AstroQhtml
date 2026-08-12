@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/sticker-icons.css" />
 <link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/brag.css" />
 <link rel="stylesheet" href="css/achievements.css" />
 <script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
@@ -21,6 +22,7 @@
 <script src="js/ranks.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/constellations.js"></script>
+<script src="js/brag.js"></script>
 <script src="js/progress.js"></script>
 </head>
 <body>
@@ -73,6 +75,12 @@
       <p class="ov-h" id="ov-h">—</p>
       <p class="ov-p" id="ov-p"></p>
       <div class="groups" id="groups"></div>
+      <!-- ⚠️ KHOE VOI BO ME, KHONG KHOE VOI NGUOI LA — the dung ngay trong may, khong
+           gui di dau ca (xem js/brag.js). Dat trong khoi TONG QUAN vi day la cho co
+           du so lieu de khoe: % hoan thanh, bac huan luyen, so huy hieu. -->
+      <button type="button" class="pbtn brag-open-btn" id="brag-btn" data-i18n="brag_btn">
+        👨‍👩‍👧 Cho bố mẹ xem
+      </button>
     </div>
   </section>
 
@@ -158,6 +166,12 @@
     vi:{
       a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Trung Tâm Điều Hướng",
       eyebrow:"Kho Thành Tích", title_h:"Huy hiệu & bộ sưu tập của bạn",
+      brag_btn:"👨‍👩‍👧 Cho bố mẹ xem",
+      brag_tag:"KHO THÀNH TÍCH", brag_title:"Thành tích của {n}",
+      brag_sub:"Ở astroQ — học thiên văn, AI và lập trình",
+      brag_lv:"Cấp độ", brag_badges:"Huy hiệu", brag_pct:"Hoàn thành", brag_planets:"Hành tinh đã ghé",
+      brag_note:"Bố mẹ xem thử con đã đi tới đâu nhé!",
+      brag_unknown:"Chưa đọc được số liệu — hãy đăng nhập rồi thử lại nhé.",
       intro:"Đây là nơi lưu giữ mọi thành tích bạn đã chinh phục. Chưa mở được thì cứ thử tiếp nhé!",
       tag_ov:"Tổng quan", done_word:"Hoàn thành",
       ov_h:"Đã mở {a}/{b} huy hiệu",
@@ -185,6 +199,12 @@
     en:{
       a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Navigation Hub",
       eyebrow:"Trophy Hold", title_h:"Your badges & collections",
+      brag_btn:"👨‍👩‍👧 Show a grown-up",
+      brag_tag:"TROPHY HOLD", brag_title:"{n}'s progress",
+      brag_sub:"On astroQ — astronomy, AI and coding",
+      brag_lv:"Level", brag_badges:"Badges", brag_pct:"Complete", brag_planets:"Planets visited",
+      brag_note:"Here is how far I have got so far!",
+      brag_unknown:"Numbers not loaded yet — sign in and try again.",
       intro:"This is where every achievement you conquered is kept. Not unlocked yet? Keep trying!",
       tag_ov:"Overview", done_word:"Complete",
       ov_h:"{a}/{b} badges unlocked",
@@ -470,6 +490,34 @@
   }
 
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /* ---- "Cho bố mẹ xem" ----
+     ⚠️ CHƯA ĐỌC ĐƯỢC SỐ LIỆU THÌ NÓI THẬT, KHÔNG DỰNG THẺ. Một tấm thẻ khoe "Cấp 1 ·
+        0 huy hiệu" cho một đứa trẻ chưa đăng nhập là **nói sai về tiến độ của nó** —
+        cùng luật với dấu "—" ở dashboard/hồ sơ. Nút vẫn bấm được và trả lời bằng một
+        câu, chứ không im lặng (im lặng thì trẻ tưởng mình bấm trượt). */
+  function openBrag(){
+    if(!window.AstroQBrag) return;
+    if(!VIEW.ok || !VIEW.level){ toast(t("brag_unknown"), "bad"); return; }
+    var u = AstroQ.getUser() || {};
+    var nm = u.pilotName || u.name || "";
+    var lv = VIEW.level.level;
+    var rank = window.AstroQRanks ? AstroQRanks.name(lv, LANG) : "";
+    var e = VIEW.summary.earned || 0, tt = VIEW.summary.total || 0;
+    AstroQBrag.open({
+      lang: LANG, tag: t("brag_tag"), badge: "🏆",
+      title: nm ? t("brag_title").replace("{n}", nm) : t("eyebrow"),
+      sub: t("brag_sub"),
+      lines: [
+        { ic:"🎖️", k:t("brag_lv"),      v:lv + (rank ? " · " + rank : "") },
+        { ic:"🏅", k:t("brag_badges"),  v:e + "/" + tt },
+        { ic:"📊", k:t("brag_pct"),     v:(tt ? Math.round(e*100/tt) : 0) + "%" },
+        { ic:"🪐", k:t("brag_planets"), v:String((VIEW.planets||[]).length) }
+      ],
+      note: t("brag_note")
+    });
+  }
+  $("brag-btn").addEventListener("click", openBrag);
 
   $("back").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
   Array.prototype.forEach.call($("f-state").querySelectorAll("button"), function(b){
