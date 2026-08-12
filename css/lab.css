@@ -112,8 +112,27 @@
    WCAG 2.5.5, đặt đúng mốc là không còn biên an toàn nào (đã có một ca chập chờn
    thật vì lý do đó — nút VI/EN của explorer đo ra đúng 44×44). */
 
-/* ── Hộp thoại linh vật: dùng .aq-say của css/mascot.css, chỉ thêm chỗ đặt ── */
-.lab-say{ position:static; margin-top:14px; max-width:820px; }
+/* ── Hộp thoại linh vật ───────────────────────────────────────────────────
+   `css/mascot.css` CHỈ giữ VỎ box (bo góc · viền · nền · bóng) và khung avatar.
+   `display` · `padding` · `gap` là phần TRANG phải góp — xem khối "FILE NÀY GIỮ /
+   TRANG GIỮ" ở đầu file đó.
+   ⚠️⚠️ BẢN ĐẦU CỦA TÔI THIẾU CẢ HAI, và hậu quả thấy ngay trên ảnh chụp: không có
+   `padding` nên chữ dí sát viền, và không có `display:flex` nên avatar xếp dọc rồi
+   nằm đè lên đúng góc trên-trái của box. Đọc CSS thì không thấy — nó là một thứ
+   THIẾU, không phải một thứ SAI. */
+.lab-say{
+  --aq-r:18px; --aq-ava:50px; --aq-ava-r:14px;
+  position:static; margin-top:14px; max-width:820px;
+  display:flex; gap:13px; align-items:flex-start;
+  padding:14px 18px 13px;
+}
+.lab-say .body{ flex:1; min-width:0; }
+.lab-say .line{ font-size:14.5px; line-height:1.6; margin:5px 0 0; }
+.lab-say .line b{ color:#a5e4ff; }
+@media (max-width:600px){
+  .lab-say{ padding:12px 14px; gap:10px; --aq-ava:42px; --aq-ava-r:12px; }
+  .lab-say .line{ font-size:13.6px; }
+}
 
 .guess{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 .guess button{ min-height:48px; }

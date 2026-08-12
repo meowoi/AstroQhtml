@@ -18,6 +18,10 @@
 <script src="js/ui-common.js"></script>
 <script src="js/lab-catalog.js"></script>
 <script src="js/lab-drop.js"></script>
+<!-- Bộ âm thanh dùng chung: nó tôn trọng ĐÚNG một lựa chọn tắt tiếng
+     `astroq-sfx` của cả app (3 mini-game + màn nhiệm vụ), nên không dựng
+     cái thứ hai. Không tải file âm thanh nào — WebAudio synth. -->
+<script src="js/sfx.js"></script>
 <script src="js/locks.js"></script>
 <!-- ⚠️ CỐ Ý KHÔNG nạp js/firebase-auth.js (SDK 64,2 KB gzip): phiên bản đầu của
      Phòng Nghiên Cứu KHÔNG ghi gì lên server, nên nó không cần token. Lý do đầy
@@ -79,11 +83,16 @@
     </div>
 
     <!-- Comet đặt câu hỏi / giải thích. Vỏ box lấy từ css/mascot.css. -->
-    <div class="aq-say lab-say" id="say">
-      <img class="aq-ava" id="say-ava" src="ava/avam.png" alt="Comet" />
-      <div>
+    <!-- ⚠️ `.aq-ava` là thẻ BỌC chứa <img>, KHÔNG gắn thẳng vào <img>: rule
+         `.aq-ava img{width:100%}` của css/mascot.css chỉ với tới ảnh khi có lớp bọc.
+         Bản đầu gắn vào chính <img> nên nền/viền khung avatar không bao quanh gì cả
+         và ảnh đè lên góc box. Ba trang kia (`.me-say`/`.mi-say`/`.tour-bubble`) đều
+         dùng lớp bọc — xem khối CÁCH DÙNG ở đầu css/mascot.css. -->
+    <div class="aq-say lab-say" id="say" role="status" aria-live="polite">
+      <span class="aq-ava"><img id="say-ava" src="ava/avam.png" alt="Comet" /></span>
+      <div class="body">
         <span class="aq-nm" id="say-nm">Comet</span>
-        <p id="say-txt"></p>
+        <p class="line" id="say-txt"></p>
       </div>
     </div>
 
@@ -93,6 +102,9 @@
     <div class="exp-ctl" id="ctl-run" hidden>
       <button class="pbtn" id="run" type="button" data-i18n="ui_drop">Thả!</button>
       <button class="pbtn ghost" id="again" type="button" data-i18n="ui_again">Làm lại</button>
+      <!-- "Xem chậm" chỉ đổi nhịp XEM, không đổi kết quả nào — nên nó an toàn về
+           mặt nội dung, và nó là thứ trẻ cần để kịp nhìn vết đèn nháy. -->
+      <button class="pbtn ghost" id="slow" type="button" data-i18n="ui_slow">Xem chậm</button>
     </div>
 
     <!-- Hai độ sâu lời giải thích -->
@@ -315,16 +327,24 @@
     });
   }
 
+  /* ⚠️ LAB-07 và LAB-08 có MỘT CÂU GIẢI THÍCH CHO TỪNG NẤC (`say_sky_noon`,
+     `say_drops_salt`…), khác LAB-03 chỉ có một câu duy nhất. Gom về một hàm để chỗ
+     gọi không phải nhớ thẻ nào thuộc loại nào. */
+  function sayKeyFor(c, step){
+    if (c.kind === "sky" || c.kind === "drops") return "say_" + c.id + "_" + step;
+    if (c.kind === "weight") return "say_weigh";
+    return "say_" + c.id;
+  }
+
   function afterPlace(c){
     resetOutcome();
     if (c.kind === "drop"){
       $("ctl-run").hidden = !guessed;
       say(guessed ? t("q_tower") : t("q_tower"));
       renderGuess(c);
-    } else if (c.kind === "weight"){
-      // Cảnh cân: không cần đoán, đổi nơi là thấy ngay
-      reveal(c, "say_weigh");
-      $("say-txt").textContent = t("say_weigh");
+    } else if (c.kind === "weight" || c.kind === "sky" || c.kind === "drops"){
+      // Không cần đoán: đổi một nấc là thấy ngay, và câu giải thích đổi theo nấc.
+      reveal(c, sayKeyFor(c, place));
     }
   }
 
@@ -352,12 +372,21 @@
     renderPlaces(c);
     renderSrcs(c);
     $("ctl-run").hidden = true;
+    // "Thả!" và "Xem chậm" chỉ có nghĩa với cảnh CÓ CÚ RƠI. Để chúng hiện ở thẻ
+    // khác là một nút bấm không làm gì — đúng cái ngõ cụt luật của dự án cấm.
+    $("slow").hidden = (c.kind !== "drop");
+    $("again").hidden = (c.kind !== "drop");
 
     if (c.kind === "drop")       { say(t("q_tower")); }
     else if (c.kind === "float") { say(t("q_float")); }
     else if (c.kind === "weight"){ say(t("q_weigh")); }
+    else if (c.kind === "sky")   { say(t("q_sky")); }
+    else if (c.kind === "drops") { say(t("q_drops")); }
     renderGuess(c);
-    if (c.kind === "weight") reveal(c, "say_weigh");
+    /* Ba thẻ này không có bước ĐOÁN: việc của trẻ là ĐỔI một thứ rồi xem đổi gì.
+       Ép thêm một câu đố vào đó là biến khám phá thành bài kiểm tra. */
+    if (c.kind === "weight" || c.kind === "sky" || c.kind === "drops")
+      reveal(c, sayKeyFor(c, place));
 
     window.scrollTo({ top:0, behavior:"smooth" });
   }
@@ -375,6 +404,14 @@
   $("run").addEventListener("click", function(){ scene.drop(); });
   $("again").addEventListener("click", function(){
     resetOutcome(); guessed = true; scene.reset(); renderGuess(LAB.card(view));
+  });
+  $("slow").addEventListener("click", function(){
+    var on = scene.toggleSlow();
+    $("slow").textContent = on ? t("ui_slow_off") : t("ui_slow");
+    $("slow").classList.toggle("on", on);
+    resetOutcome();
+    var c = LAB.card(view);
+    guessed = true; renderGuess(c);           // đã đoán rồi thì đừng hỏi lại
   });
   $("more-btn").addEventListener("click", function(){
     var box = $("more-box");
@@ -405,6 +442,7 @@
     }
     $("run").textContent = t("ui_drop");
     $("again").textContent = t("ui_again");
+    $("slow").textContent = (scene && scene.isSlow()) ? t("ui_slow_off") : t("ui_slow");
   }
 
   applyLang(LANG);

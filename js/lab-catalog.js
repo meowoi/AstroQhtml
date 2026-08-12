@@ -80,6 +80,22 @@
        lực Trái Đất vẫn còn khoảng 90%"* — con số đó lấy từ trang ĐÃ CHẾT và trang
        sống KHÔNG phát biểu nó, nên đã bỏ. Thay bằng đúng câu trang nói: trường hấp
        dẫn ở đó *"still quite strong"*, và độ cao **120–360 dặm**. */
+    /* ⚠️ Cả hai nguồn dưới kiểm 200 ngày 12/08/2026 bằng
+       `scratchpad/check_lab_sources.py`. `spaceplace` là trang NASA viết CHO TRẺ EM
+       nên nó đúng độ tuổi của dự án — cùng lý do `term_gravity` đã dùng nó. */
+    bluesky: {
+      url: "https://spaceplace.nasa.gov/blue-sky/en/",
+      quote: "Sunlight reaches Earth's atmosphere and is scattered in all directions " +
+             "by all the gases and particles in the air. Blue light is scattered more " +
+             "than the other colors because it travels as shorter, smaller waves."
+    },
+    water: {
+      url: "https://spaceplace.nasa.gov/water/en/",
+      quote: "Water covers 71 percent of Earth's surface. And almost all of it—96.5 " +
+             "percent—is salt water. ... Just 3.5 percent of the water on Earth is " +
+             "fresh water we can drink. And most of that fresh water, 68 percent, is " +
+             "trapped in ice and glaciers."
+    },
     micro: {
       url: "https://www.nasa.gov/general/what-is-microgravity/",
       quote: "That's because they're all falling together: the apple, the astronaut " +
@@ -105,6 +121,14 @@
     { code: "LAB-03", id: "weigh",  kind: "weight", ic: "⚖️", tone: "gold",
       lock: "lab:weigh",    places: ["earth", "moon", "mercury", "jupiter"],
       src: ["moonfacts", "weigh"] },
+    /* ⚠️ LAB-07 và LAB-08 KHÔNG phải về hấp dẫn — chúng là vật lý ánh sáng và
+       nước/hoá học ở mức trẻ em. Lưới thẻ chịu được điều đó: mỗi thẻ MỘT loại hoạt
+       động, nên thêm môn mới không phải đổi tên khu ngoài (chính lý do chủ dự án
+       chốt hình dạng lưới thẻ). Mã LAB-nn cấp theo số kế tiếp, KHÔNG chèn vào giữa. */
+    { code: "LAB-07", id: "sky",    kind: "sky",   ic: "🌇", tone: "gold", tall: true,
+      lock: "lab:sky",      places: ["noon", "evening", "horizon"], src: ["bluesky"] },
+    { code: "LAB-08", id: "drops",  kind: "drops", ic: "💧", tone: "cyan",
+      lock: "lab:drops",    places: ["all", "salt", "fresh", "ice"], src: ["water"] },
     { code: "LAB-04", id: "throw",  kind: null, ic: "🎯", tone: "lime",  lock: "lab:throw" },
     { code: "LAB-05", id: "tide",   kind: null, ic: "🌊", tone: "cyan",  lock: "lab:tide"  },
     { code: "LAB-06", id: "mix",    kind: null, ic: "⚗️", tone: "mag",   lock: "lab:mix"   }
@@ -141,6 +165,29 @@
       more_weigh: "Cân nặng là lực mà một nơi kéo em xuống, nên nó đổi theo nơi. Khối lượng là lượng vật chất làm nên em, và nó ở đâu cũng vậy — trên Sao Hoả hay Sao Mộc thì khối lượng của em vẫn y như trên Trái Đất. Đó là lý do phi hành gia không hề gầy đi khi bay lên trạm, dù cái cân ở đó chỉ số 0.",
       find_weigh: "Cân nặng đổi theo nơi; khối lượng thì không.",
 
+      /* ── LAB-07 · vật lý ánh sáng ── */
+      p_noon: "Giữa trưa", p_evening: "Chiều muộn", p_horizon: "Sát chân trời",
+      t_sky: "Vì sao trời xanh",
+      d_sky: "Kéo Mặt Trời xuống thấp dần. Trời đổi màu — vì sao?",
+      q_sky: "Chọn một lúc trong ngày rồi xem trời màu gì.",
+      say_sky_noon: "Giữa trưa trời xanh nhất: ánh sáng xanh bị TÁN XẠ đi khắp nơi trong không khí, nên nhìn đâu cũng thấy xanh.",
+      say_sky_evening: "Mặt Trời thấp hơn thì ánh sáng phải đi qua nhiều không khí hơn, nên màu xanh bị tán xạ mất dần.",
+      say_sky_horizon: "Sát chân trời, xanh bị tán xạ hết — chỉ còn đỏ và vàng đi thẳng tới mắt em. Đó là ráng chiều.",
+      more_sky: "Ánh sáng Mặt Trời chứa đủ mọi màu. Khi tới khí quyển, nó bị các chất khí và hạt bụi trong không khí tán xạ ra mọi hướng. Màu xanh bị tán xạ nhiều hơn các màu khác vì nó đi thành những đợt sóng NGẮN HƠN, NHỎ HƠN — nên bầu trời phần lớn thời gian có màu xanh. Lúc Mặt Trời xuống thấp, ánh sáng của nó phải xuyên qua nhiều khí quyển hơn để tới được em, xanh bị tán xạ đi càng nhiều, và đỏ với vàng mới là những màu đi thẳng qua được.",
+      find_sky: "Trời xanh vì ánh sáng xanh bị không khí tán xạ mạnh nhất.",
+
+      /* ── LAB-08 · nước & muối ── */
+      p_all: "Tất cả nước", p_salt: "Nước mặn", p_fresh: "Nước ngọt", p_ice: "Đóng thành băng",
+      t_drops: "Nước của Trái Đất",
+      d_drops: "Một trăm giọt nước. Bao nhiêu giọt em uống được?",
+      q_drops: "Bấm lần lượt từng nút để xem 100 giọt nước chia ra thế nào.",
+      say_drops_all: "Nước phủ 71% bề mặt Trái Đất. Coi tất cả nước đó là 100 giọt nhé.",
+      say_drops_salt: "96,5 giọt là nước MẶN — chủ yếu là muối natri clorua, đúng thứ muối ta cho vào thức ăn.",
+      say_drops_fresh: "Chỉ 3,5 giọt là nước ngọt uống được. Ít đến thế thôi.",
+      say_drops_ice: "Và 68% chỗ nước ngọt đó lại đang đóng thành băng và sông băng.",
+      more_drops: "Nước ở khắp nơi: trong đất, trong đại dương, trong khí quyển, và trong cả cơ thể sống — người em phần lớn là nước. Nước phủ 71% bề mặt Trái Đất, nhưng gần như tất cả — 96,5% — là nước mặn. Muối trong đó chủ yếu là natri clorua, cùng loại muối ta rắc vào thức ăn. Chỉ 3,5% lượng nước trên Trái Đất là nước ngọt uống được, mà phần lớn chỗ đó — 68% — lại bị giữ trong băng và sông băng.",
+      find_drops: "Trong 100 giọt nước của Trái Đất, chỉ hơn 3 giọt là uống được.",
+
       /* ── ba thẻ chưa dựng ── */
       t_throw: "Ném xa ở các nơi", d_throw: "Cùng một cú ném, trọng lực khác nhau thì bay xa khác nhau.",
       t_tide: "Thuỷ triều & Mặt Trăng", d_tide: "Kéo Mặt Trăng xa rồi gần, xem nước biển đổi thế nào.",
@@ -149,6 +196,9 @@
       /* ── giao diện ── */
       ui_pick_place: "Chọn nơi:",
       ui_drop: "Thả!",
+      ui_slow: "Xem chậm",
+      ui_slow_off: "Xem tốc độ thường",
+      ui_strobe: "Mỗi vệt mờ là vị trí sau cùng một khoảng thời gian",
       ui_again: "Làm lại",
       ui_more: "Tìm hiểu thêm",
       ui_less: "Thu lại",
@@ -195,12 +245,36 @@
       more_weigh: "Weight is the pull a place has on you, so it changes from place to place. Mass is how much stuff you are made of, and that is the same everywhere — on Mars or on Jupiter your mass is exactly what it is on Earth. That's why astronauts don't get thinner on the way up, even though a scale up there would read zero.",
       find_weigh: "Weight changes with where you are; mass does not.",
 
+      p_noon: "Midday", p_evening: "Late afternoon", p_horizon: "At the horizon",
+      t_sky: "Why the sky is blue",
+      d_sky: "Bring the Sun lower and lower. The sky changes colour — why?",
+      q_sky: "Pick a time of day and see what colour the sky is.",
+      say_sky_noon: "At midday the sky is at its bluest: blue light is SCATTERED all around by the air, so you see blue wherever you look.",
+      say_sky_evening: "With the Sun lower, its light travels through more air, so the blue gets scattered away.",
+      say_sky_horizon: "Near the horizon the blue is all scattered away — only red and yellow come straight to your eyes. That's a sunset.",
+      more_sky: "Sunlight contains every colour. When it reaches the atmosphere it is scattered in all directions by the gases and particles in the air. Blue light is scattered more than the other colours because it travels as SHORTER, SMALLER waves — which is why the sky is blue most of the time. As the Sun gets lower, its light passes through more atmosphere to reach you, even more of the blue is scattered away, and the reds and yellows are what pass straight through.",
+      find_sky: "The sky is blue because air scatters blue light the most.",
+
+      p_all: "All the water", p_salt: "Salt water", p_fresh: "Fresh water", p_ice: "Locked in ice",
+      t_drops: "Earth's water",
+      d_drops: "One hundred drops of water. How many can you drink?",
+      q_drops: "Press each button in turn to see how 100 drops split up.",
+      say_drops_all: "Water covers 71% of Earth's surface. Let's call all of it 100 drops.",
+      say_drops_salt: "96.5 drops are SALT water — mostly sodium chloride, the very salt we put on our food.",
+      say_drops_fresh: "Only 3.5 drops are fresh water you could drink. That little.",
+      say_drops_ice: "And 68% of that fresh water is locked up in ice and glaciers.",
+      more_drops: "Water is everywhere: in the ground, in the oceans, in the atmosphere, and in living things — your body is mostly water. Water covers 71 percent of Earth's surface, but almost all of it — 96.5 percent — is salt water. That salt is mostly sodium chloride, the same salt we add to our food. Just 3.5 percent of Earth's water is fresh water we can drink, and most of that, 68 percent, is trapped in ice and glaciers.",
+      find_drops: "Of Earth's 100 drops of water, only about 3 are drinkable.",
+
       t_throw: "Throwing distance", d_throw: "The same throw, different gravity, different distance.",
       t_tide: "Tides and the Moon", d_tide: "Pull the Moon closer and further, watch the sea change.",
       t_mix: "Mix elements", d_mix: "Put two elements together and see what you get.",
 
       ui_pick_place: "Pick a place:",
       ui_drop: "Drop!",
+      ui_slow: "Slow motion",
+      ui_slow_off: "Normal speed",
+      ui_strobe: "Each faint copy is where it was after the same slice of time",
       ui_again: "Again",
       ui_more: "Tell me more",
       ui_less: "Close",

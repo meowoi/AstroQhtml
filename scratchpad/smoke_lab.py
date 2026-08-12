@@ -11,6 +11,7 @@ Chay:  python -m http.server 8123   (trong AstroQhtml/)   roi   python scratchpa
    nen khong ghim thi phan "tieng Viet" cua bo do lang le chay bang tieng Anh va moi
    phep kiem chu Viet vo nghia (bai hoc 12/08/2026).
 """
+import re
 import sys
 import io
 
@@ -75,17 +76,30 @@ with sync_playwright() as pw:
     ctx, pg = mk(br)
     pg.goto(URL, wait_until="load")
     pg.wait_for_selector(".lcard", timeout=8000)
+    # ⚠️ DOI PHAT BIEU 12/08/2026: them LAB-07 (vi sao troi xanh) + LAB-08 (nuoc cua
+    #    Trai Dat) => 8 the. Ba phep kiem cu ghim con so 6 va ghim "LAB-04..06 la
+    #    soon" THEO VI TRI, nen chung bao hong dung luc san pham lam dung.
+    #    Ban moi doc trang thai tu CHINH DANH MUC (the co `kind` la the dung xong)
+    #    nen no dung voi moi so luong the ve sau, VA no manh hon: no la chot chan
+    #    "the CHUA dung xong khong bao gio duoc mang nhan tra phi" — gan `pro` cho
+    #    thu chua ton tai la noi voi phu huynh "tra tien se mo duoc".
     cards = pg.query_selector_all(".lcard")
-    check("co dung 6 the", len(cards) == 6, str(len(cards)))
+    check("co it nhat 6 the", len(cards) >= 6, "%d the" % len(cards))
     codes = pg.eval_on_selector_all(".lc-code", "els => els.map(e => e.textContent)")
-    check("6 ma LAB-01..06 dung thu tu", codes == ["LAB-0%d" % i for i in range(1, 7)],
+    check("moi ma dung dang LAB-nn", all(re.match(r"^LAB-\d\d$", c) for c in codes),
           ",".join(codes))
+    check("khong ma nao bi trung", len(set(codes)) == len(codes), ",".join(codes))
+    kinds = pg.evaluate("() => AstroQLab.CARDS.map(c => ({code:c.code, done:!!c.kind}))")
     tags = pg.eval_on_selector_all(".lc-tag", "els => els.map(e => e.className)")
-    check("LAB-01 la the MIEN PHI", "free" in tags[0], tags[0])
-    check("LAB-02 va LAB-03 la the tra phi", "pro" in tags[1] and "pro" in tags[2],
-          "%s | %s" % (tags[1], tags[2]))
-    check("LAB-04..06 la 'sap ra mat'", all("soon" in t for t in tags[3:]),
-          " | ".join(tags[3:]))
+    check("so nhan khop so the", len(tags) == len(kinds),
+          "%d nhan / %d the" % (len(tags), len(kinds)))
+    for _i, _k in enumerate(kinds):
+        _want = ("free", "pro") if _k["done"] else ("soon",)
+        check("%s: %s" % (_k["code"],
+                          "da dung xong -> free/pro" if _k["done"]
+                          else "chua dung xong -> soon"),
+              any(w in tags[_i] for w in _want), tags[_i].replace("lc-tag ", ""))
+    check("LAB-01 la the MIEN PHI (the trai nghiem)", "free" in tags[0], tags[0])
     # ⚠️ Khong the nao co chu 'Sao Hoa' o day: nguon chi chong lung 4 noi va Sao Hoa
     #    KHONG nam trong do (Space Place chi nhac Sao Hoa khi noi ve KHOI LUONG).
     body = pg.inner_text("body")
@@ -216,13 +230,19 @@ with sync_playwright() as pw:
           pg.is_visible("#lab-dev"))
     check("dai nhac noi ro day khong phai thu tre thay",
           "trẻ" in pg.inner_text("#lab-dev"), pg.inner_text("#lab-dev")[:60])
+    # ⚠️ SUY TU DANH MUC, KHONG GHIM THEO VI TRI trong luoi. Ban dau kiem `tags2[:3]`
+    #    va `tags2[3:]`; them LAB-07/08 vao giua la thu tu doi va phep kiem bao hong
+    #    dung luc san pham lam dung — cung loai loi voi con so "6 the" o muc [1].
     tags2 = pg.eval_on_selector_all(".lc-tag", "e => e.map(x => x.className)")
-    check("che do thu MO the tra phi", all("free" in t for t in tags2[:3]),
-          " | ".join(t.replace("lc-tag ", "") for t in tags2))
-    # ⚠️ VA KHONG mo the `soon`: chung chua co noi dung, mo ra la mot man trong —
-    #    dung cai bay `soon`/`pro` ma js/locks.js sinh ra de tranh.
-    check("che do thu KHONG mo the 'soon'", all("soon" in t for t in tags2[3:]),
-          " | ".join(t.replace("lc-tag ", "") for t in tags2[3:]))
+    kinds2 = pg.evaluate("() => AstroQLab.CARDS.map(c => !!c.kind)")
+    _done = [tags2[i] for i, d in enumerate(kinds2) if d]
+    _todo = [tags2[i] for i, d in enumerate(kinds2) if not d]
+    check("che do thu MO moi the DA DUNG XONG", all("free" in t for t in _done),
+          " | ".join(t.replace("lc-tag ", "") for t in _done))
+    # ⚠️ VA KHONG mo the CHUA dung xong: mo ra la mot man trong — dung cai bay
+    #    `soon`/`pro` ma js/locks.js sinh ra de tranh.
+    check("che do thu KHONG mo the chua dung xong", all("soon" in t for t in _todo),
+          " | ".join(t.replace("lc-tag ", "") for t in _todo))
 
     def stamp(pg):
         """Bam mot con so tu anh canvas — de so HAI CANH co khac nhau khong."""
@@ -236,7 +256,8 @@ with sync_playwright() as pw:
         }""")
 
     shots = {}
-    for cid, code in (("tower", "LAB-01"), ("float", "LAB-02"), ("weigh", "LAB-03")):
+    for cid, code in (("tower", "LAB-01"), ("float", "LAB-02"), ("weigh", "LAB-03"),
+                      ("sky", "LAB-07"), ("drops", "LAB-08")):
         pg.goto(URL + "?unlock=1", wait_until="load")
         pg.wait_for_selector(".lcard", timeout=8000)
         pg.click(".lcard[data-card='%s']" % cid)
@@ -258,8 +279,32 @@ with sync_playwright() as pw:
 
     # ⚠️ Phep kiem nay la thu `ink()` KHONG lam duoc: ba canh phai la ba hinh khac
     #    nhau. Thieu no thi `setScene` co the ve sai canh ma bo do van xanh.
-    check("BA CANH KHAC NHAU (khong phai cung mot hinh)",
-          len(set(shots.values())) == 3, str(shots))
+    # ⚠️ MOI canh phai la MOT HINH KHAC — `ink()` khong lam duoc viec nay (no dem
+    #    dien tich canvas nen cho cung mot con so o moi canh). Thieu phep kiem nay
+    #    thi `setScene` co the ve sai canh ma bo do van xanh.
+    check("MOI CANH LA MOT HINH KHAC NHAU",
+          len(set(shots.values())) == len(shots), str(shots))
+
+    print("\n[3d2] LAB-07 + LAB-08: doi nac thi CANH va LOI GIAI THICH doi theo")
+    for cid, n2, need in (("sky", 3, "t\u00e1n x\u1ea1"), ("drops", 2, "natri clorua")):
+        pg.goto(URL + "?unlock=1", wait_until="load")
+        pg.wait_for_selector(".lcard", timeout=8000)
+        pg.click(".lcard[data-card='%s']" % cid)
+        pg.wait_for_selector("#exp-view:not([hidden])", timeout=6000)
+        pg.wait_for_timeout(400)
+        # ⚠️ Hai the nay KHONG co cu roi, nen nut "Tha!"/"Xem cham" phai AN. Mot nut
+        #    bam duoc ma khong lam gi la dung cai ngo cut luat du an cam.
+        check("%s: nut Tha va Xem cham AN (khong co cu roi)" % cid,
+              not pg.is_visible("#run") and not pg.is_visible("#slow"))
+        check("%s: he lo ngay, khong bat doan" % cid, pg.is_visible("#finding"))
+        _a = stamp(pg); _sa = pg.inner_text("#say-txt")
+        pg.click("#places button:nth-child(%d)" % n2); pg.wait_for_timeout(450)
+        _b = stamp(pg); _sb = pg.inner_text("#say-txt")
+        check("%s: doi nac thi CANH ve lai khac" % cid, _a != _b, "%s vs %s" % (_a, _b))
+        check("%s: doi nac thi LOI GIAI THICH cung doi" % cid, _sa != _sb, _sb[:56])
+        pg.click("#more-btn"); pg.wait_for_timeout(220)
+        check("%s: do sau thu hai co tu khoa CO NGUON" % cid,
+              need in pg.inner_text("#more-box"), need)
 
     print("\n[3e] LAB-02: buong qua tao ra thi no TROI")
     pg.goto(URL + "?unlock=1", wait_until="load")

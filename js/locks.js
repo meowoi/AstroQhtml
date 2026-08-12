@@ -80,6 +80,12 @@
     },
     /* Ba thẻ chưa dựng xong → `soon`, KHÔNG phải `pro`. Gắn `pro` cho thứ chưa
        tồn tại là nói với phụ huynh "trả tiền sẽ mở được" — xem cảnh báo đầu file. */
+    /* LAB-07 + LAB-08: DA DUNG XONG, nen `pro` chu khong `soon`. Xem canh bao dau
+       file: gan `pro` cho thu chua dung xong moi la loi. */
+    "lab:sky":   { state: "pro", plan: "astronaut", ic: "🌇",
+                   feats: ["f_lab_1", "f_lab_2", "f_lab_3"] },
+    "lab:drops": { state: "pro", plan: "astronaut", ic: "💧",
+                   feats: ["f_lab_1", "f_lab_2", "f_lab_3"] },
     "lab:throw": { state: "soon", plan: "astronaut", ic: "🎯" },
     "lab:tide":  { state: "soon", plan: "astronaut", ic: "🌊" },
     "lab:mix":   { state: "soon", plan: "astronaut", ic: "⚗️" },

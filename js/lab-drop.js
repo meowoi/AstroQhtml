@@ -35,6 +35,17 @@
   var AIR_SLOW = 3.4;       // lông chim trong không khí chậm hơn bấy nhiêu lần — ĐỊNH TÍNH
   var PX_CAP = 1600000;     // trần pixel vùng vẽ, cùng lối js/game-shell.js
 
+  /* ⚠️⚠️ VẾT ĐÈN NHÁY (ghost strobe) — THỨ LÀM BÀI HỌC HIỆN RA, KHÔNG PHẢI TRANG TRÍ.
+     Cứ mỗi `STROBE_MS` để lại một bản mờ của từng vật. Vì nhịp đó CỐ ĐỊNH, khoảng
+     cách giữa các bậc chính là bằng chứng của gia tốc: trên Mặt Trăng hai cái thang
+     ghost xếp ĐÚNG TỪNG BẬC ⇒ *"rơi nhanh như nhau"* thành một thứ NHÌN THẤY thay vì
+     một câu người lớn nói. Trên Trái Đất thang của lông chim thưa và ngắn hơn hẳn.
+     ⚠️ Nó KHÔNG phát biểu một con số thời gian nào, nên không phạm luật ③ của
+        js/lab-catalog.js (không hiện thời gian rơi tuyệt đối). Đừng thêm đồng hồ. */
+  var STROBE_MS = 110;
+  var GHOST_MAX = 40;       // trần số bản mờ MỖI VẬT (vạch mảnh nên 40 vẫn đọc ra bậc)
+  var SLOW = 0.35;          // hệ số "Xem chậm"; không đổi kết quả, chỉ đổi nhịp xem
+
   var GROUND_Y = 430;       // mặt đất trong hệ ảo
   var TOP_Y = 96;           // độ cao thả
 
@@ -52,6 +63,22 @@
     var raf = 0, t0 = 0, running = false, done = false;
     var doneCb = null;
     var floatT = 0;
+    var slow = false;                 // "Xem chậm"
+    var ghosts = [];                  // [{x,y,kind}] các bản mờ đã để lại
+    var nGh = { h: 0, f: 0 };         // đếm theo TỪNG vật, không đếm tổng
+    var nextStrobe = 0;
+    var landed = { h: 0, f: 0 };      // mốc thời gian chạm đất của từng vật (0 = chưa)
+    var puffs = [];                   // [{x,t}] bụi bung khi chạm đất
+    var sfxDone = false;
+
+    function sfx(name, arg) {
+      /* Dùng chung `js/sfx.js` nên nó tôn trọng ĐÚNG một lựa chọn tắt tiếng
+         `astroq-sfx` của cả app. Không có file thì im lặng, không vỡ. */
+      try {
+        var S = global.AstroQSfx;
+        if (S && typeof S[name] === "function") S[name](arg);
+      } catch (e) {}
+    }
 
     function dprFor(w, h) {
       var d = Math.min(2, global.devicePixelRatio || 1);
@@ -152,6 +179,49 @@
       ctx.restore();
     }
 
+    /* Vạch đích ở mặt đất — trẻ cần một MỐC để nói "cái nào tới trước". */
+    function finishLine(flash) {
+      ctx.save();
+      ctx.setLineDash([9, 7]);
+      ctx.lineWidth = flash ? 4 : 2;
+      ctx.strokeStyle = flash ? "rgba(134,239,172,.95)" : "rgba(234,241,255,.34)";
+      ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(VW, GROUND_Y); ctx.stroke();
+      ctx.restore();
+    }
+
+    /* Bụi bung lúc chạm đất — vẽ bằng cung mờ dần, KHÔNG dùng shadowBlur. */
+    function puff(x, age) {
+      var k = Math.min(1, age / 420);
+      if (k >= 1) return;
+      ctx.save();
+      ctx.globalAlpha = (1 - k) * 0.5;
+      ctx.strokeStyle = "#eaf1ff"; ctx.lineWidth = 2.4;
+      for (var i = 0; i < 3; i++) {
+        var rr = 8 + k * (26 + i * 9);
+        ctx.beginPath(); ctx.arc(x, GROUND_Y - 2, rr, Math.PI * 1.08, Math.PI * 1.92);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* Huy hiệu thứ tự chạm đất. `same` → cả hai đều mang dấu "=" thay vì 1st/2nd:
+       trên Mặt Trăng KHÔNG có ai thắng, và đó chính là bài học. */
+    function orderTag(x, txt, tone) {
+      ctx.save();
+      ctx.font = "800 20px 'Space Grotesk', Inter, sans-serif";
+      ctx.textAlign = "center";
+      /* ⚠️ ĐẶT TRÊN ĐẦU VẬT, KHÔNG ĐẶT Ở `GROUND_Y - 26`. Vật hạ cánh với tâm ở
+         `GROUND_Y - 22`, mà búa vẽ từ `y-18` tới `y+38` ⇒ mốc cũ rơi ĐÚNG VÀO
+         giữa cái búa; ảnh chụp cho thấy chữ "1" và "=" nằm đè lên vật, đọc ra như
+         lỗi vẽ. Chỉ soi ảnh mới thấy — đọc code thì hai con số đều "hợp lý". */
+      var ty = GROUND_Y - 62;
+      ctx.lineWidth = 5; ctx.strokeStyle = "rgba(5,8,18,.9)";
+      ctx.strokeText(txt, x, ty);
+      ctx.fillStyle = tone;
+      ctx.fillText(txt, x, ty);
+      ctx.restore();
+    }
+
     function drawDrop(now) {
       var place = opt.place || "earth";
       var r = global.AstroQLab ? AstroQLab.ratio(place) : 1;
@@ -161,8 +231,9 @@
       sky(place); ground(place);
 
       var span = GROUND_Y - TOP_Y - 22;
+      var mul = slow ? (1 / SLOW) : 1;
       // t ∝ 1/√g  ⇒  cú rơi ở nơi có g nhỏ hơn thì lâu hơn đúng √(1/r) lần.
-      var msH = BASE_MS / Math.sqrt(r);
+      var msH = BASE_MS / Math.sqrt(r) * mul;
       // Không khí chỉ tồn tại ở nơi có khí quyển dày. Bốn nơi trong danh mục thì
       // chỉ Trái Đất có — Mặt Trăng "essentially in a vacuum" (nguyên văn NASA).
       var hasAir = (place === "earth");
@@ -177,17 +248,73 @@
              // Trong không khí lông chim đạt tốc độ gần như đều rất sớm → gần tuyến tính.
              ? TOP_Y + span * kF
              : TOP_Y + span * kF * kF;
+      var xH = VW * 0.36, xF = VW * 0.62;
 
-      hammer(VW * 0.36, yH);
-      feather(VW * 0.62, yF, Math.sin(el / 220) * (hasAir ? 0.35 : 0.06));
-      label(VW * 0.36, GROUND_Y + 34, tx("o_hammer"));
-      label(VW * 0.62, GROUND_Y + 34, tx("o_feather"));
+      /* ── ghi VẾT ĐÈN NHÁY theo nhịp CỐ ĐỊNH ──
+         Nhịp cố định là cả điểm: khoảng cách giữa hai bậc kề nhau = quãng đường vật
+         đi trong cùng một lượng thời gian, nên hai cái thang xếp trùng bậc là bằng
+         chứng "rơi nhanh như nhau". Nhịp đo theo thời gian THẬT, không theo `mul`,
+         nên "Xem chậm" cho ra NHIỀU bậc hơn chứ không đổi hình dạng thang. */
+      if (running && el >= nextStrobe) {
+        // ⚠️ Trần đếm THEO TỪNG VẬT. Trần tính trên TỔNG thì thang của lông chim
+        //    (cần ~29 bậc ở chế độ xem chậm) bị cắt giữa đường — đọc ra như lỗi vẽ.
+        if (kH < 1 && nGh.h < GHOST_MAX) { ghosts.push({ x: xH, y: yH, kind: "h" }); nGh.h++; }
+        if (kF < 1 && nGh.f < GHOST_MAX) { ghosts.push({ x: xF, y: yF, kind: "f" }); nGh.f++; }
+        nextStrobe = el + STROBE_MS * mul;
+      }
+      /* ⚠️⚠️ BẢN MỜ VẼ BẰNG VẠCH NGANG, KHÔNG VẼ LẠI HÌNH VẬT — và đây là một lỗi
+         hình THẬT đã sửa sau khi soi ảnh chụp. Bản đầu vẽ lại chính cái búa / cái
+         lông chim ở mỗi bậc: búa thì ra thang bậc rõ ràng, nhưng LÔNG CHIM rơi
+         chậm nên các bản mờ chồng lên nhau và HÀN THÀNH MỘT DẢI LIỀN — mất hẳn
+         nghĩa "từng bậc", tức mất luôn bằng chứng. Đúng ràng buộc hình học đã trả
+         giá ở bộ icon sticker: hai hình cách nhau dưới ngưỡng thì mắt gom lại
+         thành một khối khác.
+         ⚠️ Và CỐ Ý KHÔNG chữa bằng cách "chỉ ghi bản mờ khi vật đã đi đủ xa" —
+         làm thế thì khoảng cách giữa các bậc thôi mã hoá THỜI GIAN, mà chính cái
+         đó mới là bằng chứng. Vạch mảnh giữ được nhịp thời gian VÀ không hàn. */
+      for (var i = 0; i < ghosts.length; i++) {
+        var g = ghosts[i];
+        ctx.save();
+        ctx.globalAlpha = 0.34;
+        ctx.strokeStyle = (g.kind === "h") ? "#cfd7ea" : "#f2e6a8";
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(g.x - 13, g.y); ctx.lineTo(g.x + 13, g.y);
+        ctx.stroke();
+        ctx.restore();
+      }
 
-      if (running && kH >= 1 && kF >= 1) {
+      /* ── chạm đất: ghi mốc, bung bụi, kêu một tiếng ── */
+      if (running && kH >= 1 && !landed.h) { landed.h = el; puffs.push({ x: xH, t: el }); sfx("beep", 240); }
+      if (running && kF >= 1 && !landed.f) { landed.f = el; puffs.push({ x: xF, t: el }); sfx("beep", 200); }
+
+      var bothDown = (kH >= 1 && kF >= 1);
+      finishLine(bothDown);
+      for (var j = 0; j < puffs.length; j++) puff(puffs[j].x, el - puffs[j].t);
+
+      hammer(xH, yH);
+      feather(xF, yF, Math.sin(el / 220) * (hasAir ? 0.35 : 0.06));
+      label(xH, GROUND_Y + 34, tx("o_hammer"));
+      label(xF, GROUND_Y + 34, tx("o_feather"));
+
+      if (bothDown) {
+        if (hasAir) {
+          orderTag(xH, "1", "#ffcf6b");
+          orderTag(xF, "2", "rgba(234,241,255,.8)");
+        } else {
+          // Không ai thắng — dấu "=" ở CẢ HAI, đó là kết quả của thí nghiệm.
+          orderTag(xH, "=", "#86efac");
+          orderTag(xF, "=", "#86efac");
+        }
+      }
+
+      if (running && bothDown) {
+        if (!sfxDone) { sfxDone = true; sfx(hasAir ? "nope" : "ready"); }
         running = false; done = true;
         if (doneCb) doneCb({ same: !hasAir, place: place });
       }
-      return running;
+      // Còn bụi đang tan thì vẫn vẽ tiếp vài khung nữa.
+      return running || (done && (el - Math.max(landed.h, landed.f)) < 480);
     }
 
     /* ── LAB-02: trong trạm, mọi thứ rơi CÙNG NHAU ──────────────────────── */
@@ -268,12 +395,117 @@
       return false;                                     // cảnh tĩnh
     }
 
+    /* Dọn dấu vết của LƯỢT TRƯỚC. ⚠️ Thiếu hàm này thì vết đèn nháy của lượt cũ
+       nằm lại trên cảnh và trẻ đọc ra thành một cú rơi khác — một lỗi im lặng. */
+    function clearRun() {
+      ghosts = []; nGh = { h: 0, f: 0 }; puffs = []; nextStrobe = 0;
+      landed = { h: 0, f: 0 }; sfxDone = false;
+    }
+
+    /* ══ LAB-07: vì sao trời xanh ══════════════════════════════════════════
+       Trẻ hạ Mặt Trời xuống dần và TỰ TẠO RA ráng chiều. Ba nấc rời rạc, không
+       thanh trượt liên tục — cùng lý do đã ghi ở mục 10 của đề xuất: một thanh
+       trượt khẳng định CẢ MỘT DẢI, trong khi nguồn chỉ chống lưng cho ba câu.
+       Màu trời suy từ ĐÚNG điều nguồn nói: càng thấp thì ánh sáng đi qua càng
+       nhiều khí quyển ⇒ xanh bị tán xạ đi càng nhiều ⇒ còn lại đỏ/vàng. */
+    function drawSky() {
+      var step = opt.place || "noon";
+      var L = (global.AstroQ && AstroQ.getLang && AstroQ.getLang() === "en") ? "en" : "vi";
+      var tx = function (k) { return global.AstroQLab ? AstroQLab.text(k, L) : k; };
+
+      // k = 0 giữa trưa · 1 sát chân trời
+      var k = (step === "horizon") ? 1 : (step === "evening") ? 0.55 : 0;
+      var sunY = 120 + k * (GROUND_Y - 150);
+      var sunX = VW * (0.5 + k * 0.28);
+
+      // Trời: xanh đậm trên, và càng thấp Mặt Trời thì mép trời càng ngả đỏ.
+      var g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+      g.addColorStop(0, k < 0.3 ? "#1f6fd0" : k < 0.8 ? "#2a4a86" : "#241a3e");
+      g.addColorStop(0.62, k < 0.3 ? "#63b3f2" : k < 0.8 ? "#b3733f" : "#8c3a2e");
+      g.addColorStop(1, k < 0.3 ? "#bfe3ff" : k < 0.8 ? "#f0a35a" : "#e5613a");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, VW, GROUND_Y);
+
+      // Mặt Trời: hào quang bằng gradient toả, KHÔNG dùng shadowBlur.
+      var hal = ctx.createRadialGradient(sunX, sunY, 6, sunX, sunY, 120);
+      hal.addColorStop(0, k < 0.3 ? "rgba(255,250,220,.95)" : "rgba(255,190,120,.95)");
+      hal.addColorStop(1, "rgba(255,190,120,0)");
+      ctx.fillStyle = hal;
+      ctx.beginPath(); ctx.arc(sunX, sunY, 120, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = k < 0.3 ? "#fffbe6" : "#ffcf6b";
+      ctx.beginPath(); ctx.arc(sunX, sunY, 26, 0, Math.PI * 2); ctx.fill();
+
+      /* Đường ánh sáng đi qua khí quyển — thứ MANG bài học: nó dài ra khi Mặt Trời
+         xuống thấp, và chính độ dài đó là lý do màu xanh bị tán xạ hết. */
+      ctx.save();
+      ctx.setLineDash([7, 6]); ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,.55)";
+      ctx.beginPath(); ctx.moveTo(sunX, sunY); ctx.lineTo(VW * 0.16, GROUND_Y - 26); ctx.stroke();
+      ctx.restore();
+
+      // Mặt đất + một người nhìn lên (để "tới mắt em" có chỗ neo)
+      ctx.fillStyle = "#16281c"; ctx.fillRect(0, GROUND_Y, VW, VH - GROUND_Y);
+      ctx.font = "42px system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("🧒", VW * 0.16, GROUND_Y - 4);
+
+      label(VW * 0.16, GROUND_Y + 34, tx("p_" + step));
+      return false;                                   // cảnh tĩnh
+    }
+
+    /* ══ LAB-08: 100 giọt nước ══════════════════════════════════════════════
+       Bốn nấc, mỗi nấc tô lại đúng số giọt mà NGUỒN nói. 100 giọt là một cách
+       ĐỌC con số phần trăm, không phải một con số mới — nên nó không cần nguồn
+       riêng, chỉ cần đúng tỉ lệ. */
+    function drawDrops() {
+      var step = opt.place || "all";
+      var L = (global.AstroQ && AstroQ.getLang && AstroQ.getLang() === "en") ? "en" : "vi";
+      var tx = function (k) { return global.AstroQLab ? AstroQLab.text(k, L) : k; };
+
+      var g = ctx.createLinearGradient(0, 0, 0, VH);
+      g.addColorStop(0, "#071026"); g.addColorStop(1, "#0d1b3a");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+
+      var cols = 20, rows = 5, gap = 30;
+      var x0 = (VW - (cols - 1) * gap) / 2, y0 = 150;
+      for (var i = 0; i < 100; i++) {
+        var cx = x0 + (i % cols) * gap, cy = y0 + Math.floor(i / cols) * gap;
+        // 96,5% mặn → 96 giọt đầu là mặn (làm tròn xuống, phần lẻ không vẽ được)
+        var salt = i < 96;
+        var fresh = !salt;
+        // 68% của 3,5 giọt ngọt ≈ 2/4 giọt còn lại nằm trong băng
+        var ice = fresh && i >= 98;
+        var on = (step === "all") ||
+                 (step === "salt" && salt) ||
+                 (step === "fresh" && fresh) ||
+                 (step === "ice" && ice);
+        ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+        if (!on) { ctx.fillStyle = "rgba(143,182,255,.14)"; }
+        else if (step === "all") { ctx.fillStyle = "#5fd3ff"; }
+        else if (salt) { ctx.fillStyle = "#8f7bff"; }
+        else if (ice) { ctx.fillStyle = "#eaf1ff"; }
+        else { ctx.fillStyle = "#86efac"; }
+        ctx.fill();
+        ctx.strokeStyle = "rgba(5,8,18,.55)"; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      var n = (step === "all") ? "100" : (step === "salt") ? "96,5"
+            : (step === "fresh") ? "3,5" : "68%";
+      ctx.save();
+      ctx.font = "800 46px 'Space Grotesk', Inter, sans-serif"; ctx.textAlign = "center";
+      ctx.lineWidth = 6; ctx.strokeStyle = "rgba(5,8,18,.9)";
+      ctx.strokeText(n, VW / 2, 108); ctx.fillStyle = "#ffcf6b";
+      ctx.fillText(n, VW / 2, 108);
+      ctx.restore();
+      label(VW / 2, 360, tx("p_" + step));
+      return false;
+    }
+
     function frame(now) {
       raf = 0;
       var keep = false;
       if (scene === "drop") keep = drawDrop(now);
       else if (scene === "float") keep = drawFloat(now);
       else if (scene === "weight") keep = drawWeight(now);
+      else if (scene === "sky") keep = drawSky();
+      else if (scene === "drops") keep = drawDrops();
       if (keep) raf = global.requestAnimationFrame(frame);
     }
 
@@ -286,24 +518,29 @@
       /* kind: "drop"|"float"|"weight"  ·  o: {place} */
       setScene: function (kind, o) {
         scene = kind; opt = o || {};
-        running = false; done = false;
+        clearRun(); running = false; done = false;
         fit(); paint();
       },
       setPlace: function (id) {
         opt.place = id;
-        running = false; done = false;
+        clearRun(); running = false; done = false;
         fit(); paint();
       },
       drop: function () {
         if (scene !== "drop" || running) return;
         // reduced-motion: KHÔNG bỏ cú rơi (nó là nội dung bài học, không phải
         // trang trí) — chỉ đi nhanh hơn. Cùng cách `005` xử phần đổi tông màu.
+        clearRun();
         running = true; done = false;
         t0 = (global.performance ? performance.now() : Date.now());
         if (reduced()) t0 -= BASE_MS * 0.55;
         paint();
       },
-      reset: function () { running = false; done = false; paint(); },
+      /* "Xem chậm" — chỉ đổi nhịp XEM, không đổi kết quả nào. Trả về trạng thái
+         mới để trang tự đổi nhãn nút. */
+      toggleSlow: function () { slow = !slow; clearRun(); paint(); return slow; },
+      isSlow: function () { return slow; },
+      reset: function () { clearRun(); running = false; done = false; paint(); },
       onDone: function (cb) { doneCb = cb; },
       resize: function () { fit(); paint(); },
       isRunning: function () { return running; },
