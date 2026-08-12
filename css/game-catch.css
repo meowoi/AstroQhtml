@@ -1,0 +1,20 @@
+/* ============================================================
+   css/game-catch.css — BẮT SAO BĂNG (ARCADE-06). Phần RIÊNG của trang.
+   Khung (header · .stage · .play · HUD · overlay · toast) ở css/game-shell.css —
+   ĐỪNG copy khung vào đây (quy tắc 2 mục 6 CLAUDE.md).
+   ============================================================ */
+
+/* Tỉ lệ sân: hệ toạ độ ảo 800×500 → 8:5. Trần bề rộng do `--field-w` (js/game-shell.js)
+   quyết, ở đây chỉ khoá TỈ LỆ để cảnh không bao giờ bị bóp méo. */
+.field{aspect-ratio:8 / 5;max-width:1120px;}
+
+/* Ba trái tim mạng sống. Mất mạng thì trái tim mờ đi chứ KHÔNG biến mất — biến mất
+   thì hàng chip co lại và cả HUD nhảy chỗ giữa lúc đang chơi. */
+.chip.lives .v{letter-spacing:.14em;}
+.chip.lives .v i{font-style:normal;opacity:.28;transition:opacity .25s;}
+.chip.lives .v i.on{opacity:1;}
+
+/* Chip chuỗi bắt liên tiếp — chỉ sáng lên khi chuỗi ≥ 3, để nó là một phần thưởng
+   nhìn thấy được chứ không phải một con số luôn nằm đó. */
+.chip.combo{transition:border-color .2s,box-shadow .2s;}
+.chip.combo.hot{border-color:rgba(255,207,107,.75);box-shadow:0 0 18px -6px rgba(255,207,107,.8);}

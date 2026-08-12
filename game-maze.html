@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Mê Cung Thiên Hà</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/game-maze.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <!-- HUD là thanh RIÊNG phía trên sân: đè lên sân thì chip che mất một ô hành lang
+       mà trẻ vẫn phải đi qua (bài học ARCADE-01). -->
+  <div class="hud" id="hud">
+    <div class="chip gems" id="chip-gems" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <span class="k" data-i18n="gems_lbl">Tinh thể</span><span class="v" id="hb-gems">0/0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="time_lbl">Thời gian</span><span class="v" id="hb-time">0:00</span></div>
+    <div class="chip"><span class="k" data-i18n="steps_lbl">Số bước</span><span class="v" id="hb-steps">0</span></div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">—</span></div>
+
+    <div class="hud-btns">
+      <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </button>
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <canvas id="cv"></canvas>
+    </div>
+
+    <!-- Bốn nút điều hướng cho máy cảm ứng (CSS chỉ hiện ở `pointer: coarse`). -->
+    <div class="dpad" id="dpad" role="group" data-i18n-aria="dpad_aria" aria-label="Điều hướng">
+      <button class="u" type="button" data-dir="up"    aria-label="↑">↑</button>
+      <button class="l" type="button" data-dir="left"  aria-label="←">←</button>
+      <button class="r" type="button" data-dir="right" aria-label="→">→</button>
+      <button class="d" type="button" data-dir="down"  aria-label="↓">↓</button>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">🌀</div>
+        <h2 data-i18n="start_title">Mê Cung Thiên Hà</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🧑‍🚀 <b>Dẫn phi hành gia</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.</span>
+          <span data-i18n-html="how2">💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.</span>
+          <span data-i18n-html="how3">🌟 <b>Tới cổng sáng</b> để về đích. Không có thua — đi sai thì chỉ mất thêm bước.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ MAZE_SOLVED ]</span>
+        <div class="ov-ic">🏆</div>
+        <h2 data-i18n="over_title">Ra khỏi mê cung!</h2>
+        <div class="res">
+          <div class="cell time"><div class="rv" id="r-time">0:00</div><div class="rl" data-i18n="time_lbl">Thời gian</div></div>
+          <div class="cell time"><div class="rv" id="r-best">—</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell"><div class="rv" id="r-steps">0</div><div class="rl" data-i18n="steps_lbl">Số bước</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="reward_lbl">Thưởng Thiên thạch tím</div></div>
+        </div>
+        <!-- Nói RÕ thưởng gồm những gì: trẻ phải hiểu được vì sao mình được 13 hay 9,
+             không thì phần thưởng thành xổ số (bài học ARCADE-04). -->
+        <div class="reward-why" id="why"></div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Mê cung khác · <b>4</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+      <div class="ov-card">
+        <div class="ov-ic">⏸️</div>
+        <h2 data-i18n="pause_title">Tạm dừng</h2>
+        <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?</p>
+        <div class="acts">
+          <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+          <button id="pause-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.play -->
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/progress.js"></script>
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script>
+/* ============================================================
+   AstroQ · MÊ CUNG THIÊN HÀ (ARCADE-05) — mini-game giải đố 2D Canvas
+   Vanilla JS · requestAnimationFrame · không thư viện ngoài
+
+   LUẬT: dẫn phi hành gia từ góc trên-trái tới cổng sáng ở góc dưới-phải, thu tinh
+   thể trên đường. **KHÔNG CÓ TRẠNG THÁI THUA** — đi sai chỉ mất thêm bước.
+
+   ⚠️⚠️ MÊ CUNG LUÔN GIẢI ĐƯỢC, BẰNG CẤU TRÚC CHỨ KHÔNG BẰNG MỘT PHÉP KIỂM.
+      Bộ sinh là "đào đường lùi" (recursive backtracker): nó bắt đầu từ một ô rồi
+      chỉ đào sang ô **chưa tới**, nên đồ thị kết quả là một CÂY — giữa hai ô bất kỳ
+      có đúng một đường đi. Không có ô nào bị bịt kín, và không cần kiểm lại sau khi
+      sinh. Đây là lý do KHÔNG dùng cách "đặt tường ngẫu nhiên rồi kiểm xem có đường":
+      cách đó sinh ra mê cung không giải được và phải sinh lại, tức có ngày trẻ gặp
+      một lượt chờ vô hạn.
+
+   ⚠️ HỆ TOẠ ĐỘ ẢO CỐ ĐỊNH 800×500 rồi `setTransform` — độ khó và cỡ ô y hệt trên
+      mọi máy (bài học ARCADE-01).
+   ⚠️ KHÔNG dùng `shadowBlur` (đắt mỗi khung hình) — hào quang bằng gradient +
+      `globalCompositeOperation="lighter"`.
+   ⚠️ Thưởng chốt MỘT LẦN, NGAY khi ra khỏi mê cung (không đợi bấm nút): đóng tab ở
+      bảng kết quả thì công sức vẫn được trả (bài học ARCADE-04).
+   ============================================================ */
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+
+  var CONFIG = {
+    COST: 4,                  // khớp Wallet.Fees["maze"]
+    VW: 800, VH: 500,
+
+    cols: 15, rows: 9,        // 15×9 ô — DIFF: Vừa
+    gems: 5,                  // số tinh thể mỗi mê cung = số tt thu được
+    moveMs: 110,              // thời gian trượt giữa hai ô (cảm giác "bước")
+    hintAfter: 15,            // giây không nhúc nhích thì hé đường đi
+    hintCells: 6,             // hé bao nhiêu ô phía trước, KHÔNG hé cả đường
+
+    rewardBase: 4,            // thưởng về đích, cộng thêm phần "đi nhanh"
+    parPerCell: 0.55,         // giây "chuẩn" cho mỗi ô của đường ngắn nhất
+    bgStars: 70
+  };
+  var VW=CONFIG.VW, VH=CONFIG.VH, TAU=Math.PI*2;
+  var BEST_KEY="astroq-maze-best";
+  var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var I18N = {
+    vi:{
+      back:"Về Khu Huấn Luyện", tt_name:"Thiên thạch tím", game_name:"Mê Cung Thiên Hà",
+      gems_lbl:"Tinh thể", time_lbl:"Thời gian", steps_lbl:"Số bước", best_lbl:"Kỷ lục",
+      reward_lbl:"Thưởng Thiên thạch tím", dpad_aria:"Điều hướng",
+      start_title:"Mê Cung Thiên Hà",
+      how1:"🧑‍🚀 <b>Dẫn phi hành gia</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.",
+      how2:"💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.",
+      how3:"🌟 <b>Tới cổng sáng</b> để về đích. Không có thua — đi sai thì chỉ mất thêm bước.",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu", over_title:"Ra khỏi mê cung!",
+      again_btn:"Mê cung khác · <b>4</b>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Mỗi lượt cần {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz đạt là có thêm ngay!",
+      need_go:"Làm Quiz ngay",
+      pause_aria:"Tạm dừng", sfx_aria:"Âm thanh",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?",
+      resume:"Chơi tiếp",
+      start_toast:"Đi tìm cổng sáng, nhớ thu tinh thể nhé!",
+      gem_toast:"+1 {tt}",
+      all_gems:"Đủ tinh thể! Giờ ra cổng sáng thôi.",
+      hint_toast:"Bí rồi? Đường đi đang hé ra phía trước.",
+      best_toast:"Kỷ lục mới!",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn.",
+      why_line:"{g} tinh thể + {b} thưởng về đích",
+      lv_gems:"đã thu {n}/{t} tinh thể", lv_out:"ra cổng sáng là xong!",
+      title:"AstroQ — Mê Cung Thiên Hà"
+    },
+    en:{
+      back:"Back to Training Simulator", tt_name:"Purple Meteor", game_name:"Galaxy Maze",
+      gems_lbl:"Crystals", time_lbl:"Time", steps_lbl:"Steps", best_lbl:"Best",
+      reward_lbl:"Purple Meteor reward", dpad_aria:"Move",
+      start_title:"Galaxy Maze",
+      how1:"🧑‍🚀 <b>Guide the astronaut</b> with ◀ ▲ ▼ ▶ / W A S D — on touch screens <b>swipe</b> or use the four buttons.",
+      how2:"💎 <b>Collect every crystal</b> on the way: each one is a Purple Meteor.",
+      how3:"🌟 <b>Reach the glowing gate</b> to finish. There's no losing — a wrong turn only costs steps.",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start", over_title:"Out of the maze!",
+      again_btn:"Another maze · <b>4</b>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"Each run costs {cost} Purple Meteors and you have {bal}. Pass a quiz to earn more!",
+      need_go:"Take a quiz",
+      pause_aria:"Pause", sfx_aria:"Sound",
+      pause_title:"Paused", pause_body:"Keep playing, or head back to the Training Simulator?",
+      resume:"Keep playing",
+      start_toast:"Find the glowing gate — and grab those crystals!",
+      gem_toast:"+1 {tt}",
+      all_gems:"All crystals! Now head for the gate.",
+      hint_toast:"Stuck? The path ahead is showing.",
+      best_toast:"New best!",
+      paid_line:"{n} {tt} added to your wallet.",
+      why_line:"{g} crystals + {b} finish bonus",
+      lv_gems:"{n}/{t} crystals collected", lv_out:"reach the gate to finish!",
+      title:"AstroQ — Galaxy Maze"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
+  var toast = AstroQ.makeToast("toast", 1800);
+
+  /* ===== Âm thanh — API THẬT của js/sfx.js: on() · wake() · beep(f) · pickup() ·
+     nope() · rumble() · ready(). Không có enabled/toggle/unlock (đã đọc file). ===== */
+  var LS_SFX="astroq-sfx";
+  function sfxOn(){ return !window.AstroQSfx || AstroQSfx.on(); }
+  function sfxToggle(){
+    var muted = sfxOn();
+    try{ localStorage.setItem(LS_SFX, muted ? "off" : "on"); }catch(e){}
+    return muted;
+  }
+  var SFX = {
+    unlock:function(){ if(window.AstroQSfx) AstroQSfx.wake(); },
+    step:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.beep(430); },
+    bump:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.beep(190); },
+    gem:   function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.pickup(); },
+    win:   function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.fanfare(); },
+    start: function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); }
+  };
+
+  /* ===== Canvas ===== */
+  var cv=$("cv"), ctx=cv.getContext("2d");
+  var DPR=1, bgGrad=null;
+  function fit(){
+    var r=cv.getBoundingClientRect();
+    var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
+    DPR=(window.AstroQGameShell && AstroQGameShell.dpr)
+      ? AstroQGameShell.dpr(w,h) : Math.min(2, window.devicePixelRatio||1);
+    cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
+    ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
+    bgGrad=ctx.createLinearGradient(0,0,0,VH);
+    bgGrad.addColorStop(0,"#070b16"); bgGrad.addColorStop(0.62,"#101733"); bgGrad.addColorStop(1,"#17123a");
+  }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(cv); }
+  else { window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); }
+
+  /* ===== Mê cung =====
+     `cells[r][c]` = 4 cờ tường: N=1 E=2 S=4 W=8 (bật = CÓ tường).
+     Bộ sinh "đào đường lùi": chỉ đào sang ô CHƯA tới → đồ thị là một cây → luôn
+     có đúng một đường giữa hai ô bất kỳ. Xem cảnh báo ở đầu file. */
+  var N=1, E=2, S=4, W=8;
+  var DX={ up:0, down:0, left:-1, right:1 };
+  var DY={ up:-1, down:1, left:0, right:0 };
+  var WALL={ up:N, down:S, left:W, right:E };
+  var OPP={ up:"down", down:"up", left:"right", right:"left" };
+
+  var COLS=CONFIG.cols, ROWS=CONFIG.rows;
+  var cells=[], gems=[], pos={c:0,r:0}, exitC=COLS-1, exitR=ROWS-1;
+  var anim=null;            // {fc,fr,tc,tr,t} — đang trượt giữa hai ô
+
+  function genMaze(){
+    cells=[];
+    for(var r=0;r<ROWS;r++){
+      var row=[];
+      for(var c=0;c<COLS;c++) row.push(N|E|S|W);   // ban đầu bịt kín bốn phía
+      cells.push(row);
+    }
+    var seen=[], stack=[{c:0,r:0}];
+    for(var i=0;i<ROWS;i++){ seen.push(new Array(COLS).fill(false)); }
+    seen[0][0]=true;
+    while(stack.length){
+      var cur=stack[stack.length-1];
+      var opts=[];
+      ["up","down","left","right"].forEach(function(d){
+        var nc=cur.c+DX[d], nr=cur.r+DY[d];
+        if(nc<0||nr<0||nc>=COLS||nr>=ROWS) return;
+        if(seen[nr][nc]) return;
+        opts.push(d);
+      });
+      if(!opts.length){ stack.pop(); continue; }
+      var d=opts[Math.floor(Math.random()*opts.length)];
+      var nc=cur.c+DX[d], nr=cur.r+DY[d];
+      cells[cur.r][cur.c] &= ~WALL[d];            // đào cả hai phía của bức tường
+      cells[nr][nc]      &= ~WALL[OPP[d]];
+      seen[nr][nc]=true;
+      stack.push({c:nc,r:nr});
+    }
+  }
+
+  /** Đường ngắn nhất từ (c,r) tới cổng, trả về mảng hướng. BFS trên đúng bộ tường
+      đang vẽ — nên nó là bằng chứng "mê cung này giải được", không phải phỏng đoán. */
+  function pathTo(c0,r0,c1,r1){
+    var q=[[c0,r0]], prev={}, key=function(c,r){ return c+","+r; };
+    var seen={}; seen[key(c0,r0)]=true;
+    while(q.length){
+      var cur=q.shift(), c=cur[0], r=cur[1];
+      if(c===c1 && r===r1) break;
+      var dirs=["up","down","left","right"];
+      for(var i=0;i<dirs.length;i++){
+        var d=dirs[i];
+        if(cells[r][c] & WALL[d]) continue;        // có tường thì không đi được
+        var nc=c+DX[d], nr=r+DY[d];
+        if(nc<0||nr<0||nc>=COLS||nr>=ROWS) continue;
+        var k=key(nc,nr);
+        if(seen[k]) continue;
+        seen[k]=true; prev[k]={ c:c, r:r, d:d };
+        q.push([nc,nr]);
+      }
+    }
+    var out=[], k=key(c1,r1);
+    while(prev[k]){
+      var p=prev[k];
+      out.unshift(p.d);
+      k=key(p.c,p.r);
+    }
+    return out;
+  }
+
+  function placeGems(){
+    gems=[];
+    var taken={}; taken["0,0"]=true; taken[exitC+","+exitR]=true;
+    var guard=0;
+    while(gems.length<CONFIG.gems && guard++<500){
+      var c=Math.floor(Math.random()*COLS), r=Math.floor(Math.random()*ROWS);
+      var k=c+","+r;
+      if(taken[k]) continue;
+      taken[k]=true;
+      gems.push({ c:c, r:r, got:false, ph:Math.random()*TAU });
+    }
+  }
+
+  /* ===== Trạng thái ===== */
+  var state="start";        // start | play | paused | over
+  var steps=0, mined=0, elapsed=0, idleT=0, hintOn=false, hintPath=[];
+  var parts=[], bg=[], bests=readBests(), newBest=false, lastPaid=0, winBonus=0;
+  var shortest=0, last=0, winT=0;
+
+  function readBests(){
+    try{ return JSON.parse(localStorage.getItem(BEST_KEY)||"{}")||{}; }catch(e){ return {}; }
+  }
+  function bestKey(){ return COLS+"x"+ROWS; }
+  function saveBest(secs){
+    var k=bestKey(), cur=bests[k];
+    if(cur!=null && cur<=secs) return false;
+    /* CẮT bớt chứ không làm tròn lên: làm tròn thì lượt 4,95s lưu thành 5,0 và bảng
+       kết quả hiện "Thời gian 0:04 · Kỷ lục 0:05" — kỷ lục tệ hơn lượt vừa chơi,
+       trông như lỗi tính điểm (bài học ARCADE-04). */
+    bests[k]=Math.floor(secs*10)/10;
+    try{ localStorage.setItem(BEST_KEY, JSON.stringify(bests)); }catch(e){}
+    return true;
+  }
+
+  function initSky(){
+    bg=[];
+    var n = REDUCE ? Math.round(CONFIG.bgStars/2) : CONFIG.bgStars;
+    for(var i=0;i<n;i++)
+      bg.push({ x:Math.random()*VW, y:Math.random()*VH, r:0.4+Math.random()*1.1,
+                a:0.14+Math.random()*0.42, sp:0.5+Math.random()*2, ph:Math.random()*TAU });
+  }
+  initSky();
+
+  /* ===== Hình học: mê cung căn giữa sân, ô VUÔNG ===== */
+  var CELL=1, OX=0, OY=0;
+  function layout(){
+    var pad=26;
+    CELL=Math.floor(Math.min((VW-pad*2)/COLS, (VH-pad*2)/ROWS));
+    OX=Math.round((VW-CELL*COLS)/2);
+    OY=Math.round((VH-CELL*ROWS)/2);
+  }
+  layout();
+  function cx(c){ return OX + c*CELL + CELL/2; }
+  function cy(r){ return OY + r*CELL + CELL/2; }
+
+  /* ===== Ví ===== */
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
+
+  /* ===== onFinishGame: CHỖ DUY NHẤT cộng thưởng vào ví chính ===== */
+  function onFinishGame(m, secs){
+    var n=Math.max(0, Math.floor(m||0));
+    if(n>0){ Economy.addAsteroids(n); bumpGem(); }
+    paintBalance();
+    /* Fire-and-forget — bảng kết quả phải hiện NGAY. `score:1` = đã giải xong một
+       mê cung; kỷ lục ở server chỉ lấy giá trị lớn nhất. */
+    if(window.AstroQProgress) AstroQProgress.game({
+      game:"maze", score:1, id:bestKey(),
+      seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
+    return n;
+  }
+
+  /* Thưởng về đích tính bằng CÔNG THỨC, không ngẫu nhiên: trẻ phải hiểu được vì sao
+     mình được 13 hay 9 (bài học ARCADE-04). */
+  function finishBonus(){
+    var par=Math.max(1, shortest) * CONFIG.parPerCell;
+    var fast = elapsed<=par ? 4 : elapsed<=par*1.6 ? 3 : elapsed<=par*2.4 ? 2 : elapsed<=par*3.5 ? 1 : 0;
+    return CONFIG.rewardBase + fast;
+  }
+  function fmtTime(s){
+    s=Math.max(0,Math.floor(s));
+    return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2);
+  }
+
+  /* ===== HUD ===== */
+  var hudCache={};
+  function setTxt(id,v){ if(hudCache[id]===v) return; hudCache[id]=v; $(id).textContent=v; }
+  function paintHud(){
+    var got=gems.filter(function(g){ return g.got; }).length;
+    setTxt("hb-gems", got+"/"+gems.length);
+    setTxt("hb-time", fmtTime(elapsed));
+    setTxt("hb-steps", String(steps));
+    var b=bests[bestKey()];
+    setTxt("hb-best", b==null ? "—" : fmtTime(b));
+    $("chip-gems").classList.toggle("full", gems.length>0 && got===gems.length);
+    paintLevel(got);
+  }
+  function paintLevel(got){
+    if(!window.AstroQGameShell || !AstroQGameShell.setLevel) return;
+    if(state!=="play"){ AstroQGameShell.setLevel(null); return; }
+    var total=gems.length;
+    AstroQGameShell.setLevel({
+      pct: total ? got/total : 1,
+      label: t("lv_gems").replace("{n}", got).replace("{t}", total),
+      note: got>=total ? t("lv_out") : ""
+    });
+  }
+
+  /* ===== Overlay ===== */
+  function showOv(id){ $(id).classList.add("show"); }
+  function hideOv(id){ $(id).classList.remove("show"); }
+  function hideAllOv(){ ["ov-start","ov-over","ov-need","ov-pause"].forEach(hideOv); }
+  function syncBtns(){
+    $("btn-pause").classList.toggle("is-hidden", !(state==="play"||state==="paused"));
+    $("btn-pause").classList.toggle("off", state==="paused");
+    $("btn-sfx").classList.toggle("off", !sfxOn());
+  }
+  function showNeed(){
+    hideAllOv();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    showOv("ov-need");
+  }
+
+  /* ===== Vòng đời một lượt ===== */
+  function startRound(){
+    if(state==="play") return;                    // chặn trừ phí hai lần
+    if(Economy.getAsteroids() < CONFIG.COST){ showNeed(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    Economy.spend("maze"); paintBalance(); bumpGem();
+
+    genMaze(); layout();
+    pos={c:0,r:0}; exitC=COLS-1; exitR=ROWS-1;
+    placeGems();
+    shortest=pathTo(0,0,exitC,exitR).length;
+    steps=0; mined=0; elapsed=0; idleT=0; hintOn=false; hintPath=[];
+    anim=null; parts=[]; winT=0; newBest=false; winBonus=0;
+    hudCache={};
+    hideAllOv();
+    state="play"; last=0; syncBtns(); paintHud();
+    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+  }
+
+  function finish(){
+    state="over"; winT=0;
+    winBonus=finishBonus();
+    var total=mined+winBonus;
+    newBest=saveBest(elapsed);
+    lastPaid=onFinishGame(total, elapsed);
+    $("r-time").textContent=fmtTime(elapsed);
+    $("r-best").textContent=fmtTime(bests[bestKey()]||elapsed);
+    $("r-steps").textContent=String(steps);
+    $("r-mtr").textContent=String(total);
+    paintWhy(); paintPaid();
+    syncBtns(); paintLevel(gems.length);
+    showOv("ov-over");
+    SFX.win();
+    if(newBest) toast(t("best_toast"), "ok");
+  }
+  /* Hai dòng dưới do JS sinh nên `applyTexts` không với tới — phải vẽ lại khi đổi
+     ngôn ngữ (bài học dòng thưởng của ARCADE-01 từng không đổi tiếng). */
+  function paintWhy(){
+    $("why").textContent = t("why_line").replace("{g}", mined).replace("{b}", winBonus);
+  }
+  function paintPaid(){
+    var el=$("paid");
+    if(lastPaid>0){
+      el.innerHTML = t("paid_line").replace("{n}", "<b>"+lastPaid+"</b>")
+        .replace("{tt}", '<img class="tt-inline" src="img/tt.png" alt="'+t("tt_name")+'" />');
+      el.style.display="";
+    } else { el.textContent=""; el.style.display="none"; }
+  }
+
+  function togglePause(){
+    if(state==="play"){ state="paused"; showOv("ov-pause"); }
+    else if(state==="paused"){ hideOv("ov-pause"); state="play"; last=0; }
+    syncBtns();
+  }
+
+  /* ===== Di chuyển ===== */
+  function burst(x,y,color,n){
+    if(REDUCE) n=Math.round(n/2);
+    for(var i=0;i<n;i++){
+      var a=Math.random()*TAU, s=30+Math.random()*120;
+      parts.push({ x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:0.45+Math.random()*0.3, t:0, c:color });
+    }
+  }
+
+  function tryMove(d){
+    if(state!=="play" || anim) return false;
+    if(!DX.hasOwnProperty(d)) return false;
+    idleT=0; hintOn=false;
+    if(cells[pos.r][pos.c] & WALL[d]){
+      /* Đụng tường KHÔNG phạt gì — chỉ một tiếng "cụt" và không tính bước. Phạt ở
+         đây là phạt việc đang thử, mà thử là cách duy nhất giải mê cung. */
+      SFX.bump();
+      return false;
+    }
+    var nc=pos.c+DX[d], nr=pos.r+DY[d];
+    anim={ fc:pos.c, fr:pos.r, tc:nc, tr:nr, t:0 };
+    pos={ c:nc, r:nr };
+    steps++;
+    SFX.step();
+    // Thu tinh thể ngay khi ĐẶT CHÂN vào ô (không đợi hoạt cảnh trượt xong)
+    for(var i=0;i<gems.length;i++){
+      var g=gems[i];
+      if(!g.got && g.c===nc && g.r===nr){
+        g.got=true; mined++;
+        SFX.gem(); burst(cx(nc),cy(nr),"#c084fc",16);
+        toast(t("gem_toast").replace("{tt}","{tt}"), "ok");
+        if(mined===gems.length) toast(t("all_gems"), "ok");
+      }
+    }
+    paintHud();
+    if(nc===exitC && nr===exitR){ finish(); }
+    return true;
+  }
+
+  /* ===== Vòng lặp ===== */
+  function update(dt){
+    elapsed+=dt;
+    if(anim){
+      anim.t += dt*1000;
+      if(anim.t>=CONFIG.moveMs) anim=null;
+    } else {
+      idleT+=dt;
+      if(!hintOn && idleT>=CONFIG.hintAfter){
+        /* Bí thì HÉ đường, không giải hộ: chỉ mấy ô phía trước. Cùng cách ARCADE-04
+           hé đường mờ sau 9 giây. */
+        hintOn=true;
+        hintPath=pathTo(pos.c,pos.r,exitC,exitR).slice(0,CONFIG.hintCells);
+        toast(t("hint_toast"));
+      }
+    }
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i]; p.t+=dt;
+      if(p.t>=p.life){ parts.splice(i,1); continue; }
+      p.x+=p.vx*dt; p.y+=p.vy*dt;
+    }
+    if(Math.floor(elapsed*2)!==Math.floor((elapsed-dt)*2)) paintHud();  // đồng hồ 0,5s/lần
+  }
+
+  /* ===== Vẽ ===== */
+  function drawBg(){
+    ctx.fillStyle=bgGrad||"#0b0f19"; ctx.fillRect(0,0,VW,VH);
+    for(var i=0;i<bg.length;i++){
+      var s=bg[i];
+      var a = REDUCE ? s.a : s.a*(0.55+0.45*Math.sin(elapsed*s.sp+s.ph));
+      ctx.globalAlpha=a; ctx.fillStyle="#eaf1ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+  function glow(x,y,r,c1,c2){
+    var g=ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+    ctx.globalCompositeOperation="source-over";
+  }
+
+  function drawMaze(){
+    // Nền hành lang: một khối mờ dưới cả mê cung cho tường nổi lên
+    ctx.fillStyle="rgba(12,20,48,.62)";
+    ctx.fillRect(OX-3, OY-3, CELL*COLS+6, CELL*ROWS+6);
+
+    ctx.strokeStyle="rgba(150,196,255,.72)";
+    ctx.lineWidth=Math.max(2, CELL*0.09);
+    ctx.lineCap="round";
+    ctx.beginPath();
+    for(var r=0;r<ROWS;r++){
+      for(var c=0;c<COLS;c++){
+        var x=OX+c*CELL, y=OY+r*CELL, m=cells[r][c];
+        if(m & N){ ctx.moveTo(x,y); ctx.lineTo(x+CELL,y); }
+        if(m & W){ ctx.moveTo(x,y); ctx.lineTo(x,y+CELL); }
+        if(m & S){ ctx.moveTo(x,y+CELL); ctx.lineTo(x+CELL,y+CELL); }
+        if(m & E){ ctx.moveTo(x+CELL,y); ctx.lineTo(x+CELL,y+CELL); }
+      }
+    }
+    ctx.stroke();
+  }
+
+  function drawHint(){
+    if(!hintOn || !hintPath.length) return;
+    var c=pos.c, r=pos.r;
+    ctx.save();
+    ctx.strokeStyle="rgba(120,230,255,.34)";
+    ctx.lineWidth=Math.max(2, CELL*0.16);
+    ctx.setLineDash([CELL*0.22, CELL*0.22]);
+    ctx.beginPath(); ctx.moveTo(cx(c),cy(r));
+    for(var i=0;i<hintPath.length;i++){
+      c+=DX[hintPath[i]]; r+=DY[hintPath[i]];
+      ctx.lineTo(cx(c),cy(r));
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function drawExit(){
+    var x=cx(exitC), y=cy(exitR), r=CELL*0.34;
+    glow(x,y,CELL*0.9,"rgba(255,207,107,.55)","rgba(255,207,107,0)");
+    var k = REDUCE ? 1 : 0.86+0.14*Math.sin(elapsed*3);
+    ctx.strokeStyle="#ffcf6b"; ctx.lineWidth=Math.max(2,CELL*0.1);
+    ctx.beginPath(); ctx.arc(x,y,r*k,0,TAU); ctx.stroke();
+    ctx.fillStyle="rgba(255,207,107,.28)";
+    ctx.beginPath(); ctx.arc(x,y,r*0.62*k,0,TAU); ctx.fill();
+  }
+
+  function drawGems(){
+    for(var i=0;i<gems.length;i++){
+      var g=gems[i]; if(g.got) continue;
+      var x=cx(g.c), y=cy(g.r), r=CELL*0.2;
+      var k = REDUCE ? 1 : 0.9+0.1*Math.sin(elapsed*3.4+g.ph);
+      glow(x,y,CELL*0.62,"rgba(192,132,252,.5)","rgba(192,132,252,0)");
+      ctx.fillStyle="#c084fc";
+      ctx.beginPath();
+      ctx.moveTo(x,y-r*k); ctx.lineTo(x+r*0.78*k,y); ctx.lineTo(x,y+r*k); ctx.lineTo(x-r*0.78*k,y);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.arc(x-r*0.18,y-r*0.2,r*0.2,0,TAU); ctx.fill();
+    }
+  }
+
+  function drawAstro(){
+    var px, py;
+    if(anim){
+      var k=Math.min(1, anim.t/CONFIG.moveMs);
+      px = cx(anim.fc) + (cx(anim.tc)-cx(anim.fc))*k;
+      py = cy(anim.fr) + (cy(anim.tr)-cy(anim.fr))*k;
+    } else { px=cx(pos.c); py=cy(pos.r); }
+    var r=CELL*0.3;
+    glow(px,py,CELL*0.8,"rgba(56,189,248,.5)","rgba(56,189,248,0)");
+    // Mũ phi hành gia: cầu trắng + kính tối + vệt sáng
+    ctx.fillStyle="#eaf6ff";
+    ctx.beginPath(); ctx.arc(px,py,r,0,TAU); ctx.fill();
+    ctx.fillStyle="#123055";
+    ctx.beginPath(); ctx.ellipse(px, py-r*0.05, r*0.66, r*0.5, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,.62)";
+    ctx.beginPath(); ctx.ellipse(px-r*0.24, py-r*0.2, r*0.2, r*0.13, -0.5, 0, TAU); ctx.fill();
+  }
+
+  function drawParts(){
+    for(var i=0;i<parts.length;i++){
+      var p=parts[i], k=1-p.t/p.life;
+      ctx.globalAlpha=Math.max(0,k); ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.4*k+0.6,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function render(){
+    drawBg(); drawMaze(); drawHint(); drawExit(); drawGems(); drawAstro(); drawParts();
+  }
+
+  function loop(ts){
+    requestAnimationFrame(loop);
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if(state==="play") update(dt);
+    else elapsed += (state==="start") ? dt : 0;   // sao nền vẫn nhấp nháy ở màn brief
+    render();
+  }
+
+  /* ===== Điều khiển ===== */
+  document.addEventListener("keydown", function(e){
+    var k=e.key, d=null;
+    if(k==="ArrowUp"||k==="w"||k==="W") d="up";
+    if(k==="ArrowDown"||k==="s"||k==="S") d="down";
+    if(k==="ArrowLeft"||k==="a"||k==="A") d="left";
+    if(k==="ArrowRight"||k==="d"||k==="D") d="right";
+    if(d){ e.preventDefault(); tryMove(d); return; }
+    if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
+    if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
+    if((k===" "||k==="Enter") && (state==="start"||state==="over")){
+      /* KHÔNG bắt đầu khi tiêu điểm đang ở một <button>: một cú bấm bị tính hai lần
+         và trẻ mất phí hai lượt (bài học ARCADE-01). */
+      var ae=document.activeElement;
+      if(!(ae && ae.tagName==="BUTTON")){ e.preventDefault(); startRound(); }
+    }
+  });
+
+  /* Quệt trên máy cảm ứng: chọn trục có độ dịch LỚN HƠN, ngưỡng 24px để một cú
+     chạm hơi lệch không bị hiểu thành quệt. */
+  var sw=null;
+  cv.addEventListener("pointerdown", function(e){ sw={x:e.clientX, y:e.clientY}; });
+  cv.addEventListener("pointerup", function(e){
+    if(!sw) return;
+    var dx=e.clientX-sw.x, dy=e.clientY-sw.y; sw=null;
+    if(Math.max(Math.abs(dx),Math.abs(dy))<24) return;
+    if(Math.abs(dx)>Math.abs(dy)) tryMove(dx>0?"right":"left");
+    else tryMove(dy>0?"down":"up");
+  });
+  cv.addEventListener("touchmove", function(e){ e.preventDefault(); }, {passive:false});
+
+  Array.prototype.forEach.call($("dpad").querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){ this.blur(); tryMove(b.getAttribute("data-dir")); });
+  });
+
+  /* ===== Nút ===== */
+  $("start-btn").addEventListener("click", startRound);
+  $("again-btn").addEventListener("click", startRound);
+  $("resume-btn").addEventListener("click", togglePause);
+  $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
+  $("btn-sfx").addEventListener("click", function(){ this.blur(); SFX.unlock(); sfxToggle(); syncBtns(); });
+  $("back").addEventListener("click", function(){ location.href="games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href="games.html"; });
+  $("pause-hub").addEventListener("click", function(){ location.href="games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href="games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href="dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href="quiz.html"; });
+
+  /* ===== Ngôn ngữ ===== */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("game_name") + " ]";
+    if($("ov-need").classList.contains("show")){
+      $("need-body").textContent = t("need_body")
+        .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    }
+    if($("ov-over").classList.contains("show")){ paintWhy(); paintPaid(); }
+    hudCache={}; paintHud();
+  }
+
+  genMaze(); placeGems();       // mê cung nền cho màn brief — nhìn thấy mình sắp chơi gì
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  fit(); paintBalance(); syncBtns(); paintHud();
+  requestAnimationFrame(loop);
+
+  /* Bề mặt điều khiển cho bộ đo — CHỈ đọc trạng thái và ĐI như trẻ đi (`move`
+     gọi đúng `tryMove`, tức qua đúng luật tường). KHÔNG cấp điểm, KHÔNG cấp thưởng,
+     KHÔNG đi xuyên tường (bài học `__dbg` của ARCADE-02).
+     ⚠️ Các hàm cố ý KHÔNG trả Promise: `page.evaluate` tự chờ promise được trả về
+        nên script test sẽ TREO thay vì báo hỏng. */
+  window.__maze = {
+    get state(){ return state; },
+    get steps(){ return steps; },
+    get mined(){ return mined; },
+    get gems(){ return gems.length; },
+    get got(){ return gems.filter(function(g){ return g.got; }).length; },
+    get pos(){ return { c:pos.c, r:pos.r }; },
+    get exit(){ return { c:exitC, r:exitR }; },
+    get shortest(){ return shortest; },
+    get hint(){ return hintOn; },
+    cfg: CONFIG,
+    /** Đường ngắn nhất từ chỗ đang đứng tới cổng — BFS trên đúng bộ tường đang vẽ. */
+    path: function(){ return pathTo(pos.c,pos.r,exitC,exitR); },
+    /** Đường đi qua HẾT tinh thể rồi mới ra cổng (ghé lần lượt viên gần nhất). */
+    tour: function(){
+      var c=pos.c, r=pos.r, out=[], left=gems.filter(function(g){ return !g.got; });
+      while(left.length){
+        var bi=0, bp=pathTo(c,r,left[0].c,left[0].r);
+        for(var i=1;i<left.length;i++){
+          var p=pathTo(c,r,left[i].c,left[i].r);
+          if(p.length<bp.length){ bp=p; bi=i; }
+        }
+        out=out.concat(bp); c=left[bi].c; r=left[bi].r; left.splice(bi,1);
+      }
+      return out.concat(pathTo(c,r,exitC,exitR));
+    },
+    move: function(d){ return tryMove(d); },
+    /** Bỏ hoạt cảnh trượt để bộ đo đi nhanh — KHÔNG đổi luật đi. */
+    snap: function(){ anim=null; }
+  };
+})();
+</script>
+</body>
+</html>

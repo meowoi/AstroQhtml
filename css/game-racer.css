@@ -1,0 +1,28 @@
+/* ============================================================
+   css/game-racer.css — ĐƯỜNG ĐUA SAO CHỔI (ARCADE-03). Phần RIÊNG của trang.
+   Khung (header · .stage · .play · HUD · overlay · toast) ở css/game-shell.css —
+   ĐỪNG copy khung vào đây (quy tắc 2 mục 6 CLAUDE.md).
+   ============================================================ */
+
+/* Tỉ lệ sân: hệ toạ độ ảo 800×500 → 8:5, y như ba game kia. */
+.field{aspect-ratio:8 / 5;max-width:1120px;}
+
+/* Chip nhiên liệu: đổi màu theo mức còn lại. Đây là thứ QUAN TRỌNG NHẤT trên HUD của
+   game này (hết nhiên liệu là hết lượt), nên nó phải đọc được bằng MÀU chứ không chỉ
+   bằng con số — trẻ đang lái thì không kịp đọc số. */
+.chip.fuel{transition:border-color .25s,box-shadow .25s;}
+.chip.fuel.warn{border-color:rgba(255,207,107,.8);box-shadow:0 0 18px -6px rgba(255,207,107,.85);}
+.chip.fuel.low{border-color:rgba(255,138,138,.85);box-shadow:0 0 20px -6px rgba(255,138,138,.9);}
+
+/* Thanh nhiên liệu nhỏ ngay trong chip — dài ngắn theo mức còn, đọc được từ đuôi mắt. */
+.chip.fuel .bar{
+  display:block;width:52px;height:4px;border-radius:3px;margin-top:3px;
+  background:rgba(148,163,184,.28);overflow:hidden;
+}
+.chip.fuel .bar i{display:block;height:100%;width:100%;background:var(--green,#63e6a8);
+  transition:width .18s linear,background .25s;}
+.chip.fuel.warn .bar i{background:#ffcf6b;}
+.chip.fuel.low  .bar i{background:#ff8a8a;}
+
+/* Chip đích: sáng lên khi đã đi hơn nửa đường — một phần thưởng nhìn thấy được. */
+.chip.dist.half{border-color:rgba(56,189,248,.75);box-shadow:0 0 18px -6px rgba(56,189,248,.85);}

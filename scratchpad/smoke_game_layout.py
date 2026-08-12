@@ -16,7 +16,13 @@ from playwright.sync_api import sync_playwright
 sys.stdout.reconfigure(encoding="utf-8")
 BASE = "http://127.0.0.1:8123/"
 GAMES = [("game-dodge.html", 1.6), ("game-defender.html", 1.0),
-         ("game-constellation.html", 1.6)]
+         ("game-constellation.html", 1.6),
+         # ARCADE-06 them 12/08/2026 — cung khung game-shell, ti le 8:5.
+         ("game-catch.html", 1.6),
+         # ARCADE-05 them 12/08/2026 — cung khung game-shell, ti le 8:5.
+         ("game-maze.html", 1.6),
+         # ARCADE-03 them 12/08/2026 — ca SAU mini-game nay cung mot khung.
+         ("game-racer.html", 1.6)]
 
 ok_n = bad_n = 0
 
@@ -106,7 +112,8 @@ with sync_playwright() as pw:
     # ══════════════════════════════════════════════════════════════════════
     print("\n=== [2] San to ra THAT SU so voi ban cu (moc 800/600px) ===")
     for game, old in [("game-dodge.html", 800), ("game-defender.html", 600),
-                      ("game-constellation.html", 800)]:
+                      ("game-constellation.html", 800), ("game-catch.html", 800),
+                      ("game-maze.html", 800), ("game-racer.html", 800)]:
         pg = new(b, 1920, 1080, dpr=1)
         pg.goto(BASE + game)
         pg.wait_for_selector(".field")

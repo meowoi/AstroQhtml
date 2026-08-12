@@ -1,0 +1,44 @@
+/* ============================================================
+   css/game-maze.css — MÊ CUNG THIÊN HÀ (ARCADE-05). Phần RIÊNG của trang.
+   Khung (header · .stage · .play · HUD · overlay · toast) ở css/game-shell.css —
+   ĐỪNG copy khung vào đây (quy tắc 2 mục 6 CLAUDE.md).
+   ============================================================ */
+
+/* Tỉ lệ sân: hệ toạ độ ảo 800×500 → 8:5, y như ba game kia. */
+.field{aspect-ratio:8 / 5;max-width:1120px;}
+
+/* Chip tinh thể: sáng lên khi đã thu đủ — trẻ biết mình không bỏ sót viên nào
+   trước khi ra cửa. */
+.chip.gems{transition:border-color .2s,box-shadow .2s;}
+.chip.gems.full{border-color:rgba(192,132,252,.8);box-shadow:0 0 18px -6px rgba(192,132,252,.85);}
+
+/* ⚠️ NÚT ĐIỀU HƯỚNG CHỈ HIỆN TRÊN MÁY CẢM ỨNG (`pointer: coarse`), không theo bề
+   rộng: bóp hẹp cửa sổ Chrome trên laptop cũng ra khung hẹp, mà ở đó bàn phím vẫn
+   là cách chơi tốt hơn — cùng lý do đã ghi cho lời nhắc xoay ngang ở js/game-shell.js.
+   Trên máy cảm ứng thì QUỆT là cách chính, bốn nút này là đường thứ hai cho trẻ
+   không quen quệt (và là đường DUY NHẤT nếu quệt bị hệ điều hành chặn). */
+.dpad{display:none;}
+@media (pointer: coarse){
+  .dpad{
+    display:grid;position:absolute;right:10px;bottom:10px;z-index:6;
+    grid-template-areas:". u ." "l . r" ". d .";
+    grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:5px;
+  }
+  /* Vùng chạm 52px > mốc TỐI THIỂU 44px của WCAG 2.5.5 — đặt đúng mốc là không còn
+     biên an toàn nào (quy tắc 10 mục 6). */
+  .dpad button{
+    width:100%;height:100%;border-radius:14px;cursor:pointer;
+    border:1px solid rgba(148,197,255,.34);background:rgba(12,20,44,.72);
+    color:#dbe9ff;font-size:20px;line-height:1;display:grid;place-items:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .dpad button:active{background:rgba(56,189,248,.28);border-color:rgba(56,189,248,.8);}
+  .dpad .u{grid-area:u;} .dpad .l{grid-area:l;} .dpad .r{grid-area:r;} .dpad .d{grid-area:d;}
+}
+
+/* Dòng "thưởng gồm những gì" ở bảng kết quả. `.paid` (đã có ở game-shell) nói ĐÃ
+   CỘNG bao nhiêu; dòng này nói TỪ ĐÂU RA — hai câu khác nhau, đừng gộp. */
+.reward-why{
+  margin-top:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;
+  color:var(--ink-faint,#93a4c4);
+}

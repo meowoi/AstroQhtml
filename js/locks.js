@@ -83,9 +83,15 @@
       feats: ["f_moon_1", "f_moon_2", "f_moon_3"]
     },
     /* Ba mini-game: sắp ra mắt và SẼ MIỄN PHÍ → không mời mua. */
-    "game:racer": { state: "soon", plan: null, ic: "☄️" },
-    "game:maze":  { state: "soon", plan: null, ic: "🌀" },
-    "game:catch": { state: "soon", plan: null, ic: "🌟" }
+    /* ⚠️ `game:racer` DA BO 12/08/2026 — Duong Dua Sao Choi da dung xong
+       (`game-racer.html`). Ba muc `game:*` cua mang nay nay RONG: ca sau mini-game
+       da chay that, nen khong con the game nao khoa. */
+    /* ⚠️ `game:maze` DA BO 12/08/2026 — Me Cung Thien Ha da dung xong
+       (`game-maze.html`). Giu muc khoa cho mot game da choi duoc la noi voi tre
+       rang no chua mo. */
+    /* ⚠️ `game:catch` ĐÃ BỎ 12/08/2026 — Bat Sao Bang da dung xong
+       (`game-catch.html`), nen thẻ đó không còn khoá. Giữ mục cho một game đã
+       chạy được là nói với trẻ rằng nó chưa mở. */
   };
 
   var T = {

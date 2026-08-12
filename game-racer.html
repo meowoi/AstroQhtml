@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Đường Đua Sao Chổi</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/game-racer.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="hud" id="hud">
+    <!-- Nhiên liệu là thứ quyết định lượt chơi, nên nó đứng ĐẦU và có cả thanh màu:
+         đang lái thì trẻ không kịp đọc số (xem css/game-racer.css). -->
+    <div class="chip fuel" id="chip-fuel">
+      <span class="k" data-i18n="fuel_lbl">Nhiên liệu</span>
+      <span class="v" id="hb-fuel">100%</span>
+      <span class="bar" aria-hidden="true"><i id="fuel-bar"></i></span>
+    </div>
+    <div class="chip dist" id="chip-dist"><span class="k" data-i18n="dist_lbl">Còn lại</span><span class="v" id="hb-dist">0 m</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">—</span></div>
+
+    <div class="hud-btns">
+      <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </button>
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <canvas id="cv"></canvas>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">☄️</div>
+        <h2 data-i18n="start_title">Đường Đua Sao Chổi</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🛸 <b>Đổi làn</b> bằng ▲ ▼ / W S, hoặc quệt lên xuống trên máy cảm ứng.</span>
+          <span data-i18n-html="how2">⛽ <b>Nhiên liệu tụt dần</b>. Hứng thùng nhiên liệu 🛢️ để nạp thêm, hứng tinh thể tím 💎 để lấy Thiên thạch tím.</span>
+          <span data-i18n-html="how3">🪨 <b>Đâm vào thiên thạch</b> là mất một mảng nhiên liệu — về đích trước khi cạn!</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>5</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag" id="over-tag">[ RACE_RESULT ]</span>
+        <div class="ov-ic" id="over-ic">🏁</div>
+        <h2 id="over-title">—</h2>
+        <p class="over-sub" id="over-sub"></p>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-dist">0 m</div><div class="rl" data-i18n="run_lbl">Đã đi</div></div>
+          <div class="cell time"><div class="rv" id="r-time">0:00</div><div class="rl" data-i18n="time_lbl">Thời gian</div></div>
+          <div class="cell time"><div class="rv" id="r-best">—</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="reward_lbl">Thưởng Thiên thạch tím</div></div>
+        </div>
+        <div class="reward-why" id="why"></div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Đua lại · <b>5</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-pause" role="dialog" aria-modal="true">
+      <div class="ov-card">
+        <div class="ov-ic">⏸️</div>
+        <h2 data-i18n="pause_title">Tạm dừng</h2>
+        <p data-i18n="pause_body">Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?</p>
+        <div class="acts">
+          <button class="primary" id="resume-btn" data-i18n="resume">Chơi tiếp</button>
+          <button id="pause-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.play -->
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/progress.js"></script>
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script>
+/* ============================================================
+   AstroQ · ĐƯỜNG ĐUA SAO CHỔI (ARCADE-03) — mini-game đua 2D Canvas
+   Vanilla JS · requestAnimationFrame · không thư viện ngoài
+
+   LUẬT: phi thuyền chạy sang phải trên 4 LÀN, đường đua dài 14.000 m (~56 giây). Nhiên liệu tụt
+   dần theo thời gian; thùng nhiên liệu nạp thêm, thiên thạch làm mất một mảng. Về
+   đích trước khi cạn thì thắng; cạn giữa đường thì lượt kết thúc **và vẫn được thưởng
+   theo quãng đã đi** — trẻ bỏ 5 tt vào cửa nên không được về tay không.
+
+   ⚠️⚠️ ĐỔI LÀN, KHÔNG BAY TỰ DO. Bốn làn cố định là điều kiện để "luôn có đường
+      qua": mỗi cụm chướng ngại luôn chừa **ít nhất một làn trống**, và điều đó KIỂM
+      ĐƯỢC (xem `spawnCluster`). Bay tự do theo pixel thì "có đường qua" thành một
+      câu không đo được — đúng lỗi vành đai đá của ARCADE-01 trước khi chuyển sang làn.
+   ⚠️ HỆ TOẠ ĐỘ ẢO CỐ ĐỊNH 800×500 rồi `setTransform` (bài học ARCADE-01).
+   ⚠️ KHÔNG dùng `shadowBlur` — hào quang bằng gradient + `lighter`.
+   ⚠️ Thưởng chốt MỘT LẦN ở `onFinishGame()`.
+   ============================================================ */
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+
+  var CONFIG = {
+    COST: 5,                    // khớp Wallet.Fees["racer"]
+    VW: 800, VH: 500,
+
+    lanes: 4,
+    laneTop: 118, laneH: 84,    // 4 làn × 84 = 336px, chừa chỗ cho dải sao trên/dưới
+    shipX: 150, shipW: 58, shipH: 30,
+    hopMs: 130,                 // thời gian trượt sang làn kế
+
+    /* ⚠️⚠️ ĐỘ DÀI ĐƯỜNG ĐUA PHẢI ĐO BẰNG GIÂY, KHÔNG BẰNG CẢM GIÁC — LỖI CÂN BẰNG
+       THẬT, bộ đo bắt được. Bản đầu để `raceLen: 1200` với tốc độ 190–320 px/s, tức
+       **cả đường đua hết trong ~5 giây**: nhiên liệu (19 giây nếu không nạp) chưa bao
+       giờ kịp thành vấn đề, nên toàn bộ sức căng của game — cái tên "về đích trước khi
+       hết nhiên liệu" — là một câu nói suông. Nay: 14.000 ở ~250 px/s ≈ **56 giây**,
+       trong khi 100% nhiên liệu chỉ đủ **19 giây** ⇒ trẻ BUỘC phải bám theo thùng
+       nhiên liệu, đúng thứ game này dạy.
+       ⇒ Đổi `raceLen` / `speed0` / `speedMax` / `fuelDrain` thì phải TÍNH LẠI ba con
+         số: giây mỗi lượt · giây nhiên liệu · số thùng cần hứng. */
+    raceLen: 14000,             // mét — ~56 giây ở tốc độ trung bình
+    speed0: 190, speedMax: 320, // px ảo/giây: bò dần lên, KHÔNG đặt thẳng (ARCADE-01)
+    speedRamp: 0.09,            // mỗi giây tăng bao nhiêu phần tới speedMax
+
+    fuel0: 100,
+    fuelDrain: 5.2,             // %/giây
+    fuelCan: 22,                // % mỗi thùng nạp
+    hitCost: 16,                // % mất khi đâm thiên thạch
+    warnAt: 45, lowAt: 20,      // mốc đổi màu chip nhiên liệu
+
+    /* Mật độ tính theo MÉT nên nó không đổi khi tốc độ tăng. Với 14.000 m: ~33 cụm
+       chướng ngại và ~54 vật phẩm mỗi lượt, trong đó ~58% là thùng nhiên liệu —
+       đủ để một lượt cẩn thận không bao giờ cạn, và một lượt lười thì cạn. */
+    clusterEvery: 420,          // mét giữa hai cụm chướng ngại
+    pickEvery: 260,             // mét giữa hai vật phẩm
+    gemChance: 0.42,            // còn lại là thùng nhiên liệu
+
+    rewardFinish: 6,            // thưởng về đích, cộng thêm phần "còn nhiều nhiên liệu"
+    bgStars: 80
+  };
+  var VW=CONFIG.VW, VH=CONFIG.VH, TAU=Math.PI*2;
+  var BEST_KEY="astroq-racer-best";
+  var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var I18N = {
+    vi:{
+      back:"Về Khu Huấn Luyện", tt_name:"Thiên thạch tím", game_name:"Đường Đua Sao Chổi",
+      fuel_lbl:"Nhiên liệu", dist_lbl:"Còn lại", best_lbl:"Kỷ lục", run_lbl:"Đã đi",
+      time_lbl:"Thời gian", reward_lbl:"Thưởng Thiên thạch tím",
+      start_title:"Đường Đua Sao Chổi",
+      how1:"🛸 <b>Đổi làn</b> bằng ▲ ▼ / W S, hoặc quệt lên xuống trên máy cảm ứng.",
+      how2:"⛽ <b>Nhiên liệu tụt dần</b>. Hứng thùng nhiên liệu 🛢️ để nạp thêm, hứng tinh thể tím 💎 để lấy Thiên thạch tím.",
+      how3:"🪨 <b>Đâm vào thiên thạch</b> là mất một mảng nhiên liệu — về đích trước khi cạn!",
+      cost_line:"Mỗi lượt: <b>5</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu",
+      win_title:"Về đích!", win_sub:"Bạn đã đi hết {n} m đường đua.",
+      lose_title:"Cạn nhiên liệu!", lose_sub:"Còn {n} m nữa là tới đích. Thùng nhiên liệu 🛢️ nằm rải trên đường — bám theo chúng nhé!",
+      again_btn:"Đua lại · <b>5</b>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Mỗi lượt cần {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz đạt là có thêm ngay!",
+      need_go:"Làm Quiz ngay",
+      pause_aria:"Tạm dừng", sfx_aria:"Âm thanh",
+      pause_title:"Tạm dừng", pause_body:"Bạn muốn tiếp tục chơi hay quay về Khu Huấn Luyện?",
+      resume:"Chơi tiếp",
+      start_toast:"Xuất phát! Bám theo thùng nhiên liệu nhé.",
+      fuel_toast:"+{n}% nhiên liệu",
+      gem_toast:"+1 {tt}",
+      hit_toast:"Đâm rồi! Mất nhiên liệu.",
+      low_toast:"Sắp cạn nhiên liệu!",
+      best_toast:"Kỷ lục mới!",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn.",
+      why_win:"{g} tinh thể + {b} thưởng về đích",
+      why_lose:"{g} tinh thể (chưa về đích nên không có thưởng đích)",
+      lv_dist:"đã đi {n}/{t} m", lv_done:"về đích rồi!",
+      title:"AstroQ — Đường Đua Sao Chổi"
+    },
+    en:{
+      back:"Back to Training Simulator", tt_name:"Purple Meteor", game_name:"Comet Racer",
+      fuel_lbl:"Fuel", dist_lbl:"To go", best_lbl:"Best", run_lbl:"Distance",
+      time_lbl:"Time", reward_lbl:"Purple Meteor reward",
+      start_title:"Comet Racer",
+      how1:"🛸 <b>Change lane</b> with ▲ ▼ / W S, or swipe up and down on touch screens.",
+      how2:"⛽ <b>Fuel keeps draining.</b> Grab fuel cans 🛢️ to top up, purple crystals 💎 for Purple Meteors.",
+      how3:"🪨 <b>Hitting an asteroid</b> costs a chunk of fuel — finish before you run dry!",
+      cost_line:"Per run: <b>5</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start",
+      win_title:"Finished!", win_sub:"You covered the whole {n} m track.",
+      lose_title:"Out of fuel!", lose_sub:"Only {n} m from the finish. Fuel cans 🛢️ are spread along the track — follow them!",
+      again_btn:"Race again · <b>5</b>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"Each run costs {cost} Purple Meteors and you have {bal}. Pass a quiz to earn more!",
+      need_go:"Take a quiz",
+      pause_aria:"Pause", sfx_aria:"Sound",
+      pause_title:"Paused", pause_body:"Keep playing, or head back to the Training Simulator?",
+      resume:"Keep playing",
+      start_toast:"Go! Follow the fuel cans.",
+      fuel_toast:"+{n}% fuel",
+      gem_toast:"+1 {tt}",
+      hit_toast:"Crash! Fuel lost.",
+      low_toast:"Fuel almost out!",
+      best_toast:"New best!",
+      paid_line:"{n} {tt} added to your wallet.",
+      why_win:"{g} crystals + {b} finish bonus",
+      why_lose:"{g} crystals (no finish bonus — you didn't reach the end)",
+      lv_dist:"{n}/{t} m covered", lv_done:"finished!",
+      title:"AstroQ — Comet Racer"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ return (I18N[LANG]||I18N.vi)[k] || k; }
+  var toast = AstroQ.makeToast("toast", 1700);
+
+  /* ===== Âm thanh — API THẬT của js/sfx.js (đã đọc file): on · wake · beep ·
+     pickup · nope · rumble · ready · fanfare. ===== */
+  var LS_SFX="astroq-sfx";
+  function sfxOn(){ return !window.AstroQSfx || AstroQSfx.on(); }
+  function sfxToggle(){
+    var muted=sfxOn();
+    try{ localStorage.setItem(LS_SFX, muted ? "off" : "on"); }catch(e){}
+    return muted;
+  }
+  var SFX = {
+    unlock:function(){ if(window.AstroQSfx) AstroQSfx.wake(); },
+    hop:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.beep(520); },
+    fuel: function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.beep(920); },
+    gem:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.pickup(); },
+    hit:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.nope(); },
+    win:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.fanfare(); },
+    dry:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble(); },
+    start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); }
+  };
+
+  /* ===== Canvas ===== */
+  var cv=$("cv"), ctx=cv.getContext("2d");
+  var DPR=1, bgGrad=null;
+  function fit(){
+    var r=cv.getBoundingClientRect();
+    var w=Math.max(1,Math.round(r.width)), h=Math.max(1,Math.round(r.height));
+    DPR=(window.AstroQGameShell && AstroQGameShell.dpr)
+      ? AstroQGameShell.dpr(w,h) : Math.min(2, window.devicePixelRatio||1);
+    cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR);
+    ctx.setTransform(cv.width/VW, 0, 0, cv.height/VH, 0, 0);
+    bgGrad=ctx.createLinearGradient(0,0,0,VH);
+    bgGrad.addColorStop(0,"#070b18"); bgGrad.addColorStop(0.55,"#0f1836"); bgGrad.addColorStop(1,"#1a1140");
+  }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(cv); }
+  else { window.addEventListener("resize", fit); window.addEventListener("orientationchange", fit); }
+
+  function laneY(i){ return CONFIG.laneTop + i*CONFIG.laneH + CONFIG.laneH/2; }
+
+  /* ===== Trạng thái ===== */
+  var state="start";          // start | play | paused | over
+  var lane=1, hop=null;       // hop = {from,to,t}
+  var items=[], parts=[], bg=[];
+  var dist=0, speed=CONFIG.speed0, fuel=CONFIG.fuel0, mined=0, elapsed=0;
+  var nextCluster=CONFIG.clusterEvery, nextPick=CONFIG.pickEvery;
+  var won=false, lowWarned=false, hurtT=0, shakeT=0, winBonus=0;
+  var best=readBest(), newBest=false, lastPaid=0, last=0;
+
+  function readBest(){
+    try{ var n=parseInt(localStorage.getItem(BEST_KEY),10); return isNaN(n)?0:n; }catch(e){ return 0; }
+  }
+  function saveBest(v){
+    if(v<=best) return false;
+    best=v;
+    try{ localStorage.setItem(BEST_KEY, String(v)); }catch(e){}
+    return true;
+  }
+
+  function initSky(){
+    bg=[];
+    var n = REDUCE ? Math.round(CONFIG.bgStars/2) : CONFIG.bgStars;
+    for(var i=0;i<n;i++)
+      bg.push({ x:Math.random()*VW, y:Math.random()*VH, r:0.4+Math.random()*1.2,
+                a:0.14+Math.random()*0.45, sp:0.35+Math.random()*1.1 });
+  }
+  initSky();
+
+  /* ===== Ví ===== */
+  function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+  function bumpGem(){ var g=$("gem"); g.classList.remove("bump"); void g.offsetWidth; g.classList.add("bump"); }
+
+  /* ===== onFinishGame: CHỖ DUY NHẤT cộng thưởng vào ví chính ===== */
+  function onFinishGame(m, d, secs){
+    var n=Math.max(0, Math.floor(m||0));
+    if(n>0){ Economy.addAsteroids(n); bumpGem(); }
+    paintBalance();
+    /* `score` = số mét đã đi — kỷ lục ở server chỉ lấy giá trị lớn nhất, nên nó
+       đọc ra đúng nghĩa "đi được xa nhất". Fire-and-forget: bảng kết quả hiện NGAY. */
+    if(window.AstroQProgress) AstroQProgress.game({
+      game:"racer", score:Math.max(0,Math.floor(d||0)),
+      seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
+    return n;
+  }
+
+  /* ===== Sinh chướng ngại / vật phẩm =====
+     ⚠️ MỖI CỤM LUÔN CHỪA ÍT NHẤT MỘT LÀN TRỐNG — đây là chỗ "luôn có đường qua"
+        được bảo đảm bằng CẤU TRÚC: số đá tối đa = lanes-1, và làn trống chọn trước.
+        Bài học ARCADE-01: một luật chỉ đáng tin khi nó ĐẾM ĐƯỢC. */
+  function spawnCluster(){
+    var free=Math.floor(Math.random()*CONFIG.lanes);
+    var maxRocks=CONFIG.lanes-1;
+    var n=1+Math.floor(Math.random()*maxRocks);          // 1..lanes-1
+    var used={}; used[free]=true;
+    for(var k=0;k<n;k++){
+      var guard=0, L;
+      do { L=Math.floor(Math.random()*CONFIG.lanes); } while(used[L] && guard++<20);
+      if(used[L]) continue;
+      used[L]=true;
+      items.push({ kind:"rock", lane:L, x:VW+40+Math.random()*70, r:22+Math.random()*7,
+                   spin:Math.random()*TAU, hit:false });
+    }
+  }
+  function spawnPick(){
+    var L=Math.floor(Math.random()*CONFIG.lanes);
+    var gem=Math.random()<CONFIG.gemChance;
+    items.push({ kind:gem?"gem":"can", lane:L, x:VW+30, r:gem?14:16, ph:Math.random()*TAU, hit:false });
+  }
+
+  function burst(x,y,c,n){
+    if(REDUCE) n=Math.round(n/2);
+    for(var i=0;i<n;i++){
+      var a=Math.random()*TAU, s=40+Math.random()*150;
+      parts.push({ x:x, y:y, vx:Math.cos(a)*s-speed*0.25, vy:Math.sin(a)*s, life:0.4+Math.random()*0.3, t:0, c:c });
+    }
+  }
+
+  /* ===== HUD ===== */
+  var hudCache={};
+  function setTxt(id,v){ if(hudCache[id]===v) return; hudCache[id]=v; $(id).textContent=v; }
+  function fmtTime(s){
+    s=Math.max(0,Math.floor(s));
+    return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2);
+  }
+  /* Nhóm hàng nghìn: "13.820 m" đọc được, "13820 m" thì không. Dấu nhóm theo ngôn
+     ngữ (VI dùng dấu chấm, EN dùng dấu phẩy). */
+  function fmtM(n){
+    var s=String(Math.max(0,Math.round(n))), sep=(LANG==="en"?",":".");
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, sep) + " m";
+  }
+  function paintHud(){
+    var f=Math.max(0,Math.round(fuel));
+    setTxt("hb-fuel", f+"%");
+    setTxt("hb-dist", fmtM(CONFIG.raceLen-dist));
+    setTxt("hb-mtr", String(mined));
+    setTxt("hb-best", best>0 ? fmtM(best) : "—");
+    var w=Math.max(0,Math.min(100,f));
+    if(hudCache["fbar"]!==w){ hudCache["fbar"]=w; $("fuel-bar").style.width=w+"%"; }
+    var chip=$("chip-fuel");
+    chip.classList.toggle("warn", f<=CONFIG.warnAt && f>CONFIG.lowAt);
+    chip.classList.toggle("low", f<=CONFIG.lowAt);
+    $("chip-dist").classList.toggle("half", dist>=CONFIG.raceLen/2);
+    paintLevel();
+  }
+  function paintLevel(){
+    if(!window.AstroQGameShell || !AstroQGameShell.setLevel) return;
+    if(state!=="play"){ AstroQGameShell.setLevel(null); return; }
+    AstroQGameShell.setLevel({
+      pct: Math.min(1, dist/CONFIG.raceLen),
+      label: t("lv_dist").replace("{n}", fmtM(dist).replace(" m",""))
+                         .replace("{t}", fmtM(CONFIG.raceLen).replace(" m","")),
+      note: dist>=CONFIG.raceLen ? t("lv_done") : ""
+    });
+  }
+
+  /* ===== Overlay ===== */
+  function showOv(id){ $(id).classList.add("show"); }
+  function hideOv(id){ $(id).classList.remove("show"); }
+  function hideAllOv(){ ["ov-start","ov-over","ov-need","ov-pause"].forEach(hideOv); }
+  function syncBtns(){
+    $("btn-pause").classList.toggle("is-hidden", !(state==="play"||state==="paused"));
+    $("btn-pause").classList.toggle("off", state==="paused");
+    $("btn-sfx").classList.toggle("off", !sfxOn());
+  }
+  function showNeed(){
+    hideAllOv();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    showOv("ov-need");
+  }
+
+  /* ===== Vòng đời một lượt ===== */
+  function startRound(){
+    if(state==="play") return;                     // chặn trừ phí hai lần
+    if(Economy.getAsteroids() < CONFIG.COST){ showNeed(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    Economy.spend("racer"); paintBalance(); bumpGem();
+
+    lane=1; hop=null; items=[]; parts=[];
+    dist=0; speed=CONFIG.speed0; fuel=CONFIG.fuel0; mined=0; elapsed=0;
+    nextCluster=CONFIG.clusterEvery; nextPick=CONFIG.pickEvery;
+    won=false; lowWarned=false; hurtT=0; shakeT=0; winBonus=0; newBest=false;
+    hudCache={};
+    hideAllOv();
+    state="play"; last=0; syncBtns(); paintHud();
+    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+  }
+
+  /* ⚠️ CẠN NHIÊN LIỆU VẪN ĐƯỢC THƯỞNG TINH THỂ ĐÃ THU. Trẻ bỏ 5 tt vào cửa; cho về
+     tay không là biến một lượt học thành một lượt mất tiền. Chỉ **thưởng về đích**
+     là thứ phải đổi bằng việc về đích — và bảng kết quả nói rõ điều đó. */
+  function endRound(win){
+    state="over"; won=!!win;
+    winBonus = won ? CONFIG.rewardFinish + Math.floor(Math.max(0,fuel)/25) : 0;
+    var total=mined+winBonus;
+    newBest=saveBest(Math.round(Math.min(dist,CONFIG.raceLen)));
+    lastPaid=onFinishGame(total, Math.min(dist,CONFIG.raceLen), elapsed);
+
+    $("over-tag").textContent = won ? "[ RACE_WON ]" : "[ OUT_OF_FUEL ]";
+    $("over-ic").textContent  = won ? "🏁" : "⛽";
+    $("r-dist").textContent   = fmtM(Math.min(dist,CONFIG.raceLen));
+    $("r-time").textContent   = fmtTime(elapsed);
+    $("r-best").textContent   = best>0 ? fmtM(best) : "—";
+    $("r-mtr").textContent    = String(total);
+    paintOver(); paintWhy(); paintPaid();
+    syncBtns(); paintLevel();
+    showOv("ov-over");
+    if(won) SFX.win(); else SFX.dry();
+    if(newBest) toast(t("best_toast"), "ok");
+  }
+  /* Ba dòng dưới do JS sinh → `applyTexts` không với tới, phải vẽ lại khi đổi ngôn
+     ngữ (bài học dòng thưởng của ARCADE-01 từng không đổi tiếng). */
+  function paintOver(){
+    $("over-title").textContent = won ? t("win_title") : t("lose_title");
+    $("over-sub").textContent = won
+      ? t("win_sub").replace("{n}", fmtM(CONFIG.raceLen).replace(" m",""))
+      : t("lose_sub").replace("{n}", fmtM(CONFIG.raceLen-dist).replace(" m",""));
+  }
+  function paintWhy(){
+    $("why").textContent = won
+      ? t("why_win").replace("{g}", mined).replace("{b}", winBonus)
+      : t("why_lose").replace("{g}", mined);
+  }
+  function paintPaid(){
+    var el=$("paid");
+    if(lastPaid>0){
+      el.innerHTML = t("paid_line").replace("{n}", "<b>"+lastPaid+"</b>")
+        .replace("{tt}", '<img class="tt-inline" src="img/tt.png" alt="'+t("tt_name")+'" />');
+      el.style.display="";
+    } else { el.textContent=""; el.style.display="none"; }
+  }
+
+  function togglePause(){
+    if(state==="play"){ state="paused"; showOv("ov-pause"); }
+    else if(state==="paused"){ hideOv("ov-pause"); state="play"; last=0; }
+    syncBtns();
+  }
+
+  /* ===== Đổi làn ===== */
+  function hopTo(d){
+    if(state!=="play" || hop) return false;
+    var to=lane+d;
+    if(to<0 || to>=CONFIG.lanes) return false;
+    hop={ from:lane, to:to, t:0 };
+    lane=to; SFX.hop();
+    return true;
+  }
+
+  /* ===== Cập nhật ===== */
+  function shipY(){
+    if(!hop) return laneY(lane);
+    var k=Math.min(1, hop.t/CONFIG.hopMs);
+    return laneY(hop.from) + (laneY(hop.to)-laneY(hop.from))*k;
+  }
+
+  function update(dt){
+    elapsed+=dt;
+    // Tốc độ BÒ DẦN lên trần — đặt thẳng thì cả màn hình giật một nhịp (ARCADE-01)
+    speed += (CONFIG.speedMax-speed)*Math.min(1, CONFIG.speedRamp*dt);
+    dist  += speed*dt;
+    fuel  -= CONFIG.fuelDrain*dt;
+
+    if(hop){ hop.t += dt*1000; if(hop.t>=CONFIG.hopMs) hop=null; }
+
+    // Sinh cụm đá + vật phẩm theo QUÃNG ĐƯỜNG, không theo thời gian: nhờ vậy mật độ
+    // trên đường không đổi khi tốc độ tăng.
+    if(dist>=nextCluster){ nextCluster+=CONFIG.clusterEvery; spawnCluster(); }
+    if(dist>=nextPick){ nextPick+=CONFIG.pickEvery; spawnPick(); }
+
+    var sy=shipY(), sx=CONFIG.shipX, halfW=CONFIG.shipW/2, halfH=CONFIG.shipH/2;
+    for(var i=items.length-1;i>=0;i--){
+      var o=items[i];
+      o.x -= speed*dt;
+      if(o.x < -60){ items.splice(i,1); continue; }
+      if(o.hit) continue;
+
+      /* Va chạm hình-tròn ↔ hình-chữ-nhật đo bằng ĐIỂM GẦN NHẤT: quy phi thuyền về
+         một hình tròn thì hai đầu hụt mất, quy đá về AABB thì bốn góc vuông giết
+         tàu ở chỗ mắt thấy còn hở (bài học `hitRock` của ARCADE-01). */
+      var nx=Math.max(sx-halfW, Math.min(o.x, sx+halfW));
+      var ny=Math.max(sy-halfH, Math.min(laneY(o.lane), sy+halfH));
+      var dx=o.x-nx, dy=laneY(o.lane)-ny;
+      if(dx*dx+dy*dy > o.r*o.r) continue;
+
+      o.hit=true;
+      if(o.kind==="rock"){
+        fuel -= CONFIG.hitCost; hurtT=0.4; shakeT=0.3;
+        burst(o.x, laneY(o.lane), "#ff9d8a", 16);
+        SFX.hit(); toast(t("hit_toast"), "bad");
+        items.splice(i,1);
+      } else if(o.kind==="can"){
+        fuel = Math.min(100, fuel + CONFIG.fuelCan);
+        burst(o.x, laneY(o.lane), "#63e6a8", 14);
+        SFX.fuel(); toast(t("fuel_toast").replace("{n}", CONFIG.fuelCan), "ok");
+        items.splice(i,1);
+        lowWarned=false;        // nạp rồi thì cho phép nhắc lại nếu cạn lần nữa
+      } else {
+        mined++; burst(o.x, laneY(o.lane), "#c084fc", 16);
+        SFX.gem(); toast(t("gem_toast").replace("{tt}","{tt}"), "ok");
+        items.splice(i,1);
+      }
+      paintHud();
+    }
+
+    for(var j=parts.length-1;j>=0;j--){
+      var p=parts[j]; p.t+=dt;
+      if(p.t>=p.life){ parts.splice(j,1); continue; }
+      p.x+=p.vx*dt; p.y+=p.vy*dt;
+    }
+    if(hurtT>0) hurtT-=dt;
+    if(shakeT>0) shakeT-=dt;
+
+    if(!lowWarned && fuel<=CONFIG.lowAt && fuel>0){ lowWarned=true; toast(t("low_toast"), "bad"); }
+
+    paintHud();
+    if(dist>=CONFIG.raceLen){ dist=CONFIG.raceLen; endRound(true); return; }
+    if(fuel<=0){ fuel=0; paintHud(); endRound(false); return; }
+  }
+
+  /* ===== Vẽ ===== */
+  function drawBg(){
+    ctx.fillStyle=bgGrad||"#0b0f19"; ctx.fillRect(0,0,VW,VH);
+    // Sao nền trôi ngược để thấy mình đang bay (parallax một lớp, rẻ)
+    for(var i=0;i<bg.length;i++){
+      var s=bg[i];
+      if(state==="play"){
+        s.x -= speed*s.sp*0.02;
+        if(s.x < -2){ s.x=VW+2; s.y=Math.random()*VH; }
+      }
+      ctx.globalAlpha=s.a; ctx.fillStyle="#eaf1ff";
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+  function glow(x,y,r,c1,c2){
+    var g=ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+    ctx.globalCompositeOperation="source-over";
+  }
+
+  function drawLanes(){
+    var top=CONFIG.laneTop, h=CONFIG.laneH*CONFIG.lanes;
+    ctx.fillStyle="rgba(10,18,44,.5)";
+    ctx.fillRect(0, top, VW, h);
+    // Vạch làn trôi: cho cảm giác tốc độ mà không cần thêm hạt nào
+    ctx.strokeStyle="rgba(140,190,255,.22)";
+    ctx.lineWidth=2;
+    var off = (dist*0.9) % 60;
+    for(var i=1;i<CONFIG.lanes;i++){
+      var y=top+i*CONFIG.laneH;
+      ctx.beginPath();
+      for(var x=-off; x<VW; x+=60){ ctx.moveTo(x,y); ctx.lineTo(x+34,y); }
+      ctx.stroke();
+    }
+    ctx.strokeStyle="rgba(140,190,255,.4)"; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(0,top); ctx.lineTo(VW,top);
+    ctx.moveTo(0,top+h); ctx.lineTo(VW,top+h); ctx.stroke();
+
+    // Vạch đích khi đã gần tới: một cột ô vuông trắng-đỏ
+    var togo=CONFIG.raceLen-dist;
+    if(togo <= VW){
+      var fx=CONFIG.shipX+togo;
+      for(var r=0;r<CONFIG.lanes*2;r++){
+        ctx.fillStyle=(r%2===0)?"#eaf1ff":"#ff8a8a";
+        ctx.fillRect(fx, top+r*(h/(CONFIG.lanes*2)), 12, h/(CONFIG.lanes*2));
+      }
+    }
+  }
+
+  function drawItems(){
+    for(var i=0;i<items.length;i++){
+      var o=items[i], y=laneY(o.lane);
+      if(o.kind==="rock"){
+        glow(o.x,y,o.r*1.5,"rgba(180,190,220,.22)","rgba(180,190,220,0)");
+        ctx.save(); ctx.translate(o.x,y); ctx.rotate(o.spin + (REDUCE?0:elapsed*0.6));
+        ctx.beginPath();
+        for(var k=0;k<9;k++){
+          var a=k/9*TAU, rr=o.r*(0.84+((k*37)%13)/13*0.24);
+          var px=Math.cos(a)*rr, py=Math.sin(a)*rr;
+          if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.closePath();
+        var g=ctx.createLinearGradient(-o.r,-o.r,o.r,o.r);
+        g.addColorStop(0,"#8291b0"); g.addColorStop(1,"#4b5570");
+        ctx.fillStyle=g; ctx.fill();
+        ctx.strokeStyle="rgba(20,28,48,.8)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.restore();
+      } else if(o.kind==="can"){
+        glow(o.x,y,o.r*1.8,"rgba(99,230,168,.5)","rgba(99,230,168,0)");
+        ctx.fillStyle="#63e6a8";
+        if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(o.x-o.r*0.62,y-o.r,o.r*1.24,o.r*2,5); ctx.fill(); }
+        else ctx.fillRect(o.x-o.r*0.62,y-o.r,o.r*1.24,o.r*2);
+        ctx.fillStyle="#0d2a1d";
+        ctx.fillRect(o.x-o.r*0.34,y-o.r*0.36,o.r*0.68,o.r*0.72);
+      } else {
+        var k2 = REDUCE ? 1 : 0.9+0.1*Math.sin(elapsed*3.6+o.ph);
+        glow(o.x,y,o.r*2,"rgba(192,132,252,.55)","rgba(192,132,252,0)");
+        ctx.fillStyle="#c084fc";
+        ctx.beginPath();
+        ctx.moveTo(o.x,y-o.r*k2); ctx.lineTo(o.x+o.r*0.74*k2,y);
+        ctx.lineTo(o.x,y+o.r*k2); ctx.lineTo(o.x-o.r*0.74*k2,y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  function drawShip(){
+    var x=CONFIG.shipX, y=shipY(), w=CONFIG.shipW, h=CONFIG.shipH;
+    // Vệt đuôi: dài theo tốc độ, tông tím như phi thuyền Luna của ARCADE-01
+    var tl=w*(0.7+0.5*(speed-CONFIG.speed0)/Math.max(1,CONFIG.speedMax-CONFIG.speed0));
+    var g=ctx.createLinearGradient(x-w/2-tl,y,x-w/2,y);
+    g.addColorStop(0,"rgba(168,85,247,0)"); g.addColorStop(1,"rgba(200,140,255,.75)");
+    ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(x-w/2, y-h*0.26); ctx.lineTo(x-w/2-tl, y); ctx.lineTo(x-w/2, y+h*0.26);
+    ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation="source-over";
+
+    glow(x,y,w*0.7,"rgba(56,189,248,.4)","rgba(56,189,248,0)");
+    var b=ctx.createLinearGradient(x-w/2,y-h/2,x+w/2,y+h/2);
+    b.addColorStop(0,"#2b6fa8"); b.addColorStop(0.5,"#bfefff"); b.addColorStop(1,"#2b6fa8");
+    ctx.fillStyle = hurtT>0 ? "#ffb3b3" : b;
+    ctx.beginPath();
+    ctx.moveTo(x+w/2, y);                       // mũi chỉ sang PHẢI = hướng bay
+    ctx.lineTo(x-w/2, y-h/2);
+    ctx.lineTo(x-w*0.28, y);
+    ctx.lineTo(x-w/2, y+h/2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#0e1a2f";
+    ctx.beginPath(); ctx.ellipse(x+w*0.1,y,w*0.12,h*0.24,0,0,TAU); ctx.fill();
+  }
+
+  function drawParts(){
+    for(var i=0;i<parts.length;i++){
+      var p=parts[i], k=1-p.t/p.life;
+      ctx.globalAlpha=Math.max(0,k); ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.5*k+0.6,0,TAU); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function render(){
+    ctx.save();
+    if(shakeT>0 && !REDUCE){
+      var s=shakeT*9;
+      ctx.translate((Math.random()-0.5)*s,(Math.random()-0.5)*s);
+    }
+    drawBg(); drawLanes(); drawItems(); drawShip(); drawParts();
+    if(hurtT>0){
+      ctx.globalCompositeOperation="lighter";
+      ctx.fillStyle="rgba(255,90,90,"+(0.2*hurtT/0.4).toFixed(3)+")";
+      ctx.fillRect(0,0,VW,VH);
+      ctx.globalCompositeOperation="source-over";
+    }
+    ctx.restore();
+  }
+
+  function loop(ts){
+    requestAnimationFrame(loop);
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if(state==="play") update(dt); else elapsed += (state==="start") ? dt : 0;
+    render();
+  }
+
+  /* ===== Điều khiển ===== */
+  document.addEventListener("keydown", function(e){
+    var k=e.key;
+    if(k==="ArrowUp"||k==="w"||k==="W"){ e.preventDefault(); hopTo(-1); return; }
+    if(k==="ArrowDown"||k==="s"||k==="S"){ e.preventDefault(); hopTo(1); return; }
+    if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
+    if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
+    if((k===" "||k==="Enter") && (state==="start"||state==="over")){
+      /* Không bắt đầu khi tiêu điểm ở một <button>: một cú bấm bị tính hai lần và
+         trẻ mất phí hai lượt (bài học ARCADE-01). */
+      var ae=document.activeElement;
+      if(!(ae && ae.tagName==="BUTTON")){ e.preventDefault(); startRound(); }
+    }
+  });
+
+  /* Quệt dọc trên máy cảm ứng. Ngưỡng 22px để một cú chạm hơi lệch không thành quệt. */
+  var sw=null;
+  cv.addEventListener("pointerdown", function(e){ sw={y:e.clientY}; });
+  cv.addEventListener("pointerup", function(e){
+    if(!sw) return;
+    var dy=e.clientY-sw.y; sw=null;
+    if(Math.abs(dy)<22) return;
+    hopTo(dy>0 ? 1 : -1);
+  });
+  cv.addEventListener("touchmove", function(e){ e.preventDefault(); }, {passive:false});
+
+  /* ===== Nút ===== */
+  $("start-btn").addEventListener("click", startRound);
+  $("again-btn").addEventListener("click", startRound);
+  $("resume-btn").addEventListener("click", togglePause);
+  $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
+  $("btn-sfx").addEventListener("click", function(){ this.blur(); SFX.unlock(); sfxToggle(); syncBtns(); });
+  $("back").addEventListener("click", function(){ location.href="games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href="games.html"; });
+  $("pause-hub").addEventListener("click", function(){ location.href="games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href="games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href="dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href="quiz.html"; });
+
+  /* ===== Ngôn ngữ ===== */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.title=t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("game_name") + " ]";
+    if($("ov-need").classList.contains("show")){
+      $("need-body").textContent = t("need_body")
+        .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    }
+    if($("ov-over").classList.contains("show")){ paintOver(); paintWhy(); paintPaid(); }
+    hudCache={}; paintHud();
+  }
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+  fit(); paintBalance(); syncBtns(); paintHud();
+  requestAnimationFrame(loop);
+
+  /* Bề mặt điều khiển cho bộ đo — CHỈ đọc trạng thái, đổi làn qua đúng `hopTo` mà
+     bàn phím gọi, và gieo vật thể ở LÀN xác định. KHÔNG cấp điểm, KHÔNG cấp thưởng,
+     KHÔNG nạp nhiên liệu trực tiếp (bài học `__dbg` của ARCADE-02).
+     ⚠️ Các hàm cố ý KHÔNG trả Promise — `page.evaluate` tự chờ promise nên script
+        test sẽ TREO thay vì báo hỏng. */
+  window.__racer = {
+    get state(){ return state; },
+    get lane(){ return lane; },
+    get lanes(){ return CONFIG.lanes; },
+    get fuel(){ return fuel; },
+    get dist(){ return dist; },
+    get mined(){ return mined; },
+    get won(){ return won; },
+    get items(){ return items.length; },
+    get speed(){ return speed; },
+    cfg: CONFIG,
+    hop: function(d){ return hopTo(d); },
+    /** Gieo MỘT vật thể ở làn đang đứng, ngay trước mũi tàu. */
+    put: function(kind, aheadPx){
+      var C = kind==="rock" ? 22 : (kind==="gem" ? 14 : 16);
+      items.push({ kind:kind, lane:lane, x:CONFIG.shipX+(aheadPx||90), r:C,
+                   spin:0, ph:0, hit:false });
+    },
+    clear: function(){ items=[]; },
+    /** Đếm số làn TRỐNG của cụm gần nhất — dùng để chứng minh "luôn có đường qua". */
+    freeLanes: function(){
+      var byLane={}, n=0;
+      for(var i=0;i<items.length;i++) if(items[i].kind==="rock") byLane[items[i].lane]=true;
+      for(var L=0;L<CONFIG.lanes;L++) if(!byLane[L]) n++;
+      return n;
+    },
+    /** Đưa đường đua về gần đích để bộ đo kiểm nhánh THẮNG mà không phải chờ. */
+    nearFinish: function(){ dist = CONFIG.raceLen - 30; items=[]; }
+  };
+})();
+</script>
+</body>
+</html>
