@@ -1,0 +1,133 @@
+/* css/weeklog.css — Nhật ký tuần "so với chính mình" (js/weeklog.js).
+   Nạp SAU css/page-shell.css; vỏ `.panel` lấy từ khung chung.
+
+   ⚠️⚠️ KHÔNG CÓ MÀU ĐỎ TRONG FILE NÀY, và `.wl-down` CỐ Ý KHÔNG khác màu `.wl-same`.
+      Đây là nhật ký một đứa trẻ đọc về CHÍNH NÓ. Tô đỏ dòng "ít hơn 6 câu" là biến một
+      phép đo thành một lời phán xét, và tuần học ít hơn của một đứa trẻ 9 tuổi có thể
+      chỉ vì nó đi nghỉ với gia đình. Mũi ▼ đủ để đọc ra hướng; màu thì không cần.
+      Cùng luật đã chốt cho `parent.html` (*"xu hướng giảm KHÔNG tô đỏ"*).
+   ⚠️ Không animation, không nhấp nháy: không có gì ở đây cần gấp. */
+
+.wl-list { display: grid; gap: 2px; }
+
+.wl-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(120, 150, 200, .12);
+}
+.wl-row:last-child { border-bottom: 0; }
+.wl-k { font-size: 13px; color: #9fb0d0; }
+.wl-v {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #eaf1ff;
+  white-space: nowrap;
+}
+.wl-sub { font-size: 11.5px; color: #8ea1c2; white-space: nowrap; }
+
+/* Chênh lệch so với tuần trước. Ba trạng thái, và HAI trong ba dùng cùng một tông. */
+.wl-d {
+  font-size: 11.5px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+}
+.wl-up {
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, .28);
+  background: rgba(22, 48, 38, .34);
+}
+/* ⚠️ Xám-lam, KHÔNG đỏ. Xem khối cảnh báo ở đầu file trước khi đổi. */
+.wl-down,
+.wl-same {
+  color: #9fb0d0;
+  border-color: rgba(120, 150, 200, .22);
+  background: rgba(13, 20, 48, .45);
+}
+
+/* Nút mở chi tiết. `senior` mở sẵn, `junior` gấp — nhưng nút LUÔN có ở cả hai bậc:
+   bậc tuổi chỉ quyết định cái mặc định, không khoá gì (luật ở js/depth.js). */
+.wl-more {
+  margin: 12px 0 0;
+  /* 48px, không phải 44 — xem ghi chú ở css/daily.css. */
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(95, 211, 255, .34);
+  background: rgba(13, 20, 48, .5);
+  color: #cfe0ff;
+  font: 600 13px/1 "Space Grotesk", system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.wl-more:hover,
+.wl-more:focus-visible {
+  border-color: rgba(95, 211, 255, .7);
+  background: rgba(20, 30, 66, .7);
+}
+
+.wl-detail { margin-top: 10px; }
+/* ⚠️ BẮT BUỘC khai lại: `[hidden]` bị `display` của tác giả ghi đè, và nếu khối này
+   khai `display` ở đâu đó thì nút "Xem chi tiết" thành vô nghĩa (chi tiết hiện sẵn).
+   Bẫy `[hidden]` đã trả giá 7 lần trong dự án. */
+.wl-detail[hidden] { display: none; }
+
+.wl-bh {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #8ea1c2;
+}
+.wl-brow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(120, 150, 200, .1);
+}
+.wl-brow:last-child { border-bottom: 0; }
+.wl-bk { font-size: 13px; color: #cfe0ff; }
+.wl-bv {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 14px;
+  color: #ffcf6b;
+  white-space: nowrap;
+}
+.wl-tie {
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: #ffcf6b;
+  border: 1px solid rgba(255, 207, 107, .3);
+  border-radius: 999px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.wl-note {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9fb0d0;
+}
+.wl-since {
+  margin: 12px 0 0;
+  font-size: 11px;
+  color: #7e90b0;
+}
+
+/* Màn hẹp: chênh lệch xuống hàng dưới thay vì bóp nhãn. Ở 390px cột nhãn còn ~120px
+   nếu giữ 3 cột và "Số ngày có học" bị cắt đuôi. */
+@media (max-width: 560px) {
+  .wl-row,
+  .wl-brow { grid-template-columns: 1fr auto; }
+  .wl-d,
+  .wl-tie { grid-column: 1 / -1; justify-self: start; }
+}

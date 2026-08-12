@@ -427,6 +427,59 @@ def main():
         if token:
             check("Da xoa tai khoan Firebase tam", _fbtest.delete(token))
 
+        # ── [12] Diem cao nhat TRONG TUAN (Nhat ky tuan cua tre) ──
+        # ⚠️ KHAC HAN `PROGRESS.bests` (ky luc CA DOI). Hai con so phai de canh nhau moi
+        #    noi duoc "tuan nay ban cham dung ky luc cua minh", nen endpoint tra ve CA
+        #    HAI va client so. Muc nay do dung cho phan biet do.
+        print("\n[12] Diem cao nhat TRONG TUAN vs ky luc CA DOI")
+        wipe(uid)
+        seed_profile(uid, email)
+        c0 = monday_vn(0) + timedelta(hours=30)     # trong tuan nay
+        p0 = monday_vn(1) + timedelta(hours=30)     # tuan truoc
+        # Tuan nay: dodge 500 roi 1200 (max 1200), maze 300
+        put_hist(uid, c0, "game", ref="dodge", score=500, seconds=60, xp=10)
+        put_hist(uid, c0 + timedelta(hours=1), "game", ref="dodge", score=1200, seconds=90, xp=10)
+        put_hist(uid, c0 + timedelta(hours=2), "game", ref="maze", score=300, seconds=40, xp=10)
+        # Tuan truoc: dodge 2000 -> ky luc ca doi cao hon tuan nay
+        put_hist(uid, p0, "game", ref="dodge", score=2000, seconds=100, xp=10)
+        # Ky luc ca doi ghi thang vao PROGRESS
+        aws("dynamodb", "put-item", "--table-name", TABLE, "--item", json.dumps({
+            "PK": {"S": f"USER#{uid}"}, "SK": {"S": "PROGRESS"},
+            "bests": {"M": {"dodge": {"N": "2000"}, "maze": {"N": "300"}}},
+            "xp": {"N": "100"}}))
+
+        st, d = call("GET", "/me/report?week=0", token=token)
+        cur = d.get("current", {})
+        wb = cur.get("bests") or {}
+        check("Tra ve `current.bests`", isinstance(cur.get("bests"), dict), str(wb))
+        check("Lay diem CAO NHAT trong tuan (1200, khong phai 500)",
+              wb.get("dodge") == 1200, str(wb.get("dodge")))
+        check("Diem cua tuan TRUOC khong lot vao tuan nay (khong phai 2000)",
+              wb.get("dodge") != 2000, str(wb.get("dodge")))
+        check("Ghi dung theo TUNG game", wb.get("maze") == 300, str(wb.get("maze")))
+        life = d.get("lifetime", {})
+        lb = life.get("bests") or {}
+        check("Tra ve `lifetime.bests` (ky luc ca doi)", isinstance(life.get("bests"), dict), str(lb))
+        check("Ky luc ca doi dodge = 2000 (cao hon tuan nay)", lb.get("dodge") == 2000, str(lb.get("dodge")))
+        # ⚠️ Day la phep so ma client dung de noi "bang ky luc cua ban" — phai phan biet
+        #    duoc hai truong hop, khong thi cau do luon dung hoac luon sai.
+        check("maze: diem tuan == ky luc ca doi (client se noi 'bang ky luc')",
+              wb.get("maze") == lb.get("maze"), f"{wb.get('maze')} vs {lb.get('maze')}")
+        check("dodge: diem tuan < ky luc ca doi (client KHONG noi 'bang ky luc')",
+              wb.get("dodge") < lb.get("dodge"), f"{wb.get('dodge')} vs {lb.get('dodge')}")
+        # Tuan truoc cung phai co bests rieng cua no
+        prv = d.get("previous", {})
+        check("Tuan truoc co bests rieng (2000)",
+              (prv.get("bests") or {}).get("dodge") == 2000, str(prv.get("bests")))
+        # ⚠️ Dong nhat ky KHONG co `refId` thi phai BO QUA, dung gom vao khoa "" —
+        #    mot cot ky luc khong co ten game la mot con so khong ai doi chieu duoc.
+        put_hist(uid, c0 + timedelta(hours=3), "game", ref="", score=9999, seconds=10, xp=1)
+        st, d = call("GET", "/me/report?week=0", token=token)
+        wb2 = d.get("current", {}).get("bests") or {}
+        check("Dong game khong co refId -> KHONG sinh khoa rong",
+              "" not in wb2, str(sorted(wb2.keys())))
+        check("Va khong lam sai diem cua game khac", wb2.get("dodge") == 1200, str(wb2))
+
     print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
     return 0 if bad_n == 0 else 1
 

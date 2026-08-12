@@ -409,6 +409,29 @@
     },
 
     /**
+     * VIỆC HÔM NAY + CHUỖI NGÀY (`GET /me/daily`).
+     *
+     * ⚠️ SERVER LÀ NGUỒN SỰ THẬT DUY NHẤT, và cố ý KHÔNG có bản sao trong máy.
+     *    Tiến độ ba việc suy ra từ nhật ký ở server (xem Services/Daily.cs), nên đoán
+     *    ở client thì lúc mất mạng sẽ hiện một cái dấu ✅ cho việc chưa được ghi nhận —
+     *    tức khoe một phần thưởng chưa có thật. Cùng lý do `bumpLocal()` bỏ qua
+     *    `type:"mission"`. Mất mạng → `{ok:false}` → bảng hiện dấu "—".
+     *
+     * ⚠️ Route này CÓ TÁC DỤNG PHỤ ở server (tự cấp bù việc đã xong mà chưa trả
+     *    thưởng), nên nó cũng trả về `wallet` — đẩy thẳng vào cache ví như mọi route
+     *    khác, không thì số dư trên đầu trang thấp hơn số thật.
+     */
+    daily: function () {
+      return waitAuth(2500).then(function (a) {
+        if (!a || !a.getDaily) return { ok: false, reason: "auth" };
+        return a.getDaily().then(function (r) {
+          if (r && r.ok) syncWallet(r.data);
+          return r;
+        });
+      }).catch(function () { return { ok: false, reason: "error" }; });
+    },
+
+    /**
      * Bước nào của một nhiệm vụ đã xong, theo lần cuối SERVER trả lời.
      * → { known, done:string[], total:number, complete:boolean }
      *

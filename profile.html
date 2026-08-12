@@ -12,11 +12,18 @@
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/cockpit.css" />
+<!-- Nhat ky tuan — xem dau css/weeklog.css -->
+<link rel="stylesheet" href="css/weeklog.css" />
 <link rel="stylesheet" href="css/profile.css" />
 <script src="js/ui-common.js"></script>
+<!-- Nhat ky tuan "so voi chinh minh" — xem dau js/weeklog.js -->
+<script src="js/weeklog.js"></script>
 <script src="js/characters.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/ranks.js"></script>
+<script src="js/depth.js"></script>
+<script src="js/cosmetics.js"></script>
 <!-- Đường vào trang báo cáo hệ thống cho tài khoản admin. Tự thoát êm khi không
      phải admin, và KHÔNG gọi mạng — chỉ đọc cờ trong hồ sơ máy do `login()`
      đóng dấu (xem js/admin-link.js). -->
@@ -111,6 +118,17 @@
         <div class="suits" id="suits"></div>
       </section>
 
+      <!-- ĐỘ SÂU LỜI GIẢI THÍCH — đổi được bất cứ lúc nào.
+           ⚠️ Đây là chỗ DUY NHẤT sửa lại được lựa chọn đã khai ở màn cấp thẻ ID,
+              nên nó phải nói rõ bậc đang dùng đổi CÁI GÌ (không chỉ tên bậc). -->
+      <section class="panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_depth">READING</span></span>
+        <h2><span class="ic" aria-hidden="true">📖</span><span id="depth-lbl" data-i18n="depth_h">Độ sâu lời giải thích</span></h2>
+        <p class="suits-hint" data-i18n="depth_hint">Comet sẽ giải thích ngắn gọn hay sâu hơn. Đổi lúc nào cũng được — và ở đâu cũng còn nút “Tìm hiểu thêm”.</p>
+        <div class="depthpick" id="depthpick" role="group" aria-labelledby="depth-lbl"></div>
+        <p class="depth-note" id="depth-note"></p>
+      </section>
+
       <!-- Thống kê -->
       <section class="panel">
         <span class="panel-tag"><span class="led"></span><span data-i18n="tag_stats">FLIGHT LOG</span></span>
@@ -127,6 +145,18 @@
       </section>
 
       <!-- Kỷ lục -->
+      <!-- ============ NHAT KY TUAN ============
+           ⚠️ TEN PANEL KHONG DUNG "Nhat ky phi hanh" du de xuat A2 goi the: nhan
+              `FLIGHT LOG` DA thuoc panel Thong ke ca doi ngay phia tren. Mot ten cho
+              hai thu la loi da tra gia o "Tram Tri Thuc" (31/07) va "Khu Huan Luyen"
+              (08/08). Nen panel nay la "TUAN NAY / So voi tuan truoc".
+           ⚠️ SO VOI CHINH MINH, KHONG SO VOI TRE KHAC — de xuat da bac bang xep hang. -->
+      <section class="panel" id="wk-panel">
+        <span class="panel-tag"><span class="led"></span><span data-i18n="tag_wk">THIS WEEK</span></span>
+        <h2><span class="ic" aria-hidden="true">📈</span><span data-i18n="wk_h">So với tuần trước</span></h2>
+        <div id="wklog"></div>
+      </section>
+
       <section class="panel">
         <span class="panel-tag"><span class="led"></span><span data-i18n="tag_rec">RECORDS</span></span>
         <h2><span class="ic" aria-hidden="true">🥇</span><span data-i18n="rec_h">Kỷ lục Khu Huấn Luyện</span></h2>
@@ -185,11 +215,16 @@
       rank_next:"🎖️ Còn {n} cấp nữa để thành {r}",
       rank_soon:"🎖️ Lên cấp {lv} là thành {r}!",
       visited:"ĐÃ GHÉ", locked:"CHƯA TỚI",
-      rec_dodge:"Né Thiên Thạch", rec_defender:"Space Defender", rec_constellation:"Ghép Chòm Sao",
+      tag_wk:"Tuần này", wk_h:"So với tuần trước",
+      rec_dodge:"Né Thiên Thạch", rec_defender:"Phòng Thủ Không Gian", rec_constellation:"Ghép Chòm Sao",
+      rec_catch:"Bắt Sao Băng", rec_maze:"Mê Cung Thiên Hà", rec_racer:"Đường Đua Sao Chổi",
       rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm",
       off_guest:"Bạn đang xem dữ liệu tạm trong máy này. <a href=\"landing-app.html\">Đăng nhập</a> để hồ sơ theo bạn sang mọi thiết bị.",
       off_net:"Không kết nối được máy chủ — đang hiện số liệu lưu trong máy. Thử tải lại trang sau nhé.",
       saved_name:"Đã đổi tên thành \"{n}\"", saved_suit:"Đã đổi trang phục sang {n}",
+      tag_depth:"CÁCH ĐỌC", depth_h:"Độ sâu lời giải thích",
+      depth_hint:"Comet sẽ giải thích ngắn gọn hay sâu hơn. Đổi lúc nào cũng được — và ở đâu cũng còn nút “Tìm hiểu thêm”.",
+      saved_depth:"Đã đổi sang: {n}",
       err_name_empty:"Hãy nhập tên phi hành gia!",
       err_save:"Chưa lưu được lên máy chủ — đã lưu tạm trong máy này.",
       role_unknown:"Tân binh", trait_unknown:"Đang chờ khám phá",
@@ -216,11 +251,16 @@
       rank_next:"🎖️ {n} more levels to become {r}",
       rank_soon:"🎖️ Reach level {lv} to become {r}!",
       visited:"VISITED", locked:"NOT YET",
+      tag_wk:"This week", wk_h:"Compared with last week",
       rec_dodge:"Asteroid Dodge", rec_defender:"Space Defender", rec_constellation:"Constellation Match",
+      rec_catch:"Star Catcher", rec_maze:"Galaxy Maze", rec_racer:"Comet Racer",
       rec_none:"None yet", rec_pts:"pts", rec_done:"done",
       off_guest:"You are viewing data saved on this device. <a href=\"landing-app.html\">Sign in</a> so your profile follows you everywhere.",
       off_net:"Can't reach the server — showing numbers stored on this device. Try reloading later.",
       saved_name:"Name changed to \"{n}\"", saved_suit:"Suit changed to {n}",
+      tag_depth:"READING", depth_h:"Explanation depth",
+      depth_hint:"Whether Comet keeps it short or goes deeper. Change it any time — and “Learn more” is always there.",
+      saved_depth:"Switched to: {n}",
       err_name_empty:"Please enter a pilot name!",
       err_save:"Couldn't save to the server — kept on this device for now.",
       role_unknown:"Rookie", trait_unknown:"Yet to be discovered",
@@ -284,6 +324,13 @@
         email: VIEW.profile.email || u.email || ""
       });
       AstroQ.setUser(merged);
+      /* Độ sâu: server là nguồn sự thật, nên kéo về cache để `lab.html` (không có
+         token) đọc được. Rỗng = trẻ chưa khai bao giờ → GIỮ NGUYÊN cache, đừng
+         ghi "" đè lên bậc trẻ vừa chọn trên chính máy này. */
+      if(window.AstroQDepth && VIEW.profile.depth) AstroQDepth.absorb(VIEW.profile.depth);
+      /* Khung the ID + ten tau: keo ve cache de trang nao cung ve dung. `equipped`
+         khong nam trong GET /me/profile nen giu nguyen cache — chi dong bo `ship`. */
+      if(window.AstroQCos) AstroQCos.absorb(null, VIEW.profile.ship || "");
     } else {
       // Không có server: dựng từ hồ sơ trong máy + bộ đếm cache của js/progress.js
       var p = res.data || {};
@@ -428,6 +475,47 @@
       return isNaN(n) ? 0 : n;
     }catch(e){ return 0; }
   }
+  /* ================= Nhật ký tuần =================
+     `null` = CHƯA ĐỌC ĐƯỢC (hiện dấu "—"), khác hẳn "tuần này chưa làm gì". */
+  var WEEK = null;
+
+  /** Tên game song ngữ — LẤY TỪ CHÍNH bảng `rec_*` của trang này, không khai bản thứ hai. */
+  function gameName(key){
+    var k = t("rec_" + key);
+    return k === "rec_" + key ? key : k;      // game lạ thì hiện chính khoá, không vỡ
+  }
+
+  function renderWeek(){
+    if(!window.AstroQWeekLog) return;
+    AstroQWeekLog.paint($("wklog"), WEEK, {
+      lang: LANG,
+      gameName: gameName,
+      /* ⚠️ Bậc tuổi chỉ quyết định MỞ SẴN hay không — nút "Xem chi tiết" luôn có ở cả
+         hai bậc. Đề xuất A2 ghi rằng so sánh phục vụ đầu trên của dải tuổi, nhưng luật
+         ở js/depth.js là bậc KHÔNG khoá gì. */
+      senior: !!(window.AstroQDepth && AstroQDepth.isSenior())
+    });
+  }
+
+  /* ⚠️ MỘT LỜI GỌI RIÊNG, SONG SONG với `/me/profile`. `/me/report` trả một tập dữ
+     liệu khác hẳn (nhật ký theo tuần) nên không gộp được; chạy song song thì quãng chờ
+     vẫn xấp xỉ một vòng mạng. */
+  function loadWeek(){
+    if(!window.AstroQAuth || !AstroQAuth.getReport){
+      /* SDK nạp sau (module ES) — chờ có hạn rồi mới kết luận. Cùng khuôn waitAuth. */
+      var t0 = Date.now();
+      var timer = setInterval(function(){
+        if(window.AstroQAuth && AstroQAuth.getReport){ clearInterval(timer); loadWeek(); }
+        else if(Date.now() - t0 > 2500){ clearInterval(timer); renderWeek(); }
+      }, 60);
+      return;
+    }
+    AstroQAuth.getReport(0).then(function(r){
+      WEEK = (r && r.ok && r.data) ? r.data : null;
+      renderWeek();
+    }).catch(function(){ renderWeek(); });
+  }
+
   function renderRecs(){
     var bests = (VIEW.progress && VIEW.progress.bests) || {};
     /* Ghép Chòm Sao đếm SỐ CHÒM đã ghép, không phải điểm — server trả sẵn
@@ -439,7 +527,12 @@
     var rows = [
       { key:"dodge",         ic:"☄️", nm:t("rec_dodge"),         unit:t("rec_pts"), ls:"astroq-dodge-best-v2" },
       { key:"defender",      ic:"🛡️", nm:t("rec_defender"),      unit:t("rec_pts"), ls:"astroq-defender-best-v2" },
-      { key:"constellation", ic:"✨", nm:t("rec_constellation"), unit:t("rec_done"), ls:"astroq-constellation-best" }
+      { key:"constellation", ic:"✨", nm:t("rec_constellation"), unit:t("rec_done"), ls:"astroq-constellation-best" },
+      /* Ba game them 12/08/2026. ⚠️ Thieu chung o day thi ky luc CO THAT trong
+         `PROGRESS.bests` khong hien ra dau ca — tre lap ky luc ma khong thay no. */
+      { key:"catch",         ic:"🌟", nm:t("rec_catch"),         unit:t("rec_pts"), ls:"astroq-catch-best" },
+      { key:"maze",          ic:"🌀", nm:t("rec_maze"),          unit:t("rec_pts"), ls:"astroq-maze-best" },
+      { key:"racer",         ic:"🚀", nm:t("rec_racer"),         unit:t("rec_pts"), ls:"astroq-racer-best" }
     ];
     $("recs").innerHTML = rows.map(function(r){
       var v = r.key === "constellation" ? num(cDone) : num(bests[r.key]);
@@ -460,7 +553,8 @@
   }
 
   function render(){
-    renderIdCard(); renderSuits(); renderStats(); renderRoute(); renderRecs(); renderBanner();
+    renderIdCard(); renderSuits(); renderDepth(); renderStats(); renderRoute();
+    renderRecs(); renderWeek(); renderBanner();
   }
 
   /* ---------------- Đổi tên / đổi trang phục ----------------
@@ -495,6 +589,37 @@
     pushProfile({ character:id, avatar:c.ava }, t("saved_suit").replace("{n}", c.name));
   }
 
+  /* ---------------- ĐỘ SÂU LỜI GIẢI THÍCH ----------------
+     Hai bậc khai ở `js/depth.js` (chỗ duy nhất) — không gõ lại tên hay giá trị ở
+     đây. Cùng phân công đã dùng cho nhân vật (`js/characters.js`) và bậc huấn
+     luyện (`js/ranks.js`): một chỗ khai, nhiều trang đọc. */
+  function renderDepth(){
+    var host = $("depthpick");
+    if(!host || !window.AstroQDepth) return;
+    var cur = AstroQDepth.get();
+    host.innerHTML = AstroQDepth.all().map(function(b){
+      return '<button type="button" class="depth-btn' + (b===cur ? ' active' : '') +
+             '" data-band="' + b + '" aria-pressed="' + (b===cur) + '">' +
+             '<span class="db-nm">' + AstroQ.esc(AstroQDepth.label(b, LANG)) + '</span>' +
+             '<span class="db-age">' + AstroQ.esc(AstroQDepth.ageLabel(b, LANG)) + '</span>' +
+             '</button>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".depth-btn"), function(b){
+      b.addEventListener("click", function(){ pickDepth(b.getAttribute("data-band")); });
+    });
+    var nt = $("depth-note");
+    if(nt) nt.textContent = AstroQDepth.hint(cur, LANG);
+  }
+
+  function pickDepth(band){
+    if(!window.AstroQDepth) return;
+    var b = AstroQDepth.norm(band);
+    if(b === AstroQDepth.get()) return;      // bấm lại ô đang chọn thì KHÔNG gọi API
+    AstroQDepth.set(b);                      // ghi cache trước → giao diện đổi ngay
+    renderDepth();
+    pushProfile({ depth:b }, t("saved_depth").replace("{n}", AstroQDepth.label(b, LANG)));
+  }
+
   function saveName(){
     var v = ($("new-name").value || "").trim();
     if(!v){ $("new-name").focus(); toast(t("err_name_empty"), "bad"); return; }
@@ -526,6 +651,7 @@
   applyLang(LANG);
   AstroQ.initLang(applyLang);
   load();
+  loadWeek();
 })();
 </script>
 <script type="module" src="js/firebase-auth.js"></script>

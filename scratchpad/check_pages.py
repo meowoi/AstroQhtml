@@ -966,9 +966,14 @@ print("\n=== [4] Chi cac trang noi dung duoc nap SDK Firebase ===")
 # Khong co token o day thi tre choi xong mot chang, quay lai va van thay dung chang
 # vua choi dang sang — mot loi IM LANG. Ban do va man hanh tinh thi KHONG nap: chung
 # doc cache ma trang nay vua ghi.
+# shop.html them 12/08/2026: mua mot mon la TRU VI THAT, va server la noi tra gia
+# (AstroqSV/Services/Cosmetics.cs). Khong co token thi khong tru duoc tien cua ai —
+# va cung khong duoc phep tru. Day la trang thu hai co duong tieu Thien thach tim,
+# canh 3 mini-game (chung tru phi qua economy.js, khong can SDK vi js/progress.js
+# xep hang cho).
 allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.html",
            "specimen-vault.html", "missions.html", "codex.html", "parent.html",
-           "admin-report.html", "checkout.html", "mission-tree.html"}
+           "admin-report.html", "checkout.html", "mission-tree.html", "shop.html"}
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue
@@ -3207,6 +3212,476 @@ check("[21] me day chua mo dung `sic--off`, khong dung grayscale",
       "sic--off" in strip_comments(rd("achievements.html"))
       and bool(_medal_off) and "grayscale" not in _medal_off.group(1),
       _medal_off.group(1).strip() if _medal_off else "khong tim thay rule")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# [22] HAI DO SAU LOI GIAI THICH (js/depth.js) — client khop server
+#
+# Dai tuoi cua du an la 8–15 va no VAT QUA moc ~11 tuoi (xem js/depth.js). Bo nay
+# canh 4 thu, moi thu la mot loi da tra gia o cho khac:
+#   a) hai bac khai o client PHAI khop danh sach validation o server;
+#   b) do sau KHONG duoc suy tu `level` — level do THOI GIAN CHOI, khong do tuoi;
+#   c) trang nao dung `AstroQDepth` thi phai NAP js/depth.js (hai chieu, nhu [21]);
+#   d) nut "Tim hieu them" phai con o CA HAI bac — bac chi quyet cai MAC DINH.
+# ═══════════════════════════════════════════════════════════════════════════
+print("\n=== [22] Hai do sau loi giai thich: client khop server ===")
+
+_dep_js  = rd("js/depth.js")
+_dep_src = _no_comments(_dep_js)
+_me_cs   = _no_cs_comments(rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Endpoints", "MeEndpoints.cs")))
+
+# (a) Hai bac, dung hai chuoi, va server liet ke DUNG hai chuoi do.
+# ⚠️ Hai bac khai TRONG MOT cau `var JUNIOR = "junior", SENIOR = "senior";` nen dung
+#    doi `var` truoc SENIOR — bat theo TEN HANG, khong bat theo tu khoa `var`.
+_bands_cl = set(re.findall(r'\b(?:JUNIOR|SENIOR)\s*=\s*"([a-z]+)"', _dep_src))
+check("[22] js/depth.js khai dung 2 bac", _bands_cl == {"junior", "senior"}, str(sorted(_bands_cl)))
+
+_depth_guard = re.search(r'depth\s+is\s+not\s+\(([^)]*)\)', _me_cs)
+_bands_sv = set(re.findall(r'"([a-z]+)"', _depth_guard.group(1))) if _depth_guard else set()
+check("[22] server liet ke dung 2 bac (bad-depth)", _bands_sv == _bands_cl,
+      "server=" + str(sorted(_bands_sv)) + " client=" + str(sorted(_bands_cl)))
+
+# ⚠️ `nothing-to-do` PHAI tinh ca `depth`: thieu no thi PUT chi co depth se bi tu
+#    choi 400 va viec dong bo bac tu select.html am tham khong bao gio chay.
+_nothing = re.search(r'if\s*\(name is null[^)]*\)', _me_cs)
+check("[22] `nothing-to-do` co tinh ca depth",
+      bool(_nothing) and "depth is null" in _nothing.group(0),
+      _nothing.group(0) if _nothing else "khong tim thay dieu kien")
+
+# GET /me/profile va GET /me/achievements deu phai TRA bac — dashboard doc bac tu
+# achievements (no la trang co token ma tre di qua truoc khi vao Phong Nghien Cuu).
+check('[22] GET tra `depth` (profile + achievements)',
+      _me_cs.count('depth     = Str(profile, "depth")') >= 1
+      and 'depth    = prof is null ? "" : Str(prof, "depth")' in _me_cs,
+      "profile=" + str(_me_cs.count('depth     = Str(profile, "depth")')))
+
+# (b) KHONG suy bac tu level — bay da duoc ghi thanh canh bao o dau js/depth.js.
+check("[22] js/depth.js khong doc level/AstroQRanks",
+      "AstroQRanks" not in _dep_src and not re.search(r'\.level\b', _dep_src),
+      "co doc level trong depth.js")
+
+# (c) Hai chieu: dung thi phai nap, khong dung thi khong nap.
+# ⚠️ PHAI SOI CA SCRIPT RIENG CUA TRANG, khong chi soi HTML. `select.html` nap
+#    depth.js nhung noi DUNG no la `js/auth-flow.js` — chi doc HTML thi phep kiem
+#    bao hong dung luc trang lam dung. (Khac muc [21]: o do loi goi `sic(` nam
+#    ngay trong HTML.)
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _src2 = rd(_f)
+    _l = 'src="js/depth.js"' in _src2
+    _u = "AstroQDepth" in strip_comments(_src2)
+    if not _u:
+        for _js in re.findall(r'<script src="(js/[^"]+\.js)"', _src2):
+            if _js == "js/depth.js":
+                continue
+            try:
+                if "AstroQDepth" in _no_comments(rd(_js)):
+                    _u = True
+                    break
+            except OSError:
+                pass
+    check("[22] " + _f + ": nap js/depth.js <=> co dung no", _l == _u,
+          "nap=" + str(_l) + " dung=" + str(_u))
+
+# (d) Nut "Tim hieu them" con o CA HAI bac: `more-wrap` chi duoc an/hien theo tien
+#     trinh thi nghiem, KHONG theo bac. Neu mot bac lam mat han nut do thi tre bi
+#     may chot ho, dung cai ma `js/depth.js` sinh ra de tranh.
+_lab = _no_comments(rd("lab.html"))
+check("[22] lab.html: bac chi doi `more-box`, khong an `more-wrap`",
+      not re.search(r'more-wrap"\)\.hidden\s*=\s*[^;]*(isSenior|AstroQDepth)', _lab),
+      "co nhanh an ca khoi theo bac")
+check("[22] lab.html: `more-box` mo san khi la senior",
+      bool(re.search(r'more-box"\)\.hidden\s*=\s*!\(window\.AstroQDepth\s*&&\s*AstroQDepth\.isSenior\(\)\)', _lab)))
+
+# select.html phai co dung hai nut, dung hai gia tri bac.
+_sel = strip_comments(rd("select.html"))
+_sel_bands = set(re.findall(r'data-band="([a-z]+)"', _sel))
+check("[22] select.html co 2 nut tuoi, dung 2 bac", _sel_bands == _bands_cl, str(sorted(_sel_bands)))
+
+# ═══════════════════════════════════════════════════════════════════════════
+# [23] CUA HANG TRANG TRI — client khop server, va BA DIEU CAM
+#
+# Bo nay canh dung mot phan cong: **server giu GIA, client giu TEN** (giong
+# Wallet.Fees / Achievements.XpLadder). Cong ba dieu cam cua Services/Cosmetics.cs:
+# khong ban loi the · khong hop ngau nhien · khong khan hiem gia.
+# ═══════════════════════════════════════════════════════════════════════════
+print("\n=== [23] Cua hang trang tri: client khop server ===")
+
+_cos_cs = _no_cs_comments(rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Services", "Cosmetics.cs")))
+_cos_js = _no_comments(rd("js/cosmetics.js"))
+_shop   = strip_comments(rd("shop.html"))
+_ck_css = strip_comments(rd("css/cockpit.css"))
+
+# Bang mon o server: new("<id>", "<kind>", <price>)
+_items = re.findall(r'new\("([a-z0-9-]+)",\s*"([a-z]+)",\s*(\d+)\)', _cos_cs)
+check("[23] doc ra duoc bang mon o server", len(_items) >= 4, f"{len(_items)} mon")
+
+# ⚠️ PHEP KIEM QUAN TRONG NHAT: client KHONG duoc co mot con so gia nao.
+# Chep gia sang JS la hai noi giu mot luat, va ngay doi gia thi ban o client noi
+# con so cu — tuc noi SAI voi tre ngay cho no quyet dinh tieu tien.
+_prices = {p for _, _, p in _items if p != "0"}
+_leak = sorted(p for p in _prices if re.search(r'\b' + p + r'\b', _cos_js))
+check("[23] js/cosmetics.js KHONG chua con so gia nao", not _leak, str(_leak))
+check("[23] shop.html KHONG gui so tien len server",
+      not re.search(r'(price|amount|cost)\s*:', _shop), "co gui so tien")
+
+# Ten (ca vi va en) + o xem truoc: hai chieu.
+_ids = [i for i, _, _ in _items]
+_no_name = [i for i in _ids if _cos_js.count('"%s":' % i) < 2]
+check("[23] moi mon co TEN o ca vi va en", not _no_name, str(_no_name))
+_no_sw = [i for i in _ids if (".cos-sw--" + i) not in _ck_css]
+check("[23] moi mon co o xem truoc trong css/cockpit.css", not _no_sw, str(_no_sw))
+_sw_extra = sorted(set(re.findall(r'\.cos-sw--([a-z0-9-]+)', _ck_css)) - set(_ids))
+check("[23] khong co o xem truoc bo khong", not _sw_extra, str(_sw_extra))
+
+# Mon mac dinh phai khop hai ben — lech thi tre "dang dung" mot mon khong ton tai.
+_def_sv = dict(re.findall(r'\["([a-z]+)"\]\s*=\s*"([a-z0-9-]+)"', _cos_cs))
+_def_cl = dict(re.findall(r'(theme|frame):\s*"([a-z0-9-]+)"', _cos_js))
+check("[23] mon mac dinh khop client <-> server", _def_sv == _def_cl and len(_def_sv) == 2,
+      f"server={_def_sv} client={_def_cl}")
+check("[23] mon mac dinh deu co gia 0",
+      all(p == "0" for i, _, p in _items if i in _def_sv.values()))
+
+# ⚠️ THU TU CO CHU Y: ghi-kho TRUOC, tru-tien SAU. Nguoc lai thi khi ghi kho hong
+#    la tre MAT TIEN MA KHONG CO MON — hong theo huong te hon.
+_me_cs2 = _no_cs_comments(rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Endpoints", "MeEndpoints.cs")))
+_buy = re.search(r'MapPost\("/shop/buy".*?MapPut\("/shop/equip"', _me_cs2, re.S)
+_buy_src = _buy.group(0) if _buy else ""
+check("[23] co route /shop/buy", bool(_buy_src))
+if _buy_src:
+    _i_add = _buy_src.find("TryAddCosmeticAsync")
+    _i_pay = _buy_src.find("TrySpendWalletAsync")
+    check("[23] ghi kho TRUOC tru tien", 0 <= _i_add < _i_pay, f"add@{_i_add} pay@{_i_pay}")
+    check("[23] tru tien hong thi HOAN TAC mon", "RemoveCosmeticAsync" in _buy_src)
+    check("[23] gui lai cung opId thi khong tru hai lan", 'TryBeginOpAsync(uid, "buy-"' in _buy_src)
+    check("[23] mon gia 0 thi khong ban", '"free-item"' in _buy_src)
+
+# ⚠️ Cua so phai chay tu route NAY toi route KE TIEP. Dung `.*?\}\);` thi no dung
+#    ngay o `Results.BadRequest(new {…});` dau tien va cua so KHONG chua CanEquip —
+#    phep kiem bao hong dung luc code lam dung (loi cua phep do, khong cua san pham).
+_eq = re.search(r'MapPut\("/shop/equip".*?(?=g\.Map|\Z)', _me_cs2, re.S)
+check("[23] deo mon: server kiem quyen deo (khong tin client)",
+      bool(_eq) and "Cosmetics.CanEquip" in _eq.group(0))
+
+# BA DIEU CAM
+check("[23] KHONG hop ngau nhien / gacha (server)",
+      not re.search(r'\b(Random|Shuffle|gacha|lootbox)\b', _cos_cs, re.I))
+check("[23] KHONG hop ngau nhien / gacha (client)",
+      not re.search(r'Math\.random|gacha|lootbox', _cos_js + _shop, re.I)
+      or "opId" in _shop,   # Math.random CHI duoc dung de sinh opId
+      "co chon mon bang ngau nhien")
+# ⚠️ Khong khan hiem gia: khong dem nguoc, khong "chi con hom nay".
+check("[23] KHONG khan hiem gia o cua hang",
+      not re.search(r'countdown|setInterval|hết hạn|sắp hết|chỉ còn', _shop, re.I))
+# Khong ban loi the: moi mon phai thuoc dung hai loai trang tri.
+_kinds = sorted({k for _, k, _ in _items})
+check("[23] moi mon la do TRANG TRI (theme/frame)", _kinds == ["frame", "theme"], str(_kinds))
+
+# ===========================================================================
+# [24] THE "CHO BO ME XEM" (js/brag.js) — KHONG GUI GI RA NGOAI
+#
+# Ca ly do tinh nang nay ton tai la lay phan lon gia tri cua "khoe" ma KHONG mo
+# cua chat / ket ban / tai len. Bo nay canh dung cai cua do van dong:
+#   a) khong `fetch` / `XMLHttpRequest` / `navigator.share` / form upload;
+#   b) trang nao dung `AstroQBrag` thi phai nap CA js/brag.js VA css/brag.css;
+#   c) `.brag[hidden]{display:none}` phai co — bay `[hidden]` da tra gia 6 lan;
+#   d) cho khoe o Kho Thanh Tich phai CHAN khi chua doc duoc so lieu (khong bia so).
+# ===========================================================================
+print("\n=== [24] The 'Cho bo me xem': khong gui gi ra ngoai ===")
+
+_brag_js  = _no_comments(rd("js/brag.js"))
+_brag_css = strip_comments(rd("css/brag.css"))
+
+for _bad in ["navigator.share", "fetch(", "XMLHttpRequest", "FormData",
+             "new Image(", "enctype", "action="]:
+    check("[24] js/brag.js KHONG dung `%s`" % _bad, _bad not in _brag_js)
+check("[24] the ve bang canvas (mot nguon su that cho bo cuc)",
+      "getContext" in _brag_js and "toDataURL" in _brag_js)
+check("[24] cho font xong moi ve (chu khong ra font he thong)",
+      "document.fonts" in _brag_js)
+check("[24] tra tieu diem ve nut vua bam khi dong",
+      "lastFocus" in _brag_js and "Escape" in _brag_js)
+# Bay `[hidden]`: `display` cua tac gia THANG `display:none` ma trinh duyet ap.
+# `.brag` khai `display:grid` nen no BAT BUOC phai khai lai `[hidden]`.
+check("[24] `.brag[hidden]` khai lai display:none",
+      bool(re.search(r'\.brag\[hidden\]\s*\{[^}]*display\s*:\s*none', _brag_css)))
+
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _src3 = rd(_f)
+    _u = "AstroQBrag" in strip_comments(_src3)
+    _lj = 'src="js/brag.js"' in _src3
+    _lc = 'href="css/brag.css"' in _src3
+    check("[24] " + _f + ": dung AstroQBrag <=> nap ca js va css",
+          (_u == _lj) and (_u == _lc), "dung=%s js=%s css=%s" % (_u, _lj, _lc))
+
+# (d) Kho Thanh Tich: chua doc duoc so lieu thi KHONG dung the.
+_ach24 = _no_comments(rd("achievements.html"))
+_openb = re.search(r'function openBrag\(\)\s*\{(.*?)\n  \}', _ach24, re.S)
+check("[24] achievements: chan khi chua co so lieu (khong bia so)",
+      bool(_openb) and "VIEW.ok" in _openb.group(1) and "VIEW.level" in _openb.group(1),
+      "khong tim thay chot chan" if not _openb else "")
+
+# ===========================================================================
+# [25] VIEC HANG NGAY + CHUOI NGAY (Services/Daily.cs · js/daily.js)
+#
+# Nam dieu kien da chot TRUOC khi viet dong nao (xem dau Daily.cs):
+#   ① 2 ngay an han/tuan  ② chuoi khong ve 0 (ky luc giu vinh vien)
+#   ③ khong dem nguoc     ④ khong giuc     ⑤ noi truoc luat
+#
+# Muc nay canh nhung dieu DOC DUOC TU MA NGUON; phan phai render moi thay (khong to
+# do, vung cham 48px, dich VI/EN, dau "—" khi mat mang) nam o smoke_daily.py, va phan
+# server tinh dung nam o test_daily.py.
+# ===========================================================================
+print("\n=== [25] Viec hang ngay + chuoi ngay ===")
+
+_dl_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Daily.cs"))
+_dlx_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.Daily.cs"))
+_dl_js  = rd("js/daily.js")
+_dl_js_code = _no_comments(_dl_js)
+
+# ── Bang viec: doc tu server ──
+_dl_tasks = re.findall(r'new\("([a-z]+)",\s*(\d+),\s*(\d+)\)', _dl_cs)
+check("[25] doc duoc bang viec o Daily.cs", len(_dl_tasks) >= 3, f"{len(_dl_tasks)} viec")
+
+_dl_ids = [t[0] for t in _dl_tasks]
+check("[25] khong co id viec nao bi trung", len(set(_dl_ids)) == len(_dl_ids), str(_dl_ids))
+
+# ⚠️ MOI VIEC PHAI LAM LAI DUOC VO HAN. `lesson` / `planet` / `mission` chi tinh LAN
+#    DAU (49 bai, 8 hanh tinh, 7 chang) nen chung SE CAN — mot viec hang ngay khong
+#    bao gio hoan thanh duoc nua la mot loi hua vinh vien khong giu duoc. Cung cai bay
+#    da ghi o js/specimens.js ("dung viet Mo khoa tai Mission 02").
+check("[25] khong viec nao dua tren su kien CHI TINH LAN DAU",
+      not ({"lesson", "planet", "mission"} & set(_dl_ids)), str(_dl_ids))
+
+# ⚠️ Thuong phai LON HON phi vao cua game dat nhat, khong thi "viec hang ngay" la mot
+#    viec LAM MAT TIEN va tre hoc duoc dung mot dieu: dung lam viec hang ngay.
+_dl_fees = [int(m.group(1)) for m in re.finditer(r'\["[a-z]+"\]\s*=\s*(\d+)', _wallet)]
+_dl_play = next((int(t[2]) for t in _dl_tasks if t[0] == "play"), 0)
+check("[25] thuong viec 'play' > phi game dat nhat",
+      _dl_play > max(_dl_fees or [0]), f"{_dl_play} > {max(_dl_fees or [0])}")
+
+# ⚠️ Tran la HANG RAO O PHEP KIEM, khong phai phep kep luc chay (xem Wallet.cs): kep
+#    tong luc chay thi server danh dau "da tra" cho ca ba viec ma chi cong tien toi
+#    tran, tuc tre mat phan chenh va khong co duong nao lay lai.
+_dl_total = sum(int(t[2]) for t in _dl_tasks)
+_dl_cap = re.search(r"MaxPerDailyAll\s*=\s*(\d+)", _wallet)
+check("[25] tong thuong mot ngay <= MaxPerDailyAll",
+      bool(_dl_cap) and _dl_total <= int(_dl_cap.group(1)),
+      f"{_dl_total} <= {_dl_cap.group(1) if _dl_cap else '?'}")
+
+# ⚠️ CO'Y KHONG dua "daily" vao Wallet.MaxRewardFor: ham do phuc vu POST /me/progress
+#    noi `type` la chuoi CLIENT gui len, nen mot nhanh "daily" o do la mot cua de goi
+#    {type:"daily", meteors:19} va tu tra thuong ma khong lam viec nao.
+_mrf = re.search(r"MaxRewardFor\(string type\)\s*=>\s*type switch\s*\{(.*?)\};",
+                 _no_comments(_wallet), re.S)
+check("[25] `daily` KHONG co nhanh trong Wallet.MaxRewardFor",
+      bool(_mrf) and '"daily"' not in _mrf.group(1),
+      "khong doc duoc MaxRewardFor" if not _mrf else "")
+
+# ── Hai chieu: server giu MOC, client giu TEN ──
+# ⚠️ CHI SOI TRONG KHOI `var T = {…}`. Quet ca file thi regex bat luon
+#    `vi: {` va `en: {` cua tu dien TXT — bao "thua 2 viec" oan.
+_dl_T = re.search(r"var T = \{(.*?)\n  \};", _dl_js, re.S)
+_dl_js_ids = re.findall(r"^\s{4}([a-z]+):\s*\{\s*$",
+                        _dl_T.group(1) if _dl_T else "", re.M)
+check("[25] doc duoc bang ten o js/daily.js", bool(_dl_T) and len(_dl_js_ids) >= 3,
+      f"{len(_dl_js_ids)} ten")
+check("[25] moi viec cua server co TEN o js/daily.js",
+      set(_dl_ids) <= set(_dl_js_ids), f"thieu: {sorted(set(_dl_ids) - set(_dl_js_ids))}")
+check("[25] js/daily.js khong khai ten cho viec khong co that",
+      set(_dl_js_ids) <= set(_dl_ids), f"thua: {sorted(set(_dl_js_ids) - set(_dl_ids))}")
+
+# ⚠️ CLIENT KHONG DUOC CHUA MOT CON SO LUAT NAO. Go "5 cau" hay "+6 tt" vao chuoi
+#    tieng Viet la hai noi cung giu mot con so, va ban o client se noi con so cu vao
+#    dung ngay server doi do kho. Chuoi phai dung token {n} roi thay bang `goal`.
+_dl_nums = sorted({t[1] for t in _dl_tasks} | {t[2] for t in _dl_tasks})
+_dl_bad_nums = [n for n in _dl_nums
+                if int(n) > 1 and re.search(r"(?<![\w-])" + n + r"(?![\w-])", _dl_js_code)]
+check("[25] js/daily.js khong gan cung moc/thuong cua server",
+      not _dl_bad_nums, f"tim thay: {_dl_bad_nums}")
+check("[25] ten viec dung token {n} cho moc", _dl_js_code.count("{n}") >= len(_dl_ids),
+      f"{_dl_js_code.count('{n}')} token")
+
+# ── ③ KHONG DEM NGUOC, o CA HAI phia ──
+# ⚠️ QUET TREN BAN DA BOC GHI CHU. Lan dau toi quet van ban tho va no bao hong
+#    ngay: chinh loi canh bao *"dung them expiresAt vao day"* trong Daily.cs
+#    chua chu do. Loi "dem ca chu trong ghi chu cua chinh minh" — da lap lai
+#    du nhieu lan de thanh phan xa: MOI phep kiem dang "khong duoc chua X"
+#    phai chay tren code da boc comment.
+_dl_cs_code = _no_comments(_dl_cs)
+for _bad in ["expiresAt", "resetAt", "secondsLeft", "deadline", "endsAt"]:
+    check(f"[25] ③ Daily.cs khong tra ve '{_bad}'", _bad not in _dl_cs_code)
+for _bad in ["setInterval", "setTimeout", "expiresAt", "countdown", "Date.now"]:
+    check(f"[25] ③ js/daily.js khong dung '{_bad}'", _bad not in _dl_js_code)
+
+# ⚠️ ② BAN GHI STREAK KHONG DUOC CO `ttl`. No giu KY LUC — thu tre da dat duoc thi
+#    khong ai lay lai, ke ca mot co che don rac. Ban ghi WAITLIST# da day bai nay.
+_st_blk = re.search(r"TrySetStreakAsync\(.*?\n    \}", _dlx_cs, re.S)
+check("[25] ② phep ghi chuoi khong dat ttl",
+      bool(_st_blk) and "ttl" not in _st_blk.group(0),
+      "khong doc duoc TrySetStreakAsync" if not _st_blk else "")
+# Nguoc lai: ban ghi ngay THI PHAI co ttl (chi can cho hom nay, don duoc).
+_pay_blk = re.search(r"TryPayDailyAsync\(.*?\n    \}", _dlx_cs, re.S)
+check("[25] ban ghi DAILY# CO dat ttl",
+      bool(_pay_blk) and "ttl" in _pay_blk.group(0),
+      "khong doc duoc TryPayDailyAsync" if not _pay_blk else "")
+# ⚠️ Chot chong tra thuong hai lan phai la phep ghi CO DIEU KIEN cua DynamoDB, khong
+#    phai mot phep so o tang ung dung: hai loi goi song song deu thay "chua tra".
+#    Phep thu pha hoai da chung minh dieu nay (xem pha_daily.py).
+check("[25] chot chong tra hai lan la ConditionExpression NOT contains",
+      bool(_pay_blk) and "NOT contains(paid" in _pay_blk.group(0))
+
+# ── Khong co route "nhan thuong" ──
+# Mot cai nut nhan thuong la mot cach de MAT: quen bam truoc nua dem la mat cong suc
+# da bo ra, va no sinh ra dung thu ap luc ma dieu ③④ dang cam.
+_me_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/MeEndpoints.cs"))
+check("[25] khong co route /daily/claim", "/daily/claim" not in _me_cs)
+check("[25] co dung MOT route GET /daily",
+      len(re.findall(r'MapGet\("/daily"', _me_cs)) == 1)
+check("[25] khong co MapPost/MapPut cho /daily",
+      not re.search(r'Map(Post|Put)\("/daily', _me_cs))
+
+# ── Hai chieu: trang dung AstroQDaily thi phai nap CA js va css ──
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _src = rd(_f)
+    _u = "AstroQDaily" in strip_comments(_src)
+    _lj = 'src="js/daily.js"' in _src
+    _lc = 'href="css/daily.css"' in _src
+    check("[25] " + _f + ": dung AstroQDaily <=> nap ca js va css",
+          (_u == _lj) and (_u == _lc), "dung=%s js=%s css=%s" % (_u, _lj, _lc))
+
+# ⚠️ `renderDaily` phai nam trong `paintAll`, khong chi goi luc du lieu ve: `applyLang`
+#    cung goi `paintAll`, ma chu tren bang do JS sinh nen doi VI/EN o tab khac thi no
+#    phai dich theo. Thieu cho nay la bang dung lai o tieng cu — dung loi da tra gia
+#    voi nhan ong khoi o buoc ④ cua nhiem vu Trai Dat.
+_mis = _no_comments(rd("missions.html"))
+_pa = re.search(r"function paintAll\(\)\s*\{(.*?)\}", _mis, re.S)
+check("[25] missions.html: paintAll co goi renderDaily",
+      bool(_pa) and "renderDaily" in _pa.group(1),
+      "khong tim thay paintAll" if not _pa else "")
+
+# ===========================================================================
+# [26] NHAT KY TUAN — SO VOI CHINH MINH (js/weeklog.js · Services/Report.cs)
+#
+# Muc A2 cua de xuat 12/08/2026. Hai dieu phai gac bang phep kiem, vi ca hai deu la
+# thu de len vao ma khong ai thay:
+#   ① KHONG BAO GIO so voi tre khac. De xuat da bac bang xep hang (muc 5), va day la
+#      cho de nhat de no quay lai duoi dang "gioi hon 70% cac ban".
+#   ② GIAM KHONG TO DO. Day la nhat ky mot dua tre doc ve CHINH NO; to do dong
+#      "it hon 6 cau" la bien mot phep do thanh mot loi phan xet.
+# Phan phai render moi thay (mau hieu dung, vung cham, dich VI/EN) o smoke_weeklog.py.
+# ===========================================================================
+print("\n=== [26] Nhat ky tuan: so voi chinh minh ===")
+
+_wl_js   = rd("js/weeklog.js")
+_wl_code = _no_comments(_wl_js)
+_wl_css  = strip_comments(rd("css/weeklog.css"))
+_rep_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Report.cs"))
+_pro     = rd("profile.html")
+_pro_code = _no_comments(_pro)
+
+# ── ① Khong so voi tre khac ──
+# ⚠️ QUET TREN BAN DA BOC GHI CHU: chinh loi canh bao "khong bao gio so voi tre khac"
+#    cung chua nhung chu nay. Loi "dem ca chu trong ghi chu cua chinh minh" da lap lai
+#    16 lan trong du an.
+for _bad in ["leaderboard", "percentile", "xếp hạng", "giỏi hơn", "bạn khác",
+             "trung bình của"]:
+    check("[26] ① js/weeklog.js khong nhac '%s'" % _bad,
+          _bad.lower() not in _wl_code.lower())
+# Server cung khong duoc mo mot duong lay du lieu cua tre khac.
+check("[26] ① Report.cs khong co khai niem xep hang giua cac tre",
+      not re.search(r"(?i)(rank|leaderboard|percentile)", _no_comments(_rep_cs)))
+
+# ── ② Giam khong to do ──
+# Bat moi mau trong file roi doi 0 mau nao "do troi" (r nhieu hon g va b ro rang).
+def _reddish_hex(h):
+    h = h.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    if len(h) != 6:
+        return False
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return r > 120 and r > g * 1.8 and r > b * 1.8
+
+_wl_hex = re.findall(r"#[0-9a-fA-F]{3,6}\b", _wl_css)
+_wl_red = [h for h in _wl_hex if _reddish_hex(h)]
+check("[26] ② css/weeklog.css khong co mot mau do nao", not _wl_red, str(_wl_red))
+# ⚠️ Va `.wl-down` phai dung CHUNG khai bao voi `.wl-same` — tach ra la mo duong cho
+#    ai do cho no mot mau rieng, tuc mot phan xet rieng.
+check("[26] ② `.wl-down` khai CHUNG mot rule voi `.wl-same`",
+      bool(re.search(r"\.wl-down\s*,\s*\.wl-same\s*\{", _wl_css)))
+check("[26] ② khong animation nao trong css/weeklog.css",
+      "animation" not in _wl_css and "@keyframes" not in _wl_css)
+
+# ⚠️ "BANG ky luc", KHONG PHAI "ky luc MOI". Diem tuan bang ky luc ca doi thi chi chac
+#    chan duoc rang no BANG — ky luc co the da lap tu tuan truoc. Noi "moi" la mot suy
+#    luan khong co can cu trong du lieu.
+# ⚠️⚠️ DUNG BAN BOC COMMENT RIENG, KHONG DUNG `_no_comments` CHO PHEP KIEM NAY —
+#    va day la mot PHAT HIEN dang ghi lai: `_no_comments()` quet tung ky tu va coi moi
+#    dau nhay la mo dau mot CHUOI, nen no bi mot REGEX LITERAL chua dau nhay lam lech.
+#    `js/weeklog.js` (va `js/daily.js`) deu co `replace(/[&<>"']/g, …)`: gap dau `"`
+#    trong regex do, ham tuong minh dang o trong chuoi va an qua luon ca khoi comment
+#    phia sau — nen chinh loi canh bao *"BANG ky luc, KHONG PHAI ky luc MOI"* bi tinh la
+#    van ban code. Lan dau chay muc nay no bao hong dung vi vay.
+#    O day chi can bo comment nen mot phep the regex la du va khong bi bay do.
+_wl_nc = re.sub(r"/\*.*?\*/", "", _wl_js, flags=re.S)
+_wl_nc = re.sub(r"(?m)^\s*//.*$", "", _wl_nc)
+check("[26] khong noi 'ky luc moi' (suy luan khong co can cu)",
+      not re.search(r"(?i)(kỷ lục mới|new record|record mới)", _wl_nc))
+
+# ── Bay `[hidden]` — lan thu 8 trong du an ──
+check("[26] `.wl-detail[hidden]` khai lai display:none",
+      bool(re.search(r"\.wl-detail\[hidden\]\s*\{[^}]*display\s*:\s*none", _wl_css)))
+
+# ── Server giu MOC, client giu TEN: weeklog KHONG duoc chua ten game ──
+# Ten game nam o tung trang (`GAMES` cua games.html, `rec_*` cua profile.html); khai
+# them mot ban thu ba o js/weeklog.js la chac chan co ngay ba ban noi ba ten.
+for _nm in ["Né Thiên Thạch", "Ghép Chòm Sao", "Bắt Sao Băng", "Mê Cung",
+            "Đường Đua", "Asteroid Dodge", "Star Catcher"]:
+    check("[26] js/weeklog.js khong khai ten game '%s'" % _nm, _nm not in _wl_js)
+check("[26] ten game do TRANG truyen vao qua gameName()", "gameName" in _wl_code)
+
+# ── Server tra ve CA HAI: diem tuan + ky luc ca doi ──
+check("[26] Report.WeekStats co truong Bests", "Bests" in _rep_cs)
+check("[26] endpoint tra ve lifetime.bests",
+      bool(re.search(r"lifetime\s*=\s*new\s*\{[^}]*bests\s*=", _no_comments(_me_cs), re.S)))
+
+# ── Hai chieu: trang dung AstroQWeekLog thi phai nap CA js va css ──
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _src = rd(_f)
+    _u = "AstroQWeekLog" in strip_comments(_src)
+    _lj = 'src="js/weeklog.js"' in _src
+    _lc = 'href="css/weeklog.css"' in _src
+    check("[26] " + _f + ": dung AstroQWeekLog <=> nap ca js va css",
+          (_u == _lj) and (_u == _lc), "dung=%s js=%s css=%s" % (_u, _lj, _lc))
+
+# ⚠️ `renderWeek` phai nam trong `render()`: `applyLang` cung goi `render()`, ma chu
+#    tren bang do JS sinh nen doi VI/EN o tab khac thi no phai dich theo.
+_pr = re.search(r"function render\(\)\s*\{(.*?)\n  \}", _pro_code, re.S)
+check("[26] profile.html: render() co goi renderWeek",
+      bool(_pr) and "renderWeek" in _pr.group(1),
+      "khong tim thay render()" if not _pr else "")
+
+# ══════════════════════════════════════════════════════════════════════════
+# ⚠️⚠️ PHEP KIEM DANG GIA NHAT CUA MUC NAY: MOI GAME CO PHI PHAI CO O KY LUC.
+#    Truoc 12/08/2026 bang ky luc o profile.html chi co 3 game, trong khi
+#    `Wallet.Fees` da co 6 — nghia la ky luc CO THAT trong `PROGRESS.bests` cua ba
+#    game moi KHONG HIEN RA DAU CA: tre lap ky luc ma khong bao gio thay no. Loi im
+#    lang, khong phep kiem nao hoi toi. Tu nay them game moi ma quen o ky luc thi
+#    day bao ngay.
+# ══════════════════════════════════════════════════════════════════════════
+_fee_keys = set(re.findall(r'\["([a-z]+)"\]\s*=\s*\d+', _wallet))
+_rec_keys = set(re.findall(r'\{\s*key:"([a-z]+)"', _pro_code))
+check("[26] doc duoc bang phi va bang ky luc",
+      len(_fee_keys) >= 3 and len(_rec_keys) >= 3,
+      "phi=%s recs=%s" % (sorted(_fee_keys), sorted(_rec_keys)))
+check("[26] MOI game co phi deu co o ky luc o profile.html",
+      _fee_keys <= _rec_keys, "thieu: %s" % sorted(_fee_keys - _rec_keys))
+check("[26] khong o ky luc nao cho game khong co that",
+      _rec_keys <= _fee_keys, "thua: %s" % sorted(_rec_keys - _fee_keys))
+# Va moi o phai co TEN song ngu (thieu thi o hien khoa tho).
+_vi_keys, _en_keys = i18n_dicts(_pro_code)
+for _k in sorted(_rec_keys):
+    check("[26] ten game '%s' co o CA vi va en" % _k,
+          ("rec_" + _k) in _vi_keys and ("rec_" + _k) in _en_keys)
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

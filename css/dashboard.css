@@ -390,12 +390,17 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
    Đặt DƯỚI `.ptiles`, không nằm trong lưới đó: ba ô kia là của trẻ, cái này là
    của phụ huynh (xem ghi chú ở dashboard.html). Vẻ ngoài cũng khác hẳn — một
    dòng liên kết, không phải một ô — để mắt trẻ không nhầm là chỗ mình cần bấm.
-   ⚠️ min-height 48px: đây là vùng chạm thật, và 44 là mốc TỐI THIỂU của WCAG. */
-.pt-parent{grid-column:1 / -1;display:flex;align-items:center;gap:8px;min-height:48px;
+   ⚠️ min-height 48px: đây là vùng chạm thật, và 44 là mốc TỐI THIỂU của WCAG.
+   ⚠️ TÊN CLASS: `.pt-row` là VẺ NGOÀI dùng chung (dòng liên kết dưới lưới ô);
+      `.pt-parent` / `.pt-shop` là ĐỊNH DANH của từng dòng. Ngày 12/08/2026 dòng
+      Kho Trang Trí từng mang thẳng class `.pt-parent` để mượn vẻ ngoài — một cửa
+      hàng đeo class tên "phụ huynh" vừa sai nghĩa, vừa làm `smoke_parent.py` hỏng
+      (selector `.pt-parent` khớp HAI phần tử). Mượn kiểu thì mượn `.pt-row`. */
+.pt-row{grid-column:1 / -1;display:flex;align-items:center;gap:8px;min-height:48px;
   margin-top:9px;padding:9px 12px;border-radius:12px;text-decoration:none;
   font-size:12.8px;line-height:1.45;color:var(--ink-soft);
   border:1px dashed rgba(150,180,255,.28);background:rgba(150,180,255,.05);
   transition:border-color .18s ease,color .18s ease;}
-.pt-parent .ar{margin-left:auto;font-size:15px;opacity:.7;}
-.pt-parent:hover{color:var(--ink);border-color:rgba(150,180,255,.5);}
-.pt-parent:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.pt-row .ar{margin-left:auto;font-size:15px;opacity:.7;}
+.pt-row:hover{color:var(--ink);border-color:rgba(150,180,255,.5);}
+.pt-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}

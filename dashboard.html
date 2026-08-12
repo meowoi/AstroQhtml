@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/cockpit.css" />
 <link rel="stylesheet" href="css/sticker-icons.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
@@ -30,6 +31,8 @@
      đóng dấu (xem js/admin-link.js). -->
 <script src="js/admin-link.js"></script>
 <script src="js/planets.js"></script>
+<script src="js/depth.js"></script>
+<script src="js/cosmetics.js"></script>
 <script src="js/progress.js"></script>
 <!-- Cổng lộ trình: trang này CÓ token nên nó là chỗ làm mới cache cho
      explorer.html (trang đó cố ý không nạp SDK Firebase). Xem js/route-gate.js. -->
@@ -67,7 +70,7 @@
 
 <!-- ============ HEADER = BẢNG TRẠNG THÁI TÀU ============ -->
 <header class="statusbar">
-  <div class="ship-id"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"><span class="hull">HULL · OK</span></div>
+  <div class="ship-id"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"><span class="ship-name" id="ship-nm" hidden></span><span class="hull">HULL · OK</span></div>
 
   <div class="gauges">
     <!-- Thiên thạch tím (Purple Meteor) -->
@@ -219,7 +222,18 @@
               lại mình. Cái này là bảng cho NGƯỜI KHÁC đọc (bố mẹ). Trộn vào là làm
               loãng nghĩa cả hàng, đúng lỗi đã tránh khi không nhét Hồ sơ/Thành tích
               vào lưới MOD. -->
-      <a class="pt-parent" href="parent.html">
+      <!-- KHO TRANG TRÍ — cùng khuôn "một dòng liên kết" với ô bố mẹ, KHÔNG phải ô
+           thứ tư trong `.ptiles` (xem ghi chú ngay trên: lưới đó khai 3 cột cố định).
+           ⚠️ Đây là chỗ TIÊU Thiên thạch tím thứ hai của cả app — trước 12/08/2026
+              tt chỉ có một cửa tiêu là phí vào cửa mini-game, tức tiền không phải
+              phần thưởng mà là vé (xem AstroqSV/Services/Cosmetics.cs). -->
+      <a class="pt-row pt-shop" href="shop.html">
+        <span aria-hidden="true">🎨</span>
+        <span data-i18n="pt_shop">Kho Trang Trí: đổi tông đèn buồng lái, đặt tên phi thuyền</span>
+        <span class="ar" aria-hidden="true">›</span>
+      </a>
+
+      <a class="pt-row pt-parent" href="parent.html">
         <span aria-hidden="true">👨‍👩‍👧</span>
         <span data-i18n="pt_parent">Dành cho bố mẹ: xem báo cáo tuần của con</span>
         <span class="ar" aria-hidden="true">›</span>
@@ -441,6 +455,7 @@
       codex_tag:"Tra cứu thuật ngữ", codex_title:"Sổ Tay Thuật Ngữ",
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
+      pt_shop:"Kho Trang Trí: đổi tông đèn buồng lái, đặt tên phi thuyền",
       pt_parent:"Dành cho bố mẹ: xem báo cáo tuần của con",
       lab_open:"Vào phòng thí nghiệm", lab_ready:"SẴN SÀNG",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
@@ -490,6 +505,7 @@
       codex_tag:"Term reference", codex_title:"Terminology Codex",
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
+      pt_shop:"Decoration Deck: cockpit lights, ship name",
       pt_parent:"For parents: see your child's weekly report",
       lab_open:"Enter the lab", lab_ready:"READY",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
@@ -591,10 +607,28 @@
     return window.AstroQRanks ? AstroQRanks.name(lv, LANG) : "";
   }
 
+  /* ---- ĐỘ SÂU LỜI GIẢI THÍCH: cầu nối giữa hồ sơ trên server và các trang
+          KHÔNG có token (`lab.html`, `select.html`). Xem `js/depth.js`.
+     ⚠️ Hai chiều, và chúng KHÔNG bao giờ giẫm chân nhau:
+        · máy này trẻ vừa khai (select.html ghi cache) → ĐẨY lên, một lần/uid;
+        · máy này chưa khai gì → KÉO bậc server về cache.
+        Chọn nhánh theo `declared()` nên không có ca "hai bên tranh nhau ghi". */
+  function syncDepth(serverDepth){
+    if(!window.AstroQDepth) return;
+    var u = AstroQ.getUser() || {};
+    if(AstroQDepth.declared()) AstroQDepth.syncUp(window.AstroQAuth, u.uid || "");
+    else if(serverDepth) AstroQDepth.absorb(serverDepth);
+  }
+
   function loadStats(){
     AstroQProgress.achievements().then(function(r){
       if(!(r && r.ok)) { renderStats(); return; }
       var d = r.data || {}, a = d.achievements || {};
+      syncDepth(d.depth);
+      /* Tong den + ten tau: server la nguon su that, keo ve cache roi ve lai ngay.
+         `js/cosmetics.js` da ap tong tu cache LUC NAP nen buong lai khong nhap
+         mot cai tu tong mac dinh sang tong cua tre. */
+      if(window.AstroQCos){ AstroQCos.absorb(d.equipped, d.ship); paintShip(); }
       STATS.level = d.level || STATS.level;
       STATS.progress = d.progress || STATS.progress;
       STATS.badges = a.badges || [];
@@ -605,6 +639,16 @@
   }
 
   /* ---- Số dư Thiên thạch tím = nhiên liệu ---- */
+  /* Ten phi thuyen do tre dat (js/cosmetics.js). CHUA dat thi AN HAN khoi nay —
+     mot nhan trong doc ra nhu cho bi loi. */
+  function paintShip(){
+    var el = $("ship-nm");
+    if(!el || !window.AstroQCos) return;
+    var nm = AstroQCos.ship();
+    el.textContent = nm;
+    el.hidden = !nm;
+  }
+
   function paintBalance(){
     var bal = Economy.getAsteroids();
     $("purple-asteroids").textContent = bal;
@@ -789,6 +833,7 @@
 
   /* ---- Khởi tạo ---- */
   paintBalance();
+  paintShip();
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)

@@ -65,6 +65,7 @@ PAGES = [
     # Mini-game + 2 trang 3D: sân chơi khoá theo `aspect-ratio` nên đây là chỗ
     # dễ tràn ngang nhất khi màn thấp (Win 1366x768, iPad ngang).
     "game-dodge.html", "game-defender.html", "game-constellation.html",
+    "game-catch.html", "game-maze.html", "game-racer.html",
     "explorer.html", "mission-earth.html",
 ]
 

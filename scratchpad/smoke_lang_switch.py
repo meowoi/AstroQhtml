@@ -56,9 +56,16 @@ PAGES = [
     # trang nay khong co h1, tieu de lon nhat la ten buoc dang mo.
     ("checkout.html",      ".co-card:not([hidden]) h2", None),
     ("specimen-vault.html", "h1",             None),
+    # shop.html them 12/08/2026 — Kho Trang Tri (buong lai cua con). TEN MON do
+    # js/cosmetics.js sinh nen chung phai dich theo, khong chi cac nhan tinh.
+    ("shop.html",          "h1",              None),
     ("game-dodge.html",    None,              None),
     ("game-defender.html", None,              None),
     ("game-constellation.html", None,         None),
+    # ARCADE-06 them 12/08/2026
+    ("game-catch.html",    None,              None),
+    ("game-maze.html",     None,              None),
+    ("game-racer.html",    None,              None),
     ("explorer.html",      "#deck-title",     None),
     ("mission-earth.html", None,              None),
 ]

@@ -362,6 +362,28 @@ const AstroQAuth = {
     return r.ok ? { ok:true, data:r.data } : r;
   },
 
+  /* ---------------- Cửa hàng trang trí (buồng lái của con) ----------------
+     ⚠️ GIÁ do server trả trong `getShop()`. Client KHÔNG bao giờ gửi số tiền lên —
+        gửi được thì ai cũng mua 0 đồng. Xem AstroqSV/Services/Cosmetics.cs. */
+
+  /** { items[{id,kind,price}], owned[], equipped{}, ship, wallet } */
+  async getShop(){
+    const r = await this._authed(t => apiGetAuth("/me/shop", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Mua một món. `opId` sinh MỘT LẦN cho mỗi lượt mua để gửi lại không trừ hai lần. */
+  async buyCosmetic(itemId, opId){
+    const r = await this._authed(t => apiPostAuth("/me/shop/buy", { itemId, opId }, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Đeo một món đã có (hoặc món mặc định). Server kiểm quyền đeo, không tin client. */
+  async equipCosmetic(itemId){
+    const r = await this._authed(t => apiPutAuth("/me/shop/equip", { itemId }, t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
   /** Kho thành tích: { summary, badges[] } + cấp độ + tiến độ. */
   async getAchievements(){
     const r = await this._authed(t => apiGetAuth("/me/achievements", t));
@@ -400,6 +422,17 @@ const AstroQAuth = {
   /** Trạng thái nhiệm vụ (bước đã xong, mẫu dữ liệu Codex). */
   async getMissions(){
     const r = await this._authed(t => apiGetAuth("/me/missions", t));
+    return r.ok ? { ok:true, data:r.data } : r;
+  },
+
+  /** Việc hôm nay + chuỗi ngày → { ok:true, data:{ daily, dailyPaid, wallet } }.
+      ⚠️ KHÔNG có route "nhận thưởng": thưởng được cộng ngay lúc việc xong, nên lời gọi
+         này chỉ ĐỌC — trừ một việc, nó **tự cấp bù** khi có việc đã xong mà lượt cộng
+         ví trước đó hỏng giữa đường (`dailyPaid > 0`). Xem Services/Daily.cs.
+      ⚠️ Server cố ý KHÔNG trả về mốc hết hạn nào; đừng tự tính nửa đêm ở client để
+         dựng đồng hồ đếm ngược — đó là thứ cả tính năng này quyết định không làm. */
+  async getDaily(){
+    const r = await this._authed(t => apiGetAuth("/me/daily", t));
     return r.ok ? { ok:true, data:r.data } : r;
   },
 

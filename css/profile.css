@@ -79,6 +79,22 @@
 .suit.on .tick{display:grid;}
 .suits-hint{color:var(--ink-faint);font-size:12.2px;margin:0 0 13px;line-height:1.5;}
 
+/* ============ ĐỘ SÂU LỜI GIẢI THÍCH (js/depth.js) ============
+   ⚠️ Vùng chạm 48px, không phải 44 — 44 là mốc TỐI THIỂU của WCAG 2.5.5 và dự án
+      đã có một ca chập chờn thật vì đặt đúng mốc (quy tắc 10 mục 6 CLAUDE.md). */
+.depthpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;}
+.depth-btn{min-height:48px;cursor:pointer;border:1px solid var(--brd);border-radius:15px;
+  padding:11px 13px;background:rgba(15,23,42,.44);display:flex;flex-direction:column;gap:3px;
+  align-items:flex-start;text-align:left;transition:transform .3s var(--jelly),border-color .2s,box-shadow .2s;}
+.depth-btn:hover{transform:translateY(-3px);border-color:var(--brd-on);}
+.depth-btn .db-nm{font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--ink);}
+.depth-btn .db-age{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--ink-faint);}
+.depth-btn.active{border-color:rgba(192,132,252,.85);background:rgba(40,26,66,.6);
+  box-shadow:0 0 22px -6px rgba(192,132,252,.75);}
+.depth-btn.active .db-nm{color:#e9d7ff;}
+/* Câu nói rõ bậc đang chọn đổi cái gì — tên bậc một mình không đủ để trẻ hiểu. */
+.depth-note{color:var(--ink-faint);font-size:12px;line-height:1.5;margin:11px 0 0;}
+
 /* ============ HÀNH TRÌNH KHÁM PHÁ ============ */
 .route{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;}
 .stop{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 6px 9px;border-radius:14px;
