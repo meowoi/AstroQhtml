@@ -56,7 +56,7 @@ EN_META = {
     "description": "astroQ.org is an interactive 3D STEM learning platform about "
                    "Space, AI and Quantum Physics for children and beginners. Join the "
                    "waitlist to get 500 Purple Meteors and an early-access pass before "
-                   "the 9 August 2026 launch.",
+                   "the 20 August 2026 launch.",
     "og_title": "astroQ.org — Explore the Galaxy of Knowledge",
     "og_description": "An interactive learning platform on Space, AI & Quantum Physics "
                       "for young explorers. Join early and get 500 Purple Meteors.",
@@ -78,7 +78,7 @@ EN_APP_JSONLD = """{
   "operatingSystem": "Web (any modern browser)",
   "browserRequirements": "Requires a browser with HTML5 and WebGL support",
   "inLanguage": ["en", "vi"],
-  "datePublished": "2026-08-09",
+  "datePublished": "2026-08-20",
   "description": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
   "educationalUse": ["Self-study", "Game-based learning", "STEM curriculum supplement"],
   "learningResourceType": ["Interactive Simulation", "Quiz", "Educational Game", "3D Explorer"],

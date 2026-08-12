@@ -9,7 +9,7 @@
   "use strict";
 
   /* Ngày mở cửa chính thức (giờ Việt Nam, UTC+7) — dùng cho đồng hồ đếm ngược */
-  var LAUNCH_AT = new Date("2026-08-09T00:00:00+07:00").getTime();
+  var LAUNCH_AT = new Date("2026-08-20T00:00:00+07:00").getTime();
   var LS_WAITLIST = "astroq-waitlist";      // bản sao dự phòng trên máy khách: [{ email, ts, lang, sent }]
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -22,7 +22,7 @@
       a_crew:"Phi hành đoàn đồng hành",
       a_comet:"Mèo Comet — phi công vũ trụ, linh vật của astroQ.org",
       a_byte:"Robot Byte — trợ lý AI, linh vật của astroQ.org",
-      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 09/08/2026",
+      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 20/08/2026",
       status:"TRẠM ĐANG KHỞI ĐỘNG",
       eyebrow:"PRE-LAUNCH · MISSION 001",
       h1:"Khám Phá Ngân Hà Tri Thức Cùng astroQ.org",
@@ -39,7 +39,7 @@
       wl_label:"Địa chỉ email", wl_ph:"phihanhgia@astroq.org",
       wl_cta:"Nhận 500 Purple Meteors & Vé Sớm 🚀",
       wl_sending:"Đang gửi...",
-      wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào ngày 09/08/2026.",
+      wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào ngày 20/08/2026.",
       mob_title:"Trải nghiệm tốt nhất trên máy tính",
       mob_body:"astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!",
       mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
@@ -74,7 +74,7 @@
       q4:"Purple Meteors là gì?",
       a4:"Purple Meteors (Thiên thạch tím) là đơn vị phần thưởng trong astroQ.org. Người học kiếm Purple Meteors khi hoàn thành quiz, đọc bài và chơi mini-game, rồi dùng để nâng cấp phi thuyền và mở khóa hành tinh mới.",
       q5:"Khi nào astroQ.org ra mắt?",
-      a5:"astroQ.org dự kiến ra mắt chính thức vào ngày 09/08/2026. Người đăng ký waitlist bằng email sẽ nhận vé mời sớm cùng 500 Purple Meteors khởi đầu ngay khi hệ thống mở cửa.",
+      a5:"astroQ.org dự kiến ra mắt chính thức vào ngày 20/08/2026. Người đăng ký waitlist bằng email sẽ nhận vé mời sớm cùng 500 Purple Meteors khởi đầu ngay khi hệ thống mở cửa.",
 
       /* Dải mời sang bản ngôn ngữ kia. Chữ này hiện trên trang TIẾNG ANH cho
          khách được đoán là người Việt — nên nó viết bằng tiếng Việt. */
@@ -91,7 +91,7 @@
       a_crew:"Your companion crew",
       a_comet:"Comet the cat — space pilot, astroQ.org mascot",
       a_byte:"Byte the robot — AI assistant, astroQ.org mascot",
-      title:"astroQ.org — Explore the Galaxy of Knowledge | Launching 9 Aug 2026",
+      title:"astroQ.org — Explore the Galaxy of Knowledge | Launching 20 Aug 2026",
       status:"STATION WARMING UP",
       eyebrow:"PRE-LAUNCH · MISSION 001",
       h1:"Explore the Galaxy of Knowledge with astroQ.org",
@@ -108,7 +108,7 @@
       wl_label:"Email address", wl_ph:"astronaut@astroq.org",
       wl_cta:"Claim 500 Purple Meteors & Early Access 🚀",
       wl_sending:"Sending...",
-      wl_hint:"No spam. You'll only hear from us at the official launch on 9 August 2026.",
+      wl_hint:"No spam. You'll only hear from us at the official launch on 20 August 2026.",
       mob_title:"Best experienced on a computer",
       mob_body:"astroQ has a 3D galaxy map and mini-games that need a wide screen. You can still browse this page on a phone, but open it on a <b>laptop or PC</b> for the full ride!",
       mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
@@ -141,7 +141,7 @@
       q4:"What are Purple Meteors?",
       a4:"Purple Meteors are the reward currency inside astroQ.org. Learners earn them by finishing quizzes, reading articles and playing mini-games, then spend them to upgrade their ship and unlock new planets.",
       q5:"When does astroQ.org launch?",
-      a5:"astroQ.org is scheduled to launch on 9 August 2026. Everyone on the email waitlist gets an early-access pass plus 500 starter Purple Meteors the moment the system opens.",
+      a5:"astroQ.org is scheduled to launch on 20 August 2026. Everyone on the email waitlist gets an early-access pass plus 500 starter Purple Meteors the moment the system opens.",
 
       /* Hiện trên trang TIẾNG VIỆT cho khách quốc tế — nên viết bằng tiếng Anh.
          Mời một người Nhật sang bản tiếng Anh bằng một câu tiếng Việt thì dải

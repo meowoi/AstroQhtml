@@ -282,13 +282,27 @@ with sync_playwright() as pw:
     pg.goto(URL + api_q, wait_until="networkidle")
     pg.eval_on_selector("#waitlist", "e=>e.scrollIntoView({block:'center'})")
     pg.fill("#wl-email", mail)
+    # ⚠️ Chu "Kiem tra hom thu" CO SAN trong #wl-done tu luc tai trang (data-i18n-html
+    #    dung khoa done_body), nen doc chu KHONG chung minh duoc form da gui. Moc that
+    #    phai la mot THAY DOI TRANG THAI: hidden con day truoc khi gui, mat sau khi gui.
+    check("truoc khi gui: the 'da dang ky' con AN",
+          pg.get_attribute("#wl-done", "hidden") is not None)
     pg.click("#wl-submit")
-    pg.wait_for_timeout(4000)
+    # ⚠️ Doi TIN HIEU THAT, dung ngu mot khoang co dinh: Lambda nguoi lanh + SES co the
+    #    lau hon 4s, va moc cung lam phep kiem bao HONG OAN trong khi san pham lam dung
+    #    (do duoc 12/08/2026: Lambda am 1,6s, lan goi dau cua phien >4s).
+    shown = True
+    try:
+        pg.wait_for_selector("#wl-done:not([hidden])", timeout=25000)
+    except Exception:
+        shown = False
     check("khong bi CORS chan (khong loi console)", pg.cerr == [], pg.cerr)
-    check("the 'da dang ky' hien ra tu phan hoi THAT",
-          pg.get_attribute("#wl-done", "hidden") is None)
+    check("the 'da dang ky' hien ra tu phan hoi THAT", shown)
+    # Co CSS/co chu deu KHONG chung minh nguoi dung nhin thay -> do bang is_visible.
+    check("the 'da dang ky' NHIN THAY DUOC (khong chi co chu nam trong DOM)",
+          shown and pg.is_visible("#wl-done"))
     check("bao 'kiem tra hom thu' (SES that su da nhan thu)",
-          "Kiểm tra hòm thư" in pg.inner_text("#wl-done"))
+          shown and "Kiểm tra hòm thư" in pg.inner_text("#wl-done"))
     check("khong loi JS", pg.perr == [], pg.perr)
     b.close()
     # don ban ghi vua tao
