@@ -480,24 +480,11 @@
   applyLang(LANG);
   AstroQ.initLang(applyLang);
 
-  /* ⚠️ Đọc cờ "đã mở bán chưa" rồi truyền vào js/locks.js. Mặc định của locks là
-     `false` (fail-closed) nên nếu lời gọi này hỏng thì trẻ thấy câu "chưa mở bán"
-     — không bao giờ bị mời mua một thứ không mua được.
-     Nạp js/api.js bằng import ĐỘNG: chỉ trang này cần, và nó ~4 KB. */
-  /* ⚠️ `import()` trong script CỔ ĐIỂN giải theo URL của TÀI LIỆU, không phải của
-     script. Trang này luôn nằm ở gốc nên "./js/api.js" ra đúng /js/api.js — nhưng
-     nếu có ngày lab.html được đặt vào một thư mục con thì phải sửa dòng này, đúng
-     lỗi đã giết form waitlist khi trang chủ có thêm bản /en/ (07/08/2026). */
-  (function loadSale(){
-    import("./js/api.js").then(function(m){
-      return m.apiGet ? m.apiGet("/billing/catalog") : null;
-    }).then(function(r){
-      if (r && r.ok && r.data && r.data.saleOpen === true){
-        AstroQLocks.setSaleOpen(true);
-        renderGrid();                     // nhãn thẻ có thể đổi theo
-      }
-    }).catch(function(){ /* giữ fail-closed, không nói gì */ });
-  })();
+  /* ⚠️ TRƯỚC ĐÂY chỗ này gọi `GET /billing/catalog` để biết đã mở bán chưa, rồi
+     truyền vào `AstroQLocks.setSaleOpen()`. Bỏ hẳn 12/08/2026: lời văn của thẻ trả
+     phí nay là bản CHÍNH THỨC (coi như đã mở bán), nên không còn ai đọc cờ đó —
+     giữ lời gọi lại là một vòng mạng không làm gì, đúng bài học `missionsShared()`.
+     Nhờ vậy trang này không gọi API nào cả. */
 })();
 </script>
 </body>

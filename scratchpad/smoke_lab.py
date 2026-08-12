@@ -107,20 +107,32 @@ with sync_playwright() as pw:
     check("khong loi trang", pg.perr == [], "; ".join(pg.perr[:2]))
 
     # ══════════════════════════════════════════════════════ [2] Duong (c): chua mo ban
-    print("\n[2] The tra phi khi CHUA MO BAN — phai noi that, khong moi mua")
+    print("\n[2] The tra phi: noi ro thuoc goi nao va CO duong di that")
     pg.click(".lcard[data-card='float']")
     pg.wait_for_selector("#aq-lock.show", timeout=5000)
     lk = pg.inner_text("#aq-lock")
     check("hop khoa mo ra", pg.is_visible("#aq-lock"))
-    check("noi la CHUA MO BAN", "chưa mở bán" in lk.casefold(), lk[:70].replace("\n", " "))
-    check("noi la DA LAM XONG (khac 'dang duoc xay')",
-          "làm xong" in lk.casefold() and "đang được xây" not in lk.casefold())
-    # Chot chan cua ca duong (c): KHONG duoc co nut dan sang trang gia.
-    go_vis = pg.is_visible("#lk-go")
-    check("KHONG co nut dan sang trang gia (khong ngo cut)", not go_vis,
-          "nut dang hien" if go_vis else "an dung")
-    check("KHONG moi bo me di xem gia", not pg.is_visible("#lk-note"))
-    check("van noi thu nay thuoc goi nao", "Phi Hành Gia" in lk)
+    # ⚠️ DOI PHAT BIEU 12/08/2026: chu du an chot "coi nhu da mo ban roi", nen bien
+    #    the "chua mo ban" da bo. Dieu can bao ve KHONG doi — hop khoa noi that, khong
+    #    hoi thuc mua, va CO mot duong di that su bam duoc — chi doi cau hoi:
+    #    nay the tra phi PHAI co nut dan sang trang gia (truoc day phai KHONG co).
+    check("KHONG con noi 'chua mo ban' (loi van nay la ban CHINH THUC)",
+          "chưa mở bán" not in lk.casefold(), lk[:70].replace("\n", " "))
+    check("noi ro thu nay thuoc goi nao", "Phi Hành Gia" in lk, lk[:70].replace("\n", " "))
+    check("KHONG noi 'dang duoc xay' (thu nay DA lam xong)",
+          "đang được xây" not in lk.casefold())
+    go = pg.locator("#lk-go")
+    check("CO nut dan sang trang gia", go.is_visible())
+    check("nut do tro dung pricing.html",
+          (go.get_attribute("href") or "").endswith("pricing.html"),
+          go.get_attribute("href"))
+    check("co cau nho bo me xem giup (khong hoi thuc tre)",
+          "bố mẹ" in pg.inner_text("#lk-note"), pg.inner_text("#lk-note")[:60])
+    # ⚠️ Van KHONG duoc hoi thuc: day la modal TRE doc, phu huynh moi la nguoi tra tien.
+    _low = lk.casefold()
+    check("KHONG hoi thuc 'mua ngay' / 'mo khoa ngay' / 'nang cap ngay'",
+          not any(w in _low for w in ["mua ngay", "mở khoá ngay", "mở khóa ngay",
+                                     "nâng cấp ngay"]), _low[:70])
     pg.keyboard.press("Escape")
 
     print("\n[2b] The chua dung xong thi noi kieu KHAC (khong phai 'chua mo ban')")
@@ -129,8 +141,8 @@ with sync_playwright() as pw:
     lk2 = pg.inner_text("#aq-lock")
     check("noi la dang duoc xay", "đang được xây" in lk2.casefold(),
           lk2[:60].replace("\n", " "))
-    check("KHONG noi 'chua mo ban' cho thu chua dung xong",
-          "chưa mở bán" not in lk2.casefold())
+    check("the chua dung xong KHONG hua mo bang tien",
+          "vào được ngay" not in lk2.casefold(), lk2[:70].replace("\n", " "))
     pg.keyboard.press("Escape")
     ctx.close()
 

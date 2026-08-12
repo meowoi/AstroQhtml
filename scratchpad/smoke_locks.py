@@ -123,16 +123,16 @@ def main():
         #    dat no giua cau. Ghim dung mot cach viet hoa la phep kiem bao hong oan
         #    ngay lan doi cau chu dau tien — du an da tra gia BA lan vi loai loi nay
         #    (xem quy tac 8 muc 6 cua CLAUDE.md).
-        # ⚠️ Bien the MOI: da lam xong NHUNG chua mo ban. No phai noi du HAI dieu ma
-        #    ba cau kia khong noi duoc — xong roi (khac `soon`) va hom nay khong mua
-        #    duoc (khac `pro`). Bo mot trong hai la hoac hua hao, hoac dan vao ngo cut.
+        # ⚠️ DOI PHAT BIEU 12/08/2026: bien the "chua mo ban" da bo (chu du an chot coi
+        #    nhu da mo ban). Dieu can bao ve van nguyen: hop khoa noi that thu nay
+        #    thuoc goi nao, va KHONG noi kieu "khoa vi chua tra tien".
         check("Tieu de KHONG noi 'da khoa vi chua tra tien'",
               "chưa trả" not in title.casefold(), title)
-        check("Than bai noi ro CHUA MO BAN",
-              "chưa mở bán" in body.casefold(), body[:80])
-        check("Than bai noi ro thu nay DA LAM XONG (khac 'dang duoc xay')",
-              "làm xong" in body.casefold() and "đang được xây" not in body.casefold(),
-              body[:80])
+        check("Tieu de noi ro thuoc goi nao", "Phi Hành Gia" in title, title)
+        check("Than bai KHONG con noi 'chua mo ban'",
+              "chưa mở bán" not in body.casefold(), body[:80])
+        check("Than bai KHONG noi 'dang duoc xay' (thu nay DA lam xong)",
+              "đang được xây" not in body.casefold(), body[:80])
         check("Than bai nhac ten goi", "Phi Hành Gia" in body, body[:70])
         # ⚠️ Phep kiem quan trong nhat ca bo
         low = (title + " " + body + " " + pg.inner_text("#lk-go")).lower()
@@ -141,27 +141,15 @@ def main():
               low[:80])
         check("Co danh sach quyen loi", pg.locator("#lk-feats li").count() >= 3,
               str(pg.locator("#lk-feats li").count()))
-        # ⚠️⚠️ CHOT CHAN CUA DUONG (c), va la phep kiem quan trong nhat cua muc nay:
-        #    chua mo ban thi KHONG duoc co nut dan sang trang gia, va KHONG duoc moi
-        #    bo me di xem gia. Mot nut tro tOi trang dang noi "chua mo ban" la mot
-        #    ngo cut — te hon la khong co nut. Cung nguyen tac da chot cho checkout.html.
-        check("Chua mo ban: KHONG moi bo me di xem gia",
-              not pg.locator("#lk-note").is_visible())
-        check("Chua mo ban: KHONG co nut dan sang trang gia",
-              not pg.locator("#lk-go").is_visible())
-        # Va khi mo ban thi nut PHAI tro lai — khong thi co che ban hang chet cung.
-        pg.keyboard.press("Escape")
-        pg.evaluate("AstroQLocks.setSaleOpen(true)")
-        open_modal(pg, ".lcard[data-card='float']")
+        # ⚠️ The tra phi phai co MOT DUONG DI THAT: nut dan sang pricing.html. Mot hop
+        #    khoa khong co duong ra nao la mot ngo cut — te hon ca mot nut `disabled`.
         go = pg.locator("#lk-go")
-        check("Mo ban roi thi nut hien lai va dan sang pricing.html",
-              go.is_visible() and (go.get_attribute("href") or "").endswith("pricing.html"),
+        check("CO nut dan sang trang gia", go.is_visible())
+        check("nut do tro dung pricing.html",
+              (go.get_attribute("href") or "").endswith("pricing.html"),
               go.get_attribute("href"))
-        check("Mo ban roi thi moi co cau nho bo me xem giup",
-              "bố mẹ" in pg.inner_text("#lk-note"))
-        pg.keyboard.press("Escape")
-        pg.evaluate("AstroQLocks.setSaleOpen(false)")
-        open_modal(pg, ".lcard[data-card='float']")
+        check("Co cau nho bo me xem giup (khong hoi thuc tre)",
+              "bố mẹ" in pg.inner_text("#lk-note"), pg.inner_text("#lk-note")[:60])
 
         # Escape dong + tra tieu diem
         pg.keyboard.press("Escape")
@@ -178,7 +166,7 @@ def main():
               "ASTRONAUT" in pg.inner_text(".lcard[data-card='float'] .lc-tag").upper(),
               pg.inner_text(".lcard[data-card='float'] .lc-tag").strip())
         open_modal(pg, ".lcard[data-card='float']")
-        check("Modal dich sang EN", "not on sale yet" in pg.inner_text("#lk-body"),
+        check("Modal dich sang EN", "plan" in pg.inner_text("#lk-body").casefold(),
               pg.inner_text("#lk-body")[:70])
         pg.keyboard.press("Escape")
         check("0 loi console/pageerror o lab.html", not errs, str(errs[:2]))
