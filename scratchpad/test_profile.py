@@ -331,6 +331,23 @@ def main():
               xp["xpForNext"] == need(xp["level"] + 1) - need(xp["level"]) or xp["level"] >= 50,
               str(xp["xpForNext"]))
         check("Phan tram trong 0..100", 0 <= xp["pct"] <= 100, str(xp["pct"]))
+        # ⚠️⚠️ PHEP KIEM CU CHI DOI 0..100 — qua long, va no da BO LOT mot loi that:
+        #    `Math.Round` lam tron 99,5% thanh **100%**, nen thanh XP bao DAY trong khi
+        #    cap chua doi. Do duoc tren tai khoan that 13/08/2026: XP 2.097 -> cap 6,
+        #    vao 597/600 = 99,5% -> hien 100%. Tre doc ra la "app hong".
+        #    Nay doi DUNG con so, va doi 100% chi xuat hien o cap toi da.
+        _span, _into = xp["xpForNext"], xp["xpInLevel"]
+        _want = 100 if _span <= 0 else int(_into * 100 // _span)
+        check("pct lam tron XUONG, khong lam tron gan nhat",
+              xp["pct"] == _want, f"pct={xp['pct']} muon={_want} ({_into}/{_span})")
+        check("pct == 100 CHI khi da o cap toi da",
+              xp["pct"] < 100 or xp["level"] >= 50 or _span <= 0,
+              f"pct={xp['pct']} cap={xp['level']} into={_into}/{_span}")
+        # Ca bien: XP dung 1 diem truoc moc len cap phai hien 99%, KHONG phai 100%.
+        _edge_into, _edge_span = 597, 600
+        check("bien 597/600 -> 99% (khong phai 100)",
+              int(_edge_into * 100 // _edge_span) == 99,
+              str(int(_edge_into * 100 // _edge_span)))
 
         # ══════════════════════════════════════════════════════════════════
         # [14b] DO SAU LOI GIAI THICH (`depth`) — hai bac, do TRE khai
