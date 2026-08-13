@@ -41,7 +41,15 @@ ITEMS = [
     {"id": "cockpit-violet", "kind": "theme", "price": 90},
     {"id": "frame-steel",    "kind": "frame", "price": 0},
     {"id": "frame-gold",     "kind": "frame", "price": 40},
+    # Loai mon thu ba (them 13/08/2026). Co mat o day de bo do khong con gieo mot
+    # cua hang chi hai loai — mot ban gia mo ta trang thai da loi thoi thi no dang do
+    # mot thu khong con ton tai (bai hoc ban gia `ACH` thieu `levels`).
+    {"id": "decal-none",     "kind": "decal", "price": 0},
+    {"id": "decal-comet",    "kind": "decal", "price": 40},
 ]
+
+KINDS = ["theme", "frame", "decal"]
+DEFAULTS = {"theme": "cockpit-cyan", "frame": "frame-steel", "decal": "decal-none"}
 
 
 def check(label, cond, detail=""):
@@ -81,12 +89,17 @@ def seed_user(ctx, meteors=200, ship="", equipped=None):
         "localStorage.setItem('astroq-asteroids','%d');" % (json.dumps(u), meteors))
 
 
-def stub(ctx, meteors=200, owned=None, equipped=None, ship="", buy_ok=True):
-    shop = {"items": ITEMS, "kinds": ["theme", "frame"],
-            "defaults": {"theme": "cockpit-cyan", "frame": "frame-steel"},
+def stub(ctx, meteors=200, owned=None, equipped=None, ship="", buy_ok=True, late=False):
+    """Gieo ban gia `AstroQAuth`.
+
+    `late=True` gieo no trong mot `<script type="module">` THAT SU, tuc chay sau khi
+    tai lieu parse xong — dung nhip cua `js/firebase-auth.js`. Dung cho muc [10];
+    xem ly do day du o do. Cung mot ban gia cho ca hai nhip, khong chep hai ban.
+    """
+    shop = {"items": ITEMS, "kinds": KINDS, "defaults": DEFAULTS,
             "owned": owned or [], "equipped": equipped or {}, "ship": ship,
             "wallet": {"meteors": meteors}}
-    ctx.add_init_script("""(() => {
+    body = """(() => {
       const SHOP = %s, BUY_OK = %s;
       const push = (k, b) => {
         let a = [];
@@ -132,7 +145,23 @@ def stub(ctx, meteors=200, owned=None, equipped=None, ship="", buy_ok=True):
       Object.defineProperty(window, 'AstroQAuth', {
         configurable: true, get: () => v, set: () => {}
       });
-    })();""" % (json.dumps(shop), "true" if buy_ok else "false"))
+    })();""" % (json.dumps(shop), "true" if buy_ok else "false")
+
+    if not late:
+        ctx.add_init_script(body)
+        return
+
+    ctx.add_init_script("""(() => {
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.textContent = %s;
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'interactive' && !window.__lateInj) {
+          window.__lateInj = true;
+          document.head.appendChild(s);
+        }
+      });
+    })();""" % json.dumps(body))
 
 
 def calls(pg, key):
@@ -169,7 +198,12 @@ with sync_playwright() as pw:
     body = pg.inner_text("#kinds")
     check("hien DUNG gia gieo lech (777)", "777" in body, body[:80].replace("\n", " · "))
     check("mon gia 0 hien 'Co san'", "Có sẵn" in body)
-    check("hai khoi: den + khung", len(pg.query_selector_all("#kinds .panel")) == 2)
+    # ⚠️ Suy tu `KINDS` da gieo, dung ghim con so. Ban dau dong nay ghim `== 2` nen
+    #    them loai mon thu ba la no bao hong dung luc trang ve dung — loai loi "phep
+    #    kiem bao ve trang thai cu" da lap nhieu lan trong du an.
+    check("moi loai mon mot khoi",
+          len(pg.query_selector_all("#kinds .panel")) == len(KINDS),
+          "%d khoi / %d loai" % (len(pg.query_selector_all("#kinds .panel")), len(KINDS)))
     # Mon dang deo: nut bi vo hieu (khong bam duoc de mua/deo lai)
     cur = pg.query_selector('.citem.on .cbtn')
     check("mon dang dung co nut vo hieu", cur is not None and cur.get_attribute("disabled") is not None)
@@ -308,6 +342,50 @@ with sync_playwright() as pw:
           pg.inner_text(".shop-rule")[:50])
     check("nhan nut dich", "Buy" in pg.inner_text("#kinds"), "")
     check("ten mon dich", "Cyan Lights" in pg.inner_text("#kinds"))
+    check("0 loi trang", not pg.perr, str(pg.perr[:1]))
+    ctx.close()
+
+    # ══════════════════════════════════════════ [10] SDK NAP MUON
+    # ⚠️⚠️ PHEP KIEM NAY SINH RA TU MOT LOI THAT DA SONG TREN BAN THAT: cua hang
+    # hien 0 mon voi MOI nguoi da dang nhap. `js/firebase-auth.js` la `type="module"`
+    # nen luon chay SAU khoi script co dien cua trang; ban dau trang goi `load()`
+    # thang o cuoi file → `window.AstroQAuth` chua ton tai → nhanh "chua dang nhap"
+    # → 0 mon, va KHONG BAO GIO hoi lai. Nguoi dung thay dai "Ban can dang nhap"
+    # ngay canh so du THAT cua chinh minh.
+    #
+    # ⚠️ VA CHINH BO NAY DA MU VOI NO: 9 muc tren deu gieo ban gia bang
+    #    `add_init_script`, tuc `AstroQAuth` co san TRUOC khi trang chay — mot thu tu
+    #    KHONG BAO GIO xay ra o ban that. Muc nay gieo MUON (trong mot
+    #    `<script type="module">` that su) de do dung nhip that.
+    print("\n[10] SDK nap MUON (nhip that cua module ES) — cua hang van phai hien mon")
+    ctx, pg = mk(br)
+    seed_user(ctx)
+    stub(ctx, late=True)
+    pg.goto(BASE + "/shop.html", wait_until="load")
+    # ⚠️ BOC PHEP CHO — quy tac 6 muc 6 CLAUDE.md. Dung `wait_for_selector` tran thi
+    #    khi loi quay lai, bo do NEM NGOAI LE va dung han: in ra "0 hong" va khong co
+    #    dong ket qua nao, doc y het "phep kiem mu". Da gap dung canh do luc thu pha
+    #    hoai muc nay.
+    try:
+        pg.wait_for_selector("#kinds .citem", timeout=9000)
+    except Exception:
+        st = pg.evaluate("() => ({auth: !!window.AstroQAuth,"
+                         " banner: (document.getElementById('offline')||{}).className || '',"
+                         " txt: ((document.getElementById('offline-txt')||{}).textContent||'').slice(0,50)})")
+        check("SDK nap muon van hien du mon", False,
+              "0 mon sau 9s · AstroQAuth=%s · dai nhac=%r" % (st["auth"], st["txt"]))
+        check("KHONG con dai 'can dang nhap'", False, "dai nhac: " + str(st["banner"]))
+        check("0 loi trang", not pg.perr, str(pg.perr[:1]))
+        ctx.close()
+        br.close()
+        print("\n=== KET QUA: %d dat / %d hong ===" % (dat, hong))
+        sys.exit(1)
+    pg.wait_for_timeout(400)
+    n_late = pg.locator("#kinds .citem").count()
+    check("SDK nap muon van hien du mon", n_late == len(ITEMS),
+          "%d / %d mon" % (n_late, len(ITEMS)))
+    check("KHONG con dai 'can dang nhap'", not pg.locator("#offline").is_visible(),
+          pg.inner_text("#offline")[:60])
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
     ctx.close()
 

@@ -45,7 +45,7 @@
 
   <div class="hero">
     <h1 data-i18n="h1">Kho Trang Trí</h1>
-    <p class="hero-sub" data-i18n="sub">Buồng lái là của bạn — chọn tông đèn và khung thẻ ID bạn thích.</p>
+    <p class="hero-sub" data-i18n="sub">Buồng lái là của bạn — chọn tông đèn, khung thẻ ID và hình dán bạn thích.</p>
   </div>
 
   <!-- ⚠️ NÓI THẲNG LUẬT NGAY ĐẦU TRANG: ở đây chỉ có đồ trang trí. Trẻ (và phụ
@@ -82,7 +82,7 @@
   var I18N = {
     vi: {
       back:"Về Trung Tâm Điều Hướng", tt_name:"Thiên thạch tím",
-      h1:"Kho Trang Trí", sub:"Buồng lái là của bạn — chọn tông đèn và khung thẻ ID bạn thích.",
+      h1:"Kho Trang Trí", sub:"Buồng lái là của bạn — chọn tông đèn, khung thẻ ID và hình dán bạn thích.",
       rule:"Ở đây chỉ có đồ trang trí. Không có món nào giúp bạn làm quiz dễ hơn hay chơi game giỏi hơn.",
       tag_ship:"PHI THUYỀN", ship_h:"Tên phi thuyền",
       ship_hint:"Đặt tên cho con tàu của bạn. Nó hiện ở buồng lái. Miễn phí, đổi lúc nào cũng được.",
@@ -91,14 +91,16 @@
       buy:"Mua", equip:"Dùng", using:"Đang dùng", owned:"Đã có",
       free:"Có sẵn", need:"Cần thêm {n} ☄️",
       bought:"Đã mua {n} — đang dùng luôn!", equipped:"Đang dùng {n}",
+      loading:"Đang mở kho trang trí…",
       err_net:"Không kết nối được máy chủ. Thử lại sau nhé.",
+      empty:"Kho trang trí đang trống. Máy chủ chưa gửi món nào về — thử lại sau nhé.",
       err_guest:"Bạn cần <a href=\"landing-app.html\">đăng nhập</a> để mua và lưu đồ trang trí.",
       err_money:"Chưa đủ Thiên thạch tím. Làm quiz đạt hoặc chơi game để kiếm thêm nhé!",
       title:"AstroQ — Kho Trang Trí"
     },
     en: {
       back:"Back to Navigation Hub", tt_name:"Purple Meteor",
-      h1:"Decoration Deck", sub:"The cockpit is yours — pick the light colour and ID frame you like.",
+      h1:"Decoration Deck", sub:"The cockpit is yours — pick the lights, ID frame and decal you like.",
       rule:"Decorations only. Nothing here makes quizzes easier or games easier to win.",
       tag_ship:"SHIP", ship_h:"Ship name",
       ship_hint:"Name your ship. It shows up in the cockpit. Free, change it any time.",
@@ -107,7 +109,9 @@
       buy:"Buy", equip:"Use", using:"In use", owned:"Owned",
       free:"Included", need:"Need {n} more ☄️",
       bought:"Bought {n} — now in use!", equipped:"Now using {n}",
+      loading:"Opening the decoration deck…",
       err_net:"Can't reach the server. Try again later.",
+      empty:"The decoration deck is empty. The server sent no items — try again later.",
       err_guest:"You need to <a href=\"landing-app.html\">sign in</a> to buy and keep decorations.",
       err_money:"Not enough Purple Meteors. Pass a quiz or play a game to earn more!",
       title:"AstroQ — Decoration Deck"
@@ -117,11 +121,38 @@
 
   var toast = AstroQ.makeToast("toast", 2600);
 
+  /* Icon theo LOẠI món. Bảng chứ không phải ternary hai nhánh: loại thứ ba sẽ lặng
+     lẽ nhận icon của loại thứ hai, và đó là lỗi không ai thấy. `🎁` là lưới an toàn
+     cho loại mới chưa khai — hiện một cái gì đó còn hơn hiện `undefined`. */
+  var KIND_IC = { theme:"💡", frame:"🖼️", decal:"✨" };
+
   /* Trạng thái: GIÁ và KHO ĐỒ đều do server trả — trang này không có bản sao nào. */
   var SHOP = { items:[], kinds:[], owned:[], equipped:{}, ship:"", ready:false };
   var busy = false;
 
   function auth(){ return window.AstroQAuth; }
+
+  /* ⚠️⚠️ CHỜ SDK RỒI MỚI KẾT LUẬN "chưa đăng nhập" — ĐÂY LÀ LỖI ĐÃ LÀM CỬA HÀNG
+     RỖNG VỚI MỌI NGƯỜI DÙNG THẬT, và nó im lặng tuyệt đối.
+     `js/firebase-auth.js` là `type="module"` nên **luôn chạy SAU** khối script cổ
+     điển này (module bị hoãn theo đặc tả). Bản đầu gọi `load()` thẳng ở cuối file →
+     `window.AstroQAuth` chưa tồn tại → nhánh `err_guest` → `SHOP.items` rỗng →
+     `render()` vẽ 0 khối, và **không bao giờ hỏi lại**. Người đã đăng nhập mở trang
+     ra thấy đúng một dải "Bạn cần đăng nhập" cạnh số dư THẬT của chính mình.
+     ⚠️ `smoke_shop.py` mù với lỗi này vì nó gieo bản giả `AstroQAuth` bằng
+     `add_init_script` — có sẵn TRƯỚC khi trang chạy, tức nó đo một thứ tự KHÔNG BAO
+     GIỜ xảy ra ở bản thật. Đã thêm mục [9] gieo MUỘN để chặn đường quay lại.
+     Cùng khuôn `waitAuth` của `js/progress.js` và khối chờ ở `profile.html`. */
+  function whenAuth(ms, cb){
+    var a = auth();
+    if(a && a.getShop){ cb(a); return; }
+    var t0 = Date.now();
+    var timer = setInterval(function(){
+      var x = auth();
+      if(x && x.getShop){ clearInterval(timer); cb(x); }
+      else if(Date.now() - t0 > ms){ clearInterval(timer); cb(null); }
+    }, 60);
+  }
 
   function opId(){
     /* Mã một lượt mua, sinh MỘT LẦN rồi giữ nguyên khi gửi lại: gửi lại cùng mã
@@ -135,7 +166,12 @@
   }
   function has(id){ return SHOP.owned.indexOf(id) >= 0 || priceOf(id) === 0; }
 
+  /* Giữ KHOÁ đang hiện, không giữ chuỗi đã dịch: đổi VI/EN giữa chừng thì dải nhắc
+     phải dịch theo. Bản đầu đoán lại khoá bằng `SHOP.ready ? …` — một phép đoán sẽ
+     nói sai ngay khi có trạng thái thứ ba (đang tải). */
+  var curBanner = null;
   function banner(msgKey){
+    curBanner = msgKey || null;
     var el = $("offline");
     if(!msgKey){ el.classList.remove("show"); return; }
     $("offline-txt").innerHTML = t(msgKey);
@@ -156,7 +192,7 @@
       sec.innerHTML =
         '<span class="panel-tag"><span class="led"></span><span>' +
           AstroQ.esc(kind.toUpperCase()) + '</span></span>' +
-        '<h2><span class="ic" aria-hidden="true">' + (kind==="theme" ? "💡" : "🖼️") + '</span>' +
+        '<h2><span class="ic" aria-hidden="true">' + (KIND_IC[kind] || "🎁") + '</span>' +
           '<span>' + AstroQ.esc(AstroQCos.kindName(kind, LANG)) + '</span></h2>' +
         '<div class="cgrid">' + items.map(function(it){
           var mine = has(it.id), on = (it.id === cur);
@@ -210,11 +246,20 @@
   }
 
   function load(){
-    var a = auth();
-    if(!a || !a.getShop){ banner("err_guest"); render(); return; }
-    a.getShop().then(function(r){
-      if(r && r.ok){ SHOP.ready = true; banner(null); absorb(r.data); }
-      else banner(r && r.reason === "auth" ? "err_guest" : "err_net");
+    /* Chưa biết gì thì nói "đang tải", ĐỪNG nói "chưa đăng nhập": lúc này câu đó
+       mới chỉ là phỏng đoán, mà nó lại là câu đổ lỗi cho người đọc. */
+    banner("loading");
+    whenAuth(2500, function(a){
+      if(!a){ banner("err_guest"); render(); return; }
+      a.getShop().then(function(r){
+        if(r && r.ok){
+          SHOP.ready = true; banner(null); absorb(r.data);
+          /* Đọc được server mà bảng món rỗng thì NÓI RA. Một trang trắng không có
+             lời giải thích nào đọc ra thành "app hỏng" — đúng cảnh đã xảy ra. */
+          if(!SHOP.items.length) banner("empty");
+        }
+        else banner(r && r.reason === "auth" ? "err_guest" : "err_net");
+      });
     });
   }
 
@@ -262,15 +307,19 @@
   }
 
   function saveShip(){
-    var a = auth();
     var v = ($("ship-in").value || "").trim();
-    if(!a || !a.updateProfile){ banner("err_guest"); return; }
-    a.updateProfile({ ship: v }).then(function(r){
-      if(r && r.ok){
-        SHOP.ship = v;
-        AstroQCos.absorb(SHOP.equipped, v);
-        toast(v ? t("ship_saved").replace("{n}", v) : t("ship_cleared"), "ok");
-      } else toast(t("err_net"), "bad");
+    /* Ô tên tàu là markup TĨNH nên bấm được ngay từ khung hình đầu — tức trẻ có thể
+       bấm Lưu trước khi SDK kịp nạp. Phải chờ như `load()`, không thì nó nhận một
+       câu "cần đăng nhập" sai. */
+    whenAuth(2500, function(a){
+      if(!a || !a.updateProfile){ banner("err_guest"); return; }
+      a.updateProfile({ ship: v }).then(function(r){
+        if(r && r.ok){
+          SHOP.ship = v;
+          AstroQCos.absorb(SHOP.equipped, v);
+          toast(v ? t("ship_saved").replace("{n}", v) : t("ship_cleared"), "ok");
+        } else toast(t("err_net"), "bad");
+      });
     });
   }
 
@@ -279,7 +328,7 @@
     document.title = t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
-    if($("offline").classList.contains("show")) banner(SHOP.ready ? "err_net" : "err_guest");
+    if(curBanner) banner(curBanner);
     render();     // chữ do JS sinh không được applyTexts dịch → vẽ lại
   }
 
