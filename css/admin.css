@@ -185,7 +185,17 @@
 .ad-card.busy .plot{opacity:.45;transition:opacity .2s;}
 
 /* ============ NÉT VẼ (js/viz.js gắn class, giá trị ở đây) ============ */
-.viz{display:block;overflow:visible;}
+/* ⚠️⚠️ `.viz` LÀ CHÍNH THẺ `<svg>` (xem `mount()` ở js/viz.js), nên `overflow` ở đây
+   GHI ĐÈ mặc định `svg:root{overflow:hidden}` của trình duyệt. Bản cũ để `visible`,
+   và ngày 13/08/2026 nó biến một lỗi thang đo thành một lỗi CHE MẤT NỘI DUNG: một
+   đường tí hon nhận giá trị −613 vẽ ra hình cao ~11.000px, trải tím kín cả trang và
+   che hết chữ bên dưới.
+   Gốc đã chữa ở `js/viz.js` (thang ôm cả số âm + kẹp toạ độ), nhưng giữ `hidden` làm
+   LỚP THỨ HAI: một biểu đồ vẽ sai thì tệ nhất cũng chỉ xấu trong khung của nó, không
+   bao giờ được phép nuốt phần còn lại của trang.
+   ⚠️ Không đụng tới tooltip: `.viz-tip` là một `<div>` nằm trong `.plot`, KHÔNG nằm
+      trong svg — nên nó vẫn tràn ra ngoài khung biểu đồ như cũ. */
+.viz{display:block;overflow:hidden;}
 
 .viz-grid line{stroke:var(--viz-grid);stroke-width:1;}           /* hairline LIỀN */
 .viz-ytick,.viz-xtick text{

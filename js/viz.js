@@ -295,7 +295,11 @@
     var all = series.reduce(function(a, s){ return a.concat(s.values || []); }, []);
     if (!labels.length || !all.length){ return empty(box, cfg.emptyMsg || "Chưa có số liệu."); }
 
+    /* Cùng bài học với `spark()` (13/08/2026): thang chỉ tính theo `max` thì một giá
+       trị ÂM cho ra toạ độ ngoài khung, và `.viz` khai `overflow:visible` nên nó vẽ
+       đè lên cả trang. Ở đây thang luôn ôm vạch 0 và giá trị nhỏ nhất. */
     var max = niceMax(Math.max.apply(null, all.concat([0])));
+    var lo  = Math.min(0, Math.min.apply(null, all.concat([0])));
     var h = cfg.h || 190;
 
     mount(box, h, function(svg, w){
@@ -306,13 +310,28 @@
 
       var stepX = labels.length > 1 ? plotW / (labels.length - 1) : 0;
       var X = function(i){ return PAD.l + (labels.length > 1 ? i * stepX : plotW/2); };
-      var Y = function(v){ return h - PAD.b - (max ? (v/max) * plotH : 0); };
+      var rng = (max - lo) || 1;
+      var Y = function(v){
+        var y = h - PAD.b - ((v - lo)/rng) * plotH;
+        return y < 0 ? 0 : (y > h ? h : y);   // lưới an toàn: NaN/Infinity không ra ngoài khung
+      };
 
       series.forEach(function(s){
         var vals = s.values || [], d = "";
         vals.forEach(function(v, i){ d += (i ? "L" : "M") + X(i) + "," + Y(v); });
         // Vùng tô là MỘT LỚP RỬA ~10%, không phải khối đặc — độ mờ khai ở CSS.
-        var area = "M" + X(0) + "," + Y(0) + d.slice(1) + "L" + X(vals.length-1) + "," + Y(0) + "Z";
+        /* ⚠️⚠️ PHẢI CÓ "L" NGĂN GIỮA — ĐÂY LÀ GỐC THẬT CỦA VỆT TÍM TRẢI KÍN TRANG.
+           `d` bắt đầu bằng "M<x>,<y>", nên `d.slice(1)` chỉ bỏ CHỮ "M" và để lại
+           "<x>,<y>L…". Ghép thẳng vào sau toạ độ đáy là hai con số DÍNH LIỀN nhau:
+           `"M40,164" + "40,164L…"` → **"M40,16440,164L…"** — trình duyệt đọc ra
+           y = **16.440px**. Hộp bao của hình vì thế cao hơn khung hàng nghìn pixel,
+           và `.viz` (chính thẻ svg) từng khai `overflow:visible` nên nó vẽ đè lên
+           toàn bộ phần trang bên dưới.
+           ⚠️ Lỗi này CÓ SẴN ở cả hai chỗ vẽ vùng tô và im lặng suốt: đường viền vẫn
+              đúng (nó dùng `d` nguyên vẹn), chỉ lớp tô 10% là hỏng — nên nó chỉ lộ
+              ra khi có một giá trị đủ lớn để kéo hình đi xa. */
+        var area = "M" + X(0) + "," + Y(0) + "L" + d.slice(1) +
+                   "L" + X(vals.length-1) + "," + Y(0) + "Z";
         svg.appendChild(el("path", { d: area, class: "viz-area " + (s.cls || "s1") }));
         svg.appendChild(el("path", { d: d, class: "viz-line " + (s.cls || "s1") }));
         // Điểm cuối: bán kính 4 + VÒNG 2px màu nền, để nó đọc được ở chỗ chồng lên đường.
@@ -461,7 +480,7 @@
       labels.forEach(function(lab, i){
         var v = Number(values[i]) || 0;
         var x = PAD.l + i*slot + (slot - bw)/2;
-        var bh = max ? (v/max) * plotH : 0;
+        var bh = max ? Math.min(plotH, (v/max) * plotH) : 0;
         var g = el("g");
         if (v > 0)
           g.appendChild(el("path", {
@@ -588,20 +607,39 @@
     var min = Math.min.apply(null, vals);
     var h = cfg.h || 26;
 
-    // Chuỗi phẳng tuyệt đối (thường là toàn 0 vì nhật ký chưa chảy) thì vẽ đường
-    // giữa khung, KHÔNG chia cho 0.
-    var span = max > 0 ? max : 1;
+    /* ⚠️⚠️ THANG ĐO PHẢI ÔM CẢ SỐ ÂM — ĐÂY LÀ LỖI ĐÃ TRẢI TÍM CHE KÍN CẢ TRANG.
+       Bản cũ: `span = max > 0 ? max : 1`, và `min` thì tính ra rồi **không ai dùng**.
+       Ngày 13/08/2026 chuỗi "tt trao mỗi ngày" nhận giá trị **−613** (cửa hàng ghi số
+       âm vào nhật ký), nên max = 0 → span = 1 → `Y(−613) = h−3 + 613·(h−8)` ≈
+       **11.000px**. Vùng tô kéo dài 11.000px xuống dưới, và vì `.viz` (chính thẻ
+       `<svg>`) khai `overflow:visible` nên nó vẽ đè lên toàn bộ phần trang bên dưới.
+       Nay thang chạy từ `min(0,min)` tới `max(0,max)`: số âm nằm dưới vạch 0, số
+       dương nằm trên, và không giá trị nào ra ngoài khung được.
+       ⚠️ KẸP `Y` là lưới an toàn thứ hai, cố ý giữ dù đã sửa thang: dữ liệu `NaN`
+          hoặc `Infinity` vẫn cho ra toạ độ rác, mà một hình vẽ nổ ra ngoài khung là
+          lỗi che mất nội dung THẬT của trang chứ không chỉ là một biểu đồ xấu. */
+    var lo = Math.min(0, min), hi = Math.max(0, max);
+    var span = (hi - lo) || 1;
 
     mount(box, h, function(svg, w){
       var n = vals.length;
-      var X = function(i){ return n > 1 ? 1 + i * (w - 2) / (n - 1) : w/2; };
-      var Y = function(v){ return h - 3 - (v/span) * (h - 8); };
+      // Chừa 3px mỗi bên cho CHẤM CUỐI (r = 2.5): từ 13/08/2026 `.viz` cắt phần vẽ
+      // ra ngoài khung, nên chấm đặt sát mép sẽ bị xén mất một nửa.
+      var X = function(i){ return n > 1 ? 3 + i * (w - 6) / (n - 1) : w/2; };
+      var Y = function(v){
+        var y = h - 3 - ((v - lo)/span) * (h - 8);
+        return y < 0 ? 0 : (y > h ? h : y);
+      };
 
       var d = "";
       vals.forEach(function(v, i){ d += (i ? "L" : "M") + X(i) + "," + Y(v); });
 
       svg.appendChild(el("path", {
-        d: "M" + X(0) + "," + (h-1) + d.slice(1) + "L" + X(n-1) + "," + (h-1) + "Z",
+        // Vùng tô đo từ VẠCH 0, không phải đáy khung: có số âm thì phần dưới vạch 0
+        // phải tô xuống, không thì hình nói sai dấu.
+        // Ngăn "L" bắt buộc — xem cảnh báo cùng chỗ ở `line()`.
+        d: "M" + X(0) + "," + Y(0) + "L" + d.slice(1) +
+           "L" + X(n-1) + "," + Y(0) + "Z",
         class: "viz-area " + (cfg.cls || "s1")
       }));
       svg.appendChild(el("path", { d: d, class: "viz-spark " + (cfg.cls || "s1") }));
