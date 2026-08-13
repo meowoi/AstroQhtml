@@ -1124,6 +1124,20 @@ for f in sorted(os.listdir(ROOT)):
 # kiem phia sau, ma nhin output thi tuong la "chay xong". Chu co dau chi duoc nam
 # trong DIEU KIEN, khong nam trong nhan.
 print("\n=== [7b] Dashboard: 6 card, 3 khu moi ===")
+
+# ⚠️ BANG THONG KE PHAI TU DAT `text-align`, vi no NAM TRONG `.hero` — noi khai
+#    `text-align:center`, va chu thi thua huong. Thieu mot dong nay thi MOI khoi hai
+#    dong (so tren, nhan duoi) canh giua theo dong DAI HON, tuc moi khoi mot mep trai.
+#    Do duoc truoc khi sua: o "0%" lech 37px · o "Ho so" +25px · o "Thanh tich" -31px
+#    · khoi XP -33px. Sau khi sua: ca bay khoi lech 0px (do o desktop + 390px + EN).
+#    Phep kiem tinh nay chi canh dung mot dong de nguoi don dep sau khong go no.
+_dash_css = strip_comments(rd("css/dashboard.css"))
+_sh_rule = re.search(r'\.stats-hud\{[^}]*\}', _dash_css)
+check("[7b] bang Thong Ke tu dat text-align (vi nam trong .hero canh giua)",
+      bool(_sh_rule) and "text-align:left" in _sh_rule.group(0),
+      (_sh_rule.group(0)[:70] if _sh_rule else "khong thay rule .stats-hud"))
+check("[7b] .hero VAN canh giua (khong pha lay)",
+      bool(re.search(r'\.hero\{[^}]*text-align:center', _dash_css)))
 for key, mod in (("mission_title", "MOD-04"), ("lab_title", "MOD-05"),
                  ("codex_title", "MOD-06")):
     check(f"dashboard.html: co khoa i18n '{key}'", key in dash)

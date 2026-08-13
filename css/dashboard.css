@@ -100,7 +100,19 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes barFlow{from{background-position:0 0;}to{background-position:200% 0;}}
 
-.stats-hud{position:relative;z-index:1;margin:26px auto 0;width:min(880px,100%);
+/* ⚠️⚠️ ĐẶT LẠI `text-align` Ở ĐÂY, ĐỪNG DỰA VÀO MẶC ĐỊNH — và đây là lỗi ĐO ĐƯỢC,
+   không phải chuyện thẩm mỹ. `.hero` khai `text-align:center` và bảng này nằm TRONG
+   nó, nên chữ thừa hưởng canh giữa; mọi khối hai dòng (số trên, nhãn dưới) vì thế
+   canh giữa theo dòng DÀI HƠN, tức mỗi khối một mép trái.
+   Đo được trước khi sửa: ô "0%" lệch **37px** (nhãn "ĐỘ CHÍNH XÁC QUIZ" dài mà số
+   ngắn) · ô "Hồ sơ" +25px · ô "Thành tích" −31px · khối XP −33px. Bốn khối xếp
+   trong một bảng mà mỗi khối một mép thì đọc ra như bố cục hỏng — chủ dự án bắt được
+   ở ô "0%", chỗ lệch nhiều nhất.
+   ⚠️ Chữa ở CẤP BẢNG, không vá từng khối: vá lẻ thì khối thứ năm thêm sau lại lệch,
+      và người thêm nó không có cách nào biết. Mọi thứ trong bảng này vốn canh trái;
+      thứ cần canh giữa đều đang dùng flex nên không phụ thuộc `text-align`.
+   Sau khi sửa: cả bốn khối lệch **0px**, đo ở desktop · điện thoại 390px · bản EN. */
+.stats-hud{position:relative;z-index:1;margin:26px auto 0;width:min(880px,100%);text-align:left;
   display:grid;grid-template-columns:1.12fr 1fr;gap:16px;padding:20px 18px 18px;border-radius:20px;
   border:1px solid rgba(var(--neon-rgb),.32);
   background:linear-gradient(180deg, rgba(11,15,25,.62), rgba(13,19,34,.5));
@@ -216,7 +228,11 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   box-shadow:0 12px 26px -14px rgba(0,0,0,.7), 0 0 22px -6px var(--tile-glow);}
 .stat-tile .st-ic{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:19px;
   color:var(--tile-c);background:var(--tile-bg);border:1px solid var(--tile-brd);box-shadow:inset 0 0 14px -6px var(--tile-c);}
-.stat-tile .st-body{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
+/* `flex:1` để nhãn được dùng hết chỗ còn lại trước khi phải cắt bằng ellipsis —
+   khối này vốn co theo nội dung nên nhãn dài bị cắt sớm hơn cần thiết.
+   (Canh trái do `.stats-hud` lo — xem ghi chú ở đó.) */
+.stat-tile .st-body{display:flex;flex-direction:column;line-height:1.15;
+  min-width:0;flex:1;}
 .stat-tile .st-val{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;}
 .stat-tile .st-lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tile-time{--tile-c:#38bdf8;--tile-bg:rgba(var(--neon-rgb),.14);--tile-brd:rgba(var(--neon-rgb),.42);--tile-glow:rgba(var(--neon-rgb),.6);}
