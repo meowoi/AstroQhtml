@@ -1,6 +1,14 @@
 /* dashboard.css - CSS rieng cua dashboard.html (dung chung: css/common.css) */
 /* ---- Tokens ---- */
-:root{--glass:rgba(16,26,60,0.55);--glass-strong:rgba(12,20,50,0.78);--glass-brd:rgba(150,180,255,0.18);--glass-brd-strong:rgba(160,190,255,0.4);--sun:#ffcf6b;--sun-warm:#ff9d3d;--accent:#5fd3ff;--accent-2:#8f7bff;--good:#63e6a8;--shadow-soft:0 18px 50px -18px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.4);--font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;--font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;--jelly:cubic-bezier(.34,1.56,.64,1);}
+:root{--glass:rgba(16,26,60,0.55);--glass-strong:rgba(12,20,50,0.78);--glass-brd:rgba(150,180,255,0.18);--glass-brd-strong:rgba(160,190,255,0.4);--sun:#ffcf6b;--sun-warm:#ff9d3d;--accent:#5fd3ff;--accent-2:#8f7bff;--good:#63e6a8;--shadow-soft:0 18px 50px -18px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.4);--font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;--font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;--jelly:cubic-bezier(.34,1.56,.64,1);
+  /* ⚠️ NEON CUA BUONG LAI PHAI THEO TONG DEN TRE CHON.
+     13 cho trong file nay tung go cung `rgba(var(--neon-rgb),…)`, ma css/cockpit.css chi
+     ghi de `--accent/--accent-2/--cyan/--purple` — nen doi den xong thi vien, goc
+     neon va quang sang VAN mau cyan. Chu du an bat duoc dung chuyen do.
+     `rgba()` khong nhan bien mau hex, nen phai giu rieng bo ba RGB. Gia tri mac
+     dinh la dung mau cu (56,189,248) de tong `cockpit-cyan` khong doi mot pixel. */
+  --neon-rgb:56,189,248;
+  --neon-hi-rgb:120,220,255;}
 html,body{min-height:100%;}
 body{min-height:100vh;overflow-x:hidden;background:#060c22;}
 /* NỀN: ảnh khoang lái phủ kín màn hình.
@@ -66,9 +74,9 @@ a{text-decoration:none;}
 .lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
 .user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);
   transition:border-color .18s,box-shadow .18s,transform .12s;}
-.user:hover{border-color:rgba(125,211,252,.7);box-shadow:0 0 18px -6px rgba(56,189,248,.8);}
+.user:hover{border-color:rgba(125,211,252,.7);box-shadow:0 0 18px -6px rgba(var(--neon-rgb),.8);}
 .user:active{transform:scale(.97);}
-.user .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(56,189,248,.4);}
+.user .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(var(--neon-rgb),.4);}
 .user .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 .user .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:5px;}
 .user .meta .nm{font-family:var(--font-display);font-weight:600;font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -94,14 +102,14 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 
 .stats-hud{position:relative;z-index:1;margin:26px auto 0;width:min(880px,100%);
   display:grid;grid-template-columns:1.12fr 1fr;gap:16px;padding:20px 18px 18px;border-radius:20px;
-  border:1px solid rgba(56,189,248,.32);
+  border:1px solid rgba(var(--neon-rgb),.32);
   background:linear-gradient(180deg, rgba(11,15,25,.62), rgba(13,19,34,.5));
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
-  box-shadow:0 26px 62px -26px rgba(0,0,0,.78), 0 0 46px -14px rgba(56,189,248,.4), inset 0 0 32px -18px rgba(120,220,255,.6);}
+  box-shadow:0 26px 62px -26px rgba(0,0,0,.78), 0 0 46px -14px rgba(var(--neon-rgb),.4), inset 0 0 32px -18px rgba(var(--neon-hi-rgb),.6);}
 @media(max-width:640px){.stats-hud{grid-template-columns:1fr;}}
 .stats-hud .panel-tag{position:absolute;top:-10px;left:20px;display:inline-flex;align-items:center;gap:6px;
   font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
-  background:#0b0f19;border:1px solid rgba(56,189,248,.42);padding:3px 10px;border-radius:999px;box-shadow:0 0 14px rgba(56,189,248,.35);}
+  background:#0b0f19;border:1px solid rgba(var(--neon-rgb),.42);padding:3px 10px;border-radius:999px;box-shadow:0 0 14px rgba(var(--neon-rgb),.35);}
 .stats-hud .panel-tag .led{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1.6s steps(1,end) infinite;}
 
 /* --- Cột trái: Tiến trình hành tinh / thiên hà --- */
@@ -109,7 +117,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 @media(max-width:640px){.sh-left{border-right:none;border-bottom:1px solid rgba(120,160,255,.14);padding:6px 0 14px;}}
 .xp-head{display:flex;align-items:center;gap:12px;}
 .xp-orb{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:22px;color:var(--accent);
-  background:rgba(56,189,248,.14);border:1px solid rgba(56,189,248,.42);box-shadow:inset 0 0 16px -6px rgba(56,189,248,.9);}
+  background:rgba(var(--neon-rgb),.14);border:1px solid rgba(var(--neon-rgb),.42);box-shadow:inset 0 0 16px -6px rgba(var(--neon-rgb),.9);}
 .xp-orb .lic{animation:spin 16s linear infinite;}
 .xp-title{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
 .xp-level{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;margin-top:1px;}
@@ -167,8 +175,8 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Ba tông khác nhau để ba ô không đọc thành một khối, và khớp màu của trang đích:
    hồ sơ cyan (thẻ ID) · thành tích hổ phách (mề đay) · mẫu vật tím (khoang kính). */
-.pt-profile{--pt-brd:rgba(56,189,248,.38);--pt-on:rgba(56,189,248,.75);
-  --pt-glow:rgba(56,189,248,.6);--pt-bg:rgba(8,26,46,.5);}
+.pt-profile{--pt-brd:rgba(var(--neon-rgb),.38);--pt-on:rgba(var(--neon-rgb),.75);
+  --pt-glow:rgba(var(--neon-rgb),.6);--pt-bg:rgba(8,26,46,.5);}
 .pt-awards{--pt-brd:rgba(255,207,107,.4);--pt-on:rgba(255,207,107,.8);
   --pt-glow:rgba(255,207,107,.7);--pt-bg:rgba(38,28,8,.5);}
 .pt-awards .pt-nm{color:#ffe9bd;}
@@ -186,7 +194,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .stat-tile .st-body{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
 .stat-tile .st-val{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;}
 .stat-tile .st-lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tile-time{--tile-c:#38bdf8;--tile-bg:rgba(56,189,248,.14);--tile-brd:rgba(56,189,248,.42);--tile-glow:rgba(56,189,248,.6);}
+.tile-time{--tile-c:#38bdf8;--tile-bg:rgba(var(--neon-rgb),.14);--tile-brd:rgba(var(--neon-rgb),.42);--tile-glow:rgba(var(--neon-rgb),.6);}
 .tile-acc{--tile-c:#fb923c;--tile-bg:rgba(251,146,60,.14);--tile-brd:rgba(251,146,60,.42);--tile-glow:rgba(251,146,60,.6);}
 .tile-badge{--tile-c:#c084fc;--tile-bg:rgba(192,132,252,.14);--tile-brd:rgba(192,132,252,.42);--tile-glow:rgba(192,132,252,.6);}
 
@@ -208,7 +216,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .radar-svg{width:100%;max-width:236px;height:auto;overflow:visible;filter:drop-shadow(0 0 10px rgba(52,211,153,.35));}
 .rr-ring{fill:none;stroke:rgba(95,240,192,.16);stroke-width:1;}
 .rr-axis{stroke:rgba(95,240,192,.2);stroke-width:1;}
-.rr-fill{fill:rgba(56,189,248,.22);stroke:#38bdf8;stroke-width:1.6;filter:drop-shadow(0 0 6px rgba(56,189,248,.85));}
+.rr-fill{fill:rgba(var(--neon-rgb),.22);stroke:#38bdf8;stroke-width:1.6;filter:drop-shadow(0 0 6px rgba(var(--neon-rgb),.85));}
 .rr-dot{fill:#c084fc;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
 .rr-label{fill:#9fe9d4;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;}
 .rr-sweep-g{transform-box:view-box;transform-origin:100px 100px;animation:radarSweep 4s linear infinite;}
@@ -231,7 +239,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 /* ---- CARDS = MÀN HÌNH HUD SCI-FI ---- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;margin-top:34px;}
 .hud{
-  --neon:rgba(56,189,248,.4); --neonS:rgba(56,189,248,.95);
+  --neon:rgba(var(--neon-rgb),.4); --neonS:rgba(var(--neon-rgb),.95);
   position:relative;display:flex;flex-direction:column;
   border-radius:16px;padding:20px 22px;
   border:1px solid var(--neon);
@@ -289,8 +297,8 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
    của từng game vẫn còn và vẫn cần: nó ở `.gcard .cost` trong css/games.css, chỗ
    duy nhất mỗi thẻ hiện đúng phí của chính game đó. */
 
-/* Viền/góc neon dùng chung màu cyan (rgba(56,189,248,...)); chỉ đổi tông icon + nút cho từng khu vực */
-.card--quiz   {--ic-bg:rgba(56,189,248,.18);}
+/* Viền/góc neon dùng chung màu cyan (rgba(var(--neon-rgb),...)); chỉ đổi tông icon + nút cho từng khu vực */
+.card--quiz   {--ic-bg:rgba(var(--neon-rgb),.18);}
 .card--game   {--ic-bg:rgba(255,157,61,.18);}
 .card--map    {--ic-bg:rgba(143,123,255,.2);}
 .card--mission{--ic-bg:rgba(74,222,128,.18);}
@@ -331,8 +339,13 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   padding:13px 18px;border-radius:14px;font-family:var(--font-display);font-weight:600;font-size:15px;color:#04060f;
   background:linear-gradient(120deg,var(--accent),var(--accent-2));box-shadow:0 12px 26px -12px var(--neon);
   transition:transform .3s var(--jelly),filter .2s;}
-.card--game .jelly-btn{background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
-.card--map .jelly-btn{background:linear-gradient(120deg,#a48bff,var(--accent-2));}
+/* ⚠️ SAU KHI CO TONG DEN, HAI NUT NAY KHONG DUOC GIU MAU RIENG NUA.
+   `.card--game` tung go `var(--sun)` (ho phach) va `.card--map` go cung `#a48bff`,
+   nen doi den xong thi 4 nut doi mau con 2 nut dung yen — chu du an bat duoc:
+   "button 'bat dau luyen' van mau vang nhu cu" va "'Mo ban do' dang 1 kieu rieng".
+   ⚠️ Ban sac rieng cua tung khu VAN CON, chi la no khong nam o nut: moi card co
+   `--ic-bg` rieng cho o icon (6 tong khac nhau). Giu mau rieng o nut la mot bang
+   mau THU HAI phai bao tri cho moi tong den moi. */
 .jelly-btn:hover{filter:brightness(1.07);transform:translateY(-2px);}
 .jelly-btn:active{transform:scale(.93);}
 

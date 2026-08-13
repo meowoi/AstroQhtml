@@ -16,23 +16,33 @@
    ============================================================ */
 
 /* ───────── TÔNG ĐÈN BUỒNG LÁI ─────────
+   ⚠️ PHẢI KHAI CẢ `--neon-rgb`/`--neon-hi-rgb`, KHÔNG CHỈ 4 BIẾN MÀU.
+      `css/dashboard.css` dùng `rgba(<r,g,b>, alpha)` cho viền, bốn góc neon và mọi
+      quầng sáng — mà `rgba()` không nhận màu dạng hex, nên nó không đi qua
+      `--accent` được. Thiếu hai biến này thì đổi đèn xong **chỉ chữ và nút đổi màu,
+      còn cả bộ viền/góc/quầng vẫn cyan** — chủ dự án bắt được đúng chuyện đó
+      13/08/2026. Thêm tông mới thì khai đủ SÁU biến.
    Hai biến này là thứ dashboard/profile dùng cho mọi vệt sáng, viền và gradient
    (đo được: `--accent` xuất hiện ở cả HUD, nút, đèn LED và vòng cấp độ). */
 :root[data-cockpit="cockpit-amber"]{
   --accent:#ffcf6b; --accent-2:#ff9d5c;
   --cyan:#ffcf6b; --purple:#ff9d5c;
+  --neon-rgb:255,207,107; --neon-hi-rgb:255,230,173;
 }
 :root[data-cockpit="cockpit-violet"]{
   --accent:#c084fc; --accent-2:#7c5cff;
   --cyan:#c084fc; --purple:#7c5cff;
+  --neon-rgb:192,132,252; --neon-hi-rgb:233,213,255;
 }
 :root[data-cockpit="cockpit-mint"]{
   --accent:#63e6a8; --accent-2:#38bdf8;
   --cyan:#63e6a8; --purple:#38bdf8;
+  --neon-rgb:99,230,168; --neon-hi-rgb:182,245,216;
 }
 :root[data-cockpit="cockpit-rose"]{
   --accent:#ff9db4; --accent-2:#c084fc;
   --cyan:#ff9db4; --purple:#c084fc;
+  --neon-rgb:255,157,180; --neon-hi-rgb:255,208,220;
 }
 
 /* ───────── KHUNG THẺ ID ─────────
