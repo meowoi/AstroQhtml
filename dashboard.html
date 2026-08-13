@@ -31,6 +31,9 @@
      đóng dấu (xem js/admin-link.js). -->
 <script src="js/admin-link.js"></script>
 <script src="js/planets.js"></script>
+<!-- Ten + emoji mau vat cho hang "trung o ban dieu khien" (10,7 KB gzip). Cho DUY
+     NHAT giu ten mau vat; server giu dieu kien mo khoa. -->
+<script src="js/specimens.js"></script>
 <script src="js/depth.js"></script>
 <script src="js/cosmetics.js"></script>
 <script src="js/progress.js"></script>
@@ -218,6 +221,21 @@
             <span class="pt-sub" data-i18n="pt_vault_sub">Bộ sưu tập</span>
           </span>
         </a>
+      </div>
+
+      <!-- MẪU VẬT TRƯNG Ở BÀN ĐIỀU KHIỂN (thêm 13/08/2026).
+           ⚠️ VÌ SAO CÓ: `specimen-vault.html` mời trẻ "Đặt lên Bàn Điều Khiển Khoang
+              Lái", lưu được lựa chọn đó lên server — nhưng buồng lái **chưa bao giờ
+              vẽ nó ra** (đếm được 0 chỗ nhắc `desk` trong file này trước lượt sửa).
+              App hứa một chỗ trưng bày rồi không trưng gì cả.
+           ⚠️ CHƯA TRƯNG GÌ THÌ ẨN HẲN, không hiện hàng rỗng có nhãn — cùng lý do
+              `.ship-name` và `.decal` phải ẩn: một nhãn trống đọc ra như chỗ bị lỗi.
+           ⚠️ Đây là chỗ TRƯNG BÀY, không phải đường đi: chip không bấm được. Muốn đổi
+              thì vào ô "Mẫu vật" ngay trên — hai đường vào cho một việc là hai chỗ
+              phải sửa mỗi lần đổi tên (bài học Sổ Tay Thuật Ngữ 04/08). -->
+      <div class="deskrow" id="deskrow" hidden>
+        <span class="dk-tag" data-i18n="desk_tag">TRƯNG Ở BÀN ĐIỀU KHIỂN</span>
+        <span class="dk-list" id="dk-list"></span>
       </div>
 
       <!-- ⚠️ CỐ Ý KHÔNG LÀM Ô THỨ TƯ TRONG `.ptiles`. Hai lý do:
@@ -431,7 +449,7 @@
       banner_eyebrow:"🧭 Trung Tâm Điều Hướng", welcome_pre:"Chào mừng trở lại,",
       open_profile:"Mở Hồ sơ Phi Hành Gia",
       pt_profile:"Hồ sơ", pt_awards:"Thành tích", pt_vault:"Mẫu vật",
-      pt_vault_sub:"Bộ sưu tập", pt_badges_unit:"huy hiệu",
+      pt_vault_sub:"Bộ sưu tập", desk_tag:"TRƯNG Ở BÀN ĐIỀU KHIỂN", pt_badges_unit:"huy hiệu",
       unit_hour:"giờ", unit_min:"phút",
       log_badge:"Mở khoá huy hiệu ‘{n}’",
       log_empty:"Chưa có hoạt động nào, hãy tham gia khám phá hoặc huấn luyện nhé",
@@ -481,7 +499,7 @@
       banner_eyebrow:"🧭 Navigation Hub", welcome_pre:"Welcome back,",
       open_profile:"Open Astronaut Profile",
       pt_profile:"Profile", pt_awards:"Badges", pt_vault:"Specimens",
-      pt_vault_sub:"Collection", pt_badges_unit:"badges",
+      pt_vault_sub:"Collection", desk_tag:"ON THE CONSOLE", pt_badges_unit:"badges",
       unit_hour:"h", unit_min:"min",
       log_badge:"Unlocked ‘{n}’ badge",
       log_empty:"No activity yet — go explore or start training!",
@@ -635,6 +653,7 @@
          `js/cosmetics.js` da ap tong tu cache LUC NAP nen buong lai khong nhap
          mot cai tu tong mac dinh sang tong cua tre. */
       if(window.AstroQCos){ AstroQCos.absorb(d.equipped, d.ship); paintShip(); }
+      paintDesk((d.progress && d.progress.desk) || []);
       STATS.level = d.level || STATS.level;
       STATS.progress = d.progress || STATS.progress;
       STATS.badges = a.badges || [];
@@ -653,6 +672,32 @@
     var nm = AstroQCos.ship();
     el.textContent = nm;
     el.hidden = !nm;
+  }
+
+  /* Mẫu vật trẻ chọn trưng ở bàn điều khiển (`progress.desk` từ server).
+     ⚠️ TÊN LẤY TỪ `js/specimens.js`, KHÔNG gõ lại ở đây — đó là chỗ DUY NHẤT giữ tên
+        mẫu vật (server giữ điều kiện mở khoá, client giữ tên). Gõ lại là hai nơi nói
+        hai tên cho một mẫu, đúng lỗi đã trả giá với tên game ở nhật ký tuần.
+     ⚠️ Chưa đọc được server / chưa trưng gì → ẩn HẲN cả hàng, không hiện nhãn rỗng.
+     ⚠️ Thiếu `js/specimens.js` thì `name()` trả về chính id — trang không vỡ, chỉ
+        xấu; nhưng ẩn hàng luôn ở ca đó thì trẻ mất hẳn thứ nó đã chọn, nên vẫn vẽ. */
+  var DESK_MAX = 3;
+  var DESK = [];
+  function paintDesk(list){
+    if(list) DESK = list;
+    var row = $("deskrow"), box = $("dk-list");
+    if(!row || !box) return;
+    var ids = (DESK || []).filter(function(x){ return typeof x === "string" && x; })
+                          .slice(0, DESK_MAX);
+    if(!ids.length){ row.hidden = true; box.innerHTML = ""; return; }
+    var sp = window.AstroQSpecimens;
+    box.innerHTML = ids.map(function(id){
+      var nm = sp ? sp.name(id, LANG) : id;
+      var ic = sp ? sp.icon(id) : "🧪";
+      return '<span class="dchip"><span class="dk-ic" aria-hidden="true">' +
+             AstroQ.esc(ic) + '</span>' + AstroQ.esc(nm) + '</span>';
+    }).join("");
+    row.hidden = false;
   }
 
   function paintBalance(){
@@ -780,6 +825,7 @@
     document.title = t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
+    paintDesk(null);   // ten mau vat co hai ngon ngu -> ve lai
     var name = userName();
     $("user-name").textContent = name;
     // Avatar: dùng ảnh nhân vật đã chọn (thư mục ava) nếu có, ngược lại hiện chữ cái đầu.
