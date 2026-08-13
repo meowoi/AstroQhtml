@@ -3314,6 +3314,15 @@ _ck_css = strip_comments(rd("css/cockpit.css"))
 _items = re.findall(r'new\("([a-z0-9-]+)",\s*"([a-z]+)",\s*(\d+)\)', _cos_cs)
 check("[23] doc ra duoc bang mon o server", len(_items) >= 4, f"{len(_items)} mon")
 
+# ⚠️ ĐỌC BẢNG `Kinds` CỦA SERVER, ĐỪNG GÕ CỨNG TÊN LOẠI. Ban dau cac phep kiem duoi
+#    day ghim `(theme|frame)` va `len(...) == 2`, nen them loai mon thu ba la chung
+#    **bao hong dung luc san pham lam dung** — dung loai loi "phep kiem bao ve trang
+#    thai cu" da lap nhieu lan trong du an. Nay danh sach loai suy tu chinh
+#    `Cosmetics.Kinds`, va dieu can canh (hai ben khop nhau) thi giu nguyen.
+_kinds_sv = re.search(r'Kinds\s*=\s*\[([^\]]*)\]', _cos_cs)
+_kinds_sv = sorted(re.findall(r'"([a-z]+)"', _kinds_sv.group(1))) if _kinds_sv else []
+check("[23] doc ra duoc danh sach loai mon o server", len(_kinds_sv) >= 2, str(_kinds_sv))
+
 # ⚠️ PHEP KIEM QUAN TRONG NHAT: client KHONG duoc co mot con so gia nao.
 # Chep gia sang JS la hai noi giu mot luat, va ngay doi gia thi ban o client noi
 # con so cu — tuc noi SAI voi tre ngay cho no quyet dinh tieu tien.
@@ -3332,11 +3341,43 @@ check("[23] moi mon co o xem truoc trong css/cockpit.css", not _no_sw, str(_no_s
 _sw_extra = sorted(set(re.findall(r'\.cos-sw--([a-z0-9-]+)', _ck_css)) - set(_ids))
 check("[23] khong co o xem truoc bo khong", not _sw_extra, str(_sw_extra))
 
+# ⚠️ MOI LOAI PHAI CO MOT CHO DE HIEN RA. Day la phep kiem quan trong nhat cua lan
+#    them loai mon: thieu no thi mon co that, mua duoc, tru tien duoc, ma **khong
+#    hien ra gi** — loi im lang tuyet doi, va tre da tra tien cho no.
+_attr_cl = dict(re.findall(r'(\w+):\s*"(data-[a-z-]+)"', _cos_js))
+_no_attr = [k for k in _kinds_sv if k not in _attr_cl]
+check("[23] moi loai co thuoc tinh gan len <html> (ATTR)", not _no_attr, str(_no_attr))
+for _k in _kinds_sv:
+    _a = _attr_cl.get(_k)
+    if not _a:
+        continue
+    check("[23] css/cockpit.css ve theo `%s`" % _a, ("[%s=" % _a) in _ck_css,
+          "khong co selector nao doc " + _a)
+# Hinh dan can mot the that trong DOM de ve len; hai loai kia ap vao phan tu co san.
+check("[23] dashboard.html co the .decal cho hinh dan",
+      'class="decal"' in rd("dashboard.html") and ".decal{" in _ck_css)
+# ⚠️ Lop trang tri nam CHONG len mep bang stats, ma ngay duoi la hang ba o bam duoc
+#    (Bang Phi Hanh Gia). Thieu `pointer-events:none` la no nuot cu bam — cung bai
+#    hoc `.ver-badge` va `#loader`.
+_decal_rule = re.search(r'\.decal\{[^}]*\}', _ck_css)
+check("[23] .decal khong nuot cu bam", bool(_decal_rule) and "pointer-events:none" in _decal_rule.group(0),
+      _decal_rule.group(0)[:90] if _decal_rule else "khong thay rule")
+
 # Mon mac dinh phai khop hai ben — lech thi tre "dang dung" mot mon khong ton tai.
 _def_sv = dict(re.findall(r'\["([a-z]+)"\]\s*=\s*"([a-z0-9-]+)"', _cos_cs))
-_def_cl = dict(re.findall(r'(theme|frame):\s*"([a-z0-9-]+)"', _cos_js))
-check("[23] mon mac dinh khop client <-> server", _def_sv == _def_cl and len(_def_sv) == 2,
-      f"server={_def_sv} client={_def_cl}")
+# ⚠️ CAT LAY DUNG KHOI `DEFAULTS` ROI MOI DOC. Quet ca file thi bang `ATTR`
+#    (`theme: "data-cockpit"`) cung khop dung khuon `<loai>: "<chuoi>"` va **de len**
+#    ket qua — phep kiem bao hong trong khi hai ben khop nhau. Cung bai hoc "gioi han
+#    pham vi dung bang khoi chua no" da tra gia o `showCard` va `.badge.off`.
+_def_blk = re.search(r'var DEFAULTS\s*=\s*\{([^}]*)\}', _cos_js)
+check("[23] doc ra duoc khoi DEFAULTS o client", bool(_def_blk))
+_def_cl = dict(re.findall(r'(%s):\s*"([a-z0-9-]+)"' % "|".join(_kinds_sv or ["theme"]),
+                          _def_blk.group(1) if _def_blk else ""))
+check("[23] mon mac dinh khop client <-> server",
+      _def_sv == _def_cl and sorted(_def_sv) == _kinds_sv,
+      f"server={_def_sv} client={_def_cl} kinds={_kinds_sv}")
+# Moi loai PHAI co mon mac dinh gia 0 — thieu la tre mua roi khong co duong ve.
+check("[23] moi loai co mon mac dinh", sorted(_def_sv) == _kinds_sv, str(sorted(_def_sv)))
 check("[23] mon mac dinh deu co gia 0",
       all(p == "0" for i, _, p in _items if i in _def_sv.values()))
 
@@ -3369,11 +3410,36 @@ check("[23] KHONG hop ngau nhien / gacha (client)",
       or "opId" in _shop,   # Math.random CHI duoc dung de sinh opId
       "co chon mon bang ngau nhien")
 # ⚠️ Khong khan hiem gia: khong dem nguoc, khong "chi con hom nay".
-check("[23] KHONG khan hiem gia o cua hang",
-      not re.search(r'countdown|setInterval|hết hạn|sắp hết|chỉ còn', _shop, re.I))
+# ⚠️ BAN DAU PHEP KIEM NAY CAM CA CHU `setInterval`, va no bao hong ngay khi
+#    `whenAuth()` dung mot dong ho de CHO SDK NAP — mot phep kiem bao oan la mot phep
+#    kiem som muon bi bo qua. Thu that su tao suc ep thoi gian la CHU HIEN RA, nen
+#    phan chu giu nguyen; con dong ho thi doi sang phat bieu dung: cua hang duoc co
+#    DUNG MOT cai, va no phai nam trong `whenAuth`. Them cai thu hai la phai giai
+#    trinh, dung tinh than "khong khan hiem gia" cua Services/Cosmetics.cs.
+check("[23] KHONG khan hiem gia o cua hang (chu)",
+      not re.search(r'countdown|hết hạn|sắp hết|chỉ còn|còn lại', _shop, re.I))
+_ivals = _shop.count("setInterval(")
+_wa = re.search(r'function whenAuth\([^)]*\)\s*\{.*?\n  \}', _shop, re.S)
+check("[23] cua hang chi co MOT dong ho, va no de CHO SDK",
+      _ivals <= 1 and bool(_wa) and "setInterval(" in _wa.group(0),
+      f"{_ivals} setInterval · trong whenAuth={bool(_wa) and 'setInterval(' in _wa.group(0)}")
 # Khong ban loi the: moi mon phai thuoc dung hai loai trang tri.
 _kinds = sorted({k for _, k, _ in _items})
-check("[23] moi mon la do TRANG TRI (theme/frame)", _kinds == ["frame", "theme"], str(_kinds))
+# ⚠️ DANH SACH TRANG (`DECOR_KINDS`) LA HANG RAO THAT: no khong suy tu `Kinds` cua
+#    server, vi neu suy thi ai them `new("xp-boost","boost",50)` cung tu dong "dat".
+#    Them mot loai mon moi thi PHAI sua danh sach nay bang tay — tuc phai tra loi
+#    cau "mon nay co ban loi the khong" mot lan nua, dung dieu cam so 1 cua
+#    Services/Cosmetics.cs.
+DECOR_KINDS = ["decal", "frame", "theme"]
+check("[23] moi mon la do TRANG TRI (%s)" % "/".join(DECOR_KINDS),
+      set(_kinds) <= set(DECOR_KINDS) and set(_kinds_sv) <= set(DECOR_KINDS),
+      f"mon={_kinds} kinds={_kinds_sv}")
+# Moi loai khai o server phai co it nhat mot mon — mot loai rong thi cua hang ve ra
+# mot khoi trong, doc ra thanh "app hong".
+check("[23] khong loai nao rong", set(_kinds_sv) <= set(_kinds), f"thieu mon: {sorted(set(_kinds_sv)-set(_kinds))}")
+# Ten LOAI mon phai co o ca vi va en (`kind_<loai>`) — thieu la lươi mon hien khoa tho.
+_no_kn = [k for k in _kinds_sv if _cos_js.count("kind_%s:" % k) < 2]
+check("[23] moi loai co ten o ca vi va en", not _no_kn, str(_no_kn))
 
 # ===========================================================================
 # [24] THE "CHO BO ME XEM" (js/brag.js) — KHONG GUI GI RA NGOAI

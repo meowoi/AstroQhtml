@@ -115,8 +115,29 @@ def main():
         items = d.get("items") or []
         check("tra bang mon kem GIA", len(items) >= 4 and all("price" in i for i in items),
               f"{len(items)} mon")
-        check("moi mon co kind thuoc theme/frame",
-              all(i.get("kind") in ("theme", "frame") for i in items))
+        # ⚠️ DANH SACH LOAI DO TRANG TRI GHI TAY, KHONG suy tu `d["kinds"]`.
+        #    Suy tu server thi bat ky loai moi nao cung tu dong "dat", ke ca mot loai
+        #    ban loi the (`boost`) — tuc phep kiem mat rang. Them loai mon moi thi
+        #    phai sua dong nay bang tay, dung dieu cam so 1 cua Services/Cosmetics.cs.
+        #    (Ban dau dong nay ghim ("theme","frame") nen no bao hong ngay khi them
+        #    loai `decal` — phep kiem bao ve trang thai cu, loi da lap nhieu lan.)
+        DECOR_KINDS = ("theme", "frame", "decal")
+        check("moi mon la do TRANG TRI (%s)" % "/".join(DECOR_KINDS),
+              all(i.get("kind") in DECOR_KINDS for i in items)
+              and set(d.get("kinds") or []) <= set(DECOR_KINDS),
+              f"kinds={d.get('kinds')}")
+        # Moi loai phai co it nhat mot mon — mot loai rong thi cua hang ve khoi trong.
+        _by_kind = {}
+        for i in items:
+            _by_kind.setdefault(i.get("kind"), []).append(i)
+        check("khong loai nao rong",
+              all(_by_kind.get(k) for k in (d.get("kinds") or [])),
+              str({k: len(v) for k, v in _by_kind.items()}))
+        # Moi loai phai co DUNG MOT mon gia 0 — thieu la khong co duong ve, nhieu hon
+        # mot thi "mac dinh" khong con nghia gi.
+        for k, v in sorted(_by_kind.items()):
+            _free = [i["id"] for i in v if i.get("price") == 0]
+            check(f"loai '{k}' co dung 1 mon gia 0", len(_free) == 1, str(_free))
         check("kho do rong luc dau", (d.get("owned") or []) == [], str(d.get("owned")))
         check("tra kem mon mac dinh", bool(d.get("defaults")), str(d.get("defaults")))
         check("tra kem so du vi", (d.get("wallet") or {}).get("meteors") == 200,

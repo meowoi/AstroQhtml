@@ -70,7 +70,13 @@
 
 <!-- ============ HEADER = BẢNG TRẠNG THÁI TÀU ============ -->
 <header class="statusbar">
-  <div class="ship-id"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"><span class="ship-name" id="ship-nm" hidden></span><span class="hull">HULL · OK</span></div>
+  <div class="ship-id"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"><span class="ship-name" id="ship-nm" hidden></span><!--
+    Hình dán trẻ mua ở Kho Trang Trí. Hình do `css/cockpit.css` vẽ theo `data-decal`
+    mà `js/cosmetics.js` gắn lên <html>. Là một Ô CỦA HÀNG FLEX chứ không phải lớp
+    phủ — bố cục tự chừa chỗ nên nó không thể đè lên chữ nào (lý do đầy đủ + số đo
+    của bản treo-lơ-lửng đã bị bác: xem css/cockpit.css). Chưa dán gì thì
+    `display:none` nên không ăn cả `gap`. `aria-hidden` vì nó thuần trang trí.
+ --><span class="decal" aria-hidden="true"></span><span class="hull">HULL · OK</span></div>
 
   <div class="gauges">
     <!-- Thiên thạch tím (Purple Meteor) -->

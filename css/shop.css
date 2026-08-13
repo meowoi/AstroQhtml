@@ -43,8 +43,13 @@
 .citem .cnm{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--ink);}
 .citem .cprice{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-faint);}
 /* ⚠️ Vùng chạm 48px, không phải 44 (quy tắc 10 mục 6 CLAUDE.md). `.pbtn` của
-   page-shell đo ra 40–42px trên màn 390px, và đây là nút chính của cả trang. */
-.citem .cbtn{min-height:48px;width:100%;}
+   page-shell đo ra 40–42px trên màn 390px, và đây là nút chính của cả trang.
+   ⚠️ `margin-top:auto` để MỌI NÚT TRONG MỘT HÀNG THẲNG NHAU: tên món dài ngắn khác
+   nhau ("Đèn Hồng Tinh Vân", "Hành Tinh Có Vành" xuống 2 dòng) nên không có nó thì
+   nút của thẻ tên-dài tụt xuống thấp hơn hẳn — soi ảnh chụp mới thấy, và nó đọc ra
+   như thẻ bị lỗi render. Ô lưới vốn đã cao đều nhau (grid stretch), nên chỉ cần đẩy
+   nút xuống đáy. */
+.citem .cbtn{min-height:48px;width:100%;margin-top:auto;}
 .citem .cbtn:disabled{opacity:.72;cursor:default;}
 
 @media (max-width:520px){

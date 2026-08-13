@@ -29,7 +29,15 @@
 
   /* Món mặc định mỗi loại — luôn có, giá 0. Phải khớp `Cosmetics.Defaults` ở
      server; `scratchpad/check_pages.py` mục [23] đối chiếu hai bên. */
-  var DEFAULTS = { theme: "cockpit-cyan", frame: "frame-steel" };
+  var DEFAULTS = { theme: "cockpit-cyan", frame: "frame-steel", decal: "decal-none" };
+
+  /* Loại món → thuộc tính gắn lên `<html>`.
+     ⚠️ TÊN THUỘC TÍNH KHÔNG SUY RA ĐƯỢC TỪ TÊN LOẠI (`theme` → `data-cockpit`), nên
+        phải khai tường minh. Mọi vòng lặp bên dưới đi qua bảng NÀY chứ không gõ lại
+        tên loại: thêm loại thứ tư mà quên một chỗ thì món có thật, mua được, mà
+        **không hiện ra gì** — lỗi im lặng tuyệt đối. */
+  var ATTR = { theme: "data-cockpit", frame: "data-frame", decal: "data-decal" };
+  var KINDS = Object.keys(DEFAULTS);
 
   var T = {
     vi: {
@@ -42,8 +50,14 @@
       "frame-gold":     "Khung Vàng",
       "frame-nebula":   "Khung Tinh Vân",
       "frame-ice":      "Khung Băng",
+      "decal-none":     "Chưa dán gì",
+      "decal-comet":    "Sao Chổi Bay",
+      "decal-orbit":    "Vòng Quỹ Đạo",
+      "decal-ringed":   "Hành Tinh Có Vành",
+      "decal-stars":    "Chùm Sao Nhỏ",
       kind_theme: "Đèn buồng lái",
       kind_frame: "Khung thẻ ID",
+      kind_decal: "Hình dán bảng điều khiển",
       free: "Có sẵn"
     },
     en: {
@@ -56,8 +70,14 @@
       "frame-gold":     "Gold Frame",
       "frame-nebula":   "Nebula Frame",
       "frame-ice":      "Ice Frame",
+      "decal-none":     "No decal",
+      "decal-comet":    "Comet Trail",
+      "decal-orbit":    "Orbit Ring",
+      "decal-ringed":   "Ringed Planet",
+      "decal-stars":    "Star Cluster",
       kind_theme: "Cockpit lights",
       kind_frame: "ID card frame",
+      kind_decal: "Console decal",
       free: "Included"
     }
   };
@@ -77,10 +97,12 @@
   function equipped() {
     var u = user();
     var e = (u && u.equipped) || {};
-    return {
-      theme: e.theme || DEFAULTS.theme,
-      frame: e.frame || DEFAULTS.frame
-    };
+    var out = {};
+    for (var i = 0; i < KINDS.length; i++) {
+      var k = KINDS[i];
+      out[k] = e[k] || DEFAULTS[k];
+    }
+    return out;
   }
 
   /** Tên phi thuyền do trẻ đặt (chuỗi rỗng = chưa đặt). */
@@ -96,8 +118,10 @@
     try {
       var e = equipped();
       var r = document.documentElement;
-      r.setAttribute("data-cockpit", e.theme);
-      r.setAttribute("data-frame", e.frame);
+      for (var i = 0; i < KINDS.length; i++) {
+        var k = KINDS[i];
+        r.setAttribute(ATTR[k], e[k]);
+      }
     } catch (err) {}
   }
 
@@ -105,10 +129,12 @@
   function absorb(eq, shipName) {
     var u = user();
     if (eq && typeof eq === "object") {
-      u.equipped = {
-        theme: eq.theme || DEFAULTS.theme,
-        frame: eq.frame || DEFAULTS.frame
-      };
+      var next = {};
+      for (var i = 0; i < KINDS.length; i++) {
+        var k = KINDS[i];
+        next[k] = eq[k] || DEFAULTS[k];
+      }
+      u.equipped = next;
     }
     if (typeof shipName === "string") u.ship = shipName;
     try { if (global.AstroQ && AstroQ.setUser) AstroQ.setUser(u); } catch (e) {}
@@ -118,7 +144,7 @@
 
   /** Ghi món đang đeo vào cache (dùng khi vừa mua/vừa đeo, trước khi server trả). */
   function setEquipped(kind, id) {
-    if (!id || (kind !== "theme" && kind !== "frame")) return equipped();
+    if (!id || KINDS.indexOf(kind) < 0) return equipped();
     var u = user();
     var e = u.equipped || {};
     e[kind] = id;
@@ -139,7 +165,8 @@
     apply: apply,
     absorb: absorb,
     isDefault: function (id) {
-      return id === DEFAULTS.theme || id === DEFAULTS.frame;
+      for (var i = 0; i < KINDS.length; i++) if (id === DEFAULTS[KINDS[i]]) return true;
+      return false;
     }
   };
 
