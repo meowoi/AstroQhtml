@@ -49,3 +49,11 @@ img/earth/_src/
 img/era/*.png
 
 scratchpad/__pycache__/
+
+# ---- Ảnh chụp rơi ra GỐC REPO ----
+# `scratchpad/*.png` đã bị chặn, nhưng probe chạy bằng `python scratchpad/x.py` có
+# cwd là gốc repo, nên `pg.screenshot(path="abc.png")` ghi thẳng ra đây. Ngày
+# 14/08/2026 quét ra 9 file như vậy (2,4 MB) đang chờ được `git add -A` nuốt vào.
+# ⚠️ Chỉ chặn ĐÚNG GỐC (`/*.png`) — mọi ảnh dùng thật đều nằm trong img/, 3d/,
+#    ava/, background/ nên không cái nào bị chặn nhầm.
+/*.png

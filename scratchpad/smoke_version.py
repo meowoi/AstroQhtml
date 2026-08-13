@@ -57,6 +57,23 @@ def main():
         pg.on("console", lambda mm: errs.append(mm.text[:100])
               if mm.type == "error" and "Failed to load resource" not in mm.text else None)
         pg.add_init_script("localStorage.setItem('astroq-lang','vi')")
+        # ⚠️ CHAN `/billing/catalog` VA TRA PHAN HOI CO DINH — bo do nay quet CA 18
+        #    trang, trong do `checkout.html`/`lab.html`/`pricing.html` goi route cong
+        #    khai do ngay khi mo trang. Bo do chay o cong 8123, KHONG nam trong
+        #    `ALLOWED_ORIGINS`, nen CORS chan va trinh duyet TU ghi mot dong do vao
+        #    console — khong `catch` nao chan duoc → phep kiem "0 loi console" bao
+        #    hong oan (do duoc: 1 phep kiem do lien tuc, ke ca tren ban HEAD).
+        # ⚠️ CO Y KHONG them cong 8123 vao `ALLOWED_ORIGINS`: do la cau hinh SAN XUAT,
+        #    mo them mot origin that chi de lam xanh mot phep kiem la doi thu khong
+        #    thuoc san xuat. `audit_viewports.py` va `smoke_lang_switch.py` da chan
+        #    theo dung loi nay tu 11/08/2026; bo do nay bi bo sot.
+        # ⚠️ Mot phep kiem hay bao oan thi som muon nguoi ta bo qua no — do moi la
+        #    cai gia that (luat 10 muc 6 CLAUDE.md).
+        pg.route("**/billing/catalog*", lambda r: r.fulfill(
+            status=200, content_type="application/json",
+            headers={"access-control-allow-origin": "*"},
+            body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
+                 '"trialDays":14,"graceDays":7,"offers":[]}'))
         thieu, sai = [], []
         for t in trang:
             pg.goto(BASE + t, wait_until="domcontentloaded")
