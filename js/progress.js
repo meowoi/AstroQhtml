@@ -40,6 +40,16 @@
   var LS_QUEUE = "astroq-progress-queue";  // việc chưa gửi được
   var MAX_QUEUE = 40;                      // đủ cho vài ngày offline, không phình vô hạn
 
+  /* ⚠️⚠️ SỐ VIỆC ĐÃ BỊ HÀNG CHỜ VỨT ĐI (thêm 13/08/2026).
+     `enqueue()` cắt bớt việc CŨ NHẤT khi vượt `MAX_QUEUE` — cần thiết (localStorage
+     có hạn, và một hàng chờ phình vô hạn thì lần gửi lại nào cũng chậm hơn lần
+     trước), nhưng trước hôm nay nó cắt **trong im lặng**: trẻ chơi 60 lượt lúc mất
+     phiên thì 20 lượt đầu biến mất mà không một chỗ nào trong app nói ra.
+     Đếm lại được thì `dashboard.html` mới nói thật được là *bao nhiêu* việc đã mất.
+     ⚠️ ĐỪNG "chữa" bằng cách bỏ trần: cái mất khi đó là **việc MỚI** (ghi
+        localStorage hỏng vì đầy) — tức mất theo hướng tệ hơn, và cũng im lặng. */
+  var LS_DROP = "astroq-progress-dropped";
+
   /* ⚠️ DANH SÁCH BƯỚC ĐÃ XONG — CHỈ ĐỂ BIẾT VÀO CHƠI TIẾP TỪ ĐÂU, KHÔNG PHẢI THƯỞNG.
      Điều 1 ở đầu file vẫn nguyên: ở đây **không** lưu meteors/xp/huy hiệu nào, chỉ
      lưu id bước + tổng số bước + cờ "xong cả nhiệm vụ", và chỉ ghi từ CÂU TRẢ LỜI
@@ -172,11 +182,20 @@
 
   /* ---------------- Hàng chờ ---------------- */
   function queue() { var q = read(LS_QUEUE, []); return Array.isArray(q) ? q : []; }
+
+  /** Số việc đã bị vứt vì hàng chờ đầy. Không tự về 0 — chỉ `clearDropped()` xoá. */
+  function dropped() { var n = read(LS_DROP, 0); return typeof n === "number" && n > 0 ? n : 0; }
+  function clearDropped() { write(LS_DROP, 0); }
+
   function enqueue(ev) {
     var q = queue();
     q.push(ev);
     // Bỏ những việc CŨ NHẤT khi tràn: việc mới phản ánh trạng thái gần đây hơn
-    if (q.length > MAX_QUEUE) q = q.slice(q.length - MAX_QUEUE);
+    if (q.length > MAX_QUEUE) {
+      // GHI LẠI SỐ BỊ VỨT rồi mới cắt — xem lý do ở khối `LS_DROP` đầu file.
+      write(LS_DROP, dropped() + (q.length - MAX_QUEUE));
+      q = q.slice(q.length - MAX_QUEUE);
+    }
     write(LS_QUEUE, q);
   }
 
@@ -210,11 +229,26 @@
 
   var flushing = false;
 
+  /* ⚠️ SỐ VIỆC VỪA GỬI XONG — để trang nói được "đã lưu xong n việc".
+     Vì sao không để trang tự đếm: `flush()` chạy ngay khi file này nạp, và với một
+     phiên đăng nhập còn tốt thì nó xong TRƯỚC cả lúc script của trang chạy tới —
+     đo được như vậy ở `smoke_session_note.py` mục [5]. Trang tự đếm thì luôn thấy
+     hàng chờ đã rỗng và **lời báo không bao giờ hiện ra**, tức trẻ đăng nhập lại
+     xong vẫn không biết việc của mình có được cứu hay không.
+     Chỉ sống trong lượt tải trang này (không ghi localStorage), nên F5 không báo
+     lại một chuyện đã báo. */
+  var lastFlush = 0;
+
+  /** Số việc của lần gửi lại gần nhất, 0 nếu chưa có. Gọi `ackFlush()` sau khi đã nói. */
+  function flushed() { return lastFlush; }
+  function ackFlush() { lastFlush = 0; }
+
   /** Gửi lại những việc đang xếp hàng. Gọi được nhiều lần, tự bỏ qua nếu đang chạy. */
   function flush() {
     if (flushing) return Promise.resolve(false);
     var q = queue();
     if (q.length === 0) return Promise.resolve(true);
+    var n0 = q.length;
 
     flushing = true;
     return waitAuth(2500).then(function (a) {
@@ -226,6 +260,7 @@
       function step() {
         if (i >= q.length) {
           write(LS_QUEUE, []);       // chỉ xoá hàng chờ khi đã gửi HẾT
+          lastFlush += n0;           // gửi HẾT rồi mới ghi nhận — xem ghi chú ở `lastFlush`
           flushing = false;
           return true;
         }
@@ -353,6 +388,20 @@
 
     /** Số việc đang xếp hàng chờ gửi. */
     pending: function () { return queue().length; },
+
+    /**
+     * Số việc đã bị hàng chờ VỨT ĐI vì đầy (trần `MAX_QUEUE`). Trang nào nói với
+     * trẻ về hàng chờ thì phải nói cả con số này — bỏ qua nó là im lặng đúng chỗ
+     * dữ liệu THẬT SỰ mất, và im lặng ở đó thì trẻ chỉ thấy tt tự nhiên hụt đi.
+     */
+    dropped: dropped,
+    /** Xoá bộ đếm trên, gọi SAU khi đã nói với người dùng. */
+    clearDropped: clearDropped,
+
+    /** Số việc vừa gửi lại xong trong lượt tải trang này (0 = chưa có). */
+    flushed: flushed,
+    /** Xoá con số trên, gọi SAU khi đã báo với người dùng. */
+    ackFlush: ackFlush,
 
     /**
      * Lấy hồ sơ + tiến độ để vẽ trang.

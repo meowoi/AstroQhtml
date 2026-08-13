@@ -221,6 +221,50 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   border:1px solid rgba(var(--neon-rgb),.34);background:rgba(var(--neon-rgb),.09);
   box-shadow:inset 0 0 14px -8px rgba(var(--neon-rgb),.9);}
 .dchip .dk-ic{font-size:14px;line-height:1;}
+
+/* ══ DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP (thêm 13/08/2026) ═══════════════════════════
+   Vì sao có: 13/08 đo được ví thật của chủ dự án là 21 tt trong khi HUD hiện 866.
+   `Economy` cộng LẠC QUAN vào cache mỗi lượt quiz/game rồi chờ `setFromServer()`
+   ghi đè; hai số lệch 845 nghĩa là mọi lời gọi `/me/*` đã trả `auth` từ lâu — tức
+   trẻ vẫn chơi, vẫn thấy tt tăng, mà KHÔNG THỨ GÌ được lưu. App im lặng suốt quãng
+   đó; chỉ tới khi mở một trang CẦN token (cửa hàng) nó mới lộ, và lộ bằng một câu
+   dễ đọc nhầm thành lỗi.
+
+   ⚠️ CỐ Ý KHÔNG mượn `.banner` của `css/page-shell.css`: dashboard không nạp file
+      đó, mà nạp vào là kéo theo cả khung trang nội dung (nền, `.wrap`, `.hub-top`,
+      `.hero`, `.panel`) — đè lên bố cục buồng lái. Đây là bản riêng, 6 dòng.
+
+   ⚠️ BẪY `[hidden]` — LẦN THỨ CHÍN (`#time-ok` · `.lk-btn` · `.pt-empty` ·
+      `.co-steps` · `#wl-done` · `.exp-ctl` · `.brag` · `.deskrow` · nay `.sess`).
+      Khai `display:flex` thì phải khai lại `[hidden]{display:none}`.
+
+   ⚠️ TÔNG HỔ PHÁCH, KHÔNG ĐỎ. Đây không phải lỗi của đứa trẻ và cũng chưa mất gì
+      — việc vẫn nằm trong hàng chờ. Đỏ đọc ra thành "hỏng rồi", đúng thứ khiến trẻ
+      đóng app; cùng nguyên tắc đã chốt cho `.sum-note` ở quiz và cột "cần luyện
+      thêm" ở trang phụ huynh.
+   ⚠️ KHÔNG animation. Một dải nhấp nháy ở đây là GIỤC — cùng loại với thứ điều ④
+      của `Services/Daily.cs` đã cấm. Nói một lần, nói rõ, rồi để yên. */
+.sess{grid-column:1 / -1;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;
+  margin-top:11px;padding:11px 14px;border-radius:14px;
+  border:1px solid rgba(255,207,107,.34);background:rgba(255,207,107,.09);
+  color:#ffe3bd;font-size:13px;line-height:1.5;}
+.sess[hidden]{display:none;}
+.sess .ic{font-size:17px;line-height:1.35;flex:none;}
+.sess .tx{flex:1;min-width:0;}
+.sess .tx b{color:#fff;font-weight:700;}
+/* Câu về việc ĐÃ MẤT tách dòng riêng và nhạt hơn: nó là chuyện đã rồi, không phải
+   việc trẻ làm được gì. Câu hành động ở trên mới là thứ cần đọc trước. */
+.sess .lost{display:block;margin-top:3px;font-size:12px;color:rgba(255,227,189,.72);}
+/* Vùng chạm 48px, KHÔNG 44 — luật 10 mục 6 CLAUDE.md: 44 là mốc TỐI THIỂU của
+   WCAG 2.5.5, đặt đúng mốc là không còn biên an toàn nào. */
+.sess .go{flex:none;display:inline-flex;align-items:center;min-height:48px;padding:0 16px;
+  border-radius:12px;font-family:var(--font-display);font-weight:700;font-size:13px;
+  color:#1b1204;text-decoration:none;background:linear-gradient(135deg,#ffd98a,#ffb43f);
+  box-shadow:0 10px 22px -14px rgba(255,180,63,.9);}
+.sess .go:hover{filter:brightness(1.06);}
+.sess .go[hidden]{display:none;}   /* bẫy [hidden] lần thứ chín — xem ghi chú trên */
+.sess button.go{border:0;cursor:pointer;font-family:var(--font-display);}
+@media (max-width:560px){ .sess .go{width:100%;justify-content:center;} }
 .stat-tile{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;
   border:1px solid rgba(120,160,255,.18);background:rgba(15,23,42,.44);
   transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}

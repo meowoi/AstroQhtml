@@ -238,6 +238,24 @@
         <span class="dk-list" id="dk-list"></span>
       </div>
 
+      <!-- DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP — xem lý do đầy đủ ở khối `.sess` trong
+           css/dashboard.css. Tóm tắt: app từng im lặng khi mất phiên, trẻ vẫn chơi
+           và vẫn thấy tt tăng mà không thứ gì lên tới server.
+           ⚠️ Chữ do JS sinh (số việc là số thật), nên KHÔNG gắn `data-i18n` cho
+              phần `.tx` — `applyTexts` chạy trước sẽ ghi đè con số. Chỉ nút mới có. -->
+      <div class="sess" id="sess" role="status" aria-live="polite" hidden>
+        <span class="ic" aria-hidden="true">📡</span>
+        <span class="tx" id="sess-tx"></span>
+        <!-- HAI NÚT, HAI VAI, không bao giờ cùng hiện:
+             · còn việc chờ + mất phiên → đường đi THẬT (đăng nhập lại);
+             · hết việc chờ, chỉ còn tin việc đã mất → nút xác nhận đã đọc.
+             ⚠️ Mất mạng thì KHÔNG hiện nút nào — bảo trẻ "đăng nhập lại" khi phiên
+                vẫn còn là chỉ nó đi sửa một thứ không hỏng (bài học ba lý do
+                `sent:false` của email phụ huynh: gộp lại là nói sai 2/3 số ca). -->
+        <a class="go" id="sess-go" href="landing-app.html" data-i18n="sess_btn" hidden>Đăng nhập lại</a>
+        <button class="go" id="sess-ok" type="button" data-i18n="sess_ok" hidden>Đã hiểu</button>
+      </div>
+
       <!-- ⚠️ CỐ Ý KHÔNG LÀM Ô THỨ TƯ TRONG `.ptiles`. Hai lý do:
            ① `.ptiles` khai `repeat(3,1fr)` cố định — ô thứ tư rơi xuống một hàng
               lẻ; đổi sang 4 cột thì phải đo lại bề rộng, mà chính hàng này đã một
@@ -450,6 +468,17 @@
       open_profile:"Mở Hồ sơ Phi Hành Gia",
       pt_profile:"Hồ sơ", pt_awards:"Thành tích", pt_vault:"Mẫu vật",
       pt_vault_sub:"Bộ sưu tập", desk_tag:"TRƯNG Ở BÀN ĐIỀU KHIỂN", pt_badges_unit:"huy hiệu",
+      /* Dải nhắc mất phiên. ⚠️ Bốn khoá đầu là HAI CÂU × số ít/số nhiều, viết
+         LITERAL (không ghép `t("sess_"+k)`) — phép kiểm i18n quét `t("khoá")` dạng
+         chữ, ghép động là chúng bị báo "khai mà không dùng" và lỗi đó im lặng. */
+      sess_auth:"Chưa lưu được {n} lên tàu mẹ. Đăng nhập lại để giữ Thiên thạch tím và huy hiệu con vừa kiếm được.",
+      sess_auth1:"Chưa lưu được {n} lên tàu mẹ. Đăng nhập lại để giữ Thiên thạch tím và huy hiệu con vừa kiếm được.",
+      sess_net:"Chưa lưu được {n} lên tàu mẹ. Có mạng trở lại là tự gửi, con không phải làm gì cả.",
+      sess_net1:"Chưa lưu được {n} lên tàu mẹ. Có mạng trở lại là tự gửi, con không phải làm gì cả.",
+      sess_lost:"Hàng chờ đã đầy nên {n} việc cũ nhất không giữ được.",
+      sess_done:"Đã lưu xong {n} việc lên tàu mẹ.",
+      sess_btn:"Đăng nhập lại", sess_ok:"Đã hiểu",
+      sess_unit:"việc", sess_unit1:"việc",
       unit_hour:"giờ", unit_min:"phút",
       log_badge:"Mở khoá huy hiệu ‘{n}’",
       log_empty:"Chưa có hoạt động nào, hãy tham gia khám phá hoặc huấn luyện nhé",
@@ -500,6 +529,14 @@
       open_profile:"Open Astronaut Profile",
       pt_profile:"Profile", pt_awards:"Badges", pt_vault:"Specimens",
       pt_vault_sub:"Collection", desk_tag:"ON THE CONSOLE", pt_badges_unit:"badges",
+      sess_auth:"{n} haven't reached the mothership. Log back in to keep the Purple Asteroids and badges you just earned.",
+      sess_auth1:"{n} hasn't reached the mothership. Log back in to keep the Purple Asteroids and badges you just earned.",
+      sess_net:"{n} haven't reached the mothership yet. They'll be sent as soon as you're back online — nothing for you to do.",
+      sess_net1:"{n} hasn't reached the mothership yet. It'll be sent as soon as you're back online — nothing for you to do.",
+      sess_lost:"The queue filled up, so the {n} oldest could not be kept.",
+      sess_done:"Saved to the mothership: {n}.",
+      sess_btn:"Log back in", sess_ok:"Got it",
+      sess_unit:"things", sess_unit1:"thing",
       unit_hour:"h", unit_min:"min",
       log_badge:"Unlocked ‘{n}’ badge",
       log_empty:"No activity yet — go explore or start training!",
@@ -646,6 +683,11 @@
 
   function loadStats(){
     AstroQProgress.achievements().then(function(r){
+      /* Nguồn DUY NHẤT phân biệt "mất phiên" với "mất mạng" cho dải nhắc `.sess`.
+         `reason:"auth"` = không có phiên đăng nhập; `"http"`/`"error"` = mạng. */
+      SESS.known = true;
+      SESS.reason = (r && r.ok) ? "" : ((r && r.reason) || "error");
+      paintSess();
       if(!(r && r.ok)) { renderStats(); return; }
       var d = r.data || {}, a = d.achievements || {};
       syncDepth(d.depth);
@@ -698,6 +740,101 @@
              AstroQ.esc(ic) + '</span>' + AstroQ.esc(nm) + '</span>';
     }).join("");
     row.hidden = false;
+  }
+
+  /* ══ DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP ═══════════════════════════════════════════
+     Vì sao có: 13/08/2026 đo được ví thật của một tài khoản là 21 tt trong khi HUD
+     hiện 866 — lệch 845. `Economy` cộng LẠC QUAN vào cache mỗi lượt quiz/game rồi
+     chờ `setFromServer()` ghi đè, nên hai số lệch nhau nghĩa là mọi lời gọi `/me/*`
+     đã trả `auth` từ lâu: trẻ vẫn chơi, vẫn thấy tt tăng, mà KHÔNG THỨ GÌ lên tới
+     server. App im lặng suốt quãng đó, và chỉ lộ ra ở một trang cần token — bằng
+     một câu dễ đọc nhầm thành "app hỏng".
+
+     ⚠️⚠️ NÓI ĐÚNG NGUYÊN NHÂN, ĐỪNG GỘP. Hàng chờ có việc vì HAI lý do khác hẳn
+        nhau: mất PHIÊN (phải đăng nhập lại) và mất MẠNG (không phải làm gì, tự gửi).
+        Gộp thành một câu là 1/2 số ca bảo trẻ đi sửa một thứ không hỏng — đúng bài
+        học ba lý do `sent:false` của email phụ huynh (09/08). Phân biệt bằng
+        `reason` của chính lời gọi `GET /me/achievements`: `"auth"` = mất phiên.
+
+     ⚠️ KHÔNG ĐẾM NGƯỢC, KHÔNG NHẤP NHÁY. Đây là lời nhắc, không phải hạn chót;
+        giục bằng thị giác là đúng thứ điều ④ của `Services/Daily.cs` đã cấm.
+
+     ⚠️ CHƯA BIẾT THÌ CHƯA NÓI. `SESS.known` chỉ bật sau khi `loadStats()` trả lời;
+        vẽ trước đó thì phải đoán nguyên nhân, mà đoán sai chính là lỗi trên. */
+  var SESS = { known:false, reason:"" };
+
+  /* ⚠️ HỎI TỪNG HÀM, ĐỪNG CHỈ HỎI `window.AstroQProgress`. Bộ đo của các trang khác
+     giả lập chính object này bằng một bản rút gọn (smoke_earth_done.py), và một
+     `TypeError` ở đây thì giết cả chuỗi khởi động dashboard — đúng lớp lỗi im lặng
+     mà `js/progress.js` đã đặt luật "không bao giờ ném lỗi ra ngoài". */
+  function prog(){
+    var p = window.AstroQProgress;
+    return (p && typeof p.pending === "function" && typeof p.dropped === "function") ? p : null;
+  }
+
+  function paintSess(){
+    var el = $("sess"), tx = $("sess-tx"), go = $("sess-go"), ok = $("sess-ok");
+    var P = prog();
+    if(!el || !tx || !P) return;
+    if(!SESS.known){ el.hidden = true; return; }
+
+    var n = P.pending(), lost = P.dropped();
+    if(n <= 0 && lost <= 0){ el.hidden = true; return; }
+
+    var html = "";
+    if(n > 0){
+      var unit = "<b>" + n + " " + AstroQ.esc(n === 1 ? t("sess_unit1") : t("sess_unit")) + "</b>";
+      var key = (SESS.reason === "auth")
+        ? (n === 1 ? t("sess_auth1") : t("sess_auth"))
+        : (n === 1 ? t("sess_net1")  : t("sess_net"));
+      html = AstroQ.esc(key).replace("{n}", unit);
+    }
+    if(lost > 0){
+      html += '<span class="lost">' + AstroQ.esc(t("sess_lost")).replace("{n}", lost) + "</span>";
+    }
+    tx.innerHTML = html;
+
+    /* Nút đăng nhập CHỈ hiện khi thật sự mất phiên; nút "Đã hiểu" chỉ hiện khi
+       không còn việc nào chờ mà vẫn còn tin việc đã mất cần xác nhận. */
+    go.hidden = !(n > 0 && SESS.reason === "auth");
+    ok.hidden = !(n <= 0 && lost > 0);
+    el.hidden = false;
+  }
+
+  /* ⚠️⚠️ SỐ VIỆC ĐÃ GỬI XONG PHẢI HỎI `js/progress.js`, TRANG KHÔNG TỰ ĐẾM ĐƯỢC.
+     `flush()` chạy ngay khi file đó nạp; với một phiên đăng nhập còn tốt thì nó xong
+     TRƯỚC cả lúc script này chạy tới — đo được ở `smoke_session_note.py` mục [5].
+     Trang tự đếm thì luôn thấy hàng chờ đã rỗng, và lời báo "đã lưu xong" **không
+     bao giờ hiện ra** — tức đúng cái khoảnh khắc cần nó nhất (trẻ vừa đăng nhập lại)
+     lại là khoảnh khắc nó im lặng. `AstroQProgress.flushed()` giữ con số thật.
+     ⚠️ Vẫn phải theo dõi tiếp bằng đồng hồ: mạng chậm thì lượt gửi kéo dài, và
+        `flush()` có chốt `flushing` nên gọi chồng lên chỉ trả về false — đọc ra như
+        "gửi hỏng" trong khi nó đang chạy tốt. Nên hỏi lại `flushed()`, đừng gọi lại. */
+  function announceFlush(){
+    var P = prog();
+    if(!P || typeof P.flushed !== "function") return false;
+    var n = P.flushed();
+    if(n <= 0) return false;
+    P.ackFlush();
+    toast(t("sess_done").replace("{n}", n), "ok");
+    /* Đã nói ra rồi thì xoá tin việc đã mất — để nguyên là dải nhắc ở lại vĩnh viễn
+       với một chuyện không còn làm gì được nữa. */
+    if(P.dropped() > 0) P.clearDropped();
+    paintSess();
+    return true;
+  }
+
+  function watchSess(){
+    var P = prog();
+    if(!P || typeof P.flushed !== "function") return;
+    var t0 = Date.now();
+    var timer = setInterval(function(){
+      announceFlush();
+      paintSess();
+      // Hết việc chờ và không còn gì để báo thì thôi đếm; hoặc quá 20s thì dừng.
+      if((P.pending() <= 0 && P.flushed() <= 0) ||
+         Date.now() - t0 > 20000) clearInterval(timer);
+    }, 600);
   }
 
   function paintBalance(){
@@ -826,6 +963,7 @@
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
     paintDesk(null);   // ten mau vat co hai ngon ngu -> ve lai
+    paintSess();       // chu do JS sinh (co con so) -> applyTexts khong voi toi
     var name = userName();
     $("user-name").textContent = name;
     // Avatar: dùng ảnh nhân vật đã chọn (thư mục ava) nếu có, ngược lại hiện chữ cái đầu.
@@ -889,6 +1027,12 @@
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
+  watchSess();                 // hàng chờ tiến độ: theo dõi tới lúc gửi xong
+  var sessOk = $("sess-ok");
+  if(sessOk) sessOk.addEventListener("click", function(){
+    var P = prog(); if(P) P.clearDropped();
+    paintSess();
+  });
   tickTelemetry(); setInterval(tickTelemetry, 2500);
 
   AstroQ.initLang(applyLang);
