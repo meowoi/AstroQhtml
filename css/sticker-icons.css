@@ -87,7 +87,16 @@
 .sic--gold { --sic-a: #fff3c4; --sic-b: #fbbf24; --sic-c: #b45309; }
 .sic--lime { --sic-a: #eafcc0; --sic-b: #a3e635; --sic-c: #3f6212; }
 .sic--mag  { --sic-a: #ffd9ee; --sic-b: #ec4899; --sic-c: #9d174d; }
-.sic--slate{ --sic-a: #f1f5f9; --sic-b: #94a3b8; --sic-c: #334155; }
+/* ⚠️ `.sic--slate` ĐÃ XOÁ 13/08/2026: khai từ 12/08 mà không một chỗ nào dùng, và
+   `--sic-b` của nó (#94a3b8) TRÙNG với `.sic--off` ngay dưới — tức một bảng màu xám
+   thứ hai không mang thêm nghĩa nào. Không bịa việc cho nó chỉ để giữ lại; phép kiểm
+   [21] nay canh "không bảng màu nào bỏ không" nên nó không quay lại được trong im
+   lặng. Tra lại: `git show d5f140e:css/sticker-icons.css`. */
+/* ⚠️ BẢNG MÀU THỨ SÁU, thêm 13/08/2026 vì SÁU khu vực trên dashboard có SÁU tông
+   `--ic-bg` khác nhau (cyan · cam · tím · xanh lá · hồng · hổ phách) mà bộ này chỉ có
+   năm bảng + tím mặc định — tức hai khu buộc phải dùng chung một màu. `gold` để cho
+   Sổ Tay (hổ phách), `orange` cho Khu Huấn Luyện (cam). */
+.sic--orange{ --sic-a: #ffe0c2; --sic-b: #fb923c; --sic-c: #9a3412; }
 
 /* Trạng thái KHOÁ / CHƯA MỞ — bạc xám + nhạt bớt.
    ⚠️ KHÔNG dùng `filter:grayscale()` (bài học đã trả giá 3 lần trong dự án: trên

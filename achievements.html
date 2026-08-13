@@ -418,13 +418,26 @@
         tail = '<span class="prog"><span class="bar"><i style="width:'+pct+'%"></i></span>'+
                '<span class="txt">'+b.current+' / '+b.goal+'</span></span>';
       }
+  /* MAU ME DAY THEO NHOM, khong de 22 me day cung mot mau tim.
+     Nam nhom cua `js/badges.js` la nam loai viec khac nhau, nen mau khac nhau giup
+     tre nhan ra "minh dang thieu me day nhom nao" ngay tu luoi — thu ma mot bang 22
+     me day don sac khong noi duoc.
+     Map theo NHOM (5 dong) chu khong theo tung id (22 dong): them me day moi thi no
+     tu co mau dung nhom cua no, khong phai sua o day.
+     ⚠️ Chua mo thi VAN `sic--off` — luc do dieu can noi la "chua dat duoc", khong
+        phai "no thuoc nhom nao". Khoa phai khop `GROUPS` o js/badges.js.
+     ⚠️ Nhom la nam, bang mau la sau (+ tim mac dinh): `mission` de tim mac dinh cho
+        khop tong tim cua khu nhiem vu. */
+  var BADGE_PAL = { learn:"sic--cyan", train:"sic--orange",
+                    explore:"sic--lime", mission:"", level:"sic--gold" };
+
       return '<article class="'+cls+'">'+
         '<span class="gtag" aria-hidden="true">'+AstroQBadges.groupIcon(b.group)+'</span>'+
         '<span class="medal" aria-hidden="true">'+
           /* Me day la o 54px/26px — o duy nhat cua trang du lon cho icon sticker.
              Chua mo thi dung bang mau `sic--off` chu KHONG dung filter:grayscale()
              (bai hoc da tra gia 3 lan: tren nen sang no cho ra khoi xam SANG HON). */
-          sic(AstroQBadges.sicName(b.id), b.earned ? '' : 'sic--off')+'</span>'+
+          sic(AstroQBadges.sicName(b.id), b.earned ? (BADGE_PAL[b.group]||'') : 'sic--off')+'</span>'+
         '<span class="body">'+
           '<span class="nm">'+AstroQ.esc(AstroQBadges.name(b.id, LANG))+'</span>'+
           '<span class="ds">'+AstroQ.esc(AstroQBadges.desc(b.id, LANG))+'</span>'+

@@ -3165,6 +3165,27 @@ check("[21] admin-report + parent van dung emoji, KHONG dung sic()",
 # Lop ve va lop mau: hai chieu voi CSS.
 _f_used = set(re.findall(r'class=\\?"(f-[a-z]+)\\?"', _sic_code))
 _f_have = set(re.findall(r'\.sic-ink \.(f-[a-z]+)', _sic_css))
+# ⚠️ BANG MAU (`sic--<ten>`) PHAI CANH HAI CHIEU — thieu phep kiem nay nen 5 bang mau
+#    (`cyan`/`gold`/`lime`/`mag`/`slate`) da khai o css/sticker-icons.css tu 12/08/2026
+#    ma **chua mot cho nao dung**: moi icon tren dashboard, 6 the game va 22 me day deu
+#    roi ve tim mac dinh. Chu du an bat duoc: "sao lai toan 1 mau tim the? tre con se
+#    thay don dieu". `sic(name, cls)` nhan bang mau la mot CHUOI TU DO nen sai ten thi
+#    im lang tuyet doi — dung ho voi loi `sic()` tra chuoi rong khi ten icon sai.
+_pal_css = set(re.findall(r'\.sic--([a-z]+)\s*\{', _sic_css))
+_pal_used = set()
+for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    _pal_used |= set(re.findall(r'sic--([a-z]+)', _no_comments(rd(_f))))
+check("[21] doc duoc bang mau cua bo icon", len(_pal_css) >= 5, str(sorted(_pal_css)))
+check("[21] moi bang mau duoc dung deu CO CSS", not (_pal_used - _pal_css),
+      str(sorted(_pal_used - _pal_css)))
+check("[21] khong bang mau nao BO KHONG", not (_pal_css - _pal_used),
+      "khai ma khong ai dung: " + str(sorted(_pal_css - _pal_used)))
+# Man hinh tre nhin nhieu nhat khong duoc don sac: 6 card MOD phai co it nhat 4 mau
+# khac nhau (5 bang + tim mac dinh, hai card duoc phep dung chung mot mau).
+_dash_pals = set(re.findall(r'data-sic-cls="(sic--[a-z]+)"', _no_comments(rd("dashboard.html"))))
+check("[21] dashboard KHONG don sac (>=4 bang mau khac nhau)", len(_dash_pals) >= 4,
+      "%d bang: %s" % (len(_dash_pals), sorted(_dash_pals)))
+
 check("[21] moi lop mau `f-*` deu co CSS", not (_f_used - _f_have), str(sorted(_f_used - _f_have)))
 check("[21] khong lop mau `f-*` nao bo khong", not (_f_have - _f_used), str(sorted(_f_have - _f_used)))
 _lay_used = set(re.findall(r'class="(sic-[a-z]+)"', _sic_code))

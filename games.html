@@ -111,27 +111,27 @@
      dãy nhảy hết, trong khi số hiệu đã đi vào tài liệu và lời nói của người dùng
      ("ARCADE-04 = Ghép Chòm Sao"). Thêm game mới thì cấp số kế tiếp, không sửa số cũ. */
   var GAMES = [
-    { key:"dodge", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
+    { key:"dodge", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
       tag:{vi:"Bay ngang & né tránh", en:"Side-scroll & dodge"},
       name:{vi:"Né Thiên Thạch", en:"Asteroid Dodge"},
       desc:{vi:"Điều khiển Byte nhấp nháy bay ngang qua khe hẹp của vành đai thiên thạch và thu thập Thiên thạch tím trên đường bay!", en:"Blink Byte sideways through the narrow gaps of the asteroid belt and collect Purple Meteors along the way!"} },
-    { key:"racer", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:5, diff:"medium", status:"ready", file:"game-racer.html",
+    { key:"racer", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:5, diff:"medium", status:"ready", file:"game-racer.html",
       tag:{vi:"Đua tốc độ", en:"Racing"},
       name:{vi:"Đường Đua Sao Chổi", en:"Comet Racer"},
       desc:{vi:"Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về đích 1.200 m trước khi cạn nhiên liệu!", en:"Switch lanes to dodge asteroids, grab fuel cans and purple crystals — finish the 1,200 m track before you run dry!"} },
-    { key:"defender", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
+    { key:"defender", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
       tag:{vi:"Phòng thủ 360°", en:"360° defense"},
       name:{vi:"Phòng Thủ Không Gian", en:"Space Defender"},
       desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
-    { key:"match", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
+    { key:"match", pal:"sic--gold", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       tag:{vi:"Giải đố", en:"Puzzle"},
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
       desc:{vi:"Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!", en:"Link the stars in number order to draw a real constellation — finish it and unlock a fun fact about the night sky!"} },
-    { key:"maze", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:4, diff:"medium", status:"ready", file:"game-maze.html",
+    { key:"maze", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:4, diff:"medium", status:"ready", file:"game-maze.html",
       tag:{vi:"Giải đố", en:"Puzzle"},
       name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
       desc:{vi:"Dẫn phi hành gia qua mê cung sao: thu 5 tinh thể rồi tìm cổng sáng để ra. Mê cung mới mỗi lượt, và không có thua!", en:"Guide the astronaut through a star maze: collect 5 crystals, then find the glowing gate. A new maze every run — and no losing!"} },
-    { key:"catch", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:3, diff:"easy", status:"ready", file:"game-catch.html",
+    { key:"catch", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:3, diff:"easy", status:"ready", file:"game-catch.html",
       tag:{vi:"Phản xạ", en:"Reflex"},
       name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
       desc:{vi:"Hứng sao băng vàng để lấy điểm, hứng sao tím để lấy Thiên thạch tím — và né sao chổi lửa. Bạn có 3 mạng!", en:"Catch gold shooting stars for points and purple ones for Purple Meteors — and dodge the fiery comets. You get 3 lives!"} }
@@ -165,7 +165,11 @@
       return '<article class="gcard '+g.cls+(soon?' soon':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
         badge+
-        '<div class="ic">'+sic(g.icon, soon ? 'sic--off' : '')+'</div>'+
+        /* Bang mau theo TUNG game (`pal`), khong de tat ca roi ve tim mac dinh: sau
+           the game cung mot mau doc ra don dieu voi tre — chu du an bat duoc dung
+           chuyen do o dashboard 13/08/2026. Chua mo thi `sic--off` thang, vi luc do
+           dieu can noi la "chua dung duoc", khong phai "khu nay mau gi". */
+        '<div class="ic">'+sic(g.icon, soon ? 'sic--off' : (g.pal||''))+'</div>'+
         '<span class="tag">'+L(g.tag)+'</span>'+
         '<h3>'+L(g.name)+'</h3>'+
         '<p>'+L(g.desc)+'</p>'+
