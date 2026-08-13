@@ -42,6 +42,10 @@
 }
 .citem .cnm{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--ink);}
 .citem .cprice{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-faint);}
+/* ⚠️ `.tt-inline` mặc định là `1em`, mà hàng giá dùng mono 10,5px nên ảnh Thiên thạch
+   tím ra đúng 10,5px — bé hơn hẳn ô số dư ở header và đọc ra như một hạt bụi. Nới
+   theo `em` chứ không gõ px: đổi cỡ chữ hàng giá thì ảnh vẫn đi theo. */
+.citem .cprice .tt-inline{width:1.5em;height:1.5em;vertical-align:-0.42em;margin-left:.1em;}
 /* ⚠️ Vùng chạm 48px, không phải 44 (quy tắc 10 mục 6 CLAUDE.md). `.pbtn` của
    page-shell đo ra 40–42px trên màn 390px, và đây là nút chính của cả trang.
    ⚠️ `margin-top:auto` để MỌI NÚT TRONG MỘT HÀNG THẲNG NHAU: tên món dài ngắn khác

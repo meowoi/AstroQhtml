@@ -89,7 +89,7 @@
       ship_label:"Tên phi thuyền", ship_ph:"Ví dụ: Luna Một", ship_save:"Lưu",
       ship_saved:"Đã đặt tên tàu: {n}", ship_cleared:"Đã bỏ tên tàu",
       buy:"Mua", equip:"Dùng", using:"Đang dùng", owned:"Đã có",
-      free:"Có sẵn", need:"Cần thêm {n} ☄️",
+      free:"Có sẵn", need:"Cần thêm {n} {tt}",
       bought:"Đã mua {n} — đang dùng luôn!", equipped:"Đang dùng {n}",
       loading:"Đang mở kho trang trí…",
       err_net:"Không kết nối được máy chủ. Thử lại sau nhé.",
@@ -107,7 +107,7 @@
       ship_label:"Ship name", ship_ph:"e.g. Luna One", ship_save:"Save",
       ship_saved:"Ship named: {n}", ship_cleared:"Ship name removed",
       buy:"Buy", equip:"Use", using:"In use", owned:"Owned",
-      free:"Included", need:"Need {n} more ☄️",
+      free:"Included", need:"Need {n} more {tt}",
       bought:"Bought {n} — now in use!", equipped:"Now using {n}",
       loading:"Opening the decoration deck…",
       err_net:"Can't reach the server. Try again later.",
@@ -185,6 +185,13 @@
     host.innerHTML = "";
     (SHOP.kinds.length ? SHOP.kinds : ["theme","frame"]).forEach(function(kind){
       var items = SHOP.items.filter(function(i){ return i.kind === kind; });
+      /* ⚠️ GIÁ HIỆN BẰNG ẢNH `img/tt.png`, KHÔNG PHẢI EMOJI ☄️. Bản đầu ghép
+         `it.price + " ☄️"` và trên Windows emoji đó vẽ ra một vệt cam — chủ dự án
+         đọc không ra ("mua bằng thiên thạch tím mà sao thành cái gì thế?"). Đây là
+         tiền tệ của cả app, và dự án đã chốt từ 25/07/2026: mọi chỗ nói tới Thiên
+         thạch tím thì hiện ẢNH, không hiện emoji cũng không viết chữ "tt". Toast thì
+         dùng token `{tt}` (makeToast tự thay), còn ở đây phải gọi `AstroQ.ttImg()`
+         thẳng vì chuỗi này đi vào innerHTML. */
       if(!items.length) return;
       var sec = document.createElement("section");
       sec.className = "panel";
@@ -196,13 +203,14 @@
           '<span>' + AstroQ.esc(AstroQCos.kindName(kind, LANG)) + '</span></h2>' +
         '<div class="cgrid">' + items.map(function(it){
           var mine = has(it.id), on = (it.id === cur);
-          var badge = it.price === 0 ? t("free")
-                    : (mine ? t("owned") : it.price + " ☄️");
+          var badge = it.price === 0 ? AstroQ.esc(t("free"))
+                    : (mine ? AstroQ.esc(t("owned"))
+                            : AstroQ.esc(String(it.price)) + " " + AstroQ.ttImg());
           var label = on ? t("using") : (mine ? t("equip") : t("buy"));
           return '<div class="citem' + (on ? " on" : "") + '">' +
                    '<div class="cos-sw cos-sw--' + AstroQ.esc(it.id) + '"></div>' +
                    '<div class="cnm">' + AstroQ.esc(AstroQCos.name(it.id, LANG)) + '</div>' +
-                   '<div class="cprice">' + AstroQ.esc(badge) + '</div>' +
+                   '<div class="cprice">' + badge + '</div>' +
                    '<button type="button" class="pbtn cbtn' + (on ? " ghost" : "") + '"' +
                      ' data-item="' + AstroQ.esc(it.id) + '"' +
                      ' data-act="' + (mine ? "equip" : "buy") + '"' +

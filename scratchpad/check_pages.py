@@ -3332,6 +3332,22 @@ check("[23] js/cosmetics.js KHONG chua con so gia nao", not _leak, str(_leak))
 check("[23] shop.html KHONG gui so tien len server",
       not re.search(r'(price|amount|cost)\s*:', _shop), "co gui so tien")
 
+# ⚠️ THIEN THACH TIM HIEN BANG ANH `img/tt.png`, KHONG BANG EMOJI ☄️.
+# Du an chot dieu nay tu 25/07/2026 (bo ca chu "tt" trong toast, thay bang anh), the
+# ma hang gia o cua hang van ghep emoji — tren Windows no ve ra mot vet cam va chu du
+# an doc khong ra ("mua bang thien thach tim ma sao thanh cai gi the?"). Day la TIEN TE
+# cua ca app, hien sai bieu tuong o dung cho tre quyet dinh tieu tien la noi sai.
+# ⚠️ Quet tren `_shop` (da boc chu thich) — chinh ghi chu giai thich vi sao KHONG dung
+#    emoji cung chua emoji do; day la loi "dem ca chu trong ghi chu cua minh" da tra
+#    gia 16 lan.
+check("[23] shop.html KHONG dung emoji ☄️ cho Thien thach tim",
+      "☄" not in _shop, "con emoji trong code")
+check("[23] hang gia dung anh qua AstroQ.ttImg()", "AstroQ.ttImg()" in _shop)
+# Token {tt} cua toast phai co o CA vi va en — thieu mot ben la mot ngon ngu hien
+# thieu bieu tuong tien te.
+check("[23] toast 'thieu tien' dung token {tt} o ca vi va en",
+      _shop.count("{tt}") >= 2, "%d cho" % _shop.count("{tt}"))
+
 # Ten (ca vi va en) + o xem truoc: hai chieu.
 _ids = [i for i, _, _ in _items]
 _no_name = [i for i in _ids if _cos_js.count('"%s":' % i) < 2]
