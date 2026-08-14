@@ -1,7 +1,7 @@
 # 010 — Sáu nhánh kiến thức cho Góc Khám Phá, và khối "Mở rộng"
 
 - **Ngày:** 14/08/2026
-- **Trạng thái:** **đang chạy** (nhánh 1/6 đã giao; 5 nhánh còn lại chờ)
+- **Trạng thái:** **đang chạy** (LIFE SCIENCE 5/5 · *lập trình* 2/2 · MATHEMATICS 5/7 — mục 4b–4c; còn PHYSICS + ENGINEERING)
 - **Người quyết:** chủ dự án
 - **Đối chiếu mã nguồn:** Claude
 
@@ -124,16 +124,116 @@ không suy được theo mẫu, phải tìm rồi mở.** Tìm lại ra bản *G
 
 ---
 
-## 5. Còn lại — 4 nhánh, ~20 bài
+## 4b. Mắt xích đã giao thêm: LẬP TRÌNH (2/2) — 14/08/2026
+
+Mắt xích còn thiếu của nhánh COMPUTING, và nó **dọn một món nợ đã ghi từ 25/07/2026**:
+khoá quiz `loop` khai trong bank mà **không bài đọc nào dạy vòng lặp**, nên câu đó chưa
+bao giờ được rút ra hỏi một cách tử tế.
+
+| ord | id | Nguồn |
+|---:|---|---|
+| 4002 | `art-code-written-before-launch` | `jpl.nasa.gov/edu/resources/project/code-a-mars-landing/` |
+| 4006 | `art-loop-you-can-see-on-mars` | `science.nasa.gov/resource/autonomous-hazard-checks-…-stereo/` |
+
+Đặt `cat: "it"` chứ **không mở chủ đề thứ bảy** cho hai bài — CNTT đã là chỗ của chuỗi
+*lập trình → dữ liệu* (`art-how-data-gets-home` 4010 trở đi), và `ord` 4002/4006 giữ đúng
+thứ tự chuỗi: lập trình **trước** dữ liệu.
+
+**Đo được sau khi làm: 0 khoá lập trình còn mồ côi** — cả 5 (`algorithm` · `sequence` ·
+`condition` · `sensor` · `loop`) đều đã có bài đọc nhận.
+
+### ⚠️ Ranh giới phải giữ: NASA mô tả một THAO TÁC LẶP LẠI, không nói "vòng lặp"
+
+Trang NASA mô tả rover xoay **17,5 độ** rồi chụp ảnh, **lặp lại sau mỗi 1,2 mét**, và cái
+hoa văn hình bước nhảy mà nó để lại trên vết bánh xe. Trang **không dùng chữ "vòng lặp"**
+và không nói gì về cấu trúc lập trình.
+
+⇒ **Thân bài** chỉ kể đúng thứ NASA quan sát được. **Phần `more`** mới giải thích khái niệm
+vòng lặp, và nó **nói thẳng ra rằng chữ đó là của astroQ, không phải chữ NASA dùng trong
+trang ấy**. Đặt một thuật ngữ lập trình vào miệng NASA là đúng lớp lỗi đã mắc ba lần
+(Nam Cực *"châu lục cao nhất"* · ba tiêu chí IAU · CHNOPS).
+
+### ⚠️ `jpl.nasa.gov` trả 403 với bot, 200 với trình duyệt thật
+
+Đo ngày 14/08/2026: `curl` trần → **403** · Chromium **headless** → **403** · `curl` kèm
+User-Agent thật → **200**. Đó là bộ lọc bot của CloudFront trước `jpl.nasa.gov`, **không
+phải trang chết** — trẻ bấm bằng trình duyệt thật thì mở được. Ghi lại để lần sau ai đó
+chạy một bộ kiểm URL tự động thì **không báo "nguồn chết" oan rồi đi thay một nguồn tốt**.
+
+### ⚠️ Đã bác: dùng diễn đàn Scratch làm nguồn cho `loop`
+
+Tìm nguồn cho vòng lặp thì phần lớn kết quả trên `scratch.mit.edu` là **bài diễn đàn người
+dùng** (`/discuss/`) — nội dung do người dùng viết, không dùng làm nguồn cho một trang trẻ
+em dù tên miền nằm trong allowlist. Trang tips chính thức thì quá mỏng (hai câu, và nói về
+`repeat until`, trong khi câu quiz hỏi **lặp một số lần**). ⇒ Đi tìm một vòng lặp trong một
+cỗ máy CÓ THẬT, và kết quả tốt hơn hẳn: một vòng lặp **nhìn thấy được trên đất Sao Hoả**.
+
+⚠️ **`mit.edu` nằm trong `OKDOM` không có nghĩa là mọi URL dưới nó đều dùng được.**
+Allowlist lọc *tên miền*, không lọc *chất lượng trang*. Người viết vẫn phải mở trang ra đọc.
+
+---
+
+## 4c. Nhánh đã giao: MATHEMATICS (5/7) — 14/08/2026
+
+| ord | id | Mắt xích | Nguồn (kiểm 200 · 14/08/2026) |
+|---:|---|---|---|
+| 7010 | `art-units-lost-a-spacecraft` | Đo lường | `science.nasa.gov/mission/mars-climate-orbiter/` |
+| 7020 | `art-light-year-is-a-distance` | Khoảng cách **+ tỉ lệ** | `science.nasa.gov/exoplanets/what-is-a-light-year/` |
+| 7030 | `art-measuring-stars-with-angles` | Góc | `science.nasa.gov/asset/hubble/stellar-parallax/` |
+| 7040 | `art-orbit-is-a-balance` | Quỹ đạo | `nasa.gov/…/what-is-an-orbit-grades-5-8/` |
+
+Chủ đề mới `math` (+ icon `ruler`), tông vàng hổ phách — khác hẳn 6 tông đang có.
+
+⚠️ **`OKDOM` VẪN CHƯA PHẢI NỚI.** Mục 3d dự đoán MATHEMATICS sẽ cần `nist.gov`; đo lại
+thì **cả 4 bài đều có trang NASA tử tế**, trong đó bản *Grades 5-8* cho quỹ đạo đúng độ
+tuổi. Dự đoán sai theo hướng tốt — và nó xác nhận luật *"nới đúng lúc thật sự cần"* là
+đúng: nới sẵn theo dự đoán thì hôm nay đã mở thừa một tên miền.
+
+### Mắt xích "tỉ lệ" nằm trong phần `more` của bài khoảng cách — có chủ đích
+
+Chuỗi có 7 mắt xích nhưng **không bắt buộc 7 bài**. So sánh *8 phút ánh sáng* với
+*4,25 năm ánh sáng* là bài học về tỉ lệ đẹp hơn bất cứ ví dụ bịa nào, **và nó dùng đúng
+số liệu đã có nguồn ở thân bài**. Tách ra thành bài riêng là phải đi tìm một bộ số liệu
+thứ hai cho cùng một ý. Đây chính là việc mà khối "Mở rộng" sinh ra để làm.
+
+### ⚠️ Con số "170 km" — chỗ suýt bịa thứ tư, và là chỗ cám dỗ nhất
+
+Bản tóm tắt của bộ tra cứu nêu *"quỹ đạo thấp hơn dự tính khoảng 170 km"* cho vụ Mars
+Climate Orbiter. Mở trang ra thì **trang không có con số đó** (nó nằm ở báo cáo của ban
+điều tra, một tài liệu khác). Bài viết vì thế **không dùng nó**, và chỉ nói đúng hai câu
+trang nói. ⚠️ Lần này cám dỗ hơn ba lần trước vì con số nghe rất "chắc" và rất hợp bài.
+
+### ⚠️ Ba chỗ khác giữ đúng ranh giới "lời NASA" vs "lời astroQ"
+
+Cùng khuôn đã đặt ở `art-loop-you-can-see-on-mars`: phần suy luận của astroQ **nói thẳng
+ra là của astroQ**, không để lẫn vào lời trang nguồn.
+- phép chia ra *260.000 lần* và *260 km* (bài tỉ lệ)
+- phép ví **ngón tay / nhắm một mắt** (bài thị sai) — trang NASA **không** có phép ví này
+- lập luận *vì sao đường đi thành hình bầu dục* (bài quỹ đạo)
+
+### Còn thiếu 2 mắt xích: **toạ độ** và **vận tốc**
+
+`vận tốc` hiện đã có coverage **từ nhánh khác** (17.500 dặm/giờ ở `art-microgravity-is-falling`,
+7 phút trễ tín hiệu ở `art-code-written-before-launch`) nên nó không phải lỗ hổng gấp;
+`toạ độ` thì chưa có gì.
+
+---
+
+## 5. Còn lại — 2 nhánh + 3 mắt xích lẻ
 
 Thứ tự đề nghị, theo mức trống và mức sẵn nguồn:
 
-1. **MATHEMATICS (0/7)** — trống hoàn toàn. Cần nới allowlist trước (xem 3d).
-2. **PHYSICS (3/9)** — thiếu 6: lực · chuyển động · năng lượng · nhiệt · điện · chân không.
-3. **ENGINEERING (2/6)** — thiếu 4: cơ cấu máy · điện · động cơ tên lửa · hỗ trợ sự sống.
-4. **Hai mắt xích lẻ** — bài nhập môn thiên văn, và **lập trình** (nhánh COMPUTING).
-   ⚠️ Mắt xích *lập trình* đáng làm sớm vì nó **dọn một món nợ đã ghi**: khoá quiz `loop`
-   khai từ 25/07/2026 tới nay **vẫn chưa có bài đọc nào dạy vòng lặp**.
+1. **PHYSICS (3/9)** — thiếu 6: lực · chuyển động · năng lượng · nhiệt · điện · chân không.
+   ⚠️ **Đã thử tra nguồn 14/08 và HỎNG HAI LẦN**, ghi lại để lượt sau khỏi đi lại đường cũ:
+   `grc.nasa.gov/www/k-12/rocket/newton3r.html` → **lỗi chứng chỉ SSL** (`unable to verify
+   the first certificate`) · `nasa.gov/stem-content/the-law-of-action-and-reaction-…` →
+   trang **chỉ là vỏ của một video**, không có chữ nào phát biểu định luật. ⇒ Lượt sau nên
+   thử `www1.grc.nasa.gov/beginners-guide-to-aeronautics/` (đã thấy trong kết quả tìm kiếm)
+   hoặc các bản PDF bài giảng của NASA, và **kiểm chứng chỉ + nội dung TRƯỚC khi viết**.
+2. **ENGINEERING (2/6)** — thiếu 4: cơ cấu máy · điện · động cơ tên lửa · hỗ trợ sự sống.
+3. **Ba mắt xích lẻ** — `toạ độ` + `vận tốc` (MATHEMATICS, mục 4c) và bài nhập môn thiên văn.
+4. **Một mắt xích lẻ còn lại** — bài nhập môn thiên văn cho đầu chuỗi SPACE SCIENCE.
+   ✅ Mắt xích *lập trình* **đã xong 14/08/2026** — xem mục 4b.
 
 ⚠️ **Đừng viết cả 20 bài trong một lượt.** Tỉ lệ hỏng của việc dẫn nguồn ở quy mô lớn là
 thứ đã đo được (Đợt 1 của Gemini: **13/40 câu** trượt). Làm theo nhánh, mỗi nhánh mở
