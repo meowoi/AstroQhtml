@@ -13,7 +13,19 @@
   var LS_USER = "astroq-user", LS_LANG = "astroq-lang";
 
   function $(id){ return document.getElementById(id); }
-  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+  /* Thoát chuỗi trước khi nhét vào innerHTML.
+     ⚠️ PHẢI THOÁT CẢ `"` VÀ `'`, KHÔNG CHỈ `&` VÀ `<`. Bản cũ chỉ thoát hai ký tự đầu,
+     đủ cho phần chữ nhưng KHÔNG đủ cho THUỘC TÍNH — mà `esc()` đang được gọi bên trong
+     thuộc tính ở 6 chỗ (`title=`, `alt=`, `aria-label=` ở profile/pricing/explorer/
+     specimen-vault). Hôm nay mọi giá trị ở đó đều là chuỗi tĩnh của client nên chưa
+     thành lỗ hổng; nhưng một hàm thoát chuỗi mà chỉ đúng ở một loại ngữ cảnh là cái bẫy
+     đặt sẵn cho lần đầu tiên ai đó nội suy dữ liệu từ server vào một thuộc tính.
+     Thoát dư ở ngữ cảnh chữ là vô hại: trình duyệt vẽ lại đúng ký tự gốc. */
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
 
   /* ---------------- Hồ sơ phi hành gia ---------------- */
   function getUser(){ try{ return JSON.parse(localStorage.getItem(LS_USER)||"null"); }catch(e){ return null; } }
@@ -155,7 +167,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.14.1";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.08.14.2";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 
