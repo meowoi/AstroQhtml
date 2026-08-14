@@ -358,6 +358,18 @@
 > 9. ⚠️⚠️ **CHROME HÃM `setInterval` Ở TRANG KHÔNG HIỆN — ĐO ĐƯỢC ~124ms/ký tự thay vì 22ms (chậm 5,6 lần), VÀ NÓ XẢY RA CẢ KHI CHẠY MỘT MÌNH.** `smoke_map_onboard` ghi chú rằng chuyện này chỉ xảy ra khi chạy song song với bộ khác; sai. Bộ đó mở nhiều context, mà trong headless thì trang không phải trang đang hiện đều bị coi là ẩn — dọn sạch Chromium rồi chạy lại vẫn hỏng đúng ba câu. **Dấu vân tay để nhận ra:** đúng những câu DÀI NHẤT hỏng, câu ngắn nhất đạt (l3 172 ký tự → 21,3s vượt mốc 20s · l3b 244 → 30,3s · l4 195 → 24,2s · `ask` 101 → 12,5s **đạt**). Một lỗi sản phẩm thì không quan tâm độ dài câu. `wait_typed` nay để mốc **90 giây**.
 > 10. ⚠️ **ĐỪNG ĐẶT VÙNG CHẠM ĐÚNG BẰNG 44px.** 44 là mốc TỐI THIỂU của WCAG 2.5.5, nên đặt đúng 44 thì sai số dưới pixel làm phép kiểm khi đạt khi hỏng — `audit_viewports` cho `explorer.html` nút VI đã chập chờn **683/1 rồi 684/0 với cùng một mã** từ 31/07/2026, và ca đó nằm treo hơn hai ngày. Đã nâng `.lang-switch button` và `.me-stamp` lên **48px** (02/08). **Một phép kiểm hay báo oan thì sớm muộn người ta bỏ qua nó — đó mới là cái giá thật.**
 > 7. **Nhớ kiểm máy chủ tĩnh còn sống.** `python -m http.server 8123` chạy nền có thể chết giữa phiên; khi đó mọi bộ smoke đều ném `page.goto` và trông y như sản phẩm hỏng. Thấy **0 phép kiểm chạy** thì việc đầu tiên là `curl` cổng 8123, đừng đi sửa code.
+> 11. ⚠️ **CHẠY BỘ KIỂM THEO THỨ VỪA SỬA, ĐỪNG CHẠY HẾT MỖI LƯỢT** (chốt 14/08/2026, chủ dự án hỏi thẳng *"sao lâu thế?"*). Chạy cả 7 bộ cho một thay đổi chỉ đụng kho bài đọc là tiêu vài phút cho những bộ **không thể** bắt được lỗi của lượt đó — mà một bộ kiểm chạy lâu vô ích thì sớm muộn người ta bỏ qua nó.
+>
+>     | Sửa gì | Bộ phải chạy |
+>     |---|---|
+>     | Kho bài đọc (`js/article/*`, `articles-index`) | `check_pages` · `smoke_library_featured` · `smoke_more_box` |
+>     | Ngân hàng câu hỏi (`js/quiz/*`) | `check_pages` · `check_quiz_split` · `check_quiz_bank` |
+>     | Sổ Tay (`js/codex-terms.js`) | `check_pages` · `smoke_codex` |
+>     | Bố cục / CSS dùng chung | `check_pages` · `audit_viewports` · `smoke_lang_switch` |
+>     | Thêm/sửa khoá i18n | `check_pages` · `smoke_lang_switch` |
+>
+>     ⚠️ **`check_pages` LUÔN CHẠY** — nó tĩnh, nhanh, và là bộ duy nhất đối chiếu client ↔ server.
+>     ⚠️⚠️ **TRƯỚC MỖI LẦN PUSH thì CHẠY ĐỦ**, không có ngoại lệ: bảng trên chỉ đúng khi phán đoán "thay đổi này đụng tới đâu" là đúng, mà chính lịch sử file này ghi nhiều lần phán đoán đó SAI (`showCard` dùng chung làm cả bộ smoke đỏ mà không ai biết · `.pt-parent` mượn class làm hỏng `smoke_parent` · thêm `css/locks.css` làm `check_pages` báo thiếu CSS oan). Chạy đủ ở cửa push là chỗ bắt được những ca đó, và ở đó thì vài phút không đáng kể so với việc đẩy lỗi ra bản thật.
 
 > **Quy tắc bắt buộc (2026-07-27) — cách làm việc:**
 > 1. **Tính năng nào cũng làm CẢ hai phía**: client **và** backend. Không dừng lại ở client.
