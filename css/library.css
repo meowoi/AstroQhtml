@@ -65,6 +65,7 @@
 .cat--ai{--cat-c:#c084fc;--cat-bg:rgba(192,132,252,.14);}
 .cat--quantum{--cat-c:#4ade80;--cat-bg:rgba(74,222,128,.14);}
 .cat--robot{--cat-c:#fb923c;--cat-bg:rgba(251,146,60,.14);}
+.cat--life{--cat-c:#7ee07a;--cat-bg:rgba(126,224,122,.14);}
 .cat--it{--cat-c:#4aa890;--cat-bg:rgba(74,168,144,.14);}
 .cat--all{--cat-c:#9fb0d0;--cat-bg:rgba(159,176,208,.14);}
 .stats{display:flex;flex-direction:column;gap:10px;}

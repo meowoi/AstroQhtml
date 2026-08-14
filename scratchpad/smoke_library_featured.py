@@ -446,6 +446,27 @@ with sync_playwright() as p:
         if isinstance(b.get("vi"), list) and isinstance(b.get("en"), list) \
                 and len(b["vi"]) != len(b["en"]):
             flag(a, f"body vi/en lech so doan ({len(b['vi'])} vs {len(b['en'])})")
+
+        # ── Truong `more` (phan "Mo rong", them 14/08/2026) ──
+        # Tuy chon: bai khong co `more` la hop le. Nhung CO thi phai du song ngu
+        # va CUNG so doan — lech thi mot ngon ngu doc thieu mot doan ma khong ai
+        # bao, dung lop loi im lang da bat o `body`.
+        mo = a.get("more")
+        if mo is not None:
+            if not isinstance(mo, dict) or "vi" not in mo or "en" not in mo:
+                flag(a, "`more` thieu song ngu vi/en")
+            elif not (isinstance(mo["vi"], list) and isinstance(mo["en"], list)):
+                flag(a, "`more` khong phai mang doan van")
+            elif not mo["vi"] or not mo["en"]:
+                flag(a, "`more` co khai nhung RONG (an han con hon mot tieu de tro)")
+            elif len(mo["vi"]) != len(mo["en"]):
+                flag(a, f"more vi/en lech so doan ({len(mo['vi'])} vs {len(mo['en'])})")
+            else:
+                # `more` di vao innerHTML qua AstroQMore -> da `esc()` het, nen the
+                # HTML trong do se hien ra thanh chu tho. Chan o tang DU LIEU luon.
+                for L_ in ("vi", "en"):
+                    if any("<" in x for x in mo[L_]):
+                        flag(a, f"`more.{L_}` chua the HTML (se hien ra thanh chu tho)")
         t = a.get("term")
         if t:
             if t.get("who") not in ("comet", "byte"):
