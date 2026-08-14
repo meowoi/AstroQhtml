@@ -1,7 +1,7 @@
 # 010 — Sáu nhánh kiến thức cho Góc Khám Phá, và khối "Mở rộng"
 
 - **Ngày:** 14/08/2026
-- **Trạng thái:** **đang chạy** (LIFE SCIENCE 5/5 · *lập trình* 2/2 · MATHEMATICS 5/7 — mục 4b–4c; còn PHYSICS + ENGINEERING)
+- **Trạng thái:** **đang chạy** (LIFE 5/5 · *lập trình* 2/2 · MATH 5/7 · PHYSICS 7/9 — mục 4b–4d; còn ENGINEERING)
 - **Người quyết:** chủ dự án
 - **Đối chiếu mã nguồn:** Claude
 
@@ -219,12 +219,128 @@ ra là của astroQ**, không để lẫn vào lời trang nguồn.
 
 ---
 
-## 5. Còn lại — 2 nhánh + 3 mắt xích lẻ
+## 4d. Nhánh đã giao: PHYSICS (7/9) — 14/08/2026
+
+Chủ đề mới `physics`, **dùng icon `orbit` ĐÃ CÓ SẴN** — không vẽ icon mới khi một icon
+đang bỏ không đọc đúng nghĩa (quỹ đạo electron / chuyển động).
+
+| ord | id | Mắt xích | Nguồn |
+|---:|---|---|---|
+| 8010 | `art-four-forces-tug-of-war` | **Lực** | `www1.grc.nasa.gov/…/four-rocket-forces/` |
+| 8020 | `art-gravity-pulls-to-center` | Trọng lực | *(đã có — chuyển từ `astronomy`)* |
+| 8030 | `art-newtons-three-laws` | **Chuyển động** | `www1.grc.nasa.gov/…/newtons-laws-of-motion/` |
+| 8040 | `art-rockets-work-in-vacuum` | **Năng lượng + chân không** | `www1.grc.nasa.gov/…/rocket-thrust/` |
+| 8050 | `art-light-and-shadow-space` | Ánh sáng | *(đã có — chuyển từ `astronomy`)* |
+| — | *(trống)* | ❌ **Nhiệt** | chưa có nguồn |
+| 8070 | `art-sunlight-into-electricity` | **Điện** | `science.nasa.gov/big-idea-3-2-…/` |
+| — | `art-atmosphere-shield` | ⚠️ Bức xạ (một phần) | **ở lại `astronomy`** — xem dưới |
+
+### ⚠️ ĐÃ CHUYỂN 2 BÀI TỪ `astronomy` SANG `physics` — và đây là sửa một chỗ SAI
+
+`art-gravity-pulls-to-center` (trọng lực) và `art-light-and-shadow-space` (ánh sáng) vốn
+được gắn `cat: "astronomy"`, nhưng chính `010` mục 2 đã đếm chúng là *"3/9 của nhánh
+PHYSICS"*. Để nguyên thì chip **Vật lý** hiện 4 bài trong khi nhánh khai 7 — trẻ bấm vào
+"Vật lý" mà **không tìm thấy trọng lực**. Đó đúng lỗi *"hai nơi nói hai điều"*.
+
+⚠️ **Đánh lại `ord` (1070/1090 → 8020/8050) chứ không chỉ đổi `cat`.** `ord` là khoá sắp
+xếp TOÀN CỤC; giữ số cũ thì trong bộ lọc Vật lý chúng nhảy lên đầu và chuỗi đọc thành
+*trọng lực → ánh sáng → lực → chuyển động*, tức sai thứ tự dạy. Đo trên trình duyệt: lưới
+hiện **đúng 6 bài, đúng thứ tự chuỗi**.
+
+⚠️ **`art-atmosphere-shield` CỐ Ý Ở LẠI `astronomy`.** Nó nói về khí quyển Trái Đất như
+một NƠI CHỐN, không phải về bức xạ như một hiện tượng vật lý. ⇒ Mắt xích **bức xạ** của
+nhánh Vật lý vẫn còn thiếu một bài riêng; đừng tính nó là đã phủ.
+
+### ⚠️ Nguồn `www1.grc.nasa.gov` chỉ đọc được bằng `curl`
+
+`WebFetch` từ chối (*"unable to verify the first certificate"* — máy chủ NASA đó thiếu
+chứng chỉ trung gian), `curl` vào bình thường. **Lượt trước tôi đã kết luận SAI rằng nguồn
+này không dùng được.** Ghi ở `docs/proposals/2026-08-14-nguon-cho-physics-engineering.md`
+mục 4. **Một công cụ không mở được trang KHÔNG có nghĩa trang đó hỏng.**
+
+### ⚠️ Phép ví KÉO CO là của chính NASA — khác hẳn ba phép ví trước
+
+Trang `four-rocket-forces` **tự** ví bốn lực với sợi dây trong một cuộc kéo co, nên phép
+ví đó **được phép nằm trong thân bài**. Ngược lại, ví dụ *quyển sách / Voyager* (định luật
+1), *cây nến* (chân không) và *màu đen của tấm pin* (điện) là của astroQ ⇒ nằm ở `more` và
+**tự khai**. Đọc kỹ khác biệt này trước khi thêm bất kỳ phép ví nào.
+
+### ⚠️ Một câu trên trang NASA THIẾU CHỮ
+
+Định luật 3 viết *"the second object exerts an equal and opposite on the first"* — thiếu
+chữ `force`. Bài viết **diễn đạt lại bằng lời của mình** chứ không trích nguyên văn câu đó.
+⛔ Đừng "sửa hộ" rồi vẫn để trong ngoặc kép — sửa xong thì nó không còn là trích dẫn nữa.
+
+---
+
+## 4e. ENGINEERING — 3/6 mắt xích (14/08/2026)
+
+| Mắt xích | Bài | Nguồn |
+|---|---|---|
+| máy móc | ❌ chưa có nguồn | |
+| **điện** | `art-rollout-solar-arrays` (9020) | ISS assembly elements |
+| cảm biến | ✅ đã phủ — `art-rover-drives-itself-mars` (`robot`) | |
+| hệ thống tàu | ⚠️ một phần — `art-canadarm2-*` (`robot`) | |
+| **động cơ** | `art-solid-and-liquid-rocket-engines` (9050) | model-solid-rocket-engine |
+| **hỗ trợ sự sống** | `art-life-support-recycles-water` (9060) | ECLSS |
+
+Chủ đề mới `engineering` **dùng icon `rocket` ĐÃ CÓ SẴN** — cùng lý do đã dùng
+`orbit` cho physics: không vẽ icon mới khi một icon đang bỏ không đọc đúng nghĩa.
+
+### ⚠️ KHÁC HẲN CA PHYSICS: KHÔNG re-tag hai bài `robot` sang `engineering`
+
+Lượt PHYSICS phải chuyển 2 bài từ `astronomy` vì chip **Vật lý** khi đó **rỗng**
+và `010` đã đếm chúng là physics — tức hai nơi nói hai điều. Ở đây thì ngược:
+`robot` là một chủ đề **thật, 11 bài**, và rover/Canadarm2 đúng là bài robot.
+Chuyển sang là **rút ruột một chip đang sống** để làm đầy một chip mới.
+⇒ ENGINEERING nhận **3 bài mới**, hai mắt xích kia ghi là *đã phủ từ nhánh khác*.
+
+### ⚠️⚠️ MỘT NGUỒN BỊ LOẠI VÌ TRÙNG BÀI ĐÃ CÓ
+
+`www1.grc.nasa.gov/…/liquid-rocket-engine/` (200, đọc được) lặp **gần hết**
+`…/rocket-thrust/` mà `art-rockets-work-in-vacuum` đang dùng — cùng phương trình
+lực đẩy, cùng câu *"rockets can generate thrust in a vacuum"*. Viết tiếp từ đó là
+lặp đoạn, mà `smoke_library_featured` mục [8] cấm hai bài **cùng url** lặp đoạn.
+⇒ Đi tìm góc khác và ra thứ tốt hơn: **trang động cơ tên lửa mô hình**, nói về
+*hai loại động cơ* và *chuỗi thời gian nằm trong khối thuốc phóng*.
+
+### ⚠️ BA CHỖ CỐ Ý KHÔNG VIẾT
+
+1. **"~90% nước được tái chế"** và **"lò Sabatier"** — đến từ **bản tóm tắt của
+   bộ tra cứu**, tôi không tự đọc thấy trên trang ECLSS. `docs/proposals/2026-08-14-…`
+   mục 2 có nhắc chúng: đó là chỗ **ghi hồ sơ, không phải giấy phép trích**.
+2. **"động cơ rắn không tắt/không điều chỉnh được"** — cũng từ bản tóm tắt, trang
+   `model-solid-rocket-engine` không nói.
+3. **Tổng công suất điện của ISS** — trang chỉ cho *hơn 20 kW* của tấm pin MỚI và
+   *tăng 30%*; suy ngược ra tổng rồi viết như thể trang có nói là bịa.
+
+Đây là lớp lỗi đã mắc bốn lần (CHNOPS · "170 km" · Nam Cực · IAU).
+
+### ⚠️ CÂU CẢNH BÁO AN TOÀN PHẢI GIỮ TRONG THÂN BÀI
+
+Bài động cơ giữ nguyên câu NASA: *"đừng bao giờ tháo, cắt hay sửa một động cơ tên
+lửa mô hình thật"*. Đây là món đồ trẻ **có thể cầm trong tay ngoài đời** — khác
+hẳn mọi bài khác của kho. Đừng bỏ cho gọn.
+
+### ⚠️ PHÉP KIỂM BẮT ĐƯỢC MỘT LỖI THẬT: BÀI QUÁ 4 ĐOẠN
+
+Cả hai bài đầu viết ra **5 đoạn**; `smoke_library_featured` báo hỏng ngay. Luật
+*"mỗi bài một ý, trẻ không đọc hết bài dài"* (11/08) sống trong một phép kiểm chứ
+không chỉ trong tài liệu. Đã gộp đoạn, **không cắt nội dung**.
+
+---
+
+## 5. Còn lại — 1 nhánh + 4 mắt xích lẻ
 
 Thứ tự đề nghị, theo mức trống và mức sẵn nguồn:
 
-1. **PHYSICS (3/9)** — thiếu 6: lực · chuyển động · năng lượng · nhiệt · điện · chân không.
-   ⚠️ **Đã thử tra nguồn 14/08 và HỎNG HAI LẦN**, ghi lại để lượt sau khỏi đi lại đường cũ:
+1. ✅ **PHYSICS — ĐÃ GIAO 7/9 ngày 14/08/2026** (mục 4d). Còn thiếu **nhiệt** (chưa có
+   nguồn) và một bài **bức xạ** riêng. Ghi chú nguồn cũ giữ lại vì vẫn đúng: — hồ sơ đầy đủ ở
+   `docs/proposals/2026-08-14-nguon-cho-physics-engineering.md`. Con đường mở lại là
+   **`www1.grc.nasa.gov`** (không phải `grc.nasa.gov` bị lỗi chứng chỉ), và ⚠️ nó **chỉ
+   đọc được bằng `curl`** — `WebFetch` từ chối vì máy chủ NASA đó thiếu chứng chỉ trung
+   gian. **Một công cụ không mở được trang KHÔNG có nghĩa trang đó hỏng.**
+   ⚠️ Ghi lại hai đường đã hỏng ở lượt trước để khỏi đi lại:
    `grc.nasa.gov/www/k-12/rocket/newton3r.html` → **lỗi chứng chỉ SSL** (`unable to verify
    the first certificate`) · `nasa.gov/stem-content/the-law-of-action-and-reaction-…` →
    trang **chỉ là vỏ của một video**, không có chữ nào phát biểu định luật. ⇒ Lượt sau nên
@@ -232,6 +348,15 @@ Thứ tự đề nghị, theo mức trống và mức sẵn nguồn:
    hoặc các bản PDF bài giảng của NASA, và **kiểm chứng chỉ + nội dung TRƯỚC khi viết**.
 2. **ENGINEERING (2/6)** — thiếu 4: cơ cấu máy · điện · động cơ tên lửa · hỗ trợ sự sống.
 3. **Ba mắt xích lẻ** — `toạ độ` + `vận tốc` (MATHEMATICS, mục 4c) và bài nhập môn thiên văn.
+   ✅ **`toạ độ` đã có nguồn:** `pubs.usgs.gov/gip/usgsmaps/usgsmaps.html` (*USGS Maps
+   Booklet*), đọc được, và **USGS đã nằm sẵn trong `OKDOM`**.
+   ⛔ **`www.usgs.gov/faqs/*` PHẢI LOẠI** dù trang sống: chặn bot ở mọi đường (405 với
+   `curl`, **403 với Chromium**), tức **không đọc được để trích nguyên văn**. Nguồn không
+   đọc được thì không được dùng — viết từ bản tóm tắt của bộ tra cứu chính là đường đã đẻ
+   ra CHNOPS, "170 km" và Nam Cực *"châu lục cao nhất"*.
+   ⚠️⚠️ **MÃ 200 KHÔNG CÓ NGHĨA LÀ NGUỒN DÙNG ĐƯỢC.** Đây là luật mới rút ra 14/08 và nó
+   đứng ngang hàng với luật "URL phải kiểm 200": kiểm 200 chứng minh trang **tồn tại**,
+   còn dùng được hay không thì phải **đọc được nội dung** mới biết.
 4. **Một mắt xích lẻ còn lại** — bài nhập môn thiên văn cho đầu chuỗi SPACE SCIENCE.
    ✅ Mắt xích *lập trình* **đã xong 14/08/2026** — xem mục 4b.
 

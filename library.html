@@ -116,7 +116,7 @@
       a_source:"Nguồn", title:"AstroQ — Góc Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
       src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
       st_read:"Đã đọc (bài)", st_coll:"Tổng bài viết", articles:"Bài viết", all_topics:"Tất cả chủ đề",
-      cat_astronomy:"Thiên văn", cat_life:"Sự sống", cat_math:"Toán & đo lường", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot", cat_it:"CNTT",
+      cat_astronomy:"Thiên văn", cat_physics:"Vật lý", cat_life:"Sự sống", cat_math:"Toán & đo lường", cat_engineering:"Kỹ thuật", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot", cat_it:"CNTT",
       featured:"Bài viết nổi bật", read_now:"Đọc Ngay", src_link:"Nguồn",
       reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
       unread_badge:"Chưa đọc",
@@ -129,7 +129,7 @@
       a_source:"Source", title:"AstroQ — Discovery Corner", back:"Back to Knowledge Station", search_ph:"Search articles…",
       src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
       st_read:"Read (articles)", st_coll:"Total articles", articles:"Articles", all_topics:"All topics",
-      cat_astronomy:"Astronomy", cat_life:"Life science", cat_math:"Maths & measuring", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots", cat_it:"IT",
+      cat_astronomy:"Astronomy", cat_physics:"Physics", cat_life:"Life science", cat_math:"Maths & measuring", cat_engineering:"Engineering", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots", cat_it:"IT",
       featured:"Featured articles", read_now:"Read Now", src_link:"Source",
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
       unread_badge:"Unread",
@@ -143,7 +143,7 @@
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
 
-  var CAT_ICON={astronomy:"telescope", life:"leaf", math:"ruler", ai:"cpu", quantum:"atom", robot:"bot", it:"satellite"};
+  var CAT_ICON={astronomy:"telescope", physics:"orbit", life:"leaf", math:"ruler", engineering:"rocket", ai:"cpu", quantum:"atom", robot:"bot", it:"satellite"};
 
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
   /* Bài đọc lấy từ `js/articles-index.js` — CHỖ DUY NHẤT khai báo, dùng chung với
@@ -277,7 +277,7 @@
     /* ⚠️ "it" (CNTT) thêm 11/08/2026. `cat` mới thì phải sửa BỐN chỗ cùng lúc: mảng
        này · CAT_ICON · khoá i18n `cat_it` ở CẢ vi và en · và rule `.cat--it` trong
        css/library.css. Thiếu một chỗ là chip hiện ra khoá thô hoặc không có màu. */
-    var cats=["all","astronomy","life","math","ai","quantum","robot","it"];
+    var cats=["all","astronomy","physics","life","math","engineering","ai","quantum","robot","it"];
     $("cats").innerHTML=cats.map(function(c){
       var ic = c==="all" ? "layers" : CAT_ICON[c];
       var nm = c==="all" ? t("all_topics") : t("cat_"+c);

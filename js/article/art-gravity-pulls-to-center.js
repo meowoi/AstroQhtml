@@ -1,10 +1,10 @@
 /* MOT BAI DOC. Khoa bai = TEN FILE. Day la NGUON SU THAT — muc luc
    `js/articles-index.js` sinh ra tu day, va luat noi dung ghi o do. */
 export default {
-  ord: 1070,
+  ord: 8020,
   id: "art-gravity-pulls-to-center",
   src: "NASA",
-  cat: "astronomy",
+  cat: "physics",
   em: "🍎",
   c: ["#b9e4ff", "#3d7fd0", "#0e2044"],
   img: null,
