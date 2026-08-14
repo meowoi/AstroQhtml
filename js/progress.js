@@ -65,6 +65,19 @@
      đã dùng cho `explorer.html`. */
   var LS_MSTEPS = "astroq-mission-steps";
 
+  /* Tiến độ Trung Tâm Đào Tạo (thêm 14/08/2026).
+     ⚠️ CẦU NỐI BẮT BUỘC, cùng lý do với LS_MSTEPS ở trên: `games.html` **cố ý
+     không nạp** `js/firebase-auth.js` (SDK 64 KB gzip — trang này phải mượt vì
+     nó là cửa vào 6 mini-game), nên tự nó KHÔNG có token để hỏi
+     `GET /me/achievements`. Trang CÓ token (dashboard · profile · achievements)
+     ghi cache, Sảnh đọc.
+     ⚠️ CHỈ CHỨA trạng thái ĐẠT/CHƯA và số hiện tại — **không một con số mốc nào
+     do client tự nghĩ ra**: `goal` cũng là số server trả về. Server giữ MỐC,
+     client giữ TÊN (js/training.js).
+     ⚠️ ĐÓNG DẤU `uid` — hai đứa trẻ dùng chung máy thì chứng chỉ của đứa trước
+     không được hiện cho đứa sau. */
+  var LS_TRAIN = "astroq-training";
+
   /** Mã lượt duy nhất, sinh MỘT LẦN lúc tạo việc (xem điều 4 ở đầu file). */
   function newOpId() {
     try {
@@ -118,6 +131,62 @@
     }
     if (got) write(LS_MSTEPS, box);
     return got;
+  }
+
+  /**
+   * Rót khối `training` của một câu trả lời server vào cache. Trả true nếu ghi được.
+   *
+   * ⚠️ GHI ĐÈ CẢ BẢNG (khác `absorbMissions` gộp theo từng nhiệm vụ): server luôn
+   *    trả về **toàn bộ** danh sách chương trình, nên gộp thì một chương trình bị
+   *    gỡ khỏi `Training.All` sẽ sống mãi trong cache của trẻ.
+   * ⚠️ Đòi `programs` là MẢNG: server cũ chưa có khối này thì thà không ghi gì còn
+   *    hơn ghi `total:0` rồi Sảnh hiện "đã đạt 0/0 chương trình" — một câu SAI.
+   */
+  function absorbTraining(data) {
+    var t = data && data.training;
+    if (!t || typeof t !== "object" || !Array.isArray(t.programs)) return false;
+    write(LS_TRAIN, {
+      uid: uidNow(),
+      passed: t.passed | 0,
+      total: t.total | 0,
+      programs: t.programs.map(function (p) {
+        return {
+          key: String(p.key || ""),
+          passed: !!p.passed,
+          done: p.done | 0,
+          total: p.total | 0,
+          courses: (Array.isArray(p.courses) ? p.courses : []).map(function (c) {
+            return {
+              game: String(c.game || ""),
+              current: c.current | 0,
+              goal: c.goal | 0,
+              passed: !!c.passed
+            };
+          })
+        };
+      })
+    });
+    return true;
+  }
+
+  /**
+   * Đọc tiến độ huấn luyện từ cache.
+   * `known:false` = **chưa biết**, khác hẳn "chưa đạt gì" — nơi gọi phải hiện dấu
+   * `—` chứ không hiện 0/5 (cùng luật với missions.html và specimen-vault.html:
+   * "0/5 chương trình" là một lời khẳng định SAI về tiến độ của trẻ).
+   */
+  function trainingCache() {
+    var box = read(LS_TRAIN, null);
+    if (!box || typeof box !== "object" || box.uid !== uidNow() ||
+        !Array.isArray(box.programs)) {
+      return { known: false, passed: 0, total: 0, programs: [] };
+    }
+    return {
+      known: true,
+      passed: box.passed | 0,
+      total: box.total | 0,
+      programs: box.programs.slice()
+    };
   }
 
   /** Số dư ví thật từ server → ghi đè cache của economy.js. */
@@ -429,7 +498,7 @@
       return waitAuth(2500).then(function (a) {
         if (!a || !a.getAchievements) return { ok: false, reason: "auth" };
         return a.getAchievements().then(function (r) {
-          if (r && r.ok) syncWallet(r.data);
+          if (r && r.ok) { syncWallet(r.data); absorbTraining(r.data); }
           return r;
         });
       }).catch(function () { return { ok: false, reason: "error" }; });
@@ -488,6 +557,12 @@
      * gọi phải mở nhiệm vụ **từ bước đầu**, đừng đoán. Đây là bản sao chỉ-đọc dùng để
      * biết vào chơi tiếp từ đâu; nguồn sự thật vẫn là DynamoDB.
      */
+    /**
+     * Tiến độ Trung Tâm Đào Tạo, đọc từ cache do trang CÓ token vừa ghi.
+     * ⚠️ `known:false` = CHƯA BIẾT, khác "chưa đạt gì" — nơi gọi phải hiện `—`.
+     */
+    training: function () { return trainingCache(); },
+
     missionSteps: function (mission) {
       var box = read(LS_MSTEPS, null);
       // Cache của người khác (hoặc của lượt chưa đăng nhập) thì coi như không có.
@@ -554,6 +629,7 @@
         localStorage.removeItem(LS_LOCAL);
         localStorage.removeItem(LS_QUEUE);
         localStorage.removeItem(LS_MSTEPS);
+        localStorage.removeItem(LS_TRAIN);
       } catch (e) {}
     }
   };

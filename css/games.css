@@ -85,3 +85,77 @@
 
 /* Toast cao hơn khung chung (74px thay vì 80px) vì header của Sảnh thấp hơn. */
 .toast{top:74px;z-index:80;}
+
+/* ═══════════ TRUNG TÂM ĐÀO TẠO (14/08/2026) ═══════════
+   Khu này đổi vai từ "sảnh game" sang "trung tâm đào tạo phi hành gia": mỗi game
+   là một KHOÁ HỌC của một CHƯƠNG TRÌNH kỹ năng. Phần dưới là chỗ hiển thị của
+   việc đổi vai đó — hồ sơ huấn luyện, nhãn chương trình, dòng kỹ năng, đường
+   sang bài đọc liên quan. */
+
+/* ── Hồ sơ huấn luyện ── */
+.record{
+  max-width:min(880px,100%); margin:0 auto 18px; padding:12px 16px;
+  border:1px solid rgba(120,140,190,.20); border-radius:14px;
+  background:rgba(13,20,48,.55);
+}
+/* [hidden] — BẪY ĐÃ MẮC 10 LẦN trong dự án (#time-ok · .lk-btn · .pt-empty ·
+   .co-steps · #wl-done · .exp-ctl · .brag · .deskrow · .sess · .mb-body):
+   `display` của tác giả THẮNG `display:none` mà trình duyệt áp cho [hidden],
+   nên phải khai lại. Thiếu dòng này thì khối hồ sơ hiện ra với cả trẻ chưa
+   đăng nhập lần nào. */
+.record[hidden]{ display:none; }
+.rec-head{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.rec-lb{
+  font-family:var(--mono,ui-monospace,monospace); font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:#8ea3c9;
+}
+.rec-n{ font-weight:700; font-size:14px; color:#dbe6ff; }
+.rec-dots{ display:flex; gap:7px; margin-top:9px; flex-wrap:wrap; }
+.rd{
+  width:26px; height:6px; border-radius:99px;
+  background:rgba(120,140,190,.24);
+}
+/* Chương trình ĐÃ ĐẠT — xanh của `--good`, cùng tông với SYS.ONLINE. */
+.rd.on{ background:linear-gradient(90deg,#5fd3ff,#7ee07a); }
+.rec-note{ margin:9px 0 0; font-size:12.5px; color:#9db0d4; line-height:1.5; }
+.rec-note[hidden]{ display:none; }
+
+/* ── Nhãn CHƯƠNG TRÌNH trên thẻ (thay nhãn thể loại cũ) ── */
+.gcard .tag.prog{ text-transform:none; letter-spacing:.01em; }
+
+/* ── Huy hiệu ĐÃ ĐẠT / tiến độ khoá học ── */
+.gcard .cert{
+  display:inline-block; margin:0 0 2px; padding:2px 9px; border-radius:99px;
+  font-family:var(--mono,ui-monospace,monospace); font-size:10px;
+  letter-spacing:.1em; color:#9db0d4;
+  border:1px solid rgba(120,140,190,.26); background:rgba(120,140,190,.10);
+}
+.gcard .cert.on{
+  color:#0f2018; border-color:transparent;
+  background:linear-gradient(90deg,#7ee07a,#5fd3ff); font-weight:700;
+}
+/* Thẻ của chương trình đã đạt: viền sáng nhẹ. CỐ Ý không làm mờ hay khoá — trẻ
+   vẫn chơi lại được, và chơi lại là chuyện tốt. */
+.gcard.done{ border-color:rgba(126,224,122,.34); }
+
+/* ── Dòng KỸ NĂNG ── */
+.gcard .skill{
+  margin:0 0 2px; font-size:12.5px; line-height:1.5; color:#9db0d4;
+}
+.gcard .skill b{ color:#c3d2f0; font-weight:600; }
+
+/* ── Đường sang bài đọc liên quan ──
+   GỢI Ý, KHÔNG KHOÁ: trẻ bấm "Chơi ngay" được luôn. Vùng chạm 44px theo WCAG
+   2.5.5 vì đây là một liên kết đứng riêng, không nằm giữa câu. */
+.gcard .readlink{
+  display:inline-flex; align-items:center; gap:6px; min-height:44px;
+  margin:0 0 2px; font-size:12.5px; line-height:1.4;
+  color:#8fd4ff; text-decoration:none; border-bottom:1px solid transparent;
+}
+.gcard .readlink:hover,
+.gcard .readlink:focus-visible{ color:#bfe6ff; border-bottom-color:currentColor; }
+
+@media (max-width:560px){
+  .record{ padding:11px 13px; }
+  .rd{ width:22px; }
+}

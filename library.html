@@ -447,6 +447,19 @@
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);
+
+  /* Mở thẳng một bài theo địa chỉ: `library.html?a=<id>`.
+     Dùng cho đường "đọc bài liên quan" ở thẻ chương trình của Khu Huấn Luyện —
+     dẫn tới đúng bài thay vì thả trẻ vào lưới 67 bài rồi bắt tự tìm.
+     ⚠️ `byId` trả null với id không có thật (địa chỉ gõ tay, bài đã gỡ) → lúc đó
+        KHÔNG làm gì, trang vẫn là lưới bình thường. Đừng báo lỗi: trẻ không gõ
+        địa chỉ đó, và một thông báo lỗi cho việc nó không làm là vô nghĩa.
+     ⚠️ CỐ Ý không dọn `?a=` khỏi thanh địa chỉ: F5 phải mở lại đúng bài đó, và
+        dán lại đường dẫn cho người khác cũng phải ra đúng bài. */
+  try {
+    var want = new URLSearchParams(location.search).get("a");
+    if (want && AstroQArticles.byId(want)) openReader(want);
+  } catch (e) {}
 })();
 </script>
 </body>

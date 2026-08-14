@@ -16,10 +16,16 @@ Trong tam — thu de lam hong niem tin nhat:
 
 ⚠️ Nhan cua check() PHAI KHONG DAU — console Windows mac dinh cp1252.
 """
+import os
 import re
 import sys
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+# Goc repo (thu muc cha cua scratchpad/) — de doc thang ma nguon khi can doi chieu
+# giao dien voi du lieu, thay vi go cung mot con so vao phep kiem.
+ROOT = Path(os.path.dirname(os.path.abspath(__file__))).parent
 
 # ⚠️ BAT BUOC — console Windows mac dinh cp1252. Nhan cua check() deu khong dau,
 #    NHUNG phan `detail` la chu lay tu chinh trang (vd "SAP RA MAT" co dau), nen
@@ -213,23 +219,44 @@ def main():
         ctx.close()
 
         # ══════════════ [3] games.html — tro MIEN PHI sap ra mat ══════════════
-        print("\n[3] games.html — 3 tro sap ra mat (se MIEN PHI)")
+        #
+        # ⚠️⚠️ PHEP KIEM NAY DA KHANG DINH DUNG MOT TRANG THAI CU, VA HONG TU
+        #      12/08/2026 MA KHONG AI BIET. Hom do ba game cuoi (catch · maze ·
+        #      racer) chuyen sang `ready` va ba muc `game:*` duoc GO KHOI
+        #      js/locks.js — tuc games.html khong con mot the `soon` nao. Ban cu
+        #      doi DUNG 3 the nen `wait_for_selector` het han, script CHET giua
+        #      chung va khong in ra mot dong ket qua nao. Nhat ky 12/08 liet ke
+        #      cac bo da chay va KHONG co smoke_locks — do la ly do no lot.
+        #
+        # Ban moi khang dinh SU THAT HIEN TAI **va van co rang cho tuong lai**:
+        # them lai mot game `soon` ma quen noi vao js/locks.js thi no bao ngay.
+        print("\n[3] games.html — the game sap ra mat (neu co) phai noi that")
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         seed(ctx)
         pg = ctx.new_page(); errs = errors(pg)
         pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
-        pg.wait_for_selector(".gcard.soon", timeout=8000)
+        pg.wait_for_selector(".gcard", timeout=8000)
 
-        check("Co 3 the game sap ra mat", pg.locator(".gcard.soon").count() == 3,
-              str(pg.locator(".gcard.soon").count()))
-        open_modal(pg, ".gcard.soon .play-btn")
-        body = pg.inner_text("#lk-body")
-        check("Modal noi SE MIEN PHI", "không mất phí" in body, body[:80])
-        # ⚠️ Day la cho de sai nhat: nhet loi moi mua vao mot thu se mien phi
-        check("KHONG co nut dan sang trang gia", not pg.locator("#lk-go").is_visible())
-        check("KHONG co ghi chu ve tien", not pg.locator("#lk-note").is_visible())
-        check("KHONG co danh sach quyen loi goi", not pg.locator("#lk-feats").is_visible())
-        pg.keyboard.press("Escape")
+        n_soon = pg.locator(".gcard.soon").count()
+        locks_src = (ROOT / "js" / "locks.js").read_text(encoding="utf-8")
+        n_lock = locks_src.count('"game:')
+
+        # Hai ben phai khop: co the `soon` thi phai co muc khoa, va nguoc lai.
+        check("so the `soon` khop so muc `game:` o js/locks.js",
+              (n_soon > 0) == (n_lock > 0), f"the={n_soon} · locks={n_lock}")
+
+        if n_soon == 0:
+            check("games.html hien 0 the khoa — moi game deu choi duoc", True,
+                  f"{pg.locator('.gcard').count()} the, tat ca ready")
+        else:
+            open_modal(pg, ".gcard.soon .play-btn")
+            body = pg.inner_text("#lk-body")
+            check("Modal noi SE MIEN PHI", "không mất phí" in body, body[:80])
+            # ⚠️ Day la cho de sai nhat: nhet loi moi mua vao mot thu se mien phi
+            check("KHONG co nut dan sang trang gia", not pg.locator("#lk-go").is_visible())
+            check("KHONG co ghi chu ve tien", not pg.locator("#lk-note").is_visible())
+            check("KHONG co danh sach quyen loi goi", not pg.locator("#lk-feats").is_visible())
+            pg.keyboard.press("Escape")
         check("0 loi console/pageerror o games", not errs, str(errs[:2]))
         ctx.close()
 

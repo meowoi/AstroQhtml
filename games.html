@@ -20,6 +20,7 @@
 <script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
 <script src="js/locks.js"></script>
+<script src="js/training.js"></script>
 </head>
 <body>
 
@@ -30,7 +31,7 @@
   <!-- ============ HEADER ============ -->
   <header class="hub-top">
     <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
-    <span class="hub-tag">[ ARCADE_BAY ]</span>
+    <span class="hub-tag">[ TRAINING_CENTER ]</span>
     <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
       <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
       <span class="c-val" id="bal">0</span>
@@ -44,8 +45,23 @@
   <!-- ============ HERO ============ -->
   <section class="hero">
     <span class="eyebrow" data-i18n="eyebrow">Khu Huấn Luyện</span>
-    <h1 data-i18n="title_h">Chọn một trò chơi để bắt đầu</h1>
-    <p data-i18n="intro">Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!</p>
+    <h1 data-i18n="title_h">Chọn một chương trình huấn luyện</h1>
+    <p data-i18n="intro">Phi hành gia thật luyện từng kỹ năng một. Ở đây mỗi kỹ năng có một game mô phỏng — mỗi lượt tiêu một ít Thiên thạch tím.</p>
+  </section>
+
+  <!-- ============ HỒ SƠ HUẤN LUYỆN ============
+       Số ĐẠT do server quyết (Services/Training.cs), đọc qua cache mà dashboard
+       ghi — games.html cố ý không nạp SDK Firebase nên không tự gọi được.
+       ⚠️ Chưa đọc được thì hiện dấu `—`, KHÔNG hiện 0/5: "0/5 chương trình" là
+          một lời khẳng định SAI về tiến độ của trẻ (cùng luật với missions.html
+          và specimen-vault.html). -->
+  <section class="record" id="record" hidden>
+    <div class="rec-head">
+      <span class="rec-lb" data-i18n="cert_lb">Hồ sơ huấn luyện</span>
+      <span class="rec-n" id="rec-n">—</span>
+    </div>
+    <div class="rec-dots" id="rec-dots" aria-hidden="true"></div>
+    <p class="rec-note" id="rec-note" hidden></p>
   </section>
 
   <!-- ============ GAME GRID (đổ từ JS) ============ -->
@@ -68,6 +84,10 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="economy.js"></script>
+<!-- Chi de ĐỌC cache ho so huan luyen. Trang nay CO Y khong nap SDK Firebase
+     (64 KB gzip) — no la cua vao 6 mini-game nen phai nhe; cache do dashboard
+     ghi. Xem LS_TRAIN o js/progress.js. -->
+<script src="js/progress.js"></script>
 <script>
 (function(){
   "use strict";
@@ -77,8 +97,12 @@
     vi:{
       tt_name:"Thiên thạch tím",
       title:"AstroQ — Khu Huấn Luyện", back:"Về Trung Tâm Điều Hướng",
-      eyebrow:"Khu Huấn Luyện", title_h:"Chọn một trò chơi để bắt đầu",
-      intro:"Mỗi lượt chơi tiêu một ít Thiên thạch tím. Kiếm thêm ở Trạm Tri Thức nếu chưa đủ nhé!",
+      eyebrow:"Khu Huấn Luyện", title_h:"Chọn một chương trình huấn luyện",
+      intro:"Phi hành gia thật luyện từng kỹ năng một. Ở đây mỗi kỹ năng có một game mô phỏng — mỗi lượt tiêu một ít Thiên thạch tím.",
+      cert_lb:"Hồ sơ huấn luyện", cert_n:"{a}/{b} chương trình đã đạt",
+      cert_none:"Chưa đọc được hồ sơ. Ghé Trung Tâm Điều Hướng một lượt để đồng bộ nhé!",
+      skill_lb:"Kỹ năng", read_lb:"Đọc thêm", course_n:"{a}/{b} bài",
+      passed:"ĐÃ ĐẠT",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -89,8 +113,12 @@
     en:{
       tt_name:"Purple Meteor",
       title:"AstroQ — Training Simulator", back:"Back to Navigation Hub",
-      eyebrow:"Training Simulator", title_h:"Pick a game to start",
-      intro:"Each play costs a few Purple Meteors. Earn more at the Knowledge Station if you run low!",
+      eyebrow:"Training Simulator", title_h:"Pick a training programme",
+      intro:"Real astronauts train one skill at a time. Here each skill has its own simulator game — every run costs a few Purple Meteors.",
+      cert_lb:"Training record", cert_n:"{a}/{b} programmes passed",
+      cert_none:"Can't read your record yet. Drop by the Navigation Hub once to sync it!",
+      skill_lb:"Skill", read_lb:"Read more", course_n:"{a}/{b} courses",
+      passed:"PASSED",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
       diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now", need_later:"Later",
@@ -111,34 +139,81 @@
      dãy nhảy hết, trong khi số hiệu đã đi vào tài liệu và lời nói của người dùng
      ("ARCADE-04 = Ghép Chòm Sao"). Thêm game mới thì cấp số kế tiếp, không sửa số cũ. */
   var GAMES = [
-    { key:"dodge", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
-      tag:{vi:"Bay ngang & né tránh", en:"Side-scroll & dodge"},
+    { key:"dodge", prog:"reaction", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
       name:{vi:"Né Thiên Thạch", en:"Asteroid Dodge"},
       desc:{vi:"Điều khiển Byte nhấp nháy bay ngang qua khe hẹp của vành đai thiên thạch và thu thập Thiên thạch tím trên đường bay!", en:"Blink Byte sideways through the narrow gaps of the asteroid belt and collect Purple Meteors along the way!"} },
-    { key:"racer", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:5, diff:"medium", status:"ready", file:"game-racer.html",
-      tag:{vi:"Đua tốc độ", en:"Racing"},
+    { key:"racer", prog:"resource", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:5, diff:"medium", status:"ready", file:"game-racer.html",
       name:{vi:"Đường Đua Sao Chổi", en:"Comet Racer"},
-      desc:{vi:"Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về đích 1.200 m trước khi cạn nhiên liệu!", en:"Switch lanes to dodge asteroids, grab fuel cans and purple crystals — finish the 1,200 m track before you run dry!"} },
-    { key:"defender", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
-      tag:{vi:"Phòng thủ 360°", en:"360° defense"},
+      /* ⚠️ KHÔNG ghi lại con số chiều dài đường đua ở đây. Bản cũ ghi "1.200 m"
+         trong khi `CONFIG.raceLen` của game đã là 14.000 từ lượt cân bằng
+         12/08/2026 — thẻ hứa một quãng đường ngắn hơn 11 lần thực tế, và không
+         phép kiểm nào hỏi tới. Hai nơi giữ một con số thì bên lệch sẽ là bên nói
+         với trẻ; nên mô tả nói VIỆC PHẢI LÀM, còn con số để game tự công bố. */
+      desc:{vi:"Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về tới đích trước khi cạn nhiên liệu!", en:"Switch lanes to dodge asteroids, grab fuel cans and purple crystals — reach the finish line before you run dry!"} },
+    { key:"defender", prog:"spatial", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
       name:{vi:"Phòng Thủ Không Gian", en:"Space Defender"},
       desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
-    { key:"match", pal:"sic--gold", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
-      tag:{vi:"Giải đố", en:"Puzzle"},
+    /* ⚠️ `key` ĐỔI "match" → "constellation" (14/08/2026), do phép kiểm [27] bắt
+       được. `match` là một cái tên **chỉ tồn tại ở thẻ này**: server (`Wallet.Fees`),
+       `economy.js FEES`, và chính `game-constellation.html` (cả `Economy.spend()`
+       lẫn `AstroQProgress.game()`) đều gọi nó là `constellation`. Một trò có hai
+       tên máy là chỗ mọi phép đối chiếu client ↔ server đều trượt qua.
+       ⚠️ `cls` GIỮ NGUYÊN `card--match` — đó là tên CLASS CSS, đổi là phải sửa
+          css/games.css mà không được gì; nó không phải khoá dữ liệu. */
+    { key:"constellation", prog:"observation", pal:"sic--gold", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
       desc:{vi:"Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!", en:"Link the stars in number order to draw a real constellation — finish it and unlock a fun fact about the night sky!"} },
-    { key:"maze", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:4, diff:"medium", status:"ready", file:"game-maze.html",
-      tag:{vi:"Giải đố", en:"Puzzle"},
+    { key:"maze", prog:"navigation", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:4, diff:"medium", status:"ready", file:"game-maze.html",
       name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
       desc:{vi:"Dẫn phi hành gia qua mê cung sao: thu 5 tinh thể rồi tìm cổng sáng để ra. Mê cung mới mỗi lượt, và không có thua!", en:"Guide the astronaut through a star maze: collect 5 crystals, then find the glowing gate. A new maze every run — and no losing!"} },
-    { key:"catch", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:3, diff:"easy", status:"ready", file:"game-catch.html",
-      tag:{vi:"Phản xạ", en:"Reflex"},
+    { key:"catch", prog:"reaction", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:3, diff:"easy", status:"ready", file:"game-catch.html",
       name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
       desc:{vi:"Hứng sao băng vàng để lấy điểm, hứng sao tím để lấy Thiên thạch tím — và né sao chổi lửa. Bạn có 3 mạng!", en:"Catch gold shooting stars for points and purple ones for Purple Meteors — and dodge the fiery comets. You get 3 lives!"} }
   ];
 
   /* ================= Số dư ================= */
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
+
+  /* ================= Hồ sơ huấn luyện =================
+     Đọc cache do trang CÓ token ghi (dashboard/profile/achievements). Trang này
+     cố ý không nạp SDK Firebase — xem ghi chú ở cuối file.
+     ⚠️ `known:false` nghĩa là CHƯA BIẾT, không phải "chưa đạt gì". */
+  var TRAIN = { known:false, passed:0, total:0, programs:[] };
+  function loadTraining(){
+    TRAIN = (window.AstroQProgress && AstroQProgress.training)
+      ? AstroQProgress.training()
+      : { known:false, passed:0, total:0, programs:[] };
+  }
+  /** Trạng thái của một chương trình; null nếu chưa biết gì. */
+  function progOf(key){
+    if(!TRAIN.known) return null;
+    for(var i=0;i<TRAIN.programs.length;i++){
+      if(TRAIN.programs[i].key===key) return TRAIN.programs[i];
+    }
+    return null;
+  }
+  function fill(s,a,b){ return String(s).replace("{a}",a).replace("{b}",b); }
+
+  function paintRecord(){
+    var box=$("record");
+    /* Chưa đăng nhập lần nào thì ẩn hẳn khối — hiện một hồ sơ trống kèm câu
+       giải thích cho người chưa từng có hồ sơ là thêm nhiễu, không thêm tin. */
+    if(!TRAIN.known && !AstroQ.getUser()){ box.hidden=true; return; }
+    box.hidden=false;
+    if(!TRAIN.known){
+      $("rec-n").textContent="—";
+      $("rec-dots").innerHTML="";
+      $("rec-note").textContent=t("cert_none");
+      $("rec-note").hidden=false;
+      return;
+    }
+    $("rec-n").textContent=fill(t("cert_n"), TRAIN.passed, TRAIN.total);
+    $("rec-note").hidden=true;
+    $("rec-dots").innerHTML = TRAIN.programs.map(function(p){
+      return '<span class="rd'+(p.passed?" on":"")+'" title="'+
+             AstroQ.esc(AstroQTraining.name(p.key,LANG))+'"></span>';
+    }).join("");
+  }
 
   /* ================= Render thẻ trò chơi ================= */
   function render(){
@@ -162,7 +237,35 @@
           '</span>'
         : '';
 
-      return '<article class="gcard '+g.cls+(soon?' soon':'')+'">'+
+      /* ── Dòng KỸ NĂNG: chương trình này luyện được cái gì. Đây là thứ biến một
+            thẻ game thành một thẻ khoá học. */
+      var sk = AstroQTraining.skill(g.prog, LANG);
+      var skill = sk ? '<p class="skill"><b>'+AstroQ.esc(t("skill_lb"))+':</b> '+
+                       AstroQ.esc(sk)+'</p>' : '';
+
+      /* ── Đường sang BÀI ĐỌC liên quan. GỢI Ý, KHÔNG KHOÁ (chủ dự án chốt
+            14/08/2026): trẻ bấm Chơi ngay được luôn, không phải đọc gì trước.
+            ⚠️ Chữ hiện ra là CHỦ ĐỀ chứ không phải tiêu đề bài — tiêu đề chỉ
+               sống ở js/articles-index.js, chép sang đây là hai nơi một cái tên. */
+      var rd = AstroQTraining.read(g.prog, LANG);
+      var read = rd ? '<a class="readlink" href="library.html?a='+
+                      encodeURIComponent(rd.id)+'">📖 '+AstroQ.esc(t("read_lb"))+
+                      ': '+AstroQ.esc(rd.topic)+' <span aria-hidden="true">›</span></a>' : '';
+
+      /* ── Huy hiệu ĐÃ ĐẠT + tiến độ khoá học, chỉ khi ĐỌC ĐƯỢC hồ sơ.
+            ⚠️ Chưa biết thì KHÔNG vẽ gì — vẽ "0/2 bài" cho một đứa trẻ có thể đã
+               qua cả hai là nói sai về tiến độ của nó. */
+      var st2 = progOf(g.prog);
+      var cert = "";
+      if (st2) {
+        cert = st2.passed
+          ? '<span class="cert on">✓ '+AstroQ.esc(t("passed"))+'</span>'
+          : (st2.total > 1
+              ? '<span class="cert">'+AstroQ.esc(fill(t("course_n"), st2.done, st2.total))+'</span>'
+              : '');
+      }
+
+      return '<article class="gcard '+g.cls+(soon?' soon':'')+(st2&&st2.passed?' done':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
         badge+
         /* Bang mau theo TUNG game (`pal`), khong de tat ca roi ve tim mac dinh: sau
@@ -170,9 +273,19 @@
            chuyen do o dashboard 13/08/2026. Chua mo thi `sic--off` thang, vi luc do
            dieu can noi la "chua dung duoc", khong phai "khu nay mau gi". */
         '<div class="ic">'+sic(g.icon, soon ? 'sic--off' : (g.pal||''))+'</div>'+
-        '<span class="tag">'+L(g.tag)+'</span>'+
+        /* NHÃN = TÊN CHƯƠNG TRÌNH HUẤN LUYỆN, không phải thể loại game.
+           Trước 14/08/2026 chỗ này ghi "Giải đố" / "Đua tốc độ" / "Phản xạ" —
+           ngôn ngữ của một sảnh game. Đổi sang tên chương trình là chính việc
+           đổi vai của cả khu, và nó cũng GOM các game cùng kỹ năng lại với nhau
+           mà không cần dựng tiêu đề nhóm (Phản xạ có 2 game).
+           ⚠️ Tên lấy từ js/training.js — CHỖ DUY NHẤT giữ tên chương trình. */
+        '<span class="tag prog">'+AstroQ.esc(AstroQTraining.icon(g.prog)+" "+
+                                             AstroQTraining.name(g.prog, LANG))+'</span>'+
+        cert+
         '<h3>'+L(g.name)+'</h3>'+
         '<p>'+L(g.desc)+'</p>'+
+        skill+
+        read+
         '<span class="cost"><img src="img/tt.png" alt="'+t("tt_name")+'" /><b>'+g.cost+'</b><span>'+t("per_run")+'</span></span>'+
         btn+
         '<div class="hud-line foot">'+
@@ -219,6 +332,8 @@
     document.title=t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
+    loadTraining();
+    paintRecord();
     render();
     if($("need").classList.contains("show")) { /* giữ nguyên; sẽ cập nhật khi mở lại */ }
   }
@@ -242,6 +357,13 @@
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
   applyLang(LANG);
+
+  /* Cache co the vua duoc ghi o tab khac (tre choi xong quay ve dashboard roi
+     mo lai Sanh). Ve lai khi khoa do doi — dung khuon `storage` da dung cho
+     astroq-lang o js/ui-common.js. */
+  window.addEventListener('storage', function(e){
+    if(e.key === 'astroq-training'){ loadTraining(); paintRecord(); render(); }
+  });
 })();
 </script>
 </body>

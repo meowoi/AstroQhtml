@@ -3800,5 +3800,83 @@ for _k in sorted(_rec_keys):
     check("[26] ten game '%s' co o CA vi va en" % _k,
           ("rec_" + _k) in _vi_keys and ("rec_" + _k) in _en_keys)
 
+
+# ══════════════════════════════════════════════════════════════════════════
+print("\n=== [27] Trung Tam Dao Tao: games.html ↔ Training.cs ↔ training.js ===")
+# ══════════════════════════════════════════════════════════════════════════
+# Mot the game tro vao mot chuong trinh KHONG CO o server thi huy hieu "DA DAT"
+# khong bao gio hien ra — trang van dep, khong loi console, chi la mot tinh nang
+# cham chet. Do la lop hong IM LANG ma phep kiem tinh la cach duy nhat bat duoc.
+#
+# ⚠️ PHAN CONG (giong badges/specimens): SERVER giu MOC, CLIENT giu TEN.
+_trn_cs = rd_abs(os.path.join(SV, "src", "AstroqSV.Api", "Services", "Training.cs"))
+_trn_js = rd("js/training.js")
+_gam_html = rd("games.html")
+
+if True:
+    _cs_nc = _no_cs_comments(_trn_cs)
+    # Chuong trinh + khoa hoc khai o server
+    _srv_progs = re.findall(r'new\("([a-z]+)",\s*new\[\]', _cs_nc)
+    _srv_games = re.findall(r'new Course\("([a-z-]+)",\s*"([^"]+)",\s*(\d+)\)', _cs_nc)
+    check("[27] boc duoc chuong trinh tu Training.cs", len(_srv_progs) > 0, str(_srv_progs))
+
+    # Ten khai o client
+    _cli_progs = re.findall(r"\n    ([a-z]+): \{\n      ic:", _trn_js)
+    check("[27] boc duoc ten chuong trinh tu js/training.js",
+          len(_cli_progs) > 0, str(_cli_progs))
+
+    # (a) Moi chuong trinh o server phai co TEN o client — thieu thi the hien
+    #     khoa tho ("reaction") truoc mat tre.
+    check("[27] moi chuong trinh cua server co ten o js/training.js",
+          set(_srv_progs) <= set(_cli_progs),
+          "thieu ten: %s" % sorted(set(_srv_progs) - set(_cli_progs)))
+
+    # (b) Va nguoc lai: ten khai o client ma server khong co la ten chet.
+    check("[27] khong ten chuong trinh nao o client ma server khong co",
+          set(_cli_progs) <= set(_srv_progs),
+          "thua: %s" % sorted(set(_cli_progs) - set(_srv_progs)))
+
+    # (c) Moi `prog:` o games.html phai la chuong trinh CO THAT o server.
+    _card_progs = set(re.findall(r'prog:"([a-z]+)"', _gam_html))
+    check("[27] moi the game tro vao chuong trinh co that",
+          _card_progs <= set(_srv_progs),
+          "khong co o server: %s" % sorted(_card_progs - set(_srv_progs)))
+
+    # (d) Moi khoa hoc cua server phai la game CO THAT trong games.html.
+    _card_keys = set(re.findall(r'\{ key:"([a-z]+)",', _gam_html))
+    _srv_gkeys = set(g for g, _, _ in _srv_games)
+    check("[27] moi khoa hoc cua server tro vao game co that",
+          _srv_gkeys <= _card_keys,
+          "khong co the: %s" % sorted(_srv_gkeys - _card_keys))
+
+    # (e) Va moi game co phi (tuc choi duoc) phai thuoc mot chuong trinh — khong
+    #     thi no la mot game khong dat duoc chung chi nao, tu dung nam ngoai he.
+    check("[27] moi game trong games.html deu thuoc mot chuong trinh",
+          _card_keys <= set(re.findall(r'key:"([a-z]+)", prog:"', _gam_html)),
+          "thieu prog: %s" % sorted(_card_keys - set(re.findall(r'key:"([a-z]+)", prog:"', _gam_html))))
+
+    # (f) ⚠️⚠️ CLIENT KHONG DUOC GIU MOT CON SO MOC NAO. Moc la LUAT CHOI; hai noi
+    #     giu mot luat thi ngay doi do kho, ban o client van noi con so cu.
+    _goals = set(str(g) for _, _, g in _srv_games)
+    _js_nc = re.sub(r"/\*.*?\*/", " ", _trn_js, flags=re.S)
+    _js_nc = re.sub(r"//[^\n]*", " ", _js_nc)
+    _leak = sorted(g for g in _goals if len(g) >= 2 and re.search(r"\b" + g + r"\b", _js_nc))
+    check("[27] js/training.js KHONG chua con so moc nao cua server",
+          not _leak, "lo moc: %s" % _leak)
+
+    # (g) Bai doc goi y phai la bai CO THAT — id sai thi `library.html?a=` lang
+    #     le khong mo gi, va tre bam vao mot duong dan cut.
+    _read_ids = re.findall(r'read: \{ id: "([a-z0-9-]+)"', _trn_js)
+    _idx = rd("js/articles-index.js")
+    _bad_read = [a for a in _read_ids if ('id: "%s"' % a) not in _idx]
+    check("[27] moi bai doc goi y co that trong articles-index",
+          not _bad_read, "khong co bai: %s" % _bad_read)
+
+    # (h) library.html phai HIEU duoc `?a=` — thieu thi moi duong doc bai o tren
+    #     deu do tre vao luoi 67 bai roi bat tu tim.
+    _lib = rd("library.html")
+    check("[27] library.html mo duoc mot bai theo `?a=`",
+          'get("a")' in _lib and "openReader(want)" in _lib)
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

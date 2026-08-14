@@ -1,0 +1,219 @@
+# -*- coding: utf-8 -*-
+"""Do TRUNG TAM DAO TAO tren Chromium that.
+
+  python -m http.server 8123     (trong AstroQhtml/)
+  py -3 scratchpad/smoke_training.py
+
+Do thu NGUOI DUNG THAY, khong doc code:
+  · nhan tren the la TEN CHUONG TRINH (khong con nhan the loai kieu sanh game)
+  · dong ky nang + duong sang bai doc co that va BAM DUOC
+  · duong doc bai KHONG khoa nut Choi ngay
+  · chua doc duoc ho so → dau `—`, KHONG hien 0/5
+  · doc duoc → dung so server gieo, ke ca khi gieo so LECH HAN mac dinh
+  · doi VI/EN dich ca ten chuong trinh lan dong ky nang
+"""
+import os, re, sys, json
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception: pass
+
+ROOT = Path(os.path.dirname(os.path.abspath(__file__))).parent
+BASE = "http://127.0.0.1:8123"
+ok = bad = 0
+def ck(n, c, d=""):
+    global ok, bad
+    if c: ok += 1; print(f"  [OK]   {n}" + (f"  ({d})" if d else ""))
+    else: bad += 1; print(f"  [HONG] {n}  {d}")
+
+UID = "u-test-training"
+def seed(ctx, training=None):
+    js = "localStorage.setItem('astroq-lang','vi');"
+    js += "localStorage.setItem('astroq-user',%s);" % json.dumps(json.dumps(
+        {"uid": UID, "name": "Tester", "character": "raica"}))
+    if training is not None:
+        js += "localStorage.setItem('astroq-training',%s);" % json.dumps(
+            json.dumps(dict(training, uid=UID)))
+    else:
+        js += "localStorage.removeItem('astroq-training');"
+    ctx.add_init_script(js)
+
+# Doc DANH SACH CHUONG TRINH tu js/training.js (client giu TEN) — khong go tay
+tj = (ROOT / "js" / "training.js").read_text(encoding="utf-8")
+PROG_KEYS = re.findall(r"\n    ([a-z]+): \{\n      ic:", tj)
+READ_IDS  = re.findall(r'read: \{ id: "([a-z0-9-]+)"', tj)
+IDX = (ROOT / "js" / "articles-index.js").read_text(encoding="utf-8")
+
+with sync_playwright() as p:
+    br = p.chromium.launch()
+
+    # ═══════ [1] Bai doc goi y phai CO THAT ═══════
+    print("\n[1] Bai doc goi y tro vao bai co that")
+    ck("boc duoc chuong trinh tu js/training.js", len(PROG_KEYS) >= 5, str(PROG_KEYS))
+    miss = [a for a in READ_IDS if f'id: "{a}"' not in IDX]
+    ck("moi `read.id` co trong articles-index", not miss, str(miss))
+    ck("moi chuong trinh co bai doc goi y", len(READ_IDS) == len(PROG_KEYS),
+       f"{len(READ_IDS)}/{len(PROG_KEYS)}")
+
+    # ═══════ [2] Chua doc duoc ho so → `—`, KHONG hien 0/5 ═══════
+    print("\n[2] Chua doc duoc ho so → dau `—`")
+    ctx = br.new_context(viewport={"width": 1440, "height": 900}); seed(ctx)
+    pg = ctx.new_page(); errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
+    pg.wait_for_selector(".gcard", timeout=8000)
+    rec = pg.inner_text("#record")
+    ck("hien dau `—`", "—" in pg.inner_text("#rec-n"), pg.inner_text("#rec-n"))
+    ck("KHONG hien 0/5 hay 0 chuong trinh", not re.search(r"\b0\s*/\s*\d", rec), rec[:70])
+    ck("co cau noi that ly do", pg.locator("#rec-note").is_visible())
+    ck("KHONG the nao hien huy hieu DA DAT", pg.locator(".gcard .cert").count() == 0)
+    ck("0 loi trang", not errs, str(errs[:2]))
+
+    # ═══════ [3] Nhan the = TEN CHUONG TRINH ═══════
+    print("\n[3] Nhan tren the la ten chuong trinh, khong phai the loai game")
+    tags = pg.eval_on_selector_all(".gcard .tag", "e=>e.map(x=>x.textContent.trim())")
+    ck("moi the co nhan", len(tags) == 6, str(len(tags)))
+    # ⚠️ CHI liet ke nhan the loai KHONG trung ten chuong trinh nao. Ban dau toi
+    #    de ca "Phản xạ" vao day — nhung do cung la TEN CHUONG TRINH moi, nen phep
+    #    kiem khong bao gio xanh duoc du san pham lam dung. Phep kiem hong, khong
+    #    phai san pham hong.
+    old = ["Giải đố", "Đua tốc độ", "Phòng thủ 360°", "Bay ngang"]
+    ck("KHONG con nhan the loai kieu sanh game",
+       not any(o in " | ".join(tags) for o in old), " | ".join(tags))
+    ck("nhan la ten chuong trinh (co Phan xa · Nhan thuc khong gian)",
+       any("Phản xạ" in x for x in tags) and any("Nhận thức không gian" in x for x in tags),
+       " | ".join(tags))
+    # Hai game cung chuong trinh thi mang cung mot nhan → do la cach GOM nhom
+    ck("2 game cung chuong trinh mang cung nhan",
+       sum(1 for x in tags if "Phản xạ" in x) == 2, " | ".join(tags))
+
+    # ═══════ [4] Dong ky nang + duong doc bai ═══════
+    print("\n[4] Dong ky nang va duong sang bai doc")
+    ck("moi the co dong ky nang", pg.locator(".gcard .skill").count() == 6,
+       str(pg.locator(".gcard .skill").count()))
+    ck("moi the co duong doc bai", pg.locator(".gcard .readlink").count() == 6,
+       str(pg.locator(".gcard .readlink").count()))
+    hrefs = pg.eval_on_selector_all(".gcard .readlink", "e=>e.map(x=>x.getAttribute('href'))")
+    ck("duong doc bai tro dung library.html?a=",
+       all(h.startswith("library.html?a=art-") for h in hrefs), str(hrefs[:2]))
+    # KHONG KHOA: nut Choi ngay van bam duoc va khong `disabled`
+    dis = pg.eval_on_selector_all(".gcard:not(.soon) .play-btn", "e=>e.map(x=>x.disabled)")
+    ck("bai doc KHONG khoa nut Choi ngay", not any(dis), str(dis))
+    # Vung cham cua duong doc bai >= 44px (WCAG 2.5.5)
+    hh = pg.eval_on_selector_all(".gcard .readlink",
+                                 "e=>e.map(x=>Math.round(x.getBoundingClientRect().height))")
+    ck("vung cham duong doc bai >= 44px", all(h >= 44 for h in hh), str(hh[:3]))
+
+    # ═══════ [5] Bam that vao duong doc bai → mo DUNG bai ═══════
+    print("\n[5] Bam duong doc bai → library.html mo dung bai do")
+    want = hrefs[0].split("a=")[1]
+    with pg.expect_navigation():
+        pg.locator(".gcard .readlink").first.click()
+    pg.wait_for_timeout(2200)
+    ck("da sang library.html", "library.html" in pg.url, pg.url)
+    ck("trinh doc DA MO san", pg.locator("#reader.show").count() == 1)
+    ck("mo DUNG bai duoc tro toi",
+       pg.eval_on_selector("#reader", "e=>1") == 1 and want in pg.url, f"{want} · {pg.url}")
+    body = pg.inner_text("#r-body")
+    ck("than bai hien chu that", len(body) > 200, f"{len(body)} ky tu")
+    ctx.close()
+
+    # ═══════ [6] Doc duoc ho so — GIEO SO LECH HAN mac dinh ═══════
+    # Day la phep do DUY NHAT phan biet duoc "doc server" voi "tu tinh o client":
+    # gieo 2/7 (that la 2/5) va mot chuong trinh la → trang phai hien DUNG so gieo.
+    print("\n[6] Doc duoc ho so — gieo so LECH HAN de chac la doc server")
+    fake = {
+        "passed": 2, "total": 7,
+        "programs": [
+            {"key": "reaction",  "passed": True,  "done": 2, "total": 2, "courses": []},
+            {"key": "spatial",   "passed": True,  "done": 1, "total": 1, "courses": []},
+            {"key": "navigation","passed": False, "done": 0, "total": 1, "courses": []},
+            {"key": "resource",  "passed": False, "done": 0, "total": 1, "courses": []},
+            {"key": "observation","passed":False, "done": 0, "total": 1, "courses": []},
+            {"key": "docking",   "passed": False, "done": 0, "total": 1, "courses": []},
+            {"key": "eva",       "passed": False, "done": 0, "total": 1, "courses": []},
+        ],
+    }
+    ctx = br.new_context(viewport={"width": 1440, "height": 900}); seed(ctx, fake)
+    pg = ctx.new_page(); errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
+    pg.wait_for_selector(".gcard", timeout=8000)
+    n = pg.inner_text("#rec-n")
+    ck("hien DUNG so server gieo (2/7, khong phai 2/5)", "2" in n and "7" in n, n)
+    ck("ve du 7 cham theo so chuong trinh server tra",
+       pg.locator("#rec-dots .rd").count() == 7, str(pg.locator("#rec-dots .rd").count()))
+    ck("dung 2 cham sang", pg.locator("#rec-dots .rd.on").count() == 2,
+       str(pg.locator("#rec-dots .rd.on").count()))
+    ck("khong con cau 'chua doc duoc'", not pg.locator("#rec-note").is_visible())
+    # Chuong trinh la (docking/eva) khong co ten o client → khong duoc lam vo trang
+    ck("chuong trinh chua khai ten KHONG lam vo trang", not errs, str(errs[:2]))
+    # Huy hieu DA DAT hien dung cho
+    certs = pg.eval_on_selector_all(".gcard .cert", "e=>e.map(x=>x.textContent.trim())")
+    ck("co huy hieu DA DAT", any("ĐÃ ĐẠT" in c for c in certs), str(certs))
+    ck("2 game cua chuong trinh da dat deu duoc danh dau",
+       sum(1 for c in certs if "ĐÃ ĐẠT" in c) == 3, str(certs))  # dodge+catch+defender
+
+    # ═══════ [7] Ho so cua NGUOI KHAC khong duoc hien ═══════
+    print("\n[7] Cache cua uid khac → coi nhu chua biet")
+    ctx.close()
+    # ⚠️ CONTEXT MOI, gieo thang cache mang uid nguoi khac. KHONG sua bang
+    #    pg.evaluate roi reload: `add_init_script` GIEO LAI SAU MOI LAN DIEU HUONG
+    #    nen no ghi de dung cai vua sua — bay nay CLAUDE.md da ghi 4 lan, va toi
+    #    vua mac lai lan thu 5.
+    ctx = br.new_context(viewport={"width": 1440, "height": 900})
+    seed(ctx, fake)
+    ctx.add_init_script("""(() => {
+      const b = JSON.parse(localStorage.getItem('astroq-training') || '{}');
+      b.uid = 'u-nguoi-khac';
+      localStorage.setItem('astroq-training', JSON.stringify(b));
+    })()""")
+    pg = ctx.new_page()
+    pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
+    pg.wait_for_selector(".gcard", timeout=8000)
+    ck("ho so nguoi khac KHONG hien", "—" in pg.inner_text("#rec-n"), pg.inner_text("#rec-n"))
+    ck("va khong danh dau the nao DA DAT", pg.locator(".gcard .cert").count() == 0)
+    ctx.close()
+
+    # ═══════ [8] Ban EN ═══════
+    print("\n[8] Ban tieng Anh")
+    ctx = br.new_context(viewport={"width": 1440, "height": 900}); seed(ctx, fake)
+    ctx.add_init_script("localStorage.setItem('astroq-lang','en')")
+    pg = ctx.new_page(); errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
+    pg.wait_for_selector(".gcard", timeout=8000)
+    tags_en = pg.eval_on_selector_all(".gcard .tag", "e=>e.map(x=>x.textContent.trim())")
+    ck("ten chuong trinh dich sang EN",
+       any("Reaction" in x for x in tags_en) and not any("Phản xạ" in x for x in tags_en),
+       " | ".join(tags_en))
+    sk_en = pg.eval_on_selector_all(".gcard .skill", "e=>e.map(x=>x.textContent.trim())")
+    ck("dong ky nang dich sang EN", any("Skill:" in x for x in sk_en), str(sk_en[:1]))
+    rd_en = pg.inner_text(".gcard .readlink")
+    ck("duong doc bai dich sang EN", "Read more" in rd_en, rd_en[:60])
+    ck("ho so dich sang EN", "programmes" in pg.inner_text("#rec-n").lower(),
+       pg.inner_text("#rec-n"))
+    ck("0 loi trang o ban EN", not errs, str(errs[:2]))
+    ctx.close()
+
+    # ═══════ [9] Dien thoai 390x844 ═══════
+    print("\n[9] Dien thoai 390x844")
+    ctx = br.new_context(viewport={"width": 390, "height": 844},
+                         has_touch=True, is_mobile=True); seed(ctx, fake)
+    pg = ctx.new_page(); errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
+    pg.wait_for_selector(".gcard", timeout=8000)
+    over = pg.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
+    ck("khong tran ngang", over <= 0, f"tran {over}px")
+    cut = pg.eval_on_selector_all(".gcard .skill, .gcard .readlink, #rec-n",
+                                  "e=>e.filter(x=>x.scrollWidth>x.clientWidth+1).length")
+    ck("khong chu nao bi cat", cut == 0, str(cut))
+    ck("0 loi trang tren dien thoai", not errs, str(errs[:2]))
+    ctx.close()
+
+    br.close()
+
+print(f"\n===== {ok} dat / {bad} hong =====")
+sys.exit(1 if bad else 0)
