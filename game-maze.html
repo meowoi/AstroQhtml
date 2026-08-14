@@ -411,10 +411,22 @@
     var n=Math.max(0, Math.floor(m||0));
     if(n>0){ Economy.addAsteroids(n); bumpGem(); }
     paintBalance();
-    /* Fire-and-forget — bảng kết quả phải hiện NGAY. `score:1` = đã giải xong một
-       mê cung; kỷ lục ở server chỉ lấy giá trị lớn nhất. */
+    /* Fire-and-forget — bảng kết quả phải hiện NGAY.
+       ⚠️⚠️ `score` = SỐ TINH THỂ ĐÃ THU (0–5), đổi 14/08/2026. Trước đó nó là
+          `score:1` cứng ("đã giải xong một mê cung"), tức `bests.maze` chỉ có hai
+          giá trị 0/1 và **không có thang nào để chia cấp huấn luyện** — mà Trung
+          Tâm Đào Tạo cần trẻ luyện lại qua nhiều cấp, không phải đạt một lần rồi
+          thôi. Số tinh thể là thang ĐÚNG NGHĨA ở đây: mê cung không có trạng thái
+          thua, nên thứ trẻ thật sự quyết định là *ra sớm với ít tinh thể* hay
+          *đi hết để thu đủ 5*.
+       ⚠️ Đổi được vì **không huy hiệu hay mẫu vật nào dựa vào `best:maze`** (đã
+          kiểm cả Achievements.cs và Specimens.cs). Game Ghép Chòm Sao thì NGƯỢC
+          LẠI — nó có huy hiệu `best:constellation >= 1`, nên ở đó tuyệt đối
+          không được đổi cách báo điểm; chương trình Quan sát dùng chỉ số `consts`.
+       ⚠️ Người chơi cũ có `bests.maze = 1` sẽ ở Cấp 0 cho tới lượt chơi sau —
+          chấp nhận được, và server chỉ lấy giá trị LỚN NHẤT nên không ai bị tụt. */
     if(window.AstroQProgress) AstroQProgress.game({
-      game:"maze", score:1, id:bestKey(),
+      game:"maze", score:gems.filter(function(g){ return g.got; }).length, id:bestKey(),
       seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
     return n;
   }

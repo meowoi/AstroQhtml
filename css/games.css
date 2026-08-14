@@ -111,19 +111,28 @@
 }
 .rec-n{ font-weight:700; font-size:14px; color:#dbe6ff; }
 .rec-dots{ display:flex; gap:7px; margin-top:9px; flex-wrap:wrap; }
+/* Mỗi chương trình một thanh, tô theo TỈ LỆ cấp đã đạt — nhìn một cái là thấy
+   mình mạnh chỗ nào và còn chỗ nào chưa động tới. Trước đây đây là chấm sáng/tắt
+   (đạt/chưa), tức không phân biệt được "mới bắt đầu" với "sắp xong". */
 .rd{
-  width:26px; height:6px; border-radius:99px;
+  width:34px; height:6px; border-radius:99px; overflow:hidden;
   background:rgba(120,140,190,.24);
 }
-/* Chương trình ĐÃ ĐẠT — xanh của `--good`, cùng tông với SYS.ONLINE. */
-.rd.on{ background:linear-gradient(90deg,#5fd3ff,#7ee07a); }
+.rd i{
+  display:block; height:100%; border-radius:99px;
+  background:linear-gradient(90deg,#5fd3ff,#7ee07a);
+}
 .rec-note{ margin:9px 0 0; font-size:12.5px; color:#9db0d4; line-height:1.5; }
 .rec-note[hidden]{ display:none; }
 
 /* ── Nhãn CHƯƠNG TRÌNH trên thẻ (thay nhãn thể loại cũ) ── */
 .gcard .tag.prog{ text-transform:none; letter-spacing:.01em; }
 
-/* ── Huy hiệu ĐÃ ĐẠT / tiến độ khoá học ── */
+/* ── CẤP HUẤN LUYỆN + mốc kế tiếp ──
+   ⚠️ Trước 14/08/2026 chỗ này là huy hiệu "ĐÃ ĐẠT" nền xanh — một dấu chấm hết.
+      Nay là một CẤP kèm thanh tiến độ tới mốc kế tiếp, nên thẻ luôn nói ra thứ
+      trẻ được nếu luyện tiếp. Chỉ khi lên cấp cao nhất mới tô xanh, và ngay cả
+      lúc đó câu chữ vẫn mời phá kỷ lục của chính mình. */
 .gcard .cert{
   display:inline-block; margin:0 0 2px; padding:2px 9px; border-radius:99px;
   font-family:var(--mono,ui-monospace,monospace); font-size:10px;
@@ -134,9 +143,24 @@
   color:#0f2018; border-color:transparent;
   background:linear-gradient(90deg,#7ee07a,#5fd3ff); font-weight:700;
 }
-/* Thẻ của chương trình đã đạt: viền sáng nhẹ. CỐ Ý không làm mờ hay khoá — trẻ
-   vẫn chơi lại được, và chơi lại là chuyện tốt. */
-.gcard.done{ border-color:rgba(126,224,122,.34); }
+/* Thẻ đã lên cấp cao nhất: viền sáng nhẹ. CỐ Ý không làm mờ hay khoá — trẻ vẫn
+   chơi lại được, và ở cấp cao nhất thì chơi lại CHÍNH LÀ việc còn lại để làm. */
+.gcard.top{ border-color:rgba(126,224,122,.34); }
+
+/* Thanh tiến độ tới mốc kế tiếp. Mảnh và không có animation: nó là thông tin,
+   không phải thứ để hối thúc. */
+.gcard .lvbar{
+  height:4px; border-radius:99px; margin:0 0 2px;
+  background:rgba(120,140,190,.20); overflow:hidden;
+}
+.gcard .lvbar i{
+  display:block; height:100%; border-radius:99px;
+  background:linear-gradient(90deg,#5fd3ff,#7ee07a);
+}
+/* Câu "còn bao nhiêu nữa lên cấp sau" — thứ giữ trẻ quay lại. */
+.gcard .nextgoal{
+  margin:0 0 2px; font-size:12px; line-height:1.5; color:#8fd4ff;
+}
 
 /* ── Dòng KỸ NĂNG ── */
 .gcard .skill{
@@ -157,5 +181,5 @@
 
 @media (max-width:560px){
   .record{ padding:11px 13px; }
-  .rd{ width:22px; }
+  .rd{ width:28px; }
 }

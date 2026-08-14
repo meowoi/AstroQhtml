@@ -69,15 +69,52 @@ canvas{width:100%;height:100%;}
   width:min(100%, max(800px, var(--field-w, 800px)));}
 .chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:11px;
   background:rgba(9,14,28,.6);border:1px solid var(--brd);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
-.chip .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--ink-faint);text-transform:uppercase;}
-.chip .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;}
+/* ⚠️ NHAN CO DUOC, SO THI KHONG. Tu khi chip cam xuong hang (xem duoi), hai
+   thu nay tranh nhau be rong — va mac dinh flex cho ca hai cung co, nen chinh
+   CON SO bi cat ("14.000 m" do duoc 86px trong o 80px). So la thu tre dang doc
+   de choi; nhan thi doan duoc. Nen nhan nhan phan co, con so `flex:none`. */
+.chip .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--ink-faint);text-transform:uppercase;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;}
+/* ⚠️⚠️ SO TRONG HUD PHAI CO BE RONG ON DINH — do la LOI THAT, do duoc:
+   tren dien thoai 390px, khi diem cua Ne Thien Thach len 5 chu so thi be rong
+   chip nhay 36px va CA THANH HUD XUONG 2 HANG (34 → 72px) NGAY GIUA LUC DANG
+   CHOI. Vua kho doc vua trong nhu loi render.
+
+   Hai thu chua:
+     · `tabular-nums` — moi chu so rong bang nhau, nen 111 va 999 cung be rong
+       (font display mac dinh dung chu so ti le, "1" hep hon "8").
+     · `min-width` theo `ch` — dat truoc cho cho so DAI NHAT, nen 0 → 13820
+       khong lam chip phinh ra. Game nao can rong hon thi dat lai `--v-ch`.
+   `nowrap` de con so khong bao gio bi be doi. */
+.chip{white-space:nowrap;}
+/* ⚠️⚠️ TREN MAN HEP CO Y **KHONG** DAT TRUOC BE RONG — do roi moi chot:
+   tren 390px khong co gia tri `min-width` nao vua giu duoc MOT HANG vua on dinh.
+   So do (chieu cao thanh HUD o 0 / 2371 / 13820):
+     · khong dat truoc : dodge 34/34/72 · catch 34/34/34 · racer 34/34/34
+     · dat truoc 3ch   : dodge 34/72/72 · catch 34/34/34 · racer 72/72/72
+     · dat truoc 4ch   : dodge 72/72/72 · catch 73/73/73 · racer 72/72/72
+   Tuc dat truoc de tri cai nhay cua dodge thi CATCH VA RACER mat han mot hang
+   o MOI luot choi — san choi nho lai mai mai de chua mot ca hiem.
+   ⇒ Man hep chi dung `tabular-nums`: no khu duoc cai nhay giua cac so CUNG SO
+   CHU SO (111 vs 999), von la truong hop thuong gap nhat. Rieng dodge o >= 5 chu
+   so (~10 km, khoang 17 phut choi lien) van doi mot lan — chap nhan co y thuc.
+   ⚠️ game-defender VON DA 2 hang tu truoc (thanh giap chiem cho), khong phai do
+      thay doi nay. */
+.chip .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  }
 .chip .v small{font-family:var(--font-mono);font-size:9px;font-weight:400;color:var(--ink-faint);margin-left:2px;}
 .chip.mtr .v{color:#e9d7ff;}
 .chip img{width:15px;height:15px;object-fit:contain;}
 
 /* Nút Pause / Âm thanh — cuối thanh HUD, overlay không che nên luôn bấm được.
    Nút Pause chỉ có nghĩa khi đang chơi/đang dừng → JS gắn .is-hidden ở màn khác. */
-.hud-btns{margin-left:auto;display:flex;gap:6px;}
+/* ⚠️ CO Y **KHONG** dat `.hud{flex-wrap:nowrap}`. Da thu va do duoc no sai:
+   game-defender co THANH GIAP nam trong HUD, cam xuong hang thi ca thanh tran
+   ngang 512px tren man 390. Thu that su tri duoc cai nhay la BE RONG CHIP ON
+   DINH o tren — co no roi thi cho xuong hang van khong nhay, vi diem xuong hang
+   khong con phu thuoc do dai con so. */
+.hud-btns{margin-left:auto;display:flex;gap:6px;flex:none;}
 .iconbtn{width:34px;height:34px;display:grid;place-items:center;cursor:pointer;border-radius:11px;color:var(--ink-soft);
   background:rgba(9,14,28,.66);border:1px solid var(--brd);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   transition:background .18s,color .18s,transform .12s;}
@@ -147,6 +184,14 @@ canvas{width:100%;height:100%;}
 @media (max-width:560px){
   .chip .k{display:none;}
   .chip{padding:5px 9px;}
+  /* ⚠️ MAN HEP PHAI CAN LAI, VA DAY LA MOT DANH DOI CO SO DO:
+     de nguyen 5.5ch thi thanh HUD tren dien thoai LUON 2 HANG (do duoc 70px
+     thay vi 34px) — tuc san choi nho lai o MOI luot, chi de tri mot cai nhay
+     hiem gap. Ha xuong 4.5ch + chu 13px thi do duoc 363px < 366px kha dung:
+     MOT HANG, va van on dinh toi 4 chu so.
+     ⚠️ Diem >= 5 chu so (Ne Thien Thach ~10 km, khoang 17 phut choi lien) van
+        lam chip rong them mot lan. Chap nhan co y thuc: mot lan doi be rong o
+        moc rat hiem, doi lay san choi to hon o moi luot. */
   .ov-card{padding:22px 18px 18px;}
   .ov-card h2{font-size:21px;}
   /* Toast xuống ĐÁY màn: trên điện thoại thanh header xuống 2 dòng nên thanh HUD
@@ -255,7 +300,16 @@ canvas{width:100%;height:100%;}
        console với sân, đọc ra như hai khối rời. */
   .hud .chip{justify-content:space-between;padding:8px 11px;}
   .hud .chip .k{display:block;}   /* cột thì có chỗ cho nhãn, luôn hiện */
-  .hud .chip .v{font-size:19px;}
+  /* ⚠️ MUC DAT TRUOC CHI DAT O DAY, khong dat o `.chip .v` chung.
+     Console doc co du be rong nen dat truoc 5.5ch la an toan, va day dung la
+     cho chu du an chup duoc canh so nhay (DIEM · QUANG DUONG · KY LUC).
+     ⚠️ Da thu dat o rule chung va do duoc no SAI: tren dien thoai 390px thanh
+        HUD ngang cua Ne Thien Thach tu 1 hang (34px) thanh 2 hang (70px) o MOI
+        luot — tuc san choi nho lai mai mai de tri mot cai nhay hiem gap. Tren
+        man hep thi `tabular-nums` o rule chung da du: no khu cai nhay giua cac
+        so CUNG SO CHU SO (111 vs 999), von la truong hop thuong gap nhat.
+     `flex:none` de khi tranh cho voi nhan thi NHAN co, khong phai con so. */
+  .hud .chip .v{font-size:19px;min-width:5.5ch;text-align:right;flex:none;}
   .hud-btns{margin-left:0;margin-top:10px;justify-content:center;}
   .play{grid-area:play;}
   .gs-bar{grid-area:bar;}

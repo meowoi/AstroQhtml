@@ -67,7 +67,7 @@ with sync_playwright() as p:
     ck("hien dau `—`", "—" in pg.inner_text("#rec-n"), pg.inner_text("#rec-n"))
     ck("KHONG hien 0/5 hay 0 chuong trinh", not re.search(r"\b0\s*/\s*\d", rec), rec[:70])
     ck("co cau noi that ly do", pg.locator("#rec-note").is_visible())
-    ck("KHONG the nao hien huy hieu DA DAT", pg.locator(".gcard .cert").count() == 0)
+    ck("KHONG the nao hien cap", pg.locator(".gcard .cert").count() == 0)
     ck("0 loi trang", not errs, str(errs[:2]))
 
     # ═══════ [3] Nhan the = TEN CHUONG TRINH ═══════
@@ -123,16 +123,25 @@ with sync_playwright() as p:
     # Day la phep do DUY NHAT phan biet duoc "doc server" voi "tu tinh o client":
     # gieo 2/7 (that la 2/5) va mot chuong trinh la → trang phai hien DUNG so gieo.
     print("\n[6] Doc duoc ho so — gieo so LECH HAN de chac la doc server")
+    # ⚠️ SO GIEO LECH HAN mac dinh: 9/21 (that la ?/20) va bay chuong trinh trong
+    #    khi server chi co nam — hai chuong trinh cuoi CHUA khai ten o client.
+    #    Day la cach duy nhat phan biet "doc server" voi "tu tinh o client".
     fake = {
-        "passed": 2, "total": 7,
+        "levels": 9, "maxLevels": 21, "total": 7,
         "programs": [
-            {"key": "reaction",  "passed": True,  "done": 2, "total": 2, "courses": []},
-            {"key": "spatial",   "passed": True,  "done": 1, "total": 1, "courses": []},
-            {"key": "navigation","passed": False, "done": 0, "total": 1, "courses": []},
-            {"key": "resource",  "passed": False, "done": 0, "total": 1, "courses": []},
-            {"key": "observation","passed":False, "done": 0, "total": 1, "courses": []},
-            {"key": "docking",   "passed": False, "done": 0, "total": 1, "courses": []},
-            {"key": "eva",       "passed": False, "done": 0, "total": 1, "courses": []},
+            {"key": "reaction", "level": 4, "maxLevel": 4, "courses": [
+                {"game": "dodge", "level": 4, "maxLevel": 4, "current": 1350, "next": None, "best": 1600},
+                {"game": "catch", "level": 4, "maxLevel": 4, "current": 850,  "next": None, "best": 900}]},
+            {"key": "spatial", "level": 2, "maxLevel": 4, "courses": [
+                {"game": "defender", "level": 2, "maxLevel": 4, "current": 640, "next": 800, "best": 640}]},
+            {"key": "navigation", "level": 3, "maxLevel": 4, "courses": [
+                {"game": "maze", "level": 3, "maxLevel": 4, "current": 4, "next": 5, "best": 4}]},
+            {"key": "resource", "level": 0, "maxLevel": 4, "courses": [
+                {"game": "racer", "level": 0, "maxLevel": 4, "current": 900, "next": 3500, "best": 900}]},
+            {"key": "observation", "level": 0, "maxLevel": 4, "courses": [
+                {"game": "constellation", "level": 0, "maxLevel": 4, "current": 0, "next": 1, "best": 0}]},
+            {"key": "docking", "level": 0, "maxLevel": 4, "courses": []},
+            {"key": "eva",     "level": 0, "maxLevel": 4, "courses": []},
         ],
     }
     ctx = br.new_context(viewport={"width": 1440, "height": 900}); seed(ctx, fake)
@@ -141,19 +150,38 @@ with sync_playwright() as p:
     pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
     pg.wait_for_selector(".gcard", timeout=8000)
     n = pg.inner_text("#rec-n")
-    ck("hien DUNG so server gieo (2/7, khong phai 2/5)", "2" in n and "7" in n, n)
-    ck("ve du 7 cham theo so chuong trinh server tra",
+    ck("hien DUNG so server gieo (9/21, khong phai 0/20)", "9" in n and "21" in n, n)
+    ck("ve du 7 thanh theo so chuong trinh server tra",
        pg.locator("#rec-dots .rd").count() == 7, str(pg.locator("#rec-dots .rd").count()))
-    ck("dung 2 cham sang", pg.locator("#rec-dots .rd.on").count() == 2,
-       str(pg.locator("#rec-dots .rd.on").count()))
     ck("khong con cau 'chua doc duoc'", not pg.locator("#rec-note").is_visible())
-    # Chuong trinh la (docking/eva) khong co ten o client → khong duoc lam vo trang
     ck("chuong trinh chua khai ten KHONG lam vo trang", not errs, str(errs[:2]))
-    # Huy hieu DA DAT hien dung cho
+
     certs = pg.eval_on_selector_all(".gcard .cert", "e=>e.map(x=>x.textContent.trim())")
-    ck("co huy hieu DA DAT", any("ĐÃ ĐẠT" in c for c in certs), str(certs))
-    ck("2 game cua chuong trinh da dat deu duoc danh dau",
-       sum(1 for c in certs if "ĐÃ ĐẠT" in c) == 3, str(certs))  # dodge+catch+defender
+    # ⚠️⚠️ TUYET DOI KHONG CON CHU "DA DAT" — do la mot dau cham het bao tre rang
+    #    o day het viec, dung thu ma ca lan sua nay di bo.
+    ck("KHONG con huy hieu 'DA DAT'", not any("ĐÃ ĐẠT" in c for c in certs), str(certs))
+    # ⚠️ So `casefold()`: the o Cap 0 hien "Chưa có cấp" (chu thuong) nen kiem
+    #    `"Cấp" in c` truot — loi cua phep kiem, khong phai san pham. Day la lan
+    #    thu n cua bai hoc "dung ghim mot cach viet hoa" (quy tac 8 muc 6).
+    ck("moi the hien mot CAP", all("cấp" in c.casefold() for c in certs), str(certs))
+    ck("the o cap toi da hien Cap 4/4", any("Cấp 4/4" in c for c in certs), str(certs))
+    ck("the chua co cap hien 'Chua co cap'", any("Chưa có cấp" in c for c in certs), str(certs))
+
+    # ── Thu quan trong nhat: LUON CO MOT MOC KE TIEP ──
+    goals = pg.eval_on_selector_all(".gcard .nextgoal", "e=>e.map(x=>x.textContent.trim())")
+    ck("moi the deu noi ra viec tiep theo", len(goals) == 6, str(len(goals)))
+    ck("the chua toi da noi 'Con ... nua len Cap ...'",
+       any("Còn" in g and "lên Cấp" in g for g in goals), str(goals[:2]))
+    ck("the da toi da MOI PHA KY LUC, khong noi 'xong'",
+       any("phá kỷ lục" in g for g in goals), str(goals))
+    ck("KHONG the nao noi mot cau doc ra thanh 'het viec'",
+       not any(w in " ".join(goals).lower() for w in ["hoàn tất", "đã xong", "kết thúc"]),
+       str(goals))
+    # Thanh tien do phai co va rong dung ti le
+    bars = pg.eval_on_selector_all(".gcard .lvbar i", "e=>e.map(x=>x.style.width)")
+    ck("the chua toi da co thanh tien do", len(bars) >= 3, str(bars))
+    ck("thanh tien do khong bao gio vuot 100%",
+       all(int(b.replace("%","") or 0) <= 100 for b in bars), str(bars))
 
     # ═══════ [7] Ho so cua NGUOI KHAC khong duoc hien ═══════
     print("\n[7] Cache cua uid khac → coi nhu chua biet")
@@ -173,7 +201,7 @@ with sync_playwright() as p:
     pg.goto(f"{BASE}/games.html", wait_until="domcontentloaded")
     pg.wait_for_selector(".gcard", timeout=8000)
     ck("ho so nguoi khac KHONG hien", "—" in pg.inner_text("#rec-n"), pg.inner_text("#rec-n"))
-    ck("va khong danh dau the nao DA DAT", pg.locator(".gcard .cert").count() == 0)
+    ck("va khong hien cap cua the nao", pg.locator(".gcard .cert").count() == 0)
     ctx.close()
 
     # ═══════ [8] Ban EN ═══════
@@ -192,8 +220,11 @@ with sync_playwright() as p:
     ck("dong ky nang dich sang EN", any("Skill:" in x for x in sk_en), str(sk_en[:1]))
     rd_en = pg.inner_text(".gcard .readlink")
     ck("duong doc bai dich sang EN", "Read more" in rd_en, rd_en[:60])
-    ck("ho so dich sang EN", "programmes" in pg.inner_text("#rec-n").lower(),
+    ck("ho so dich sang EN", "level" in pg.inner_text("#rec-n").lower(),
        pg.inner_text("#rec-n"))
+    g_en = pg.eval_on_selector_all(".gcard .nextgoal", "e=>e.map(x=>x.textContent.trim())")
+    ck("cau moc ke tiep dich sang EN",
+       any("Level" in g for g in g_en) and not any("Cấp" in g for g in g_en), str(g_en[:2]))
     ck("0 loi trang o ban EN", not errs, str(errs[:2]))
     ctx.close()
 
@@ -207,7 +238,7 @@ with sync_playwright() as p:
     pg.wait_for_selector(".gcard", timeout=8000)
     over = pg.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
     ck("khong tran ngang", over <= 0, f"tran {over}px")
-    cut = pg.eval_on_selector_all(".gcard .skill, .gcard .readlink, #rec-n",
+    cut = pg.eval_on_selector_all(".gcard .skill, .gcard .readlink, .gcard .nextgoal, #rec-n",
                                   "e=>e.filter(x=>x.scrollWidth>x.clientWidth+1).length")
     ck("khong chu nao bi cat", cut == 0, str(cut))
     ck("0 loi trang tren dien thoai", not errs, str(errs[:2]))

@@ -99,10 +99,11 @@
       title:"AstroQ — Khu Huấn Luyện", back:"Về Trung Tâm Điều Hướng",
       eyebrow:"Khu Huấn Luyện", title_h:"Chọn một chương trình huấn luyện",
       intro:"Phi hành gia thật luyện từng kỹ năng một. Ở đây mỗi kỹ năng có một game mô phỏng — mỗi lượt tiêu một ít Thiên thạch tím.",
-      cert_lb:"Hồ sơ huấn luyện", cert_n:"{a}/{b} chương trình đã đạt",
+      cert_lb:"Hồ sơ huấn luyện", cert_n:"{a}/{b} cấp huấn luyện",
       cert_none:"Chưa đọc được hồ sơ. Ghé Trung Tâm Điều Hướng một lượt để đồng bộ nhé!",
-      skill_lb:"Kỹ năng", read_lb:"Đọc thêm", course_n:"{a}/{b} bài",
-      passed:"ĐÃ ĐẠT",
+      skill_lb:"Kỹ năng", read_lb:"Đọc thêm",
+      lv:"Cấp {a}/{b}", lv0:"Chưa có cấp",
+      lv_next:"Còn {a} nữa lên Cấp {b}", lv_max:"Cấp cao nhất — giờ là lúc phá kỷ lục của chính mình!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -115,10 +116,11 @@
       title:"AstroQ — Training Simulator", back:"Back to Navigation Hub",
       eyebrow:"Training Simulator", title_h:"Pick a training programme",
       intro:"Real astronauts train one skill at a time. Here each skill has its own simulator game — every run costs a few Purple Meteors.",
-      cert_lb:"Training record", cert_n:"{a}/{b} programmes passed",
+      cert_lb:"Training record", cert_n:"{a}/{b} training levels",
       cert_none:"Can't read your record yet. Drop by the Navigation Hub once to sync it!",
-      skill_lb:"Skill", read_lb:"Read more", course_n:"{a}/{b} courses",
-      passed:"PASSED",
+      skill_lb:"Skill", read_lb:"Read more",
+      lv:"Level {a}/{b}", lv0:"No level yet",
+      lv_next:"{a} more to reach Level {b}", lv_max:"Top level — now go beat your own record!",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
       diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now", need_later:"Later",
@@ -207,11 +209,15 @@
       $("rec-note").hidden=false;
       return;
     }
-    $("rec-n").textContent=fill(t("cert_n"), TRAIN.passed, TRAIN.total);
+    $("rec-n").textContent=fill(t("cert_n"), TRAIN.levels, TRAIN.maxLevels);
     $("rec-note").hidden=true;
+    /* Mỗi chương trình một thanh, tô theo TỈ LỆ cấp đã đạt — nhìn một cái là
+       thấy mình đang mạnh chỗ nào và còn chỗ nào chưa động tới. */
     $("rec-dots").innerHTML = TRAIN.programs.map(function(p){
-      return '<span class="rd'+(p.passed?" on":"")+'" title="'+
-             AstroQ.esc(AstroQTraining.name(p.key,LANG))+'"></span>';
+      var mx=p.maxLevel||0, pct = mx ? Math.round((p.level||0)*100/mx) : 0;
+      return '<span class="rd" title="'+
+             AstroQ.esc(AstroQTraining.name(p.key,LANG)+" — "+fill(t("lv"), p.level||0, mx))+
+             '"><i style="width:'+pct+'%"></i></span>';
     }).join("");
   }
 
@@ -252,20 +258,41 @@
                       encodeURIComponent(rd.id)+'">📖 '+AstroQ.esc(t("read_lb"))+
                       ': '+AstroQ.esc(rd.topic)+' <span aria-hidden="true">›</span></a>' : '';
 
-      /* ── Huy hiệu ĐÃ ĐẠT + tiến độ khoá học, chỉ khi ĐỌC ĐƯỢC hồ sơ.
-            ⚠️ Chưa biết thì KHÔNG vẽ gì — vẽ "0/2 bài" cho một đứa trẻ có thể đã
-               qua cả hai là nói sai về tiến độ của nó. */
+      /* ── CẤP HUẤN LUYỆN + mốc kế tiếp, chỉ khi ĐỌC ĐƯỢC hồ sơ.
+            ⚠️⚠️ TRƯỚC 14/08/2026 chỗ này là một huy hiệu "✓ ĐÃ ĐẠT" — một dấu
+               chấm hết bảo trẻ rằng ở đây hết việc. Chủ dự án bác đúng: khu này
+               sinh ra để trẻ LUYỆN LẠI qua nhiều cấp. Nay nó luôn nói ra **mốc
+               kế tiếp**, và ở cấp cao nhất thì mời phá kỷ lục của chính mình —
+               không bao giờ có một câu nào đọc ra thành "xong rồi".
+            ⚠️ Chưa biết thì KHÔNG vẽ gì — vẽ "Cấp 0" cho một đứa trẻ có thể đã
+               lên cấp 3 là nói sai về tiến độ của nó.
+            ⚠️ Mốc kế tiếp lấy khoá học ĐANG THẤP NHẤT (`next` gần nhất), vì cấp
+               của chương trình chính là cấp thấp nhất trong các khoá — nói mốc
+               của khoá đang cao là chỉ trẻ luyện sai chỗ. */
       var st2 = progOf(g.prog);
       var cert = "";
       if (st2) {
-        cert = st2.passed
-          ? '<span class="cert on">✓ '+AstroQ.esc(t("passed"))+'</span>'
-          : (st2.total > 1
-              ? '<span class="cert">'+AstroQ.esc(fill(t("course_n"), st2.done, st2.total))+'</span>'
-              : '');
+        var mx = st2.maxLevel || 0, lv = st2.level || 0;
+        var atTop = mx > 0 && lv >= mx;
+        cert = '<span class="cert lv'+(atTop ? " on" : "")+'">'+
+                 AstroQ.esc(lv > 0 ? fill(t("lv"), lv, mx) : t("lv0"))+
+               '</span>';
+        // Thanh tiến độ tới mốc kế tiếp + câu nói còn bao nhiêu nữa
+        var cs = (st2.courses || []).filter(function(c){ return c.next != null; });
+        if (atTop || !cs.length) {
+          cert += '<p class="nextgoal">'+AstroQ.esc(t("lv_max"))+'</p>';
+        } else {
+          cs.sort(function(a,b){ return a.level - b.level; });
+          var c0 = cs[0];
+          var pct = c0.next > 0 ? Math.max(0, Math.min(100, Math.round(c0.current*100/c0.next))) : 0;
+          cert += '<div class="lvbar"><i style="width:'+pct+'%"></i></div>'+
+                  '<p class="nextgoal">'+
+                    AstroQ.esc(fill(t("lv_next"), Math.max(0, c0.next - c0.current), c0.level + 1))+
+                  '</p>';
+        }
       }
 
-      return '<article class="gcard '+g.cls+(soon?' soon':'')+(st2&&st2.passed?' done':'')+'">'+
+      return '<article class="gcard '+g.cls+(soon?' soon':'')+(st2&&st2.maxLevel&&st2.level>=st2.maxLevel?' top':'')+'">'+
         '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
         badge+
         /* Bang mau theo TUNG game (`pal`), khong de tat ca roi ve tim mac dinh: sau

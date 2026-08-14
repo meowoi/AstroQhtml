@@ -8,8 +8,15 @@ CHAY DOC LAP TRUOC KHI NOI VAO GIAO DIEN (quy tac 4 muc 6 cua CLAUDE.md).
 
 ⚠️ LUAT DOC THANG TU `Services/Training.cs`, khong go tay lai o day. Test go
    cung con so thi no khang dinh mot trang thai CU va se bao hong dung luc ai do
-   chinh mocs cho dung — day la lop loi da mac 6 lan trong du an (14 icon · 14
-   thuat ngu · 25 cau · 20 mau vat · 5 buoc · 2 loai mon).
+   chinh moc cho dung — day la lop loi da mac 6 lan trong du an.
+
+⚠️⚠️ TU 14/08/2026 MOI KHOA HOC CO MOT **THANG MOC** chu khong phai mot moc.
+   Ly do doi: mot huy hieu "DA DAT" la mot dau cham het, trong khi ca khu sinh ra
+   de tre LUYEN LAI qua nhieu cap. Bo test nay vi the phai chung minh duoc:
+     · len cap dung theo tung moc, khong nhay coc
+     · cap cua CHUONG TRINH = cap THAP NHAT trong cac khoa hoc
+     · o cap cao nhat thi `next` la null (khong bao gio hua mot cap khong co)
+     · client khong tu dat cap duoc
 """
 import sys, os, re, json, time, subprocess, urllib.request, urllib.error
 # Console Windows mac dinh cp1252 — in chu co dau la UnicodeEncodeError GIUA bai
@@ -65,34 +72,40 @@ def call(method, path, token=None, body=None):
         except Exception: return e.code, {"_raw": raw[:200]}
 
 # ─────────────────── [1] Doc luat tu Training.cs ───────────────────
-print("\n[1] Doc luat thang tu Services/Training.cs")
+print("\n[1] Doc thang moc thang tu Services/Training.cs")
 src = open(SRC, encoding="utf-8").read()
-# Bo comment de khong dem nham vi du trong ghi chu
-nc = re.sub(r"/\*.*?\*/", " ", src, flags=re.S)
-nc = re.sub(r"//[^\n]*", " ", nc)
+nc = re.sub(r"/\*.*?\*/", " ", src, flags=re.S)     # bo comment khoi
+nc = re.sub(r"//[^\n]*", " ", nc)                    # bo comment dong
 
-blocks = re.findall(r'new\("([a-z]+)",\s*new\[\]\s*\{(.*?)\}\)', nc, re.S)
+blocks = re.findall(r'new\("([a-z]+)",\s*new\[\]\s*\{(.*?)\n        \}\)', nc, re.S)
 LAW = {}
 for key, body in blocks:
-    courses = re.findall(r'new Course\("([a-z-]+)",\s*"([^"]+)",\s*(\d+)\)', body)
-    LAW[key] = [(g, m, int(goal)) for g, m, goal in courses]
+    cs = re.findall(r'new Course\("([a-z-]+)",\s*"([^"]+)",\s*new long\[\]\s*\{([^}]*)\}\)', body)
+    LAW[key] = [(g, m, [int(x) for x in re.findall(r"\d+", goals)]) for g, m, goals in cs]
 
-ck("boc duoc chuong trinh tu Training.cs", len(LAW) > 0, str(LAW))
+ck("boc duoc chuong trinh tu Training.cs", len(LAW) > 0, str(list(LAW)))
 if not LAW:
     print("\n>>> Khong doc duoc luat — DUNG, moi phep kiem sau deu vo nghia.")
     sys.exit(1)
-print(f"       {len(LAW)} chuong trinh: " + ", ".join(f"{k}({len(v)})" for k, v in LAW.items()))
+print("       " + ", ".join(f"{k}[{'+'.join(g for g,_,_ in v)}]" for k, v in LAW.items()))
+
 ck("moi chuong trinh co it nhat 1 khoa hoc", all(len(v) >= 1 for v in LAW.values()))
-ck("moi khoa hoc dung metric best:<game>",
-   all(m == f"best:{g}" for v in LAW.values() for g, m, _ in v),
-   str([(g, m) for v in LAW.values() for g, m, _ in v]))
-ck("moc deu > 0", all(goal > 0 for v in LAW.values() for _, _, goal in v))
-# Khong game nao thuoc hai chuong trinh (mot game hai cho = hai noi noi hai dieu)
+ck("moi khoa hoc co NHIEU moc (thang cap, khong phai dat/chua)",
+   all(len(goals) >= 2 for v in LAW.values() for _, _, goals in v),
+   str({k: [len(g) for _, _, g in v] for k, v in LAW.items()}))
+ck("moc trong moi thang TANG DAN",
+   all(goals == sorted(goals) and len(set(goals)) == len(goals)
+       for v in LAW.values() for _, _, goals in v))
+ck("moc deu > 0", all(g > 0 for v in LAW.values() for _, _, goals in v for g in goals))
+# Moi chuong trinh cung so cap thi cap moi so sanh duoc voi nhau
+lv_counts = {k: min(len(g) for _, _, g in v) for k, v in LAW.items()}
+ck("moi chuong trinh cung so cap", len(set(lv_counts.values())) == 1, str(lv_counts))
+MAXLV = list(lv_counts.values())[0]
 games = [g for v in LAW.values() for g, _, _ in v]
 ck("khong game nao thuoc 2 chuong trinh", len(games) == len(set(games)), str(games))
 
 # ─────────────────── [2] Tai khoan moi ───────────────────
-print("\n[2] Tai khoan moi — chua dat chuong trinh nao")
+print("\n[2] Tai khoan moi — chua co cap nao")
 mail = f"trn-{int(time.time())}@simulator.amazonses.com"
 uid, token, _pw = _fbtest.make_verified(mail)
 print(f"       uid={uid}")
@@ -104,18 +117,41 @@ try:
     ck("response CO khoi `training`", tr is not None, str(list(r.keys())))
     ck("total khop so chuong trinh khai o server", tr and tr.get("total") == len(LAW),
        f'{tr and tr.get("total")} vs {len(LAW)}')
-    ck("chua dat chuong trinh nao", tr and tr.get("passed") == 0, str(tr and tr.get("passed")))
-    progs = {p["key"]: p for p in (tr or {}).get("programs", [])}
+    ck("chua co cap nao", tr and tr.get("levels") == 0, str(tr and tr.get("levels")))
+    ck("maxLevels = so chuong trinh x so cap",
+       tr and tr.get("maxLevels") == len(LAW) * MAXLV,
+       f'{tr and tr.get("maxLevels")} vs {len(LAW)*MAXLV}')
+
+    # ⚠️ TRUONG `passed` PHAI BIEN MAT. Con no la giao dien co the ve lai huy hieu
+    #    "DA DAT" — dung cai dau cham het ma lan sua nay di bo.
+    ck("KHONG con truong `passed` o chuong trinh",
+       all("passed" not in p for p in tr["programs"]),
+       str([p for p in tr["programs"] if "passed" in p][:1]))
+
+    progs = {p["key"]: p for p in tr["programs"]}
     ck("du ten chuong trinh", set(progs) == set(LAW), f"{set(progs)} vs {set(LAW)}")
-    ck("moi khoa hoc current=0, passed=false",
-       all(c["current"] == 0 and c["passed"] is False for p in progs.values() for c in p["courses"]))
-    ck("moc goal tra ve khop Training.cs",
-       all(c["goal"] == dict((g, gl) for g, _, gl in LAW[k])[c["game"]]
-           for k, p in progs.items() for c in p["courses"]))
+    ck("moi chuong trinh level=0", all(p["level"] == 0 for p in progs.values()))
+    ck("moc KE TIEP la moc dau tien cua thang",
+       all(c["next"] == dict((g, gs) for g, _, gs in LAW[k])[c["game"]][0]
+           for k, p in progs.items() for c in p["courses"]),
+       str([(k, c["game"], c["next"]) for k, p in progs.items() for c in p["courses"]][:3]))
+
+    # ⚠️ CHUONG TRINH QUAN SAT DUNG CHI SO `consts` (so chom sao KHAC NHAU), khong
+    #    phai `best:constellation` — game do bao `score:1` cung va co mot huy hieu
+    #    dua vao no nen khong doi duoc. Nghia la bao diem THOI KHONG DU: phai gui
+    #    kem `id` cua chom sao, va moi lan mot chom KHAC.
+    #    (Lan dau viet bo test toi quen chuyen nay va no bao hong 3 phep kiem —
+    #     loi cua phep do, khong phai cua san pham.)
+    SKY = ["ursa-major", "cassiopeia", "orion", "scorpius"]
+    _cn = [0]
 
     def report(game, score, extra=None):
         b = {"type": "game", "game": game, "score": score, "seconds": 5,
-             "meteors": 0, "opId": f"op-{game}-{score}-{int(time.time()*1000)}"}
+             "meteors": 0, "opId": f"op-{game}-{score}-{int(time.time()*1000000)}"}
+        if game == "constellation":
+            # Moi lan mot chom KHAC → `consts` moi tang. Gui trung id thi no dung yen,
+            # va do chinh la dieu chi so nay muon do: da NGAM DUOC BAO NHIEU CHOM.
+            b["id"] = SKY[min(_cn[0], len(SKY) - 1)]; _cn[0] += 1
         if extra: b.update(extra)
         return call("POST", "/me/progress", token, b)
 
@@ -124,104 +160,120 @@ try:
         t = rr["training"]
         return t, {p["key"]: p for p in t["programs"]}
 
-    # ─────────── [3] Mot khoa dat KHONG lam ca chuong trinh dat ───────────
-    print("\n[3] Chuong trinh nhieu khoa: dat 1 khoa thi CHUA dat chuong trinh")
-    multi = [k for k, v in LAW.items() if len(v) >= 2]
-    if not multi:
-        ck("co it nhat 1 chuong trinh nhieu khoa de thu", False, "khong co")
-    else:
-        k = multi[0]
-        g0, _, goal0 = LAW[k][0]
-        st, _ = report(g0, goal0)
-        ck(f"bao diem {g0}={goal0} → 200", st == 200, str(st))
-        t, progs = training()
-        ck(f"khoa {g0} da dat", progs[k]["courses"][0]["passed"] is True)
-        ck(f"chuong trinh {k} CHUA dat (con khoa khac)", progs[k]["passed"] is False)
-        ck(f"{k} hien done=1/{len(LAW[k])}", progs[k]["done"] == 1)
-        ck("tong passed van = 0", t["passed"] == 0, str(t["passed"]))
-
-        # ─────────── [4] Dat not khoa con lai ───────────
-        print("\n[4] Dat not khoa con lai → chuong trinh DAT")
-        for g, _, goal in LAW[k][1:]:
-            report(g, goal)
-        t, progs = training()
-        ck(f"chuong trinh {k} DA dat", progs[k]["passed"] is True)
-        ck("tong passed = 1", t["passed"] == 1, str(t["passed"]))
-
-    # ─────────── [5] Diem duoi moc thi khong dat ───────────
-    print("\n[5] Diem DUOI moc thi khong dat")
-    rest = [k for k in LAW if k not in (multi[:1] if multi else [])]
-    k1 = rest[0]; g1, _, goal1 = LAW[k1][0]
-    if goal1 > 1:
-        report(g1, goal1 - 1)
+    # ─────────── [3] Len cap TUNG BUOC, khong nhay coc ───────────
+    print("\n[3] Len cap tung buoc theo thang moc")
+    k1 = [k for k, v in LAW.items() if len(v) == 1][0]     # chuong trinh 1 khoa
+    g1, _, goals1 = LAW[k1][0]
+    for i, goal in enumerate(goals1):
+        report(g1, goal)
         _, progs = training()
-        ck(f"{g1}={goal1-1} (thieu 1) → CHUA dat", progs[k1]["passed"] is False)
-        ck("current hien dung so that", progs[k1]["courses"][0]["current"] == goal1 - 1,
-           str(progs[k1]["courses"][0]["current"]))
+        got = progs[k1]["level"]
+        ck(f"{g1}={goal} → Cap {i+1}", got == i + 1, f"ra Cap {got}")
+
+    # ─────────── [4] Cap cao nhat: `next` phai la null ───────────
+    print("\n[4] Cap cao nhat → khong hua mot cap khong ton tai")
+    _, progs = training()
+    ck(f"{k1} da toi da ({MAXLV})", progs[k1]["level"] == MAXLV, str(progs[k1]["level"]))
+    ck("`next` = null o cap cao nhat",
+       all(c["next"] is None for c in progs[k1]["courses"]),
+       str([c["next"] for c in progs[k1]["courses"]]))
+    ck("`maxLevel` van tra ve dung", progs[k1]["maxLevel"] == MAXLV)
+
+    # ─────────── [5] Diem DUOI moc thi khong len cap ───────────
+    print("\n[5] Diem duoi moc thi khong len cap")
+    k2 = [k for k in LAW if k != k1 and len(LAW[k]) == 1][0]
+    g2, _, goals2 = LAW[k2][0]
+    if goals2[0] > 1:
+        report(g2, goals2[0] - 1)
+        _, progs = training()
+        ck(f"{g2}={goals2[0]-1} (thieu 1) → van Cap 0", progs[k2]["level"] == 0,
+           str(progs[k2]["level"]))
+        ck("current hien dung so that", progs[k2]["courses"][0]["current"] == goals2[0] - 1,
+           str(progs[k2]["courses"][0]["current"]))
     else:
-        ck(f"(bo qua: moc cua {g1} = 1, khong co so duoi moc)", True)
+        ck(f"(bo qua: moc dau cua {g2} = 1)", True)
 
-    # ─────────── [6] KEP current ve goal ───────────
-    print("\n[6] `current` bi KEP ve goal — khong hien 999999/150")
-    report(g1, 999999)
+    # ─────────── [6] Cap CHUONG TRINH = cap THAP NHAT cua cac khoa ───────────
+    print("\n[6] Chuong trinh nhieu khoa: lay cap THAP NHAT")
+    km = [k for k, v in LAW.items() if len(v) >= 2][0]
+    ga, _, goalsa = LAW[km][0]
+    gb, _, goalsb = LAW[km][1]
+    report(ga, goalsa[-1])                       # khoa A len cap toi da
     _, progs = training()
-    c = progs[k1]["courses"][0]
-    ck("current khong vuot goal", c["current"] == c["goal"], f'{c["current"]} vs {c["goal"]}')
-    ck("va da dat", c["passed"] is True)
-
-    # ─────────── [7] Ky luc khong bao gio TUT ───────────
-    print("\n[7] Bao diem THAP hon ky luc khong lam mat chuong trinh")
-    report(g1, 0)
+    ck(f"{ga} toi da nhung chuong trinh {km} VAN Cap 0",
+       progs[km]["level"] == 0, str(progs[km]["level"]))
+    ck("khoa A that su da toi da",
+       progs[km]["courses"][0]["level"] == len(goalsa), str(progs[km]["courses"][0]["level"]))
+    report(gb, goalsb[0])                        # khoa B len cap 1
     _, progs = training()
-    ck(f"{k1} van dat sau khi bao diem 0", progs[k1]["passed"] is True)
+    ck(f"{gb} len Cap 1 → chuong trinh {km} len Cap 1",
+       progs[km]["level"] == 1, str(progs[km]["level"]))
 
-    # ─────────── [8] Client KHONG tu dat duoc chuong trinh ───────────
-    print("\n[8] Client gui `training` len → BI BO QUA")
-    k2 = [k for k in LAW if k not in (multi[:1] if multi else []) and k != k1][0]
+    # ─────────── [7] `current` bi KEP, ky luc tho van co ───────────
+    print("\n[7] `current` kep ve moc ke tiep, `best` giu ky luc tho")
+    report(g2, 999999)
+    _, progs = training()
+    c = progs[k2]["courses"][0]
+    ck("best giu nguyen so tho", c["best"] == 999999, str(c["best"]))
+    ck("current KHONG vuot moc cuoi", c["current"] <= goals2[-1], f'{c["current"]}')
+    ck("va da len cap toi da", progs[k2]["level"] == MAXLV, str(progs[k2]["level"]))
+
+    # ─────────── [8] Ky luc khong TUT ───────────
+    print("\n[8] Bao diem thap hon khong lam TUT cap")
+    report(g2, 0)
+    _, progs = training()
+    ck(f"{k2} van o cap toi da", progs[k2]["level"] == MAXLV, str(progs[k2]["level"]))
+
+    # ─────────── [9] Client KHONG tu len cap duoc ───────────
+    print("\n[9] Client gui `training` / `bests` len → BI BO QUA")
+    k3 = [k for k in LAW if progs[k]["level"] == 0][0]
     st, _ = call("POST", "/me/progress", token, {
         "type": "game", "game": "dodge", "score": 1, "seconds": 1, "meteors": 0,
         "opId": f"op-fake-{int(time.time()*1000)}",
-        "training": {"passed": 99, "programs": [{"key": k2, "passed": True}]},
+        "training": {"levels": 99, "programs": [{"key": k3, "level": 4}]},
         "bests": {g: 999999 for g in games},
     })
-    ck("van 200 (truong la bi bo qua, khong bao loi)", st == 200, str(st))
+    ck("van 200 (truong la bi bo qua)", st == 200, str(st))
     _, progs = training()
-    ck(f"chuong trinh {k2} VAN chua dat", progs[k2]["passed"] is False)
-    ck("khong chuong trinh nao dat bang cach gui bests",
-       sum(1 for p in progs.values() if p["passed"]) <= 2, str({k: p["passed"] for k, p in progs.items()}))
+    ck(f"chuong trinh {k3} VAN Cap 0", progs[k3]["level"] == 0, str(progs[k3]["level"]))
 
-    # ─────────── [9] Dat het moi chuong trinh ───────────
-    print("\n[9] Dat het → passed == total")
+    # ─────────── [10] Dat het moi cap ───────────
+    print("\n[10] Dat het → levels == maxLevels")
     for k, v in LAW.items():
-        for g, _, goal in v: report(g, goal)
+        for g, _, goals in v:
+            if g == "constellation":
+                # `consts` tang theo SO CHOM KHAC NHAU, khong theo diem — bao mot
+                # lan cho moi chom moi len duoc cap toi da.
+                for _ in range(goals[-1]): report(g, 1)
+            else:
+                report(g, goals[-1])
     t, progs = training()
-    ck("moi chuong trinh dat", all(p["passed"] for p in progs.values()),
-       str({k: p["passed"] for k, p in progs.items()}))
-    ck("passed == total", t["passed"] == t["total"] == len(LAW), f'{t["passed"]}/{t["total"]}')
+    ck("moi chuong trinh o cap toi da",
+       all(p["level"] == p["maxLevel"] for p in progs.values()),
+       str({k: p["level"] for k, p in progs.items()}))
+    ck("levels == maxLevels", t["levels"] == t["maxLevels"] == len(LAW) * MAXLV,
+       f'{t["levels"]}/{t["maxLevels"]}')
+    ck("moi `next` deu null", all(c["next"] is None for p in progs.values() for c in p["courses"]))
 
-    # ─────────── [10] Khong co duong GHI rieng ───────────
-    print("\n[10] Khong ton tai route ghi `training`")
-    for m in ("POST", "PUT", "PATCH"):
-        st, _ = call(m, "/me/training", token, {"passed": 5})
+    # ─────────── [11] Khong co duong GHI rieng ───────────
+    print("\n[11] Khong ton tai route ghi `training`")
+    for m in ("POST", "PUT", "PATCH", "GET"):
+        st, _ = call(m, "/me/training", token, {"levels": 20} if m != "GET" else None)
         ck(f"{m} /me/training khong ton tai ({st})", st in (404, 405), str(st))
-    st, _ = call("GET", "/me/training", token)
-    ck(f"GET /me/training cung khong ton tai ({st})", st in (404, 405), str(st))
 
-    # ─────────── [11] Khong token ───────────
-    print("\n[11] Khong token → 401")
+    # ─────────── [12] Khong token ───────────
+    print("\n[12] Khong token → 401")
     st, _ = call("GET", "/me/achievements")
     ck("GET /me/achievements khong token → 401", st == 401, str(st))
 
 finally:
     print("\n[don] xoa du lieu test")
     try:
-        n = wipe(uid)
-        print(f"       xoa {n} dong DynamoDB")
+        print(f"       xoa {wipe(uid)} dong DynamoDB")
     except Exception as e:
         print(f"       ⚠️ con dong DynamoDB: {e}")
     try:
-        _fbtest.delete(token)
-        print("       xoa tai khoan Firebase tam")
+        _fbtest.delete(token); print("       xoa tai khoan Firebase tam")
     except Exception as e:
         print(f"       ⚠️ con tai khoan Firebase: {e}")
 

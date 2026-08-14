@@ -147,20 +147,24 @@
     if (!t || typeof t !== "object" || !Array.isArray(t.programs)) return false;
     write(LS_TRAIN, {
       uid: uidNow(),
-      passed: t.passed | 0,
+      levels: t.levels | 0,
+      maxLevels: t.maxLevels | 0,
       total: t.total | 0,
       programs: t.programs.map(function (p) {
         return {
           key: String(p.key || ""),
-          passed: !!p.passed,
-          done: p.done | 0,
-          total: p.total | 0,
+          level: p.level | 0,
+          maxLevel: p.maxLevel | 0,
           courses: (Array.isArray(p.courses) ? p.courses : []).map(function (c) {
             return {
               game: String(c.game || ""),
+              level: c.level | 0,
+              maxLevel: c.maxLevel | 0,
               current: c.current | 0,
-              goal: c.goal | 0,
-              passed: !!c.passed
+              // `next` = null nghia la DA TOI DA. Giu nguyen null, dung quy ve 0:
+              // 0 thi giao dien ve "con 0 nua len cap sau" cho mot cap khong co.
+              next: (c.next === null || c.next === undefined) ? null : (c.next | 0),
+              best: c.best | 0
             };
           })
         };
@@ -179,11 +183,12 @@
     var box = read(LS_TRAIN, null);
     if (!box || typeof box !== "object" || box.uid !== uidNow() ||
         !Array.isArray(box.programs)) {
-      return { known: false, passed: 0, total: 0, programs: [] };
+      return { known: false, levels: 0, maxLevels: 0, total: 0, programs: [] };
     }
     return {
       known: true,
-      passed: box.passed | 0,
+      levels: box.levels | 0,
+      maxLevels: box.maxLevels | 0,
       total: box.total | 0,
       programs: box.programs.slice()
     };
