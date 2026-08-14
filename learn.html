@@ -88,6 +88,9 @@
     <div class="reader-in">
       <h2 id="reader-title"></h2>
       <div class="reader-body" id="reader-body"></div>
+      <!-- Khoi "Mo rong" — dung boi js/more-box.js, kieu o css/page-shell.css.
+           CUNG mot khoi voi library.html, khong phai ban chep thu hai. -->
+      <div class="mb" id="reader-more" hidden></div>
       <div class="reader-note" data-i18n="note">* Nội dung minh hoạ cho mục đích học tập. Xem chi tiết ở nguồn chính thức.</div>
       <a class="reader-link" id="reader-link" target="_blank" rel="noopener"><span data-i18n="src_link">Nguồn chính thức</span> →</a>
       <button class="reader-claim" id="reader-claim"></button>
@@ -102,6 +105,9 @@
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
 <script src="js/articles-index.js"></script>
+<!-- Bac do sau + khoi "Mo rong". depth.js phai nap TRUOC more-box.js. -->
+<script src="js/depth.js"></script>
+<script src="js/more-box.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
@@ -215,9 +221,12 @@
       /* ⚠️ Nói đúng lý do — xem ghi chú cùng nội dung ở `library.html`: `file://` chặn
          `import()`, mạng không liên quan. */
       if(!full){ $("reader-body").innerHTML="<p>"+
-                   (AstroQArticles.needsServer()? t("read_file") : t("read_fail"))+"</p>"; return; }
+                   (AstroQArticles.needsServer()? t("read_file") : t("read_fail"))+"</p>";
+                 var mbF=$("reader-more"); if(mbF) mbF.hidden=true; return; }
       curArt=full;
       $("reader-body").innerHTML = L(full.body).map(function(p){ return "<p>"+p+"</p>"; }).join("");
+      /* Bai nao co `more` thi hien, khong co thi an han — phan THEM, khong bat buoc. */
+      if(window.AstroQMore) AstroQMore.mount($("reader-more"), full, LANG);
       $("reader-link").href=full.url;
     });
     var btn=$("reader-claim");
@@ -235,7 +244,8 @@
     }
     $("reader").classList.add("show");
   }
-  function closeReader(){ clearInterval(readTimer); openId=null; $("reader").classList.remove("show"); }
+  function closeReader(){ clearInterval(readTimer); openId=null; $("reader").classList.remove("show");
+    if(window.AstroQMore) AstroQMore.reset(); }
   function claim(){
     if(!curArt || isRead(curArt.id)) return;
     markRead(curArt.id);

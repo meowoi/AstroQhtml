@@ -172,3 +172,33 @@ a{text-decoration:none;}
   .seg button{min-height:44px;}
   .pbtn{min-height:44px;}
 }
+
+/* ══════════════ KHỐI "MỞ RỘNG" TRONG TRÌNH ĐỌC BÀI ══════════════
+   Dựng bởi `js/more-box.js`, dùng chung cho CẢ HAI trình đọc (library.html và
+   learn.html) — đó là lý do nó nằm ở đây chứ không ở css/library.css: hai bản
+   chép tay cho cùng một khối là thứ sẽ trôi khỏi nhau, đúng cái đã xảy ra với
+   hai mảng ARTICLES riêng trước 09/08/2026.
+
+   ⚠️ TÔNG TÍM, KHÔNG PHẢI TÔNG CHÍNH CỦA TRANG. Phần Mở rộng là thứ THÊM, không
+      phải phần bài học bắt buộc; cho nó cùng tông cyan với thân bài là nói rằng
+      trẻ phải đọc nốt. Tím = "còn nữa nếu bạn muốn". */
+.mb{margin:18px 0 0;padding:14px 16px;border-radius:14px;
+  background:rgba(143,123,255,.09);border:1px solid rgba(143,123,255,.34);}
+.mb[hidden]{display:none;}
+.mb-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.mb-h{margin:0;font-family:var(--font-display);font-size:14px;letter-spacing:.06em;
+  text-transform:uppercase;color:#c9b6ff;flex:1 1 auto;min-width:max-content;}
+.mb-btn{flex:none;cursor:pointer;border-radius:999px;padding:8px 14px;
+  font-family:var(--font-body);font-size:12.5px;font-weight:700;
+  background:rgba(143,123,255,.18);border:1px solid rgba(143,123,255,.5);
+  color:#e6dcff;transition:filter .18s,transform .18s var(--ease);}
+.mb-btn:hover{filter:brightness(1.12);transform:translateY(-1px);}
+.mb-btn:active{transform:scale(.96);}
+/* ⚠️ `display` của tác giả THẮNG `display:none` mà trình duyệt áp cho `[hidden]`,
+   nên PHẢI khai lại — bẫy này dự án đã trả giá chín lần, xem `js/more-box.js`. */
+.mb-body{display:block;margin-top:10px;}
+.mb-body[hidden]{display:none;}
+.mb-body p{margin:0 0 10px;font-size:14.5px;line-height:1.75;color:var(--ink-soft);}
+.mb-body p:last-child{margin-bottom:0;}
+.mb-note{font-size:12px;color:var(--ink-faint);font-style:italic;}
+@media (pointer: coarse){ .mb-btn{min-height:44px;} }

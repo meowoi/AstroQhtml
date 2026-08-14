@@ -72,6 +72,10 @@
     <div class="r-in">
       <h2 id="r-title"></h2>
       <div class="r-body" id="r-body"></div>
+      <!-- Khối "Mở rộng" — dựng bởi js/more-box.js, kiểu ở css/page-shell.css.
+           Để TRƯỚC khối linh vật: Comet/Byte giải thích một thuật ngữ của bài,
+           đó là câu chốt; đặt phần đào sâu SAU câu chốt là đọc ngược thứ tự. -->
+      <div class="mb" id="r-more" hidden></div>
       <div class="mascot" id="r-mascot">
         <img id="r-mascot-img" src="img/b1.png" alt="" />
         <div class="m-body"><div class="m-who" id="r-mascot-who">BYTE</div><p id="r-mascot-text"></p></div>
@@ -92,6 +96,12 @@
      phiên đăng nhập thì js/progress.js xếp việc vào hàng chờ trong localStorage,
      dashboard/profile sẽ tự gửi nốt. -->
 <script src="js/articles-index.js"></script>
+<!-- Bậc độ sâu + khối "Mở rộng". `js/depth.js` phải nạp TRƯỚC `js/more-box.js`:
+     more-box hỏi `AstroQDepth.isSenior()` để biết mở sẵn hay gấp lại. Thiếu
+     depth.js thì more-box vẫn chạy (coi như junior) — trang đọc không được vỡ
+     vì một file phụ. -->
+<script src="js/depth.js"></script>
+<script src="js/more-box.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
@@ -106,7 +116,7 @@
       a_source:"Nguồn", title:"AstroQ — Góc Khám Phá", back:"Về Trạm Tri Thức", search_ph:"Tìm bài viết…",
       src_all:"Tất cả", src_ai:"AI & Tech", topics:"CHỦ ĐỀ", progress:"TIẾN ĐỘ",
       st_read:"Đã đọc (bài)", st_coll:"Tổng bài viết", articles:"Bài viết", all_topics:"Tất cả chủ đề",
-      cat_astronomy:"Thiên văn", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot", cat_it:"CNTT",
+      cat_astronomy:"Thiên văn", cat_life:"Sự sống", cat_ai:"AI", cat_quantum:"Lượng tử", cat_robot:"Robot", cat_it:"CNTT",
       featured:"Bài viết nổi bật", read_now:"Đọc Ngay", src_link:"Nguồn",
       reading:"Đang đọc…", claim:"Đánh dấu đã đọc", claimed:"✓ Đã đọc", read_badge:"Đã đọc",
       unread_badge:"Chưa đọc",
@@ -119,7 +129,7 @@
       a_source:"Source", title:"AstroQ — Discovery Corner", back:"Back to Knowledge Station", search_ph:"Search articles…",
       src_all:"All", src_ai:"AI & Tech", topics:"TOPICS", progress:"PROGRESS",
       st_read:"Read (articles)", st_coll:"Total articles", articles:"Articles", all_topics:"All topics",
-      cat_astronomy:"Astronomy", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots", cat_it:"IT",
+      cat_astronomy:"Astronomy", cat_life:"Life science", cat_ai:"AI", cat_quantum:"Quantum", cat_robot:"Robots", cat_it:"IT",
       featured:"Featured articles", read_now:"Read Now", src_link:"Source",
       reading:"Reading…", claim:"Mark as read", claimed:"✓ Read", read_badge:"Read",
       unread_badge:"Unread",
@@ -133,7 +143,7 @@
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
 
-  var CAT_ICON={astronomy:"telescope", ai:"cpu", quantum:"atom", robot:"bot", it:"satellite"};
+  var CAT_ICON={astronomy:"telescope", life:"leaf", ai:"cpu", quantum:"atom", robot:"bot", it:"satellite"};
 
   /* ===== Dữ liệu bài viết (ảnh HD thật từ NASA + nội dung minh hoạ cho trẻ em) ===== */
   /* Bài đọc lấy từ `js/articles-index.js` — CHỖ DUY NHẤT khai báo, dùng chung với
@@ -267,7 +277,7 @@
     /* ⚠️ "it" (CNTT) thêm 11/08/2026. `cat` mới thì phải sửa BỐN chỗ cùng lúc: mảng
        này · CAT_ICON · khoá i18n `cat_it` ở CẢ vi và en · và rule `.cat--it` trong
        css/library.css. Thiếu một chỗ là chip hiện ra khoá thô hoặc không có màu. */
-    var cats=["all","astronomy","ai","quantum","robot","it"];
+    var cats=["all","astronomy","life","ai","quantum","robot","it"];
     $("cats").innerHTML=cats.map(function(c){
       var ic = c==="all" ? "layers" : CAT_ICON[c];
       var nm = c==="all" ? t("all_topics") : t("cat_"+c);
@@ -317,9 +327,15 @@
     if(!a){ $("r-body").innerHTML='<p class="empty">'+
               (AstroQArticles.needsServer()? t("read_file") : t("read_fail"))+"</p>";
       var m0=$("r-mascot"); if(m0) m0.hidden=true;
+      var mb0=$("r-more"); if(mb0) mb0.hidden=true;
       $("r-credit").textContent=""; return; }
     curArt=a;
     $("r-body").innerHTML=L(a.body).map(function(p){return "<p>"+p+"</p>";}).join("");
+    /* Khối "Mở rộng" — bài nào có `more` thì hiện, không có thì ẩn hẳn. Cùng
+       khuôn khối linh vật ngay dưới: phần THÊM, không phải phần bắt buộc, nên
+       thiếu nó không được làm vỡ gì. Bậc độ sâu chỉ quyết cái mặc định — nút
+       bấm luôn có ở cả hai bậc (luật ở js/depth.js). */
+    if(window.AstroQMore) AstroQMore.mount($("r-more"), a, LANG);
     // mascot
     /* ⚠️ LỖI CÓ SẴN, SỬA 06/08/2026. Trước đây dòng này là `var who=a.term.who;`
        không có lớp bảo vệ nào — mà bài `jwst` (đang chạy thật từ đợt gộp 05/08)
@@ -353,7 +369,11 @@
         if(rLeft<=0){ clearInterval(rTimer); btn.disabled=false; btn.textContent=t("claim"); }
         else btn.textContent=t("reading")+" ("+rLeft+"s)"; },1000); }
   }
-  function closeReader(){ clearInterval(rTimer); openId=null; $("reader").classList.remove("show"); }
+  function closeReader(){ clearInterval(rTimer); openId=null; $("reader").classList.remove("show");
+    /* Tra khoi "Mo rong" ve mac dinh cua bac — khong reset thi bai ke tiep thua
+       huong trang thai gap/mo cua bai truoc, tuc mot dua junior mo bai thu hai
+       thay phan dao sau da banh san ra. */
+    if(window.AstroQMore) AstroQMore.reset(); }
   function claim(){
     if(!curArt || isRead(curArt.id)) return;
     markRead(curArt.id);
