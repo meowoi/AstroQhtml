@@ -125,8 +125,27 @@
 .rec-note{ margin:9px 0 0; font-size:12.5px; color:#9db0d4; line-height:1.5; }
 .rec-note[hidden]{ display:none; }
 
-/* ── Nhãn CHƯƠNG TRÌNH trên thẻ (thay nhãn thể loại cũ) ── */
-.gcard .tag.prog{ text-transform:none; letter-spacing:.01em; }
+/* ── Nhãn CHƯƠNG TRÌNH trên thẻ (thay nhãn thể loại cũ) ──
+   ⚠️ NẰM CẠNH ICON, KHÔNG NẰM DƯỚI (đổi 15/08/2026, chủ dự án: *"chữ quá bé"*).
+      Bản cũ để nhãn dưới icon ở cỡ mono 10px viết hoa giãn chữ — cỡ đó dành cho
+      nhãn hệ thống (`MOD-04`, `SYS.ONLINE`), không dành cho thứ trẻ phải ĐỌC để
+      biết thẻ này luyện cái gì. Bên phải icon là khoảng trống rộng gần nửa thẻ,
+      nên chuyển sang đó thì chữ to lên gấp rưỡi mà thẻ không cao thêm pixel nào.
+   ⚠️ Chữ THƯỜNG, không viết hoa toàn bộ: "QUAN SÁT THIÊN VĂN" đọc chậm hơn hẳn
+      "Quan sát thiên văn", và chữ Việt viết hoa toàn bộ còn mất dấu ở vài font. */
+.gc-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.gcard .gc-head .ic{ margin-bottom:0; flex:none; }
+.gcard .tag.prog{
+  text-transform:none; letter-spacing:.01em;
+  font-family:var(--font-display); font-weight:600; font-size:14px;
+  line-height:1.25; color:#dbe7ff; min-width:0;
+}
+/* Màn hẹp: icon nhỏ lại một chút cho nhãn đủ chỗ trên một hàng. */
+@media (max-width:420px){
+  .gcard .gc-head .ic{ width:52px; height:52px; border-radius:15px; }
+  .gcard .gc-head .ic .sic{ width:32px; height:32px; }
+  .gcard .tag.prog{ font-size:13px; }
+}
 
 /* ── CẤP HUẤN LUYỆN + mốc kế tiếp ──
    ⚠️ Trước 14/08/2026 chỗ này là huy hiệu "ĐÃ ĐẠT" nền xanh — một dấu chấm hết.

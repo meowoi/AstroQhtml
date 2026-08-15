@@ -1291,19 +1291,102 @@ check("firebase-auth.js co spendWallet + getWallet",
 check("Client KHONG bao gio gui so tien can tru len server",
       not re.search(r'spendWallet\([^)]*(amount|fee|cost)\s*:', fa + prog + eco))
 
-# Bang phi phai khop giua client va server
+# ══════ PHI SUY TU DO KHO, va phai khop o BON noi ══════
+# ⚠️ DOI PHAT BIEU 15/08/2026. Truoc do `Wallet.Fees` la 6 con so gan tay va `diff`
+#    la mot nhan gan tay KHAC, hai thu khong lien quan gi toi nhau — do duoc: Ne
+#    Thien Thach gan nhan "De" ma thu 5 tt, Me Cung "Vua" thu 4, Phong Thu "Kho"
+#    cung 5. Nay co LUAT: do kho do bang "mat bao nhieu thi het luot", va phi suy
+#    ra tu do kho (De 3 / Vua 4 / Kho 5).
+# ⚠️ Va muc nay nay canh BON noi chu khong phai ba: `CONFIG.COST` trong TUNG game
+#    truoc gio KHONG ai doi chieu — mot game de lech thi tre thay mot con so o sanh
+#    roi bi tru mot con so khac, va khong phep kiem nao noi gi.
 wal = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Wallet.cs"), encoding="utf-8").read()
-sv_fees = dict((m[0], int(m[1])) for m in re.findall(r'\["([a-z-]+)"\]\s*=\s*(\d+)', wal))
+
+_m_fbd = re.search(r"FeeByDiff = new\(\)\s*\{(.*?)\};", wal, re.S)
+check("server: co bang FeeByDiff (phi theo do kho)", bool(_m_fbd))
+# ⚠️ Chan dau tu: "Diff = new()" la CHUOI CON cua "FeeByDiff = new()", ma FeeByDiff
+#    khai TRUOC -> re.search bat trung bang kia va sv_diff ra rong (loi im lang).
+_m_diff = re.search(r"(?<![A-Za-z])Diff = new\(\)\s*\{(.*?)\};", wal, re.S)
+check("server: co bang Diff (do kho tung game)", bool(_m_diff))
+check("server: Fees SINH RA tu Diff, khong con go tay 6 con so",
+      "Diff.ToDictionary" in wal and not re.search(r'Fees = new\(\)', wal))
+
+fee_by_diff = dict((m[0], int(m[1]))
+                   for m in re.findall(r'\["([a-z]+)"\]\s*=\s*(\d+)',
+                                       _m_fbd.group(1) if _m_fbd else ""))
+sv_diff = dict(re.findall(r'\["([a-z-]+)"\]\s*=\s*"([a-z]+)"',
+                          _m_diff.group(1) if _m_diff else ""))
+sv_fees = {g: fee_by_diff[d] for g, d in sv_diff.items() if d in fee_by_diff}
+check("suy ra duoc phi cua ca 6 game", len(sv_fees) == 6, str(sv_fees))
+check("chi co dung 3 muc do kho", sorted(fee_by_diff) == ["easy", "hard", "medium"],
+      str(sorted(fee_by_diff)))
+check("kho hon thi dat hon (phi tang theo do kho)",
+      fee_by_diff.get("easy", 9) < fee_by_diff.get("medium", 0) < fee_by_diff.get("hard", 0),
+      str(fee_by_diff))
+
+# (1) economy.js
 cl_fees = dict((m[0], int(m[1])) for m in
                re.findall(r'(\w+):\s*(\d+)', re.search(r"var FEES = \{([^}]*)\}", eco).group(1)))
 check("Bang phi khop client/server", sv_fees == cl_fees, f"server={sv_fees} client={cl_fees}")
-# ...va khop ca badge phi hien o games.html
+
+# (2) badge phi + (3) nhan do kho o games.html
+_hub = rd("games.html")
 hub_fees = dict((m[1], int(m[0])) for m in
-                re.findall(r'cost:(\d+)[^}]*?file:"game-([a-z]+)\.html"', rd("games.html")))
-hub_fees = {("constellation" if k == "constellation" else k): v for k, v in hub_fees.items()}
+                re.findall(r'cost:(\d+)[^}]*?file:"game-([a-z]+)\.html"', _hub))
 check("Phi hien o games.html khop bang phi server",
       all(sv_fees.get(k) == v for k, v in hub_fees.items()),
       f"hub={hub_fees} server={sv_fees}")
+hub_diff = dict((m[1], m[0]) for m in
+                re.findall(r'diff:"([a-z]+)"[^}]*?file:"game-([a-z]+)\.html"', _hub))
+check("Nhan do kho o games.html khop bang Diff cua server",
+      all(sv_diff.get(k) == v for k, v in hub_diff.items()),
+      f"hub={hub_diff} server={sv_diff}")
+
+# (4) CONFIG.COST trong TUNG trang game
+_GAME_FILE = {"dodge": "game-dodge.html", "defender": "game-defender.html",
+              "constellation": "game-constellation.html", "catch": "game-catch.html",
+              "maze": "game-maze.html", "racer": "game-racer.html"}
+_bad_cost = []
+for _g, _f in _GAME_FILE.items():
+    _m = re.search(r"COST:\s*(\d+)", rd(_f))
+    if not _m or int(_m.group(1)) != sv_fees.get(_g):
+        _bad_cost.append(f"{_f}={_m.group(1) if _m else '?'} (can {sv_fees.get(_g)})")
+check("CONFIG.COST cua TUNG game khop bang phi server", not _bad_cost, str(_bad_cost))
+
+# Con so phi HIEN RA cho tre (`<b>n</b>` trong cost_line) phai la chinh phi do —
+# thay doi phi ma quen sua chuoi la the noi mot dang, vi tru mot dang.
+_bad_lbl = []
+for _g, _f in _GAME_FILE.items():
+    _src = rd(_f)
+    for _m in re.finditer(r'cost_line:"[^"]*?<b>(\d+)</b>', _src):
+        if int(_m.group(1)) != sv_fees.get(_g):
+            _bad_lbl.append(f"{_f}: hien {_m.group(1)}, tru {sv_fees.get(_g)}")
+check("chu 'Moi luot: n' trong tung game khop phi that", not _bad_lbl, str(_bad_lbl))
+
+# ══════ TY LE HOC/CHOI: tran quiz phai khop AWARD o quiz.html ══════
+# ⚠️ Chot 15/08/2026 (chu du an: *"can doi lai phan thien thach nhan khi hoc de tre
+#    khong roi vao trang thai hoc it ma van thoai mai choi"*). Tran o server =
+#    ROUND_SIZE × AWARD × 2 (nhan 2 vi vat pham Dong co X2). Lech thi tre thay mot
+#    con so o man tong ket roi vi cong mot con so khac.
+_q = rd("quiz.html")
+_m_aw = re.search(r"var AWARD = (\d+)", _q)
+_m_rs = re.search(r"var ROUND_SIZE = (\d+)", _q)
+_m_mq = re.search(r"MaxPerQuiz\s*=\s*(\d+)", wal)
+check("doc duoc AWARD/ROUND_SIZE/MaxPerQuiz", all([_m_aw, _m_rs, _m_mq]),
+      f"{_m_aw} {_m_rs} {_m_mq}")
+if _m_aw and _m_rs and _m_mq:
+    _need = int(_m_aw.group(1)) * int(_m_rs.group(1)) * 2
+    check("tran thuong quiz o server khop AWARD x ROUND_SIZE x 2",
+          int(_m_mq.group(1)) == _need,
+          f"server={_m_mq.group(1)} can={_need} (AWARD={_m_aw.group(1)})")
+    # Ty le muc tieu: MOT luot quiz DAT ~ 5 luot choi. Kiem bang chinh cac con so.
+    _pass_min = -(-int(_m_rs.group(1)) * 60 // 100)          # ceil(60% cua ROUND_SIZE)
+    _min_earn = _pass_min * int(_m_aw.group(1))
+    _avg_fee = sum(sv_fees.values()) / max(1, len(sv_fees))
+    _plays = _min_earn / _avg_fee
+    check("mot luot quiz DAT toi thieu doi duoc 3-8 luot choi",
+          3 <= _plays <= 8,
+          f"{_min_earn} tt / phi TB {_avg_fee:.1f} = {_plays:.1f} luot")
 
 print("\n=== [10] Chom sao: khoa phai la id trong SKY ===")
 sky = re.findall(r'key:"([a-z-]+)"', rd("game-constellation.html"))
@@ -1939,12 +2022,30 @@ _html_pages = sorted(f for f in os.listdir(ROOT)
 #    `.lang-btn`, nhung MARKUP thi khong co phan tu nao — nen trang do KHONG CO
 #    nut doi ngon ngu suot nhieu thang ma khong gi bao loi. CSS co rule va JS co
 #    lenh deu KHONG chung minh duoc rang nguoi dung BAM DUOC.
+# ⚠️ NOI DUNG 15/08/2026, VA NOI RO VI SAO. `dashboard.html` nay dung MENU THA:
+#    hai nut VI/EN do `js/user-menu.js` dung tu bang `LANGS` (them mot ngon ngu
+#    thi sua MOT cho). Neu cu doi markup tinh thi hoac phai chep bang do vao HTML
+#    (hai nguon su that), hoac phai bo phep kiem nay — ca hai deu te hon.
+#    ⇒ Trang thoa mot trong HAI duong, va duong thu hai co dieu kien RIENG:
+#      · markup co `data-lang` du vi+en, HOAC
+#      · nap `js/user-menu.js`, VA file do khai ca vi lan en la `ready:true`.
+#    Va dieu bo cu that su bao ve — *nguoi dung BAM DUOC* — nay do
+#    `smoke_lang_switch.py` chung minh tren Chromium o TUNG trang (no mo menu roi
+#    moi do). Phep kiem tinh o day chi chan cai bay cu: mot trang tu tach khoi quy
+#    uoc chung ma khong ai biet.
+_um_src = strip_comments(rd("js/user-menu.js"))   # `_no_comments` chua khai o doan nay
+_um_ready = set(re.findall(r'\{\s*code:\s*"([a-z]{2})",[^}]*ready:\s*true', _um_src))
+check("js/user-menu.js khai DU 'vi' va 'en' la ngon ngu da co noi dung",
+      {"vi", "en"} <= _um_ready, str(sorted(_um_ready)))
+
 _calls, _missing, _partial = [], [], []
 for _f in _html_pages:
     _h = rd(_f)
     if "initLang" not in _h:
         continue
     _calls.append(_f)
+    if 'src="js/user-menu.js"' in _h:
+        continue                      # danh sach do module dung — da kiem o tren
     _langs = set(re.findall(r'data-lang="([a-z]{2})"', _h))
     if not _langs:
         _missing.append(_f)
@@ -1955,6 +2056,18 @@ check("co trang nao goi initLang (phep kiem khong dat rong)", len(_calls) >= 10,
       f"{len(_calls)} trang")
 check("MOI trang goi initLang deu co markup data-lang", not _missing, str(_missing))
 check("moi trang do co DU ca 'vi' va 'en'", not _partial, str(_partial))
+# ⚠️ Ngon ngu CHUA co noi dung phai nam NGOAI `.lang-switch`: `initLang` gan su
+#    kien cho MOI `.lang-switch button`, nen de chung vao trong la bam mot ngon
+#    ngu chua co la ghi mot ma khong ton tai vao `astroq-lang` — va tu do trang
+#    lang le quay ve tieng Viet ma khong ai hieu vi sao.
+#    ⚠️ Doi DUNG hinh dang nhanh re, khong chi doi "co chuoi data-lang-soon":
+#       phep kiem dau cua toi chi hoi chuoi, va phep thu pha hoai cho thay no MU —
+#       gan `data-lang` cho ca hai loai van "dat". Chi bo smoke bat duoc. Nay hoi
+#       dung hai nhanh: `ready` -> data-lang, con lai -> data-lang-soon.
+check("ngon ngu 'sap co' KHONG mang thuoc tinh data-lang",
+      bool(re.search(r'if\s*\(l\.ready\)\s*b\.setAttribute\("data-lang",\s*l\.code\);\s*'
+                     r'else\s*b\.setAttribute\("data-lang-soon",\s*l\.code\);', _um_src)),
+      "phai la hai nhanh re: ready -> data-lang, con lai -> data-lang-soon")
 
 # Truyen selector RIENG cho initLang la duong quay lai dung cai bay tren: dat ten
 # khac `.lang-switch` thi khung dung chung o css/common.css khong ap vao nua.
@@ -2693,56 +2806,93 @@ check("co CSS cho .xp .goal va trang thai .soon",
       ".goal" in _aw_css_pf_marker if (_aw_css_pf_marker := rd("css/profile.css")) else False)
 check("co CSS cho trang thai '.goal.soon'", ".goal.soon" in _aw_css_pf_marker)
 
-# --- (f3) BANG PHI HANH GIA o dashboard: 3 duong vao, khong bia so ---
+# --- (f3) MENU THA SAU AVATAR o dashboard: 6 duong vao, khong bia so ---
+# ⚠️ DOI PHAT BIEU 15/08/2026. Truoc do muc nay doi mot LUOI 3 O (`.ptiles`) nam
+#    trong bang Thong Ke. Nay ca sau duong vao "xem lai minh" (ho so · thanh tich ·
+#    mau vat · kho trang tri · bang bo me · bao cao he thong) + nut Dang xuat nam
+#    trong MOT menu tha sau anh dai dien, va bang Thong Ke da xuong duoi 6 the khu
+#    vuc. Ly do do duoc: the khu vuc dau tien tung nam o y=1269px tren 390x844.
+#    DIEU CAN BAO VE KHONG DOI va o day con SIET HON: du duong vao · khong bia so
+#    · vung cham 48px · va them mot dieu bo cu khong hoi toi — HAI LOAI NGUOI DUNG
+#    (tre / nguoi lon) phai phan biet duoc bang mat.
 _db_html = rd("dashboard.html")
 _db_code = _no_comments(inline_js(_db_html))
 _db_css = rd("css/dashboard.css")
-check("dashboard co bang phi hanh gia (.ptiles)", 'class="ptiles"' in _db_html)
-for _href, _cls in (("profile.html", "pt-profile"), ("achievements.html", "pt-awards"),
-                    ("specimen-vault.html", "pt-vault")):
-    check(f"co o dan sang {_href}",
-          bool(re.search(r'class="ptile %s"[^>]*href="%s"' % (_cls, _href), _db_html)
-               or re.search(r'class="ptile %s" href="%s"' % (_cls, _href), _db_html)))
+_um_css = rd("css/user-menu.css")
+_um_js = rd("js/user-menu.js")
+
+check("dashboard nap khung menu tha dung chung",
+      'href="css/user-menu.css"' in _db_html and 'src="js/user-menu.js"' in _db_html)
+check("dashboard co menu tha sau avatar",
+      'class="um user-menu"' in _db_html and "data-menu-pop" in _db_html)
+for _href, _cls in (("profile.html", "um-profile"), ("achievements.html", "um-awards"),
+                    ("specimen-vault.html", "um-vault"), ("shop.html", "um-shop"),
+                    ("parent.html", "um-parent")):
+    check(f"menu co muc dan sang {_href}",
+          bool(re.search(r'class="um-item %s" href="%s"' % (_cls, _href), _db_html)))
+check("o admin (chi hien voi admin) nam TRONG menu",
+      "data-admin-link" in _db_html.split('class="um user-menu"', 1)[-1]
+      .split("</header>", 1)[0])
+check("nut Dang xuat nam TRONG menu",
+      'id="logout"' in _db_html.split('class="um user-menu"', 1)[-1].split("</header>", 1)[0])
 check("2 nut chu xep doc cua ban cu da bo han",
       "sh-link" not in _no_comments(_db_html) and "sh-link" not in _no_comments(_db_css))
-# ⚠️ Hang FULL-WIDTH, khong nam trong cot phai: do duoc trong cot phai moi o chi
-#    124px va bi cat chu ca o ban VI lan EN.
-check("bang phi hanh gia la hang FULL-WIDTH cua panel",
-      bool(re.search(r"\.ptiles\{[^}]*grid-column:\s*1\s*/\s*-1", _db_css)))
+# ⚠️ Luoi `.ptiles` + hai dong `.pt-row` da XOA HAN, ke ca CSS. Rule khong con ai
+#    dung la bay cho nguoi sua sau (ho se tuong luoi do van con va di sua no).
+for _dead in ("ptiles", "ptile", "pt-row"):
+    check(f"da bo han '{_dead}' khoi dashboard (HTML + CSS)",
+          _dead not in _no_comments(_db_html) and _dead not in _no_comments(_db_css))
 # ⚠️ ĐỪNG dùng `[^:]*` giữa `?` và `:` — hai nhánh nay co ternary LONG BEN TRONG
 #    (`window.AstroQRanks ? ... : ""`) nen `[^:]*` dung som va phep kiem bao hong oan.
 #    Dem so nhanh else tra ve dau "—" trong chinh than renderStats.
 _rs = _db_code.split("function renderStats", 1)[-1].split("\n  function ", 1)[0]
 check("KHONG bia so khi chua doc duoc server (dung dau '—')",
       _rs.count(': "—"') >= 2 and "known" in _rs, _rs.count(': "—"'))
-# ⚠️ So mau vat nam o GET /me/specimens ma dashboard khong goi -> o do KHONG co so,
+# ⚠️ So mau vat nam o GET /me/specimens ma dashboard khong goi -> muc do KHONG co so,
 #    va tuyet doi khong go cung tong so mau (server moi la nguon su that).
-check("o Mau vat KHONG go cung tong so mau",
-      not re.search(r"/2[01]\b", _db_code.split("ptiles")[-1][:2000] if "ptiles" in _db_code
-                    else ""))
+check("muc Mau vat KHONG go cung tong so mau",
+      not re.search(r"/2[01]\b", _db_html.split("um-vault", 1)[-1][:600]))
 check("dashboard KHONG goi them route chi de lay so mau vat",
       "getSpecimens" not in _db_code and "/me/specimens" not in _db_code)
-check("ten bac o o Ho so dung ranks.js (short), khong go tay",
+check("ten bac o muc Ho so dung ranks.js (short), khong go tay",
       "AstroQRanks.short(" in _db_code)
-for _k in ("pt_profile", "pt_awards", "pt_vault", "pt_vault_sub", "pt_badges_unit"):
+for _k in ("pt_profile", "pt_awards", "pt_vault", "pt_vault_sub", "pt_badges_unit",
+           "pt_shop_nm", "pt_shop_sub", "pt_parent_nm", "pt_parent_sub",
+           "a_menu", "menu_me", "menu_grown"):
     _dvi, _den = i18n_dicts(inline_js(_db_html))
     check(f"khoa i18n '{_k}' co o CA vi va en",
           _k in (_dvi or set()) and _k in (_den or set()))
 check("vung cham >= 48px tren thiet bi cam ung",
-      bool(re.search(r"\.ptile\{min-height:4[89]px", _db_css)))
-check("man hep thi 3 o xep DOC (khong bop con ~95px)",
-      bool(re.search(r"max-width:520px\)\s*\{\s*\.ptiles\{grid-template-columns:1fr", _db_css)))
+      bool(re.search(r"\.um-item\{[^}]*min-height:48px", _um_css))
+      and bool(re.search(r"\.um-btn\{min-height:48px", _um_css)))
+# ⚠️ HAI LOAI NGUOI DUNG PHAI PHAN BIET DUOC BANG MAT. Bo cu dat khu phu huynh o
+#    mot dong net DUT, khac han ba o cua tre — de mat tre khong nham la cho minh
+#    can bam. Menu moi giu dung y do (`.um-parent` net dut) va them mot tieu de
+#    nhom rieng. Mat dieu nay la sau muc tron thanh mot danh sach deu tap.
+check("khu cua NGUOI LON van khac han ve ngoai (net dut)",
+      bool(re.search(r"\.um-item\.um-parent\{[^}]*border-style:dashed", _um_css)))
+check("menu co tieu de nhom tach tre / nguoi lon",
+      'data-i18n="menu_me"' in _db_html and 'data-i18n="menu_grown"' in _db_html)
+# ⚠️ Bay `[hidden]`: `display` cua tac gia THANG `display:none` cua trinh duyet.
+#    Thieu dong nay la menu bung ra san ngay khi tai trang (lan thu 12 trong du an).
+check("tam tha co khai lai `[hidden]{display:none}`",
+      ".um-pop[hidden]{display:none;}" in _um_css)
 # data-tour phai TON TAI dung mot cho — thieu la Comet chieu sang vao khoang khong
-# ⚠️ Dem tren ban DA BOC COMMENT: chinh chu thich giai thich viec doi data-tour
-#    cung chua chuoi do -> dem tren van ban tho la bao hong oan (loi "dem ca chu
-#    trong ghi chu cua chinh minh", lan thu 14).
-#    Dung `strip_comments()` (bo CA comment HTML) chu khong `_no_comments()` — ham
-#    kia chi bo comment JS nen `<!-- ... data-tour="awards" ... -->` van con.
+# ⚠️ Dem tren ban DA BOC COMMENT (ca comment HTML): chinh chu thich giai thich
+#    viec doi data-tour cung chua chuoi do (loi "dem ca chu trong ghi chu cua
+#    chinh minh", lan thu 14).
 _db_nc = strip_comments(_db_html)
-check("data-tour='awards' ton tai dung MOT lan",
-      _db_nc.count('data-tour="awards"') == 1, _db_nc.count('data-tour="awards"'))
-check("data-tour='awards' nam tren o Thanh tich",
-      bool(re.search(r'class="ptile pt-awards"[^>]*data-tour="awards"', _db_html)))
+check("data-tour='profile' ton tai dung MOT lan",
+      _db_nc.count('data-tour="profile"') == 1, _db_nc.count('data-tour="profile"'))
+# ⚠️ Muc trong tam tha dang `hidden` cho ra khung 0x0, nen `.tour-hole` chieu vao
+#    khoang khong. Buoc "awards" da GOP vao buoc "profile" va chieu vao ca menu.
+#    (quet tren ban da boc comment o CA hai file — chinh chu thich giai thich viec
+#     gop hai buoc cung nhac lai chuoi do)
+check("KHONG con data-tour tro vao muc nam trong tam tha",
+      'data-tour="awards"' not in _db_nc
+      and 'data-tour="awards"' not in _no_comments(rd("js/onboard-tour.js")))
+check("data-tour='profile' nam tren CA menu, khong tren mot muc ben trong",
+      bool(re.search(r'class="um user-menu" data-menu data-tour="profile"', _db_html)))
 
 # --- (g) bac chua toi KHONG lam mo bang grayscale ---
 # Bai hoc da ghi 3 lan trong CLAUDE.md: tren nen gradient sang, `grayscale()` cho
@@ -3785,7 +3935,12 @@ check("[26] profile.html: render() co goi renderWeek",
 #    lang, khong phep kiem nao hoi toi. Tu nay them game moi ma quen o ky luc thi
 #    day bao ngay.
 # ══════════════════════════════════════════════════════════════════════════
-_fee_keys = set(re.findall(r'\["([a-z]+)"\]\s*=\s*\d+', _wallet))
+# ⚠️ Doc tu bang `Diff` (ten game -> do kho), KHONG doc so viet thang: tu 15/08/2026
+#    `Wallet.Fees` la dictionary DAN XUAT tu `FeeByDiff` + `Diff`, nen quet `["x"] = <so>`
+#    se bat trung `FeeByDiff` (["easy"]=3...) va cho ra ba "game" ten easy/medium/hard.
+_m_diff26 = re.search(r"(?<![A-Za-z])Diff = new\(\)\s*\{(.*?)\};", _wallet, re.S)
+_fee_keys = set(re.findall(r'\["([a-z]+)"\]\s*=\s*"[a-z]+"',
+                           _m_diff26.group(1) if _m_diff26 else ""))
 _rec_keys = set(re.findall(r'\{\s*key:"([a-z]+)"', _pro_code))
 check("[26] doc duoc bang phi va bang ky luc",
       len(_fee_keys) >= 3 and len(_rec_keys) >= 3,

@@ -39,8 +39,15 @@
   /* Phí mỗi lượt — BẢN SAO để hiện badge "5 / lượt" và chặn tại chỗ cho nhanh.
      Con số trừ THẬT do server quyết (Services/Wallet.cs `Fees`). Hai bên lệch thì
      server đúng: `setFromServer()` sẽ chỉnh lại cache ngay sau đó. */
-  var FEES = { dodge: 5, defender: 5, constellation: 3,
-             catch: 3, maze: 4, racer: 5 };
+  /* ⚠️ PHÍ SUY TỪ ĐỘ KHÓ — luật đầy đủ ở `Wallet.FeeByDiff` + `Wallet.Diff`:
+     độ khó đo bằng "mất bao nhiêu thì hết lượt" (Dễ = không có cách nào thua ·
+     Vừa = có nhiều lớp đệm · Khó = một lần chạm là hết), và phí = Dễ 3 / Vừa 4 /
+     Khó 5. Bảng này chỉ là BẢN SAO để giao diện hiện phí trước khi gọi server —
+     server vẫn là nơi quyết định trừ bao nhiêu. `check_pages` mục [3d] đối chiếu
+     cả ba nơi (Wallet.cs · economy.js · mảng GAMES ở games.html). */
+  var FEES = { constellation: 3, maze: 3,
+             catch: 4, racer: 4, defender: 4,
+             dodge: 5 };
 
   // Bộ nhớ dự phòng khi localStorage không dùng được (chế độ riêng tư…).
   var memoryBalance = null;

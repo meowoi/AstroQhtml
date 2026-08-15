@@ -101,7 +101,7 @@
       intro:"Phi hành gia thật luyện từng kỹ năng một. Ở đây mỗi kỹ năng có một game mô phỏng — mỗi lượt tiêu một ít Thiên thạch tím.",
       cert_lb:"Hồ sơ huấn luyện", cert_n:"{a}/{b} cấp huấn luyện",
       cert_none:"Chưa đọc được hồ sơ. Ghé Trung Tâm Điều Hướng một lượt để đồng bộ nhé!",
-      skill_lb:"Kỹ năng", read_lb:"Đọc thêm",
+      skill_lb:"Kỹ năng", 
       lv:"Cấp {a}/{b}", lv0:"Chưa có cấp",
       lv_next:"Còn {a} nữa lên Cấp {b}", lv_max:"Cấp cao nhất — giờ là lúc phá kỷ lục của chính mình!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
@@ -118,7 +118,7 @@
       intro:"Real astronauts train one skill at a time. Here each skill has its own simulator game — every run costs a few Purple Meteors.",
       cert_lb:"Training record", cert_n:"{a}/{b} training levels",
       cert_none:"Can't read your record yet. Drop by the Navigation Hub once to sync it!",
-      skill_lb:"Skill", read_lb:"Read more",
+      skill_lb:"Skill", 
       lv:"Level {a}/{b}", lv0:"No level yet",
       lv_next:"{a} more to reach Level {b}", lv_max:"Top level — now go beat your own record!",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
@@ -141,10 +141,10 @@
      dãy nhảy hết, trong khi số hiệu đã đi vào tài liệu và lời nói của người dùng
      ("ARCADE-04 = Ghép Chòm Sao"). Thêm game mới thì cấp số kế tiếp, không sửa số cũ. */
   var GAMES = [
-    { key:"dodge", prog:"reaction", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"easy", status:"ready", file:"game-dodge.html",
+    { key:"dodge", prog:"reaction", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"hard", status:"ready", file:"game-dodge.html",
       name:{vi:"Né Thiên Thạch", en:"Asteroid Dodge"},
       desc:{vi:"Điều khiển Byte nhấp nháy bay ngang qua khe hẹp của vành đai thiên thạch và thu thập Thiên thạch tím trên đường bay!", en:"Blink Byte sideways through the narrow gaps of the asteroid belt and collect Purple Meteors along the way!"} },
-    { key:"racer", prog:"resource", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:5, diff:"medium", status:"ready", file:"game-racer.html",
+    { key:"racer", prog:"resource", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:4, diff:"medium", status:"ready", file:"game-racer.html",
       name:{vi:"Đường Đua Sao Chổi", en:"Comet Racer"},
       /* ⚠️ KHÔNG ghi lại con số chiều dài đường đua ở đây. Bản cũ ghi "1.200 m"
          trong khi `CONFIG.raceLen` của game đã là 14.000 từ lượt cân bằng
@@ -152,7 +152,7 @@
          phép kiểm nào hỏi tới. Hai nơi giữ một con số thì bên lệch sẽ là bên nói
          với trẻ; nên mô tả nói VIỆC PHẢI LÀM, còn con số để game tự công bố. */
       desc:{vi:"Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về tới đích trước khi cạn nhiên liệu!", en:"Switch lanes to dodge asteroids, grab fuel cans and purple crystals — reach the finish line before you run dry!"} },
-    { key:"defender", prog:"spatial", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:5, diff:"hard", status:"ready", file:"game-defender.html",
+    { key:"defender", prog:"spatial", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:4, diff:"medium", status:"ready", file:"game-defender.html",
       name:{vi:"Phòng Thủ Không Gian", en:"Space Defender"},
       desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
     /* ⚠️ `key` ĐỔI "match" → "constellation" (14/08/2026), do phép kiểm [27] bắt
@@ -165,10 +165,13 @@
     { key:"constellation", prog:"observation", pal:"sic--gold", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
       desc:{vi:"Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!", en:"Link the stars in number order to draw a real constellation — finish it and unlock a fun fact about the night sky!"} },
-    { key:"maze", prog:"navigation", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:4, diff:"medium", status:"ready", file:"game-maze.html",
+    { key:"maze", prog:"navigation", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:3, diff:"easy", status:"ready", file:"game-maze.html",
       name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
-      desc:{vi:"Dẫn phi hành gia qua mê cung sao: thu 5 tinh thể rồi tìm cổng sáng để ra. Mê cung mới mỗi lượt, và không có thua!", en:"Guide the astronaut through a star maze: collect 5 crystals, then find the glowing gate. A new maze every run — and no losing!"} },
-    { key:"catch", prog:"reaction", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:3, diff:"easy", status:"ready", file:"game-catch.html",
+      /* ⚠️ KHÔNG gõ số tinh thể vào đây: từ 15/08/2026 mê cung có 4 cấp và số tinh thể
+           tăng theo cấp (5 → 11). Một con số ở mô tả là một con số sẽ nói sai — đúng
+           lỗi thẻ Đường Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
+      desc:{vi:"Dẫn phi hành gia qua mê cung sao: thu BẰNG HẾT tinh thể thì cổng mới mở. Mê cung mới mỗi lượt, giải xong là lượt sau to hơn — và không có thua!", en:"Guide the astronaut through a star maze: the gate opens only when every crystal is yours. A new maze each run, bigger after each win — and no losing!"} },
+    { key:"catch", prog:"reaction", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:4, diff:"medium", status:"ready", file:"game-catch.html",
       name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
       desc:{vi:"Hứng sao băng vàng để lấy điểm, hứng sao tím để lấy Thiên thạch tím — và né sao chổi lửa. Bạn có 3 mạng!", en:"Catch gold shooting stars for points and purple ones for Purple Meteors — and dodge the fiery comets. You get 3 lives!"} }
   ];
@@ -249,14 +252,15 @@
       var skill = sk ? '<p class="skill"><b>'+AstroQ.esc(t("skill_lb"))+':</b> '+
                        AstroQ.esc(sk)+'</p>' : '';
 
-      /* ── Đường sang BÀI ĐỌC liên quan. GỢI Ý, KHÔNG KHOÁ (chủ dự án chốt
-            14/08/2026): trẻ bấm Chơi ngay được luôn, không phải đọc gì trước.
-            ⚠️ Chữ hiện ra là CHỦ ĐỀ chứ không phải tiêu đề bài — tiêu đề chỉ
-               sống ở js/articles-index.js, chép sang đây là hai nơi một cái tên. */
-      var rd = AstroQTraining.read(g.prog, LANG);
-      var read = rd ? '<a class="readlink" href="library.html?a='+
-                      encodeURIComponent(rd.id)+'">📖 '+AstroQ.esc(t("read_lb"))+
-                      ': '+AstroQ.esc(rd.topic)+' <span aria-hidden="true">›</span></a>' : '';
+      /* ⚠️ ĐƯỜNG SANG BÀI ĐỌC ĐÃ BỎ 15/08/2026 (chủ dự án chốt: *"bỏ phần đọc
+            thêm ở các trò chơi"*). Nó thêm từ 14/08 dưới dạng GỢI Ý không khoá,
+            nhưng trên một thẻ game thì nó là dòng thứ tư cạnh tên · kỹ năng · cấp
+            — thẻ đọc thành một bảng chữ, mà thứ trẻ vào đây để làm là BẤM CHƠI.
+            ⚠️ Dữ liệu `read` và hàm `AstroQTraining.read()` cũng đã gỡ theo, không
+               để lại: một trường không ai đọc là một lời khai sai (bài học `lv`
+               của ngân hàng câu hỏi — khai ở 65 file, 0 chỗ đọc, ngủ 2 ngày).
+            Kho bài đọc KHÔNG mất đường vào nào: nó vẫn là Góc Khám Phá trong
+            Trạm Tri Thức, và `library.html?a=<id>` vẫn mở thẳng một bài. */
 
       /* ── CẤP HUẤN LUYỆN + mốc kế tiếp, chỉ khi ĐỌC ĐƯỢC hồ sơ.
             ⚠️⚠️ TRƯỚC 14/08/2026 chỗ này là một huy hiệu "✓ ĐÃ ĐẠT" — một dấu
@@ -299,20 +303,25 @@
            the game cung mot mau doc ra don dieu voi tre — chu du an bat duoc dung
            chuyen do o dashboard 13/08/2026. Chua mo thi `sic--off` thang, vi luc do
            dieu can noi la "chua dung duoc", khong phai "khu nay mau gi". */
-        '<div class="ic">'+sic(g.icon, soon ? 'sic--off' : (g.pal||''))+'</div>'+
+        /* ⚠️ ICON + NHÃN CHƯƠNG TRÌNH NẰM CÙNG MỘT HÀNG (15/08/2026). Trước đó
+           nhãn nằm DƯỚI icon ở cỡ mono 10px, và chủ dự án bác đúng: *"chữ quá
+           bé"*. Bên phải icon là một khoảng trống rộng bằng nửa thẻ — đưa nhãn
+           vào đó thì nó được cỡ chữ gấp rưỡi mà thẻ KHÔNG cao thêm một pixel. */
+        '<div class="gc-head">'+
+          '<div class="ic">'+sic(g.icon, soon ? 'sic--off' : (g.pal||''))+'</div>'+
         /* NHÃN = TÊN CHƯƠNG TRÌNH HUẤN LUYỆN, không phải thể loại game.
            Trước 14/08/2026 chỗ này ghi "Giải đố" / "Đua tốc độ" / "Phản xạ" —
            ngôn ngữ của một sảnh game. Đổi sang tên chương trình là chính việc
            đổi vai của cả khu, và nó cũng GOM các game cùng kỹ năng lại với nhau
            mà không cần dựng tiêu đề nhóm (Phản xạ có 2 game).
            ⚠️ Tên lấy từ js/training.js — CHỖ DUY NHẤT giữ tên chương trình. */
-        '<span class="tag prog">'+AstroQ.esc(AstroQTraining.icon(g.prog)+" "+
-                                             AstroQTraining.name(g.prog, LANG))+'</span>'+
+          '<span class="tag prog">'+AstroQ.esc(AstroQTraining.icon(g.prog)+" "+
+                                               AstroQTraining.name(g.prog, LANG))+'</span>'+
+        '</div>'+
         cert+
         '<h3>'+L(g.name)+'</h3>'+
         '<p>'+L(g.desc)+'</p>'+
         skill+
-        read+
         '<span class="cost"><img src="img/tt.png" alt="'+t("tt_name")+'" /><b>'+g.cost+'</b><span>'+t("per_run")+'</span></span>'+
         btn+
         '<div class="hud-line foot">'+

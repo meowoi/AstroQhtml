@@ -42,19 +42,29 @@ def seed(ctx, training=None):
 # Doc DANH SACH CHUONG TRINH tu js/training.js (client giu TEN) — khong go tay
 tj = (ROOT / "js" / "training.js").read_text(encoding="utf-8")
 PROG_KEYS = re.findall(r"\n    ([a-z]+): \{\n      ic:", tj)
-READ_IDS  = re.findall(r'read: \{ id: "([a-z0-9-]+)"', tj)
 IDX = (ROOT / "js" / "articles-index.js").read_text(encoding="utf-8")
 
 with sync_playwright() as p:
     br = p.chromium.launch()
 
-    # ═══════ [1] Bai doc goi y phai CO THAT ═══════
-    print("\n[1] Bai doc goi y tro vao bai co that")
+    # ═══════ [1] KHONG CON duong 'doc them' o the game ═══════
+    #
+    # ⚠️ DOI PHAT BIEU 15/08/2026 (chu du an chot: *"bo phan doc them o cac tro
+    #    choi"*). Truoc do muc nay canh "moi chuong trinh co mot bai doc goi y va
+    #    id do co that". Nay canh chieu NGUOC LAI — khong con dau vet nao — vi mot
+    #    tinh nang da bo ma con nua bo du lieu o lai la cai bay cho nguoi sua sau.
+    print("\n[1] Da bo han duong 'doc them' (du lieu + API + markup)")
     ck("boc duoc chuong trinh tu js/training.js", len(PROG_KEYS) >= 5, str(PROG_KEYS))
-    miss = [a for a in READ_IDS if f'id: "{a}"' not in IDX]
-    ck("moi `read.id` co trong articles-index", not miss, str(miss))
-    ck("moi chuong trinh co bai doc goi y", len(READ_IDS) == len(PROG_KEYS),
-       f"{len(READ_IDS)}/{len(PROG_KEYS)}")
+    ck("js/training.js KHONG con du lieu `read`", "read:" not in tj,
+       "con: " + tj[tj.find("read:"):tj.find("read:") + 40] if "read:" in tj else "")
+    ck("js/training.js KHONG con API `read()`", "read: function" not in tj)
+    # ⚠️ QUET TREN BAN DA BOC CHU THICH — chinh doan ghi chu giai thich viec gỡ
+    #    cung nhac lai `AstroQTraining.read()`, va ghi chu do la thu NEN co. Day la
+    #    lan thu 16 du an dinh loi "dem ca chu trong ghi chu cua chinh minh".
+    _gh = re.sub(r"<!--.*?-->|/\*.*?\*/", " ",
+                 (ROOT / "games.html").read_text(encoding="utf-8"), flags=re.S)
+    ck("games.html KHONG con goi AstroQTraining.read", "AstroQTraining.read" not in _gh)
+    ck("games.html KHONG con khoa i18n read_lb", "read_lb" not in _gh)
 
     # ═══════ [2] Chua doc duoc ho so → `—`, KHONG hien 0/5 ═══════
     print("\n[2] Chua doc duoc ho so → dau `—`")
@@ -92,31 +102,15 @@ with sync_playwright() as p:
     print("\n[4] Dong ky nang va duong sang bai doc")
     ck("moi the co dong ky nang", pg.locator(".gcard .skill").count() == 6,
        str(pg.locator(".gcard .skill").count()))
-    ck("moi the co duong doc bai", pg.locator(".gcard .readlink").count() == 6,
+    ck("KHONG con duong doc bai tren the", pg.locator(".gcard .readlink").count() == 0,
        str(pg.locator(".gcard .readlink").count()))
-    hrefs = pg.eval_on_selector_all(".gcard .readlink", "e=>e.map(x=>x.getAttribute('href'))")
-    ck("duong doc bai tro dung library.html?a=",
-       all(h.startswith("library.html?a=art-") for h in hrefs), str(hrefs[:2]))
-    # KHONG KHOA: nut Choi ngay van bam duoc va khong `disabled`
+    # Nut Choi ngay van bam duoc va khong `disabled`
     dis = pg.eval_on_selector_all(".gcard:not(.soon) .play-btn", "e=>e.map(x=>x.disabled)")
-    ck("bai doc KHONG khoa nut Choi ngay", not any(dis), str(dis))
-    # Vung cham cua duong doc bai >= 44px (WCAG 2.5.5)
-    hh = pg.eval_on_selector_all(".gcard .readlink",
-                                 "e=>e.map(x=>Math.round(x.getBoundingClientRect().height))")
-    ck("vung cham duong doc bai >= 44px", all(h >= 44 for h in hh), str(hh[:3]))
+    ck("nut Choi ngay bam duoc", not any(dis), str(dis))
 
-    # ═══════ [5] Bam that vao duong doc bai → mo DUNG bai ═══════
-    print("\n[5] Bam duong doc bai → library.html mo dung bai do")
-    want = hrefs[0].split("a=")[1]
-    with pg.expect_navigation():
-        pg.locator(".gcard .readlink").first.click()
-    pg.wait_for_timeout(2200)
-    ck("da sang library.html", "library.html" in pg.url, pg.url)
-    ck("trinh doc DA MO san", pg.locator("#reader.show").count() == 1)
-    ck("mo DUNG bai duoc tro toi",
-       pg.eval_on_selector("#reader", "e=>1") == 1 and want in pg.url, f"{want} · {pg.url}")
-    body = pg.inner_text("#r-body")
-    ck("than bai hien chu that", len(body) > 200, f"{len(body)} ky tu")
+    # ⚠️ KHOI [5] cu ("bam duong doc bai -> library.html mo dung bai") DA BO cung
+    #    voi tinh nang do. `library.html?a=<id>` VAN CHAY — no la duong mo thang
+    #    mot bai, chi la khong con the game nao tro toi nua.
     ctx.close()
 
     # ═══════ [6] Doc duoc ho so — GIEO SO LECH HAN mac dinh ═══════
@@ -218,8 +212,6 @@ with sync_playwright() as p:
        " | ".join(tags_en))
     sk_en = pg.eval_on_selector_all(".gcard .skill", "e=>e.map(x=>x.textContent.trim())")
     ck("dong ky nang dich sang EN", any("Skill:" in x for x in sk_en), str(sk_en[:1]))
-    rd_en = pg.inner_text(".gcard .readlink")
-    ck("duong doc bai dich sang EN", "Read more" in rd_en, rd_en[:60])
     ck("ho so dich sang EN", "level" in pg.inner_text("#rec-n").lower(),
        pg.inner_text("#rec-n"))
     g_en = pg.eval_on_selector_all(".gcard .nextgoal", "e=>e.map(x=>x.textContent.trim())")

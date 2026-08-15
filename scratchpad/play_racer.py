@@ -21,6 +21,9 @@ Do nhung thu doc code KHONG chung minh duoc:
    nhien lieu truc tiep.
 ⚠️ Ghim `astroq-lang` (Chromium mac dinh en-US).
 """
+import io
+import os
+import re
 import sys
 
 try:
@@ -32,6 +35,13 @@ from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8123"
 URL = BASE + "/game-racer.html"
+
+# CANH BAO: PHI DOC TU CHINH FILE GAME, KHONG GHIM SO. Phi doi theo luat do kho
+#    (15/08/2026); ghim con so o day thi bo do bao hong dung luc san pham lam dung.
+COST = int(re.search(r"COST:\s*(\d+)", io.open(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game-racer.html"),
+    encoding="utf-8").read()).group(1))
+
 dat = hong = 0
 
 
@@ -84,14 +94,15 @@ with sync_playwright() as pw:
     check("nut Pause dang AN", "is-hidden" in (pg.get_attribute("#btn-pause", "class") or ""))
     check("tag ten game dich", "đường đua" in pg.inner_text("#gtag").casefold(), pg.inner_text("#gtag"))
 
-    print("\n[2] Bat dau luot: tru dung 5 tt, mot lan")
+    print("\n[2] Bat dau luot: tru dung %d tt, mot lan" % COST)
     pg.click("#start-btn")
     pg.wait_for_timeout(350)
     check("vao 'play'", st(pg, "state") == "play", str(st(pg, "state")))
-    check("tru dung 5 tt", bal(pg) == 55, str(bal(pg)))
+    check("tru dung dung phi mot lan", bal(pg) == 60 - COST,
+          "%d (phi %d)" % (bal(pg), COST))
     pg.keyboard.press("Space")
     pg.wait_for_timeout(200)
-    check("Space luc dang choi KHONG tru them", bal(pg) == 55, str(bal(pg)))
+    check("Space luc dang choi KHONG tru them", bal(pg) == 60 - COST, str(bal(pg)))
     # ⚠️ KHONG ghim con so met: no la tham so can bang. Hoi dieu THAT SU can — mot
     #    luot phai DAI hon so giay nhien lieu chay duoc, khong thi "ve dich truoc khi
     #    het nhien lieu" la mot cau noi suong (loi can bang da bat duoc o lan chay dau).
@@ -255,16 +266,17 @@ with sync_playwright() as pw:
 
     # ══════════════════════════════════ [10] Thieu tt
     print("\n[10] Thieu Thien thach tim")
-    ctx, pg = mk(br, bal=4)
+    ctx, pg = mk(br, bal=COST - 1)
     pg.goto(URL, wait_until="load")
     pg.wait_for_timeout(400)
     pg.click("#start-btn")
     pg.wait_for_timeout(300)
     check("hien man 'chua du tt'", pg.is_visible("#ov-need"))
-    check("KHONG tru tien", bal(pg) == 4, str(bal(pg)))
+    check("KHONG tru tien", bal(pg) == COST - 1, str(bal(pg)))
     check("van o 'start'", st(pg, "state") == "start", str(st(pg, "state")))
     body = pg.inner_text("#need-body")
-    check("noi ro can 5, dang co 4", "5" in body and "4" in body, body[:70])
+    check("noi ro can bao nhieu va dang co bao nhieu",
+          str(COST) in body and str(COST - 1) in body, body[:70])
     ctx.close()
 
     # ══════════════════════════════ [12] Dien thoai

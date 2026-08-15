@@ -187,7 +187,14 @@
 <script>
 (function(){
   "use strict";
-  var AWARD = 20; // ☄️ mỗi câu đúng
+  /* ⚠️ 20 → 6 (15/08/2026). Luật và số đo đầy đủ ở `Wallet.MaxPerQuiz`; tóm tắt:
+     một lượt Quiz ĐẠT tối thiểu từng cho 60 tt trong khi một lượt chơi tốn 3–5 tt
+     ⇒ **12–20 lượt chơi cho một lượt học ~3 phút**. Nay 3/5 câu đúng = 18 tt ≈ 4–6
+     lượt chơi. Tỷ lệ mục tiêu: MỘT LƯỢT QUIZ ĐẠT ≈ 5 LƯỢT CHƠI.
+     ⚠️ Đổi số này thì phải đổi `Wallet.MaxPerQuiz` = ROUND_SIZE × AWARD × 2 (nhân 2
+        vì vật phẩm Động cơ X2) — server kẹp trần, để lệch là trẻ thấy một con số
+        rồi ví cộng một con số khác. */
+  var AWARD = 6; // ☄️ mỗi câu đúng
 
   /* ================= i18n ================= */
   var I18N = {

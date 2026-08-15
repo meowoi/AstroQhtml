@@ -26,6 +26,14 @@ import uuid
 
 import _fbtest  # token ĐÃ xác minh email — /me/* nay đòi email_verified
 
+# ⚠️ TRAN THUONG QUIZ DOC TU `Wallet.cs`, KHONG GHIM SO. Ngay 15/08/2026 no doi
+#    220 -> 60 (can doi ti le hoc/choi) va bo do nay bao hong DUNG LUC san pham lam
+#    dung — lop loi "phep kiem bao ve trang thai cu" da lap nhieu lan trong du an.
+_WAL = io.open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "..", "AstroqSV", "src", "AstroqSV.Api", "Services", "Wallet.cs"),
+               encoding="utf-8").read()
+MAX_QUIZ = int(re.search(r"MaxPerQuiz\s*=\s*(\d+)", _WAL).group(1))
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5080").rstrip("/")
 API_KEY = "AIzaSyDljo-O_8S6D8l4KP8YHxutLjO9LqLNx-A"
 IDP = "https://identitytoolkit.googleapis.com/v1/accounts"
@@ -258,8 +266,9 @@ def main():
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 5, "total": 5, "meteors": 999999})
         _dp = d.get("dailyPaid", 0)
-        check("Quiz doi 999999 tt -> kep con 220 (tran quiz)",
-              d.get("awarded") == 220 and d["wallet"]["meteors"] == b0 + 220 + _dp,
+        check(f"Quiz doi 999999 tt -> kep con {MAX_QUIZ} (tran quiz)",
+              d.get("awarded") == MAX_QUIZ
+              and d["wallet"]["meteors"] == b0 + MAX_QUIZ + _dp,
               f"awarded={d.get('awarded')} dailyPaid={_dp}")
         check("Phan cong THEM chi den tu bang viec ngay cua server (2)",
               legit_daily(_dp, _dtts), f"dailyPaid={_dp} bang={_dtts}")
@@ -318,7 +327,10 @@ def main():
               f"{d.get('quizPassMark')}")
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 5, "total": 5, "meteors": 100})
-        check("Quiz 5/5 -> dat, cong dung 100", d.get("awarded") == 100, f"{d.get('awarded')}")
+        # Client doi 100 nhung tran la MAX_QUIZ -> lay so nho hon. Doi phat bieu chu
+        # khong noi long: van doi server KEP, chi thoi ghim con so cu.
+        check(f"Quiz 5/5 -> dat, cong dung min(100, {MAX_QUIZ})",
+              d.get("awarded") == min(100, MAX_QUIZ), f"{d.get('awarded')}")
         # total=0 la du lieu rac -> phai 400, khong duoc chia cho 0
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 3, "total": 0, "meteors": 50})

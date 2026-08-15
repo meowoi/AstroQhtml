@@ -19,6 +19,9 @@ Do nhung thu doc code KHONG chung minh duoc:
    o vi tri xac dinh. No KHONG cap diem, KHONG cap thuong (bai hoc `__dbg` cua
    ARCADE-02): mot be mat test cap thuong duoc thi phep kiem "thuong dung" vo nghia.
 """
+import io
+import os
+import re
 import sys
 
 try:
@@ -30,6 +33,13 @@ from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8123"
 URL = BASE + "/game-catch.html"
+
+# ⚠️ PHI DOC TU CHINH FILE GAME, KHONG GHIM SO. Phi thay doi theo luat do kho
+#    (15/08/2026: bat sao bang 3 -> doc dong); ghim con so o day thi bo do bao hong
+#    dung luc san pham lam dung — loi da lap nhieu lan trong du an.
+COST = int(re.search(r"COST:\s*(\d+)",
+                     io.open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game-catch.html"), encoding="utf-8").read()).group(1))
+
 dat = hong = 0
 
 
@@ -92,16 +102,17 @@ with sync_playwright() as pw:
           "bắt sao băng" in pg.inner_text("#gtag").casefold(), pg.inner_text("#gtag"))
 
     # ═══════════════════════════════════ [2] Tru phi DUNG MOT lan
-    print("\n[2] Bat dau luot: tru dung 3 tt, mot lan")
+    print("\n[2] Bat dau luot: tru dung %d tt, mot lan" % COST)
     pg.click("#start-btn")
     pg.wait_for_timeout(400)
     check("vao trang thai 'play'", st(pg, "state") == "play", str(st(pg, "state")))
-    check("tru dung 3 tt", bal(pg) == 47, str(bal(pg)))
+    check("tru dung dung phi mot lan", bal(pg) == 50 - COST,
+          "%d (phi %d)" % (bal(pg), COST))
     check("nut Pause hien ra", "is-hidden" not in (pg.get_attribute("#btn-pause", "class") or ""))
     # Space khi dang choi KHONG duoc tru them lan nua
     pg.keyboard.press("Space")
     pg.wait_for_timeout(250)
-    check("Space luc dang choi KHONG tru them", bal(pg) == 47, str(bal(pg)))
+    check("Space luc dang choi KHONG tru them", bal(pg) == 50 - COST, str(bal(pg)))
 
     # ═════════════════════════ [3] Hung sao vang / sao tim
     print("\n[3] Hung sao: diem tang, sao tim cho tt vao VI TAM")
@@ -194,16 +205,17 @@ with sync_playwright() as pw:
 
     # ═══════════════════════════════ [7] Thieu tt
     print("\n[7] Thieu Thien thach tim")
-    ctx, pg = mk(br, bal=2)
+    ctx, pg = mk(br, bal=COST - 1)
     pg.goto(URL, wait_until="load")
     pg.wait_for_timeout(400)
     pg.click("#start-btn")
     pg.wait_for_timeout(400)
     check("hien man 'chua du tt'", pg.is_visible("#ov-need"))
-    check("KHONG tru tien khi khong du", bal(pg) == 2, str(bal(pg)))
+    check("KHONG tru tien khi khong du", bal(pg) == COST - 1, str(bal(pg)))
     check("van o trang thai 'start'", st(pg, "state") == "start", str(st(pg, "state")))
     body = pg.inner_text("#need-body")
-    check("noi ro can bao nhieu va dang co bao nhieu", "3" in body and "2" in body, body[:70])
+    check("noi ro can bao nhieu va dang co bao nhieu",
+          str(COST) in body and str(COST - 1) in body, body[:70])
     check("co duong sang Quiz", pg.is_visible("#need-quiz"))
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
     ctx.close()
@@ -234,6 +246,51 @@ with sync_playwright() as pw:
     check("he toa do ao la 800", cfg_vw == 800, str(cfg_vw))
     check("gio dat dung 400 trong he ao (khong theo pixel man)", abs(x_mobile - 400) < 1,
           "shipX=%.1f, canvas rong %.0fpx" % (x_mobile, w_mobile))
+    check("0 loi trang", not pg.perr, str(pg.perr[:1]))
+    ctx.close()
+
+    # ══════════════ [11] CHUOT RA NGOAI KHUNG SAN VAN DIEU KHIEN DUOC
+    #
+    # ⚠️ LOI THAT, CHOI THAT MOI THAY (chu du an bao 15/08/2026): `pointermove`
+    #    truoc day gan len chinh the canvas, nen con tro truot ra ngoai khung la
+    #    KHONG con su kien nao — gio dung chet mot cho trong khi tre van dang re
+    #    chuot, va tre "tuong bi loi". San chi cao 500 don vi ao giua mot trang cao
+    #    hon the, nen chuot di lo len tren/xuong duoi xay ra lien tuc.
+    # ⚠️ Do bang TOA DO THAT cua chuot tren TRANG, khong goi `moveTo()` — ham do di
+    #    tat qua duong su kien, tuc do mot thu khac han thu bi hong.
+    print("\n[11] Chuot ra NGOAI khung san van dieu khien duoc gio")
+    ctx, pg = mk(br)
+    pg.goto(URL, wait_until="load")
+    pg.wait_for_timeout(400)
+    pg.click("#start-btn")
+    pg.wait_for_timeout(300)
+    box = pg.evaluate("""() => { const r = document.getElementById('cv').getBoundingClientRect();
+        return {x:r.x, y:r.y, w:r.width, h:r.height}; }""")
+    # 1) Trong khung: gio bam theo (doi chung — neu cai nay hong thi khong phai
+    #    loi "ra ngoai khung" ma la duong chuot hong han)
+    pg.mouse.move(box["x"] + box["w"] * 0.25, box["y"] + box["h"] * 0.5)
+    pg.wait_for_timeout(320)
+    x_in = st(pg, "shipX")
+    check("trong khung: gio bam theo chuot", x_in < 350, "shipX=%.0f" % x_in)
+    # 2) TREN mep san (y am so voi canvas) va lech sang phai
+    pg.mouse.move(box["x"] + box["w"] * 0.8, max(1, box["y"] - 40))
+    pg.wait_for_timeout(420)
+    x_above = st(pg, "shipX")
+    check("chuot o TREN khung: gio VAN chay sang phai", x_above > x_in + 100,
+          "%.0f -> %.0f" % (x_in, x_above))
+    # 3) DUOI mep san, lech sang trai
+    pg.mouse.move(box["x"] + box["w"] * 0.15, box["y"] + box["h"] + 60)
+    pg.wait_for_timeout(420)
+    x_below = st(pg, "shipX")
+    check("chuot o DUOI khung: gio VAN chay sang trai", x_below < x_above - 100,
+          "%.0f -> %.0f" % (x_above, x_below))
+    # 4) Ra han ngoai mep TRAI: gio dung o mep, khong chay ra ngoai san
+    pg.mouse.move(max(0, box["x"] - 200), box["y"] + box["h"] * 0.5)
+    pg.wait_for_timeout(420)
+    x_left = st(pg, "shipX")
+    vw = pg.evaluate("() => window.__catch.cfg.VW")
+    check("chuot ra ngoai mep TRAI: gio dung o mep, khong ra ngoai san",
+          0 <= x_left <= vw * 0.12, "shipX=%.0f (san rong %d)" % (x_left, vw))
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
     ctx.close()
 

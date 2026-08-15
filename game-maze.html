@@ -75,7 +75,7 @@
           <span data-i18n-html="how2">💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.</span>
           <span data-i18n-html="how3">🌟 <b>Tới cổng sáng</b> để về đích. Không có thua — đi sai thì chỉ mất thêm bước.</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="tt" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -98,7 +98,7 @@
         <div class="reward-why" id="why"></div>
         <div class="paid" id="paid"></div>
         <div class="acts">
-          <button class="primary" id="again-btn" data-i18n-html="again_btn">Mê cung khác · <b>4</b></button>
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Mê cung khác · <b>3</b></button>
           <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
           <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
         </div>
@@ -164,12 +164,25 @@
   var $ = AstroQ.$;
 
   var CONFIG = {
-    COST: 4,                  // khớp Wallet.Fees["maze"]
+    COST: 3,                  // khớp Wallet.Fees["maze"]
     VW: 800, VH: 500,
 
-    cols: 15, rows: 9,        // 15×9 ô — DIFF: Vừa
-    gems: 5,                  // số tinh thể mỗi mê cung = số tt thu được
-    moveMs: 110,              // thời gian trượt giữa hai ô (cảm giác "bước")
+    /* ⚠️ BỐN CẤP, TỰ LÊN CẤP SAU MỖI LẦN GIẢI (15/08/2026). Trước đó mê cung
+       chỉ có MỘT cỡ 15×9 và 5 tinh thể — chơi lần thứ hai giống hệt lần đầu, mà
+       chủ dự án đã chốt từ 14/08: *"những game này mục đích để trẻ luyện lại
+       nhiều lần qua nhiều cấp độ khác nhau"*.
+       ⚠️ THANG NÀY CÒN LÀ ĐIỀU KIỆN ĐỂ HỒ SƠ HUẤN LUYỆN CÒN NGHĨA. Từ nay lượt
+          nào thắng cũng thu đủ tinh thể, nên `score = số tinh thể` (cách báo điểm
+          cũ) thành một hằng số và thang 4 mốc `{2,3,4,5}` ở `Services/Training.cs`
+          tự đạt hết ngay lần thắng đầu. Nay `score = CẤP vừa giải` (1–4) và thang
+          đổi thành `{1,2,3,4}` — sửa CẢ HAI nơi hoặc không sửa nơi nào. */
+    tiers: [
+      { cols:15, rows: 9, gems: 5 },
+      { cols:19, rows:11, gems: 7 },
+      { cols:23, rows:13, gems: 9 },
+      { cols:27, rows:15, gems:11 }
+    ],
+    moveMs: 108,              // thời gian trượt giữa hai ô (cảm giác "bước")
     hintAfter: 15,            // giây không nhúc nhích thì hé đường đi
     hintCells: 6,             // hé bao nhiêu ô phía trước, KHÔNG hé cả đường
 
@@ -189,10 +202,10 @@
       start_title:"Mê Cung Thiên Hà",
       how1:"🧑‍🚀 <b>Dẫn phi hành gia</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.",
       how2:"💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.",
-      how3:"🌟 <b>Tới cổng sáng</b> để về đích. Không có thua — đi sai thì chỉ mất thêm bước.",
-      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      how3:"🌟 <b>Đủ tinh thể thì cổng mới mở.</b> Không có thua — đi sai chỉ mất thêm bước, và mê cung sau sẽ to hơn.",
+      cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
       start_btn:"Bắt đầu", over_title:"Ra khỏi mê cung!",
-      again_btn:"Mê cung khác · <b>4</b>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
+      again_btn:"Mê cung khác · <b>3</b>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Mỗi lượt cần {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz đạt là có thêm ngay!",
       need_go:"Làm Quiz ngay",
@@ -201,12 +214,14 @@
       resume:"Chơi tiếp",
       start_toast:"Đi tìm cổng sáng, nhớ thu tinh thể nhé!",
       gem_toast:"+1 {tt}",
-      all_gems:"Đủ tinh thể! Giờ ra cổng sáng thôi.",
+      all_gems:"Đủ tinh thể! Cổng đã mở, ra thôi.",
+      gate_locked:"Cổng còn khoá — thu nốt {n} tinh thể nữa nhé!",
+      lv_up:"Giải xong! Mê cung sau sẽ to hơn.",
       hint_toast:"Bí rồi? Đường đi đang hé ra phía trước.",
       best_toast:"Kỷ lục mới!",
       paid_line:"Đã cộng {n} {tt} vào ví của bạn.",
       why_line:"{g} tinh thể + {b} thưởng về đích",
-      lv_gems:"đã thu {n}/{t} tinh thể", lv_out:"ra cổng sáng là xong!",
+      lv_gems:"Cấp {lv} · {n}/{t} tinh thể", lv_out:"cổng đã mở, ra là xong!",
       title:"AstroQ — Mê Cung Thiên Hà"
     },
     en:{
@@ -216,10 +231,10 @@
       start_title:"Galaxy Maze",
       how1:"🧑‍🚀 <b>Guide the astronaut</b> with ◀ ▲ ▼ ▶ / W A S D — on touch screens <b>swipe</b> or use the four buttons.",
       how2:"💎 <b>Collect every crystal</b> on the way: each one is a Purple Meteor.",
-      how3:"🌟 <b>Reach the glowing gate</b> to finish. There's no losing — a wrong turn only costs steps.",
-      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      how3:"🌟 <b>The gate opens only when every crystal is yours.</b> There's no losing — a wrong turn just costs steps, and the next maze gets bigger.",
+      cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
       start_btn:"Start", over_title:"Out of the maze!",
-      again_btn:"Another maze · <b>4</b>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
+      again_btn:"Another maze · <b>3</b>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
       need_title:"Not enough Purple Meteors!",
       need_body:"Each run costs {cost} Purple Meteors and you have {bal}. Pass a quiz to earn more!",
       need_go:"Take a quiz",
@@ -228,12 +243,14 @@
       resume:"Keep playing",
       start_toast:"Find the glowing gate — and grab those crystals!",
       gem_toast:"+1 {tt}",
-      all_gems:"All crystals! Now head for the gate.",
+      all_gems:"All crystals! The gate is open.",
+      gate_locked:"The gate is locked — {n} crystal(s) to go!",
+      lv_up:"Solved! The next maze will be bigger.",
       hint_toast:"Stuck? The path ahead is showing.",
       best_toast:"New best!",
       paid_line:"{n} {tt} added to your wallet.",
       why_line:"{g} crystals + {b} finish bonus",
-      lv_gems:"{n}/{t} crystals collected", lv_out:"reach the gate to finish!",
+      lv_gems:"Level {lv} · {n}/{t} crystals", lv_out:"gate open — head out!",
       title:"AstroQ — Galaxy Maze"
     }
   };
@@ -285,7 +302,26 @@
   var WALL={ up:N, down:S, left:W, right:E };
   var OPP={ up:"down", down:"up", left:"right", right:"left" };
 
-  var COLS=CONFIG.cols, ROWS=CONFIG.rows;
+  /* Cấp đang chơi (0-based). Nhớ trong máy để lần sau vào là đúng cấp đã tới.
+     ⚠️ Đây chỉ là CACHE để chọn cỡ mê cung. Nguồn sự thật của hồ sơ huấn luyện vẫn
+        là `best:maze` trên server — client không tự quyết cấp bậc của ai cả. */
+  var TIER_KEY="astroq-maze-tier";
+  function readTier(){
+    var v=0;
+    try{ v=parseInt(localStorage.getItem(TIER_KEY),10)||0; }catch(e){}
+    /* Máy mới nhưng tài khoản cũ: lấy theo bản sao tiến độ server đã ghi. */
+    try{
+      var p=JSON.parse(localStorage.getItem("astroq-progress")||"{}");
+      var b=p && p.bests && p.bests.maze;
+      if(b) v=Math.max(v, b-1);            // score là cấp 1-based
+    }catch(e){}
+    return Math.max(0, Math.min(CONFIG.tiers.length-1, v));
+  }
+  function saveTier(v){ try{ localStorage.setItem(TIER_KEY, String(v)); }catch(e){} }
+
+  var tier=readTier();
+  function T(){ return CONFIG.tiers[tier]; }
+  var COLS=T().cols, ROWS=T().rows;
   var cells=[], gems=[], pos={c:0,r:0}, exitC=COLS-1, exitR=ROWS-1;
   var anim=null;            // {fc,fr,tc,tr,t} — đang trượt giữa hai ô
 
@@ -351,7 +387,7 @@
     gems=[];
     var taken={}; taken["0,0"]=true; taken[exitC+","+exitR]=true;
     var guard=0;
-    while(gems.length<CONFIG.gems && guard++<500){
+    while(gems.length<T().gems && guard++<500){
       var c=Math.floor(Math.random()*COLS), r=Math.floor(Math.random()*ROWS);
       var k=c+","+r;
       if(taken[k]) continue;
@@ -364,7 +400,7 @@
   var state="start";        // start | play | paused | over
   var steps=0, mined=0, elapsed=0, idleT=0, hintOn=false, hintPath=[];
   var parts=[], bg=[], bests=readBests(), newBest=false, lastPaid=0, winBonus=0;
-  var shortest=0, last=0, winT=0;
+  var shortest=0, last=0, winT=0, solvedTier=0;
 
   function readBests(){
     try{ return JSON.parse(localStorage.getItem(BEST_KEY)||"{}")||{}; }catch(e){ return {}; }
@@ -426,7 +462,11 @@
        ⚠️ Người chơi cũ có `bests.maze = 1` sẽ ở Cấp 0 cho tới lượt chơi sau —
           chấp nhận được, và server chỉ lấy giá trị LỚN NHẤT nên không ai bị tụt. */
     if(window.AstroQProgress) AstroQProgress.game({
-      game:"maze", score:gems.filter(function(g){ return g.got; }).length, id:bestKey(),
+      /* ⚠️ `score` = CẤP vừa giải (1–4), KHÔNG phải số tinh thể. Từ 15/08/2026 lượt
+         nào thắng cũng thu đủ tinh thể, nên số tinh thể là hằng số và thang huấn
+         luyện dựa vào nó mất nghĩa. Thang ở `Services/Training.cs` đã đổi theo
+         (`{1,2,3,4}`) — hai nơi phải khớp. */
+      game:"maze", score:tier+1, id:bestKey(),
       seconds:Math.max(0,Math.floor(secs||0)), meteors:n });
     return n;
   }
@@ -462,7 +502,8 @@
     var total=gems.length;
     AstroQGameShell.setLevel({
       pct: total ? got/total : 1,
-      label: t("lv_gems").replace("{n}", got).replace("{t}", total),
+      label: t("lv_gems").replace("{lv}", String(tier+1))
+                         .replace("{n}", got).replace("{t}", total),
       note: got>=total ? t("lv_out") : ""
     });
   }
@@ -490,6 +531,11 @@
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
     Economy.spend("maze"); paintBalance(); bumpGem();
 
+    /* ⚠️ ĐẶT CỠ TRƯỚC `genMaze()`, KHÔNG SAU. `genMaze` cấp phát mảng `cells` theo
+       COLS/ROWS đang có; đặt cỡ sau nó là lượt chơi thứ hai (cấp cao hơn) đọc ô
+       ngoài mảng → `Cannot read properties of undefined` và mê cung không dựng
+       được. Lỗi này đã xảy ra thật ở lượt thêm 4 cấp. */
+    COLS=T().cols; ROWS=T().rows;
     genMaze(); layout();
     pos={c:0,r:0}; exitC=COLS-1; exitR=ROWS-1;
     placeGems();
@@ -505,6 +551,10 @@
   function finish(){
     state="over"; winT=0;
     winBonus=finishBonus();
+    solvedTier=tier;                       // cấp VỪA giải, để bảng kết quả nói đúng
+    /* Lên cấp: lần sau vào là mê cung to hơn. Cấp cao nhất thì ở lại đó — mời phá
+       kỷ lục của chính mình chứ không hứa một cấp không tồn tại. */
+    if(tier < CONFIG.tiers.length-1){ tier++; saveTier(tier); }
     var total=mined+winBonus;
     newBest=saveBest(elapsed);
     lastPaid=onFinishGame(total, elapsed);
@@ -547,6 +597,33 @@
     }
   }
 
+  /* ⚠️⚠️ GIỮ PHÍM = ĐI LIÊN TỤC, VÀ CÓ ĐỆM LỆNH — chữa đúng cái "giật cục".
+     Bản cũ: `tryMove` trả về ngay khi đang có hoạt cảnh trượt (`anim`), nên mỗi
+     bước phải chờ 110ms RỒI mới nhận một sự kiện `keydown` mới. Với phím giữ, nhịp
+     lặp phím của hệ điều hành (~500ms trễ đầu, rồi ~30ms/lần) không khớp nhịp
+     trượt ⇒ đi một ô, khựng, đi tiếp — đúng cảm giác giật cục.
+     Nay: bàn phím chỉ GHI hướng đang giữ (`held`), còn bước kế tiếp do vòng lặp
+     game phát ra ngay khi ô trước trượt xong ⇒ liền mạch. `queued` giữ cú bấm
+     trong lúc đang trượt để không rơi mất lệnh ở khúc rẽ. */
+  var held = { up:0, down:0, left:0, right:0 };
+  var queued = null;
+
+  /** Hướng đang giữ, ưu tiên phím bấm SAU CÙNG (đổi hướng giữa chừng phải ăn ngay). */
+  function heldDir(){
+    var best=null, bt=0;
+    for(var k in held){ if(held[k] > bt){ bt=held[k]; best=k; } }
+    return best;
+  }
+
+  function press(d){
+    if(!DX.hasOwnProperty(d)) return;
+    held[d] = Date.now();
+    if(state==="play" && anim) queued = d;   // đang trượt → nhớ lại, đừng bỏ
+    else tryMove(d);
+  }
+  function release(d){ if(DX.hasOwnProperty(d)) held[d] = 0; }
+  function releaseAll(){ for(var k in held) held[k]=0; queued=null; }
+
   function tryMove(d){
     if(state!=="play" || anim) return false;
     if(!DX.hasOwnProperty(d)) return false;
@@ -573,7 +650,20 @@
       }
     }
     paintHud();
-    if(nc===exitC && nr===exitR){ finish(); }
+    /* ⚠️ CỔNG CHỈ MỞ KHI ĐÃ THU HẾT TINH THỂ (đổi 15/08/2026, chủ dự án chốt).
+       Trước đó chạm cổng là kết thúc lượt ngay kể cả còn tinh thể, và đó từng là
+       luật có chủ đích ("trẻ được quyền ra sớm và chịu giá"). Nay nhiệm vụ của mê
+       cung là **thu bằng hết** rồi mới ra.
+       ⚠️ ĐỨNG LÊN CỔNG KHOÁ THÌ PHẢI NÓI RA CÒN THIẾU MẤY VIÊN. Im lặng ở đây là
+          đúng cái bẫy `#loader` của explorer: trẻ tưởng game hỏng chứ không hiểu
+          là mình chưa đủ điều kiện. Cổng cũng vẽ khác hẳn khi khoá (xem drawExit). */
+    if(nc===exitC && nr===exitR){
+      if(mined>=gems.length) finish();
+      else {
+        SFX.bump();
+        toast(t("gate_locked").replace("{n}", String(gems.length-mined)), "bad");
+      }
+    }
     return true;
   }
 
@@ -582,8 +672,17 @@
     elapsed+=dt;
     if(anim){
       anim.t += dt*1000;
-      if(anim.t>=CONFIG.moveMs) anim=null;
-    } else {
+      if(anim.t>=CONFIG.moveMs){
+        anim=null;
+        /* Nối bước NGAY trong cùng khung hình: lệnh đã đệm trước, rồi tới hướng
+           đang giữ. Chờ sang khung sau là hở đúng một nhịp vẽ và cảm giác khựng
+           quay lại. */
+        var nx = queued || heldDir();
+        queued = null;
+        if(nx) tryMove(nx);
+      }
+    }
+    if(!anim){
       idleT+=dt;
       if(!hintOn && idleT>=CONFIG.hintAfter){
         /* Bí thì HÉ đường, không giải hộ: chỉ mấy ô phía trước. Cùng cách ARCADE-04
@@ -656,14 +755,33 @@
     ctx.stroke(); ctx.restore();
   }
 
+  /* ⚠️ HAI TRẠNG THÁI, NHÌN LÀ BIẾT NGAY — không chỉ khác một chút.
+     Cổng KHOÁ: xám-lam, KHÔNG hào quang, KHÔNG nhấp nháy, có ổ khoá ở giữa.
+     Cổng MỞ: hổ phách + hào quang + nhịp thở, y như trước.
+     Một cái cổng trông y hệt nhau ở hai trạng thái là trẻ đi tới rồi không hiểu
+     vì sao không qua được — mà đó chính là điều luật mới sinh ra. */
   function drawExit(){
     var x=cx(exitC), y=cy(exitR), r=CELL*0.34;
-    glow(x,y,CELL*0.9,"rgba(255,207,107,.55)","rgba(255,207,107,0)");
-    var k = REDUCE ? 1 : 0.86+0.14*Math.sin(elapsed*3);
-    ctx.strokeStyle="#ffcf6b"; ctx.lineWidth=Math.max(2,CELL*0.1);
-    ctx.beginPath(); ctx.arc(x,y,r*k,0,TAU); ctx.stroke();
-    ctx.fillStyle="rgba(255,207,107,.28)";
-    ctx.beginPath(); ctx.arc(x,y,r*0.62*k,0,TAU); ctx.fill();
+    var open = mined>=gems.length;
+    if(open){
+      glow(x,y,CELL*0.9,"rgba(255,207,107,.55)","rgba(255,207,107,0)");
+      var k = REDUCE ? 1 : 0.86+0.14*Math.sin(elapsed*3);
+      ctx.strokeStyle="#ffcf6b"; ctx.lineWidth=Math.max(2,CELL*0.1);
+      ctx.beginPath(); ctx.arc(x,y,r*k,0,TAU); ctx.stroke();
+      ctx.fillStyle="rgba(255,207,107,.28)";
+      ctx.beginPath(); ctx.arc(x,y,r*0.62*k,0,TAU); ctx.fill();
+      return;
+    }
+    ctx.strokeStyle="rgba(150,180,255,.45)"; ctx.lineWidth=Math.max(2,CELL*0.08);
+    ctx.setLineDash([CELL*0.14, CELL*0.1]);
+    ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.stroke();
+    ctx.setLineDash([]);
+    /* Ổ khoá: thân chữ nhật + quai hình cung. Vẽ bằng code, 0 asset thêm. */
+    var w=r*0.62, h=r*0.5;
+    ctx.fillStyle="rgba(170,195,255,.6)";
+    ctx.fillRect(x-w/2, y-h*0.1, w, h);
+    ctx.strokeStyle="rgba(170,195,255,.6)"; ctx.lineWidth=Math.max(1.5,CELL*0.05);
+    ctx.beginPath(); ctx.arc(x, y-h*0.1, w*0.34, Math.PI, 0); ctx.stroke();
   }
 
   function drawGems(){
@@ -728,7 +846,7 @@
     if(k==="ArrowDown"||k==="s"||k==="S") d="down";
     if(k==="ArrowLeft"||k==="a"||k==="A") d="left";
     if(k==="ArrowRight"||k==="d"||k==="D") d="right";
-    if(d){ e.preventDefault(); tryMove(d); return; }
+    if(d){ e.preventDefault(); if(!e.repeat) press(d); return; }
     if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
     if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
     if((k===" "||k==="Enter") && (state==="start"||state==="over")){
@@ -738,6 +856,17 @@
       if(!(ae && ae.tagName==="BUTTON")){ e.preventDefault(); startRound(); }
     }
   });
+
+  document.addEventListener("keyup", function(e){
+    var k=e.key;
+    if(k==="ArrowUp"||k==="w"||k==="W") release("up");
+    if(k==="ArrowDown"||k==="s"||k==="S") release("down");
+    if(k==="ArrowLeft"||k==="a"||k==="A") release("left");
+    if(k==="ArrowRight"||k==="d"||k==="D") release("right");
+  });
+  /* Chuyển tab / mất tiêu điểm giữa lúc đang giữ phím thì `keyup` không bao giờ
+     tới — không nhả hết ở đây là phi hành gia chạy mãi một hướng khi quay lại. */
+  window.addEventListener("blur", releaseAll);
 
   /* Quệt trên máy cảm ứng: chọn trục có độ dịch LỚN HƠN, ngưỡng 24px để một cú
      chạm hơi lệch không bị hiểu thành quệt. */
@@ -752,8 +881,17 @@
   });
   cv.addEventListener("touchmove", function(e){ e.preventDefault(); }, {passive:false});
 
+  /* Bốn nút cảm ứng: GIỮ là đi liên tục, y như phím.
+     ⚠️ `click` chỉ dùng cho đường BÀN PHÍM (Enter/Space trên nút đang có tiêu điểm)
+        — nhận ra bằng `e.detail === 0`. Không lọc thì mỗi cú chạm tính hai lần
+        (một `pointerdown` + một `click`) và phi hành gia nhảy hai ô. */
   Array.prototype.forEach.call($("dpad").querySelectorAll("button"), function(b){
-    b.addEventListener("click", function(){ this.blur(); tryMove(b.getAttribute("data-dir")); });
+    var d=b.getAttribute("data-dir");
+    b.addEventListener("pointerdown", function(e){ e.preventDefault(); this.blur(); press(d); });
+    b.addEventListener("pointerup", function(){ release(d); });
+    b.addEventListener("pointercancel", function(){ release(d); });
+    b.addEventListener("pointerleave", function(){ release(d); });
+    b.addEventListener("click", function(e){ if(e.detail===0) press(d); });
   });
 
   /* ===== Nút ===== */
@@ -804,6 +942,9 @@
     get pos(){ return { c:pos.c, r:pos.r }; },
     get exit(){ return { c:exitC, r:exitR }; },
     get shortest(){ return shortest; },
+    get cols(){ return COLS; },
+    get rows(){ return ROWS; },
+    get tier(){ return tier; },
     get hint(){ return hintOn; },
     cfg: CONFIG,
     /** Đường ngắn nhất từ chỗ đang đứng tới cổng — BFS trên đúng bộ tường đang vẽ. */
@@ -822,6 +963,19 @@
       return out.concat(pathTo(c,r,exitC,exitR));
     },
     move: function(d){ return tryMove(d); },
+    /** Bấm/nhả như người dùng thật — bộ đo cần đúng đường này để đo "giữ phím". */
+    press: function(d){ press(d); },
+    release: function(d){ release(d); },
+    /** Số ô đi thẳng được theo hướng d từ chỗ đang đứng (bộ đo chọn hành lang). */
+    freeRun: function(d){
+      var c=pos.c, r=pos.r, n=0;
+      while(n<40 && !(cells[r][c] & WALL[d])){
+        c+=DX[d]; r+=DY[d];
+        if(c<0||r<0||c>=COLS||r>=ROWS) break;
+        n++;
+      }
+      return n;
+    },
     /** Bỏ hoạt cảnh trượt để bộ đo đi nhanh — KHÔNG đổi luật đi. */
     snap: function(){ anim=null; }
   };

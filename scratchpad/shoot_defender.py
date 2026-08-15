@@ -4,11 +4,18 @@
    kiem giap / diem / vi tien / quiz vang / song ngu / dien thoai.
    Chay: python -m http.server 8123  (trong AstroQhtml/) roi python scratchpad/shoot_defender.py
 """
-import os, sys, time
+import io, os, re, sys, time
 sys.stdout.reconfigure(encoding="utf-8")
 from playwright.sync_api import sync_playwright
 
 URL = "http://127.0.0.1:8123/game-defender.html"
+
+# CANH BAO: PHI DOC TU CHINH FILE GAME, KHONG GHIM SO. Phi doi theo luat do kho
+#    (15/08/2026); ghim con so o day thi bo do bao hong dung luc san pham lam dung.
+COST = int(re.search(r"COST:\s*(\d+)", io.open(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game-defender.html"),
+    encoding="utf-8").read()).group(1))
+
 OUT = os.path.dirname(os.path.abspath(__file__))
 errors, fails = [], []
 
@@ -149,7 +156,7 @@ with sync_playwright() as pw:
     print("== 2. Bat dau: tru phi + Pause hien ==")
     page.click("#start-btn"); page.wait_for_timeout(200)
     s = state(page)
-    check(s["bal"] == 115, "tru dung 5 tt mot lan (bal=%s)" % s["bal"])
+    check(s["bal"] == 120 - COST, "tru dung %d tt mot lan (bal=%s)" % (COST, s["bal"]))
     check(not s["pauseHidden"], "nut Pause hien khi dang choi")
 
     print("== 3. KHONG ban -> vat the dam vao Tram, giap phai TUT ==")
