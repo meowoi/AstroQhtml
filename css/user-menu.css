@@ -1,0 +1,165 @@
+/* ============================================================
+   user-menu.css — MENU THẢ dùng chung (menu avatar + bộ chọn ngôn ngữ).
+   Hành vi ở `js/user-menu.js`; markup ở từng trang.
+
+   ⚠️ CHỈ DÙNG BIẾN DO `common.css` KHAI (`--ink`, `--ink-soft`, `--ink-faint`,
+      `--ease`) + màu viết thẳng rgba. `--accent`/`--glass` nằm ở dashboard.css,
+      `--cyan`/`--brd` ở page-shell.css — hai bộ khung KHÔNG cùng nạp, nên dùng
+      chúng ở đây là màu rơi về `initial` ở đúng một trong hai loại trang. Cùng
+      lý do đã ghi cho `.admin-link` trong common.css.
+   ============================================================ */
+
+.um{position:relative;}
+
+/* ---- Nút thu gọn ---- */
+.um-btn{display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:4px 9px 4px 4px;border-radius:999px;
+  background:rgba(8,14,38,.6);border:1px solid rgba(150,180,255,.18);
+  color:var(--ink);font-family:inherit;
+  transition:border-color .18s var(--ease),box-shadow .18s var(--ease),transform .12s var(--ease);}
+.um-btn:hover{border-color:rgba(125,211,252,.7);box-shadow:0 0 18px -6px rgba(56,189,248,.8);}
+.um-btn:active{transform:scale(.97);}
+.um.um-on > .um-btn{border-color:rgba(125,211,252,.85);box-shadow:0 0 20px -6px rgba(56,189,248,.9);}
+
+/* Mũi tam giác chỉ xuống — vẽ bằng border nên không phụ thuộc font/emoji.
+   Nó là thứ DUY NHẤT nói cho trẻ biết cái nút này còn mở ra được nữa. */
+.um-caret{width:0;height:0;flex:none;margin-left:1px;
+  border-left:4.5px solid transparent;border-right:4.5px solid transparent;
+  border-top:5px solid var(--ink-soft);
+  transition:transform .2s var(--ease);}
+.um.um-on .um-caret{transform:rotate(180deg);}
+
+/* Chip mã ngôn ngữ (VI · EN · JA…). Cỡ cố định để nút không nhảy khi đổi mã. */
+.um-code{display:grid;place-items:center;min-width:30px;height:24px;flex:none;
+  padding:0 6px;border-radius:8px;
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;
+  color:#cfe6ff;background:rgba(56,189,248,.14);border:1px solid rgba(56,189,248,.34);}
+
+/* ---- Tấm thả ---- */
+.um-pop{position:absolute;top:calc(100% + 9px);right:0;z-index:80;
+  width:max-content;min-width:236px;max-width:min(320px, calc(100vw - 24px));
+  display:flex;flex-direction:column;gap:3px;
+  padding:9px;border-radius:16px;
+  background:rgba(12,19,44,.96);border:1px solid rgba(150,180,255,.26);
+  box-shadow:0 26px 60px -22px rgba(0,0,0,.9), 0 0 34px -14px rgba(56,189,248,.5);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  animation:umDrop .18s var(--ease);}
+@keyframes umDrop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+/* ⚠️ BẪY `[hidden]` — lần thứ mười hai trong dự án (`#time-ok` · `.lk-btn` ·
+   `.pt-empty` · `.co-steps` · `#wl-done` · `.exp-ctl` · `.brag` · `.deskrow` ·
+   `.sess` · `.mb-body` · `.record`…). `display` của tác giả THẮNG `display:none`
+   mà trình duyệt áp cho `[hidden]`, nên thiếu dòng này là menu bung ra sẵn ngay
+   khi tải trang, phủ kín góc phải màn hình. */
+.um-pop[hidden]{display:none;}
+
+/* Tiêu đề nhóm + ghi chú: chữ nhỏ, không bấm được, chỉ để chia khối. */
+.um-head{margin:2px 4px 4px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);}
+.um-sep{height:1px;margin:5px 2px;background:rgba(150,180,255,.16);}
+
+/* ---- Một mục ---- */
+.um-item{display:flex;align-items:center;gap:10px;width:100%;
+  min-height:48px;padding:8px 10px;border-radius:12px;text-align:left;
+  cursor:pointer;text-decoration:none;
+  color:var(--ink);font-family:inherit;font-size:14px;
+  background:transparent;border:1px solid transparent;
+  transition:background .16s var(--ease),border-color .16s var(--ease);}
+.um-item:hover{background:rgba(120,160,255,.12);border-color:rgba(150,180,255,.3);}
+.um-item:focus-visible{outline:2px solid rgba(95,211,255,.9);outline-offset:-2px;}
+.um-item .um-ic{width:34px;height:34px;flex:none;border-radius:11px;
+  display:grid;place-items:center;font-size:17px;line-height:1;
+  background:rgba(8,14,38,.6);border:1px solid rgba(120,160,255,.24);}
+.um-item .um-ic .sic{width:22px;height:22px;}
+.um-item .um-b{display:flex;flex-direction:column;line-height:1.25;min-width:0;flex:1;}
+.um-item .um-nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.um-item .um-sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.um-item .um-ar{margin-left:auto;font-size:15px;opacity:.55;flex:none;}
+
+/* Ba tông khớp màu trang đích, y như bảng phi hành gia cũ: hồ sơ cyan (thẻ ID) ·
+   thành tích hổ phách (mề đay) · mẫu vật tím (khoang kính). Không đổi nghĩa màu
+   giữa hai chỗ thì trẻ nhận ra ngay dù đường vào đã dời chỗ. */
+.um-item.um-profile .um-ic{border-color:rgba(56,189,248,.42);background:rgba(8,26,46,.6);}
+.um-item.um-awards  .um-ic{border-color:rgba(255,207,107,.44);background:rgba(38,28,8,.6);}
+.um-item.um-awards  .um-nm{color:#ffe9bd;}
+.um-item.um-vault   .um-ic{border-color:rgba(192,132,252,.42);background:rgba(26,12,44,.6);}
+.um-item.um-shop    .um-ic{border-color:rgba(99,230,168,.4);background:rgba(6,32,24,.6);}
+
+/* Khu của NGƯỜI LỚN: nét đứt + chữ nhạt, khác hẳn các mục của trẻ ở trên.
+   Cùng lý do `.pt-parent` từng dùng nét đứt — hai loại đối tượng, hai vẻ ngoài,
+   để mắt trẻ không nhầm là chỗ mình cần bấm. */
+.um-item.um-parent{border-style:dashed;border-color:rgba(150,180,255,.3);
+  background:rgba(150,180,255,.05);color:var(--ink-soft);font-size:13px;}
+.um-item.um-parent:hover{color:var(--ink);border-color:rgba(150,180,255,.55);}
+
+/* Đăng xuất — đỏ nhạt, và nằm sau một vạch ngăn để không bấm nhầm. */
+.um-item.um-out{color:#ffc4c4;}
+.um-item.um-out:hover{background:rgba(255,120,120,.14);border-color:rgba(255,120,120,.42);}
+
+/* Ô admin do `js/admin-link.js` dựng. Trong menu thì bỏ lề/lưới của bản dùng
+   ngoài lưới `.ptiles` (khai ở common.css), còn màu hổ phách giữ nguyên. */
+.um-pop [data-admin-link]{margin-top:0;grid-column:auto;}
+.um-pop .admin-link{font-size:13px;border-radius:12px;}
+
+/* ---- Bộ chọn ngôn ngữ ----
+   `.lang-switch` ở đây KHÔNG phải dãy nút hình viên thuốc của header (khai ở
+   dashboard.css/common.css) mà là một cột trong tấm thả. Ghi đè có chủ đích:
+   giữ nguyên TÊN CLASS là điều kiện để `AstroQ.initLang` (gắn vào
+   `.lang-switch button`) và `markLangButtons` chạy được mà không phải truyền
+   selector riêng — thứ `check_pages` mục [14] cấm, vì đặt tên riêng chính là
+   cách `explorer.html` từng mất hẳn nút đổi ngôn ngữ trong nhiều tháng. */
+.um-pop .lang-switch{display:flex;flex-direction:column;gap:3px;
+  background:none;border:0;padding:0;border-radius:0;}
+.um-pop .lang-switch button{display:flex;align-items:center;gap:10px;width:100%;
+  min-height:48px;padding:8px 10px;border-radius:12px;text-align:left;cursor:pointer;
+  color:var(--ink);font-family:inherit;font-weight:600;font-size:14px;letter-spacing:0;
+  background:transparent;border:1px solid transparent;
+  transition:background .16s var(--ease),border-color .16s var(--ease);}
+.um-pop .lang-switch button:hover{background:rgba(120,160,255,.12);border-color:rgba(150,180,255,.3);color:var(--ink);}
+/* Mục đang chọn: nền nhạt + dấu tích. KHÔNG dùng gradient vàng đặc như nút cũ —
+   ở dạng danh sách nó biến một dòng thành cả một thanh sáng chói giữa menu tối. */
+.um-pop .lang-switch button.active{background:rgba(56,189,248,.14);
+  border-color:rgba(56,189,248,.42);color:#fff;}
+.um-pop .lang-switch button.active .um-tick{opacity:1;}
+.um-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.um-tick{margin-left:auto;flex:none;color:#7dd3fc;opacity:0;font-size:13px;}
+
+/* Ngôn ngữ CHƯA có nội dung. Nói thật bằng nhãn, và vẫn BẤM ĐƯỢC: một nút
+   `disabled` không phản hồi gì thì trẻ chỉ tưởng mình bấm trượt (bài học `#loader`
+   của explorer). Bấm vào thì có lời nhắn — xem `onSoon` ở js/user-menu.js. */
+.lang-soon{display:flex;flex-direction:column;gap:3px;}
+.um-item.um-soon{color:var(--ink-faint);font-weight:500;}
+.um-item.um-soon .um-code{color:#9fb0d8;background:rgba(120,160,255,.08);border-color:rgba(120,160,255,.2);}
+.um-item.um-soon:hover{background:rgba(120,160,255,.08);}
+.um-tag{margin-left:auto;flex:none;padding:2px 8px;border-radius:999px;
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:#ffd98a;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.34);}
+
+/* ============================================================
+   MÀN HẸP — TẤM THẢ TRẢI GẦN HẾT BỀ RỘNG.
+
+   ⚠️⚠️ ĐÃ THỬ "TẤM TRƯỢT TỪ ĐÁY" (`position:fixed;bottom:0`) VÀ NÓ HỎNG — ghi lại
+   để không ai làm lại: header của dashboard có `backdrop-filter`, mà một ancestor
+   có `filter`/`backdrop-filter`/`transform` thì trở thành KHỐI CHỨA của mọi con
+   `position:fixed`. Nên tấm trượt neo vào đáy CỦA HEADER chứ không phải đáy màn
+   hình — render thật ở 390×844 thì nó hiện ra ở mép trên, cắt cụt, chỉ còn ba
+   ngôn ngữ cuối. Cùng lý do, một lớp phủ tối gắn ở `<body>` sẽ đè LÊN menu (header
+   là một stacking context ở z-index 30). Muốn tấm trượt thì phải chuyển hẳn nút
+   DOM sang `<body>` lúc mở, không phải chỉ đổi CSS.
+   ============================================================ */
+@media (max-width:560px){
+  /* Neo phải, trải sang gần hết bề rộng: `.um` nằm cách mép phải đúng phần đệm
+     của header, nên tấm thả chạy từ sát mép trái tới đó. Tên dài ("Dành cho bố
+     mẹ", "Báo cáo tuần của con") vì thế không phải cắt bằng ellipsis. */
+  .um-pop{width:calc(100vw - 22px);min-width:0;max-width:none;
+    max-height:min(72vh, 560px);overflow-y:auto;
+    padding:10px 11px 12px;border-radius:16px;}
+  .um-item,.um-pop .lang-switch button{min-height:52px;font-size:15px;}
+}
+
+/* Vùng chạm trên thiết bị cảm ứng — 48px chứ không 44 (44 là mốc TỐI THIỂU của
+   WCAG 2.5.5; đặt đúng mốc là không còn biên an toàn nào — quy tắc 10 mục 6). */
+@media (pointer:coarse){
+  .um-btn{min-height:48px;}
+}

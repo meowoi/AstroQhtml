@@ -14,8 +14,13 @@
    tới bằng thuộc tính `data-tour="<key>"` trong HTML, nên đổi bố cục trang
    thì không phải sửa file này.
 
-   ⚠️ VẪN 7 BƯỚC dù dashboard đã lên 6 card (29/07/2026). Ba card thêm vào
-   KHÔNG có `data-tour`, và đó là quyết định có chủ ý:
+   ⚠️ 6 BƯỚC (15/08/2026, trước đó 7). Bước "Kho Thành Tích" và bước "Hồ sơ Phi
+   Hành Gia" đã GỘP làm một: cả sáu đường vào "xem lại mình" nay nằm trong MỘT
+   menu thả sau ảnh đại diện, nên hai bước liên tiếp chiếu vào cùng một cái nút
+   là nói lại một điều hai lần. Chi tiết ở chính bước `profile` trong `STEPS`.
+
+   ⚠️ Dashboard có 6 card nhưng ba card thêm 29/07/2026 KHÔNG có `data-tour`, và
+   đó là quyết định có chủ ý:
      · Phòng Nghiên Cứu chưa có trang → dẫn trẻ tới rồi nói "chưa mở đâu" thì
        thà đừng dẫn;
      · Trung Tâm Nhiệm Vụ và Sổ Tay Thuật Ngữ (thẻ MOD-06 từ 04/08/2026, thay
@@ -102,18 +107,23 @@
             body: "Play mini games to sharpen your skills, earn points and collect plenty of badges." }
     },
     {
-      key: "awards", target: '[data-tour="awards"]', icon: "🏆",
-      vi: { title: "Kho Thành Tích",
-            body: "Đây là nơi lưu giữ huy hiệu, bộ sưu tập và những thành tích bạn đã chinh phục." },
-      en: { title: "Trophy Hold",
-            body: "This is where your badges, collections and every achievement you've conquered are kept." }
-    },
-    {
+      /* ⚠️ GỘP HAI BƯỚC LÀM MỘT (15/08/2026, 7 → 6 bước). Trước đó có bước
+         "Kho Thành Tích" (`[data-tour="awards"]`) và bước "Hồ sơ Phi Hành Gia"
+         riêng, vì hai khu đó là hai ô nằm rời trên trang. Nay cả sáu đường vào
+         "xem lại mình" (hồ sơ · thành tích · mẫu vật · kho trang trí · bảng bố
+         mẹ · báo cáo hệ thống) nằm trong MỘT menu thả sau ảnh đại diện — xem lý
+         do đo được ở đầu js/user-menu.js.
+         ⚠️ KHÔNG chiếu vào từng mục bên trong menu: chúng nằm trong tấm thả đang
+            `hidden`, mà `.tour-hole` khoét theo `getBoundingClientRect()` — phần
+            tử ẩn cho ra khung 0×0 và Comet chiếu sáng vào khoảng không. Thứ cần
+            dạy trẻ ở bước này cũng đúng là CÁI CỬA, không phải từng ngăn tủ. */
       key: "profile", target: '[data-tour="profile"]', icon: "👨‍🚀",
-      vi: { title: "Hồ sơ Phi Hành Gia",
-            body: "Theo dõi cấp độ, trang phục và hành trình khám phá của riêng bạn." },
-      en: { title: "Astronaut Profile",
-            body: "Track your level, your outfit and your very own journey of discovery." }
+      vi: { title: "Mọi thứ của riêng bạn",
+            body: "Bấm vào <b>ảnh của bạn</b> ở góc trên là mở ra tất cả: hồ sơ, huy hiệu, " +
+                  "kho mẫu vật, kho trang trí — và cả bảng dành cho bố mẹ nữa." },
+      en: { title: "Everything that's yours",
+            body: "Tap <b>your picture</b> in the top corner to open it all: your profile, badges, " +
+                  "specimen vault, decoration deck — and the board for your parents too." }
     },
     {
       /* ⚠️ LỜI THOẠI ĐỔI 01/08/2026 CÙNG LÚC TOUR DỜI XUỐNG SAU NHIỆM VỤ 1

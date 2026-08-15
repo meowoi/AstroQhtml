@@ -258,6 +258,10 @@ def main():
         chk(len(errs3) == 0, "dashboard: 0 loi console", "; ".join(errs3[:3]))
 
         # EN
+        # ⚠️ Nut VI/EN cua dashboard nam trong menu tha tu 15/08/2026 — phai MO ra
+        #    truoc khi bam. Cac trang khac van la day nut trai ngang.
+        pg.click('.lang-pick [data-menu-btn]')
+        pg.wait_for_selector('.lang-pick [data-menu-pop]:not([hidden])')
         pg.click('.lang-switch button[data-lang="en"]')
         pg.wait_for_timeout(400)
         en_names = pg.eval_on_selector_all(".cards .hud h3", "es => es.map(e => e.textContent.trim())")

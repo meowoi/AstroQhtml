@@ -26,13 +26,17 @@ USER = {
     "purpleAsteroids": 0,
 }
 
-# Thứ tự khu vực đúng như lời Comet dẫn tham quan
-ORDER = ["hello", "map", "learn", "train", "awards", "profile", "ready"]
+# Thứ tự khu vực đúng như lời Comet dẫn tham quan.
+# ⚠️ ĐỔI PHÁT BIỂU 15/08/2026: 7 → 6 bước. Bước "awards" (Kho Thành Tích) đã
+#    GỘP vào bước "profile", vì cả sáu đường vào "xem lại mình" nay nằm trong
+#    MỘT menu thả sau ảnh đại diện — hai bước liên tiếp chiếu vào cùng một cái
+#    nút là nói lại một điều hai lần. Điều bộ này bảo vệ KHÔNG đổi: ô sáng phải
+#    trùm đúng khu vực, và khu vực phải nằm trong khung nhìn.
+ORDER = ["hello", "map", "learn", "train", "profile", "ready"]
 TARGET = {
     "map": '[data-tour="map"]',
     "learn": '[data-tour="learn"]',
     "train": '[data-tour="train"]',
-    "awards": '[data-tour="awards"]',
     "profile": '[data-tour="profile"]',
 }
 
@@ -194,7 +198,8 @@ def main():
         check("Buoc 1 chao dung ten nguoi choi", "Bi Bo" in title, title.replace("\n", " "))
         check("Buoc 1 nhac Doi Biet Kich Vu Tru", "Biệt Kích Vũ Trụ" in body)
         check("Buoc 1 nhac tau Luna", "Luna" in body)
-        check("Co 7 cham buoc", page.eval_on_selector_all(".tour-dots span", "e=>e.length") == 7,
+        check("So cham buoc khop so buoc that",
+              page.eval_on_selector_all(".tour-dots span", "e=>e.length") == len(ORDER),
               str(page.eval_on_selector_all(".tour-dots span", "e=>e.length")))
         check("Buoc mo dau khong tro vao dau (hole.blank)",
               page.evaluate("() => document.querySelector('.tour-hole').classList.contains('blank')"))
@@ -226,10 +231,12 @@ def main():
             # "Trạm Tri Thức" → "Tri Thức" (đổi tên khu 29/07/2026)
             "learn": ("Tri Thức", "vũ trụ, robot và AI"),
             "train": ("Khu Huấn Luyện", "mini game"),
-            "awards": ("Kho Thành Tích", "huy hiệu"),
-            "profile": ("Hồ sơ Phi Hành Gia", "cấp độ"),
+            # Bước gộp: giới thiệu CÁI CỬA (menu sau ảnh đại diện), không phải
+            # từng ngăn tủ bên trong — mục bên trong đang `hidden` nên ô sáng
+            # tính theo `getBoundingClientRect()` sẽ ra khung 0×0.
+            "profile": ("Mọi thứ của riêng bạn", "hồ sơ, huy hiệu"),
         }
-        for i, key in enumerate(ORDER[1:6], start=1):
+        for i, key in enumerate(ORDER[1:-1], start=1):
             page.click(".tour-next")
             wait_stable(page)      # chờ cuộn mượt + transition ô sáng dừng hẳn
             t, b = page.inner_text(".tour-title"), page.inner_text(".tour-body")
@@ -402,8 +409,12 @@ def main():
         # Nút VI/EN của trang bị CHẶN trong lúc tour mở (cố ý: bấm ra ngoài là
         # mất mạch giới thiệu). Kiểm đúng điều đó, rồi thử đường đồng bộ THẬT:
         # đổi ngôn ngữ ở TAB KHÁC → event `storage` → applyLang → tour vẽ lại.
+        # ⚠️ ĐO Ở NÚT THU GỌN (`[data-menu-btn]`), khong o nut VI/EN nua: tu
+        #    15/08/2026 hai nut do nam TRONG tam tha dang `hidden`, ma phan tu an
+        #    cho ra khung 0x0 -> `elementFromPoint` do o goc man hinh, tuc phep do
+        #    khong con noi gi ve cai nut that. Cai tre bam duoc la nut thu gon.
         blocked = page.evaluate("""() => {
-            const b = document.querySelector('.lang-switch button[data-lang="vi"]');
+            const b = document.querySelector('.lang-pick [data-menu-btn]');
             const r = b.getBoundingClientRect();
             const top = document.elementFromPoint(r.x + r.width/2, r.y + r.height/2);
             return top ? top.className : null; }""")
@@ -417,6 +428,8 @@ def main():
         # giữa 2 tab. (Dẹp trước khi nó mở thì #tour còn chưa tồn tại.)
         tab2.wait_for_selector("#tour.show", timeout=8000)
         tab2.evaluate("() => { document.getElementById('tour').style.display='none'; }")
+        tab2.click('.lang-pick [data-menu-btn]')   # mo tam tha truoc
+        tab2.wait_for_selector('.lang-pick [data-menu-pop]:not([hidden])')
         tab2.click('.lang-switch button[data-lang="vi"]')
         page.wait_for_timeout(600)
         check("Tab khac doi sang VI: box thoai dich theo ngay",
@@ -425,6 +438,8 @@ def main():
         check("Doi ngon ngu KHONG lam mat buoc dang xem",
               page.evaluate("() => [...document.querySelectorAll('.tour-dots span')]"
                             ".findIndex(s=>s.classList.contains('on')) === 1"))
+        tab2.click('.lang-pick [data-menu-btn]')
+        tab2.wait_for_selector('.lang-pick [data-menu-pop]:not([hidden])')
         tab2.click('.lang-switch button[data-lang="en"]')
         page.wait_for_timeout(600)
         check("Doi lai EN: box thoai dich theo",
@@ -452,7 +467,7 @@ def main():
         ctx, page = new_page(browser, "vi", mobile=True)
         page.goto(BASE, wait_until="load")
         page.wait_for_selector("#tour.show", timeout=8000)
-        for key in ORDER[1:6]:
+        for key in ORDER[1:-1]:   # bo buoc chao va buoc cuoi (ca hai khong tro vao dau)
             page.click(".tour-next")
             wait_stable(page)
             bub = box(page, ".tour-bubble")
@@ -469,7 +484,7 @@ def main():
               page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1"),
               str(page.evaluate("() => document.documentElement.scrollWidth")))
         page.screenshot(path="scratchpad/w03-mobile.png")
-        page.click(".tour-next"); page.click(".tour-next")
+        page.click(".tour-next")
         page.wait_for_timeout(400)
         play_warp(page)          # tour không còn tự dẫn sang màn loading — xem play_warp()
         page.wait_for_timeout(4200)
@@ -537,7 +552,8 @@ def main():
         page.wait_for_selector("#tour.show", timeout=8000)
         check("Chua co co thi tour hien", page.is_visible("#tour.show"))
         # Xem hết một lượt → cờ được ghi → F5 thì không hiện nữa
-        page.evaluate("() => { for(let i=0;i<7;i++) document.querySelector('.tour-next').click(); }")
+        page.evaluate("() => { for(let i=0;i<12;i++){ const b=document.querySelector('.tour-next');"
+                      " if(!b) break; b.click(); } }")   # so buoc doi thi khong phai sua so o day
         page.wait_for_timeout(400)
         page.evaluate("() => AstroQWarp.stop()")
         page.reload(wait_until="load")
@@ -601,7 +617,8 @@ def main():
                       page.evaluate("() => localStorage.getItem('astroq-tour-seen') === '1'"))
             else:
                 # Xem hết → phải ĐẨY cờ lên server, không chỉ ghi vào máy
-                page.evaluate("() => { for(let i=0;i<7;i++) document.querySelector('.tour-next').click(); }")
+                page.evaluate("() => { for(let i=0;i<12;i++){ const b=document.querySelector('.tour-next');"
+                      " if(!b) break; b.click(); } }")   # so buoc doi thi khong phai sua so o day
                 page.wait_for_timeout(700)
                 check("Xem xong -> PUT co len server",
                       "set:true" in page.evaluate("() => window.__calls"),

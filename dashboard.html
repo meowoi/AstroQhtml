@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/cockpit.css" />
 <link rel="stylesheet" href="css/sticker-icons.css" />
+<!-- Menu thả từ avatar + bộ chọn ngôn ngữ (khung + hành vi dùng chung, xem
+     css/user-menu.css và js/user-menu.js) -->
+<link rel="stylesheet" href="css/user-menu.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
 <!-- Màn Comet dẫn tham quan + màn loading Luna → Trái Đất (chỉ chạy lần đầu) -->
 <link rel="stylesheet" href="css/mascot.css" />
@@ -23,6 +26,9 @@
 <script src="js/icons.js"></script>
 <script src="js/sticker-icons.js"></script>
 <script src="js/ui-common.js"></script>
+<!-- Menu thả dùng chung. ⚠️ `AstroQUserMenu.init()` phải chạy TRƯỚC
+     `AstroQ.initLang()` — lý do ghi ở đầu js/user-menu.js. -->
+<script src="js/user-menu.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
 <script src="js/badges.js"></script>
 <script src="js/ranks.js"></script>
@@ -111,34 +117,173 @@
     </div>
   </div>
 
+  <!-- ⚠️ HAI MENU THẢ, KHÔNG CÒN DÃY NÚT TRẢI NGANG (15/08/2026).
+       Trước đó chỗ này là: dãy VI|EN + chip avatar + nút Đăng xuất, và sáu đường
+       vào "xem lại mình" (hồ sơ · thành tích · mẫu vật · kho trang trí · bảng bố
+       mẹ · báo cáo hệ thống) nằm rải trong bảng Thống Kê ở NỬA TRÊN trang. Đo
+       được trên điện thoại 390×844: thẻ khu vực chơi/học đầu tiên nằm ở y=1269px,
+       tức trẻ phải kéo 465px mới thấy thứ nó vào đây để làm.
+       Gom cả cụm vào menu sau avatar là khuôn quen của app cho trẻ (hồ sơ + cài
+       đặt + khu phụ huynh nằm sau ảnh đại diện) và trả nửa trên màn hình lại cho
+       việc chơi. Khung + hành vi: css/user-menu.css + js/user-menu.js. -->
   <div class="controls">
-    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
-      <button type="button" data-lang="vi">VI</button>
-      <button type="button" data-lang="en">EN</button>
+    <!-- ── Ngôn ngữ ──
+         ⚠️ `.lang-switch` PHẢI GIỮ NGUYÊN TÊN và nằm TRONG tấm thả: `AstroQ.initLang`
+            gắn sự kiện vào `.lang-switch button`, và `check_pages` mục [14] cấm
+            truyền selector riêng (đặt tên riêng chính là cách explorer.html từng
+            mất hẳn nút đổi ngôn ngữ trong nhiều tháng).
+         ⚠️ Danh sách ngôn ngữ do js/user-menu.js dựng — hai ô rỗng dưới đây là CHỖ
+            ĐẶT. Ngôn ngữ đã có nội dung vào `.lang-switch`; ngôn ngữ đang dịch vào
+            `.lang-soon` và **cố ý nằm NGOÀI** `.lang-switch`, không thì `initLang`
+            cũng gắn sự kiện cho chúng và bấm vào là ghi một mã ngôn ngữ không tồn
+            tại vào `astroq-lang`. -->
+    <div class="um lang-pick" data-menu>
+      <button class="um-btn" type="button" data-menu-btn
+              data-i18n-aria="a_lang" aria-label="Ngôn ngữ"
+              data-i18n-title="a_lang" title="Ngôn ngữ">
+        <span class="um-code" data-lang-code>VI</span>
+        <span class="um-caret" aria-hidden="true"></span>
+      </button>
+      <div class="um-pop" data-menu-pop hidden>
+        <p class="um-head" data-i18n="lang_head">Ngôn ngữ</p>
+        <div class="lang-switch" role="group" data-i18n-aria="a_lang"
+             aria-label="Language / Ngôn ngữ" data-lang-list></div>
+        <div class="um-sep"></div>
+        <p class="um-head" data-i18n="lang_soon_h">Đang dịch, sắp có</p>
+        <div class="lang-soon" data-lang-soon-list></div>
+      </div>
     </div>
-    <!-- data-tour: khu vực Comet chỉ vào ở màn giới thiệu (js/onboard-tour.js).
-         Đặt trên HTML thay vì cắm selector trong JS → đổi bố cục trang thì
-         chỉ phải dời thuộc tính, không phải sửa file tour. -->
-    <!-- Bấm vào avatar/tên → Hồ sơ Phi Hành Gia. Là <a> chứ không phải <div>
-         để bàn phím Tab tới được và chuột phải mở tab mới được. -->
-    <a class="user" href="profile.html" data-tour="profile"
-       data-i18n-title="open_profile" title="Mở Hồ sơ Phi Hành Gia">
-      <span class="avatar" id="user-avatar">A</span>
-      <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" id="user-role">Cấp 1</span></span>
-    </a>
-    <button class="logout-btn" id="logout" type="button" data-i18n="logout" data-i18n-title="logout" title="Đăng xuất">Đăng xuất</button>
+
+    <!-- ── Menu của tôi ──
+         data-tour: khu vực Comet chỉ vào ở màn giới thiệu (js/onboard-tour.js).
+         Đặt trên HTML thay vì cắm selector trong JS → đổi bố cục trang thì chỉ
+         phải dời thuộc tính, không phải sửa file tour.
+         ⚠️ `data-tour="profile"` đặt trên CẢ MENU chứ không trên từng mục bên
+            trong: mục bên trong nằm trong tấm thả đang `hidden`, mà ô sáng của
+            tour tính theo `getBoundingClientRect()` — phần tử ẩn cho ra khung
+            0×0 và Comet chiếu sáng vào khoảng không. Bước "Kho Thành Tích" và
+            bước "Hồ sơ" vì thế đã gộp làm MỘT bước giới thiệu chính cái menu
+            này (7 → 6 bước; xem js/onboard-tour.js). -->
+    <div class="um user-menu" data-menu data-tour="profile">
+      <button class="um-btn user" type="button" data-menu-btn
+              data-i18n-aria="a_menu" aria-label="Menu của tôi">
+        <span class="avatar" id="user-avatar">A</span>
+        <span class="meta"><span class="nm" id="user-name">Nhà thám hiểm</span><span class="role" id="user-role">Cấp 1</span></span>
+        <span class="um-caret" aria-hidden="true"></span>
+      </button>
+      <div class="um-pop" data-menu-pop hidden>
+        <p class="um-head" data-i18n="menu_me">Của tôi</p>
+
+        <a class="um-item um-profile" href="profile.html">
+          <span class="um-ic" aria-hidden="true" data-sic="astronaut" data-sic-cls="sic--cyan"></span>
+          <span class="um-b">
+            <span class="um-nm" data-i18n="pt_profile">Hồ sơ</span>
+            <span class="um-sub" id="pt-rank">—</span>
+          </span>
+          <span class="um-ar" aria-hidden="true">›</span>
+        </a>
+
+        <a class="um-item um-awards" href="achievements.html">
+          <span class="um-ic" aria-hidden="true" data-sic="trophy" data-sic-cls="sic--gold"></span>
+          <span class="um-b">
+            <span class="um-nm" data-i18n="pt_awards">Thành tích</span>
+            <span class="um-sub" id="pt-badges">—</span>
+          </span>
+          <span class="um-ar" aria-hidden="true">›</span>
+        </a>
+
+        <a class="um-item um-vault" href="specimen-vault.html">
+          <span class="um-ic" aria-hidden="true" data-sic="crate"></span>
+          <span class="um-b">
+            <span class="um-nm" data-i18n="pt_vault">Mẫu vật</span>
+            <span class="um-sub" data-i18n="pt_vault_sub">Bộ sưu tập</span>
+          </span>
+          <span class="um-ar" aria-hidden="true">›</span>
+        </a>
+
+        <a class="um-item um-shop" href="shop.html">
+          <span class="um-ic" aria-hidden="true">🎨</span>
+          <span class="um-b">
+            <span class="um-nm" data-i18n="pt_shop_nm">Kho Trang Trí</span>
+            <span class="um-sub" data-i18n="pt_shop_sub">Tông đèn · tên tàu</span>
+          </span>
+          <span class="um-ar" aria-hidden="true">›</span>
+        </a>
+
+        <div class="um-sep"></div>
+        <p class="um-head" data-i18n="menu_grown">Dành cho người lớn</p>
+
+        <a class="um-item um-parent" href="parent.html">
+          <span class="um-ic" aria-hidden="true">👨‍👩‍👧</span>
+          <span class="um-b">
+            <span class="um-nm" data-i18n="pt_parent_nm">Dành cho bố mẹ</span>
+            <span class="um-sub" data-i18n="pt_parent_sub">Báo cáo tuần của con</span>
+          </span>
+          <span class="um-ar" aria-hidden="true">›</span>
+        </a>
+
+        <!-- Đường vào trang báo cáo hệ thống — CHỈ hiện với tài khoản admin.
+             `js/admin-link.js` tự dựng thẻ vào đây; ô này để `hidden` sẵn nên với
+             trẻ nó không chiếm chỗ nào và menu không nhấp một cái rồi mới ẩn đi.
+             ⚠️ Nhãn/biểu tượng/đường dẫn KHÔNG viết ở đây — chúng nằm ở
+                admin-link.js, để trang thứ ba chỉ cần một thẻ div. -->
+        <div data-admin-link hidden></div>
+
+        <div class="um-sep"></div>
+        <button class="um-item um-out" id="logout" type="button">
+          <span class="um-ic" aria-hidden="true">🚪</span>
+          <span class="um-b"><span class="um-nm" data-i18n="logout">Đăng xuất</span></span>
+        </button>
+      </div>
+    </div>
   </div>
 </header>
 
 <main>
-  <!-- ============ HERO: phi hành đoàn đứng tự do (không khung) ============ -->
+  <!-- ============ HERO: lời chào + một câu chỉ đường ============ -->
   <section class="hero">
     <span class="eyebrow" data-i18n="banner_eyebrow">🧭 Trung Tâm Điều Hướng</span>
     <h1 id="welcome">Chào mừng trở lại, Nhà thám hiểm!</h1>
     <p data-i18n="banner_desc">Chọn một khu vực để bắt đầu: nhận nhiệm vụ, học kiến thức, thử tài trong game hay du hành khắp thiên hà.</p>
+  </section>
 
-    <!-- ============ STATS HUD: tiến trình học tập & gamification ============ -->
-    <div class="stats-hud">
+  <!-- DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP — xem lý do đầy đủ ở khối `.sess` trong
+       css/dashboard.css. Tóm tắt: app từng im lặng khi mất phiên, trẻ vẫn chơi
+       và vẫn thấy tt tăng mà không thứ gì lên tới server.
+       ⚠️ ĐẶT TRÊN 6 THẺ KHU VỰC, không nhét vào bảng Thống Kê ở cuối trang như
+          bản cũ: nó nói rằng thứ trẻ vừa làm CHƯA được lưu, nên nó phải nằm ở
+          chỗ trẻ nhìn thấy mà không phải kéo xuống. Bảng Thống Kê nay ở cuối
+          trang, chôn lời nhắc đó xuống đấy là gần như không ai đọc.
+       ⚠️ Chữ do JS sinh (số việc là số thật), nên KHÔNG gắn `data-i18n` cho
+          phần `.tx` — `applyTexts` chạy trước sẽ ghi đè con số. Chỉ nút mới có. -->
+  <div class="sess" id="sess" role="status" aria-live="polite" hidden>
+    <span class="ic" aria-hidden="true">📡</span>
+    <span class="tx" id="sess-tx"></span>
+    <!-- HAI NÚT, HAI VAI, không bao giờ cùng hiện:
+         · còn việc chờ + mất phiên → đường đi THẬT (đăng nhập lại);
+         · hết việc chờ, chỉ còn tin việc đã mất → nút xác nhận đã đọc.
+         ⚠️ Mất mạng thì KHÔNG hiện nút nào — bảo trẻ "đăng nhập lại" khi phiên
+            vẫn còn là chỉ nó đi sửa một thứ không hỏng (bài học ba lý do
+            `sent:false` của email phụ huynh: gộp lại là nói sai 2/3 số ca). -->
+    <a class="go" id="sess-go" href="landing-app.html" data-i18n="sess_btn" hidden>Đăng nhập lại</a>
+    <button class="go" id="sess-ok" type="button" data-i18n="sess_ok" hidden>Đã hiểu</button>
+  </div>
+
+  <!-- ============ BẢNG THỐNG KÊ HÀNH TRÌNH ============
+       ⚠️⚠️ Ở TRÊN 6 THẺ KHU VỰC, NHƯNG PHẢI GIỮ MỎNG (chủ dự án chốt 15/08/2026).
+          Lịch sử: bản gốc để nó ở đây và nó cao 481px — cộng với sáu đường vào
+          "xem lại mình" thì thẻ khu vực đầu tiên bị đẩy xuống y=1269px trên điện
+          thoại 390×844 (trẻ phải kéo 465px mới thấy thứ để chơi). Lượt 15/08 đẩy
+          cả bảng xuống cuối trang; chủ dự án muốn nó về chỗ cũ nhưng ngắn lại.
+       ⇒ Nay nó là một DẢI MỎNG: cấp bậc + thanh XP + số hành tinh nằm một hàng,
+          ba ô số nằm ngang cạnh đó. Cao ~120px thay vì 481px.
+       ⚠️ ĐỔI GÌ Ở ĐÂY THÌ ĐO LẠI BẰNG `scratchpad/probe_hub_layout.py` — con số
+          phải canh là "thẻ khu vực đầu tiên nằm ở y bao nhiêu". Mốc hiện tại ghi
+          trong chính probe đó; đừng để nó bò lên lại.
+       ⚠️ SỐ Ở ĐÂY LÀ TỔNG TÍCH LUỸ CẢ ĐỜI, không phải phiên đang chơi: chúng đến
+          từ bộ đếm trên bản ghi `SK=PROGRESS` (`GET /me/achievements`), và app
+          KHÔNG có bộ đếm nào theo phiên. -->
+  <section class="stats-hud">
       <span class="panel-tag"><span class="led"></span><span data-i18n="stats_tag">VOYAGE STATS</span></span>
 
       <!-- Cột trái: Tiến trình hành tinh / thiên hà -->
@@ -159,68 +304,20 @@
         </div>
       </div>
 
-      <!-- Cột phải: 3 mini stat tiles (xem nhanh). Đường vào các khu đã chuyển
-           xuống hàng "bảng phi hành gia" bên dưới — xem lý do ở đó.
-           ⚠️ `data-tour="awards"` ĐÃ DỜI từ cả cột này sang đúng ô Thành tích
-              (08/08/2026). Trước đó nó bọc cả cột để ô sáng gồm "ô Huy hiệu + nút
-              dẫn sang trang"; nay nút không còn trong cột, mà Comet ở bước đó đang
-              giới thiệu ĐƯỜNG ĐI — nên chiếu đúng đường đi. Ô sáng nhỏ hơn (54px
-              thay vì ~250px) cũng cho box thoại dư chỗ ở cả nhánh trên và dưới. -->
+      <!-- Cột phải: 3 mini stat tiles (xem nhanh).
+           ⚠️ SÁU ĐƯỜNG VÀO "XEM LẠI MÌNH" ĐÃ RA KHỎI ĐÂY (15/08/2026): hồ sơ ·
+              thành tích · mẫu vật · kho trang trí · bảng bố mẹ · báo cáo hệ thống
+              nay nằm trong menu thả sau avatar ở header. Lý do đo được ghi ở đầu
+              js/user-menu.js; tóm tắt: chúng chiếm nửa trên trang và đẩy 6 thẻ
+              khu vực chơi/học xuống dưới màn hình.
+           ⚠️ `data-tour="awards"` ĐÃ BỎ — mục Thành tích nay nằm trong tấm thả
+              đang `hidden`, mà ô sáng của tour tính theo `getBoundingClientRect()`
+              nên phần tử ẩn cho ra khung 0×0 (Comet chiếu vào khoảng không). Bước
+              "Thành tích" và bước "Hồ sơ" đã gộp thành MỘT bước giới thiệu chính
+              cái menu đó — xem js/onboard-tour.js. -->
       <div class="sh-right">
         <div id="stat-tiles"></div>
 
-      </div>
-
-
-      <!-- ============ BẢNG PHI HÀNH GIA — 3 ô nhỏ nằm ngang ============
-           Đường vào cho 3 khu "xem lại mình": Hồ sơ · Kho Thành Tích · Kho Mẫu Vật.
-
-           ⚠️ CỐ Ý KHÔNG làm card HUD thứ 7–8 trong lưới MOD (chốt 08/08/2026,
-              chủ dự án hỏi thẳng "cần card HUD cho hồ sơ và khu thành tích ko?"):
-              ① `MOD-01…06` là các KHOANG của tàu — nơi đi tới để LÀM gì đó; ba khu
-              này là giấy tờ và tủ kính của chính phi hành gia — nơi XEM LẠI mình.
-              Trộn vào lưới là làm loãng nghĩa của cả lưới. ② Lưới 6 đang chia đẹp
-              3×2; thành 8 thì hoặc 4×2 (card hẹp đi 25%) hoặc 3+3+2 lệch hàng cuối,
-              và cả 8 đều `ready` nên mất luôn cảm giác "còn khu chưa mở" mà MOD-05
-              đang giữ. ③ Thêm card là phải đo lại chỗ đặt box thoại của màn Comet
-              dẫn tham quan (thẻ HUD ~375px + box ~245px đã vượt màn 900px — chính
-              lý do tour vẫn 7 bước dù dashboard đã lên 6 card).
-
-           ⚠️ Thay 2 nút chữ xếp DỌC của bản cũ, KHÔNG thêm chiều cao nào cho trang.
-              Và nó sửa một bất đối xứng đang có: Kho Thành Tích + Kho Mẫu Vật có
-              nút, còn Hồ sơ chỉ có chip avatar nhỏ ở header — ba khu cùng loại mà
-              hai kiểu đường vào, cái nhỏ nhất lại là cái quan trọng nhất.
-              Chip avatar VẪN GIỮ (chủ dự án chốt): bấm ảnh mình để xem hồ sơ là
-              thói quen phổ biến, và hai chỗ này không phải hai nơi phải sửa mỗi lần
-              đổi tên — khác ca Sổ Tay Thuật Ngữ ngày 04/08.
-
-           ⚠️ Ô Mẫu Vật CỐ Ý KHÔNG có số. Số mẫu đã thu nằm ở `GET /me/specimens`,
-              mà dashboard chỉ gọi `GET /me/achievements` — thêm một vòng mạng chỉ
-              để lấy một con số là đi ngược `missionsShared()`, còn gõ "n/21" vào
-              đây là gán cứng con số mà server mới là nguồn sự thật (lỗi đã trả giá
-              5 lần). Thà thiếu một con số hơn bịa hoặc phình đường mạng. -->
-      <div class="ptiles">
-        <a class="ptile pt-profile" href="profile.html">
-          <span class="pt-ic" aria-hidden="true" data-sic="astronaut" data-sic-cls="sic--cyan"></span>
-          <span class="pt-b">
-            <span class="pt-nm" data-i18n="pt_profile">Hồ sơ</span>
-            <span class="pt-sub" id="pt-rank">—</span>
-          </span>
-        </a>
-        <a class="ptile pt-awards" href="achievements.html" data-tour="awards">
-          <span class="pt-ic" aria-hidden="true" data-sic="trophy" data-sic-cls="sic--gold"></span>
-          <span class="pt-b">
-            <span class="pt-nm" data-i18n="pt_awards">Thành tích</span>
-            <span class="pt-sub" id="pt-badges">—</span>
-          </span>
-        </a>
-        <a class="ptile pt-vault" href="specimen-vault.html">
-          <span class="pt-ic" aria-hidden="true" data-sic="crate"></span>
-          <span class="pt-b">
-            <span class="pt-nm" data-i18n="pt_vault">Mẫu vật</span>
-            <span class="pt-sub" data-i18n="pt_vault_sub">Bộ sưu tập</span>
-          </span>
-        </a>
       </div>
 
       <!-- MẪU VẬT TRƯNG Ở BÀN ĐIỀU KHIỂN (thêm 13/08/2026).
@@ -238,56 +335,6 @@
         <span class="dk-list" id="dk-list"></span>
       </div>
 
-      <!-- DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP — xem lý do đầy đủ ở khối `.sess` trong
-           css/dashboard.css. Tóm tắt: app từng im lặng khi mất phiên, trẻ vẫn chơi
-           và vẫn thấy tt tăng mà không thứ gì lên tới server.
-           ⚠️ Chữ do JS sinh (số việc là số thật), nên KHÔNG gắn `data-i18n` cho
-              phần `.tx` — `applyTexts` chạy trước sẽ ghi đè con số. Chỉ nút mới có. -->
-      <div class="sess" id="sess" role="status" aria-live="polite" hidden>
-        <span class="ic" aria-hidden="true">📡</span>
-        <span class="tx" id="sess-tx"></span>
-        <!-- HAI NÚT, HAI VAI, không bao giờ cùng hiện:
-             · còn việc chờ + mất phiên → đường đi THẬT (đăng nhập lại);
-             · hết việc chờ, chỉ còn tin việc đã mất → nút xác nhận đã đọc.
-             ⚠️ Mất mạng thì KHÔNG hiện nút nào — bảo trẻ "đăng nhập lại" khi phiên
-                vẫn còn là chỉ nó đi sửa một thứ không hỏng (bài học ba lý do
-                `sent:false` của email phụ huynh: gộp lại là nói sai 2/3 số ca). -->
-        <a class="go" id="sess-go" href="landing-app.html" data-i18n="sess_btn" hidden>Đăng nhập lại</a>
-        <button class="go" id="sess-ok" type="button" data-i18n="sess_ok" hidden>Đã hiểu</button>
-      </div>
-
-      <!-- ⚠️ CỐ Ý KHÔNG LÀM Ô THỨ TƯ TRONG `.ptiles`. Hai lý do:
-           ① `.ptiles` khai `repeat(3,1fr)` cố định — ô thứ tư rơi xuống một hàng
-              lẻ; đổi sang 4 cột thì phải đo lại bề rộng, mà chính hàng này đã một
-              lần bị cắt tên ở 124px (xem ghi chú "BẢNG PHI HÀNH GIA" ở CLAUDE.md).
-           ② Ba ô kia là giấy tờ và tủ kính của CHÍNH phi hành gia — nơi trẻ xem
-              lại mình. Cái này là bảng cho NGƯỜI KHÁC đọc (bố mẹ). Trộn vào là làm
-              loãng nghĩa cả hàng, đúng lỗi đã tránh khi không nhét Hồ sơ/Thành tích
-              vào lưới MOD. -->
-      <!-- KHO TRANG TRÍ — cùng khuôn "một dòng liên kết" với ô bố mẹ, KHÔNG phải ô
-           thứ tư trong `.ptiles` (xem ghi chú ngay trên: lưới đó khai 3 cột cố định).
-           ⚠️ Đây là chỗ TIÊU Thiên thạch tím thứ hai của cả app — trước 12/08/2026
-              tt chỉ có một cửa tiêu là phí vào cửa mini-game, tức tiền không phải
-              phần thưởng mà là vé (xem AstroqSV/Services/Cosmetics.cs). -->
-      <a class="pt-row pt-shop" href="shop.html">
-        <span aria-hidden="true">🎨</span>
-        <span data-i18n="pt_shop">Kho Trang Trí: đổi tông đèn buồng lái, đặt tên phi thuyền</span>
-        <span class="ar" aria-hidden="true">›</span>
-      </a>
-
-      <a class="pt-row pt-parent" href="parent.html">
-        <span aria-hidden="true">👨‍👩‍👧</span>
-        <span data-i18n="pt_parent">Dành cho bố mẹ: xem báo cáo tuần của con</span>
-        <span class="ar" aria-hidden="true">›</span>
-      </a>
-
-      <!-- Đường vào trang báo cáo hệ thống — CHỈ hiện với tài khoản admin.
-           `js/admin-link.js` tự dựng thẻ vào đây; ô này để `hidden` sẵn nên với trẻ
-           nó không chiếm chỗ nào và trang không nhấp một cái rồi mới ẩn đi.
-           ⚠️ Nhãn/biểu tượng/đường dẫn KHÔNG viết ở đây — chúng nằm ở admin-link.js,
-              để trang thứ ba chỉ cần một thẻ div. -->
-      <div data-admin-link hidden></div>
-    </div>
   </section>
 
   <!-- ============ 6 CARD = MÀN HÌNH HUD ============
@@ -304,10 +351,19 @@
        Thuật Ngữ (đã có trang).
 
        ⚠️ `data-tour` chỉ có trên 3 card CŨ. Màn Comet dẫn tham quan
-       (js/onboard-tour.js) vẫn giữ 7 bước — nó không giới thiệu Phòng Nghiên Cứu
+       (js/onboard-tour.js) nay **6 bước** — nó không giới thiệu Phòng Nghiên Cứu
        vì khu đó chưa dùng được, mà dẫn trẻ tới một chỗ rồi nói "chưa mở đâu" thì
        thà đừng dẫn. Mission Control và Sổ Tay Thuật Ngữ cũng chưa vào tour: thêm
-       bước là phải kiểm lại chỗ đặt box thoại trên màn 390px. -->
+       bước là phải kiểm lại chỗ đặt box thoại trên màn 390px.
+
+       ⚠️⚠️ KHỐI NÀY ĐẶT NGAY SAU LỜI CHÀO (15/08/2026) — số đo, không phải sở
+       thích bố cục. Trước đó bảng Thống Kê + sáu đường vào "xem lại mình" chen
+       vào giữa, và `scratchpad/probe_hub_layout.py` đo được thẻ khu vực ĐẦU TIÊN
+       nằm ở **y=1269px trên điện thoại 390×844** (phải kéo 465px) và **y=774px
+       trên desktop 1440×900** (chỉ hở đúng mép trên). Tức là màn hình đầu tiên
+       của một đứa trẻ vào đây để chơi/học thì không có chỗ nào để chơi/học.
+       Thứ tự nay: mình là ai (header) → chào → LÀM GÌ ĐÂY → đã đi tới đâu (Thống
+       Kê) → chi tiết (radar/nhật ký). Đổi lại thứ tự thì đo lại bằng probe đó. -->
   <section class="cards">
     <!-- Trung Tâm Nhiệm Vụ → missions.html (CỬA TRƯỚC của khu nhiệm vụ 4 tầng:
          missions → bản đồ → hành tinh → cây chặng → màn chơi; xem docs/decisions/008) -->
@@ -465,9 +521,18 @@
       a_xp:"Điểm kinh nghiệm",
       a_coord:"Tọa độ",
       banner_eyebrow:"🧭 Trung Tâm Điều Hướng", welcome_pre:"Chào mừng trở lại,",
-      open_profile:"Mở Hồ sơ Phi Hành Gia",
+      /* Menu thả từ avatar (15/08/2026). `a_menu` là lời trình đọc màn hình đọc
+         lên — nút chỉ có ảnh + tên nên không có nhãn nào khác. */
+      a_menu:"Menu của tôi", menu_me:"Của tôi", menu_grown:"Dành cho người lớn",
       pt_profile:"Hồ sơ", pt_awards:"Thành tích", pt_vault:"Mẫu vật",
       pt_vault_sub:"Bộ sưu tập", desk_tag:"TRƯNG Ở BÀN ĐIỀU KHIỂN", pt_badges_unit:"huy hiệu",
+      pt_shop_nm:"Kho Trang Trí", pt_shop_sub:"Tông đèn · tên tàu",
+      pt_parent_nm:"Dành cho bố mẹ", pt_parent_sub:"Báo cáo tuần của con",
+      /* Bộ chọn ngôn ngữ. `lang_soon_*` nói THẬT rằng những tiếng đó chưa có nội
+         dung — bấm vào vẫn có lời nhắn chứ không im lặng (nút không phản hồi thì
+         trẻ chỉ tưởng mình bấm trượt; bài học `#loader` của explorer). */
+      lang_head:"Ngôn ngữ", lang_soon_h:"Đang dịch, sắp có", lang_soon_tag:"Sắp có",
+      lang_soon_msg:"{n} đang được dịch, sắp có rồi nhé!",
       /* Dải nhắc mất phiên. ⚠️ Bốn khoá đầu là HAI CÂU × số ít/số nhiều, viết
          LITERAL (không ghép `t("sess_"+k)`) — phép kiểm i18n quét `t("khoá")` dạng
          chữ, ghép động là chúng bị báo "khai mà không dùng" và lỗi đó im lặng. */
@@ -508,10 +573,9 @@
       codex_tag:"Tra cứu thuật ngữ", codex_title:"Sổ Tay Thuật Ngữ",
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
-      pt_shop:"Kho Trang Trí: đổi tông đèn buồng lái, đặt tên phi thuyền",
-      pt_parent:"Dành cho bố mẹ: xem báo cáo tuần của con",
       lab_open:"Vào phòng thí nghiệm", lab_ready:"SẴN SÀNG",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
+      sys_online:"SYS.ONLINE",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Bạn cần <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> để vào Khu Huấn Luyện nhưng chỉ có <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Hãy ghé <b>Trạm Tri Thức</b> làm Quiz để kiếm thêm nhé!",
       need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -526,9 +590,13 @@
       a_xp:"Experience points",
       a_coord:"Coordinates",
       banner_eyebrow:"🧭 Navigation Hub", welcome_pre:"Welcome back,",
-      open_profile:"Open Astronaut Profile",
+      a_menu:"My menu", menu_me:"Mine", menu_grown:"For grown-ups",
       pt_profile:"Profile", pt_awards:"Badges", pt_vault:"Specimens",
       pt_vault_sub:"Collection", desk_tag:"ON THE CONSOLE", pt_badges_unit:"badges",
+      pt_shop_nm:"Decoration Deck", pt_shop_sub:"Cockpit lights · ship name",
+      pt_parent_nm:"For parents", pt_parent_sub:"Your child's weekly report",
+      lang_head:"Language", lang_soon_h:"Being translated",
+      lang_soon_tag:"Soon", lang_soon_msg:"{n} is being translated — coming soon!",
       sess_auth:"{n} haven't reached the mothership. Log back in to keep the Purple Asteroids and badges you just earned.",
       sess_auth1:"{n} hasn't reached the mothership. Log back in to keep the Purple Asteroids and badges you just earned.",
       sess_net:"{n} haven't reached the mothership yet. They'll be sent as soon as you're back online — nothing for you to do.",
@@ -566,10 +634,9 @@
       codex_tag:"Term reference", codex_title:"Terminology Codex",
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
-      pt_shop:"Decoration Deck: cockpit lights, ship name",
-      pt_parent:"For parents: see your child's weekly report",
       lab_open:"Enter the lab", lab_ready:"READY",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
+      sys_online:"SYS.ONLINE",
       need_title:"Not enough Purple Asteroids!",
       need_body:"You need <b>5 <img class='tt-inline' src='img/tt.png' alt='tt'/></b> to enter the Training Simulator but only have <b>{have} <img class='tt-inline' src='img/tt.png' alt='tt'/></b>.<br/>Visit the <b>Knowledge Station</b> and take a Quiz to earn more!",
       need_go:"Do Quiz now", need_later:"Later",
@@ -1025,6 +1092,20 @@
   paintBalance();
   paintShip();
   Economy.onAsteroidsChange(paintBalance);
+
+  /* ---- Menu thả từ avatar + bộ chọn ngôn ngữ ----
+     ⚠️ GỌI TRƯỚC `applyLang` VÀ TRƯỚC `AstroQ.initLang`, cả hai đều bắt buộc:
+        · trước `initLang` vì hàm đó gắn sự kiện cho `.lang-switch button` đúng
+          MỘT lần lúc chạy, mà danh sách ngôn ngữ do user-menu dựng ra — dựng sau
+          là mấy cái nút đó không có ai nghe, bấm không ăn và im lặng tuyệt đối;
+        · trước `applyLang` vì nhãn "Sắp có" trong danh sách mang `data-i18n`, mà
+          `applyTexts` chỉ dịch những gì ĐANG có trong DOM lúc nó chạy.
+     ⚠️ Ngôn ngữ chưa có nội dung thì BẤM VẪN CÓ LỜI NHẮN. Một nút không phản hồi
+        gì thì trẻ chỉ tưởng mình bấm trượt — đúng bài học `#loader` của explorer. */
+  if(window.AstroQUserMenu) AstroQUserMenu.init({
+    onSoon: function(l){ toast(t("lang_soon_msg").replace("{n}", l.name)); }
+  });
+
   applyLang(LANG);
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
   watchSess();                 // hàng chờ tiến độ: theo dõi tới lúc gửi xong

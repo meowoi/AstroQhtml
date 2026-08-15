@@ -39,9 +39,32 @@ a{text-decoration:none;}
 .ship-id{display:flex;align-items:center;gap:11px;--logo-h:32px;}
 .ship-id .hull{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--good);border:1px solid rgba(99,230,168,.35);padding:2px 7px;border-radius:6px;}
 
-.gauges{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;flex-wrap:wrap;}
-.gauge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:12px;
+.gauges{display:flex;align-items:center;gap:8px;flex:1;justify-content:center;flex-wrap:wrap;}
+.gauge{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:12px;
   background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
+/* ⚠️ MÀN RỘNG: HÀNG ĐỒNG HỒ KHÔNG ĐƯỢC XUỐNG DÒNG — và đây là một lỗi ĐO ĐƯỢC,
+   không phải chuyện gọn mắt. `probe_decal.py` canh "dán hình lên bảng tên tàu thì
+   header KHÔNG cao thêm một pixel". Hình dán rộng 36px, và ở 1440px với tên tàu +
+   số dư 3 chữ số thì 4 đồng hồ cần 827px trong khi chỗ còn lại chỉ 815 ⇒ hàng
+   xuống 2 dòng và header nhảy **69px → 105px**. Tức là một món trang trí làm cả
+   thanh trạng thái đổi hình dạng.
+   Chữa ở gốc: màn rộng thì cấm xuống dòng, và cho ĐÚNG ô Toạ độ co lại (nó là
+   thông số tàu giả lập, dài nhất và ít giá trị nhất). Ba ô kia `flex:none` nên
+   không bao giờ bị bóp — số dư Thiên thạch tím và XP là số thật của trẻ.
+   ⚠️ Ellipsis ở đây là VAN AN TOÀN cho ca cực đoan (số dư 5 chữ số), không phải
+      trạng thái thường ngày: sau khi siết `gap`/`padding`, 4 ô còn 797px. */
+@media (min-width:721px){
+  .gauges{flex-wrap:nowrap;}
+  .gauge{flex:none;}
+  .gauge.coord{flex:0 1 auto;min-width:0;}
+  .gauge.coord .g-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+}
+/* Máy tính bảng (721–1100px): BỎ HẲN ô Toạ độ thay vì để nó bị cắt cụt. Đo trên
+   iPad mini/Pro dọc: ô đó cần 188px mà chỉ còn 111–128px, nên hiện ra
+   "7.36°N 142…" — một chuỗi cụt đọc ra như trang bị lỗi, trong khi nội dung nó
+   mang là toạ độ GIẢ LẬP sinh ngẫu nhiên mỗi 2,5 giây. Thà bỏ hẳn một thứ trang
+   trí hơn là bày ra một dòng trông như hỏng. */
+@media (max-width:1100px){ .gauge.coord{display:none;} }
 .gauge .g-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-faint);}
 .gauge img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(143,123,255,.6));}
 .gauge .g-val{font-family:var(--font-display);font-weight:700;font-size:14px;color:#fff;}
@@ -67,24 +90,23 @@ a{text-decoration:none;}
 .gauge.streak .streak-unit{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#eaa668;}
 @keyframes flameFlick{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-1px) scale(1.09);}}
 
-.controls{display:flex;align-items:center;gap:10px;}
-.lang-switch{align-items:center;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;transition:background .2s,color .2s;}
-.lang-switch button:hover{color:var(--ink);}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--sun),var(--sun-warm));}
-.user{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border-radius:999px;background:rgba(8,14,38,.6);border:1px solid var(--glass-brd);
-  transition:border-color .18s,box-shadow .18s,transform .12s;}
-.user:hover{border-color:rgba(125,211,252,.7);box-shadow:0 0 18px -6px rgba(var(--neon-rgb),.8);}
-.user:active{transform:scale(.97);}
-.user .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(var(--neon-rgb),.4);}
-.user .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
-.user .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:5px;}
-.user .meta .nm{font-family:var(--font-display);font-weight:600;font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user .meta .role{font-family:var(--font-mono);font-size:9px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;}
-.logout-btn{flex:none;cursor:pointer;border:1px solid var(--glass-brd);background:rgba(255,255,255,.05);color:var(--ink-soft);
-  border-radius:999px;padding:8px 13px;font-family:var(--font-display);font-weight:600;font-size:12px;transition:background .16s,color .16s,border-color .16s,transform .1s;}
-.logout-btn:hover{background:rgba(255,120,120,.16);border-color:rgba(255,120,120,.4);color:var(--ink);}
-.logout-btn:active{transform:scale(.95);}
+/* ⚠️ DÃY NÚT VI|EN + NÚT ĐĂNG XUẤT ĐÃ BỎ KHỎI HEADER (15/08/2026) — chúng nay là
+   hai MENU THẢ (`css/user-menu.css`). Rule `.lang-switch` / `.logout-btn` cũ đã
+   xoá theo chứ không để lại: CSS không còn ai dùng là bẫy cho người sửa sau, và
+   `.lang-switch` bên trong tấm thả có kiểu riêng khai ở user-menu.css. */
+.controls{display:flex;align-items:center;gap:8px;}
+/* Ruột của nút menu avatar. Vỏ (viên thuốc, viền, quầng sáng) do `.um-btn` ở
+   css/user-menu.css lo — ở đây chỉ còn phần riêng của dashboard. */
+.user-menu .avatar{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;color:#04060f;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 12px rgba(var(--neon-rgb),.4);}
+.user-menu .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.user-menu .meta{display:flex;flex-direction:column;line-height:1.12;padding-right:3px;text-align:left;}
+.user-menu .meta .nm{font-family:var(--font-display);font-weight:600;font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
+.user-menu .meta .role{font-family:var(--font-mono);font-size:9px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;}
+/* Màn hẹp: giấu tên + cấp, chỉ còn ảnh đại diện. Ở 390px hàng header phải chứa
+   logo + 2 gauge + 2 nút menu; giữ tên ở đây là header xuống thêm một hàng, mà
+   chính chiều cao header là thứ đang đẩy 6 thẻ khu vực xuống dưới màn hình.
+   Tên vẫn còn — nó nằm ngay trong lời chào "Chào mừng trở lại, …" bên dưới. */
+@media (max-width:640px){ .user-menu .meta{display:none;} }
 
 /* ============================================================
    MAIN
@@ -112,90 +134,67 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
       và người thêm nó không có cách nào biết. Mọi thứ trong bảng này vốn canh trái;
       thứ cần canh giữa đều đang dùng flex nên không phụ thuộc `text-align`.
    Sau khi sửa: cả bốn khối lệch **0px**, đo ở desktop · điện thoại 390px · bản EN. */
-.stats-hud{position:relative;z-index:1;margin:26px auto 0;width:min(880px,100%);text-align:left;
-  display:grid;grid-template-columns:1.12fr 1fr;gap:16px;padding:20px 18px 18px;border-radius:20px;
+/* ⚠️ DẢI MỎNG, KHÔNG PHẢI PANEL CAO (15/08/2026). Nó nằm TRÊN 6 thẻ khu vực nên
+   mỗi pixel nó chiếm là một pixel đẩy thứ trẻ vào đây để làm xuống dưới màn hình.
+   Đo được: bản cũ cao **481px**; bản này ~120px. Ba thứ tạo ra chênh lệch đó —
+   ba ô số nằm NGANG thay vì xếp dọc · bỏ khoảng đệm thừa · gộp cấp bậc + thanh XP
+   + số hành tinh vào một cột hẹp. Sửa gì ở đây thì đo lại bằng
+   `scratchpad/probe_hub_layout.py`, đừng để nó cao trở lại. */
+.stats-hud{position:relative;z-index:1;margin:22px auto 0;width:min(880px,100%);text-align:left;
+  display:grid;grid-template-columns:1.12fr 1fr;gap:14px;padding:14px 16px 13px;border-radius:18px;
   border:1px solid rgba(var(--neon-rgb),.32);
   background:linear-gradient(180deg, rgba(11,15,25,.62), rgba(13,19,34,.5));
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   box-shadow:0 26px 62px -26px rgba(0,0,0,.78), 0 0 46px -14px rgba(var(--neon-rgb),.4), inset 0 0 32px -18px rgba(var(--neon-hi-rgb),.6);}
-@media(max-width:640px){.stats-hud{grid-template-columns:1fr;}}
+/* ⚠️ MỐC 900px chứ không phải 640px — số đo, không phải ước lượng. Ở iPad mini
+   dọc (768px) panel chia 2 cột thì cột phải chỉ còn ~85px cho mỗi ô, và
+   `audit_viewports` bắt được **"0 phút" bị cắt còn "0 ph…"** (sw 48 > cw 37). Một
+   con số bị cắt là một con số nói sai. Dưới 900px thì xếp dọc, ba ô được cả bề
+   rộng. */
+@media(max-width:900px){.stats-hud{grid-template-columns:1fr;}}
 .stats-hud .panel-tag{position:absolute;top:-10px;left:20px;display:inline-flex;align-items:center;gap:6px;
   font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
   background:#0b0f19;border:1px solid rgba(var(--neon-rgb),.42);padding:3px 10px;border-radius:999px;box-shadow:0 0 14px rgba(var(--neon-rgb),.35);}
 .stats-hud .panel-tag .led{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:blink 1.6s steps(1,end) infinite;}
 
 /* --- Cột trái: Tiến trình hành tinh / thiên hà --- */
-.sh-left{display:flex;flex-direction:column;gap:13px;padding:6px 16px 2px 4px;border-right:1px solid rgba(120,160,255,.14);}
-@media(max-width:640px){.sh-left{border-right:none;border-bottom:1px solid rgba(120,160,255,.14);padding:6px 0 14px;}}
-.xp-head{display:flex;align-items:center;gap:12px;}
-.xp-orb{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:22px;color:var(--accent);
+.sh-left{display:flex;flex-direction:column;gap:8px;padding:2px 14px 0 2px;border-right:1px solid rgba(120,160,255,.14);}
+@media(max-width:900px){.sh-left{border-right:none;border-bottom:1px solid rgba(120,160,255,.14);padding:2px 0 10px;}}
+.xp-head{display:flex;align-items:center;gap:10px;}
+.xp-orb{width:36px;height:36px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:22px;color:var(--accent);
   background:rgba(var(--neon-rgb),.14);border:1px solid rgba(var(--neon-rgb),.42);box-shadow:inset 0 0 16px -6px rgba(var(--neon-rgb),.9);}
 .xp-orb .lic{animation:spin 16s linear infinite;}
 .xp-title{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
-.xp-level{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;margin-top:1px;}
+.xp-level{font-family:var(--font-display);font-weight:700;font-size:15.5px;color:#fff;margin-top:1px;}
 .xp-level #planet-name{color:var(--accent);}
-.xp-bar{position:relative;height:10px;border-radius:8px;background:rgba(255,255,255,.09);overflow:hidden;box-shadow:inset 0 0 8px rgba(0,0,0,.5);}
+.xp-bar{position:relative;height:8px;border-radius:8px;background:rgba(255,255,255,.09);overflow:hidden;box-shadow:inset 0 0 8px rgba(0,0,0,.5);}
 .xp-bar i{position:absolute;inset:0;width:0;border-radius:8px;display:block;
   background:linear-gradient(90deg,var(--accent),#c084fc);background-size:200% 100%;
   box-shadow:0 0 14px rgba(192,132,252,.7);transition:width .85s var(--ease);animation:barFlow 3.5s linear infinite;}
 .xp-meta{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-soft);}
 .xp-meta b{color:#c084fc;font-weight:700;}
-.galaxy-row{display:flex;align-items:center;gap:9px;margin-top:2px;padding-top:12px;border-top:1px dashed rgba(150,180,255,.18);}
+.galaxy-row{display:flex;align-items:center;gap:9px;margin-top:0;padding-top:8px;border-top:1px dashed rgba(150,180,255,.18);}
 .galaxy-row .lic{color:#c084fc;font-size:18px;filter:drop-shadow(0 0 6px rgba(192,132,252,.7));}
-.galaxy-row .gx-txt{font-size:13px;color:var(--ink-soft);}
+.galaxy-row .gx-txt{font-size:12.5px;color:var(--ink-soft);}
 .galaxy-row .gx-txt b{color:#fff;font-family:var(--font-display);}
 .gx-pips{display:flex;gap:4px;margin-left:auto;}
 .gx-pips span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(120,160,255,.3);}
 .gx-pips span.on{background:radial-gradient(circle,#c084fc,#8f7bff);box-shadow:0 0 8px rgba(192,132,252,.85);border-color:transparent;}
 
 /* --- Cột phải: 3 mini stat tiles + đường vào Kho Thành Tích --- */
-.sh-right{display:flex;flex-direction:column;gap:10px;}
-.sh-right #stat-tiles{display:grid;grid-template-columns:1fr;gap:10px;}
-/* ============ BẢNG PHI HÀNH GIA — 3 ô nhỏ nằm ngang ============
-   Đường vào Hồ sơ · Kho Thành Tích · Kho Mẫu Vật. Thay 2 nút `.sh-link` xếp DỌC
-   của bản cũ (bỏ hẳn 08/08/2026) nên KHÔNG thêm chiều cao nào cho trang.
-   Lý do không làm card HUD thứ 7–8: ghi ở chính khối markup trong dashboard.html. */
-/* ⚠️ HÀNG FULL-WIDTH của panel, KHÔNG nằm trong cột phải — đây là số đo, không
-      phải sở thích bố cục. Bản đầu đặt 3 ô trong `.sh-right`: panel rộng
-      `min(880px,100%)` chia 2 cột `1.12fr 1fr` rồi chia 3 nữa ⇒ mỗi ô còn **124px**,
-      đo được "Thành tích" (VI) và "Specimens" (EN) bị cắt tên, "Cấp 7 · Học Viên"
-      và "1/2 huy hiệu" bị cắt dòng phụ. Full-width thì mỗi ô ~285px, dư chỗ. */
-.ptiles{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;
-  margin-top:4px;padding-top:14px;border-top:1px dashed rgba(150,180,255,.18);}
-@media(max-width:640px){ .ptiles{padding-top:12px;} }
-.ptile{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:13px;min-width:0;
-  border:1px solid var(--pt-brd,rgba(120,160,255,.2));background:var(--pt-bg,rgba(15,23,42,.44));
-  transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s,background .2s;}
-.ptile:hover{transform:translateY(-3px);border-color:var(--pt-on,rgba(120,160,255,.55));
-  box-shadow:0 12px 26px -14px rgba(0,0,0,.7), 0 0 22px -6px var(--pt-glow,rgba(120,160,255,.5));}
-.ptile:active{transform:scale(.96);}
-.ptile .pt-ic{width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;
-  font-size:17px;line-height:1;border:1px solid var(--pt-brd,rgba(120,160,255,.2));
-  background:rgba(8,14,38,.55);}
-/* ⚠️ 22px là SÀN của bộ icon sticker, đo trên trang soi `scratchpad/preview-
-   sticker-icons.html`: dưới mức đó thì rìa trắng 9 + nét navy 4 ăn hết phần
-   ruột và hình chỉ còn là một vệt màu. Ba ô này vì thế chỉ dùng được icon KHỐI
-   ĐƠN GIẢN (astronaut/trophy/crate) — đừng đặt `brain` hay `galaxy` vào đây. */
-.ptile .pt-ic .sic{width:22px;height:22px;}
-.ptile .pt-b{display:flex;flex-direction:column;line-height:1.2;min-width:0;}
-/* `nowrap` + ellipsis cho CẢ hai dòng: ô chỉ rộng ~1/3 cột, mà "Thành tích" ở bản VI
-   và "Specimens" ở bản EN đều sát mép — để xuống dòng là ba ô lệch chiều cao nhau. */
-.ptile .pt-nm{font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ptile .pt-sub{font-family:var(--font-mono);font-size:8.6px;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--ink-faint);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Ba tông khác nhau để ba ô không đọc thành một khối, và khớp màu của trang đích:
-   hồ sơ cyan (thẻ ID) · thành tích hổ phách (mề đay) · mẫu vật tím (khoang kính). */
-.pt-profile{--pt-brd:rgba(var(--neon-rgb),.38);--pt-on:rgba(var(--neon-rgb),.75);
-  --pt-glow:rgba(var(--neon-rgb),.6);--pt-bg:rgba(8,26,46,.5);}
-.pt-awards{--pt-brd:rgba(255,207,107,.4);--pt-on:rgba(255,207,107,.8);
-  --pt-glow:rgba(255,207,107,.7);--pt-bg:rgba(38,28,8,.5);}
-.pt-awards .pt-nm{color:#ffe9bd;}
-.pt-vault{--pt-brd:rgba(192,132,252,.38);--pt-on:rgba(192,132,252,.78);
-  --pt-glow:rgba(192,132,252,.62);--pt-bg:rgba(26,12,44,.5);}
-/* Màn hẹp: 3 ô ngang còn ~95px mỗi ô thì chữ bị cắt hết — xếp dọc lại, mỗi ô một hàng. */
-@media (max-width:520px){ .ptiles{grid-template-columns:1fr;} }
+.sh-right{display:flex;flex-direction:column;gap:10px;justify-content:center;}
+/* ⚠️ BA Ô NẰM NGANG, không xếp dọc. Xếp dọc là 3 × 60px = 180px chiều cao cho ba
+   con số — chính nó chiếm phần lớn 481px của bản cũ. Nằm ngang thì cả cột phải
+   cao ~58px, và ba con số vẫn đọc được vì mỗi ô chỉ có icon + số + nhãn ngắn. */
+.sh-right #stat-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+/* ⚠️ BẢNG PHI HÀNH GIA (`.ptiles`/`.ptile`) ĐÃ BỎ 15/08/2026 — ba ô Hồ sơ ·
+   Thành tích · Mẫu vật nay là ba mục trong menu thả sau avatar, cùng chỗ với
+   Kho Trang Trí, bảng bố mẹ và Đăng xuất. Kiểu dáng ở `css/user-menu.css`.
+   ⚠️ XOÁ HẲN chứ không để lại: rule không còn ai dùng là bẫy cho người sửa sau
+      (họ sẽ tưởng lưới đó vẫn còn và đi sửa nó). Lý do dời + số đo: xem chú
+      thích ở đầu js/user-menu.js và trong dashboard.html.
+   Ba tông màu theo trang đích (cyan · hổ phách · tím) KHÔNG mất — chúng đi
+   theo sang `.um-item.um-profile/.um-awards/.um-vault`. */
 
 /* ── MẪU VẬT TRƯNG Ở BÀN ĐIỀU KHIỂN (thêm 13/08/2026) ──
    Hàng full-width trong bảng Thống Kê, đặt ngay dưới ba ô Bảng Phi Hành Gia: đó là
@@ -244,7 +243,12 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
       thêm" ở trang phụ huynh.
    ⚠️ KHÔNG animation. Một dải nhấp nháy ở đây là GIỤC — cùng loại với thứ điều ④
       của `Services/Daily.cs` đã cấm. Nói một lần, nói rõ, rồi để yên. */
-.sess{grid-column:1 / -1;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;
+/* ⚠️ `grid-column` GIỮ LẠI dù dải này nay là con TRỰC TIẾP của <main> (15/08/2026,
+   dời lên trên 6 thẻ khu vực): thuộc tính đó bị bỏ qua khi cha không phải lưới,
+   nên nó vô hại, và giữ thì dải vẫn đúng nếu ai đó đặt lại nó vào một lưới.
+   `width` + `margin` là phần MỚI: trước đây bề rộng do bảng Thống Kê quyết. */
+.sess{grid-column:1 / -1;width:min(880px,100%);margin:18px auto 0;
+  display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;
   margin-top:11px;padding:11px 14px;border-radius:14px;
   border:1px solid rgba(255,207,107,.34);background:rgba(255,207,107,.09);
   color:#ffe3bd;font-size:13px;line-height:1.5;}
@@ -265,20 +269,39 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .sess .go[hidden]{display:none;}   /* bẫy [hidden] lần thứ chín — xem ghi chú trên */
 .sess button.go{border:0;cursor:pointer;font-family:var(--font-display);}
 @media (max-width:560px){ .sess .go{width:100%;justify-content:center;} }
-.stat-tile{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;
+/* ⚠️ `min-width:0` LÀ BẮT BUỘC khi ba ô nằm ngang — lỗi ĐO ĐƯỢC, không phải phòng
+   xa. Ô lưới mặc định không co xuống dưới bề rộng nội dung, mà nhãn `.st-lbl` khai
+   `nowrap`; nên ở 390px cột thứ ba bị đẩy **ra ngoài mép phải và cắt cụt** (ảnh
+   chụp: ô "0/0 HUY HIỆU" mất một nửa). */
+.stat-tile{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:12px;min-width:0;
   border:1px solid rgba(120,160,255,.18);background:rgba(15,23,42,.44);
   transition:transform .3s var(--jelly),border-color .25s,box-shadow .25s;}
 .stat-tile:hover{transform:translateY(-3px);border-color:var(--tile-brd);
   box-shadow:0 12px 26px -14px rgba(0,0,0,.7), 0 0 22px -6px var(--tile-glow);}
-.stat-tile .st-ic{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:19px;
+.stat-tile .st-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:16px;
   color:var(--tile-c);background:var(--tile-bg);border:1px solid var(--tile-brd);box-shadow:inset 0 0 14px -6px var(--tile-c);}
 /* `flex:1` để nhãn được dùng hết chỗ còn lại trước khi phải cắt bằng ellipsis —
    khối này vốn co theo nội dung nên nhãn dài bị cắt sớm hơn cần thiết.
    (Canh trái do `.stats-hud` lo — xem ghi chú ở đó.) */
 .stat-tile .st-body{display:flex;flex-direction:column;line-height:1.15;
   min-width:0;flex:1;}
-.stat-tile .st-val{font-family:var(--font-display);font-weight:700;font-size:17px;color:#fff;}
-.stat-tile .st-lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-tile .st-val{font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;white-space:nowrap;}
+/* ⚠️ NHÃN XUỐNG DÒNG, KHÔNG CẮT BẰNG ELLIPSIS. Từ khi ba ô nằm ngang thì mỗi ô
+   chỉ còn ~126px ở 1440px, và `audit_viewports` bắt được "Độ chính xác Quiz" bị
+   cắt còn "Độ chính xác…" (89 > 64px) trên 6 khổ màn. Nhãn là thứ nói con số bên
+   trên là con số CỦA CÁI GÌ — cắt nó đi thì con số mất nghĩa. Thà ô cao thêm một
+   dòng. */
+.stat-tile .st-lbl{font-family:var(--font-mono);font-size:8.2px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);line-height:1.2;}
+/* Màn hẹp: ô chỉ còn ~100px nên nhãn phải được XUỐNG DÒNG thay vì cắt bằng
+   ellipsis — "ĐỘ CHÍNH XÁC QUIZ" cắt thành "ĐỘ CHÍNH XÁC…" thì mất đúng chữ nói
+   nó là con số của cái gì. Ô cao thêm một dòng, đổi lại đọc được. */
+@media (max-width:640px){
+  .stat-tile{padding:8px;gap:7px;}
+  .stat-tile .st-ic{width:26px;height:26px;font-size:14px;border-radius:8px;}
+}
+/* Dãy chấm hành tinh: bỏ ở màn hẹp. Nó lặp lại đúng thứ "0/8" ngay bên trái đã
+   nói, mà lại là thứ đẩy hàng đó tràn ra ngoài. */
+@media (max-width:560px){ .gx-pips{display:none;} }
 .tile-time{--tile-c:#38bdf8;--tile-bg:rgba(var(--neon-rgb),.14);--tile-brd:rgba(var(--neon-rgb),.42);--tile-glow:rgba(var(--neon-rgb),.6);}
 .tile-acc{--tile-c:#fb923c;--tile-bg:rgba(251,146,60,.14);--tile-brd:rgba(251,146,60,.42);--tile-glow:rgba(251,146,60,.6);}
 .tile-badge{--tile-c:#c084fc;--tile-bg:rgba(192,132,252,.14);--tile-brd:rgba(192,132,252,.42);--tile-glow:rgba(192,132,252,.6);}
@@ -322,7 +345,7 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .log-item .lg-time{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;}
 
 /* ---- CARDS = MÀN HÌNH HUD SCI-FI ---- */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;margin-top:34px;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;margin-top:26px;}
 .hud{
   --neon:rgba(var(--neon-rgb),.4); --neonS:rgba(var(--neon-rgb),.95);
   position:relative;display:flex;flex-direction:column;
@@ -455,9 +478,72 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .m-btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#04060f;border-color:transparent;}
 
 
-@media (max-width:720px){
+/* ⚠️ MÁY TÍNH BẢNG & HẸP HƠN: HÀNG ĐỒNG HỒ XUỐNG MỘT DÒNG RIÊNG.
+   Không phải cho gọn mắt — để chiều cao header KHÔNG phụ thuộc bề rộng của bảng
+   tên tàu. `probe_decal.py` đo được: khi ba khối (tên tàu · đồng hồ · hai menu)
+   cùng chen một hàng ở 820px thì chỉ cần dán thêm một hình 36px là điểm xuống
+   dòng đổi và header nhảy **125px ↔ 117px** — tức một món trang trí làm cả thanh
+   trạng thái đổi hình dạng. Tách hàng thì bố cục cố định, dán gì cũng không đổi. */
+@media (max-width:1100px){
   .gauges{order:3;width:100%;justify-content:flex-start;}
+}
+@media (max-width:720px){
   .hero p{max-width:100%;}
+  /* ⚠️ GIẤU HAI ĐỒNG HỒ TELEMETRY Ở MÀN HẸP (15/08/2026) — có chủ đích, và chỉ
+     đúng hai cái này. `O₂` và `TỌA ĐỘ` là thông số TÀU GIẢ LẬP (`tickTelemetry()`
+     sinh số ngẫu nhiên mỗi 2,5 giây), tức trang trí bối cảnh chứ không phải số
+     liệu của trẻ. Bốn đồng hồ xuống 2 hàng làm header cao **257px** trên 390×844
+     — đo được bằng `scratchpad/probe_hub_layout.py` — và chính chiều cao đó là
+     một phần lý do 6 thẻ khu vực bị đẩy khỏi màn hình đầu tiên.
+     ⛔ ĐỪNG giấu `.gauge.fuel` (Thiên thạch tím) hay `.gauge.streak` (XP): đó là
+        HAI CON SỐ THẬT của trẻ, và tt là thứ nó phải biết trước khi bấm vào một
+        mini-game có phí. */
+  .gauge.o2,.gauge.coord{display:none;}
+}
+
+/* ============================================================
+   MÀN HẸP — LƯỚI THẺ 2 CỘT, THẺ RÚT GỌN.
+   Khuôn quen của màn hình chính trong game/app cho trẻ: một lưới ô to, đủ để
+   nhìn thấy MỌI lựa chọn cùng lúc thay vì cuộn qua từng thẻ một.
+   Số đo: ở 390px, lưới 1 cột cho mỗi thẻ ~360px chiều cao ⇒ cả 6 thẻ trải
+   2168px, tức trẻ phải cuộn 3 màn hình mới xem hết mình có những khu nào.
+   ⚠️ RÚT GỌN chỉ ở ≤560px, và chỉ bỏ những phần NGƯỜI LỚN cần: đoạn mô tả, nhãn
+      thể loại, hàng chỉ số chân thẻ. Icon + TÊN KHU + nút vào vẫn còn nguyên —
+      đó là ba thứ trẻ dùng để chọn. Từ 561px trở lên thẻ vẫn đầy đủ.
+   ============================================================ */
+@media (max-width:900px){
+  .cards{grid-template-columns:repeat(2,1fr);gap:14px;}
+}
+@media (max-width:560px){
+  /* Hai đồng hồ còn lại xếp CHUNG một hàng thay vì mỗi cái một hàng: bỏ nhãn chữ,
+     giữ biểu tượng + con số. Nhãn "THIÊN THẠCH"/"KINH NGHIỆM" là thứ dài nhất
+     trong ô, mà ảnh thiên thạch tím và ngọn lửa XP đã là dấu hiệu riêng — tên đầy
+     đủ vẫn còn ở `title` (trình đọc màn hình và chuột dừng đều đọc được).
+     Đo được: header 169px → 128px trên 390×844. */
+  .gauge .g-label{display:none;}
+  .gauge{padding:6px 11px;}
+  /* Câu "Chọn một khu vực để bắt đầu…" ẩn ở cỡ này: nó nói lại đúng thứ lưới thẻ
+     ngay bên dưới đang bày ra, mà nó chiếm 3 dòng (~90px) — tức là nó đẩy chính
+     mấy cái thẻ nó đang giới thiệu ra khỏi màn hình. Vẫn còn nguyên ở màn rộng. */
+  .hero p{display:none;}
+  .hero h1{font-size:clamp(21px,6.4vw,28px);}
+  .cards{gap:12px;}
+  .hud{padding:14px 13px;border-radius:14px;}
+  .hud .ic{width:48px;height:48px;border-radius:14px;margin-bottom:10px;}
+  .hud .ic .sic{width:30px;height:30px;}
+  .hud h3{font-size:15.5px;line-height:1.2;}
+  /* Mô tả + nhãn thể loại + hàng chỉ số chân thẻ: ẩn ở cỡ này (xem lý do trên).
+     `.hud p` đang giữ `flex:1` để đẩy nút xuống đáy, nên phải cho `h3` nhận vai
+     đó — không thì nút của thẻ tên ngắn nhảy lên cao hơn thẻ tên dài cùng hàng. */
+  .hud p,.hud .tag,.hud .hud-line.bot{display:none;}
+  .hud h3{flex:1;margin-bottom:10px;}
+  .hud-line.top{margin-bottom:10px;font-size:8.5px;letter-spacing:.1em;}
+  /* Nhãn nút dài nhất ("Vào phòng thí nghiệm", "Xem bảng nhiệm vụ") vẫn xuống 2
+     dòng ở cỡ này, và ĐỂ NGUYÊN như vậy: rút chữ cho vừa một dòng là đổi nội
+     dung theo bề rộng màn hình (hai câu cho một nút), còn thu nhỏ nữa thì chữ
+     dưới 12px. Nút cao thấp khác nhau trong cùng một hàng không sao — chúng canh
+     đáy thẻ, và cả hàng vẫn bằng nhau nhờ lưới. */
+  .jelly-btn{padding:10px 10px;font-size:12.5px;border-radius:12px;}
 }
 
 /* Nhật ký rỗng — chưa có hoạt động nào. Thà một dòng thật còn hơn 4 dòng bịa:
@@ -474,31 +560,14 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
   transition:opacity .28s var(--ease),transform .28s var(--ease);}
 @media (max-width:560px){ .toast{top:auto;bottom:18px;} }
 
-/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
-   Đo trên iPad: "Đăng xuất" cao 34px, "🏆 Mở Kho Thành Tích" cao 41px. */
-@media (pointer: coarse){
-  .logout-btn{min-height:44px;}
-  .ptile{min-height:48px;}   /* 48 chu khong 44: 44 la moc TOI THIEU cua WCAG 2.5.5,
-                                dat dung moc la khong con bien an toan nao (CLAUDE.md
-                                quy tac 10 muc 6 — nut VI/EN cua explorer da chap chon
-                                683/1 roi 684/0 voi cung mot ma vi ly do do). */
-}
+/* Vùng chạm trên thiết bị cảm ứng: khối `@media (pointer:coarse)` cũ ở đây chỉ
+   nói về `.logout-btn` và `.ptile` — hai thứ không còn tồn tại từ 15/08/2026 —
+   nên đã bỏ. Vùng chạm của hai menu thả khai ở `css/user-menu.css` (`.um-btn`
+   48px, `.um-item` 48px, màn hẹp 52px), vẫn là 48 chứ không 44: 44 là mốc TỐI
+   THIỂU của WCAG 2.5.5, đặt đúng mốc là không còn biên an toàn nào (quy tắc 10
+   mục 6 — nút VI/EN của explorer đã chập chờn 683/1 rồi 684/0 vì lý do đó). */
 
-/* ── Đường vào Bảng theo dõi cho bố mẹ ──
-   Đặt DƯỚI `.ptiles`, không nằm trong lưới đó: ba ô kia là của trẻ, cái này là
-   của phụ huynh (xem ghi chú ở dashboard.html). Vẻ ngoài cũng khác hẳn — một
-   dòng liên kết, không phải một ô — để mắt trẻ không nhầm là chỗ mình cần bấm.
-   ⚠️ min-height 48px: đây là vùng chạm thật, và 44 là mốc TỐI THIỂU của WCAG.
-   ⚠️ TÊN CLASS: `.pt-row` là VẺ NGOÀI dùng chung (dòng liên kết dưới lưới ô);
-      `.pt-parent` / `.pt-shop` là ĐỊNH DANH của từng dòng. Ngày 12/08/2026 dòng
-      Kho Trang Trí từng mang thẳng class `.pt-parent` để mượn vẻ ngoài — một cửa
-      hàng đeo class tên "phụ huynh" vừa sai nghĩa, vừa làm `smoke_parent.py` hỏng
-      (selector `.pt-parent` khớp HAI phần tử). Mượn kiểu thì mượn `.pt-row`. */
-.pt-row{grid-column:1 / -1;display:flex;align-items:center;gap:8px;min-height:48px;
-  margin-top:9px;padding:9px 12px;border-radius:12px;text-decoration:none;
-  font-size:12.8px;line-height:1.45;color:var(--ink-soft);
-  border:1px dashed rgba(150,180,255,.28);background:rgba(150,180,255,.05);
-  transition:border-color .18s ease,color .18s ease;}
-.pt-row .ar{margin-left:auto;font-size:15px;opacity:.7;}
-.pt-row:hover{color:var(--ink);border-color:rgba(150,180,255,.5);}
-.pt-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* ⚠️ `.pt-row` (hai dòng liên kết Kho Trang Trí + Dành cho bố mẹ) ĐÃ BỎ
+   15/08/2026 — cả hai nay là mục trong menu thả sau avatar. Sự phân biệt
+   "của trẻ" và "của người lớn" mà nét đứt từng mang KHÔNG mất: nó đi theo
+   sang `.um-item.um-parent` (vẫn nét đứt, vẫn chữ nhạt) ở css/user-menu.css. */

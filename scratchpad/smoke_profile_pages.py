@@ -517,10 +517,20 @@ def main():
               log.replace("\n", " · ")[:140])
         check("Nhat ky KHONG con dong bia 'Nha Du Hanh'", "Nhà Du Hành" not in log)
         check("Nhat ky co 4 dong", page.eval_on_selector_all(".log-item", "e=>e.length") == 4)
-        check("Bam avatar -> profile.html",
-              page.get_attribute(".user", "href") == "profile.html")
-        check("Co nut mo Kho Thanh Tich",
-              page.get_attribute(".ptile.pt-awards", "href") == "achievements.html")
+        # ⚠️ ĐỔI PHÁT BIỂU 15/08/2026: chip avatar khong con la mot `<a href>` ma la
+        #    NUT MO MENU THA — sau avatar la ca sau duong vao "xem lai minh". Dieu
+        #    can bao ve khong doi (van toi duoc ho so + kho thanh tich tu dashboard),
+        #    va o day con siet hon: phai MO menu ra roi doc link that.
+        page.click(".user-menu [data-menu-btn]")
+        page.wait_for_selector(".user-menu [data-menu-pop]:not([hidden])", timeout=5000)
+        check("Bam avatar -> mo menu cua toi",
+              page.get_attribute(".user-menu [data-menu-btn]", "aria-expanded") == "true")
+        check("Menu co duong vao Ho so",
+              page.get_attribute(".um-item.um-profile", "href") == "profile.html")
+        check("Menu co duong vao Kho Thanh Tich",
+              page.get_attribute(".um-item.um-awards", "href") == "achievements.html")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(200)
         check("The MOD-02 doi ten thanh Khu Huan Luyen",
               "Khu Huấn Luyện" in txt(page, ".card--game"), txt(page, ".card--game")[:60])
         page.screenshot(path="scratchpad/p04-dashboard.png", full_page=True)

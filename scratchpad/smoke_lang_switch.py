@@ -70,6 +70,25 @@ PAGES = [
     ("mission-earth.html", None,              None),
 ]
 
+# ⚠️ TRANG CO NUT VI/EN NAM TRONG MENU THA (15/08/2026).
+#    `dashboard.html` gom bo chon ngon ngu vao mot tam tha (css/user-menu.css) de
+#    tra nua tren man hinh lai cho 6 the khu vuc. Nut VI/EN VAN LA `.lang-switch
+#    button` va van do `AstroQ.initLang` gan su kien — chi la phai MO MENU truoc
+#    khi do. Bo do phai mo, khong duoc noi long phep kiem: dieu can chung minh van
+#    la "tre bam duoc va chu doi that".
+MENU_PAGES = {"dashboard.html"}
+
+
+def open_lang_menu(pg, page):
+    """Mo tam tha ngon ngu neu trang do dung menu. Tra ve True neu da mo."""
+    if page not in MENU_PAGES:
+        return False
+    pg.click(".lang-pick [data-menu-btn]")
+    pg.wait_for_selector(".lang-pick [data-menu-pop]:not([hidden])", timeout=5000)
+    pg.wait_for_timeout(250)   # cho animation umDrop xong roi moi do toa do
+    return True
+
+
 ok_n = bad_n = 0
 
 
@@ -127,6 +146,8 @@ with sync_playwright() as p:
                 "return !l || getComputedStyle(l).visibility==='hidden';}",
                 timeout=15000)
 
+        open_lang_menu(pg, page)
+
         # (1) Nut co ton tai, NHIN THAY va la phan tu tren cung tai diem giua no
         info = pg.evaluate("""() => {
           const btns = [...document.querySelectorAll('.lang-switch [data-lang]')];
@@ -155,11 +176,20 @@ with sync_playwright() as p:
         check(info["docLang"] == "vi", f"{page}: <html lang> = vi",
               repr(info["docLang"]))
 
+        # ⚠️ ĐÓNG menu lại TRƯỚC khi chụp chữ của trang. Chụp lúc menu đang mở thì
+        #    `after != before` đúng một cách RỖNG (menu đóng lại là chữ đã khác),
+        #    tức phép kiểm "bấm EN thì chữ đổi thật" mất hết tác dụng ở đúng trang
+        #    dùng menu.
+        if page in MENU_PAGES:
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(200)
+
         before = pg.evaluate("() => document.body.innerText")
         t_before = pg.evaluate("(s)=>{const e=s?document.querySelector(s):null;"
                               "return e?e.innerText.trim():null}", title_sel)
 
         # (2) Bam that vao nut EN
+        open_lang_menu(pg, page)
         if page in LINK_PAGES:
             with pg.expect_navigation(wait_until="load"):
                 pg.click(".lang-switch [data-lang='en']")
