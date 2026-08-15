@@ -13,6 +13,11 @@
 <link rel="stylesheet" href="css/mascot.css" />
 <link rel="stylesheet" href="css/pick-place.css" />
 <link rel="stylesheet" href="css/brag.css" />
+<!-- VỎ màn chơi (dùng chung mọi nhiệm vụ) → CẢNH bản đồ 2D (dùng chung mọi nhiệm
+     vụ ở Trái Đất) → phần RIÊNG của nhiệm vụ này. Thứ tự đó là thứ tự ghi đè:
+     nhiệm vụ được phép chỉnh lại vỏ, không bao giờ ngược lại. -->
+<link rel="stylesheet" href="css/mission-stage.css" />
+<link rel="stylesheet" href="css/earth2d.css" />
 <link rel="stylesheet" href="css/mission-earth.css" />
 <script src="js/ui-common.js"></script>
 <!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js: trang này đã kéo
@@ -36,6 +41,11 @@
      server, sang bước kế, vẽ dãy chấm tiến độ. Trang này chỉ còn khai NỘI DUNG
      của 8 bước và cảnh Trái Đất. Xem `docs/decisions/002`. -->
 <script src="js/mission-engine.js"></script>
+<!-- VỎ màn chơi: dựng header/bảng mục tiêu/box thoại/thẻ nội dung/màn tổng kết/
+     hộp "tiếp hay dừng"/toast, và tự mang chuỗi song ngữ của chúng. Trang này chỉ
+     còn khai NỘI DUNG 7 chặng + 5 khoá riêng (`tag`, `win_h`, `win_badge`,
+     `win_badge_sub`, `win_next`). Xem đầu `js/mission-stage.js`. -->
+<script src="js/mission-stage.js"></script>
 <!-- Khuon "the -> o": keo-tha bang chuot VA choi duoc bang ban phim. -->
 <script src="js/pick-place.js"></script>
 </head>
@@ -51,85 +61,18 @@
 <div class="me-era" id="era" aria-hidden="true"></div>
 <div class="me-smog" id="smog" aria-hidden="true"></div>
 
-<!-- Màn chờ nạp ảnh Trái Đất -->
-<div class="me-load" id="load">
-  <span class="ring" aria-hidden="true"></span>
-  <span class="txt" id="load-txt">ĐANG NẠP HỆ THỐNG QUÉT…</span>
-  <span class="sub" id="load-sub"></span>
-</div>
-
-<!-- ============ LỚP HUD ============ -->
+<!-- ============ LỚP HUD ============
+     ⚠️ HEADER · BẢNG MỤC TIÊU · BOX THOẠI · THẺ NỘI DUNG · MÀN CHỜ · MÀN TỔNG KẾT ·
+        HỘP "TIẾP HAY DỪNG" · TOAST **KHÔNG CÒN VIẾT Ở ĐÂY** — `js/mission-stage.js`
+        dựng chúng lúc `ST.mount()`. Đúng khuôn `js/game-shell.js` (dựng console +
+        thanh cấp cho 6 mini-game) và `js/user-menu.js`.
+        Chép lại chúng ở trang nhiệm vụ thứ hai là hai bản markup sớm muộn lệch nhau,
+        và lịch sử dự án đã trả giá đúng thế nhiều lần. Trang này chỉ còn khai các
+        `.me-board` mang NỘI DUNG bước của riêng nó. -->
 <div class="me-ui">
-  <header class="me-top">
-    <button class="back hit" id="back" type="button">&lt; <span data-i18n="back">Về đường đi</span></button>
-    <span class="me-tag" id="tag">[ MISSION_01 · HÀNH TINH XANH ]</span>
-    <span class="me-steps" id="steps" role="img" aria-label="Tiến độ nhiệm vụ"></span>
-    <span class="me-cur" data-i18n-title="tt_name" title="Thiên thạch tím">
-      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />
-      <span class="v" id="bal">0</span>
-    </span>
-    <button type="button" class="me-mute hit" id="mute"
-            data-i18n-title="a_sfx" title="Bật/tắt âm thanh"
-            data-i18n-aria="a_sfx" aria-label="Bật/tắt âm thanh" aria-pressed="false"></button>
-    <span class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
-      <button type="button" class="hit" data-lang="vi">VI</button>
-      <button type="button" class="hit" data-lang="en">EN</button>
-    </span>
-  </header>
-
-  <!-- Bảng mục tiêu bước hiện tại -->
-  <section class="me-obj" id="obj">
-    <span class="k"><span class="led"></span><span id="obj-k">MỤC TIÊU</span></span>
-    <h2><span class="ic" id="obj-ic">🎯</span><span id="obj-h">—</span></h2>
-    <p id="obj-p"></p>
-    <span class="prog" id="obj-prog">
-      <span class="bar"><i id="obj-bar"></i></span>
-      <span class="n" id="obj-n">0/0</span>
-    </span>
-  </section>
-
-  <!-- Bảng tín hiệu vệ tinh (bước 3) -->
-  <!-- Bàn tay hướng dẫn (bước 1) -->
-  <span class="me-hand" id="hand" aria-hidden="true">👆</span>
-
-  <!-- Box thoại mascot -->
-  <section class="aq-say me-say" id="say" role="status" aria-live="polite">
-    <span class="aq-ava"><img id="say-ava" src="img/m1.png" alt="" /></span>
-    <span class="body">
-      <span class="aq-nm" id="say-who">Comet</span>
-      <p class="line" id="say-line"></p>
-    </span>
-    <button type="button" class="next hide hit" id="say-next">OK</button>
-  </section>
-
-  <!-- Thẻ "vừa nhận được" — dùng chung cho mẫu sự sống (bước 6), viên nham thạch
-       (bước 2) và huy hiệu Chiến Binh Xanh (bước 7). Một thẻ cho cả ba vì trẻ đọc
-       chúng y như nhau: emoji lớn · tên · một câu · nhãn trạng thái. -->
-  <article class="me-card hit" id="card" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="top" id="card-ic">🌊</div>
-    <div class="nm" id="card-nm">—</div>
-    <p class="fact" id="card-fact"></p>
-    <!-- Dòng phụ, chỉ bước ④ dùng: câu hé lộ độ cao. CỐ Ý đặt TRONG thẻ chứ không ở
-         dòng nhắc dưới bảng — dòng nhắc bị chính thẻ này che, và tới lúc thẻ đóng thì
-         câu hỏi kế tiếp đã ghi đè lên nó. Bước nào không dùng thì `showCard` tự ẩn. -->
-    <p class="sub" id="card-sub" hidden></p>
-    <span class="got" id="card-got">ĐÃ THU THẬP</span>
-    <!-- ⚠️ NÚT NÀY LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ. Thẻ từng TỰ ĐÓNG sau 3,4 giây;
-         chủ dự án chơi thật và báo là không đủ thời gian đọc. Thẻ mang bài học (tên
-         châu lục + một câu kiến thức) nên phải để trẻ tự quyết lúc nào đọc xong.
-         Cả thẻ vẫn bấm được (`el.addEventListener('click', close)`) — nút chỉ là chỗ
-         NÓI RA rằng phải bấm, và là thứ bàn phím Tab tới được. -->
-    <button type="button" class="ok hit" id="card-ok">Đã hiểu!</button>
-  </article>
-
-  <!-- Bước 1 · Câu đố "nước hay đất nhiều hơn?" (nhịp (b) của bước `scan`).
-       Dùng lại `.me-board` như 4 bảng kia — trẻ nhận ra ngay đây là "một bảng của
-       tàu", không phải một hộp thoại lạ. -->
-  <section class="me-board me-ask" id="ask">
-    <span class="k" id="ask-k">DỰ ĐOÁN CỦA PHI HÀNH GIA</span>
-    <p class="q" id="ask-q"></p>
-    <div class="opts" id="ask-opts"></div>
-  </section>
+  <!-- ⚠️ Bảng câu đố (`#ask`) KHÔNG còn ở đây: nó là markup của khuôn `buildAsk`,
+       mà khuôn đó nằm ở `js/mission-stage.js` — nên markup đi theo. Bước ① và ③
+       vẫn gọi `buildAsk(...)` y như cũ. -->
 
   <!-- Bước 2 · Mốc thời gian 4,5 tỷ năm -->
   <section class="me-board me-time" id="time">
@@ -266,94 +209,6 @@
     <p class="hint" id="core-hint"></p>
   </section>
 </div>
-
-<!-- ============ MÀN TỔNG KẾT ============ -->
-<div class="me-win" id="win" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="me-win-card">
-    <h2><span aria-hidden="true">🚀</span> <span id="win-h">SỨ MỆNH TRÁI ĐẤT HOÀN THÀNH!</span></h2>
-
-    <div class="me-cheer" aria-hidden="true">
-      <img src="img/m1.png" alt="" /><img src="img/b1.png" alt="" />
-    </div>
-
-    <div class="medal">
-      <div class="big" aria-hidden="true">🎖️</div>
-      <div class="nm" id="win-badge">ROOKIE ASTRONAUT</div>
-      <div class="sub" id="win-badge-sub">Huy Hiệu Phi Hành Gia Tập Sự</div>
-    </div>
-
-    <div class="sec">
-      <span class="k"><span aria-hidden="true">🎁</span><span id="win-rw-k">PHẦN THƯỞNG SỨ MỆNH</span></span>
-      <div class="rw"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" />
-        <span id="win-rw-tt">—</span></div>
-      <div class="rw"><span class="ic" aria-hidden="true">📘</span><span id="win-rw-codex">—</span></div>
-      <div class="rw"><span class="ic" aria-hidden="true">⭐</span><span id="win-rw-xp">—</span></div>
-      <!-- Huy hiệu mở thêm TRONG lượt này (ví dụ 🌱 Chiến Binh Xanh ở bước Eco-Hero).
-           Chỉ hiện những cái SERVER báo trong `newBadges` — chưa đăng nhập / mất mạng
-           thì khối này rỗng chứ không tự nhận là đã mở. -->
-      <div class="rw hide" id="win-rw-badges"><span class="ic" aria-hidden="true">🏅</span>
-        <span id="win-badges">—</span></div>
-    </div>
-
-    <!-- ⚠️ KHỐI NÀY TRƯỚC ĐÂY LÀ "HÀNH TINH MỚI ĐÃ MỞ KHOÁ 🌙 MẶT TRĂNG" kèm một
-         nút `win-moon` để `disabled`. Đã BỎ HẲN ngày 30/07/2026 theo yêu cầu.
-         Vì sao không chỉ xoá mà phải THAY: khối đó là thứ DUY NHẤT trả lời câu
-         "xong rồi thì làm gì tiếp" trên màn tổng kết. Xoá trắng thì trẻ vừa hoàn
-         thành nhiệm vụ lớn nhất của app và nhận lại hai cái nút xám — thành đường
-         cụt, tệ hơn cả lời hứa hão.
-         Thay bằng việc CÓ THẬT: Trung Tâm Nhiệm Vụ. Cố ý KHÔNG hứa nhiệm vụ kế
-         tiếp — `missions.html` cho biết MISSION-02 Mặt Trăng vẫn "sắp ra mắt", nên
-         không có nhiệm vụ nào để dẫn tới. Nhưng nhiệm vụ này MỞ MẪU VẬT THẬT trong
-         Kho Mẫu Vật, nên đó là chỗ đáng chỉ tới. -->
-    <div class="sec">
-      <span class="k"><span aria-hidden="true">🧭</span><span id="win-next-k">VIỆC TIẾP THEO</span></span>
-      <div class="nextup"><span class="ic" aria-hidden="true">🎯</span><span id="win-next">—</span></div>
-    </div>
-
-    <!-- ⚠️ NÚT CHÍNH (vàng) LÀ "VỀ TRUNG TÂM ĐIỀU HƯỚNG", không phải nút sang
-         Trung Tâm Nhiệm Vụ. Vì đường về dashboard là đường ĐƯỢC THIẾT KẾ: về tới đó
-         thì Comet chúc mừng và chiếu sáng thẻ Trung Tâm Nhiệm Vụ để chỉ việc tiếp
-         theo. Để nút vàng đi thẳng sang missions.html thì đa số trẻ bỏ qua lời chào
-         đó — và cũng lệch với đường về TỰ ĐỘNG sau 5 giây (cũng về dashboard).
-         Nút sang Trung Tâm Nhiệm Vụ vẫn còn, làm lối đi nhanh cho ai muốn. -->
-    <div class="acts">
-      <button type="button" class="go" id="win-home">—</button>
-      <button type="button" class="ghost" id="win-missions">—</button>
-      <button type="button" class="ghost" id="win-awards">—</button>
-      <!-- ⚠️ KHOE VOI BO ME, KHONG KHOE VOI NGUOI LA. The dung ngay trong may, khong
-           gui di dau ca (xem js/brag.js). Day la cach lay phan lon gia tri cua "khoe"
-           ma khong mo cua chat / ket ban / noi dung do nguoi dung dang. -->
-      <button type="button" class="ghost" id="win-brag">—</button>
-    </div>
-    <p class="autoline" id="win-auto" aria-live="polite"></p>
-  </div>
-</div>
-
-<!-- ============ XONG MỘT CHẶNG: HỎI TIẾP HAY DỪNG ============
-     `docs/decisions/008` quyết định 4: *chơi xong một chặng thì HỎI, đừng tự quyết*.
-     Trước đây trang này nối thẳng bảy chặng thành một lượt dài — trẻ không có chỗ nào
-     dừng lại mà không mất mạch.
-
-     ⚠️ HỘP NÀY KHÔNG BAO GIỜ HIỆN Ở CHẶNG CUỐI: hết chặng thì màn tổng kết mới là
-        thứ đúng để hiện, và ở đó không còn gì để hỏi. Nhờ vậy ĐỒNG HỒ VỀ TỰ ĐỘNG 5
-        GIÂY (chỉ có ở màn tổng kết) không bao giờ chạy trong lúc một câu hỏi hai lựa
-        chọn đang chờ trẻ trả lời — điều kiện mà `008` đặt ra được thoả **bằng cấu
-        trúc**, không phải bằng một cái cờ phải nhớ tắt.
-     ⚠️ Chơi LẠI một chặng cũ cũng không hiện hộp này: không có chặng nào vừa mở ra để
-        đi tiếp, và tiến độ không nhúc nhích. Ở đó trang đưa thẳng về đường đi.
-     Dùng lại nguyên vỏ `.me-win` — cùng một kiểu hộp thì trẻ chỉ phải học một lần. -->
-<div class="me-win me-next" id="after" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="me-win-card">
-    <h2><span aria-hidden="true">🎉</span> <span id="af-h">—</span></h2>
-    <p class="af-p" id="af-p">—</p>
-    <div class="acts">
-      <button type="button" class="go" id="af-next">—</button>
-      <button type="button" class="ghost" id="af-stop">—</button>
-    </div>
-  </div>
-</div>
-
-<div class="me-toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="economy.js"></script>
 
@@ -1204,74 +1059,47 @@ let world = null;
       PHẢI đổi cùng lúc ở `Missions.cs` — `check_pages.py` [3c] so hai danh sách theo
       đúng thứ tự. */
 const STEP_IDS = ['scan', 'timeline', 'sun', 'life', 'energy', 'eco', 'core'];
+
+/* ═══════════════════ VỎ MÀN CHƠI ═══════════════════
+   `js/mission-stage.js` giữ mọi thứ KHÔNG thuộc riêng nhiệm vụ này: header, bảng
+   mục tiêu, box thoại, thẻ nội dung, kéo-thả, bảng câu đố, màn tổng kết, đường về
+   tự động, hộp "tiếp hay dừng", vào chơi tiếp, `?step=`.
+
+   ⚠️ `ST.mount()` PHẢI CHẠY TRƯỚC MỌI `$('id')` của vỏ — nó là thứ dựng ra chúng.
+   ⚠️ Bí danh cục bộ bên dưới GIỮ NGUYÊN TÊN CŨ có chủ đích: ~1.000 dòng nội dung
+      của 7 chặng gọi thẳng `say(...)`, `showCard(...)`, `dragDrop(...)`… Đổi hết
+      sang `ST.say(...)` là một lượt sửa lớn không mang lại gì, mà mỗi dòng sửa là
+      một chỗ có thể sai. */
+const ST = AstroQStage.create({
+  mission: 'earth',
+  stepIds: STEP_IDS,
+  lang: () => LANG,
+  t
+});
+ST.mount();
+
+const toast     = ST.toast;
+const say       = ST.say;
+const hideSay   = ST.hideSay;
+const boardSay  = ST.boardSay;
+const objective = ST.objective;
+const progress  = ST.progress;
+const showCard  = ST.showCard;
+const liftCard  = ST.liftCard;
+const dragDrop  = ST.dragDrop;
+const buildAsk  = ST.buildAsk;
+const sfx       = ST.sfx;
+const showWin   = ST.showWin;
+/* `nudge` nhận KHOÁ i18n (bốn chỗ gọi đều truyền khoá), còn vỏ nhận CHỮ ĐÃ DỊCH —
+   vỏ không đọc được từ điển của trang. Dịch ngay tại đây, đúng một chỗ. */
+const nudge = (boardId, hintId, wrongKey, hintKey) =>
+  ST.nudge(boardId, hintId, t(wrongKey), t(hintKey));
+
+let RUN = null;
 /* Trình điều phối — dựng SAU sổ đăng ký `steps` (xem chỗ gọi `AstroQMission.create`).
    Bước nào đã xong, thưởng server đã trả, đang ở bước mấy: tất cả nằm trong `RUN`,
    trang này không giữ bản sao nào — hai bản sao là hai thứ sớm muộn lệch nhau. */
-let RUN = null;
 let busy = false;                        // đang chạy hiệu ứng → chặn bấm chồng
-let toastTimer = 0;
-
-function toast(msg) {
-  const el = $('toast');
-  el.innerHTML = String(msg).replace(/\{tt\}/g,
-    '<img src="img/tt.png" alt="' + t('tt_name') + '" />');
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
-}
-function paintBalance() { $('bal').textContent = Economy.getAsteroids(); }
-
-/* ───────────────────── Box thoại ───────────────────── */
-let sayResolve = null;
-function say(who, html, { wait = true } = {}) {
-  const el = $('say');
-  el.classList.toggle('byte', who === 'byte');
-  $('say-ava').src = who === 'byte' ? 'img/b1.png' : 'img/m1.png';
-  $('say-who').textContent = who === 'byte' ? t('byte') : t('comet');
-  $('say-line').innerHTML = html;
-  el.classList.add('show');
-  const next = $('say-next');
-  next.textContent = t('next');
-  if (!wait) { next.classList.add('hide'); return Promise.resolve(); }
-  next.classList.remove('hide');
-  return new Promise(res => { sayResolve = res; });
-}
-$('say-next').addEventListener('click', () => {
-  $('say-next').classList.add('hide');
-  const r = sayResolve; sayResolve = null;
-  if (r) r();
-});
-function hideSay() { $('say').classList.remove('show', 'lift'); }
-
-/**
- * Lời khích lệ khi bảng kéo-thả ĐANG mở. Box thoại và bảng kéo-thả cùng neo ở đáy
- * màn hình, nên nói mà không nhấc box lên thì nó phủ kín đúng mấy cái rổ/ô trẻ đang
- * phải kéo thẻ vào — trẻ đọc được câu "thử lại xem nào" nhưng không thấy chỗ để thử.
- * Đo chiều cao bảng ngay lúc gọi (nội dung bảng thay đổi theo số thẻ đã xếp).
- */
-function boardSay(boardId, who, html) {
-  const b = $(boardId);
-  $('say').style.setProperty('--board-h', (b.offsetHeight + 12) + 'px');
-  $('say').classList.add('lift');
-  return say(who, html, { wait: false });
-}
-
-/* ───────────────────── Bảng mục tiêu ───────────────────── */
-function objective({ ic, h, p, n, total }) {
-  $('obj-ic').textContent = ic;
-  $('obj-h').textContent = h;
-  $('obj-p').textContent = p;
-  $('obj-k').textContent = t('obj_k');
-  progress(n, total);
-  $('obj').classList.add('show');
-}
-function progress(n, total) {
-  const show = total > 0;
-  $('obj-prog').style.display = show ? '' : 'none';
-  if (!show) return;
-  $('obj-bar').style.width = Math.round(n / total * 100) + '%';
-  $('obj-n').textContent = n + '/' + total;
-}
 /* Dãy chấm tiến độ do `js/mission-engine.js` vẽ — xem `RUN.paint()`. */
 
 /* ───────────────────── Lớp phủ cảnh (mốc thời gian & khói) ─────────────────────
@@ -2045,155 +1873,13 @@ RUN = AstroQMission.create({
   stepsEl: $('steps'),
   codexTotal: 8,
   t: t,
-  toast: toast,
-  onBalance: paintBalance,
-  onWin: showWin,
-  onStepDone: afterStep
+  toast: ST.toast,
+  onBalance: ST.paintBalance,
+  onWin: ST.showWin,
+  onStepDone: ST.afterStep
 });
-
-/* ───────────────────── Thẻ "vừa nhận được" ─────────────────────
-   MỘT thẻ cho cả ba thứ trẻ nhận trong nhiệm vụ: mẫu sự sống (bước `life`), viên
-   nham thạch (bước `timeline`), huy hiệu Chiến Binh Xanh (bước `eco`). Nhận đã dịch
-   sẵn (`nm`/`fact`/`tag` là chuỗi, không phải object song ngữ) vì ba chỗ gọi lấy chữ
-   từ ba nguồn khác nhau: BIOMES có object vi/en, hai chỗ kia lấy từ `t()` và từ
-   `js/badges.js`. Bắt cả ba nhét vào một hình dạng chỉ để hàm này tự dịch thì mỗi
-   chỗ gọi lại phải bọc ngược lại. */
-/* ⚠️⚠️ THẺ NỘI DUNG PHẢI NHẤC LÊN KHỎI BẢNG ĐÁY — LỖI THẬT ĐÃ SỬA 03/08/2026.
-   Chủ dự án chơi thật bước ④ `life` rồi gửi ảnh: *"2 bảng thông tin che nhau"*. Thẻ
-   `.me-card` canh giữa KHUNG NHÌN, còn bảng `.me-board` neo ĐÁY — mà bảng lát cắt có
-   4 nấc nên nó cao nhất trong cả nhiệm vụ, và hai thứ chồng lên nhau. Nặng nhất: **nút
-   "Đã hiểu!" của thẻ bị bảng đè**, mà đó là đường DUY NHẤT đóng thẻ (mốc tự đóng 3,4
-   giây đã bỏ 02/08/2026) → trẻ nhìn thấy nút mà bấm không được.
-   Chữa bằng ĐÚNG cơ chế `boardSay()` đã dùng cho box thoại (`--board-h` + `.lift`),
-   không dựng cơ chế thứ hai: canh giữa phần khung CÒN LẠI phía trên bảng.
-   ⚠️ ĐO CHIỀU CAO NGAY LÚC MỞ THẺ, đừng gán cứng: bảng eco cao dần theo số thẻ đã xếp,
-      bảng lát cắt cao dần theo số chip, và bước nào không có bảng thì thẻ phải về giữa
-      khung như cũ.
-   ⚠️ CŨNG PHẢI NÂNG `z-index`: thẻ là `role="dialog" aria-modal="true"`, mà `.me-board`
-      nằm SAU nó trong DOM nên không có z-index thì bảng vẽ ĐÈ LÊN thẻ — đúng thứ trong
-      ảnh chụp. Một hộp thoại modal bị chính trang đè lên là hộp thoại nói dối. */
-function liftCard() {
-  const el = $('card');
-  const b = Array.from(document.querySelectorAll('.me-board.show'))
-                 .reduce((h, n) => Math.max(h, n.offsetHeight), 0);
-  if (!b) { el.style.removeProperty('--board-h'); el.classList.remove('lift'); return; }
-  el.style.setProperty('--board-h', (b + 12) + 'px');
-  el.classList.add('lift');
-}
-
-function showCard(c) {
-  sfx('pickup');
-  const el = $('card');
-  el.style.setProperty('--cc', c.cc);
-  el.style.setProperty('--cbg', c.cbg);
-  $('card-ic').textContent = c.ic;
-  $('card-nm').textContent = c.nm;
-  $('card-fact').textContent = c.fact;
-  $('card-sub').textContent = c.sub || '';
-  $('card-sub').hidden = !c.sub;      // bước nào không truyền `sub` thì không để lại ô trống
-  $('card-got').textContent = c.tag;
-  $('card-ok').textContent = t('card_ok');
-  liftCard();
-  el.classList.add('show');
-  el.setAttribute('aria-hidden', 'false');
-  return new Promise(res => {
-    const close = () => {
-      el.classList.remove('show');
-      el.setAttribute('aria-hidden', 'true');
-      el.removeEventListener('click', close);
-      setTimeout(res, 260);
-    };
-    el.addEventListener('click', close);
-    /* ⚠️ KHÔNG CÒN TỰ ĐÓNG SAU 3,4 GIÂY (bỏ 02/08/2026 — chủ dự án chơi thật và báo:
-       *"bảng chú thích hiện ra không đủ thời gian đọc cho trẻ"*).
-       Mốc 3,4s được đặt với lý lẽ "để trẻ không phải bấm nếu đang mải nhìn" — nhưng
-       thẻ này MANG BÀI HỌC (tên châu lục + một câu kiến thức), nên nó là thứ để ĐỌC
-       chứ không phải hiệu ứng để ngắm. Đây đúng bài học đã ghi cho đường về tự động
-       5 giây: *một màn thưởng tự biến mất sau vài giây là màn thưởng bị lấy đi giữa
-       lúc đang đọc*, và trẻ đọc chậm hơn người lớn nhiều.
-       ⚠️ `prefers-reduced-motion` CŨNG không tự đóng: giảm chuyển động là bớt hoạt
-       cảnh, KHÔNG phải bớt thời gian đọc — nhầm hai thứ đó là phạt đúng nhóm trẻ
-       nhạy cảm với chuyển động. */
-    $('card-ok').focus();
-  });
-}
-
-/* ══════════════════ KÉO-THẢ DÙNG CHUNG (3 bước) ══════════════════
-   Ba bước cần kéo-thả: `energy` (nguồn sạch → ống khói), `eco` (thẻ hành động → rổ),
-   `core` (viên ngọc → ô). Cùng một cơ chế: Pointer Events (chạy cả chuột và cảm ứng),
-   một bản sao "bay theo ngón tay", vùng dưới con trỏ sáng lên, thả đúng thì khoá lại,
-   thả sai thì KHÔNG trừ điểm — chỉ khích lệ.
-
-   Trước 29/07/2026 phần này nằm cứng trong bảng ngọc của bước ⑦. Chép sang bước thứ hai và
-   thứ ba là ba bản `pointerdown/move/drop` gần-giống-nhau: sửa một lỗi kéo-thả (ví dụ
-   `setPointerCapture` để ngón tay ra khỏi thẻ vẫn kéo được) sẽ phải nhớ sửa cả ba,
-   mà không ai nhớ. Nay chỉ còn phần KHÁC NHAU nằm ở opt.
-
-   opt = {
-     items      : mảng phần tử kéo được (mỗi cái có data-want = khoá vùng đích)
-     zones      : mảng vùng thả (mỗi cái có data-zone)
-     wide       : true = thẻ có chữ (bản bay dùng .wide và copy cả innerHTML)
-     canDrop(z) : vùng này còn nhận được không (mặc định: chưa có class 'ok')
-     onHit(el,z), onMiss(el,z)
-   } */
-/* Kéo-thả: `js/pick-place.js` lo cả đường chuột lẫn đường bàn phím.
-   Ở đây chỉ nối thêm âm thanh của trang và bộ nhãn đọc song ngữ.
-   ⚠️ Nhãn khai bằng GETTER, không phải chuỗi tính sẵn: trẻ đổi VI/EN giữa
-      chừng thì lời đọc phải đổi theo, mà bảng này chỉ dựng MỘT LẦN lúc mở bước. */
-function dragDrop(opt) {
-  AstroQPickPlace.wire({
-    items: opt.items, zones: opt.zones, wide: opt.wide,
-    canDrop: opt.canDrop, onHit: opt.onHit, onMiss: opt.onMiss,
-    sfx: sfx,
-    labels: {
-      get hold()  { return t('kb_hold'); },
-      get place() { return t('kb_place'); },
-      get wrong() { return t('kb_wrong'); },
-      get drop()  { return t('kb_drop'); }
-    }
-  });
-}
-
-/** Nhấp nháy dòng nhắc + lời khích lệ rồi tự trả lại câu hướng dẫn cũ. */
-function nudge(boardId, hintId, wrongKey, hintKey) {
-  $(hintId).textContent = t(wrongKey);
-  boardSay(boardId, 'byte', t(wrongKey));
-  clearTimeout(nudge['_' + hintId]);
-  nudge['_' + hintId] = setTimeout(() => {
-    $(hintId).textContent = t(hintKey);
-    hideSay();
-  }, 2200);
-}
-
-/* ───────────────────── Bước 1: câu đố biển/đất ─────────────────────
-   ⚠️ HAI NÚT, KHÔNG PHẢI KÉO-THẢ. `js/pick-place.js` là khuôn "thẻ → ô" cho các
-      bước có nhiều thẻ nhiều ô; ở đây chỉ có MỘT câu hỏi và HAI lựa chọn, dựng nó
-      bằng khuôn kéo-thả là bắt trẻ làm một thao tác khó hơn cho một việc dễ hơn.
-   ⚠️ CẢ HAI NÚT ĐỀU LÀ `<button>` nên bàn phím đi qua bằng Tab + Enter mà không
-      cần một dòng nào — đúng ràng buộc "mỗi khuôn phải chơi được bằng bàn phím"
-      của `002`, và đây là ca duy nhất thoả nó miễn phí.
-   ⚠️ Nút bị VÔ HIỆU ngay khi bấm: `onAnswer` có `await`, nên không khoá thì cú bấm
-      thứ hai chạy chồng và `showCard` mở hai lần. */
-/* Bảng "dự đoán của phi hành gia" — DÙNG CHUNG cho bước ① (nước hay đất) và bước ③
-   (nếu Mặt Trời tắt thì sao). Nhận cấu hình thay vì gắn cứng vào một bước: bản đầu
-   hàm này gọi thẳng `steps.scan.onAnswer`, nên bước thứ hai muốn dùng lại thì phải
-   chép cả hàm — đúng thứ quy tắc 2 mục 2 của CLAUDE.md cấm.
-   @param cfg {k, q, opts:[{id, ic, tx}], onPick} */
-function buildAsk(cfg) {
-  $('ask-k').textContent = cfg.k;
-  $('ask-q').textContent = cfg.q;
-  $('ask-opts').innerHTML = cfg.opts.map(o =>
-    `<button type="button" class="me-ask-opt hit" data-pick="${esc(o.id)}">` +
-    `<span class="ic" aria-hidden="true">${o.ic}</span>` +
-    `<span class="tx">${esc(o.tx)}</span></button>`).join('');
-  $('ask-opts').querySelectorAll('.me-ask-opt').forEach(b => {
-    b.addEventListener('click', () => {
-      // `onPick` có await → khoá cả dãy ngay, không thì bấm chồng chạy hai lần.
-      $('ask-opts').querySelectorAll('.me-ask-opt').forEach(o => { o.disabled = true; });
-      cfg.onPick(b.getAttribute('data-pick'));
-    });
-  });
-}
+/* Vỏ cần `RUN` để đọc phần thưởng, mở chặng kế và vẽ lại hộp hỏi khi đổi ngôn ngữ. */
+ST.attach(RUN);
 
 /* ───────────────────── Bước 2: dòng thời gian ───────────────────── */
 function buildTimeline() {
@@ -2486,161 +2172,6 @@ function buildFile() {
    được đảo thứ tự ấy nằm ở `js/mission-engine.js`. */
 async function finishStep(id) { return RUN.finish(id); }
 
-/* ───────────────────── Màn tổng kết ───────────────────── */
-async function showWin() {
-  sfx('fanfare');
-  $('obj').classList.remove('show');
-  hideSay();
-  $('win-h').textContent = t('win_h');
-  $('win-badge').textContent = t('win_badge');
-  $('win-badge-sub').textContent = t('win_badge_sub');
-  $('win-rw-k').textContent = t('win_rw_k');
-  $('win-next-k').textContent = t('win_next_k');
-  const RW = RUN.reward;
-  $('win-rw-tt').textContent = t('win_tt').replace('{n}', RW.meteors);
-  $('win-rw-codex').textContent = t('win_codex')
-    .replace('{n}', RW.codex).replace('{t}', RW.codexTotal);
-  $('win-rw-xp').textContent = t('win_xp').replace('{n}', RW.xp);
-  /* Huy hiệu mở THÊM trong lượt (🌱 Chiến Binh Xanh…). Bỏ `rookie-astronaut` ra vì nó
-     đã có khối huân chương riêng ở trên — liệt kê hai lần thì trẻ tưởng được hai cái.
-     Rỗng thì ẩn cả dòng, không hiện "Huy hiệu mới: " trống. */
-  const extraBadges = RW.badges.filter(b => b !== 'rookie-astronaut');
-  $('win-rw-badges').classList.toggle('hide', extraBadges.length === 0);
-  if (extraBadges.length) {
-    $('win-badges').textContent = t('win_badges').replace('{n}',
-      extraBadges.map(b => badgeIcon(b) + ' ' + badgeName(b)).join(' · '));
-  }
-  $('win-next').textContent = t('win_next');
-  /* ⚠️ Nút chính giờ DẪN ĐI ĐƯỢC THẬT (missions.html tồn tại và đã có nội dung),
-     nên KHÔNG `disabled`. Trước đây chỗ này là nút Mặt Trăng để `disabled` — một
-     nút bấm không được vẫn là một lời hứa về thứ chưa tồn tại. */
-  $('win-missions').textContent = t('win_missions');
-  $('win-awards').textContent = t('win_awards');
-  $('win-brag').textContent = t('win_brag');
-  $('win').classList.add('show');
-  $('win').setAttribute('aria-hidden', 'false');
-  startAuto();
-  setTimeout(() => $('win-home').focus(), 300);
-}
-
-/* ─────────────── Đường về tự động 5 giây ───────────────
-   ⚠️ CHỈ ĐẾM KHI ĐÃ BÁO XONG LÊN SERVER — bất biến này có sẵn nhờ THỨ TỰ GỌI:
-      `RUN.finish()` báo xong server rồi mới gọi `onWin` (tức `showWin`) — xem thứ tự
-      trong `js/mission-engine.js` — nên khi hàm dưới đây chạy thì `RUN.reward` đã có số thật. Đếm ngay lúc mở modal (không chờ) thì
-      mạng chậm là trẻ bị kéo đi trước khi con số thưởng kịp về, và thứ duy nhất nó
-      kịp đọc là "+0". Đừng đảo thứ tự hai lời gọi đó.
-
-   ⚠️ BẤT KỲ TƯƠNG TÁC NÀO CŨNG TẮT ĐẾM, KHÔNG PHẢI TẠM DỪNG. Trẻ đọc chậm hơn người
-      lớn nhiều; một màn thưởng tự biến mất sau 5 giây là màn thưởng bị lấy đi giữa
-      lúc đang đọc. Bấm/chạm/di chuột/gõ phím là hết đếm, hẳn.
-
-   ⚠️ CỐ Ý KHÔNG bắt `focus`: nút chính được `focus()` cho người dùng bàn phím, bắt
-      focus là đếm bị tắt ngay lúc mở modal và tính năng thành vô nghĩa. */
-const AUTO_RETURN_SECS = 5;
-let autoLeft = null, autoTimer = null;
-
-function paintAuto() {
-  $('win-home').textContent = t('win_home') + (autoLeft === null ? '' : ' (' + autoLeft + ')');
-  $('win-auto').textContent = autoLeft === null ? '' : t('win_auto').replace('{n}', autoLeft);
-}
-
-function cancelAuto() {
-  if (autoLeft === null) return;
-  autoLeft = null;
-  clearTimeout(autoTimer);
-  autoTimer = null;
-  paintAuto();
-}
-
-function startAuto() {
-  autoLeft = AUTO_RETURN_SECS;
-  paintAuto();
-  const tick = () => {
-    autoLeft--;
-    if (autoLeft <= 0) { autoLeft = null; location.href = 'dashboard.html'; return; }
-    paintAuto();
-    autoTimer = setTimeout(tick, 1000);
-  };
-  autoTimer = setTimeout(tick, 1000);
-}
-
-/* ─────────────── XONG MỘT CHẶNG: HỎI TIẾP HAY DỪNG ───────────────
-   `docs/decisions/008` quyết định 4: *chơi xong một chặng thì HỎI, đừng tự quyết*.
-
-   ⚠️ ĐIỀU KIỆN ĐI KÈM MÀ `008` NÊU — "phải TẮT đồng hồ về tự động 5 giây khi còn
-      chặng sau" — ĐƯỢC THOẢ BẰNG CẤU TRÚC, không phải bằng một cái cờ: đồng hồ đó
-      chỉ sống trong màn tổng kết (`startAuto` gọi từ `showWin`), mà màn tổng kết chỉ
-      mở khi ĐÃ HẾT chặng. Hộp hỏi và đồng hồ vì thế không bao giờ cùng lúc trên màn
-      hình. Đừng gọi `startAuto()` ở đâu khác.
-
-   ⚠️ CÁC CHẶNG SERVER ĐÃ GHI NHẬN lúc mở trang — dùng để phân biệt "vừa xong một
-      chặng mới" với "vừa ôn lại một chặng cũ". Hai việc đó đáng được nói hai câu
-      khác nhau, và chỉ việc thứ nhất mới có chặng kế để mời. */
-let serverDone = new Set();
-
-function treeUrl() { return 'mission-tree.html?m=earth'; }
-function pad2(n) { return n < 10 ? '0' + n : String(n); }
-
-function stepName(id) {
-  const s = window.AstroQCatalog ? AstroQCatalog.step('earth', id) : null;
-  return s ? s[LANG === 'en' ? 'en' : 'vi'].nm : id;
-}
-
-function openAsk(id, replay) {
-  const i = STEP_IDS.indexOf(id);
-  $('af-h').textContent = t('af_h').replace('{n}', stepName(id));
-  if (replay) {
-    $('af-p').textContent = t('replayed');
-    $('af-next').hidden = true;
-    $('af-stop').textContent = t('af_back');
-  } else {
-    $('af-p').textContent = t('af_p').replace('{n}', stepName(STEP_IDS[i + 1]));
-    $('af-next').hidden = false;
-    $('af-next').textContent = t('af_next').replace('{n}', pad2(i + 2));
-    $('af-stop').textContent = t('af_stop');
-  }
-  $('after').classList.add('show');
-  $('after').setAttribute('aria-hidden', 'false');
-  setTimeout(() => ($('af-next').hidden ? $('af-stop') : $('af-next')).focus(), 60);
-}
-
-function closeAsk() {
-  $('after').classList.remove('show');
-  $('after').setAttribute('aria-hidden', 'true');
-}
-
-/** Móc `onStepDone` của js/mission-engine.js. Trả `true` = engine ĐỪNG tự đi tiếp. */
-function afterStep(id, last) {
-  /* Ôn lại một chặng cũ: không có chặng nào vừa mở ra để đi tiếp và tiến độ không
-     nhúc nhích — hỏi "tiếp hay dừng" ở đó là hỏi một câu vô nghĩa. Vẫn MỞ HỘP (chứ
-     không lặng lẽ nhảy trang) để nói rõ vì sao lần này không có thưởng. */
-  if (serverDone.has(id)) { openAsk(id, true); return true; }
-  /* Chặng cuối → trả `false` để engine mở màn tổng kết. Ở đó không còn gì để hỏi. */
-  if (last) return false;
-  openAsk(id, false);
-  return true;
-}
-
-/* ───────────────────── Âm thanh ─────────────────────
-   Gói một lớp mỏng quanh `AstroQSfx` để chỗ gọi không phải kiểm `if` mỗi lần, và
-   để `prefers-reduced-motion` cũng làm nhẹ phần tiếng: trẻ chọn "giảm hiệu ứng"
-   thường là vì dễ bị quá tải cảm giác, mà tiếng cũng là một loại kích thích. */
-function sfx(name, arg) {
-  if (!window.AstroQSfx) return;
-  try { AstroQSfx[name](arg); } catch (e) {}
-}
-function paintMute() {
-  const off = !window.AstroQSfx || !AstroQSfx.on();
-  $('mute').textContent = off ? '🔇' : '🔊';
-  $('mute').setAttribute('aria-pressed', off ? 'true' : 'false');
-}
-$('mute').addEventListener('click', () => {
-  const off = !AstroQSfx.on();
-  try { localStorage.setItem('astroq-sfx', off ? 'on' : 'off'); } catch (e) {}
-  paintMute();
-  if (off) sfx('beep', 880);           // bật lại thì kêu một tiếng cho biết đã bật
-});
-
 /* ───────────────────── Ngôn ngữ ───────────────────── */
 function applyLang(lang) {
   if (lang === 'en' || lang === 'vi') LANG = lang;
@@ -2648,12 +2179,10 @@ function applyLang(lang) {
   document.title = t('title');
   AstroQ.applyTexts(t);
   AstroQ.markLangButtons(LANG);
-  $('tag').textContent = t('tag');
-  $('load-txt').textContent = t('load');
+  /* Vỏ tự vẽ lại phần của nó (header, nhãn mục tiêu, nút thẻ, màn tổng kết, hộp
+     hỏi) — trang chỉ còn lo mấy cái BẢNG nội dung của riêng nó ở dưới. */
+  ST.applyLang();
   $('load-sub').textContent = $('load-sub').dataset.fail ? t('load_fail') : t('load_sub');
-  $('obj-k').textContent = t('obj_k');
-  $('say-next').textContent = t('next');
-  if ($('win').classList.contains('show')) showWin();
   /* ĐỔI NGÔN NGỮ GIỮA MỘT BƯỚC KÉO-THẢ: chỉ vẽ lại NHÃN, KHÔNG dựng lại bảng —
      `build*()` sinh markup mới nên mọi ô đã kích hoạt / thẻ đã xếp biến mất và trẻ
      phải làm lại từ đầu chỉ vì bấm EN. Vì thế mỗi bảng có một nhánh riêng ở đây, và
@@ -2765,53 +2294,9 @@ function applyLang(lang) {
    nhà của nhiệm vụ: từ đó về bản đồ → Trung Tâm Nhiệm Vụ → dashboard là một chuỗi
    liền mạch, mỗi bước lùi một tầng. Nhảy thẳng về dashboard là bỏ qua ba tầng và trẻ
    mất luôn chỗ nhìn thấy mình vừa đi được tới đâu. */
-$('back').addEventListener('click', () => { location.href = treeUrl(); });
-
-/* ── Hộp "tiếp hay dừng" ──
-   ⚠️ Bấm ra ngoài hộp và Escape đều là CHỌN DỪNG, cùng nghĩa với nút "Để lần sau" —
-      hai cách đóng cho ra hai kết quả khác nhau là chỗ trẻ học sai một lần rồi ngại
-      bấm mãi. Tiến độ đã ghi lên server TRƯỚC khi hộp mở (thứ tự trong
-      `js/mission-engine.js`), nên "dừng" không mất gì. */
-$('af-next').addEventListener('click', () => { closeAsk(); RUN.next(); });
-$('af-stop').addEventListener('click', () => { closeAsk(); location.href = treeUrl(); });
-$('after').addEventListener('click', (e) => { if (e.target === $('after')) $('af-stop').click(); });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && $('after').classList.contains('show')) $('af-stop').click();
-});
-/* Tắt đường về tự động khi trẻ tương tác. Gắn trên CẢ thẻ modal, không chỉ trên
-   nút — trẻ di chuột vào để đọc cũng là một tín hiệu "tôi đang xem". */
-['pointerdown', 'keydown', 'mouseenter', 'touchstart'].forEach(ev => {
-  $('win').addEventListener(ev, cancelAuto, { passive: true });
-});
-$('win-missions').addEventListener('click', () => { location.href = 'missions.html'; });
-$('win-awards').addEventListener('click', () => { location.href = 'achievements.html'; });
-/* ⚠️ SO LIEU LAY DUNG TU CAC O DA HIEN TREN MAN TONG KET (`win-rw-*`), khong tinh
-   lai: tinh lai la hai noi giu mot con so, va the khoe se noi khac bang tong ket
-   dung vao ngay ai do doi cach tinh. Cho nao chua doc duoc thi cac o do da la dau
-   "—" san — the cung se hien "—", khong bao gio bia mot con so 0. */
-$('win-brag').addEventListener('click', () => {
-  if (!window.AstroQBrag) return;
-  const txt = id => { const el = $(id); return el ? el.textContent.trim() : '—'; };
-  const badgeRow = $('win-rw-badges');
-  const lines = [
-    { ic: '☄️', k: t('brag_tt'),    v: txt('win-rw-tt') },
-    { ic: '⭐', k: t('brag_xp'),    v: txt('win-rw-xp') },
-    { ic: '📘', k: t('brag_codex'), v: txt('win-rw-codex') }
-  ];
-  if (badgeRow && !badgeRow.classList.contains('hide')) {
-    lines.push({ ic: '🏅', k: t('brag_badge'), v: txt('win-badges') });
-  }
-  AstroQBrag.open({
-    lang: LANG, tag: t('brag_tag'), badge: '🎖️',
-    title: txt('win-h'), sub: txt('win-badge-sub'),
-    lines, note: t('brag_note')
-  });
-});
-$('win-home').addEventListener('click', () => { location.href = 'dashboard.html'; });
-
-paintBalance();
-paintMute();
-Economy.onAsteroidsChange(paintBalance);
+ST.paintBalance();
+ST.paintMute();
+Economy.onAsteroidsChange(ST.paintBalance);
 applyLang(LANG);
 AstroQ.initLang(applyLang);
 RUN.paint();
@@ -2838,41 +2323,6 @@ RUN.paint();
       một chặng cụ thể thì phải vào đúng chặng đó, kể cả khi đó là chặng cũ nó muốn
       chơi lại. `RUN.openAt()` KẸP lại theo số bước đã xong, nên gõ tay một chặng chưa
       mở vào thanh URL cũng không vượt được — địa chỉ là thứ ai cũng sửa được. */
-function resumeSteps() {
-  try {
-    const q = new URLSearchParams(location.search);
-    if (q.get('restart') === '1') return;
-    if (!window.AstroQProgress || !AstroQProgress.missionSteps) return;
-    const p = AstroQProgress.missionSteps('earth');
-    if (!p.known) return;
-    serverDone = new Set(p.done.map(String));
-
-    /* Số chặng ĐÃ MỞ = đoạn đầu liền mạch của danh sách server trả về. Cùng phép đếm
-       với `RUN.resume()` và với cây chặng — ba chỗ nói ba con số khác nhau là lỗi trẻ
-       nhìn thấy ngay. */
-    let unlocked = 0;
-    while (unlocked < STEP_IDS.length && serverDone.has(STEP_IDS[unlocked])) unlocked++;
-
-    const want = q.get('step');
-    const k = want ? STEP_IDS.indexOf(want) : -1;
-
-    /* Xong cả nhiệm vụ mà KHÔNG chỉ đích danh chặng nào → lượt "chơi lại" từ đầu,
-       dãy chấm phải trắng (không thì trẻ mở ra đã thấy màn tổng kết). Có `?step=` thì
-       vẫn mở đúng chặng đó: đó là cú chạm có chủ đích từ cây chặng. */
-    if (p.complete && k < 0) return;
-
-    let open = p.complete ? 0 : RUN.resume(p.done);
-    if (k >= 0) open = RUN.openAt(k, unlocked);
-    if (open > 0 && !serverDone.has(STEP_IDS[open])) {
-      toast(t('resumed').replace('{n}', open + 1).replace('{t}', RUN.total));
-    }
-  } catch (e) {
-    /* Cache hỏng / localStorage bị chặn → mở từ bước ①. Không được để việc đọc một
-       bản sao tuỳ chọn làm vỡ cả nhiệm vụ. */
-    console.warn('[AstroQ] Không đọc được tiến độ nhiệm vụ:', e && e.message);
-  }
-}
-
 /* ⚠️ CHỈ CÒN MỘT CẢNH: 2D. three.js và `js/earth3d.js` đã bỏ hẳn ngày 31/07/2026,
    sau khi bản 2D đạt 154/154 trên ĐÚNG bộ kiểm thử của bản 3D — và so cả danh sách
    nhãn: không phép kiểm nào chỉ có ở một bên. Cờ `?scene=2d|3d` là giàn giáo của
@@ -2916,11 +2366,11 @@ function resumeSteps() {
        trạng thái nó cần bằng `wait_for_function`. */
     pick: (ev) => { RUN.pick(ev); return true; },
     tick: () => { RUN.tick(); return true; },
-    say: () => { $('say-next').click(); return true; },
+    say: () => ST.sayNext(),
     /** Mở thẳng màn tổng kết — để test đường về tự động khỏi phải chơi hết 7 bước.
         ⚠️ KHÔNG trả Promise (cùng lý do như `pick`): `showWin` là async, mà
            `page.evaluate` tự chờ promise được trả về. */
-    win: () => { showWin(); return true; },
+    win: () => ST.win(),
     /* Bảng "dự đoán của phi hành gia" — nay có ở HAI bước: ① (nước hay đất) và
        ③ (nếu Mặt Trời tắt thì sao). Định tuyến theo bước ĐANG chạy thay vì gắn cứng
        `steps.scan`: gắn cứng thì bộ test gọi ở bước ③ sẽ âm thầm bấm vào bước ①.
@@ -2953,12 +2403,12 @@ function resumeSteps() {
     /** Số nơi đã xếp lên lát cắt ở bước ④. */
     get placed() { return steps.life.got.size; },
     /** Giây còn lại của đường về tự động; `null` = đã tắt đếm. */
-    get autoLeft() { return autoLeft; },
+    get autoLeft() { return ST.autoLeft; },
     /** Hộp "tiếp hay dừng" đang mở hay không, và hai lựa chọn của nó. Chỉ là
         ĐIỀU KHIỂN cho test — không cấp thưởng, không bỏ qua bước nào. */
-    get askOpen() { return $('after').classList.contains('show'); },
-    askNext: () => { $('af-next').click(); return true; },
-    askStop: () => { $('af-stop').click(); return true; },
+    get askOpen() { return ST.askOpen; },
+    askNext: () => ST.askNext(),
+    askStop: () => ST.askStop(),
     /* ⚠️ ĐỔI TỪ `fill(slot)` SANG `stamp()` 02/08/2026 — bước ⑦ không còn kéo ngọc
        vào ô mà chỉ còn MỘT cú đóng dấu. Giữ tên cũ là để lại một bề mặt test nói
        về cơ chế không còn tồn tại. Cùng quy tắc: KHÔNG trả Promise. */
@@ -2986,7 +2436,7 @@ function resumeSteps() {
     world
   };
 
-  resumeSteps();
+  ST.resumeSteps();
   await RUN.enter();
 })();
 </script>

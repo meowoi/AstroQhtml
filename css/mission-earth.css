@@ -1,263 +1,11 @@
-/* ==========================================================
-   mission-earth.css — Nhiệm Vụ 01 "Hành Tinh Xanh" (mission-earth.html).
+/* ============================================================
+   css/mission-earth.css — PHAN RIENG cua NHIEM VU 01 "Hanh Tinh Xanh".
 
-   Cảnh 2D dựng bằng DOM (js/earth2d.js, các lớp `e2-*` ở cuối file). Ở đây là
-   toàn bộ lớp HUD phủ lên:
-     .me-top     thanh trên: nút về · tên nhiệm vụ · tiến độ 7 bước · ví tt · VI/EN
-     .me-obj     bảng mục tiêu bước hiện tại (góc trên-trái)
-     .me-say     box thoại Comet/Byte, neo ĐÁY để không che hành tinh
-     .me-hand    bàn tay hướng dẫn (chỉ bước 1)
-     .me-card    thẻ mẫu vật / huy hiệu vừa nhận (bước 2, 5, 6)
-     .me-era     lớp phủ đổi màu bầu trời theo mốc thời gian (bước 2 `timeline`)
-     .me-smog    lớp khói đen của nhiên liệu hoá thạch (bước 5 `energy`)
-     .me-board   KHUNG DÙNG CHUNG của 3 bảng kéo-thả ở đáy màn hình:
-                   .me-time   thanh mốc thời gian 4,5 tỷ năm (bước 2)
-                   .me-energy 3 nguồn năng lượng sạch        (bước 5)
-                   .me-eco    2 rổ NÊN / KHÔNG NÊN           (bước 6)
-                   .me-core   3 ô ngọc                       (bước 7)
-     .me-win     màn tổng kết sứ mệnh
-
-   ⚠️ `pointer-events` là chuyện SỐNG CÒN ở trang này: lớp phủ nào chắn hết thì
-   không kéo-xoay được quả cầu nữa. Mặc định mọi lớp phủ `pointer-events:none`,
-   chỉ bật lại đúng những thứ phải bấm (nút, thẻ, ngọc).
-   ========================================================== */
-
-:root{
-  --bg:#03050f;
-  --cyan:#38bdf8; --purple:#c084fc; --green:#4ade80; --amber:#fb923c;
-  --gold:#ffcf6b; --gold2:#ff9d3d;
-  --brd:rgba(120,160,255,.2); --brd-on:rgba(120,160,255,.45);
-  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono:"Share Tech Mono", ui-monospace, "Consolas", monospace;
-  --jelly:cubic-bezier(.34,1.56,.64,1);
-}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);}
-body{font-family:var(--font-body);color:var(--ink);-webkit-font-smoothing:antialiased;}
-a{text-decoration:none;color:inherit;}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
-
-/* Sân khấu cảnh: nằm dưới cùng và NHẬN chuột/chạm (kéo xoay, zoom, chạm marker) */
-#stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;
-  cursor:grab;}
-#stage:active{cursor:grabbing;}
-
-/* Mọi lớp phủ nằm trong đây — không chắn chuột */
-.me-ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
-.me-ui button,.me-ui a,.me-ui .hit{pointer-events:auto;}
-
-/* ============ MÀN CHỜ NẠP ============ */
-.me-load{position:fixed;inset:0;z-index:60;display:grid;place-items:center;align-content:center;gap:14px;
-  background:var(--bg);transition:opacity .5s ease,visibility .5s;}
-.me-load.gone{opacity:0;visibility:hidden;}
-.me-load .ring{width:54px;height:54px;border-radius:50%;
-  border:3px solid rgba(95,211,255,.22);border-top-color:var(--cyan);
-  animation:meSpin 1s linear infinite;}
-@keyframes meSpin{to{transform:rotate(360deg);}}
-.me-load .txt{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--cyan);}
-.me-load .sub{font-size:13px;color:var(--ink-soft);max-width:280px;text-align:center;line-height:1.6;}
-
-/* ============ THANH TRÊN ============ */
-.me-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:12px clamp(12px,3vw,24px);
-  background:linear-gradient(180deg,rgba(3,5,15,.86),rgba(3,5,15,0));}
-.me-top .back{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
-  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);
-  background:rgba(8,14,38,.6);border:1px solid rgba(56,189,248,.4);border-radius:10px;
-  padding:8px 13px;transition:background .18s,color .18s;}
-.me-top .back:hover{background:rgba(56,189,248,.18);color:var(--ink);}
-.me-tag{flex:1;min-width:max-content;font-family:var(--font-mono);font-size:11px;
-  letter-spacing:.18em;color:var(--gold);text-transform:uppercase;white-space:nowrap;}
-.me-cur{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;
-  background:rgba(26,16,44,.6);border:1px solid rgba(192,132,252,.42);}
-.me-cur img{width:18px;height:18px;object-fit:contain;
-  filter:drop-shadow(0 0 6px rgba(192,132,252,.95));}
-.me-cur .v{font-family:var(--font-display);font-weight:700;font-size:15px;color:#e9d7ff;}
-/* Trước 31/07/2026 khối này mang tên riêng `.me-lang` và lặp lại y nguyên 4
-   thuộc tính khung của `.lang-switch` ở `css/common.css`. Cái giá đo được:
-   lượt sửa vùng chạm 44px đã phải viết THÊM một rule riêng cho nó, vì rule
-   dùng chung không với tới được cái tên khác. Nay chỉ giữ phần RIÊNG. */
-.lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
-  font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
-
-/* Tiến độ 7 bước — chấm nối bằng gạch. Dãy này dài hơn bản 5 bước ~60px,
-   nên trên màn hẹp phải bóp gạch nối lại: để nguyên thì hàng header xuống 3 dòng và
-   bảng mục tiêu (`top:64px`) bị thanh trên đè lên. */
-.me-steps{display:flex;align-items:center;gap:0;flex-wrap:nowrap;}
-.me-steps .s{width:11px;height:11px;border-radius:50%;flex:none;
-  background:rgba(255,255,255,.14);border:1px solid var(--brd-on);
-  transition:background .3s,box-shadow .3s,transform .3s var(--jelly);}
-.me-steps .s.now{background:radial-gradient(circle,#fff,var(--gold));
-  box-shadow:0 0 12px var(--gold);transform:scale(1.28);border-color:transparent;}
-.me-steps .s.ok{background:radial-gradient(circle,#bdf5d4,var(--green));
-  box-shadow:0 0 9px rgba(74,222,128,.85);border-color:transparent;}
-.me-steps .l{width:16px;height:2px;flex:none;background:rgba(255,255,255,.14);}
-.me-steps .l.ok{background:rgba(74,222,128,.7);}
-
-/* Nút tắt tiếng — cùng cỡ với nút VI/EN cho hàng header đều nhau */
-.me-mute{width:32px;height:28px;display:inline-grid;place-items:center;cursor:pointer;
-  font-size:14px;line-height:1;border-radius:8px;
-  border:1px solid rgba(56,189,248,.28);background:rgba(8,14,38,.6);color:#cfe8ff;
-  transition:border-color .2s,background .2s;}
-.me-mute:hover{border-color:var(--brd-on);background:rgba(14,24,58,.8);}
-
-/* ============ BẢNG MỤC TIÊU ============ */
-.me-obj{position:absolute;left:clamp(12px,3vw,24px);top:64px;width:min(268px,calc(100vw - 24px));
-  padding:13px 15px 12px;border-radius:14px;
-  border:1px solid rgba(56,189,248,.34);background:rgba(6,11,30,.82);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-  box-shadow:0 20px 46px -24px rgba(0,0,0,.85);
-  opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s var(--ease,ease);}
-.me-obj.show{opacity:1;transform:none;}
-.me-obj .k{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:9px;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);}
-.me-obj .k .led{width:6px;height:6px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 8px var(--green);animation:meBlink 1.6s steps(1,end) infinite;}
-@keyframes meBlink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
-.me-obj h2{font-family:var(--font-display);font-weight:700;font-size:15.5px;margin:7px 0 0;
-  display:flex;align-items:center;gap:8px;}
-.me-obj h2 .ic{font-size:17px;line-height:1;}
-.me-obj p{font-size:12.8px;line-height:1.55;color:var(--ink-soft);margin:6px 0 0;}
-.me-obj .prog{display:flex;align-items:center;gap:8px;margin-top:10px;}
-.me-obj .prog .bar{flex:1;display:block;height:6px;border-radius:6px;overflow:hidden;
-  background:rgba(255,255,255,.1);}
-.me-obj .prog .bar i{display:block;height:100%;width:0;border-radius:6px;
-  background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .45s ease;}
-.me-obj .prog .n{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);flex:none;}
-
-/* ============ BOX THOẠI MASCOT ============ */
-/* Vỏ box · khung avatar · chữ tên nằm ở `css/mascot.css` (`.aq-say` ·
-   `.aq-ava` · `.aq-nm`) — markup gắn KÈM hai class. Ở đây chỉ còn phần
-   RIÊNG của nhiệm vụ: neo đáy màn, canh giữa, hiện/ẩn. Ba biến `--aq-*`
-   giữ đúng kích thước cũ (bo 18px, avatar 50px) — nhỏ hơn box của
-   `mission-intro` vì ở đây còn hành tinh phải nhường chỗ. */
-.me-say{--aq-r:18px;--aq-ava:50px;--aq-ava-r:14px;
-  position:absolute;left:50%;transform:translateX(-50%) translateY(14px);
-  bottom:clamp(14px,4vh,40px);width:min(660px,calc(100vw - 24px));
-  display:flex;gap:13px;align-items:flex-start;padding:14px 18px 13px;
-  opacity:0;transition:opacity .4s,transform .4s;}
-.me-say.show{opacity:1;transform:translateX(-50%);}
-.me-say .body{flex:1;min-width:0;}
-.me-say .line{font-size:14px;line-height:1.6;margin:5px 0 0;}
-.me-say .line b{color:#a5e4ff;}
-.me-say .next{align-self:flex-end;flex:none;cursor:pointer;border:none;
-  padding:9px 15px;border-radius:12px;font-family:var(--font-display);font-weight:700;font-size:13px;
-  color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));
-  transition:transform .28s var(--jelly),filter .18s,opacity .25s;}
-.me-say .next:hover{filter:brightness(1.08);transform:translateY(-2px);}
-.me-say .next.hide{opacity:0;pointer-events:none;}
-@media (max-width:600px){
-  .me-say{flex-wrap:wrap;padding:12px 14px;gap:10px;--aq-ava:42px;--aq-ava-r:12px;}
-  .me-say .line{font-size:13.4px;}
-  .me-say .next{width:100%;}
-}
-
-/* ============ BÀN TAY HƯỚNG DẪN ============ */
-.me-hand{position:absolute;left:50%;top:50%;font-size:38px;line-height:1;
-  opacity:0;transition:opacity .35s;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7));}
-.me-hand.show{opacity:.95;}
-.me-hand.drag{animation:meDrag 2.4s ease-in-out infinite;}
-.me-hand.zoom{animation:meZoom 2s ease-in-out infinite;}
-.me-hand.tap{animation:meTap 1.4s ease-in-out infinite;}
-@keyframes meDrag{0%,100%{transform:translate(-90px,0) rotate(-8deg);}
-  50%{transform:translate(90px,0) rotate(8deg);}}
-@keyframes meZoom{0%,100%{transform:scale(1);}50%{transform:scale(1.35);}}
-@keyframes meTap{0%,100%{transform:scale(1);}45%{transform:scale(.78);}}
-
-/* ============ THẺ MẪU VẬT THU THẬP ============ */
-/* ⚠️⚠️ `z-index` + `.lift` LÀ BẢN SỬA CHO LỖI "2 BẢNG THÔNG TIN CHE NHAU" (03/08/2026).
-   Thẻ này là `role="dialog" aria-modal="true"`, nhưng nó nằm TRƯỚC mọi `.me-board`
-   trong DOM và cả hai đều không khai `z-index` → bảng đáy vẽ **đè lên** thẻ. Chủ dự án
-   chơi thật bước ④ `life` và gửi ảnh: nút "Đã hiểu!" của thẻ bị bảng lát cắt cắt mất
-   nửa dưới — mà đó là đường DUY NHẤT đóng thẻ (mốc tự đóng 3,4 giây đã bỏ 02/08/2026),
-   nên trẻ **thấy nút mà bấm không được**.
-   Hai lớp chữa, cần CẢ HAI:
-     · `z-index:20` — cao hơn mọi `.me-board` (không khai z-index, tức 0 trong cùng
-       stacking context `.me-ui`). Modal thì phải ở trên.
-     · `.lift` — canh giữa phần khung CÒN LẠI phía trên bảng, thay vì giữa cả khung
-       nhìn. Nâng z-index một mình chỉ đổi "ai che ai"; hai hộp vẫn chồng nhau và vẫn
-       đọc ra như lỗi.
-   ⚠️ DÙNG LẠI ĐÚNG BIẾN `--board-h` CỦA `.me-say.lift` — cùng một bài toán (thứ neo
-      giữa vs thứ neo đáy), nên cùng một cơ chế. `liftCard()` trong `mission-earth.html`
-      đo chiều cao bảng NGAY LÚC MỞ THẺ (bảng eco và bảng lát cắt cao dần theo số thẻ đã
-      xếp) và tự bỏ `.lift` ở bước không có bảng nào. */
-.me-card{position:absolute;left:50%;top:50%;z-index:20;
-  transform:translate(-50%,-50%) scale(.8) rotate(-4deg);
-  width:min(320px,calc(100vw - 40px));padding:0 0 16px;border-radius:18px;overflow:hidden;
-  border:2px solid var(--cc,#38bdf8);background:rgba(6,11,30,.96);
-  box-shadow:0 30px 66px -22px rgba(0,0,0,.92),0 0 46px -10px var(--cc,#38bdf8);
-  opacity:0;visibility:hidden;text-align:center;
-  transition:opacity .3s,transform .45s var(--jelly),visibility .3s;}
-.me-card.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1) rotate(0);}
-/* Canh giữa phần khung CÒN LẠI phía trên bảng đáy. `top` = nửa của khoảng trống đó.
-   ⚠️ CÓ SÀN `max(…, 8px)`: trên điện thoại dọc bảng lát cắt chiếm phần lớn khung, và
-      không có sàn thì `top` ra số ÂM — thẻ trôi lên trên mép màn hình, tiêu đề bị cắt.
-      Sàn 8px thì tệ nhất là thẻ dính mép trên nhưng vẫn còn nguyên; cùng tinh thần với
-      `.mo-say` ở `explorer.html`: dời chỗ thì được, đẩy ra ngoài khung thì không.
-   ⚠️ `transform` ở đây phải VIẾT LẠI ĐỦ, không kế thừa: `.me-card.show` đã khai
-      `translate(-50%,-50%)` để canh giữa theo cả hai trục, mà ở trạng thái `.lift` thì
-      `top` đã là tâm của vùng còn lại nên chỉ cần dịch lên nửa CHIỀU CAO THẺ. Bỏ sót là
-      thẻ lệch xuống đúng một nửa bảng. */
-.me-card.lift{top:max(8px, calc((100vh - var(--board-h,0px) - clamp(14px,4vh,40px)) / 2));}
-/* Bảng mục tiêu MỜ ĐI trong lúc thẻ đang mở. Thẻ canh giữa mà bảng mục tiêu neo góc
-   trên-trái, nên trên màn hẹp hai thứ luôn giao nhau — không nguy hiểm như ca nút bị đè
-   (thẻ đã ở trên nhờ `z-index`), nhưng hai khối chữ đè nhau ở độ đậm bằng nhau thì đọc
-   ra như lỗi bố cục. Làm mờ thì nó đọc ra đúng cái nó là: một thứ đang nằm SAU hộp thoại.
-   ⚠️ Phải dùng `:has()` vì `#obj` nằm TRƯỚC `#card` trong DOM — `~` chỉ chọn được em
-      sau. Trình duyệt không hỗ trợ `:has()` thì rule này lặng lẽ không áp: mất một chút
-      tinh tế, KHÔNG mất chức năng nào (nút vẫn bấm được nhờ `z-index`). Đó là lý do chọn
-      cách này thay vì bật/tắt class bằng JS.
-   ⚠️ Chỉ `opacity`, KHÔNG `display:none`: bảng mục tiêu biến mất rồi hiện lại sau mỗi
-      thẻ là một cú nháy ở đúng chỗ trẻ đang đọc. */
-.me-ui:has(#card.show) .me-obj{opacity:.3;}
-.me-card .top{padding:20px 0 14px;font-size:52px;line-height:1;
-  background:linear-gradient(180deg,var(--cbg,rgba(56,189,248,.28)),transparent);}
-.me-card .nm{font-family:var(--font-display);font-weight:700;font-size:17px;margin:0 16px;
-  color:#fff;}
-.me-card .fact{font-size:13.4px;line-height:1.6;color:var(--ink-soft);margin:9px 18px 0;}
-/* Dòng phụ, chỉ bước ④ dùng (câu hé lộ độ cao). Nhạt hơn và có vạch ngăn để trẻ đọc ra
-   là "một ý nữa", không phải phần tiếp của câu trên. */
-.me-card .sub{font-size:12.4px;line-height:1.55;color:var(--ink-soft);opacity:.88;
-  margin:9px 18px 0;padding-top:9px;border-top:1px solid rgba(255,255,255,.12);}
-.me-card .got{display:inline-block;margin-top:13px;font-family:var(--font-mono);font-size:9.5px;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--cc,#38bdf8);
-  border:1px solid var(--cc,#38bdf8);border-radius:999px;padding:4px 12px;}
-/* Nút "Đã hiểu!" — thẻ KHÔNG còn tự đóng (xem `showCard` ở mission-earth.html).
-   ⚠️ Cao tối thiểu 44px NGAY Ở ĐÂY, không đợi `@media (pointer:coarse)`: đây là nút
-   trẻ bấm nhiều lần nhất trong cả nhiệm vụ (mỗi châu lục, mỗi mốc, mỗi mẫu vật). */
-.me-card .ok{display:block;margin:14px auto 0;min-height:44px;padding:0 22px;
-  border:none;border-radius:12px;cursor:pointer;
-  font-family:var(--font-display);font-weight:700;font-size:13.5px;color:#04060f;
-  background:linear-gradient(120deg,var(--cyan),var(--purple));
-  transition:transform .2s var(--jelly);}
-.me-card .ok:hover,.me-card .ok:focus-visible{transform:translateY(-2px);}
-
-/* ============ KHUNG BẢNG ĐÁY MÀN HÌNH (DÙNG CHUNG 4 BƯỚC) ============
-   Bốn bước có bảng riêng ở đáy màn hình (mốc thời gian · năng lượng sạch · phân
-   loại Eco-Hero · 3 viên ngọc). Trước 29/07/2026 chỉ có `.me-core` và toàn bộ phần
-   KHUNG nằm trong đó; chép sang bảng thứ hai thì sớm muộn bốn cái lệch nhau ở chỗ
-   `bottom`, blur hay hiệu ứng hiện — mà chúng phải trông như CÙNG một bảng vì trẻ
-   thấy chúng nối tiếp nhau trong một lượt chơi.
-
-   Màu nhấn của từng bảng đổi qua 3 biến `--bd-brd` / `--bd-bg` / `--bd-k` (mặc định
-   là tông vàng của `.me-core`) — không phải viết lại cả khối. */
-.me-board{position:absolute;left:50%;bottom:clamp(14px,4vh,40px);transform:translateX(-50%) translateY(16px);
-  width:min(560px,calc(100vw - 24px));padding:16px 18px 14px;border-radius:18px;text-align:center;
-  border:1px solid var(--bd-brd,rgba(255,207,107,.45));background:var(--bd-bg,rgba(14,11,26,.9));
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-  box-shadow:0 24px 56px -22px rgba(0,0,0,.9);
-  opacity:0;visibility:hidden;transition:opacity .4s,transform .4s,visibility .4s;}
-.me-board.show{opacity:1;visibility:visible;transform:translateX(-50%);}
-.me-board .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--bd-k,var(--gold));}
-.me-board .hint{font-size:12.6px;color:var(--ink-soft);margin:14px 0 0;min-height:1.5em;}
-/* Bảng đáy VÀ box thoại đều neo ở đáy. Bước nào bật cả hai (mọi bước kéo-thả đều
-   có lời khích lệ khi thả sai) thì box thoại phải nhường chỗ, không thì nó phủ kín
-   đúng mấy cái rổ trẻ đang phải kéo thẻ vào. */
-.me-say.lift{bottom:calc(clamp(14px,4vh,40px) + var(--board-h,210px));}
+   Vo dung chung o `css/mission-stage.css`; canh ban do o `css/earth2d.css`.
+   Con lai o day dung 5 bang noi dung: dong thoi gian · nang luong sach ·
+   Eco-Hero · lat cat Trai Dat · Ho So Trai Dat, cong hai lop phu canh
+   (`.me-era` doi tong theo moc thoi gian, `.me-smog` khoi).
+   ============================================================ */
 
 /* ============ BƯỚC ④ · LÁT CẮT TRÁI ĐẤT ============
    Cột 4 nấc, TRÊN xuống DƯỚI = cao xuống thấp. Trẻ đoán nơi vừa bay tới nằm nấc nào.
@@ -267,137 +15,108 @@ a{text-decoration:none;color:inherit;}
       1366×768 bảng chiếm 84,5% khung và chỉ còn 30px bản đồ. Nên mỗi nấc bị chặn bằng
       `min-height:44px` (đúng sàn WCAG, không hơn) và nhãn để một dòng. */
 .me-xsec .xsec-q{font-size:13.6px;font-weight:600;color:var(--ink);margin:10px 0 8px;min-height:1.4em;}
+
 .xsec-col{display:flex;flex-direction:column;gap:5px;}
+
 .xsec-rung{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;
   padding:7px 12px;border-radius:11px;text-align:left;cursor:pointer;
   border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
   color:var(--ink);font:inherit;font-size:12.6px;
   transition:background .18s,border-color .18s,transform .18s;}
+
 .xsec-rung:not([disabled]):hover,.xsec-rung:not([disabled]):focus-visible{
   background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.6);transform:translateX(3px);}
+
 /* ⚠️ Nấc bị khoá KHÔNG mờ đi hẳn: sau khi hé lộ, cột chính là thứ trẻ phải đọc lại —
    làm mờ nó là giấu mất bài học ngay lúc bài học vừa hiện ra. Chỉ bỏ con trỏ. */
 .xsec-rung[disabled]{cursor:default;}
+
 .xsec-rung .lb{flex:1;opacity:.9;}
+
 .xsec-rung[disabled] .lb{opacity:.55;}
+
 .xsec-rung .chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;}
+
 .xsec-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
   font-size:11.4px;font-weight:600;white-space:nowrap;
   color:var(--cc,#fff);border:1px solid var(--cc,#fff);background:rgba(255,255,255,.07);}
+
 /* Mốc DUY NHẤT trên cột có nghĩa vật lý — nó là thứ làm nấc "dưới mặt nước" đọc được. */
 .xsec-sea{display:flex;align-items:center;gap:8px;margin:1px 0;
   font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
   color:rgba(110,200,255,.85);}
+
 .xsec-sea::before,.xsec-sea::after{content:"";flex:1;height:1px;
   background:repeating-linear-gradient(90deg,rgba(110,200,255,.7) 0 6px,transparent 6px 11px);}
-@media (prefers-reduced-motion:reduce){
+
+@media (prefers-reduced-motion:reduce) {
+
   .xsec-rung{transition:none;}
+
   .xsec-rung:not([disabled]):hover,.xsec-rung:not([disabled]):focus-visible{transform:none;}
 }
 
 /* ============ BẢNG 3 Ô NGỌC (kéo-thả) ============ */
 .me-core .slots{display:flex;justify-content:center;gap:clamp(10px,3vw,22px);margin-top:12px;}
+
 /* ============ BƯỚC ⑦ · HỒ SƠ TRÁI ĐẤT ============
    Thay bảng kéo 3 viên ngọc (bỏ 02/08/2026 — "không logic", chủ dự án chơi thật).
    Ba dòng chữ + một cái nút, không kéo-thả gì cả. */
 .me-fileline{display:flex;align-items:flex-start;gap:10px;text-align:left;
   padding:9px 0;border-bottom:1px solid rgba(255,255,255,.09);}
+
 .me-fileline:last-child{border-bottom:none;}
+
 .me-fileline .tick{flex:none;font-size:15px;line-height:1.5;color:#4ade80;}
+
 .me-fileline .tx{font-size:13.2px;line-height:1.55;color:var(--ink-soft);}
-/* ⚠️ 44 → 48px (02/08/2026). 44px là mốc TỐI THIỂU của WCAG 2.5.5, nên đặt đúng 44 là
-   không còn biên an toàn nào — `CLAUDE.md` đã ghi một ca chập chờn có thật vì đúng lý do
-   này (nút VI/EN của `explorer.html` đo ra đúng 44×44 nên phép kiểm khi đạt khi hỏng, hai
-   lượt chạy khác nhau mà không đụng dòng nào), và ghi nó thành "việc riêng đáng làm".
-   Nút này nay là đường ra DUY NHẤT của cả bước ② và ⑦ — bấm trượt là trẻ kẹt lại. */
-.me-stamp{min-height:48px;margin-top:4px;padding:0 20px;border:none;border-radius:13px;
-  cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:13.5px;
-  letter-spacing:.04em;color:#04060f;
-  background:linear-gradient(120deg,var(--gold),var(--amber));
-  transition:transform .2s var(--jelly),opacity .3s;}
-.me-stamp:hover:not([disabled]),.me-stamp:focus-visible{transform:translateY(-2px);}
-.me-stamp[disabled]{opacity:.5;cursor:default;}
-
-/* ⛔ `.me-slot` (ô tròn nhận viên ngọc) ĐÃ BỎ cùng bảng ngọc — không rule nào dưới đây
-   còn người dùng. Giữ lại là CSS chết, xoá luôn. */
-.me-gem{width:clamp(52px,13vw,62px);height:clamp(52px,13vw,62px);border-radius:16px;cursor:grab;
-  display:grid;place-items:center;font-size:clamp(24px,6.5vw,30px);line-height:1;
-  border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);
-  touch-action:none;transition:transform .25s var(--jelly),box-shadow .2s,opacity .25s;}
-.me-gem:hover{transform:translateY(-3px);box-shadow:0 10px 22px -10px rgba(0,0,0,.8);}
-.me-gem.dragging{opacity:.35;}
-.me-gem.used{opacity:0;pointer-events:none;}
-/* Thẻ CÓ CHỮ (nguồn năng lượng, hành động Eco-Hero) — vẫn là `.me-gem` để dùng
-   chung logic kéo-thả, chỉ nới hình cho vừa câu chữ. Ô vuông 62px thì "Dùng quá
-   nhiều túi nilon 1 lần" tràn ra ngoài viền. */
-.me-gem.wide{width:auto;height:auto;min-height:44px;max-width:min(232px,44vw);
-  padding:9px 12px;border-radius:14px;cursor:grab;
-  display:flex;align-items:center;gap:8px;text-align:left;
-  font-family:var(--font-body);font-size:12.7px;line-height:1.35;color:var(--ink);}
-.me-gem.wide .ic{font-size:19px;line-height:1;flex:none;}
-.me-gem.wide .tx{flex:1;min-width:0;}
-
-/* Viên ngọc / thẻ đang được kéo — bay theo ngón tay */
-.me-fly{position:fixed;z-index:40;pointer-events:none;font-size:34px;line-height:1;
-  transform:translate(-50%,-50%);filter:drop-shadow(0 6px 12px rgba(0,0,0,.8));}
-.me-fly.wide{max-width:min(232px,44vw);padding:9px 12px;border-radius:14px;
-  font-family:var(--font-body);font-size:12.7px;line-height:1.35;text-align:left;
-  color:var(--ink);background:rgba(18,26,58,.96);border:1px solid rgba(255,255,255,.28);
-  display:flex;align-items:center;gap:8px;}
-.me-fly.wide .ic{font-size:19px;line-height:1;flex:none;}
-
-/* ============ BƯỚC 1 · CÂU ĐỐ "NƯỚC HAY ĐẤT NHIỀU HƠN?" ============
-   Thêm 02/08/2026 (`docs/decisions/005`). Hai nút, không kéo-thả — lý do ghi ở
-   `buildAsk()` trong `mission-earth.html`.
-   ⚠️ HAI NÚT PHẢI RỘNG BẰNG NHAU (`1 1 0`, không phải `1 1 auto`): nhãn tiếng Việt
-      và tiếng Anh dài ngắn khác nhau, để `auto` thì nút "Nước" co lại bé hơn hẳn
-      nút "Đất liền" và trẻ đọc ra thành "chắc cái to hơn là đáp án". */
-.me-ask{--bd-brd:rgba(56,189,248,.45);--bd-bg:rgba(8,18,32,.9);--bd-k:var(--cyan);}
-.me-ask .q{font-size:14.5px;line-height:1.6;color:var(--ink);margin:12px 0 0;}
-.me-ask .opts{display:flex;gap:12px;margin-top:16px;}
-.me-ask-opt{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
-  gap:8px;padding:16px 10px;border-radius:14px;cursor:pointer;font-family:inherit;
-  color:var(--ink);border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
-  transition:border-color .25s,background .25s,transform .25s var(--jelly);}
-.me-ask-opt .ic{font-size:30px;line-height:1;}
-.me-ask-opt .tx{font-size:13px;line-height:1.35;}
-.me-ask-opt:hover:not([disabled]),.me-ask-opt:focus-visible{border-color:var(--cyan);
-  background:rgba(56,189,248,.14);transform:translateY(-3px);}
-.me-ask-opt[disabled]{cursor:default;opacity:.5;}
 
 /* ============ BƯỚC 2 · MỐC THỜI GIAN 4,54 TỶ NĂM ============
    ⚠️ 680 → 760px (02/08/2026, `005`): rail lên 5 mốc. Ở 680px thì mỗi mốc chỉ còn
       ~132px cho cả emoji, năm và tên — "4,54 tỷ năm trước" đã tràn. */
 .me-time{--bd-brd:rgba(251,146,60,.45);--bd-bg:rgba(24,12,8,.9);--bd-k:var(--amber);
   width:min(760px,calc(100vw - 24px));}
+
 .me-time .rail{position:relative;display:flex;align-items:flex-start;
   justify-content:space-between;gap:4px;margin-top:16px;}
+
 /* Sợi dây thời gian nối 4 mốc. Vẽ ở ::before của hàng chứ không phải viền từng nút:
    viền từng nút thì khoảng trống giữa hai nút không có dây, đọc thành 4 nút rời
    chứ không ra một dòng thời gian. */
 .me-time .rail::before{content:"";position:absolute;left:12%;right:12%;top:17px;height:2px;
   background:linear-gradient(90deg,var(--amber),var(--cyan),var(--green),#fff);
   opacity:.34;}
+
 .me-era-node{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;
   align-items:center;gap:6px;cursor:pointer;border:none;background:transparent;padding:2px 0 0;
   font-family:inherit;color:var(--ink-faint);transition:color .25s;}
+
 .me-era-node .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
   font-size:17px;line-height:1;flex:none;
   border:2px solid rgba(255,255,255,.2);background:rgba(8,10,26,.95);
   transition:border-color .3s,box-shadow .3s,transform .3s var(--jelly);}
+
 .me-era-node .yr{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;
   white-space:nowrap;}
+
 .me-era-node .nm{font-size:11.4px;line-height:1.3;}
+
 .me-era-node.now{color:var(--ink);}
+
 .me-era-node.now .dot{border-color:var(--gold);box-shadow:0 0 14px rgba(255,207,107,.8);
   transform:scale(1.14);}
+
 .me-era-node.ok{color:#bdf5d4;}
+
 .me-era-node.ok .dot{border-color:rgba(74,222,128,.85);background:rgba(74,222,128,.16);}
+
 /* Mốc chưa tới thì KHÔNG bấm được — bấm lung tung là mất mạch câu chuyện
    (dung nham → đại dương → khủng long → ngày nay chỉ có nghĩa khi đi đúng thứ tự). */
 .me-era-node[disabled]{cursor:default;opacity:.5;}
+
 .me-time .era-body{margin-top:14px;padding:12px 14px;border-radius:12px;text-align:left;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);}
+
 /* ---- Tranh minh hoạ của mốc đang xem (`005` mục ⑩) ----
    ⚠️ PHẢI KHAI CỠ CHỖ TRỐNG TRƯỚC KHI ẢNH VỀ (`aspect-ratio` + `width:100%`), không
       thì lúc ảnh tải xong cả bảng nhảy lên một nhịp — mà đây là bảng trẻ đang đọc.
@@ -418,9 +137,13 @@ a{text-decoration:none;color:inherit;}
 .era-fig{margin:0 auto 12px;position:relative;border-radius:12px;overflow:hidden;
   max-width:min(100%,52vh);
   border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);}
+
 .era-fig[hidden]{display:none;}
+
 .era-fig picture{display:block;}
+
 .era-fig img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;}
+
 /* ⚠️⚠️ CHE ẢNH TRONG LÚC CHỜ, ĐỪNG ĐỂ LỘ TRANH CỦA MỐC TRƯỚC (thêm 03/08/2026).
    Trình duyệt giữ khung ảnh ĐÃ VẼ cho tới khi ảnh mới decode xong, nên đổi `srcset`
    thôi thì trẻ bấm mốc "đại dương" mà vẫn đang xem tranh dung nham — không phải chậm,
@@ -432,8 +155,11 @@ a{text-decoration:none;color:inherit;}
       3:2 nên không lớp nào thắng sai.
    Nhãn "MINH HOẠ" cũng ẩn theo: nó nói về một bức tranh đang không nhìn thấy. */
 .era-fig.era-wait{aspect-ratio:3/2;}
+
 .era-fig.era-wait img,.era-fig.era-wait .era-illus{opacity:0;}
+
 .era-fig img,.era-illus{transition:opacity .18s;}
+
 .era-illus{position:absolute;left:8px;bottom:8px;
   font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
   color:#e8eeff;background:rgba(4,6,15,.72);border:1px solid rgba(255,255,255,.28);
@@ -442,6 +168,7 @@ a{text-decoration:none;color:inherit;}
 
 .me-time .era-body h3{font-family:var(--font-display);font-weight:700;font-size:14.5px;
   margin:0;color:#ffe6c8;}
+
 .me-time .era-body p{font-size:12.8px;line-height:1.6;color:var(--ink-soft);margin:6px 0 0;}
 
 /* ---- MỘT CỠ CHUNG CHO CẢ 5 MỐC (sửa 03/08/2026) ----
@@ -465,8 +192,11 @@ a{text-decoration:none;color:inherit;}
       được đo, tức mất sạch tác dụng giữ chỗ. Và `aria-hidden` trên chính khối đó để
       trình đọc màn hình không đọc 5 mốc liền một lúc. */
 .me-time .era-txt{display:grid;}
+
 .me-time .era-txt>.era-live,.me-time .era-txt>.era-ghost{grid-area:1/1;}
+
 .me-time .era-ghost{display:grid;visibility:hidden;pointer-events:none;}
+
 .me-time .era-ghost>*{grid-area:1/1;}
 
 /* ---- Hàng chứa nút của mốc cuối ----
@@ -476,6 +206,7 @@ a{text-decoration:none;color:inherit;}
       THẮNG `display:none` mà trình duyệt áp cho `[hidden]`, và nút sẽ hiện ra ngay từ
       mốc thứ nhất — tức trẻ chốt được bước ② khi mới xem 1/5 mốc. */
 .me-time .era-act{display:flex;justify-content:center;}
+
 .me-time .era-act .me-stamp{margin-top:12px;}
 
 /* Lớp phủ đổi màu bầu trời theo mốc thời gian.
@@ -486,10 +217,13 @@ a{text-decoration:none;color:inherit;}
    KHÁC hẳn qua từng mốc, mà bản đồ bờ biển thật vẫn nguyên. */
 .me-era{position:fixed;inset:0;z-index:5;pointer-events:none;
   opacity:0;transition:opacity 1s ease,background 1s ease;}
+
 .me-era.on{opacity:1;}
-#stage{transition:filter 1.1s ease;}
+
 #stage.era-magma{filter:sepia(.62) saturate(3.1) hue-rotate(-26deg) brightness(1.06) contrast(1.06);}
+
 #stage.era-ocean{filter:saturate(.62) brightness(.86) contrast(1.04);}
+
 /* ⚠️ `era-life` THÊM 02/08/2026 (`005`, mốc thứ 3 trong 5). Tông phải KHÁC RÕ
    `era-ocean` ngay trước nó — hai cảnh liền nhau trông giống nhau thì trẻ tưởng
    bấm không ăn, và đó là cả lý do mốc này tồn tại (nó lấp 92% lịch sử Trái Đất
@@ -497,19 +231,26 @@ a{text-decoration:none;color:inherit;}
    brightness .86); `era-life` đi ngược lại: đậm màu hơn và xoay về phía lục lam.
    Cũng phải khác `era-dino` (hue-rotate ÂM, ngả vàng-lục ấm). */
 #stage.era-life{filter:saturate(1.24) hue-rotate(30deg) brightness(.98) contrast(1.05);}
+
 #stage.era-dino{filter:saturate(1.32) hue-rotate(-9deg) brightness(1.03);}
+
 .me-era.era-magma{background:radial-gradient(circle at 50% 46%,rgba(255,110,30,.34),
   rgba(120,20,0,.34) 46%,rgba(20,2,0,.5));}
+
 .me-era.era-ocean{background:radial-gradient(circle at 50% 46%,rgba(40,120,160,.2),
   rgba(4,20,40,.44) 62%);}
+
 .me-era.era-life{background:radial-gradient(circle at 50% 46%,rgba(40,210,190,.2),
   rgba(2,32,34,.42) 64%);}
+
 .me-era.era-dino{background:radial-gradient(circle at 50% 46%,rgba(120,220,140,.16),
   rgba(6,26,16,.3) 66%);}
 
 /* ============ BƯỚC 4 · NĂNG LƯỢNG SẠCH ============ */
 .me-energy{--bd-brd:rgba(74,222,128,.45);--bd-bg:rgba(8,20,18,.9);--bd-k:var(--green);}
+
 .me-energy .slots{display:flex;justify-content:center;gap:clamp(10px,3vw,20px);margin-top:14px;}
+
 /* Ống khói đang nhả khói — thả đúng nguồn sạch vào thì nó thành trạm phát điện. */
 /* ============ BƯỚC ⑤ · BA NHÀ MÁY TRÊN CHÍNH BẢN ĐỒ ============
    Đổi 02/08/2026 theo chủ dự án: ba ống khói rời khỏi bảng ở đáy màn hình và neo vào
@@ -529,17 +270,23 @@ a{text-decoration:none;color:inherit;}
   /* quầng tối phủ vùng đất quanh nhà máy — đây chính là "vùng bị mờ" */
   box-shadow:0 0 0 6px rgba(24,18,12,.5), 0 0 68px 34px rgba(24,18,12,.72);
   transition:border-color .25s,background .25s,box-shadow .8s ease,transform .3s var(--jelly);}
+
 .e2-mk.e2-stack .ic{font-size:clamp(20px,5.4vw,26px);line-height:1;}
+
 .e2-mk.e2-stack .puff{position:absolute;left:50%;top:-10px;font-size:15px;line-height:1;
   transform:translateX(-50%);opacity:.85;animation:mePuff 2.6s ease-in-out infinite;}
+
 @keyframes mePuff{0%{transform:translate(-50%,4px) scale(.8);opacity:0;}
   40%{opacity:.9;}100%{transform:translate(-50%,-16px) scale(1.25);opacity:0;}}
+
 .e2-mk.e2-stack.over{border-color:var(--green);background:rgba(74,222,128,.28);
   transform:translate(-50%,-50%) scale(1.12);}
+
 /* Đã thay nguồn: quầng tối TAN HẾT — đó là phần thưởng nhìn thấy được của cú kéo. */
 .e2-mk.e2-stack.ok{border-style:solid;border-color:rgba(74,222,128,.9);
   background:rgba(74,222,128,.22);
   box-shadow:0 0 0 3px rgba(74,222,128,.35), 0 0 26px 4px rgba(74,222,128,.5);}
+
 .e2-mk.e2-stack.ok .puff{display:none;}
 
 .me-energy .tray{display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(8px,2.4vw,14px);
@@ -553,385 +300,61 @@ a{text-decoration:none;color:inherit;}
     radial-gradient(60% 42% at 28% 34%,rgba(26,22,18,.92),transparent 70%),
     radial-gradient(52% 38% at 72% 52%,rgba(34,28,20,.86),transparent 72%),
     radial-gradient(70% 50% at 50% 76%,rgba(18,16,14,.8),transparent 74%);}
+
 .me-smog.drift{animation:meSmog 14s ease-in-out infinite alternate;}
+
 @keyframes meSmog{0%{background-position:0 0,0 0,0 0;}
   100%{background-position:5% -3%,-5% 3%,3% 2%;}}
 
 /* ============ BƯỚC 7 · ECO-HERO: NÊN / KHÔNG NÊN ============ */
 .me-eco{--bd-brd:rgba(74,222,128,.45);--bd-bg:rgba(9,18,14,.92);--bd-k:var(--green);
   width:min(760px,calc(100vw - 24px));}
+
 .me-eco .buckets{display:flex;justify-content:center;gap:clamp(8px,2.4vw,16px);margin-top:14px;}
+
 .me-bucket{flex:1;min-width:0;min-height:clamp(84px,20vw,104px);padding:9px 8px;border-radius:14px;
   display:flex;flex-direction:column;align-items:center;gap:6px;
   border:2px dashed var(--bk,rgba(255,255,255,.3));background:var(--bkbg,rgba(255,255,255,.05));
   transition:border-color .25s,background .25s,transform .3s var(--jelly);}
+
 .me-bucket.good{--bk:rgba(74,222,128,.6);--bkbg:rgba(74,222,128,.09);}
+
 .me-bucket.bad{--bk:rgba(248,113,113,.6);--bkbg:rgba(248,113,113,.09);}
+
 .me-bucket .hd{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);
   font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;}
+
 .me-bucket.good .hd{color:#8ff0ae;}
+
 .me-bucket.bad .hd{color:#ffb1b1;}
+
 .me-bucket.over{border-style:solid;transform:scale(1.03);}
+
 .me-bucket .drop{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+
 /* Thẻ đã xếp đúng — thu nhỏ thành chip để cả 7 thẻ vẫn nằm trong rổ. */
 .me-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;
   padding:4px 8px;border-radius:999px;font-size:11px;line-height:1.3;
   border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.09);color:var(--ink-soft);}
+
 .me-chip .ic{font-size:12px;line-height:1;flex:none;}
+
 .me-eco .deck{display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(6px,1.8vw,10px);
   margin-top:14px;min-height:46px;}
 
-@media (max-width:600px){
-  .me-board{padding:12px 12px 11px;}
-  .me-era-node .nm{display:none;}          /* chỉ còn năm + emoji, đủ để bấm đúng mốc */
-  .me-gem.wide{font-size:12px;max-width:46vw;}
+@media (max-width:600px) {
+
+  .me-era-node .nm{display:none;}
+
   .me-eco .buckets{flex-direction:row;}
 }
-@media (max-width:560px){
-  .me-steps .s{width:9px;height:9px;} .me-steps .l{width:8px;}
-}
 
-/* ============ MÀN TỔNG KẾT SỨ MỆNH ============ */
-.me-win{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px;
-  background:rgba(3,5,15,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  opacity:0;visibility:hidden;transition:opacity .5s,visibility .5s;}
-.me-win.show{opacity:1;visibility:visible;}
-.me-win-card{width:min(560px,100%);max-height:calc(100vh - 32px);overflow-y:auto;
-  padding:24px clamp(18px,4vw,28px) 20px;border-radius:8px;
-  border:2px solid rgba(255,207,107,.85);
-  background:linear-gradient(180deg,rgba(28,20,6,.96),rgba(12,10,22,.97));
-  box-shadow:0 34px 80px -22px rgba(0,0,0,.95),0 0 60px -10px rgba(255,207,107,.55),
-             inset 0 0 48px -18px rgba(255,207,107,.7);
-  transform:scale(.9);transition:transform .55s var(--jelly);}
-.me-win.show .me-win-card{transform:scale(1);}
-.me-win h2{font-family:var(--font-display);font-weight:700;font-size:clamp(18px,4vw,25px);
-  margin:0;text-align:center;color:#fff3d6;line-height:1.25;
-  text-shadow:0 0 26px rgba(255,207,107,.7);}
-.me-win .medal{text-align:center;margin-top:16px;}
-.me-win .medal .big{font-size:44px;line-height:1;
-  filter:drop-shadow(0 0 18px rgba(255,207,107,.8));}
-.me-win .medal .nm{font-family:var(--font-display);font-weight:700;font-size:17px;
-  margin-top:6px;color:var(--gold);}
-.me-win .medal .sub{font-size:12.6px;color:#f0dcb4;margin-top:2px;}
-.me-win .sec{margin-top:18px;padding-top:14px;border-top:1px dashed rgba(255,207,107,.28);}
-.me-win .sec .k{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:9.5px;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
-.me-win .rw{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:13.6px;color:#f4e6c8;}
-.me-win .rw img{width:19px;height:19px;object-fit:contain;flex:none;
-  filter:drop-shadow(0 0 6px rgba(192,132,252,.9));}
-.me-win .rw .ic{font-size:16px;line-height:1;flex:none;}
-.me-win .rw b{color:#fff;}
-.me-win .rw.hide{display:none;}
-/* Khối "việc tiếp theo" ở màn tổng kết.
-   ⚠️ TÊN CŨ LÀ `.unlock` — đổi ngày 30/07/2026 cùng lúc bỏ khối "hành tinh mới đã
-      mở khoá 🌙 Mặt Trăng". Giữ tên `.unlock` cho một khối không còn nói về mở khoá
-      gì là để lại một cái bẫy đọc hiểu cho người sửa sau.
-   `align-items:flex-start` vì câu này dài hơn dòng "MẶT TRĂNG" cũ và xuống 2–3
-   dòng trên điện thoại — canh giữa thì icon trôi xuống lưng đoạn văn. */
-.me-win .nextup{margin-top:9px;padding:11px 13px;border-radius:10px;
-  border:1px solid rgba(95,211,255,.45);background:rgba(8,20,44,.7);
-  display:flex;align-items:flex-start;gap:10px;font-size:13.6px;line-height:1.55;color:#cfe8ff;}
-.me-win .nextup .ic{font-size:20px;line-height:1.3;flex:none;}
-/* Dòng đếm giờ của đường về tự động. Mono + mờ để nó là LỜI NHẮC, không phải một
-   nút bấm thứ tư — trẻ đang đọc phần thưởng, thêm một khối nổi bật nữa là chia mắt. */
-.me-win .autoline{margin:11px 0 0;text-align:center;font-family:var(--font-mono);
-  font-size:11px;line-height:1.5;color:rgba(207,232,255,.62);min-height:1.2em;}
-.me-win .acts{display:flex;flex-direction:column;gap:9px;margin-top:20px;}
-.me-win .acts button,.me-win .acts a{cursor:pointer;border:none;width:100%;
-  padding:13px 16px;border-radius:6px;font-family:var(--font-mono);
-  font-size:clamp(11.5px,2.6vw,13px);letter-spacing:.13em;text-transform:uppercase;
-  text-align:center;transition:transform .28s var(--jelly),filter .18s;}
-.me-win .acts .go{color:#04060f;background:linear-gradient(120deg,var(--gold),var(--gold2));
-  box-shadow:0 12px 26px -12px rgba(255,157,61,.9);}
-.me-win .acts .go:hover{filter:brightness(1.07);transform:translateY(-2px);}
-/* Nút Mặt Trăng đang vô hiệu. `grayscale + brightness` trên nền gradient vàng vẫn
-   ra một khối be SÁNG HƠN cả nút đang dùng được — trên ảnh chụp nó hút mắt hơn
-   "Xem Kho Thành Tích", tức là trẻ bấm vào đúng cái không bấm được. Bỏ hẳn nền
-   gradient, để nó chìm xuống. */
-.me-win .acts .go[disabled]{cursor:default;background:rgba(255,255,255,.05);
-  color:rgba(240,230,205,.42);border:1px dashed rgba(255,207,107,.28);
-  box-shadow:none;transform:none;filter:none;}
-.me-win .acts .ghost{color:var(--ink);background:rgba(255,255,255,.07);
-  border:1px solid var(--brd);}
-.me-win .acts .ghost:hover{background:rgba(255,255,255,.14);}
+@media (prefers-reduced-motion:reduce) {
 
-/* ============ HỘP "TIẾP HAY DỪNG" (`.me-next`) ============
-   ⚠️ TÊN LÀ `.me-next`, KHÔNG PHẢI `.me-ask` — VA CHẠM THẬT, BẮT ĐƯỢC TRƯỚC KHI NÓ
-   KỊP GÂY HẠI. `.me-ask` (dòng ~355) đã là bảng CÂU ĐỐ của bước ③ và nó khai ba biến
-   `--bd-brd`/`--bd-bg`/`--bd-k`; gắn cùng tên lên hộp này là ba biến đó chảy vào cả
-   cây con của một overlay hoàn toàn khác. Đúng lỗi `.hero` của `library.css` đã trả
-   giá (thẻ bài nổi bật trùng tên với tiêu đề canh giữa của khung chung).
-   Dùng lại nguyên vỏ `.me-win` (nền tối, thẻ kính, hai nút xếp dọc) và chỉ đổi ba
-   thứ: hẹp hơn, không có huân chương/phần thưởng, thêm một dòng dẫn.
-   ⚠️ Hẹp hơn là CÓ CHỦ ĐÍCH: hộp này chỉ hỏi MỘT câu. Để nguyên bề rộng 560px của
-      màn tổng kết thì một câu hỏi ngắn nằm giữa một tấm thẻ rộng đọc ra như trang
-      đang thiếu nội dung.
-   ⚠️ "Để lần sau" là một lựa chọn HỢP LỆ, không phải cú thoát hiểm — nó dùng đúng
-      `.ghost` như mọi nút phụ khác, không bị làm mờ thêm. */
-/* ⚠️ `[hidden]` phải khai lại ở đây. Nút "Chơi tiếp chặng sau" bị ẩn khi trẻ đang ÔN
-   LẠI một chặng cũ; `.acts` là flex nên con của nó là flex item, và dự án đã bị đúng
-   cái bẫy này 5 lần (`#time-ok` · `.lk-btn` · `.pt-empty` · `.co-steps` · `.pbtn`).
-   Khai tường minh thì không phải đoán quy tắc nào thắng. */
-.me-win .acts [hidden]{display:none;}
-.me-next .me-win-card{width:min(440px,100%);}
-.me-next .af-p{margin:12px 0 0;text-align:center;font-size:14px;line-height:1.6;
-  color:#f0e6cf;}
-
-/* Hai mascot nhảy ăn mừng */
-.me-cheer{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-top:14px;}
-/* Cao 96px, RỘNG TỰ ĐỘNG. Bản đầu để hộp vuông 58×58 + `object-fit:contain`, mà
-   m1/b1 là ảnh dọc tỉ lệ 2:3 → phần vẽ ra chỉ còn 39×58, trên ảnh chụp đọc thành
-   hai emoji lạ chứ không ra "Comet và Byte đang nhảy lên vui mừng". */
-.me-cheer img{height:96px;width:auto;object-fit:contain;
-  filter:drop-shadow(0 8px 18px rgba(0,0,0,.6));}
-.me-cheer img:nth-child(1){animation:meJump 1s ease-in-out infinite;}
-.me-cheer img:nth-child(2){animation:meJump 1s ease-in-out .18s infinite;}
-@keyframes meJump{0%,100%{transform:translateY(0) rotate(-3deg);}
-  45%{transform:translateY(-12px) rotate(4deg);}}
-
-/* ============ TOAST ============ */
-.me-toast{position:fixed;left:50%;top:74px;transform:translateX(-50%) translateY(-10px);z-index:80;
-  padding:11px 17px;border-radius:999px;font-weight:600;font-size:13.4px;
-  background:rgba(13,20,48,.95);border:1px solid rgba(95,211,255,.5);
-  box-shadow:0 18px 40px -18px rgba(0,0,0,.85);color:var(--ink);
-  opacity:0;pointer-events:none;transition:opacity .28s,transform .28s;}
-.me-toast.show{opacity:1;transform:translateX(-50%);}
-.me-toast img{width:1em;height:1em;object-fit:contain;vertical-align:-.16em;margin:0 .1em;}
-/* Điện thoại: toast xuống ĐÁY. Thanh trên đã xuống 2 dòng nên `top:74px` rơi
-   đúng vào giữa nó. */
-@media (max-width:560px){
-  .me-cheer img{height:74px;} .me-toast{top:auto;bottom:150px;} }
-
-/* Bớt chuyển động */
-@media (prefers-reduced-motion:reduce){
   .me-hand.drag,.me-hand.zoom,.me-hand.tap,.me-cheer img,
   .me-stack .puff,.me-smog.drift{animation:none;}
-  .me-card,.me-board,.me-win-card,.me-obj,.me-say{transition:opacity .2s linear;}
-  .me-card.show{transform:translate(-50%,-50%);}
-  .me-win-card{transform:none;}
-  .me-win.show .me-win-card{transform:none;}
+
   /* Đổi tông hành tinh vẫn GIỮ (nó là nội dung bài học "Trái Đất từng khác hẳn",
      không phải hiệu ứng trang trí) nhưng bỏ phần chuyển màu dần. */
   #stage,.me-era{transition:none;}
-  .me-stack .puff{opacity:.85;}
-}
-
-/* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`. Đo trên
-   iPad: nút 🔊 32×28, nút "Về Trung Tâm Điều Hướng" cao 32px. Nhiệm vụ này
-   chính là nội dung hay được chơi trên máy tính bảng nhất.
-   Nút VI/EN KHÔNG cần rule riêng nữa — nó đã dùng `.lang-switch` dùng chung. */
-@media (pointer: coarse){
-  .me-mute{min-width:44px;min-height:44px;}
-  .me-top .back{min-height:44px;}
-  /* ⚠️ SÓT CỦA LƯỢT SỬA VÙNG CHẠM 31/07/2026, `audit_viewports` bắt được: nút
-     "Tiếp tục" của box thoại Comet đo được **82×35px** trên iPad mini (dọc và
-     ngang) — dưới mốc WCAG 2.5.5 / hướng dẫn Apple là 44px. Và đây không phải một
-     nút phụ: nó là nút DUY NHẤT đưa trẻ qua từng lời Comet, tức bấm trượt là kẹt
-     lại ở bước đang xem.
-     Vì sao sót: lượt đó sửa `.me-mute` + `.me-top .back` (hai nút ở header) và
-     không ai đi hết các nút TRONG cảnh.
-     ⚠️ `min-height` ghi đè được `padding` sẵn có nên không phải xoá giá trị cũ —
-     bề rộng dùng thật là `clamp(min, height, max)`. */
-  .me-say .next{min-height:44px;}
-}
-
-/* ============================================================
-   CẢNH 2D CỦA NHIỆM VỤ 01 — 13 class `e2-*` cho `js/earth2d.js`
-   (bậc 2b của việc bỏ three.js, 31/07/2026)
-
-   Cấu trúc DOM do `earth2d.js` dựng, thứ tự trong DOM = thứ tự vẽ:
-     #stage.e2 > .e2-view > .e2-layer > picture > img.e2-img
-                                      > .e2-grid
-                                      > .e2-markers > button.e2-mk
-                                      > .e2-drone > .e2-beam
-                          > .e2-shield
-   Trạng thái: `.e2-flat` (bản đồ phẳng) · `.e2-night` (mất nắng) trên #stage;
-   `.done` trên marker; `.show`/`.ok` trên vệ tinh, drone, khiên.
-
-   ⚠️ `.e2-layer` PHẢI CÓ ĐÚNG TỈ LỆ CỦA ẢNH, không được chỉ `inset:0`.
-      `earth2d.js` đặt marker bằng PHẦN TRĂM của lớp này (`left:96%` = mép đĩa
-      hành tinh). Nếu lớp rộng hơn ảnh (letterbox vì `object-fit:contain`) thì
-      96% của LỚP không còn là mép đĩa — marker rơi ra ngoài hành tinh, đúng loại
-      lỗi "thẻ mẫu vật ghi Amazon mà chỗ đó là đại dương" đã trả giá ở bản 3D.
-      Nên: lớp lấy đúng tỉ lệ ảnh, ảnh phủ kín lớp (`width/height:100%`).
-   ⚠️ Dùng ĐƠN VỊ KHUNG NHÌN (vw/vh) được vì `#stage` là `position:fixed;inset:0`
-      — tức khung nhìn của nó CHÍNH LÀ khung nhìn trình duyệt. Đổi `#stage` sang
-      bố cục khác thì phải sửa lại 4 dòng cỡ ở đây.
-   ============================================================ */
-.e2{overflow:hidden;}
-.e2-view{position:absolute;inset:0;overflow:hidden;touch-action:none;}
-
-/* Lớp BỊ biến hình. `transform` do JS ghi (pan + zoom) — CSS không đặt transform
-   ở đây, và cũng không dùng transform để canh giữa (sẽ bị JS ghi đè). */
-.e2-layer{position:absolute;inset:0;margin:auto;transform-origin:50% 50%;
-  will-change:transform;
-  /* ảnh quả cầu 640×640: hình vuông LỌT trong khung, để thấy trọn đĩa hành tinh */
-  width:min(100vw,100vh);height:min(100vw,100vh);}
-/* bản đồ phẳng 2048×1024 (tỉ lệ 2:1): PHỦ KÍN khung, không để dải trống —
-   width = max(100vw, 200vh) nên height = một nửa = max(50vw, 100vh)
-
-   ⚠️⚠️ `left:50% + margin-left:-nửa bề rộng` LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ
-   (sửa 02/08/2026 — lỗi CÓ SẴN TỪ TRƯỚC, chỉ lộ ra khi bước ① lên 7 châu lục).
-
-   `inset:0 + margin:auto + width` là **quá ràng buộc**. CSS xử hai trục KHÁC NHAU:
-     · trục DỌC (10.6.4): margin auto được chia ĐỀU → lớp **căn giữa** ✅
-     · trục NGANG (10.3.7): ở `direction:ltr` thì **`right` bị bỏ qua**, margin về 0
-       → lớp **neo MÉP TRÁI** (đo được `left = 0`, không phải −180) ❌
-   Hậu quả: `paint()` dịch lớp theo `-lon/360` bề rộng LỚP, nhưng khung thì hẹp hơn
-   → điểm ở `facing` rơi vào **62,5% bề rộng khung** (đo trên 1440×900), lệch **36°**.
-   Và tệ hơn: dải kinh độ với tới được bị CẮT MẤT MỘT ĐẦU. Trên điện thoại dọc
-   390×844, `facing.lon` chỉ chạy được trong [−180, 180) nên **mọi kinh độ đông hơn
-   ~83° KHÔNG THỂ đưa vào khung** — marker chỉ được vẽ trên bản ảnh THẬT, hai bản
-   sao lát chỉ để lấp mắt. Tức là ở bước ④ `life`, dãy **Himalaya (lon 87)** đã
-   không tài nào nhìn thấy trên máy tính bảng dọc, từ trước lượt này. Không phép
-   kiểm nào hỏi câu đó nên nó sống im lặng.
-   Căn giữa xong thì `facing.lon` đúng nghĩa "kinh độ ở TÂM khung", hai trục nhất
-   quán, và `centerOn()` của `js/earth2d.js` rút gọn còn `facing.lon = zoom × lon`.
-   ⚠️ KHÔNG canh giữa bằng `transform:translateX(-50%)` — JS ghi đè `transform`. */
-.e2.e2-flat .e2-layer{width:max(100vw,200vh);height:max(50vw,100vh);
-  left:50%;right:auto;margin-left:calc(max(100vw,200vh) / -2);}
-.e2-img{display:block;width:100%;height:100%;
-  transition:filter .8s ease;}
-
-/* ---- Hai bản sao LÁT THEO KINH TUYẾN (02/08/2026, `docs/decisions/005`) ----
-   Chữa lỗi ĐANG CHẠY mà chủ dự án gặp khi chơi thật: `paint()` dịch `.e2-layer`
-   theo `facing.lon` tới ±50% bề rộng, mà lớp chỉ đủ phủ khung khi phép dịch = 0
-   → dải ĐEN bên phải (đo được 602px ở bước ③ trên khung 1900×985).
-   Bản đồ equirectangular lặp liền mạch theo kinh độ (180°Đ = 180°T), nên ghép
-   thêm một bản mỗi bên là hết hở ở mọi kinh độ.
-   ⚠️ CỐ Ý KHÔNG đổi `width`/`height` của `.e2-layer` để chữa: marker định vị bằng
-      PHẦN TRĂM của lớp đó, đổi cỡ lớp là dời toàn bộ toạ độ địa lý — đúng lỗi
-      "thẻ Amazon rơi giữa đại dương" của bản 3D. Bản sao nằm NGOÀI hộp của lớp.
-   ⚠️ CHỈ Ở BẢN ĐỒ PHẲNG. `globe-640` là ảnh CHỤP một hình cầu — lát nó ra cạnh
-      nhau cho ra ba quả cầu nằm hàng, vô nghĩa. */
-.e2 .e2-wrap{display:none;}
-.e2.e2-flat .e2-wrap{display:block;position:absolute;top:0;width:100%;height:100%;}
-.e2.e2-flat .e2-wrap-w{left:-100%;}
-.e2.e2-flat .e2-wrap-e{left:100%;}
-
-/* ---- KHÔNG CÒN VÙNG TỐI NÀO TRÊN BẢN ĐỒ PHẲNG ----
-   ⛔ `.e2-view::after` (gradient ranh giới ngày/đêm) và `.e2-terminator` ĐÃ BỎ HẲN
-   02/08/2026 — `docs/decisions/005` mục 2. Đừng dựng lại dưới bất kỳ tên nào.
-
-   Chủ dự án chơi thật bước `rotation` rồi gửi ảnh chụp: gradient đen `.82` ở mép
-   phải **trông như một bức tường đen**, không như ranh giới ngày/đêm. Đó là bằng
-   chứng thị giác chống lại chính `004` — mức mà `004` định cho bước ③ "dâng lên"
-   CHÍNH LÀ mức trong bức ảnh bị bác.
-   Mức mặc định nhẹ (`.16 → .30`) cũng bỏ theo: nó **ăn 29,6 điểm sáng của MỌI
-   bước** mà không còn bài học nào để trả lại — bài học ngày/đêm đã chuyển sang
-   quả cầu 3D ở `explorer.html`, nơi có `PointLight` gắn vào Mặt Trời THẬT trong
-   cảnh (đo được hai nửa chênh 106,5 điểm sáng, tỉ số 2,94×).
-   `check_pages` [3c] đếm `e2-terminator` phải bằng 0 ở cả CSS lẫn HTML.
-
-   Mất nắng (`.e2-night`) thì GIỮ — nó khác hẳn: cả hành tinh tối đi vì Mặt Trời
-   chưa cháy, không phải một dải tối vắt ngang bản đồ. Làm tối CHÍNH ẢNH, không
-   phủ thêm một lớp lên trên: phủ lớp thì marker cũng bị tối và mờ đi đúng lúc trẻ
-   cần chạm vào nó. */
-.e2.e2-night .e2-img{filter:brightness(.26) saturate(.6);}
-
-/* ---- Lưới Chẩn Đoán (bước ①) ----
-   ⚠️⚠️ CHƯA DÙNG `img/earth/graticule.svg` — ĐANG TREO, LÝ DO ĐO ĐƯỢC:
-   Tôi đã vẽ xong lưới kinh–vĩ tuyến theo phép chiếu chính hình (file SVG đó, hình
-   học đúng, đã kiểm bằng ảnh chụp). Nhưng trong cảnh 2D, `paint()` của
-   `js/earth2d.js` để `px = py = 0` khi bản đồ là ẢNH QUẢ CẦU — nghĩa là **kéo
-   KHÔNG làm ảnh quả cầu xoay**, nó chỉ đổi `facing` để marker chiếu lại chỗ khác.
-   Hệ quả: một lưới toạ độ vẽ cố định trên ảnh sẽ ĐỨNG YÊN trong khi các điểm tín
-   hiệu trượt đi — và tệ hơn, xích đạo sẽ nằm sai chỗ so với địa lý thật của bức
-   ảnh (ảnh NASA này chụp lệch tâm về Bắc Mỹ, không phải tâm ở xích đạo).
-   Đó đúng là loại lỗi "dạy sai địa lý" mà dự án đã trả giá một lần với nhiễu fBm.
-   Cách sửa đúng: sinh lưới bằng JS từ `facing`, dùng CHÍNH `project()` của
-   earth2d.js, để nó xoay cùng thứ mà marker đang xoay theo. Chưa làm.
-   Tạm thời để lưới quét TRUNG TÍNH — không tuyên bố nó là kinh/vĩ tuyến. */
-.e2-grid{position:absolute;inset:0;pointer-events:none;
-  transition:opacity .6s ease;
-  background-image:
-    repeating-linear-gradient(90deg, rgba(95,240,255,.20) 0 1px, transparent 1px 12.5%),
-    repeating-linear-gradient(0deg,  rgba(95,240,255,.20) 0 1px, transparent 1px 12.5%);}
-
-/* ---- Điểm tín hiệu ---- */
-.e2-markers{position:absolute;inset:0;}
-/* ⚠️ KHÔNG đặt `transform` ở đây: JS ghi `translate(-50%,-50%) scale(1/zoom)` để
-   dấu hiệu giữ nguyên cỡ trên màn hình dù ảnh phóng bao nhiêu. */
-.e2-mk{position:absolute;width:34px;height:34px;border-radius:50%;
-  transform-origin:50% 50%;
-  border:2px solid var(--mk,#5ff0ff);background:rgba(2,10,26,.42);
-  box-shadow:0 0 14px var(--mk,#5ff0ff), inset 0 0 10px rgba(255,255,255,.25);
-  cursor:pointer;padding:0;}
-.e2-mk::after{content:"";position:absolute;inset:-9px;border-radius:50%;
-  border:2px solid var(--mk,#5ff0ff);opacity:.85;
-  animation:e2Ping 1.5s ease-out infinite;}
-.e2-mk.done{border-color:var(--good);box-shadow:0 0 16px rgba(99,230,168,.9);}
-
-.e2-mk.done::after{animation:none;opacity:0;}
-@keyframes e2Ping{
-  0%{transform:scale(.72);opacity:.9;}
-  100%{transform:scale(1.55);opacity:0;}
-}
-
-/* ---- Drone quét mẫu (bước ⑥) ---- */
-.e2-drone{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;
-  border-radius:8px;opacity:0;transition:opacity .3s ease;
-  background:linear-gradient(150deg,#dbe6ff,#8f7bff);
-  box-shadow:0 0 16px rgba(143,123,255,.85);}
-.e2-drone.show{opacity:1;}
-/* Tia laser tím: chiều dài theo biến `--scan` (0 → 1) mà JS tween. */
-.e2-beam{position:absolute;left:50%;top:100%;width:4px;
-  height:calc(var(--scan,0) * 74px);transform:translateX(-50%);
-  background:linear-gradient(180deg, rgba(192,132,252,.95), rgba(192,132,252,0));
-  box-shadow:0 0 10px rgba(192,132,252,.9);}
-
-/* ---- Mặt Trời (bước ③) ---- */
-/* ⛔⛔ `.e2-sun` ĐÃ BỎ HẲN 03/08/2026 — ĐỪNG DỰNG LẠI. Đây là rác còn sót của một quyết
-   định đã chốt từ 02/08/2026: bước ③ không còn vật thể Mặt Trời nào để chạm, và lời
-   thoại đã viết lại để nói rõ Mặt Trời **không nằm trên tấm bản đồ này** (có phép kiểm
-   ở `check_pages`). Nhưng thẻ DOM thì chưa ai xoá, nên nó vẫn vẽ một đĩa sáng mờ ở góc
-   trên-phải trong MỌI bước; chủ dự án chơi thật rồi hỏi *"vẫn còn hình mặt trời ở đây?
-   bỏ đi"*.
-   Cùng một họ với `.e2-terminator` và vành tròn cũ của `.e2-shield`: hình đúng cho QUẢ
-   CẦU (Mặt Trời ở ngoài rìa hành tinh) để nguyên trên BẢN ĐỒ PHẲNG phủ kín khung — nơi
-   mọi pixel đều là bề mặt Trái Đất — thì nó nói rằng Mặt Trời nằm TRÊN mặt đất.
-   Bài học của bước ③ nay chỉ nằm ở `.e2-night`: cả bản đồ tối đi rồi sáng lại. Biến
-   `--lit` vì thế cũng không còn ai đặt. */
-
-/* ---- Màng khí quyển (bước ⑦) ---- */
-/* ⛔⛔ KHÔNG CÒN HÌNH TRÒN — LỖI THẬT ĐÃ SỬA 03/08/2026, ĐỪNG HOÀN TÁC.
-   Bản trước là một VÀNH TRÒN `border-radius:50%` cỡ `min(100vw,100vh)` đặt giữa khung.
-   Nó đúng cho bản 3D, nơi hành tinh LÀ một quả cầu và vành đó là mép trong của cầu.
-   Nhưng cảnh nay là **bản đồ phẳng phủ kín khung** (`004`: một hình cho cả nhiệm vụ),
-   nên cái vành ấy không bọc quanh cái gì cả — nó là một đường tròn lơ lửng giữa châu
-   Phi. Chủ dự án chơi thật và hỏi đúng câu phải hỏi: *"sao đoạn này lại có hình tròn ở
-   giữa? Trái Đất trải phẳng rồi mà."*
-   Đây là **cùng một lỗi** với `.e2-terminator` (`005` mục 2): một hình ảnh đúng trên quả
-   cầu bị mang nguyên sang bản đồ phẳng, và trên bản đồ phẳng nó đọc ra thành một thứ
-   khác hẳn. Nên chữa bằng cách vẽ lại cho đúng hệ hình, không phải bằng cách gỡ bỏ —
-   khoảnh khắc "khí quyển bọc lấy Trái Đất" là câu kết của cả nhiệm vụ.
-
-   HÌNH MỚI, ĐÚNG VỚI BẢN ĐỒ PHẲNG: trên bản đồ phẳng thì **cả khung hình chính là bề
-   mặt hành tinh**, nên "một lớp màng bọc lấy nó" = một lớp phim sáng phủ kín khung, dày
-   lên ở bốn mép. Hai lớp:
-     · `inset box-shadow` — vành sáng bám sát bốn mép khung, tức mép của chính bề mặt
-       đang xem. Đây là phần đọc ra "có một lớp vỏ ở ngoài".
-     · vignette rất nhẹ — cảm giác đang nhìn XUYÊN QUA một lớp gì đó.
-   ⚠️⚠️ ĐO ĐƯỢC, VÀ ĐÂY LÀ CHỖ NÓ KHÁC HẲN `.e2-terminator`: màng này **làm SÁNG bản
-      đồ lên**, không làm tối. Chụp ảnh cùng khung, bật/tắt màng (bộ đo ghi trong lịch
-      sử lượt sửa 03/08/2026): độ sáng TB toàn ảnh **81,0 → 90,5 (+9,6 điểm)**, còn
-      **giữa khung thì +0,0 điểm** — tức phần bản đồ trẻ đang đọc KHÔNG bị đụng tới.
-      `005` mục 2 bác lớp phủ tối vì nó ăn **29,6 điểm sáng của mọi bước**; đó là con
-      số phải so với, và nó ngược dấu.
-   ⚠️ Vẫn đừng đổi vignette sang tông TỐI. Cái được ở đây là nó chỉ thêm sáng ở mép; hạ
-      độ sáng phần giữa là quay lại đúng vết `005` đã đi bỏ.
-   `--k` 0 → 1 do `shield()` tween; hợp đồng JS không đổi (xem `js/earth2d.js`). */
-.e2-shield{position:absolute;inset:0;z-index:2;pointer-events:none;
-  opacity:var(--k,0);
-  background:radial-gradient(ellipse 78% 78% at 50% 50%,
-    rgba(95,240,255,0) 40%, rgba(95,240,255,.09) 76%, rgba(95,240,255,.2) 100%);
-  box-shadow:inset 0 0 0 3px rgba(160,250,255,.72),
-             inset 0 0 78px 10px rgba(95,240,255,.42);}
-.e2-shield.show{}
-
-/* Giảm chuyển động: bỏ mọi animation vô hạn, GIỮ phần đổi tông (đó là nội dung
-   bài học "Trái Đất từng khác hẳn"), đúng như bản 3D. */
-@media (prefers-reduced-motion:reduce){
-  .e2-mk::after{animation:none;}
-  .e2-img,.e2-grid,.e2-drone{transition:none;}
 }
