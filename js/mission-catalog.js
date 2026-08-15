@@ -106,6 +106,53 @@
           en: { nm: "Stamp the Earth File",
                 p: "Three things you just learned, one stamp. And the point: you need all three at once." } }
       ]
+    },
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       NHIỆM VỤ 02 — cũng ở Trái Đất, nên `mission-map.html` KHÔNG còn vào thẳng
+       cây chặng nữa mà mở màn hành tinh (`goWorld()`): lúc có hai nhiệm vụ thì
+       "chơi cái nào" mới là một câu hỏi thật.
+
+       ⚠️ **5 CHẶNG — MẶC ĐỊNH TỪ NAY VỀ SAU** (chủ dự án chốt 15/08/2026). Nhiệm
+          vụ 01 giữ 7 chặng vì đổi số chặng của nó là phá tương thích dữ liệu cũ;
+          nhiệm vụ MỚI thì không có cái giá đó.
+
+       ⚠️ CHỦ ĐỀ CỐ Ý KHÔNG LẶP NHIỆM VỤ 01. Nhiệm vụ 01 dạy Trái Đất CÓ GÌ (châu
+          lục, thời gian, khí hậu, sự sống, năng lượng); nhiệm vụ này dạy LÀM SAO
+          MÀ BIẾT — tức chính công cụ trẻ đang ngồi trong đó. Hợp bối cảnh: cả app
+          đặt trẻ trên một con tàu ở quỹ đạo.
+       ───────────────────────────────────────────────────────────────────────── */
+    {
+      id: "orbit", world: "earth", file: "mission-orbit.html", ic: "🛰️",
+      vi: { nm: "Mắt Thần Trên Quỹ Đạo", tag: "Nhiệm vụ 02 · Trái Đất" },
+      en: { nm: "Eyes in Orbit", tag: "Mission 02 · Earth" },
+      steps: [
+        { id: "eyes", ic: "🛰️",
+          vi: { nm: "Mắt thần trên quỹ đạo",
+                p: "Vệ tinh là gì, và vì sao từ trên cao nó nhìn được cả một mảng Trái Đất trong một lần?" },
+          en: { nm: "Eyes in orbit",
+                p: "What is a satellite, and why can it see a huge slice of Earth all at once?" } },
+        { id: "bands", ic: "🌈",
+          vi: { nm: "Ánh sáng mắt không nhìn thấy",
+                p: "Vì sao rừng cây lại đỏ rực trong ảnh vệ tinh? Gạt công tắc băng sóng rồi tự đoán xem." },
+          en: { nm: "Light your eyes cannot see",
+                p: "Why does a forest glow bright red in a satellite image? Flip the band switch and find out." } },
+        { id: "night", ic: "🌃",
+          vi: { nm: "Trái Đất lúc nửa đêm",
+                p: "Bốn đốm sáng trong đêm — đâu là thành phố, đâu là cháy rừng, đâu là cực quang?" },
+          en: { nm: "Earth at midnight",
+                p: "Four glows in the dark — which is a city, which is a wildfire, which is an aurora?" } },
+        { id: "read", ic: "🔎",
+          vi: { nm: "Năm mẹo đọc ảnh vệ tinh",
+                p: "NASA dạy năm mẹo để đọc một tấm ảnh chụp từ vũ trụ. Dùng đủ cả năm cho một tấm ảnh thật." },
+          en: { nm: "Five tips for reading an image",
+                p: "NASA teaches five tips for reading a picture from space. Use all five on one real image." } },
+        { id: "report", ic: "📡",
+          vi: { nm: "Gửi báo cáo quan sát",
+                p: "Ba điều bạn vừa học, một lần gửi. Và câu chốt: nhìn thấy chưa đủ, phải biết cách ĐỌC." },
+          en: { nm: "Send the observation report",
+                p: "Three things you just learned, one transmission. The point: seeing is not enough — you must read." } }
+      ]
     }
   ];
 

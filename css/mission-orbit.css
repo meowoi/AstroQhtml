@@ -1,0 +1,154 @@
+/* ============================================================
+   css/mission-orbit.css — PHẦN RIÊNG của NHIỆM VỤ 02 "Mắt Thần Trên Quỹ Đạo".
+
+   Vỏ màn chơi ở `css/mission-stage.css`; cảnh bản đồ ở `css/earth2d.css`.
+   Còn lại ở đây đúng 5 bảng nội dung + hai lớp phủ cảnh (tông băng sóng, đêm).
+
+   ⚠️ KHÔNG khai lại `.me-board`, `.me-gem`, `.me-ask`, `.me-stamp` — chúng là VỎ.
+      Ở đây chỉ đặt biến màu của từng bảng (`--bd-brd` / `--bd-bg` / `--bd-k`) và
+      phần riêng. Khai lại là hai bản sẽ trôi khỏi nhau.
+   ============================================================ */
+
+/* ============ LỚP PHỦ CẢNH ============
+   ⚠️⚠️ ĐÂY LÀ MÔ PHỎNG, KHÔNG PHẢI ẢNH MÀU GIẢ THẬT — và trang PHẢI NÓI RA ĐIỀU ĐÓ.
+      Ảnh nền là ảnh màu THẬT của NASA; không có kênh hồng ngoại nào trong file đó để
+      mà đổi. Lớp phủ dưới đây chỉ đổi tông cho trẻ hình dung "cùng một nơi, vẽ bằng
+      một loại ánh sáng khác". Để trẻ tưởng đây là ảnh hồng ngoại thật là dạy một điều
+      sai — đúng bài học nhãn "MINH HOẠ" của 5 mốc thời gian ở Nhiệm vụ 01.
+      Nhãn `.mo-sim` là chỗ nói ra, và nó KHÔNG được bỏ đi cho gọn. */
+.mo-tint{position:fixed;inset:0;z-index:5;pointer-events:none;
+         opacity:0;transition:opacity .7s ease;}
+.mo-tint.on{opacity:1;}
+/* Màu giả: cây cối ngả đỏ, nước sẫm lại. */
+#stage.mo-false{filter:hue-rotate(122deg) saturate(1.7) contrast(1.1) brightness(.98);}
+.mo-tint.mo-false{background:radial-gradient(circle at 50% 46%,rgba(255,60,60,.13),
+                  rgba(80,0,20,.3) 72%,rgba(30,0,10,.5));}
+/* Đêm: cả hành tinh tối đi, chỉ còn các đốm sáng của bước ③. */
+#stage.mo-dark{filter:brightness(.24) saturate(.55) contrast(1.12);}
+.mo-tint.mo-dark{background:radial-gradient(circle at 50% 46%,rgba(6,10,30,.35),
+                 rgba(2,4,16,.72) 68%,rgba(0,1,8,.88));}
+#stage{transition:filter 1s ease;}
+
+/* Nhãn "MÔ PHỎNG" — neo góc trên-trái vùng cảnh, dưới header. */
+.mo-sim{position:absolute;left:clamp(12px,3vw,24px);top:112px;z-index:9;
+        padding:5px 10px;border-radius:8px;pointer-events:none;
+        font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;
+        color:#ffd7a8;background:rgba(40,16,4,.82);
+        border:1px solid rgba(251,146,60,.5);
+        opacity:0;transition:opacity .35s;}
+.mo-sim.show{opacity:1;}
+
+/* ============ BƯỚC ① · VỆT QUÉT ============ */
+.mo-scan{--bd-brd:rgba(56,189,248,.45);--bd-bg:rgba(8,18,32,.9);--bd-k:var(--cyan);}
+.mo-scan .rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+.mo-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;
+        text-align:left;background:rgba(255,255,255,.045);
+        border:1px dashed rgba(255,255,255,.16);opacity:.5;transition:all .3s;}
+.mo-row.ok{opacity:1;border-style:solid;border-color:rgba(74,222,128,.75);
+           background:rgba(74,222,128,.1);}
+.mo-row .ic{font-size:19px;line-height:1;flex:none;}
+.mo-row .tx{font-size:12.8px;line-height:1.5;color:var(--ink-soft);flex:1;min-width:0;}
+.mo-row.ok .tx{color:var(--ink);}
+.mo-row .tick{flex:none;font-size:14px;color:#4ade80;opacity:0;}
+.mo-row.ok .tick{opacity:1;}
+
+/* Vệt quét trên bản đồ: khác hẳn đốm tròn của Nhiệm vụ 01 để trẻ không đọc nhầm
+   thành "một địa điểm" — đây là một DẢI mà vệ tinh nhìn thấy. */
+.e2-mk.mo-swath{width:clamp(54px,13vw,68px);height:clamp(30px,7vw,38px);
+                border-radius:8px;border-style:dashed;}
+.e2-mk.mo-swath .ic{font-size:clamp(15px,3.6vw,18px);line-height:1;}
+
+/* ============ BƯỚC ② · BĂNG SÓNG ============ */
+.mo-band{--bd-brd:rgba(192,132,252,.45);--bd-bg:rgba(20,10,32,.9);--bd-k:var(--purple);}
+.mo-band .switch{display:flex;gap:10px;margin-top:14px;}
+.mo-bandbtn{flex:1 1 0;min-width:0;min-height:48px;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:3px;cursor:pointer;
+            padding:8px 6px;border-radius:12px;color:var(--ink);
+            background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);
+            transition:all .2s;}
+.mo-bandbtn .nm{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;
+                color:var(--ink-soft);}
+.mo-bandbtn .tx{font-size:12.6px;line-height:1.3;}
+.mo-bandbtn:hover,.mo-bandbtn:focus-visible{transform:translateY(-2px);
+            border-color:var(--purple);}
+.mo-bandbtn.on{border-color:var(--purple);background:rgba(192,132,252,.18);
+            box-shadow:0 0 16px -4px rgba(192,132,252,.7);}
+.mo-bandbtn.on .nm{color:#e6d2ff;}
+
+/* ============ BƯỚC ③ · ĐỐM SÁNG BAN ĐÊM ============ */
+.mo-night{--bd-brd:rgba(255,207,107,.45);--bd-bg:rgba(22,16,4,.92);--bd-k:var(--gold);}
+.mo-night .tray{display:flex;justify-content:center;flex-wrap:wrap;
+                gap:clamp(6px,2vw,12px);margin-top:14px;}
+
+/* Đốm sáng: vòng tròn có hào quang, nhận thẻ thả vào (data-zone). */
+.e2-mk.mo-glow{width:clamp(44px,11vw,56px);height:clamp(44px,11vw,56px);
+               border-radius:50%;border-style:dashed;
+               background:radial-gradient(circle,rgba(255,236,180,.5),rgba(255,200,80,.12) 70%);
+               box-shadow:0 0 22px -2px rgba(255,214,120,.75);}
+.e2-mk.mo-glow .ic{font-size:clamp(17px,4.4vw,21px);line-height:1;}
+.e2-mk.mo-glow.over{border-style:solid;border-color:var(--gold);transform-origin:center;}
+.e2-mk.mo-glow.ok{border-style:solid;border-color:rgba(74,222,128,.9);
+                  background:radial-gradient(circle,rgba(190,255,214,.5),rgba(74,222,128,.12) 70%);
+                  box-shadow:0 0 20px -2px rgba(74,222,128,.7);}
+
+/* ============ BƯỚC ④ · NĂM MẸO ĐỌC ẢNH ============ */
+.mo-tips{--bd-brd:rgba(56,189,248,.45);--bd-bg:rgba(6,18,30,.92);--bd-k:var(--cyan);
+         width:min(720px,calc(100vw - 24px));}
+.mo-tips .rail{display:flex;gap:6px;margin-top:12px;}
+.mo-tip{flex:1 1 0;min-width:0;min-height:52px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:3px;cursor:pointer;
+        padding:6px 4px;border-radius:10px;color:var(--ink-soft);
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
+        transition:all .22s;}
+.mo-tip .n{font-family:var(--font-mono);font-size:11px;font-weight:700;}
+.mo-tip .ic{font-size:16px;line-height:1;}
+.mo-tip.now{color:var(--ink);border-color:var(--gold);
+            box-shadow:0 0 14px -2px rgba(255,207,107,.8);}
+.mo-tip.ok{color:#bdf5d4;border-color:rgba(74,222,128,.8);
+           background:rgba(74,222,128,.12);}
+/* Mẹo chưa tới thì KHÔNG bấm được — năm mẹo là một TRÌNH TỰ, bấm lung tung là mất
+   chính cái trình tự đang được dạy. */
+.mo-tip[disabled]{cursor:default;opacity:.45;}
+.mo-tips .say{font-size:13.2px;line-height:1.6;color:var(--ink-soft);
+              margin:12px 0 0;min-height:3.2em;text-align:left;}
+
+/* Hai lớp chỉ dẫn vẽ TRÊN cảnh cho mẹo ① và ④. Chúng là công cụ ĐỌC ảnh, nên phải
+   nằm trên bản đồ chứ không nằm trong bảng. */
+.mo-scale{position:absolute;left:50%;bottom:calc(clamp(14px,4vh,40px) + 232px);
+          transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;
+          align-items:center;gap:4px;pointer-events:none;
+          opacity:0;transition:opacity .35s;}
+.mo-scale.show{opacity:1;}
+.mo-scale .bar{width:120px;height:8px;border:2px solid #fff;border-top:none;
+               box-shadow:0 2px 6px rgba(0,0,0,.7);}
+.mo-scale .lb{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;
+              color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);}
+.mo-compass{position:absolute;right:clamp(12px,3vw,24px);top:112px;z-index:9;
+            width:56px;height:56px;border-radius:50%;pointer-events:none;
+            display:grid;place-items:center;
+            background:rgba(6,12,30,.72);border:1px solid rgba(255,255,255,.24);
+            opacity:0;transition:opacity .35s;}
+.mo-compass.show{opacity:1;}
+.mo-compass .n{font-family:var(--font-display);font-weight:700;font-size:15px;
+               color:#fff;line-height:1;}
+.mo-compass .ar{font-size:15px;line-height:1;color:var(--cyan);}
+
+/* ============ BƯỚC ⑤ · BÁO CÁO QUAN SÁT ============ */
+.mo-report{--bd-brd:rgba(74,222,128,.45);--bd-bg:rgba(8,20,16,.92);--bd-k:var(--green);}
+.mo-report .lines{margin-top:12px;}
+.mo-line{display:flex;align-items:flex-start;gap:10px;text-align:left;
+         padding:9px 2px;border-bottom:1px dashed rgba(255,255,255,.12);}
+.mo-line:last-child{border-bottom:none;}
+.mo-line .tick{flex:none;font-size:15px;line-height:1.5;color:#4ade80;}
+.mo-line .tx{font-size:13.2px;line-height:1.55;color:var(--ink-soft);}
+
+@media (max-width:600px){
+  .mo-tips .rail{flex-wrap:wrap;}
+  .mo-tip{flex:1 1 30%;}
+  .mo-scale{bottom:calc(clamp(14px,4vh,40px) + 264px);}
+  .mo-sim,.mo-compass{top:132px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .mo-tint,#stage,.mo-sim,.mo-scale,.mo-compass,.mo-row,.mo-tip,.mo-bandbtn{
+    transition:none;}
+}

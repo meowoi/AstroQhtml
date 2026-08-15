@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa — noindex để Google không đưa vào kết quả tìm kiếm. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Nhiệm Vụ 02: Mắt Thần Trên Quỹ Đạo</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/mascot.css" />
+<link rel="stylesheet" href="css/pick-place.css" />
+<link rel="stylesheet" href="css/brag.css" />
+<!-- VỎ (mọi nhiệm vụ) → CẢNH bản đồ 2D (mọi nhiệm vụ ở Trái Đất) → phần RIÊNG. -->
+<link rel="stylesheet" href="css/mission-stage.css" />
+<link rel="stylesheet" href="css/earth2d.css" />
+<link rel="stylesheet" href="css/mission-orbit.css" />
+<script src="js/ui-common.js"></script>
+<!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js — cùng lý do với Nhiệm vụ
+     01: trang chơi phải nhẹ, và `js/progress.js` đã xếp việc vào hàng chờ khi chưa
+     đăng nhập. `check_pages` mục [4] canh không trang nào nạp lẫn. -->
+<script src="js/brag.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/badges.js"></script>
+<script src="js/mission-catalog.js"></script>
+<script src="js/mission-engine.js"></script>
+<script src="js/mission-stage.js"></script>
+<script src="js/pick-place.js"></script>
+</head>
+<body>
+
+<!-- Sân khấu cảnh 2D: `js/earth2d.js` dựng các lớp con bên trong div này. -->
+<div id="stage"></div>
+
+<!-- Lớp phủ CẢNH (không phải HUD) nên nằm NGOÀI `.me-ui`: `.me-ui` có `z-index:10`
+     và tự tạo stacking context, đặt vào trong thì `z-index:5` của nó vẫn vượt lên
+     trên các bảng HUD và che mất bảng mục tiêu. -->
+<div class="mo-tint" id="tint" aria-hidden="true"></div>
+
+<!-- ============ LỚP HUD ============
+     ⚠️ Header · bảng mục tiêu · box thoại · thẻ nội dung · bảng câu đố · màn chờ ·
+        màn tổng kết · hộp "tiếp hay dừng" · toast do `js/mission-stage.js` dựng.
+        Ở đây chỉ còn các bảng mang NỘI DUNG của 5 chặng. -->
+<div class="me-ui">
+
+  <!-- Nhãn "MÔ PHỎNG" — xem khối cảnh báo ở đầu css/mission-orbit.css. Nó nói ra
+       rằng tông màu giả là MÔ PHỎNG chứ không phải ảnh hồng ngoại thật. -->
+  <span class="mo-sim" id="sim" aria-hidden="true">MÔ PHỎNG</span>
+
+  <!-- Hai lớp chỉ dẫn của bước ④ (thước tỉ lệ + hoa gió). Chúng là CÔNG CỤ ĐỌC ảnh
+       nên phải nằm trên bản đồ, không nằm trong bảng. -->
+  <span class="mo-scale" id="scale" aria-hidden="true">
+    <span class="bar"></span><span class="lb" id="scale-lb">~1000 km</span>
+  </span>
+  <span class="mo-compass" id="compass" aria-hidden="true">
+    <span class="ar">▲</span><span class="n">N</span>
+  </span>
+
+  <!-- Chặng ① · Ba vệt quét -->
+  <section class="me-board mo-scan" id="scan">
+    <span class="k" id="scan-k">HỆ THỐNG QUAN SÁT</span>
+    <div class="rows" id="scan-rows"></div>
+    <p class="hint" id="scan-hint"></p>
+  </section>
+
+  <!-- Chặng ② · Băng sóng -->
+  <section class="me-board mo-band" id="band">
+    <span class="k" id="band-k">CHỌN BĂNG SÓNG</span>
+    <div class="switch" id="band-switch"></div>
+    <p class="hint" id="band-hint"></p>
+  </section>
+
+  <!-- Chặng ③ · Bốn đốm sáng ban đêm (kéo-thả) -->
+  <section class="me-board mo-night" id="night">
+    <span class="k" id="night-k">NHẬN DẠNG NGUỒN SÁNG</span>
+    <div class="tray" id="night-tray"></div>
+    <p class="hint" id="night-hint"></p>
+  </section>
+
+  <!-- Chặng ④ · Năm mẹo đọc ảnh -->
+  <section class="me-board mo-tips" id="tips">
+    <span class="k" id="tips-k">NĂM MẸO ĐỌC ẢNH VỆ TINH</span>
+    <div class="rail" id="tips-rail"></div>
+    <p class="say" id="tips-say"></p>
+  </section>
+
+  <!-- Chặng ⑤ · Báo cáo quan sát -->
+  <section class="me-board mo-report" id="report">
+    <span class="k" id="report-k">BÁO CÁO QUAN SÁT</span>
+    <div class="lines" id="report-lines"></div>
+    <button type="button" class="me-stamp hit" id="report-send"></button>
+    <p class="hint" id="report-hint"></p>
+  </section>
+</div>
+
+<script src="economy.js"></script>
+<script src="js/earth2d.js"></script>
+
+<script>
+/* CANH GIỜ NẠP CẢNH — đặt ở script CỔ ĐIỂN, cố ý không nằm trong module: nếu chính
+   module không nạp được thì `boot()` không bao giờ chạy và màn chờ quay mãi mà không
+   nói gì. Hai ca thật: mở bằng `file://` (trình duyệt chặn ES module vì CORS), và ảnh
+   Trái Đất không tải được. */
+(function () {
+  setTimeout(function () {
+    if (window.__mission) return;
+    var load = document.getElementById('load');
+    if (!load || load.classList.contains('gone')) return;
+    var sub = document.getElementById('load-sub');
+    if (sub) {
+      sub.dataset.fail = '1';
+      sub.textContent = (localStorage.getItem('astroq-lang') === 'en')
+        ? 'Could not load the scene. Check your connection and reload. '
+          + 'Note: this page must be served over http, not opened as a file.'
+        : 'Không nạp được cảnh. Kiểm tra kết nối mạng rồi tải lại trang nhé. '
+          + 'Lưu ý: trang này phải mở qua http, không mở trực tiếp từ file.';
+    }
+    var ring = load.querySelector('.ring');
+    if (ring) ring.style.display = 'none';
+  }, 12000);
+})();
+</script>
+
+<script type="module">
+/* ============================================================================
+   NHIỆM VỤ 02 "MẮT THẦN TRÊN QUỸ ĐẠO" — 5 chặng, MỘT trang, KHÔNG tải lại.
+
+   Nhiệm vụ 01 dạy Trái Đất CÓ GÌ. Nhiệm vụ này dạy LÀM SAO MÀ BIẾT — tức chính cái
+   công cụ trẻ đang ngồi trong đó. Cả app đặt trẻ trên một con tàu ở quỹ đạo, nên đây
+   là bài học duy nhất mà bối cảnh tự nó đã dựng sẵn.
+
+   ⚠️ `STEP_IDS` PHẢI KHỚP `Missions.All` Ở SERVER, ĐÚNG THỨ TỰ. Đó là khoá dùng trong
+      `missions.orbit.<bước>` của DynamoDB. `check_pages.py` mục [20] đối chiếu ba nơi
+      cùng lúc: file này ↔ `js/mission-catalog.js` ↔ `Services/Missions.cs`.
+
+   ⚠️ KHÔNG CÓ MỘT CON SỐ THƯỞNG NÀO TRONG FILE NÀY. Client chỉ gửi `{mission, step}`;
+      `Services/Missions.cs` tra bảng rồi cộng.
+
+   ══════════════════ NGÂN SÁCH KHUÔN TƯƠNG TÁC ══════════════════
+   `docs/decisions/002`: MỘT nhiệm vụ không dùng cùng một khuôn quá 2 lần. Nhiệm vụ
+   này tiêu:
+     signal_scan   1/2  chặng ① (chạm 3 vệt quét trên bản đồ)
+     buildAsk      1/2  chặng ② (vì sao cây đỏ rực)
+     dragDrop      1/2  chặng ③ (4 nhãn → 4 đốm sáng)
+     sequence      1/2  chặng ④ (5 mẹo, đi đúng thứ tự)
+     stamp         1/2  chặng ⑤ (một cú gửi báo cáo)
+   Còn chỗ cho một nhiệm vụ dài hơn về sau; đừng tiêu hết vào đây.
+
+   ⚠️ CHẶNG ④ LÀ `evidence_investigation` — khuôn `002` đã chốt mà tới 15/08/2026 vẫn
+      **0 nơi dùng**. Nó không phải khuôn thứ sáu bịa thêm: năm mẹo là một QUY TRÌNH
+      ĐỌC BẰNG CHỨNG do chính NASA dạy, và mỗi mẹo làm một việc KHÁC NHAU trên cùng
+      một tấm ảnh. Đó là lý do nó không gộp được vào `buildAsk` (một câu hỏi rồi vứt
+      đi) hay `dragDrop` (phân loại).
+
+   ══════════════════ NGUỒN ══════════════════
+   Năm trang NASA, mở và đọc thật, kiểm trả 200 ngày 15/08/2026:
+     [S1] spaceplace.nasa.gov/satellite/en/
+     [S2] science.nasa.gov/earth/earth-observatory/how-to-interpret-a-false-color-satellite-image/
+     [S3] science.nasa.gov/earth/earth-observatory/night-lights-2012-the-black-marble-79803/
+     [S4] science.nasa.gov/earth/earth-observatory/how-to-interpret-a-satellite-image/
+     [S5] science.nasa.gov/missions/landsat/picturing-a-pixel/
+   Nội dung đọc đầy đủ ở `learningdata/astronomy/orbit_codex.json`.
+
+   ⚠️ BỐN CHỖ CỐ Ý KHÔNG VIẾT vì trang nguồn KHÔNG nói (xem khối `$comment` của file
+      codex): số vệ tinh NASA đang có · quy đổi 30 m sang một vật quen thuộc của trẻ
+      Việt · "đèn tàu cá" trong danh sách VIIRS · độ phân giải của VIIRS.
+   ============================================================================ */
+const $ = AstroQ.$;
+const esc = AstroQ.esc;
+
+const reduced = (() => {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch (e) { return false; }
+})();
+
+/* ───────────────────── Từ điển ─────────────────────
+   ⚠️ CHỈ CÒN CHỮ CỦA RIÊNG NHIỆM VỤ NÀY. Nút Về, OK, "Đã hiểu!", cả màn tổng kết và
+      hộp "tiếp hay dừng" đều do `js/mission-stage.js` tự mang chuỗi — khai lại ở đây
+      là hai bảng chữ sẽ trôi khỏi nhau.
+   ⚠️ NĂM KHOÁ BẮT BUỘC mà vỏ đọc từ trang: `tag` · `win_h` · `win_badge` ·
+      `win_badge_sub` · `win_next`. */
+const I18N = {
+  vi: {
+    title: 'AstroQ — Nhiệm Vụ 02: Mắt Thần Trên Quỹ Đạo',
+    tag: '[ MISSION_02 · MẮT THẦN TRÊN QUỸ ĐẠO ]',
+    load_sub: 'Đang mở ống kính quan sát…',
+    load_fail: 'Không dựng được cảnh. Kiểm tra kết nối mạng rồi tải lại trang nhé.',
+
+    /* ── Chặng ① ── */
+    s1_h: 'Ba con mắt của con tàu',
+    s1_p: 'Chạm vào ba vệt quét trên bản đồ để xem mỗi con mắt nhìn thấy điều gì.',
+    s1_say1: 'Chào phi hành gia! Mình đang ở trên quỹ đạo, và con tàu này có mấy <b>con mắt</b> chĩa xuống Trái Đất. Xem thử chúng nhìn thấy gì nhé.',
+    s1_k: 'HỆ THỐNG QUAN SÁT',
+    s1_hint: 'Còn vệt quét nào chưa xem?',
+    s1_hit1: 'Đã thu tín hiệu.',
+    s1_hit2: 'Tốt! Còn một vệt nữa thôi.',
+    s1_hit3: 'Đủ ba rồi — hệ thống quan sát: SẴN SÀNG.',
+    sw_wide_n: 'Tầm nhìn rộng',
+    sw_wide_t: 'Một lần nhìn thấy cả một mảng lớn',
+    sw_wide_f: 'NASA viết rằng tầm nhìn của vệ tinh cho phép chúng nhìn thấy những vùng rộng lớn của Trái Đất CÙNG MỘT LÚC. Nhờ vậy nó thu được nhiều dữ liệu hơn, nhanh hơn hẳn dụng cụ đặt dưới đất.',
+    sw_above_n: 'Ở trên mây',
+    sw_above_t: 'Bay phía trên mây và bụi',
+    sw_above_f: 'Vệ tinh bay phía trên mây, bụi và các phân tử trong khí quyển — chính những thứ chắn mất tầm nhìn khi quan sát từ mặt đất.',
+    sw_pixel_n: 'Ô 30 mét',
+    sw_pixel_t: 'Ô vuông nhỏ nhất nó nhìn thấy',
+    sw_pixel_f: 'Ảnh vệ tinh ghép từ nhiều ô vuông nhỏ gọi là điểm ảnh. Mỗi điểm ảnh của Landsat phủ một vùng 30 × 30 mét — NASA ví nó bằng cỡ một sân bóng chày. Nhỏ hơn thế thì gộp chung một màu.',
+    s1_done: 'Ba con mắt đã sẵn sàng. Giờ tới phần thú vị: <b>nhìn bằng thứ ánh sáng mà mắt mình không thấy được</b>.',
+    tag_scan: 'ĐÃ THU TÍN HIỆU',
+
+    /* ── Chặng ② ── */
+    s2_h: 'Ánh sáng mắt không nhìn thấy',
+    s2_p: 'Gạt công tắc sang “màu giả” rồi xem chuyện gì xảy ra với rừng cây.',
+    s2_say1: 'Máy của tàu đo được nhiều loại ánh sáng hơn mắt mình rất nhiều. Gạt thử sang <b>màu giả</b> xem nào!',
+    s2_k: 'CHỌN BĂNG SÓNG',
+    s2_true_n: 'BĂNG A',
+    s2_true_t: 'Màu thật',
+    s2_false_n: 'BĂNG B',
+    s2_false_t: 'Màu giả',
+    s2_hint: 'Chọn một băng sóng để xem cùng một nơi bằng hai kiểu ánh sáng.',
+    s2_sim: 'MÔ PHỎNG',
+    s2_say2: 'Đỏ rực hết cả rồi! Nhưng nói trước cho thật thà: đây là <b>mô phỏng</b> để bạn dễ hình dung, chứ ảnh nền của mình vẫn là ảnh màu thật.',
+    s2_ask_k: 'DỰ ĐOÁN CỦA PHI HÀNH GIA',
+    s2_q: 'Vì sao rừng cây lại đỏ rực trong ảnh màu giả?',
+    s2_o1: 'Vì lá cây thật ra màu đỏ',
+    s2_o2: 'Vì cây phản xạ mạnh tia hồng ngoại',
+    s2_o3: 'Vì máy ảnh bị hỏng màu',
+    s2_ok: 'Chính xác! Cây phản xạ tia hồng ngoại gần rất mạnh — mạnh hơn cả ánh sáng xanh lá — nên khi tia đó được vẽ bằng màu đỏ thì vùng có cây phủ hiện lên <b>đỏ đậm</b>. Cây khoẻ còn phản xạ mạnh hơn cây đang yếu.',
+    s2_no: 'Chưa đúng, nhưng đoán là việc nên làm! Lá cây trông xanh vì diệp lục hấp thụ đỏ và xanh lam. Cái mắt mình <b>không</b> thấy là: cây phản xạ tia hồng ngoại rất mạnh — và tia đó được vẽ bằng màu đỏ.',
+    s2_water: 'Còn nước thì ngược lại: nó hấp thụ cả ba bước sóng nên hiện ra <b>đen kịt</b>. Chính vì thế tổ hợp băng sóng này rất hợp để theo dõi lũ lụt.',
+    s2_cn: 'Ảnh màu giả',
+    s2_ct: 'Nhìn bằng ánh sáng vô hình',
+    s2_cf: 'Một ảnh màu giả dùng ít nhất một bước sóng không nhìn thấy được, nhưng vẫn vẽ nó ra bằng đỏ, xanh lá hoặc xanh lam.',
+    s2_cs: 'Cây phủ đất → đỏ đậm. Nước → đen.',
+
+    /* ── Chặng ③ ── */
+    s3_h: 'Trái Đất lúc nửa đêm',
+    s3_p: 'Kéo bốn cái tên vào đúng bốn đốm sáng.',
+    s3_say1: 'Tắt đèn ban ngày nào… Ban đêm Trái Đất kể một câu chuyện khác hẳn. Bốn đốm sáng này là <b>bốn loại tín hiệu</b> mà máy VIIRS nhìn thấy — mình xếp chúng gần nhau cho dễ so sánh.',
+    s3_k: 'NHẬN DẠNG NGUỒN SÁNG',
+    s3_hint: 'Kéo mỗi cái tên vào đốm sáng của nó.',
+    s3_wrong: 'Chưa đúng đốm rồi, thử chỗ khác xem nào!',
+    g_city: 'Đèn thành phố',
+    g_aurora: 'Cực quang',
+    g_fire: 'Cháy rừng',
+    g_moon: 'Ánh trăng phản chiếu',
+    s3_cn: 'Đèn đêm',
+    s3_ct: 'Bốn thứ nhìn thấy trong đêm',
+    s3_cf: 'VIIRS dò ánh sáng từ xanh lá tới hồng ngoại gần, đủ nhạy để thấy những tín hiệu rất mờ: đèn thành phố, cực quang, cháy rừng và ánh trăng phản chiếu.',
+    s3_cs: 'Vệ tinh bay qua mỗi điểm hai lần một ngày, khoảng 1h30 sáng và 1h30 chiều.',
+    s3_done: 'Bốn đốm, bốn câu chuyện khác nhau. Thấy chưa — <b>nhìn thấy</b> thôi thì chưa đủ, phải biết <b>đọc</b>.',
+
+    /* ── Chặng ④ ── */
+    s4_h: 'Năm mẹo đọc ảnh vệ tinh',
+    s4_p: 'Bấm lần lượt năm mẹo NASA dạy, và xem mỗi mẹo làm gì với tấm ảnh.',
+    s4_say1: 'NASA có hẳn năm mẹo để đọc một tấm ảnh chụp từ vũ trụ. Mình làm đủ cả năm trên đúng tấm ảnh đang mở nhé — <b>theo thứ tự</b>.',
+    s4_k: 'NĂM MẸO ĐỌC ẢNH VỆ TINH',
+    tip1_n: 'Tỉ lệ',
+    tip1_p: '① Trước hết phải biết mình đang nhìn một vùng rộng bao nhiêu. Tuỳ độ phân giải, một thành phố có thể chiếm trọn khung hình — hoặc chỉ là một chấm nhỏ.',
+    tip2_n: 'Hoa văn',
+    tip2_p: '② Tìm hoa văn, hình dạng, kết cấu. NASA nói thẳng: con người rất giỏi việc này — ai từng nằm nhìn mây và thấy ra hình con vật thì đã biết cách rồi.',
+    tip3_n: 'Màu sắc',
+    tip3_p: '③ Màu trong ảnh phụ thuộc vào loại ánh sáng mà máy đo được. Đúng bài vừa học: đỏ rực không phải đất đỏ, mà là cây phản xạ hồng ngoại.',
+    tip4_n: 'Hướng bắc',
+    tip4_p: '④ Biết hướng bắc thì mới nói được dãy núi kia chạy bắc–nam hay đông–tây, hay thành phố nằm bờ đông hay bờ tây con sông.',
+    tip5_n: 'Điều đã biết',
+    tip5_p: '⑤ Và đây là mẹo NASA gọi là mạnh nhất: công cụ mạnh nhất để đọc một tấm ảnh vệ tinh chính là <b>hiểu biết về nơi đó</b>.',
+    s4_cn: 'Năm mẹo',
+    s4_ct: 'Cách đọc một tấm ảnh',
+    s4_cf: 'Tỉ lệ · hoa văn · màu sắc · hướng bắc · điều mình đã biết. Mẹo cuối cùng lại là mẹo mạnh nhất.',
+    s4_done: 'Càng biết nhiều về Trái Đất, bạn càng đọc được nhiều thứ trong <b>cùng một</b> tấm ảnh. Máy thì vẫn thế thôi!',
+
+    /* ── Chặng ⑤ ── */
+    s5_h: 'Gửi báo cáo quan sát',
+    s5_p: 'Ba điều bạn vừa học. Bấm gửi để khép lại nhiệm vụ.',
+    s5_say1: 'Xong rồi! Ghi lại ba điều vừa học rồi gửi về trạm nhé.',
+    s5_k: 'BÁO CÁO QUAN SÁT',
+    s5_l1: 'Vệ tinh nhìn được cả một mảng lớn vì nó ở phía trên mây và bụi.',
+    s5_l2: 'Màu giả vẽ ánh sáng vô hình bằng màu nhìn thấy được — cây đỏ, nước đen.',
+    s5_l3: 'Đọc một tấm ảnh cần năm mẹo, và mẹo mạnh nhất là điều mình đã biết.',
+    s5_send: '📡 GỬI BÁO CÁO',
+    s5_hint: 'Nhìn thấy chưa đủ — phải biết cách đọc.',
+    s5_done: 'Đã nhận báo cáo! Từ giờ mỗi tấm ảnh Trái Đất bạn gặp đều đọc được nhiều hơn một chút.',
+
+    /* ── Màn tổng kết (5 khoá vỏ đọc từ trang) ── */
+    win_h: 'HOÀN THÀNH NHIỆM VỤ QUAN SÁT!',
+    win_badge: 'QUAN SÁT VIÊN TRÁI ĐẤT',
+    win_badge_sub: 'Huy Hiệu Quan Sát Viên Trái Đất',
+    win_next: 'Ghé Góc Khám Phá đọc thêm về vệ tinh và ảnh Trái Đất.'
+  },
+
+  en: {
+    title: 'AstroQ — Mission 02: Eyes in Orbit',
+    tag: '[ MISSION_02 · EYES IN ORBIT ]',
+    load_sub: 'Opening the observation optics…',
+    load_fail: 'Could not build the scene. Check your connection and reload.',
+
+    s1_h: 'The ship’s three eyes',
+    s1_p: 'Touch the three scan swaths on the map to see what each eye can spot.',
+    s1_say1: 'Hello astronaut! We’re in orbit, and this ship has a few <b>eyes</b> pointed down at Earth. Let’s see what they can spot.',
+    s1_k: 'OBSERVATION SYSTEM',
+    s1_hint: 'Any swath left to check?',
+    s1_hit1: 'Signal acquired.',
+    s1_hit2: 'Nice! Just one swath to go.',
+    s1_hit3: 'All three — observation system: READY.',
+    sw_wide_n: 'Wide view',
+    sw_wide_t: 'A huge area in a single look',
+    sw_wide_f: 'NASA writes that a satellite’s view lets it see large areas of Earth AT ONE TIME. That is how it gathers more data, more quickly, than instruments on the ground.',
+    sw_above_n: 'Above the clouds',
+    sw_above_t: 'Flying above cloud and dust',
+    sw_above_f: 'Satellites fly above the clouds, dust and molecules in the atmosphere — exactly the things that block the view from the ground.',
+    sw_pixel_n: '30-metre square',
+    sw_pixel_t: 'The smallest square it can see',
+    sw_pixel_f: 'A satellite image is built from small squares called pixels. Each Landsat pixel covers a 30 × 30 metre area — NASA compares it to the size of a baseball diamond. Anything smaller blends into one colour.',
+    s1_done: 'Three eyes ready. Now the fun part: <b>seeing with light your eyes cannot detect</b>.',
+    tag_scan: 'SIGNAL ACQUIRED',
+
+    s2_h: 'Light your eyes cannot see',
+    s2_p: 'Flip the switch to “false colour” and watch what happens to the forests.',
+    s2_say1: 'The ship’s instrument measures far more kinds of light than our eyes do. Try flipping to <b>false colour</b>!',
+    s2_k: 'CHOOSE A BAND',
+    s2_true_n: 'BAND A',
+    s2_true_t: 'Natural colour',
+    s2_false_n: 'BAND B',
+    s2_false_t: 'False colour',
+    s2_hint: 'Pick a band to see the same place in two kinds of light.',
+    s2_sim: 'SIMULATION',
+    s2_say2: 'Everything glows red! But let’s be honest up front: this is a <b>simulation</b> to help you picture it — our background is still a natural-colour image.',
+    s2_ask_k: 'ASTRONAUT’S GUESS',
+    s2_q: 'Why do forests glow bright red in a false-colour image?',
+    s2_o1: 'Because leaves are really red',
+    s2_o2: 'Because plants strongly reflect infrared',
+    s2_o3: 'Because the camera’s colours broke',
+    s2_ok: 'Exactly! Plants reflect near-infrared light strongly — more than green light — so when that band is drawn in red, plant-covered land appears <b>deep red</b>. Healthy plants reflect even more than stressed ones.',
+    s2_no: 'Not quite, but guessing is the right move! Leaves look green because chlorophyll absorbs red and blue. What our eyes <b>cannot</b> see is this: plants reflect near-infrared very strongly — and that band is drawn in red.',
+    s2_water: 'Water does the opposite: it absorbs all three wavelengths, so it comes out <b>black</b>. That is exactly why this band combination is so useful for monitoring floods.',
+    s2_cn: 'False colour',
+    s2_ct: 'Seeing invisible light',
+    s2_cf: 'A false-colour image uses at least one non-visible wavelength, though that band is still represented in red, green or blue.',
+    s2_cs: 'Plant-covered land → deep red. Water → black.',
+
+    s3_h: 'Earth at midnight',
+    s3_p: 'Drag the four names onto the four glows.',
+    s3_say1: 'Lights out for the day… At night Earth tells a completely different story. These four glows are <b>four kinds of signal</b> the VIIRS instrument can see — we placed them close together so you can compare.',
+    s3_k: 'IDENTIFY THE LIGHT SOURCE',
+    s3_hint: 'Drag each name onto its own glow.',
+    s3_wrong: 'Not that glow — try another one!',
+    g_city: 'City lights',
+    g_aurora: 'Aurora',
+    g_fire: 'Wildfire',
+    g_moon: 'Reflected moonlight',
+    s3_cn: 'Night lights',
+    s3_ct: 'Four things seen in the dark',
+    s3_cf: 'VIIRS detects light from green to near-infrared, sensitive enough to observe dim signals such as city lights, auroras, wildfires and reflected moonlight.',
+    s3_cs: 'The satellite passes over each point twice a day, at roughly 1:30 a.m. and 1:30 p.m.',
+    s3_done: 'Four glows, four different stories. See? <b>Seeing</b> is not enough — you have to <b>read</b>.',
+
+    s4_h: 'Five tips for reading an image',
+    s4_p: 'Work through NASA’s five tips in order, and watch what each one does.',
+    s4_say1: 'NASA has five tips for reading a picture taken from space. Let’s use all five on the very image we have open — <b>in order</b>.',
+    s4_k: 'FIVE TIPS FOR READING AN IMAGE',
+    tip1_n: 'Scale',
+    tip1_p: '① First, know how wide an area you are looking at. Depending on resolution, a city may fill the whole frame — or be a mere dot.',
+    tip2_n: 'Patterns',
+    tip2_p: '② Look for patterns, shapes and textures. NASA says it plainly: humans are very good at this — anyone who has found animals in the clouds already knows how.',
+    tip3_n: 'Colours',
+    tip3_p: '③ The colours depend on what kind of light the instrument measured. Just like the last step: bright red is not red soil, it is plants reflecting infrared.',
+    tip4_n: 'Find north',
+    tip4_p: '④ Knowing where north is tells you whether that range runs north–south or east–west, or which bank of the river the city sits on.',
+    tip5_n: 'What you know',
+    tip5_p: '⑤ And here is the one NASA calls the strongest: the most powerful tool for interpreting a satellite image is <b>knowledge of the place</b>.',
+    s4_cn: 'Five tips',
+    s4_ct: 'How to read an image',
+    s4_cf: 'Scale · patterns · colours · north · what you already know. The last tip is the most powerful one.',
+    s4_done: 'The more you learn about Earth, the more you can read in the <b>very same</b> picture. The instrument has not changed at all!',
+
+    s5_h: 'Send the observation report',
+    s5_p: 'Three things you just learned. Press send to close the mission.',
+    s5_say1: 'All done! Write down the three things you learned and send them back to the station.',
+    s5_k: 'OBSERVATION REPORT',
+    s5_l1: 'A satellite sees a huge area because it flies above the clouds and dust.',
+    s5_l2: 'False colour draws invisible light in visible colours — plants red, water black.',
+    s5_l3: 'Reading an image takes five tips, and the strongest is what you already know.',
+    s5_send: '📡 SEND REPORT',
+    s5_hint: 'Seeing is not enough — you have to know how to read.',
+    s5_done: 'Report received! From now on every picture of Earth you meet will say a little more to you.',
+
+    win_h: 'OBSERVATION MISSION COMPLETE!',
+    win_badge: 'EARTH OBSERVER',
+    win_badge_sub: 'Earth Observer badge',
+    win_next: 'Drop by the Discovery Corner to read more about satellites and Earth imagery.'
+  }
+};
+
+let LANG = AstroQ.getLang();
+const t = (k) => { const d = I18N[LANG] || I18N.vi; return d[k] != null ? d[k] : k; };
+
+/* ⚠️ `STEP_IDS` khớp `Missions.All` ĐÚNG THỨ TỰ — xem khối cảnh báo ở đầu file. */
+const STEP_IDS = ['eyes', 'bands', 'night', 'read', 'report'];
+
+/* ═══════════════════ VỎ MÀN CHƠI ═══════════════════
+   `ST.mount()` PHẢI chạy trước mọi `$('id')` của vỏ — nó là thứ dựng ra chúng. */
+const ST = AstroQStage.create({
+  mission: 'orbit',
+  stepIds: STEP_IDS,
+  lang: () => LANG,
+  t
+});
+ST.mount();
+
+const toast     = ST.toast;
+const say       = ST.say;
+const hideSay   = ST.hideSay;
+const boardSay  = ST.boardSay;
+const objective = ST.objective;
+const showCard  = ST.showCard;
+const dragDrop  = ST.dragDrop;
+const buildAsk  = ST.buildAsk;
+const sfx       = ST.sfx;
+const nudge = (boardId, hintId, wrongKey, hintKey) =>
+  ST.nudge(boardId, hintId, t(wrongKey), t(hintKey));
+
+let RUN = null;
+let world = null;
+let busy = false;                     // đang chạy hiệu ứng → chặn bấm chồng
+
+/* ───────────────────── Dữ liệu ─────────────────────
+   ⚠️ BA VỆT QUÉT ĐẶT GẦN NHAU CÓ CHỦ ĐÍCH — 34° kinh độ, 44° vĩ độ.
+      Bài học đã trả giá ở Nhiệm vụ 01: bề ngang nhìn thấy được trên điện thoại dọc
+      390×844 chỉ khoảng **83°**, nên ba mục tiêu rải khắp địa cầu là trẻ KHÔNG BAO
+      GIỜ thấy cái thứ ba, và không có gì đưa nó vào khung. Nhiệm vụ 01 phải dựng
+      hẳn `focusMarker()` để chữa. Ở đây thì tránh hẳn nguyên nhân: bước này dạy về
+      DỤNG CỤ, không dạy địa lý, nên ba vệt nằm đâu cũng được — cho chúng nằm gần
+      nhau là bài toán "ngoài khung" không bao giờ phát sinh. */
+const SWATHS = [
+  { id: 'wide',  ic: '🛰️', lat: 46, lon: -4 },
+  { id: 'above', ic: '☁️', lat: 22, lon: 14 },
+  { id: 'pixel', ic: '🔲', lat: 2,  lon: 30 }
+];
+
+/* Bốn đốm sáng ban đêm — CÙNG một ràng buộc khung nhìn: 50° kinh độ, 51° vĩ độ.
+   ⚠️ Đây là bốn LOẠI tín hiệu, không phải bốn sự kiện có thật ở đúng toạ độ đó, và
+      lời Comet (`s3_say1`) NÓI RA điều đó. Gán một đám cháy cụ thể vào một toạ độ
+      cụ thể là khẳng định một sự kiện mà không có nguồn nào chứng minh. */
+const GLOWS = [
+  { id: 'city',   ic: '🏙️', lat: 48, lon: 2   },
+  { id: 'aurora', ic: '🌌', lat: 66, lon: 25  },
+  { id: 'fire',   ic: '🔥', lat: 37, lon: -8  },
+  { id: 'moon',   ic: '🌙', lat: 15, lon: -25 }
+];
+
+const TIPS = ['tip1', 'tip2', 'tip3', 'tip4', 'tip5'];
+const TIP_IC = { tip1: '📏', tip2: '🧩', tip3: '🎨', tip4: '🧭', tip5: '🧠' };
+
+/* Khung nhìn mở màn: phóng vừa đủ để cả ba vệt quét nằm trong khung ở mọi khổ máy. */
+const FACE_OPEN = { lat: 25, lon: 12, dist: 3.4 };
+
+/* ───────────────────── Lớp phủ cảnh ───────────────────── */
+function setTint(kind) {
+  const st = $('stage'), ov = $('tint');
+  ['mo-false', 'mo-dark'].forEach(c => { st.classList.remove(c); ov.classList.remove(c); });
+  ov.classList.toggle('on', !!kind);
+  if (kind) { st.classList.add('mo-' + kind); ov.classList.add('mo-' + kind); }
+}
+function showSim(on) {
+  $('sim').textContent = t('s2_sim');
+  $('sim').classList.toggle('show', !!on);
+}
+
+/* ───────────────────── Chặng ① · Ba vệt quét ───────────────────── */
+function buildScan() {
+  $('scan-k').textContent = t('s1_k');
+  $('scan-hint').textContent = t('s1_hint');
+  $('scan-rows').innerHTML = SWATHS.map(s =>
+    `<div class="mo-row" data-row="${s.id}">` +
+    `<span class="ic" aria-hidden="true">${s.ic}</span>` +
+    `<span class="tx">${esc(t('sw_' + s.id + '_t'))}</span>` +
+    `<span class="tick" aria-hidden="true">✓</span></div>`).join('');
+  world.addMarkers(SWATHS.map(s => ({
+    id: s.id, lat: s.lat, lon: s.lon, cls: 'mo-swath',
+    label: t('sw_' + s.id + '_n'),
+    html: `<span class="ic" aria-hidden="true">${s.ic}</span>`
+  })));
+}
+
+/* ───────────────────── Chặng ② · Băng sóng ───────────────────── */
+function buildBand() {
+  $('band-k').textContent = t('s2_k');
+  $('band-hint').textContent = t('s2_hint');
+  $('band-switch').innerHTML = ['true', 'false'].map(b =>
+    `<button type="button" class="mo-bandbtn hit" data-band="${b}">` +
+    `<span class="nm">${esc(t('s2_' + b + '_n'))}</span>` +
+    `<span class="tx">${esc(t('s2_' + b + '_t'))}</span></button>`).join('');
+  $('band-switch').querySelectorAll('.mo-bandbtn').forEach(b => {
+    b.addEventListener('click', () => steps.bands.onBand(b.getAttribute('data-band')));
+  });
+  paintBand();
+}
+function paintBand() {
+  $('band-switch').querySelectorAll('.mo-bandbtn').forEach(b => {
+    b.classList.toggle('on', b.getAttribute('data-band') === steps.bands.band);
+  });
+}
+
+/* ───────────────────── Chặng ③ · Đốm sáng ban đêm ───────────────────── */
+function buildNight() {
+  $('night-k').textContent = t('s3_k');
+  $('night-hint').textContent = t('s3_hint');
+  world.addMarkers(GLOWS.map(g => ({
+    id: g.id, zone: g.id, lat: g.lat, lon: g.lon, cls: 'mo-glow',
+    label: t('g_' + g.id),
+    html: `<span class="ic" aria-hidden="true">${g.ic}</span>`
+  })));
+  $('night-tray').innerHTML = GLOWS.map(g =>
+    `<button type="button" class="me-gem wide hit" data-want="${g.id}">` +
+    `<span class="ic" aria-hidden="true">${g.ic}</span>` +
+    `<span class="tx">${esc(t('g_' + g.id))}</span></button>`).join('');
+
+  dragDrop({
+    items: Array.from($('night-tray').querySelectorAll('.me-gem')),
+    zones: Array.from(document.querySelectorAll('.mo-glow')),
+    wide: true,
+    onHit(el, z) {
+      z.classList.add('ok');
+      el.classList.add('used');
+      steps.night.onPlace();
+    },
+    onMiss() { nudge('night', 'night-hint', 's3_wrong', 's3_hint'); }
+  });
+}
+
+/* ───────────────────── Chặng ④ · Năm mẹo ───────────────────── */
+function buildTips() {
+  $('tips-k').textContent = t('s4_k');
+  $('tips-rail').innerHTML = TIPS.map((id, i) =>
+    `<button type="button" class="mo-tip hit" data-tip="${i}"` +
+    ` aria-label="${esc(t(id + '_n'))}">` +
+    `<span class="n">${i + 1}</span>` +
+    `<span class="ic" aria-hidden="true">${TIP_IC[id]}</span></button>`).join('');
+  $('tips-rail').querySelectorAll('.mo-tip').forEach(b => {
+    b.addEventListener('click', () => steps.read.openTip(Number(b.getAttribute('data-tip'))));
+  });
+  paintTips();
+}
+/* ⚠️ CHẶNG NÀY LÀ MỘT TRÌNH TỰ, nên mẹo chưa tới bị chặn HẲN ở chính cái nút
+   (`disabled`), không chặn bằng một câu `if`: chặn bằng `if` thì nút vẫn nhận tiêu
+   điểm bàn phím và vẫn báo với trình đọc màn hình rằng nó bấm được. */
+function paintTips() {
+  const seen = steps.read.seen;
+  $('tips-rail').querySelectorAll('.mo-tip').forEach((b, i) => {
+    b.classList.toggle('ok', i < seen);
+    b.classList.toggle('now', i === seen);
+    b.disabled = i !== seen;
+  });
+  $('tips-say').innerHTML = seen > 0 ? t(TIPS[seen - 1] + '_p') : '';
+}
+
+/* ───────────────────── Chặng ⑤ · Báo cáo ───────────────────── */
+function buildReport() {
+  $('report-k').textContent = t('s5_k');
+  $('report-hint').textContent = t('s5_hint');
+  $('report-send').textContent = t('s5_send');
+  $('report-lines').innerHTML = ['s5_l1', 's5_l2', 's5_l3'].map(k =>
+    `<div class="mo-line"><span class="tick" aria-hidden="true">✓</span>` +
+    `<span class="tx">${esc(t(k))}</span></div>`).join('');
+}
+
+/* ═══════════════════ SỔ ĐĂNG KÝ CHẶNG ═══════════════════
+
+   ⚠️⚠️ MỌI `enter()` ĐỀU THEO ĐÚNG MỘT NHỊP: khoá `busy` → bảng mục tiêu → Comet nói
+      → mở bảng điều khiển → nhả `busy`. **ĐỪNG MỞ BẢNG TRƯỚC KHI COMET NÓI XONG.**
+
+      Bản đầu 15/08/2026 làm ngược (mở bảng rồi mới `await say(...)`), và bộ smoke bắt
+      được ngay: một cú bấm vào bảng trong lúc câu thoại còn đang chờ sẽ gọi `say()`
+      LẦN THỨ HAI, mà `say()` chỉ giữ MỘT `sayResolve` — lời gọi mới ghi đè lời cũ,
+      nên promise của `enter()` **không bao giờ resolve** và chặng đứng lại vĩnh viễn.
+      Trẻ nhìn thấy: bấm nút xong thì không có gì xảy ra nữa.
+
+      Hai lớp chặn, cần CẢ HAI: `busy` chặn mọi cú bấm trong lúc hoạt cảnh chạy, còn
+      việc mở bảng sau lời thoại thì bảo đảm **không có gì để bấm** ngay từ đầu — thứ
+      không tồn tại thì không cần ai nhớ khoá. */
+const steps = {
+  /* ── ① Ba vệt quét ── */
+  eyes: {
+    hits: 0,
+    got: new Set(),
+    async enter() {
+      world.setMap('flat');
+      world.setControls({ rotate: false, zoom: false });
+      setTint(null);
+      showSim(false);
+      await world.panTo({ ...FACE_OPEN, ms: 0 });
+      busy = true;
+      objective({ ic: '🛰️', h: t('s1_h'), p: t('s1_p'), n: 0, total: SWATHS.length });
+      await say('comet', t('s1_say1'));
+      hideSay();
+      buildScan();
+      $('scan').classList.add('show');
+      busy = false;
+    },
+    async pick(ev) {
+      if (busy || ev.type !== 'marker') return;
+      const s = SWATHS.find(x => x.id === ev.id);
+      if (!s || this.got.has(s.id)) return;
+      busy = true;
+      this.got.add(s.id);
+      this.hits++;
+      world.markDone(s.id);
+      const row = $('scan-rows').querySelector(`[data-row="${s.id}"]`);
+      if (row) row.classList.add('ok');
+      ST.progress(this.hits, SWATHS.length);
+      sfx('beep', 900 + this.hits * 150);
+      await showCard({
+        ic: s.ic, cc: '#5fd3ff', cbg: 'rgba(10,30,52,.96)',
+        nm: t('sw_' + s.id + '_n'),
+        fact: t('sw_' + s.id + '_f'),
+        sub: t('sw_' + s.id + '_t'),
+        tag: t('tag_scan')
+      });
+      /* Ba câu phản hồi KHÁC NHAU theo lượt chạm, viết literal chứ không ghép
+         `t('s1_hit' + n)` — phép kiểm i18n quét `t("khoá")` dạng CHỮ, ghép động là
+         ba khoá này bị báo "khai mà không dùng" và lỗi đó im lặng. */
+      const line = this.hits === 1 ? t('s1_hit1') : this.hits === 2 ? t('s1_hit2') : t('s1_hit3');
+      $('scan-hint').textContent = line;
+      busy = false;
+      if (this.hits >= SWATHS.length) {
+        sfx('ready');
+        await say('byte', t('s1_done'));
+        hideSay();
+        await finishStep('eyes');
+      }
+    },
+    outro() {
+      $('scan').classList.remove('show');
+      world.clearMarkers();
+    }
+  },
+
+  /* ── ② Băng sóng ── */
+  bands: {
+    band: null,
+    asked: false,
+    async enter() {
+      world.setMap('flat');
+      setTint(null);
+      showSim(false);
+      await world.panTo({ lat: 20, lon: 15, dist: 3.0, ms: 900 });
+      busy = true;
+      objective({ ic: '🌈', h: t('s2_h'), p: t('s2_p'), n: 0, total: 0 });
+      await say('comet', t('s2_say1'));
+      hideSay();
+      buildBand();
+      $('band').classList.add('show');
+      busy = false;
+    },
+    async onBand(b) {
+      if (busy || this.asked) return;
+      this.band = b;
+      paintBand();
+      setTint(b === 'false' ? 'false' : null);
+      showSim(b === 'false');
+      sfx('pickup');
+      if (b !== 'false') return;      // còn phải gạt sang màu giả mới đi tiếp
+      busy = true;
+      this.asked = true;
+      await say('byte', t('s2_say2'));
+      hideSay();
+      $('band').classList.remove('show');
+      buildAsk({
+        k: t('s2_ask_k'), q: t('s2_q'),
+        opts: [
+          { id: 'red',  ic: '🍁', tx: t('s2_o1') },
+          { id: 'nir',  ic: '📡', tx: t('s2_o2') },
+          { id: 'bug',  ic: '🐞', tx: t('s2_o3') }
+        ],
+        onPick: (p) => this.onAnswer(p)
+      });
+      $('ask').classList.add('show');
+      busy = false;
+    },
+    /* ⚠️ ĐOÁN SAI KHÔNG PHẠT — cả hai nhánh đều hé lộ đáp án đúng kèm lý do. Đây là
+       màn HỌC, không phải bài kiểm tra; phạt ở đây là dạy trẻ đừng đoán. */
+    async onAnswer(pick) {
+      if (busy) return;
+      busy = true;
+      $('ask').classList.remove('show');
+      sfx(pick === 'nir' ? 'ready' : 'nope');
+      await say(pick === 'nir' ? 'comet' : 'byte', pick === 'nir' ? t('s2_ok') : t('s2_no'));
+      await say('byte', t('s2_water'));
+      hideSay();
+      await showCard({
+        ic: '🌈', cc: '#c084fc', cbg: 'rgba(26,12,40,.96)',
+        nm: t('s2_cn'), fact: t('s2_cf'), sub: t('s2_cs'), tag: t('s2_ct')
+      });
+      busy = false;
+      await finishStep('bands');
+    },
+    outro() {
+      $('band').classList.remove('show');
+      $('ask').classList.remove('show');
+      setTint(null);
+      showSim(false);
+    }
+  },
+
+  /* ── ③ Đốm sáng ban đêm ── */
+  night: {
+    placed: 0,
+    async enter() {
+      world.setMap('flat');
+      await world.panTo({ lat: 40, lon: 0, dist: 3.2, ms: 900 });
+      setTint('dark');
+      busy = true;
+      objective({ ic: '🌃', h: t('s3_h'), p: t('s3_p'), n: 0, total: GLOWS.length });
+      await say('comet', t('s3_say1'));
+      hideSay();
+      buildNight();
+      $('night').classList.add('show');
+      busy = false;
+    },
+    async onPlace() {
+      this.placed++;
+      ST.progress(this.placed, GLOWS.length);
+      sfx('pickup');
+      $('night-hint').textContent = t('s3_hint');
+      if (this.placed < GLOWS.length) return;
+      sfx('ready');
+      await showCard({
+        ic: '🌃', cc: '#ffcf6b', cbg: 'rgba(30,22,6,.96)',
+        nm: t('s3_cn'), fact: t('s3_cf'), sub: t('s3_cs'), tag: t('s3_ct')
+      });
+      await say('byte', t('s3_done'));
+      hideSay();
+      await finishStep('night');
+    },
+    outro() {
+      $('night').classList.remove('show');
+      world.clearMarkers();
+      setTint(null);
+    }
+  },
+
+  /* ── ④ Năm mẹo ── */
+  read: {
+    seen: 0,
+    async enter() {
+      world.setMap('flat');
+      setTint(null);
+      await world.panTo({ lat: 30, lon: 10, dist: 3.2, ms: 900 });
+      busy = true;
+      objective({ ic: '🔎', h: t('s4_h'), p: t('s4_p'), n: 0, total: TIPS.length });
+      await say('comet', t('s4_say1'));
+      hideSay();
+      buildTips();
+      $('tips').classList.add('show');
+      busy = false;
+    },
+    /** Mỗi mẹo làm một việc KHÁC NHAU trên chính tấm ảnh đang mở — đó là điều tách
+        chặng này khỏi một bảng câu đố năm câu. */
+    async openTip(i) {
+      if (busy || i !== this.seen) return;
+      busy = true;
+      this.seen = i + 1;
+      sfx('beep', 820 + i * 90);
+      if (i === 0) { $('scale').classList.add('show'); }
+      if (i === 1) { world.showGrid(true); }
+      if (i === 2) { setTint('false'); showSim(true); }
+      if (i === 3) { setTint(null); showSim(false); world.showGrid(false); $('compass').classList.add('show'); }
+      if (i === 4) { $('compass').classList.remove('show'); $('scale').classList.remove('show'); }
+      ST.progress(this.seen, TIPS.length);
+      paintTips();
+      busy = false;
+      if (this.seen < TIPS.length) return;
+      await showCard({
+        ic: '🔎', cc: '#5fd3ff', cbg: 'rgba(8,26,44,.96)',
+        nm: t('s4_cn'), fact: t('s4_cf'), sub: t('s4_ct'), tag: t('s4_ct')
+      });
+      await say('comet', t('s4_done'));
+      hideSay();
+      await finishStep('read');
+    },
+    outro() {
+      $('tips').classList.remove('show');
+      $('scale').classList.remove('show');
+      $('compass').classList.remove('show');
+      world.showGrid(false);
+      setTint(null);
+      showSim(false);
+    }
+  },
+
+  /* ── ⑤ Báo cáo ── */
+  report: {
+    sent: false,
+    async enter() {
+      world.setMap('flat');
+      setTint(null);
+      await world.panTo({ ...FACE_OPEN, ms: 900 });
+      busy = true;
+      objective({ ic: '📡', h: t('s5_h'), p: t('s5_p'), n: 0, total: 0 });
+      await say('comet', t('s5_say1'));
+      hideSay();
+      buildReport();
+      $('report').classList.add('show');
+      busy = false;
+    },
+    async onSend() {
+      if (busy || this.sent) return;
+      this.sent = true;
+      busy = true;
+      $('report-send').disabled = true;
+      sfx('fanfare');
+      await say('comet', t('s5_done'));
+      hideSay();
+      busy = false;
+      await finishStep('report');
+    },
+    outro() { $('report').classList.remove('show'); }
+  }
+};
+
+$('report-send').addEventListener('click', () => steps.report.onSend());
+
+RUN = AstroQMission.create({
+  mission: 'orbit',
+  stepIds: STEP_IDS,
+  steps: steps,
+  stepsEl: $('steps'),
+  /* Số tạm cho tới khi server trả số thật — khớp số entry của
+     `learningdata/astronomy/orbit_codex.json`. `check_pages` [3c] đối chiếu. */
+  codexTotal: 4,
+  t: t,
+  toast: ST.toast,
+  onBalance: ST.paintBalance,
+  onWin: ST.showWin,
+  onStepDone: ST.afterStep
+});
+ST.attach(RUN);
+
+async function finishStep(id) { return RUN.finish(id); }
+
+/* ───────────────────── Ngôn ngữ ───────────────────── */
+function applyLang(lang) {
+  if (lang === 'en' || lang === 'vi') LANG = lang;
+  document.documentElement.lang = LANG;
+  document.title = t('title');
+  AstroQ.applyTexts(t);
+  AstroQ.markLangButtons(LANG);
+  ST.applyLang();
+  $('load-sub').textContent = $('load-sub').dataset.fail ? t('load_fail') : t('load_sub');
+  $('sim').textContent = t('s2_sim');
+  /* ⚠️ ĐỔI NGÔN NGỮ GIỮA MỘT CHẶNG: chỉ vẽ lại NHÃN, KHÔNG dựng lại bảng —
+     `build*()` sinh markup mới nên mọi ô đã kích hoạt / thẻ đã xếp biến mất và trẻ
+     phải làm lại từ đầu chỉ vì bấm EN. Mỗi bảng vì thế có một nhánh riêng ở đây. */
+  if ($('scan').classList.contains('show')) {
+    $('scan-k').textContent = t('s1_k');
+    $('scan-rows').querySelectorAll('.mo-row').forEach(r => {
+      r.querySelector('.tx').textContent = t('sw_' + r.getAttribute('data-row') + '_t');
+    });
+    document.querySelectorAll('.mo-swath').forEach(m => {
+      m.setAttribute('aria-label', t('sw_' + m.dataset.id + '_n'));
+    });
+    const n = steps.eyes.hits;
+    $('scan-hint').textContent = n === 0 ? t('s1_hint')
+      : n === 1 ? t('s1_hit1') : n === 2 ? t('s1_hit2') : t('s1_hit3');
+  }
+  if ($('band').classList.contains('show')) {
+    $('band-k').textContent = t('s2_k');
+    $('band-hint').textContent = t('s2_hint');
+    $('band-switch').querySelectorAll('.mo-bandbtn').forEach(b => {
+      const k = b.getAttribute('data-band');
+      b.querySelector('.nm').textContent = t('s2_' + k + '_n');
+      b.querySelector('.tx').textContent = t('s2_' + k + '_t');
+    });
+  }
+  if ($('night').classList.contains('show')) {
+    $('night-k').textContent = t('s3_k');
+    $('night-hint').textContent = t('s3_hint');
+    /* Nhãn của cả thẻ CHƯA xếp lẫn đốm sáng ĐÃ xếp — đọc lại từ dữ liệu chứ không
+       từ DOM: chữ cũ nằm trong DOM chính là thứ đang cần thay. */
+    $('night-tray').querySelectorAll('.me-gem').forEach(el => {
+      el.querySelector('.tx').textContent = t('g_' + el.getAttribute('data-want'));
+    });
+    document.querySelectorAll('.mo-glow').forEach(m => {
+      m.setAttribute('aria-label', t('g_' + m.dataset.id));
+    });
+  }
+  if ($('tips').classList.contains('show')) {
+    $('tips-k').textContent = t('s4_k');
+    $('tips-rail').querySelectorAll('.mo-tip').forEach((b, i) => {
+      b.setAttribute('aria-label', t(TIPS[i] + '_n'));
+    });
+    paintTips();
+  }
+  if ($('report').classList.contains('show')) {
+    buildReport();
+    if (steps.report.sent) $('report-send').disabled = true;
+  }
+}
+
+/* ───────────────────── Khởi động ───────────────────── */
+ST.paintBalance();
+ST.paintMute();
+Economy.onAsteroidsChange(ST.paintBalance);
+applyLang(LANG);
+AstroQ.initLang(applyLang);
+RUN.paint();
+
+(async function boot() {
+  try {
+    world = AstroQEarth2D.create($('stage'), { reduced });
+  } catch (e) {
+    $('load-sub').dataset.fail = '1';
+    $('load-sub').textContent = t('load_fail');
+    $('load').querySelector('.ring').style.display = 'none';
+    console.warn('[AstroQ] Không dựng được cảnh:', e && e.message);
+    return;
+  }
+  world.onPick(ev => RUN.pick(ev));
+  world.start();
+  $('load').classList.add('gone');
+
+  /* Bề mặt điều khiển cho test tự động. Chỉ ĐIỀU KHIỂN, KHÔNG cấp thưởng — thưởng
+     vẫn do server quyết.
+     ⚠️ Gán TRƯỚC `await RUN.enter()`: chặng ① chờ trẻ bấm "OK", nên gán sau thì
+        `window.__mission` không tồn tại cho tới khi có người bấm.
+     ⚠️ Các hàm CỐ Ý KHÔNG trả Promise — `page.evaluate` của Playwright tự chờ
+        promise được trả về, mà bên trong lại chờ một cú bấm → test treo vĩnh viễn
+        thay vì báo hỏng. */
+  window.__mission = {
+    get step()   { return RUN.step; },
+    get done()   { return RUN.done; },
+    get reward() { return RUN.reward; },
+    get busy()   { return busy; },
+    pick: (ev) => { RUN.pick(ev); return true; },
+    say:  () => ST.sayNext(),
+    win:  () => ST.win(),
+    get autoLeft() { return ST.autoLeft; },
+    get askOpen()  { return ST.askOpen; },
+    askNext: () => ST.askNext(),
+    askStop: () => ST.askStop(),
+    /** Số vệt quét đã chạm ở chặng ①. */
+    get scanned() { return steps.eyes.hits; },
+    /** Gạt băng sóng ở chặng ②; `'true'` | `'false'`. */
+    band: (b) => { steps.bands.onBand(b); return true; },
+    /** Trả lời câu đố chặng ②. Phải gọi được CẢ nhánh sai — "đoán sai không phạt"
+        là một luật của thiết kế, mà luật nào không có phép kiểm thì sớm muộn có
+        người "sửa" nó đi. */
+    answer: (p) => { steps.bands.onAnswer(p); return true; },
+    /** Số đốm sáng đã nhận dạng ở chặng ③. */
+    get placed() { return steps.night.placed; },
+    /** Mở mẹo thứ `i` (0-based) ở chặng ④. */
+    tip: (i) => { steps.read.openTip(i); return true; },
+    get tips() { return steps.read.seen; },
+    get tipTotal() { return TIPS.length; },
+    /** Gửi báo cáo ở chặng ⑤. */
+    send: () => { steps.report.onSend(); return true; },
+    get badges() { return RUN.reward.badges; },
+    world
+  };
+
+  ST.resumeSteps();
+  await RUN.enter();
+})();
+</script>
+</body>
+</html>

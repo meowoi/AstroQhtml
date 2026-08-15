@@ -1,0 +1,286 @@
+{
+  "$comment": [
+    "HỒ SƠ QUAN SÁT (Observation Codex) — nội dung đọc mở khoá theo từng chặng của",
+    "Nhiệm Vụ 02 \"Mắt Thần Trên Quỹ Đạo\".",
+    "",
+    "PHÂN CÔNG (giống earth_codex.json):",
+    "  · SERVER (AstroqSV/Services/Missions.cs) giữ `Codex` id của từng bước —",
+    "    đó là nguồn sự thật về mẫu nào mở ở bước nào.",
+    "  · File này chỉ giữ NỘI DUNG ĐỌC, khớp theo `id`.",
+    "  · `check_pages.py` mục [3c] đối chiếu hai bên: mẫu server khai mà đây không",
+    "    có bài đọc là hỏng, và bài đọc lạ không ai mở khoá được cũng là hỏng.",
+    "",
+    "⚠️ MỌI CON SỐ TRONG FILE NÀY TRÍCH TỪ MỘT TRANG NASA ĐÃ MỞ VÀ ĐỌC, kiểm trả",
+    "   200 ngày 2026-08-15. Đừng \"làm giàu\" bằng số liệu nhớ được — dự án đã mắc",
+    "   đúng lỗi đó ba lần (Nam Cực \"châu lục cao nhất\", ba tiêu chí IAU, CHNOPS).",
+    "",
+    "⚠️ BỐN CHỖ CỐ Ý KHÔNG VIẾT vì trang nguồn không nói:",
+    "   · số vệ tinh quan sát Trái Đất NASA đang có — không đọc thấy trên trang nào",
+    "     trong bộ nguồn này;",
+    "   · quy đổi 30 mét ra một vật quen thuộc của trẻ Việt: NASA ví bằng \"sân bóng",
+    "     chày\", nên câu chữ nói rõ ĐÓ LÀ PHÉP VÍ CỦA NASA, không đổi sang sân bóng đá;",
+    "   · \"đèn tàu cá\" trong danh sách thứ VIIRS nhìn thấy — trang Night Lights 2012",
+    "     chỉ liệt kê city lights, auroras, wildfires, reflected moonlight;",
+    "   · độ phân giải hay số kênh phổ của VIIRS — trang không cho con số.",
+    "",
+    "⚠️ Nội dung CHƯA qua rà soát chuyên môn (`reviewed_by_teacher: false`), y như",
+    "   earth_codex.json. Số liệu có nguồn, nhưng cách diễn đạt cho trẻ cần giáo viên",
+    "   đọc lại trước khi phát hành."
+  ],
+  "topic": "Thiên văn học",
+  "topic_id": "astronomy",
+  "codex_id": "orbit",
+  "mission_id": "orbit",
+  "sources_checked_at": "2026-08-15",
+  "title": { "vi": "Hồ Sơ Quan Sát", "en": "The Observation File" },
+  "count": 4,
+  "entries": [
+    {
+      "id": "satellite-eyes",
+      "step": "eyes",
+      "ic": "🛰️",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Vì sao phải nhìn Trái Đất từ trên cao",
+        "en": "Why we look at Earth from above"
+      },
+      "summary": {
+        "vi": "Vệ tinh là bất cứ thứ gì bay vòng quanh một hành tinh hay một ngôi sao. Nhiều vệ tinh của NASA mang máy ảnh và cảm biến chĩa xuống Trái Đất. Từ trên đó, chúng thấy được cả một mảng rộng trong một lần nhìn — và thấy được vì chúng ở phía trên lớp mây bụi vốn che mất tầm nhìn từ mặt đất.",
+        "en": "A satellite is anything that orbits a planet or a star. Many NASA satellites carry cameras and sensors pointed down at Earth. From up there they see a huge area in one look — and they can see it because they are above the clouds and dust that block the view from the ground."
+      },
+      "body": [
+        {
+          "h": { "vi": "Vệ tinh là gì?", "en": "What is a satellite?" },
+          "p": {
+            "vi": "NASA định nghĩa rất gọn: vệ tinh là bất cứ thứ gì bay vòng quanh một hành tinh hoặc một ngôi sao. Mặt Trăng là vệ tinh của Trái Đất, còn những con tàu nhỏ mà con người phóng lên cũng là vệ tinh. Một số vệ tinh mang theo dụng cụ chĩa xuống Trái Đất để thu thập thông tin về đất, không khí và nước của nó.",
+            "en": "NASA puts it simply: a satellite is anything that orbits a planet or a star. The Moon is Earth's satellite, and so are the small craft people launch. Some of them carry instruments pointed at Earth to gather information about its land, air and water."
+          }
+        },
+        {
+          "h": { "vi": "Một lần nhìn, cả một mảng lớn", "en": "One look, a huge area" },
+          "p": {
+            "vi": "Đứng dưới mặt đất, bạn chỉ thấy tới đường chân trời. Từ quỹ đạo thì khác hẳn: NASA viết rằng tầm nhìn của vệ tinh cho phép chúng nhìn thấy những vùng rộng lớn của Trái Đất cùng một lúc. Nhờ vậy một vệ tinh thu được nhiều dữ liệu hơn, nhanh hơn hẳn so với dụng cụ đặt dưới đất.",
+            "en": "Standing on the ground you can only see as far as the horizon. From orbit it is completely different: NASA writes that a satellite's view lets it see large areas of Earth at one time. That is how one satellite gathers more data, more quickly, than instruments on the ground."
+          }
+        },
+        {
+          "h": { "vi": "Ở trên cả mây và bụi", "en": "Above the clouds and the dust" },
+          "p": {
+            "vi": "Còn một lý do nữa, và nó là lý do rất thực tế: vệ tinh bay phía trên mây, bụi và các phân tử trong khí quyển — chính những thứ chắn mất tầm nhìn khi ta quan sát từ mặt đất. Kính thiên văn đặt dưới đất phải nhìn xuyên qua tất cả những thứ đó; vệ tinh thì không.",
+            "en": "There is a second reason, and it is a very practical one: satellites fly above the clouds, dust and molecules in the atmosphere — exactly the things that block the view from the ground. A telescope on the ground has to peer through all of that; a satellite does not."
+          }
+        },
+        {
+          "h": { "vi": "Một ô vuông 30 mét", "en": "A 30-metre square" },
+          "p": {
+            "vi": "Ảnh vệ tinh được ghép từ rất nhiều ô vuông nhỏ gọi là điểm ảnh. Với vệ tinh Landsat, mỗi điểm ảnh phủ một vùng 30 nhân 30 mét — NASA ví nó bằng cỡ một sân bóng chày. Nghĩa là mọi thứ nhỏ hơn ô vuông đó đều gộp lại thành MỘT màu duy nhất: cái cây trong vườn nhà bạn không có ô riêng của nó.",
+            "en": "A satellite image is built from many small squares called pixels. For the Landsat satellite each pixel covers a 30 by 30 metre area — NASA compares it to the size of a baseball diamond. So anything smaller than that square blends into a single colour: the tree in your garden does not get a pixel of its own."
+          }
+        }
+      ],
+      "mascot_dialog": [
+        {
+          "who": "comet",
+          "vi": "Mình đang ngồi trong một cái vệ tinh đấy! Nhìn xuống đi — cả một mảng Trái Đất trong một lần nhìn.",
+          "en": "We're sitting inside a satellite right now! Look down — a whole slice of Earth in a single glance."
+        },
+        {
+          "who": "byte",
+          "vi": "Và mỗi ô vuông nhỏ nhất mà Landsat nhìn thấy rộng 30 mét. Nhỏ hơn thế thì… trộn chung một màu.",
+          "en": "And the smallest square Landsat can see is 30 metres wide. Anything smaller just blends into one colour."
+        }
+      ],
+      "source_reference": {
+        "label": "NASA Space Place — What Is a Satellite? · NASA Landsat — Picturing a Pixel",
+        "url": "https://spaceplace.nasa.gov/satellite/en/"
+      }
+    },
+
+    {
+      "id": "false-color",
+      "step": "bands",
+      "ic": "🌈",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Ảnh màu giả: nhìn bằng ánh sáng mắt không thấy",
+        "en": "False colour: seeing light your eyes cannot"
+      },
+      "summary": {
+        "vi": "Một tấm ảnh vệ tinh được tạo ra bằng cách gộp các phép đo cường độ của một số bước sóng ánh sáng — cả loại mắt người thấy được lẫn loại không thấy được. Khi một bước sóng vô hình được vẽ ra bằng màu đỏ, xanh lá hay xanh lam, ta có một tấm ảnh màu giả. Rừng cây hiện lên đỏ rực, còn nước thì đen kịt.",
+        "en": "A satellite image is made by combining measurements of certain wavelengths of light — both the kind human eyes can see and the kind they cannot. When an invisible wavelength is drawn in red, green or blue, you get a false-colour image. Forests glow deep red, and water turns black."
+      },
+      "body": [
+        {
+          "h": { "vi": "Ảnh vệ tinh được ghép từ các bước sóng", "en": "An image built from wavelengths" },
+          "p": {
+            "vi": "NASA mô tả rất rõ cách một tấm ảnh vệ tinh ra đời: nó được tạo ra bằng cách gộp các phép đo cường độ của một số bước sóng ánh sáng nhất định, cả nhìn thấy được lẫn không nhìn thấy được bằng mắt thường. Máy đo được nhiều loại ánh sáng hơn mắt ta rất nhiều — vấn đề chỉ là vẽ chúng ra thế nào.",
+            "en": "NASA describes exactly how a satellite image is born: it is created by combining measurements of the intensity of certain wavelengths of light, both visible and invisible to human eyes. The instrument measures far more kinds of light than our eyes do — the only question is how to draw them."
+          }
+        },
+        {
+          "h": { "vi": "Màu giả nghĩa là gì?", "en": "What 'false colour' means" },
+          "p": {
+            "vi": "Một ảnh màu giả dùng ít nhất một bước sóng KHÔNG nhìn thấy được, nhưng vẫn vẽ nó ra bằng đỏ, xanh lá hoặc xanh lam. Nó không phải ảnh \"sai\" hay ảnh bịa: nó là cách duy nhất để mắt người đọc được thứ ánh sáng mà mắt người vốn không nhận ra.",
+            "en": "A false-colour image uses at least one non-visible wavelength, though that band is still represented in red, green or blue. It is not a \"wrong\" or made-up picture: it is the only way for human eyes to read light that human eyes cannot detect."
+          }
+        },
+        {
+          "h": { "vi": "Vì sao rừng cây lại đỏ rực?", "en": "Why forests glow red" },
+          "p": {
+            "vi": "Diệp lục trong cây hấp thụ ánh sáng đỏ và xanh lam, nhưng phản xạ ánh sáng xanh lá và hồng ngoại — đó là lý do lá cây trông xanh với mắt ta. Cây phản xạ tia hồng ngoại gần rất mạnh, và cây khoẻ phản xạ mạnh hơn cây đang yếu. Vì chúng phản xạ hồng ngoại gần nhiều hơn cả ánh sáng xanh lá, nên trên ảnh màu giả, vùng đất có cây phủ hiện lên màu đỏ đậm.",
+            "en": "Chlorophyll in plants absorbs red and blue light but reflects green and infrared — that is why leaves look green to us. Plants reflect near-infrared light strongly, and healthy plants reflect more than stressed ones. Since they reflect more near-infrared than green, plant-covered land appears deep red in a false-colour image."
+          }
+        },
+        {
+          "h": { "vi": "Còn nước thì đen kịt", "en": "And water turns black" },
+          "p": {
+            "vi": "Nước thì ngược lại: nó hấp thụ cả ba bước sóng của tổ hợp băng sóng này, nên nó hiện ra màu đen. Chính vì nước và đất ướt nổi bật hẳn lên trong tổ hợp đó mà nó rất có giá trị để theo dõi lũ lụt — trên ảnh màu thật, nước đục lẫn vào đất nâu và gần như không phân biệt được.",
+            "en": "Water does the opposite: it absorbs all three wavelengths of this band combination, so it comes out black. Precisely because water and wet soil stand out this way, the combination is valuable for monitoring floods — in a natural-colour image muddy water blends into brown land and is nearly impossible to pick out."
+          }
+        }
+      ],
+      "mascot_dialog": [
+        {
+          "who": "byte",
+          "vi": "Đừng gọi nó là ảnh \"sai màu\" nhé. Màu ở đây là một CÁCH VẼ, để mắt mình đọc được thứ mắt mình không nhìn thấy.",
+          "en": "Don't call it a \"wrong colour\" picture. The colour here is a way of drawing, so our eyes can read light our eyes can't see."
+        },
+        {
+          "who": "comet",
+          "vi": "Nhớ hai điều thôi: cây đỏ rực là cây khoẻ, nước đen kịt là nước. Thế là đọc được nửa tấm ảnh rồi!",
+          "en": "Just remember two things: bright red means healthy plants, pitch black means water. That's half the image read already!"
+        }
+      ],
+      "source_reference": {
+        "label": "NASA Earth Observatory — How to Interpret a False-Color Satellite Image",
+        "url": "https://science.nasa.gov/earth/earth-observatory/how-to-interpret-a-false-color-satellite-image/"
+      }
+    },
+
+    {
+      "id": "night-lights",
+      "step": "night",
+      "ic": "🌃",
+      "kind": "science",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Trái Đất lúc nửa đêm",
+        "en": "Earth at midnight"
+      },
+      "summary": {
+        "vi": "Bức ảnh Trái Đất về đêm nổi tiếng được ghép từ dữ liệu của vệ tinh Suomi NPP, nhờ một bộ phận gọi là \"băng ngày-đêm\". Nó dùng cảm biến ánh sáng đủ nhạy để thấy những tín hiệu rất mờ: đèn thành phố, cực quang, cháy rừng và cả ánh trăng phản chiếu.",
+        "en": "The famous night-time image of Earth is assembled from data taken by the Suomi NPP satellite, using a part called the \"day-night band\". Its light sensors are sensitive enough to see very dim signals: city lights, auroras, wildfires and even reflected moonlight."
+      },
+      "body": [
+        {
+          "h": { "vi": "Ai chụp bức ảnh này?", "en": "Who took this picture?" },
+          "p": {
+            "vi": "Đây không phải một bức ảnh chụp một lần. NASA ghép nó lại từ dữ liệu thu được bởi vệ tinh Suomi National Polar-orbiting Partnership — gọi tắt là Suomi NPP. Phần làm nên tấm ảnh là \"băng ngày-đêm\" của bộ dụng cụ mang tên Visible Infrared Imaging Radiometer Suite, viết tắt là VIIRS.",
+            "en": "This is not a single snapshot. NASA assembled it from data acquired by the Suomi National Polar-orbiting Partnership satellite — Suomi NPP for short. What made it possible is the \"day-night band\" of an instrument called the Visible Infrared Imaging Radiometer Suite, or VIIRS."
+          }
+        },
+        {
+          "h": { "vi": "Bốn thứ nó nhìn thấy trong đêm", "en": "Four things it sees in the dark" },
+          "p": {
+            "vi": "VIIRS dò được ánh sáng trong dải bước sóng từ xanh lá tới hồng ngoại gần, và nó dùng cảm biến ánh sáng \"thông minh\" để quan sát những tín hiệu rất mờ: đèn thành phố, cực quang, cháy rừng, và ánh trăng phản chiếu. Bốn thứ đó trông đều là \"đốm sáng trong đêm\" — biết phân biệt chúng chính là việc của người đọc ảnh.",
+            "en": "VIIRS detects light across wavelengths from green to near-infrared, and uses \"smart\" light sensors to observe dim signals such as city lights, auroras, wildfires, and reflected moonlight. All four look like \"a glow in the dark\" — telling them apart is exactly the job of whoever reads the image."
+          }
+        },
+        {
+          "h": { "vi": "Hai lần một ngày, đúng giờ", "en": "Twice a day, right on time" },
+          "p": {
+            "vi": "Vệ tinh này bay theo quỹ đạo cực, nên nó đi qua bất kỳ điểm nào trên bề mặt Trái Đất hai lần mỗi ngày — vào khoảng 1 giờ 30 sáng và 1 giờ 30 chiều. Nghĩa là mỗi nơi đều được ngó tới một lần giữa đêm, đều đặn, ngày này qua ngày khác.",
+            "en": "This satellite is in a polar orbit, so it flies over any given point on Earth's surface twice each day — at roughly 1:30 a.m. and 1:30 p.m. That means every place gets looked at once in the middle of the night, regularly, day after day."
+          }
+        }
+      ],
+      "mascot_dialog": [
+        {
+          "who": "comet",
+          "vi": "Ban đêm Trái Đất kể một câu chuyện khác hẳn ban ngày. Ánh sáng ở đây phần lớn là do CON NGƯỜI thắp lên.",
+          "en": "At night Earth tells a completely different story than by day. Most of this light was switched on by PEOPLE."
+        },
+        {
+          "who": "byte",
+          "vi": "Nhưng không phải đốm nào cũng là thành phố đâu nhé. Cực quang, cháy rừng, ánh trăng phản chiếu — cũng sáng cả đấy.",
+          "en": "But not every glow is a city. Auroras, wildfires, reflected moonlight — those shine too."
+        }
+      ],
+      "source_reference": {
+        "label": "NASA Earth Observatory — Night Lights 2012: The Black Marble",
+        "url": "https://science.nasa.gov/earth/earth-observatory/night-lights-2012-the-black-marble-79803/"
+      }
+    },
+
+    {
+      "id": "read-image",
+      "step": "read",
+      "ic": "🔎",
+      "kind": "skill",
+      "reviewed_by_teacher": false,
+      "title": {
+        "vi": "Năm mẹo đọc một tấm ảnh vệ tinh",
+        "en": "Five tips for reading a satellite image"
+      },
+      "summary": {
+        "vi": "NASA dạy năm mẹo để đọc một tấm ảnh chụp từ vũ trụ: tìm tỉ lệ, tìm hoa văn và hình dạng, xác định màu sắc, tìm hướng bắc, và dùng chính điều mình đã biết về nơi đó. Mẹo cuối cùng lại là mẹo mạnh nhất.",
+        "en": "NASA teaches five tips for reading a picture taken from space: look for a scale, look for patterns and shapes, define the colours, find north, and use what you already know about the place. The last tip turns out to be the most powerful one."
+      },
+      "body": [
+        {
+          "h": { "vi": "1. Tìm tỉ lệ", "en": "1. Look for a scale" },
+          "p": {
+            "vi": "Trước hết phải biết mình đang nhìn một vùng rộng bao nhiêu. Tuỳ độ phân giải của ảnh, một thành phố có thể chiếm trọn khung hình với đầy đủ mạng lưới đường phố, hoặc chỉ là một chấm nhỏ trên một vùng đất rộng. Không biết tỉ lệ thì mọi thứ khác đều đoán sai.",
+            "en": "First you need to know how wide an area you are looking at. Depending on the image resolution, a city may fill the entire frame with its grid of streets, or it may be a mere dot on a landscape. Without a scale, everything else is a wrong guess."
+          }
+        },
+        {
+          "h": { "vi": "2. Tìm hoa văn, hình dạng, kết cấu", "en": "2. Look for patterns, shapes and textures" },
+          "p": {
+            "vi": "NASA nói thẳng rằng con người rất giỏi việc này: nếu bạn từng nằm nhìn mây và thấy ra hình con vật, thì bạn đã biết cách rồi. Đường thẳng tăm tắp thường là do con người làm ra; đường ngoằn ngoèo thường là của tự nhiên.",
+            "en": "NASA says outright that humans are very good at this: if you have ever spent an afternoon finding animals and shapes in the clouds, you already know how. Straight lines usually mean people; winding ones usually mean nature."
+          }
+        },
+        {
+          "h": { "vi": "3. Xác định màu sắc", "en": "3. Define the colours" },
+          "p": {
+            "vi": "Màu trong một tấm ảnh phụ thuộc vào loại ánh sáng mà dụng cụ của vệ tinh đo được. Đây chính là chỗ nối với bài trước: đỏ rực trong ảnh màu giả không phải là đất đỏ, mà là cây cối phản xạ tia hồng ngoại. Chưa biết ảnh dùng băng sóng nào thì chưa đọc được màu.",
+            "en": "The colours in an image depend on what kind of light the satellite instrument measured. This is where it links back to the previous lesson: bright red in a false-colour image is not red soil, it is vegetation reflecting infrared. Until you know which bands the image uses, you cannot read its colours."
+          }
+        },
+        {
+          "h": { "vi": "4. Tìm hướng bắc", "en": "4. Find north" },
+          "p": {
+            "vi": "Nghe đơn giản nhưng đổi hẳn cách hiểu: nếu biết hướng bắc ở đâu, bạn mới nói được dãy núi kia chạy theo hướng bắc–nam hay đông–tây, hay thành phố nằm ở bờ đông hay bờ tây con sông.",
+            "en": "It sounds trivial but it changes everything: if you know where north is, you can work out whether that mountain range runs north to south or east to west, or whether a city sits on the east or the west side of the river."
+          }
+        },
+        {
+          "h": { "vi": "5. Dùng điều mình đã biết", "en": "5. Use what you already know" },
+          "p": {
+            "vi": "Và đây là mẹo NASA gọi là mạnh nhất: có lẽ công cụ mạnh nhất để đọc một tấm ảnh vệ tinh chính là hiểu biết về nơi đó. Máy đo được ánh sáng, nhưng thứ biến ánh sáng thành câu chuyện là những gì bạn đã biết về chỗ ấy.",
+            "en": "And here is the one NASA calls the strongest: perhaps the most powerful tool for interpreting a satellite image is knowledge of the place. The instrument measures light, but what turns light into a story is what you already know about that spot."
+          }
+        }
+      ],
+      "mascot_dialog": [
+        {
+          "who": "byte",
+          "vi": "Mẹo số 5 mới là mẹo hay nhất đấy: thứ mạnh nhất để đọc một tấm ảnh chính là hiểu biết của bạn về nơi đó.",
+          "en": "Tip five is the best one: the most powerful tool for reading an image is your own knowledge of the place."
+        },
+        {
+          "who": "comet",
+          "vi": "Nghĩa là càng học nhiều về Trái Đất, bạn càng đọc được nhiều thứ trong cùng một tấm ảnh. Máy thì vẫn thế thôi!",
+          "en": "Which means the more you learn about Earth, the more you can read in the very same picture. The instrument hasn't changed at all!"
+        }
+      ],
+      "source_reference": {
+        "label": "NASA Earth Observatory — How to Interpret a Satellite Image: Five Tips and Strategies",
+        "url": "https://science.nasa.gov/earth/earth-observatory/how-to-interpret-a-satellite-image/"
+      }
+    }
+  ]
+}

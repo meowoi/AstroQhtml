@@ -80,6 +80,8 @@
                                   en:{ n:"Rookie Astronaut", d:"Complete Mission 01: The Blue Planet." } },
     "eco-warrior":     { ic:"🌱", sic:"sprout", vi:{ n:"Chiến Binh Xanh", d:"Phân loại đúng cả 7 hành động NÊN / KHÔNG NÊN làm ở bước Eco-Hero." },
                                   en:{ n:"Eco-Warrior", d:"Sort all 7 Do / Don't actions correctly in the Eco-Hero step." } },
+    "earth-observer":  { ic:"🛰️", sic:"sat", vi:{ n:"Quan Sát Viên Trái Đất", d:"Hoàn thành Nhiệm Vụ 02: Mắt Thần Trên Quỹ Đạo." },
+                                  en:{ n:"Earth Observer", d:"Complete Mission 02: Eyes in Orbit." } },
 
     /* ---- Cấp độ ---- */
     "level-5":         { ic:"⭐", sic:"star", vi:{ n:"Phi Hành Gia Cấp 5", d:"Đạt cấp 5." },
