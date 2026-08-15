@@ -62,13 +62,34 @@ def read(*parts):
         return f.read()
 
 
+# ⚠️ Nhiệm vụ đang đo. Đổi bằng đối số dòng lệnh thứ hai để đo nhiệm vụ khác:
+#      python scratchpad/test_missions.py <api> orbit
+MISSION = "earth"
+for _a in sys.argv[1:]:
+    if not _a.startswith("http") and _a.replace("-", "").isalnum():
+        MISSION = _a
+
+
 def parse_rules():
     """Bóc luật nhiệm vụ ra khỏi Services/Missions.cs + Services/Wallet.cs."""
     src = read("Services", "Missions.cs")
 
+    # ⚠️⚠️ CẮT LẤY ĐÚNG KHỐI CỦA MỘT NHIỆM VỤ TRƯỚC KHI BÓC BƯỚC (sửa 15/08/2026).
+    #    Trước đó dòng dưới `re.findall` trên CẢ file, tức gộp bước của MỌI nhiệm vụ
+    #    làm một. Khi Trái Đất có nhiệm vụ thứ hai thì nó đọc ra 12 bước, tính cổng =
+    #    ceil(12 × 0,7) = 9, rồi chơi 5 bước của `orbit` NHƯ THỂ chúng thuộc `earth` —
+    #    server trả `awarded=None` và bộ đo báo hỏng hàng loạt. Sản phẩm đúng; bộ đo
+    #    mới là thứ giả định sai. Đây đúng lớp lỗi "phép kiểm chỉ soi một nhiệm vụ".
+    _blk = re.search(r'new\("' + MISSION + r'", "\w+",\s*\[(.*?)\],\s*DoneMeteors',
+                     src, re.S)
+    if not _blk:
+        print(f"KHONG cat duoc khoi nhiem vu {MISSION!r} trong Missions.cs — dung lai.")
+        sys.exit(1)
+    blk = _blk.group(1)
+
     # Bước: new("scan", 0, 20, null) — đòi 2 SỐ ở giữa nên KHÔNG khớp dòng khai nhiệm vụ
     # `new("earth", "earth",` (đối số thứ hai là chuỗi).
-    steps = re.findall(r'new\("(\w+)",\s*(\d+),\s*(\d+),\s*(null|"[^"]*")\)', src)
+    steps = re.findall(r'new\("([\w-]+)",\s*(\d+),\s*(\d+),\s*(null|"[^"]*")\)', blk)
     if not steps:
         print("KHONG doc duoc buoc nao tu Missions.cs — dung lai"
               " (khong de test 'dat' mot cach rong).")
@@ -90,9 +111,13 @@ def parse_rules():
             sys.exit(1)
         return cast(m.group(1))
 
-    r["done_meteors"] = one(r"DoneMeteors:\s*(\d+)")
-    r["done_xp"] = one(r"DoneXp:\s*(\d+)")
-    r["unlocks"] = one(r'Unlocks:\s*"(\w+)"', cast=str)
+    # Ba con số này nằm NGAY SAU khối bước, nên phải đọc trong đoạn của đúng nhiệm vụ
+    # đang đo — đọc trên cả file là lấy nhầm của nhiệm vụ khai trước.
+    tail = src[_blk.end() - len("DoneMeteors"):][:200]
+    r["done_meteors"] = one(r"DoneMeteors:\s*(\d+)", tail)
+    r["done_xp"] = one(r"DoneXp:\s*(\d+)", tail)
+    _unl = re.search(r'Unlocks:\s*(null|"(\w+)")', tail)
+    r["unlocks"] = (_unl.group(2) if _unl and _unl.group(2) else None)
     r["ratio"] = one(r"UnlockRatio\s*=\s*([\d.]+)", cast=float)
 
     route = re.search(r"Route\s*=\s*\[([^\]]*)\]", src)
@@ -101,14 +126,38 @@ def parse_rules():
         sys.exit(1)
     r["route"] = re.findall(r'"(\w+)"', route.group(1))
 
+    # Điểm đến của nhiệm vụ đang đo (đối số thứ hai của `new("<id>", "<place>", …`).
+    # Cần để biết nhiệm vụ này có phải nhiệm vụ GÁC CỔNG của nơi đó hay không.
+    _pl = re.search(r'new\("' + MISSION + r'", "(\w+)",', src)
+    if not _pl:
+        print(f"KHONG doc duoc diem den cua nhiem vu {MISSION!r} — dung lai.")
+        sys.exit(1)
+    r["place"] = _pl.group(1)
+
     # Cổng suy ra ĐÚNG như server: ceil(số bước × tỉ lệ).
+    # Cổng suy ra ĐÚNG như server: ceil(số bước CỦA NHIỆM VỤ NÀY × tỉ lệ).
     r["gate"] = math.ceil(len(r["steps"]) * r["ratio"])
     r["cap_step"] = one(r"MaxPerMissionStep\s*=\s*(\d+)",
                         read("Services", "Wallet.cs"))
     return r
 
 
+def mission_badge():
+    """Huy hieu mo khi XONG CA nhiem vu dang do — suy tu `Achievements.All`.
+
+    ⚠️ ĐỪNG GÕ CỨNG `rookie-astronaut`: đó là huy hiệu của RIÊNG nhiệm vụ 01. Nhiệm
+       vụ 02 có `earth-observer`. Nguồn sự thật là `Services/Achievements.cs`.
+    """
+    src = read("Services", "Achievements.cs")
+    m = re.search(r'new\("([\w-]+)",\s*"mission",\s*"mission:' + MISSION + r'",\s*1\)', src)
+    if not m:
+        print(f"KHONG doc duoc huy hieu cua nhiem vu {MISSION!r} — dung lai.")
+        sys.exit(1)
+    return m.group(1)
+
+
 R = parse_rules()
+BADGE = mission_badge()
 STEPS = R["steps"]
 GATE = R["gate"]
 
@@ -191,11 +240,11 @@ def full(token):
 
 
 def mis(token):
-    return full(token).get("missions", {}).get("earth", {})
+    return full(token).get("missions", {}).get(MISSION, {})
 
 
 def step(token, sid, **extra):
-    body = {"mission": "earth", "step": sid}
+    body = {"mission": MISSION, "step": sid}
     body.update(extra)
     return call("POST", "/me/missions/step", token=token, body=body)
 
@@ -234,8 +283,8 @@ def main():
 
         print("\n[3] Trang thai ban dau")
         f = full(token)
-        m = f.get("missions", {}).get("earth", {})
-        check("Co nhiem vu 'earth'", bool(m), str(list(f.get("missions", {}))))
+        m = f.get("missions", {}).get(MISSION, {})
+        check(f"Co nhiem vu {MISSION!r}", bool(m), str(list(f.get("missions", {}))))
         check("Bo buoc khop Missions.cs, DUNG THU TU",
               m.get("steps") == STEPS, str(m.get("steps")))
         check("Chua xong buoc nao", m.get("doneSteps") == [], str(m.get("doneSteps")))
@@ -263,9 +312,9 @@ def main():
         print("\n[4] Du lieu vao sai")
         for body, code in (({"mission": "khong-co-that", "step": STEPS[0]}, "bad-mission"),
                            ({"step": STEPS[0]}, "bad-mission"),
-                           ({"mission": "earth", "step": "khong-co-that"}, "bad-step"),
-                           ({"mission": "earth"}, "bad-step"),
-                           ({"mission": "earth", "step": "sc an"}, "bad-step")):
+                           ({"mission": MISSION, "step": "khong-co-that"}, "bad-step"),
+                           ({"mission": MISSION}, "bad-step"),
+                           ({"mission": MISSION, "step": "sc an"}, "bad-step")):
             st, d = call("POST", "/me/missions/step", token=token, body=body)
             check(f"{json.dumps(body)} -> 400 {code}",
                   st == 400 and d.get("code") == code, f"{st} {d.get('code')}")
@@ -284,17 +333,17 @@ def main():
               d.get("xpGained") == want_xp, f"xp={d.get('xpGained')}")
         check("Vi khong nhan 99999", d["wallet"]["meteors"] == want_tt, str(d["wallet"]))
         check("KHONG chot nhiem vu theo yeu cau cua client",
-              d.get("missionDone") is False and d["missions"]["earth"]["done"] is False,
+              d.get("missionDone") is False and d["missions"][MISSION]["done"] is False,
               str(d.get("missionDone")))
         check("KHONG mo huy hieu level-20", "level-20" not in d.get("newBadges", []),
               str(d.get("newBadges")))
         f = full(token)
         check("Client gui gate=0 -> server VAN giu gate cua minh",
-              f["missions"]["earth"]["gate"] == GATE,
-              str(f["missions"]["earth"]["gate"]))
+              f["missions"][MISSION]["gate"] == GATE,
+              str(f["missions"][MISSION]["gate"]))
         check("Client gui gateMet=true -> BI BO QUA",
-              f["missions"]["earth"]["gateMet"] is False,
-              str(f["missions"]["earth"]["gateMet"]))
+              f["missions"][MISSION]["gateMet"] is False,
+              str(f["missions"][MISSION]["gateMet"]))
         check("Client gui unlockedPlaces -> BI BO QUA",
               f.get("unlockedPlaces") == [R["route"][0]], str(f.get("unlockedPlaces")))
 
@@ -306,18 +355,18 @@ def main():
         check("Khong cong tien", d2["wallet"]["meteors"] == b0, str(d2["wallet"]))
         check("Khong cong XP", d2["level"]["xp"] == xp0, f"{xp0} -> {d2['level']['xp']}")
         check("doneSteps van dung 1 buoc",
-              d2["missions"]["earth"]["doneSteps"] == [s0],
-              str(d2["missions"]["earth"]["doneSteps"]))
+              d2["missions"][MISSION]["doneSteps"] == [s0],
+              str(d2["missions"][MISSION]["doneSteps"]))
 
         print(f"\n[6b] KHONG LACH CONG DUOC BANG CACH LAM LAI MOT BUOC {GATE + 2} lan")
         for _ in range(GATE + 2):
             step(token, s0)
         f = full(token)
         check(f"Lam lai '{s0}' {GATE + 2} lan -> gateMet VAN false",
-              f["missions"]["earth"]["gateMet"] is False,
-              str(f["missions"]["earth"]["gateMet"]))
-        check("doneSteps van dung 1 buoc", f["missions"]["earth"]["doneSteps"] == [s0],
-              str(f["missions"]["earth"]["doneSteps"]))
+              f["missions"][MISSION]["gateMet"] is False,
+              str(f["missions"][MISSION]["gateMet"]))
+        check("doneSteps van dung 1 buoc", f["missions"][MISSION]["doneSteps"] == [s0],
+              str(f["missions"][MISSION]["doneSteps"]))
         check("Diem den thu hai van khoa",
               f.get("unlockedPlaces") == [R["route"][0]], str(f.get("unlockedPlaces")))
 
@@ -336,7 +385,7 @@ def main():
             check(f"buoc {i}/{len(STEPS)} '{sid}': +{exp_tt} tt / +{exp_xp} XP",
                   d.get("awarded") == exp_tt and d.get("xpGained") == exp_xp,
                   f"awarded={d.get('awarded')} xp={d.get('xpGained')}")
-            me = d["missions"]["earth"]
+            me = d["missions"][MISSION]
             check(f"  doneSteps = {i} buoc", len(me["doneSteps"]) == i,
                   str(me["doneSteps"]))
             for c in R["codex"][sid]:
@@ -361,22 +410,39 @@ def main():
         check("Hoan thanh nhiem vu = da ghe Trai Dat",
               "earth" in call("GET", "/me/profile", token=token)[1]
               .get("progress", {}).get("planets", []))
-        check("Mo huy hieu rookie-astronaut",
-              any(b["id"] == "rookie-astronaut" and b["earned"]
+        check(f"Mo huy hieu {BADGE}",
+              any(b["id"] == BADGE and b["earned"]
                   for b in call("GET", "/me/achievements", token=token)[1]
                   ["achievements"]["badges"]))
 
         print("\n[7b] CONG LO TRINH sau khi xong het")
         f = full(token)
-        check(f"Mo dung {len(R['route'])} diem den {R['route']}",
-              f.get("unlockedPlaces") == R["route"], str(f.get("unlockedPlaces")))
-        check("KHONG mo qua lo trinh (Route la tran)",
-              len(f.get("unlockedPlaces") or []) == len(R["route"]),
-              str(f.get("unlockedPlaces")))
-        check("Dung lai o diem den CHUA CO nhiem vu"
-              " (khong hua nhiem vu chua ton tai)",
-              (f.get("unlockedPlaces") or [None])[-1] == R["route"][-1],
-              str(f.get("unlockedPlaces")))
+        # ⚠️⚠️ CHỈ NHIỆM VỤ GÁC CỔNG MỚI MỞ ĐƯỢC ĐIỂM ĐẾN KẾ TIẾP (quyết định
+        #    15/08/2026, `Missions.GateMissionOfPlace`). Cổng của một NƠI đo theo
+        #    nhiệm vụ khai TRƯỚC NHẤT ở nơi đó; nhiệm vụ thêm vào sau là nội dung
+        #    THÊM. Trước đó bộ đo giả định mọi nhiệm vụ đều gác cổng, nên khi có
+        #    nhiệm vụ thứ hai nó báo hỏng 3 phép kiểm ĐÚNG LÚC server làm đúng.
+        #    ⚠️ Nhánh `else` KHÔNG phải chỗ bỏ qua cho xong: nó là phép kiểm cho
+        #       chính quyết định đó — xong một nhiệm vụ KHÔNG gác cổng thì điểm đến
+        #       sau PHẢI vẫn đóng. Bỏ nhánh này là quyết định mất phép kiểm duy nhất.
+        _gate_mission = re.search(r'new\("([\w-]+)", "' + R["place"] + r'",',
+                                  read("Services", "Missions.cs"))
+        _is_gate = bool(_gate_mission) and _gate_mission.group(1) == MISSION
+        if _is_gate:
+            check(f"Mo dung {len(R['route'])} diem den {R['route']}",
+                  f.get("unlockedPlaces") == R["route"], str(f.get("unlockedPlaces")))
+            check("KHONG mo qua lo trinh (Route la tran)",
+                  len(f.get("unlockedPlaces") or []) == len(R["route"]),
+                  str(f.get("unlockedPlaces")))
+            check("Dung lai o diem den CHUA CO nhiem vu"
+                  " (khong hua nhiem vu chua ton tai)",
+                  (f.get("unlockedPlaces") or [None])[-1] == R["route"][-1],
+                  str(f.get("unlockedPlaces")))
+        else:
+            check(f"{MISSION!r} KHONG gac cong: xong het van chi mo diem den dau tien",
+                  f.get("unlockedPlaces") == [R["route"][0]],
+                  f"{f.get('unlockedPlaces')} (nhiem vu gac cong la "
+                  f"{_gate_mission.group(1) if _gate_mission else '?'})")
 
         print("\n[8] Xong roi lam lai -> khong cong them gi")
         b1 = bal(token)
@@ -420,18 +486,18 @@ def main():
 
         print("\n[11] uid trong body/query bi bo qua")
         st, d = call("POST", "/me/missions/step?uid=nguoi-khac", token=token,
-                     body={"mission": "earth", "step": STEPS[0], "uid": "nguoi-khac"})
+                     body={"mission": MISSION, "step": STEPS[0], "uid": "nguoi-khac"})
         check("Van ghi vao ho so CUA MINH", st == 200
-              and STEPS[0] in d["missions"]["earth"]["doneSteps"], str(d.get("missions")))
+              and STEPS[0] in d["missions"][MISSION]["doneSteps"], str(d.get("missions")))
         check("Khong tao ban ghi cho uid la", len(rows("nguoi-khac")) == 0)
 
         print("\n[12] Nhiem vu xuat hien o /me/profile va /me/achievements")
         st, prof = call("GET", "/me/profile", token=token)
-        check("/me/profile co progress.missions.earth",
-              "earth" in (prof.get("progress", {}).get("missions") or {}),
+        check(f"/me/profile co progress.missions.{MISSION}",
+              MISSION in (prof.get("progress", {}).get("missions") or {}),
               str(list((prof.get("progress", {}).get("missions") or {}))))
         st, ach = call("GET", "/me/achievements", token=token)
-        rook = [b for b in ach["achievements"]["badges"] if b["id"] == "rookie-astronaut"]
+        rook = [b for b in ach["achievements"]["badges"] if b["id"] == BADGE]
         check("Huy hieu rookie-astronaut co trong danh sach", len(rook) == 1, str(rook))
         check("Nhom huy hieu la 'mission'", bool(rook) and rook[0]["group"] == "mission",
               str(rook[0]["group"]) if rook else "")

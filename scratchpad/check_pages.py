@@ -309,7 +309,7 @@ WIRED = {
 #    Khai RO file phu o day thay vi quet bua moi js/*.js trang nap: `js/progress.js`
 #    co dinh nghia `missionStep` nen quet bua la phep kiem tu dat (trang nao nap
 #    progress.js cung "co goi missionStep").
-EXTRA_SRC = {"mission-earth.html": ["js/mission-engine.js"]}
+EXTRA_SRC = {"mission-earth.html": ["js/mission-engine.js", "js/mission-stage.js"]}
 for page, (call, dep) in WIRED.items():
     html = rd(page)
     src = html + "".join(rd(f) for f in EXTRA_SRC.get(page, []))
@@ -328,7 +328,7 @@ import re as _re
 # ⚠️ QUET CA `js/mission-engine.js` (tach ra 31/07/2026): phan cong don thuong da
 #    chuyen sang do. Chi quet HTML thi ba phep kiem duoi day tu dat ma khong con
 #    canh gi — dung loai "phep kiem con xanh vi nhin nham cho".
-_me_src = me + rd("js/mission-engine.js")
+_me_src = me + rd("js/mission-engine.js") + rd("js/mission-stage.js")
 _bad = [k for k in ("addAsteroids", "Economy.add") if k in _me_src]
 # `reward.meteors += r.data.awarded` là ĐÚNG — cộng đúng con số SERVER trả về.
 # Chỉ sai khi cộng một số viết cứng.
@@ -354,11 +354,16 @@ _me_code = strip_comments(me)
 _moon = _re.findall(r"win-moon|win_moon|🌙|MẶT TRĂNG|Mặt Trăng|THE MOON", _me_code)
 check("man tong ket KHONG con dau vet Mat Trang nao", not _moon, f"{sorted(set(_moon))}")
 # Va phai CO thu thay the: bo trang khong thi man tong ket thanh duong cut.
+# ⚠️ Markup man tong ket nay do `js/mission-stage.js` DUNG (tach 15/08/2026), khong
+#    con viet trong HTML. Doi phep kiem sang soi dung cho — de nguyen la no bao hong
+#    dung luc san pham lam dung, dung loai loi "phep kiem bao ve trang thai cu".
+_stage_src = rd("js/mission-stage.js")
 check("man tong ket co khoi 'viec tiep theo' dan di duoc THAT",
-      "win-missions" in _me_code and "missions.html" in _me_code)
+      "win-missions" in _stage_src and "missions.html" in _stage_src)
 check("nut viec tiep theo KHONG bi disabled (missions.html co that)",
-      not _re.search(r"win-missions'\)\.disabled\s*=\s*true", _me_code)
-      and 'id="win-missions"' in me and 'id="win-missions" disabled' not in me)
+      not _re.search(r"win-missions\"\)\.disabled\s*=\s*true", _stage_src)
+      and 'id="win-missions"' in _stage_src
+      and 'id="win-missions" disabled' not in _stage_src)
 for k in ("win_next_k", "win_next", "win_missions"):
     check(f"mission-earth.html: khoa i18n `{k}` co o CA vi va en",
           me.count(k + ":") == 2, f"{me.count(k + ':')} lan")
@@ -373,57 +378,96 @@ print("\n=== [3c] Nhiem Vu 01: buoc khop server + codex + i18n ===")
 # nên KHÔNG có thưởng và cũng KHÔNG có lỗi nào hiện ra.
 mi_cs = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Missions.cs"),
                 encoding="utf-8").read()
-_earth = mi_cs.split('new("earth", "earth",', 1)[1].split("], DoneMeteors", 1)[0]
-sv_steps = _re.findall(r'new\("([a-z]+)",\s*\d+,\s*\d+,\s*(null|"[a-z0-9,-]+")\)', _earth)
-sv_ids = [s[0] for s in sv_steps]
-_cl = _re.search(r"const STEP_IDS = \[([^\]]*)\]", me)
-cl_ids = _re.findall(r"'([a-z]+)'", _cl.group(1)) if _cl else []
-check("STEP_IDS cua trang KHOP dung thu tu voi Missions.cs",
-      sv_ids == cl_ids, f"server={sv_ids} client={cl_ids}")
-# ⚠️ KHONG GAN CUNG SO BUOC. Truoc 02/08/2026 dong nay ghi `== 8`, va khi bo buoc
-#    `rotation` (docs/decisions/005) thi no bao hong DUNG LUC code lam dung — cung
-#    mot ho voi loi "gan cung con so ma noi khac moi la nguon su that" du an da gap
-#    nhieu lan (14 icon · 14 thuat ngu · 25 cau · 20 mau vat · 5 buoc).
-#    Nguon su that la `Missions.cs`. O day chi doi: doc duoc, va khop client.
-check("doc duoc danh sach buoc tu Missions.cs", len(sv_ids) >= 5, str(len(sv_ids)))
-check("KHONG con buoc `rotation` (bo 02/08/2026, docs/decisions/005)",
-      "rotation" not in sv_ids, str(sv_ids))
-check("Moi buoc co object xu ly trong trang",
-      all(_re.search(r"^  " + s + r": \{", me, _re.M) for s in sv_ids),
-      str([s for s in sv_ids if not _re.search(r"^  " + s + r": \{", me, _re.M)]))
+# ══════════════════ MOI NHIEM VU, KHONG CHI NHIEM VU 01 ══════════════════
+# WARN Truoc 15/08/2026 khoi nay cat rieng `new("earth", "earth",` roi chi soi
+#   `mission-earth.html` + `earth_codex.json`. Khi Trai Dat co nhiem vu thu hai
+#   ("orbit"), nhiem vu do khong co MOT phep kiem nao: STEP_IDS lech thu tu, thieu
+#   object xu ly cho mot chang, hay thieu bai doc codex deu la LOI IM LANG — chang
+#   client gui ma server khong biet thi tra `counted:false`, tuc KHONG thuong va
+#   cung KHONG bao loi. Nay lap qua tung nhiem vu server khai.
+_sv_missions = _re.findall(
+    r'new\("([a-z0-9-]+)", "([a-z0-9-]+)",\s*\[(.*?)\],\s*DoneMeteors', mi_cs, _re.S)
+check("doc duoc it nhat 1 nhiem vu tu Missions.cs", len(_sv_missions) >= 1,
+      str([m[0] for m in _sv_missions]))
 
-# Mẫu codex server khai ↔ entry trong earth_codex.json
-sv_codex = []
-for _s in sv_steps:
-    if _s[1] != "null":
-        sv_codex += _s[1].strip('"').split(",")
-_cx = json.loads(rd("learningdata/astronomy/earth_codex.json"))
-cx_ids = [e["id"] for e in _cx["entries"]]
-check("Moi mau codex server khai deu co bai doc o earth_codex.json",
-      set(sv_codex) <= set(cx_ids), str(sorted(set(sv_codex) - set(cx_ids))))
-check("earth_codex.json khong co bai doc la",
-      set(cx_ids) <= set(sv_codex), str(sorted(set(cx_ids) - set(sv_codex))))
-check("earth_codex.json: `count` khop so entry",
-      _cx["count"] == len(cx_ids), f'count={_cx["count"]} entries={len(cx_ids)}')
-# ⚠️ THEM 02/08/2026 — LOI THAT DA XAY RA. Bo buoc `rotation` lam mat mot entry
-#    codex, nhung `codexTotal` o mission-earth.html van la 9, nen man tong ket ghi
-#    **"8/9 mau du lieu"**: noi voi tre rang no bo sot mot mau KHONG TON TAI, o dung
-#    man khen thuong. `smoke_mission_earth` bat duoc (no choi that toi man tong ket),
-#    con muc [3c] thi khong — vi truoc do khong co phep kiem nao noi hai con so nay.
-_ct = _re.search(r"codexTotal:\s*(\d+)", me)
-check("mission-earth.html: `codexTotal` du phong khop so entry earth_codex.json",
-      bool(_ct) and int(_ct.group(1)) == len(cx_ids),
-      f'codexTotal={_ct.group(1) if _ct else "?"} entries={len(cx_ids)}')
-check("earth_codex.json: moi entry co tieu de vi+en",
-      all(e.get("title", {}).get("vi") and e.get("title", {}).get("en") for e in _cx["entries"]),
-      str([e["id"] for e in _cx["entries"] if not e.get("title", {}).get("en")]))
-check("earth_codex.json: moi entry co nguon tham chieu",
-      all(e.get("source_reference", {}).get("url") for e in _cx["entries"]),
-      str([e["id"] for e in _cx["entries"] if not e.get("source_reference", {}).get("url")]))
-# Nội dung chưa qua rà soát chuyên môn thì phải TỰ KHAI, y như learningdata/README.md
-check("earth_codex.json: moi entry tu khai da qua ra soat chua",
-      all("reviewed_by_teacher" in e for e in _cx["entries"]),
-      str([e["id"] for e in _cx["entries"] if "reviewed_by_teacher" not in e]))
+# Ban do id nhiem vu -> trang choi, lay tu danh muc client (chỗ DUY NHAT khai `file`)
+_cat_raw = strip_comments(rd("js/mission-catalog.js"))
+_cat_file = dict(_re.findall(r'id: "([a-z0-9-]+)", world: "[a-z0-9-]+", file: "([^"]+)"',
+                             _cat_raw))
+
+for _mid, _place, _body in _sv_missions:
+    _steps = _re.findall(r'new\("([a-z0-9-]+)",\s*\d+,\s*\d+,\s*(null|"[a-z0-9,-]+")\)', _body)
+    _ids = [x[0] for x in _steps]
+    _pg = _cat_file.get(_mid)
+    check(f"[{_mid}] co trang choi khai trong danh muc", bool(_pg), str(_cat_file))
+    if not _pg or not os.path.exists(os.path.join(ROOT, _pg)):
+        check(f"[{_mid}] trang choi ton tai tren dia", False, str(_pg))
+        continue
+    _psrc = rd(_pg)
+
+    _cl = _re.search(r"const STEP_IDS = \[([^\]]*)\]", _psrc)
+    _clids = _re.findall(r"'([a-z0-9-]+)'", _cl.group(1)) if _cl else []
+    check(f"[{_mid}] STEP_IDS cua trang KHOP dung thu tu voi Missions.cs",
+          _ids == _clids, f"server={_ids} client={_clids}")
+    check(f"[{_mid}] doc duoc danh sach buoc", len(_ids) >= 4, str(len(_ids)))
+    check(f"[{_mid}] moi buoc co object xu ly trong trang",
+          all(_re.search(r"^  " + _s + r": \{", _psrc, _re.M) for _s in _ids),
+          str([_s for _s in _ids if not _re.search(r"^  " + _s + r": \{", _psrc, _re.M)]))
+
+    # WARN 5 CHANG LA MAC DINH TU NHIEM VU 02 TRO DI (chu du an chot 15/08/2026).
+    #   Nhiem vu 01 GIU 7 chang co chu dich: doi so chang cua no la pha tuong thich —
+    #   ban ghi `missions.earth.<buoc>` trong DynamoDB dung chinh id buoc, nguoi da
+    #   choi xong se thay nhiem vu tu chuyen ve "chua hoan thanh". Them nhiem vu MOI
+    #   thi khong co cai gia do. Day la mot QUYET DINH SAN PHAM, nen no co phep kiem.
+    if _mid != "earth":
+        check(f"[{_mid}] dung 5 chang (mac dinh tu nhiem vu 02 tro di)",
+              len(_ids) == 5, f"{len(_ids)} chang: {_ids}")
+
+    # Mau codex server khai ↔ bai doc. Moi nhiem vu MOT file `<id>_codex.json`.
+    _svcx = []
+    for _x in _steps:
+        if _x[1] != "null":
+            _svcx += _x[1].strip('"').split(",")
+    _cxp = "learningdata/astronomy/%s_codex.json" % _mid
+    if not os.path.exists(os.path.join(ROOT, _cxp)):
+        check(f"[{_mid}] co file bai doc codex {_cxp}", not _svcx,
+              f"server khai {len(_svcx)} mau ma khong co file")
+        continue
+    _cx = json.loads(rd(_cxp))
+    _cxids = [e["id"] for e in _cx["entries"]]
+    check(f"[{_mid}] moi mau codex server khai deu co bai doc",
+          set(_svcx) <= set(_cxids), str(sorted(set(_svcx) - set(_cxids))))
+    check(f"[{_mid}] {_cxp} khong co bai doc la",
+          set(_cxids) <= set(_svcx), str(sorted(set(_cxids) - set(_svcx))))
+    check(f"[{_mid}] `count` khop so entry",
+          _cx["count"] == len(_cxids), f'count={_cx["count"]} entries={len(_cxids)}')
+    # WARN THEM 02/08/2026 — LOI THAT DA XAY RA. Bo buoc `rotation` lam mat mot entry
+    #   codex, nhung `codexTotal` o trang van la 9, nen man tong ket ghi "8/9 mau du
+    #   lieu": noi voi tre rang no bo sot mot mau KHONG TON TAI, o dung man khen thuong.
+    _ct = _re.search(r"codexTotal:\s*(\d+)", _psrc)
+    check(f"[{_mid}] `codexTotal` du phong khop so entry codex",
+          bool(_ct) and int(_ct.group(1)) == len(_cxids),
+          f'codexTotal={_ct.group(1) if _ct else "?"} entries={len(_cxids)}')
+    check(f"[{_mid}] moi entry codex co tieu de vi+en",
+          all(e.get("title", {}).get("vi") and e.get("title", {}).get("en")
+              for e in _cx["entries"]),
+          str([e["id"] for e in _cx["entries"] if not e.get("title", {}).get("en")]))
+    check(f"[{_mid}] moi entry codex co nguon tham chieu",
+          all(e.get("source_reference", {}).get("url") for e in _cx["entries"]),
+          str([e["id"] for e in _cx["entries"]
+               if not e.get("source_reference", {}).get("url")]))
+    # Noi dung chua qua ra soat chuyen mon thi phai TU KHAI, y như learningdata/README.md
+    check(f"[{_mid}] moi entry codex tu khai da qua ra soat chua",
+          all("reviewed_by_teacher" in e for e in _cx["entries"]),
+          str([e["id"] for e in _cx["entries"] if "reviewed_by_teacher" not in e]))
+
+# --- Rieng Nhiem vu 01: buoc `rotation` da bo han (docs/decisions/005) ---
+_earth_ids = next((([x[0] for x in _re.findall(
+    r'new\("([a-z0-9-]+)",\s*\d+,\s*\d+,', b)]) for i2, p2, b in _sv_missions
+    if i2 == "earth"), [])
+check("KHONG con buoc `rotation` (bo 02/08/2026, docs/decisions/005)",
+      "rotation" not in _earth_ids, str(_earth_ids))
+sv_ids = _earth_ids
 
 # i18n: trang này dùng dấu nháy ĐƠN (khác profile/achievements ở mục [1]) nên phải
 # tìm bằng regex riêng. Chỉ so vi ↔ en — không soi "khoá bỏ không" vì trang ghép khoá
@@ -462,8 +506,15 @@ if _vi and _en:
     _dyn("ENERGY", r"const ENERGY = \[(.*?)\n\];", [("ce_", "")])
     _dyn("ECO", r"const ECO = \[(.*?)\n\];", [("eco_", "")])
 # `$('id')` nháy đơn — id nào gọi trong JS mà HTML không có là lỗi im lặng (null.textContent)
-_me_ids = ids_in(me)
-_me_refs = set(_re.findall(r"\$\('([^']+)'\)", _me_js))
+# ⚠️ CONG CA ID DO VO DUNG RA. `js/mission-stage.js` chen header / bang muc tieu /
+#    box thoai / the noi dung / man cho / man tong ket / hop hoi / toast luc chay, nen
+#    chung KHONG co trong HTML tinh. Chi doc HTML thi phep kiem bao thieu oan.
+_me_ids = ids_in(me) | ids_in(rd("js/mission-stage.js"))
+# ⚠️ QUET TREN MA DA BOC CHU THICH. Bay "dem ca chu trong ghi chu cua chinh minh" da
+#    lap lai ~18 lan trong du an nay: mot dong ghi chu viet `$('id')` de GIAI THICH
+#    luat la du lam phep kiem bao thieu mot id ten "id". Sua o BO KIEM, dung viet lai
+#    ghi chu de ne.
+_me_refs = set(_re.findall(r"\$\('([^']+)'\)", strip_js(_me_js)))
 check("mission-earth.html: moi $('id') deu ton tai",
       _me_refs <= _me_ids, f"thieu: {sorted(_me_refs - _me_ids)}")
 # Class dùng trong markup phải có CSS (bốn bảng kéo-thả mới dễ quên khai)
@@ -550,8 +601,8 @@ print("\n=== [3g] Nhiem Vu 01 - 3 loi choi that 03/08/2026 (`docs/decisions/007`
 # Ba loi chu du an bat duoc khi choi that. Ca ba deu "hien ra dung nhu binh thuong" nen
 # doc code khong thay - chi thay khi chieu lai chinh cai quyet dinh da chot.
 _e2 = strip_comments(rd("js/earth2d.js"))
-_me3g = strip_comments(me)
-_css3g = strip_comments(rd("css/mission-earth.css"))
+_me3g = strip_comments(me + rd("js/mission-stage.js"))
+_css3g = strip_comments(rd("css/mission-stage.css") + rd("css/mission-earth.css"))
 
 # --- (1) DIA MAT TROI: rac con sot cua mot quyet dinh da chot tu 02/08 ---
 # WARN Loi thoai buoc 3 da viet lai tu 02/08/2026 de noi ro Mat Troi KHONG nam tren tam
@@ -613,7 +664,11 @@ check("`liftCard()` do chieu cao bang NGAY LUC MO THE (bang cao dan theo so the 
 #   hien o ca chuc cho khac (bang muc tieu, cac `.me-board`...) nen `index()` tren ca file
 #   se bat dung cai dau tien va bao hong oan. Ban dau tien cua phep kiem nay hong dung
 #   vi ly do do.
+# WARN Vo viet theo loi ES5 (nhay KEP), trang nhiem vu viet nhay DON. Ghim mot kieu
+#   nhay la phep kiem bao hong khi ma chuyen file ma khong doi mot chut hanh vi nao —
+#   dung loai "phep kiem bao ve dinh dang thay vi bao ve hanh vi". Chuan hoa truoc.
 _sc = _me3g.split("function showCard(", 1)[1].split(chr(10) + "function ", 1)[0]
+_sc = _sc.replace('"', "'")
 check("`showCard` goi `liftCard()` TRUOC khi hien the",
       "liftCard();" in _sc and
       _sc.index("liftCard();") < _sc.index("classList.add('show')"))
@@ -622,17 +677,22 @@ print("\n=== [3e] Nhiem Vu 01 sau `005`: 0 vung toi · 0 qua cau · noi dung co 
 # Chot 02/08/2026, `docs/decisions/005`. Muc nay canh nhung RANG BUOC "tu nay" cua no —
 # thu ma doc code khong thay sai, chi thay sai khi chieu lai quyet dinh.
 _me_code = strip_comments(me)          # bo ghi chu: chinh chu thich GIAI THICH vi sao
-_me_css_raw = strip_comments(rd("css/mission-earth.css"))
+# WARN CSS CANH (`.e2-*`) DA TACH SANG `css/earth2d.css` ngay 15/08/2026 — canh ban
+#   do khong thuoc rieng Nhiem vu 01; nhiem vu thu hai dien ra tren dung tam ban do
+#   do. Doc CA HAI file: chi doc mot la nhung phep kiem duoi day bao hong dung luc
+#   ma nguon dang dung.
+_me_css_raw = strip_comments(rd("css/mission-earth.css")) + rd("css/earth2d.css")
 
 # --- (1) KHONG con vung toi nao tren ban do phang ---
 # ⚠️ Chu du an choi that roi BAC bang anh chup: gradient `.e2-terminator` trong nhu mot
 #    buc tuong den. Bai hoc ngay/dem da chuyen sang qua cau 3D o explorer.html.
+_me_css_bare = strip_comments(_me_css_raw)
 check("KHONG con `.e2-terminator` trong CSS (bo han, 005 muc 2)",
-      "e2-terminator" not in _me_css_raw)
+      "e2-terminator" not in _me_css_bare)
 check("KHONG con `.e2-terminator` trong mission-earth.html",
       "e2-terminator" not in _me_code)
 check("KHONG con `.e2-view::after` (gradient vung toi mac dinh)",
-      "e2-view::after" not in _me_css_raw)
+      "e2-view::after" not in _me_css_bare)
 # `.e2-night` thi GIU — ca hanh tinh toi di vi Mat Troi chua chay, khac han mot dai
 # toi vat ngang ban do. Doi nham hai thu nay la bo mat khoanh khac cua buoc ③.
 check("`.e2-night` VAN con (mat nang khac han vung toi)", "e2-night" in _me_css_raw)
@@ -1907,6 +1967,9 @@ _dyn2 = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.cs"))
 _ep2 = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/MeEndpoints.cs"))
 
 # --- (1) Duong ve tu dong 5 giay ---
+# WARN Duong ve tu dong, `startAuto`, `cancelAuto` nay do `js/mission-stage.js` giu
+#   (tach 15/08/2026): chung la VO, khong phai noi dung nhiem vu.
+_me2 = _me2 + rd("js/mission-stage.js")
 check("man tong ket co duong ve tu dong 5 giay",
       re.search(r"AUTO_RETURN_SECS\s*=\s*5\b", _me2) is not None)
 # ⚠️ Dem gio phai bat SAU khi bao xong len server. Bat dam bao bang THU TU GOI:
@@ -1921,8 +1984,8 @@ check("KHONG bat su kien focus de tat dem",
       not re.search(r"addEventListener\(\s*['\"]focus", _me2))
 check("het dem thi ve dashboard (khong phai trang khac)",
       re.search(r"autoLeft <= 0.*?dashboard\.html", _me2, re.S) is not None)
-_meraw = rd("mission-earth.html")
-check("mission-earth.html: khoa i18n `win_auto` co o CA vi va en",
+_meraw = rd("js/mission-stage.js")
+check("khoa i18n `win_auto` cua vo co o CA vi va en",
       _meraw.count("win_auto:") == 2, f"{_meraw.count('win_auto:')} lan")
 
 # --- (2) DUNG LAI engine tour, khong viet overlay thu hai ---
@@ -2046,6 +2109,12 @@ for _f in _html_pages:
     _calls.append(_f)
     if 'src="js/user-menu.js"' in _h:
         continue                      # danh sach do module dung — da kiem o tren
+    # WARN Trang nhiem vu: `js/mission-stage.js` dung ca header, ke ca nut VI/EN. Cung
+    #   ca voi user-menu.js o tren. VAN CON RANG: file vo phai khai du ca hai ngon ngu.
+    if 'src="js/mission-stage.js"' in _h:
+        if {"vi", "en"} <= set(re.findall(r'data-lang="([a-z]{2})"',
+                                          rd("js/mission-stage.js"))):
+            continue
     _langs = set(re.findall(r'data-lang="([a-z]{2})"', _h))
     if not _langs:
         _missing.append(_f)
@@ -3146,13 +3215,21 @@ check("[20] id chang client == id buoc server, DUNG THU TU",
       _all_cat_steps == _sv_steps,
       f"client={_all_cat_steps} server={_sv_steps}")
 
-# ── `STEP_IDS` cua trang choi == danh muc ──
+# ── `STEP_IDS` cua trang choi == danh muc, VOI MOI NHIEM VU ──
+# WARN Truoc 15/08/2026 phep kiem nay ghim `mission-earth.html` va `'earth'`. Khi
+#   Trai Dat co nhiem vu thu hai, trang choi cua no khong duoc doi chieu voi danh
+#   muc — ma lech o day la cay chang ve mot chang trang choi khong biet, hoac nguoc
+#   lai. Lap qua tung nhiem vu, lay ten trang tu chinh danh muc.
 _me_src = rd("mission-earth.html")
-_m_step_ids = re.search(r"const STEP_IDS = \[([^\]]+)\]", _me_src)
-_me_steps = re.findall(r"'([a-z0-9-]+)'", _m_step_ids.group(1)) if _m_step_ids else []
-check("[20] STEP_IDS cua mission-earth == danh muc chang cua 'earth'",
-      _me_steps == _cat_steps("earth"),
-      f"STEP_IDS={_me_steps} catalog={_cat_steps('earth')}")
+for _mid2, _wid2, _file2 in _cat_ids:
+    if not os.path.exists(os.path.join(ROOT, _file2)):
+        continue                       # da co phep kiem rieng o duoi cho ca nay
+    _psrc2 = rd(_file2)
+    _msi = re.search(r"const STEP_IDS = \[([^\]]+)\]", _psrc2)
+    _pst = re.findall(r"'([a-z0-9-]+)'", _msi.group(1)) if _msi else []
+    check(f"[20] STEP_IDS cua {_file2} == danh muc chang cua '{_mid2}'",
+          _pst == _cat_steps(_mid2),
+          f"STEP_IDS={_pst} catalog={_cat_steps(_mid2)}")
 
 # ⚠️⚠️ DANH MUC KHONG DUOC CHUA MOT CON SO THUONG NAO.
 #    `GET /me/missions` khong tra thuong theo tung buoc, nen ve duoc day chip
@@ -3240,11 +3317,15 @@ check("[20] noi chua co nhiem vu thi noi that mot cau, khong ve danh sach rong",
       'id="empty"' in _pl_src and 'data-i18n="emp_h"' in _pl_src)
 
 # ── Trang choi: `?step=` + hop "tiep hay dung" ──
-_me_js = strip_comments(inline_js(_me_src))
-check("[20] mission-earth doc `?step=` va mo dung chang do",
+# WARN VO (`js/mission-stage.js`) giu: `?step=`, hop "tiep hay dung", dong ho ve tu
+#   dong, duong ve cay chang. Trang nhiem vu chi con NOI vao. Soi ca hai — de nguyen
+#   la phep kiem bao hong dung luc san pham lam dung.
+_me_js = strip_comments(inline_js(_me_src)) + strip_comments(rd("js/mission-stage.js"))
+_me_js = _me_js.replace(chr(34), "'")   # vo viet nhay KEP, trang viet nhay DON
+check("[20] trang choi doc `?step=` va mo dung chang do",
       "q.get('step')" in _me_js and "RUN.openAt(" in _me_js)
 check("[20] khai moc onStepDone cho trinh dieu phoi",
-      "onStepDone: afterStep" in _me_js)
+      "onStepDone: ST.afterStep" in _me_js)
 # ⚠️ DIEU KIEN CUA `008`: "tat dong ho ve tu dong 5 giay khi con chang sau".
 #    No duoc thoa BANG CAU TRUC: dong ho chi song trong man tong ket, ma man tong ket
 #    chi mo khi HET chang (`afterStep` tra `false` dung o chang cuoi). Hai phep kiem
@@ -3256,8 +3337,15 @@ check("[20] hop hoi KHONG mo o chang cuoi (de man tong ket mo)",
 check("[20] dong ho ve tu dong chi khoi dong tu man tong ket",
       len(re.findall(r"(?<!function )startAuto\(\)", _me_js)) == 1,
       str(re.findall(r".{22}startAuto\(\)", _me_js)))
-check("[20] duong ve cua trang choi la cay chang",
-      "function treeUrl()" in _me_js and "mission-tree.html?m=earth" in _me_js)
+# WARN Truoc 15/08/2026 phep kiem nay ghim nguyen van `mission-tree.html?m=earth`. Vo
+#   dung chung dung URL TU ID NHIEM VU (`?m=` + encodeURIComponent(mission)), nen ghim
+#   mot ten nhiem vu la phep kiem chi dung cho Trai Dat va se bao hong o nhiem vu thu
+#   hai — trong khi hanh vi thi dung hon truoc. Hoi dieu MUON BIET: duong ve la cay
+#   chang CUA CHINH nhiem vu dang choi, khong phai mot trang gan cung.
+check("[20] duong ve cua trang choi la cay chang cua CHINH no",
+      "function treeUrl()" in _me_js
+      and "mission-tree.html?m=" in _me_js
+      and "encodeURIComponent(mission)" in _me_js)
 check("[20] on lai mot chang cu thi NOI RO khong co thuong them",
       "serverDone.has(id)" in _me_js and "replayed" in _me_js)
 
@@ -3673,7 +3761,11 @@ check("[24] `.brag[hidden]` khai lai display:none",
 
 for _f in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
     _src3 = rd(_f)
-    _u = "AstroQBrag" in strip_comments(_src3)
+    # WARN Trang nhiem vu goi AstroQBrag QUA VO (`js/mission-stage.js`) — no van la
+    #   trang "dung" the khoe, nen van phai nap du js + css.
+    _u = "AstroQBrag" in strip_comments(_src3) or (
+        'src="js/mission-stage.js"' in _src3
+        and "AstroQBrag" in strip_comments(rd("js/mission-stage.js")))
     _lj = 'src="js/brag.js"' in _src3
     _lc = 'href="css/brag.css"' in _src3
     check("[24] " + _f + ": dung AstroQBrag <=> nap ca js va css",

@@ -68,6 +68,7 @@ PAGES = [
     ("game-racer.html",    None,              None),
     ("explorer.html",      "#deck-title",     None),
     ("mission-earth.html", None,              None),
+    ("mission-orbit.html", None,              None),
 ]
 
 # ⚠️ TRANG CO NUT VI/EN NAM TRONG MENU THA (15/08/2026).

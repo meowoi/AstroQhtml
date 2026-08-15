@@ -66,7 +66,7 @@ PAGES = [
     # dễ tràn ngang nhất khi màn thấp (Win 1366x768, iPad ngang).
     "game-dodge.html", "game-defender.html", "game-constellation.html",
     "game-catch.html", "game-maze.html", "game-racer.html",
-    "explorer.html", "mission-earth.html",
+    "explorer.html", "mission-earth.html", "mission-orbit.html",
 ]
 
 ok_n = bad_n = 0

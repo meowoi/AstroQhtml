@@ -135,7 +135,13 @@ def main():
         sub = pg.inner_text("#r-sub")
         chk("04 / 07" in sub, "dong phu noi dung chang thu may", sub)
         ov = pg.eval_on_selector_all("#ov .cell .v", "es => es.map(e => e.textContent.trim())")
-        chk(ov == ["0/1", "3/7", "0/8"], "bang dieu phoi lay so THAT tu server", str(ov))
+        # WARN KHONG GAN CUNG SO NHIEM VU. Truoc 15/08/2026 dong nay ghim `"0/1"`, va khi
+        #   Trai Dat co nhiem vu thu hai thi no bao hong DUNG LUC san pham lam dung — cung
+        #   mot ho voi loi "gan cung con so ma noi khac moi la nguon su that" da lap nhieu
+        #   lan trong du an. Nguon su that la `js/mission-catalog.js`.
+        _nmis = pg.evaluate("() => AstroQCatalog.missions().length")
+        chk(ov == ["0/%d" % _nmis, "3/7", "0/8"],
+            "bang dieu phoi lay so THAT tu server", "%s (danh muc co %d nhiem vu)" % (ov, _nmis))
         chk(pg.locator("#offline.show").count() == 0,
             "doc duoc tien do -> khong hien dai nhac")
 
@@ -198,11 +204,22 @@ def main():
         chk(d["best"] < 0.02, "dia Trai Dat nam DUNG tren duong quy dao cua no",
             f"lech {d['best']:.4f}")
 
-        # Bấm nơi CÓ nhiệm vụ → vào thẳng, KHÔNG mở bảng trung gian
+        # WARN HANH VI DA DOI 15/08/2026 — VA DOI DUNG NHU THIET KE DU TRU. `goWorld()`
+        #   bo qua man hanh tinh khi mot noi chi co MOT nhiem vu; tu khi Trai Dat co HAI
+        #   nhiem vu thi cau "choi cai nao" moi la mot cau hoi that, nen man hanh tinh
+        #   thanh CUA CHINH. Phep kiem cu ghim `mission-tree.html?m=earth` nen no bao
+        #   hong dung luc san pham lam dung. Phat bieu lai theo SO NHIEM VU that.
+        _ms = pg.evaluate("() => AstroQCatalog.byWorld('earth').length")
         pg.click('.body[data-id="earth"]')
-        pg.wait_for_url("**/mission-tree.html?m=earth", timeout=15000)
-        chk("mission-tree.html?m=earth" in pg.url,
-            "cham noi CO nhiem vu -> vao THANG cay chang", pg.url)
+        if _ms == 1:
+            pg.wait_for_url("**/mission-tree.html?m=earth", timeout=15000)
+            chk("mission-tree.html?m=earth" in pg.url,
+                "noi co DUNG 1 nhiem vu -> vao THANG cay chang", pg.url)
+        else:
+            pg.wait_for_url("**/mission-planet.html*", timeout=15000)
+            chk("mission-planet.html?w=earth" in pg.url,
+                "noi co NHIEU nhiem vu -> mo man hanh tinh de chon",
+                "%s (%d nhiem vu)" % (pg.url, _ms))
         chk(not errs, "0 loi trang o ban do", str(errs[:2]))
         ctx.close()
 
@@ -366,7 +383,13 @@ def main():
         pg, errs = newpage(ctx, STEPS[:3])
         pg.goto(BASE + "/mission-planet.html?w=earth", wait_until="load")
         pg.wait_for_selector(".node", timeout=15000)
-        chk(pg.locator(".node").count() == 1, "Trai Dat co dung 1 nhiem vu that")
+        # WARN KHONG GAN CUNG SO NHIEM VU (sua 15/08/2026, luc Trai Dat co cai thu hai).
+        #   Dieu phep kiem nay MUON BIET la "man hanh tinh liet ke DUNG nhung nhiem vu
+        #   danh muc khai o noi nay", khong phai "co dung mot cai".
+        _nw = pg.evaluate("() => AstroQCatalog.byWorld('earth').length")
+        chk(pg.locator(".node").count() == _nw,
+            "man hanh tinh liet ke DUNG so nhiem vu danh muc khai o Trai Dat",
+            "%d node / %d nhiem vu" % (pg.locator(".node").count(), _nw))
         chk("Hành Tinh Xanh" in pg.inner_text(".node-lb b"), "goi dung ten nhiem vu",
             pg.inner_text(".node-lb b"))
         chk("chặng 4/7" in pg.inner_text(".node .sub"), "noi dung chang dang do",

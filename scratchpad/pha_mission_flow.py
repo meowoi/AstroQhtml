@@ -45,10 +45,14 @@ CASES = [
      '    { id:"mars",    vi:"Sao Hoả",  en:"Mars",    c:"#d6603a", c2:"#7a3320" },\n'
      '    { id:"moon",    vi:"Mặt Trăng", en:"Moon",   c:"#d3cfc4", c2:"#74706a" },', 1),
 
+    # WARN MOC NAY DA CHUYEN SANG VO 15/08/2026 — `afterStep` nay nam trong
+    #   `js/mission-stage.js`. De nguyen duong dan cu thi phep pha "khong pha dung cho",
+    #   va script TU BAO dieu do thay vi im lang bao "6/7 bi bat" — do la ly do no lo ra.
+    #   Mot phep pha khong pha trung cho thi ket qua cua no khong dung de ket luan gi.
     ("bo chan chang cuoi -> hop hoi mo ca o chang cuoi",
-     "mission-earth.html",
-     "  if (last) return false;\n",
-     "  if (false && last) return false;\n", 1),
+     "js/mission-stage.js",
+     "      if (last) return false;\n",
+     "      if (false && last) return false;\n", 1),
 
     ("cho ban do tu tinh nguong cong thay vi hoi AstroQGate",
      "mission-map.html",
@@ -94,10 +98,15 @@ def main():
                   f"pha dung cho, ket qua khong dung de ket luan.")
             continue
         try:
-            io.open(p, "w", encoding="utf-8").write(orig.replace(old, new, 1))
+            # WARN `newline=""` LA BAT BUOC. Thieu no thi tren Windows Python doi moi
+            #   dau xuong dong LF thanh CRLF khi ghi, nen file KHOI PHUC xong giong het
+            #   ve NOI DUNG ma khac ve KIEU XUONG DONG — git bao CA FILE bi sua (435
+            #   dong o `mission-map.html`), va mot lan chay bo pha hoai lam ban ca commit.
+            #   Loi im lang: bo do van bao "khoi phuc xong, 0 hong".
+            io.open(p, "w", encoding="utf-8", newline="").write(orig.replace(old, new, 1))
             n = run_check()
         finally:
-            io.open(p, "w", encoding="utf-8").write(orig)
+            io.open(p, "w", encoding="utf-8", newline="").write(orig)
         got = n - base
         if got >= need:
             ok += 1
