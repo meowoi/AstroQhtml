@@ -196,30 +196,105 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
    Ba tông màu theo trang đích (cyan · hổ phách · tím) KHÔNG mất — chúng đi
    theo sang `.um-item.um-profile/.um-awards/.um-vault`. */
 
-/* ── MẪU VẬT TRƯNG Ở BÀN ĐIỀU KHIỂN (thêm 13/08/2026) ──
-   Hàng full-width trong bảng Thống Kê, đặt ngay dưới ba ô Bảng Phi Hành Gia: đó là
-   "bàn điều khiển" mà `specimen-vault.html` nói tới.
+/* ══ MẪU VẬT GẮN TRÊN VÁCH BUỒNG LÁI (16/08/2026) ═══════════════════════════
+   Chủ dự án: *"nó bồng bềnh nhưng gắn vào khung của khoang tàu 2 bên"*.
 
-   ⚠️ BẪY `[hidden]` — LẦN THỨ TÁM trong dự án (`#time-ok` · `.lk-btn` · `.pt-empty` ·
-      `.co-steps` · `#wl-done` · `.exp-ctl` · `.brag` · nay `.deskrow`). Khai `display:flex`
-      thì `display` của tác giả THẮNG `display:none` mà trình duyệt áp cho `[hidden]`,
-      nên `row.hidden = true` KHÔNG ẩn được gì — hàng nhãn rỗng sẽ đứng đó với mọi trẻ
-      chưa trưng mẫu nào. Phải khai lại tường minh.
+   ⚠️ GẮN VÀO MÉP MÀN, KHÔNG GẮN VÀO CỘT KHUNG VẼ TRONG ẢNH. Nghe thì cột khung
+      mới đúng ý, nhưng đo ra nó KHÔNG ĐỨNG YÊN: `object-fit:cover` cắt mỗi khổ
+      một kiểu nên cột đó rơi vào những chỗ khác nhau trên màn, và Kho Trang Trí
+      sắp bán NỀN — đổi nền là cột đi chỗ khác hoặc không còn cột nào. Bám mép màn
+      thì đúng ở mọi khổ và với mọi nền, không cần khai dữ liệu cho từng ảnh.
+   ⚠️ TABLET DỌC KHÔNG CÓ TÍNH NĂNG NÀY, và đó là số đo chứ không phải lựa chọn:
+      ở tỉ lệ 0.75 thì cover chỉ giữ 26%..74% bề rộng ảnh, tức **hai cột khung
+      buồng lái bị cắt mất hoàn toàn** — không có "hai bên" nào để mà gắn. Nằm
+      ngang thì giữ được 6%..94%, cột còn nguyên. */
+.desk-float{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;
+  /* ⚠️ CỠ MÓC BỊ KẸP THEO CẢ BỀ RỘNG LẪN CHIỀU CAO, và vế chiều cao mới là vế giữ
+     cho 5 móc không đè lên nhau. Chỉ theo bề rộng thì một màn 1600×720 cho móc
+     148px → 5×148 + 4 khe = 796px trên một khung cao 720px, tức hai móc cuối tràn
+     khỏi màn. `(100vh - 120px)/5 - 14px` = phần mỗi móc được chia sau khi chừa
+     60px trên/dưới (tránh thanh trạng thái và hai huy hiệu neo góc dưới) và 14px
+     khe. Sàn 64px vẫn thắng ở màn rất thấp — ở đó cột ngắn lại chứ không tràn. */
+  --dfw:clamp(64px, min(calc((100vw - 1120px) * .30 + 34px),
+                        calc((100vh - 120px) / 5 - 14px)), 148px);}
+.desk-float[hidden]{display:none;}
 
-   ⚠️ Chip KHÔNG bấm được, cố ý: đây là chỗ trưng bày, đường đi để đổi nằm ở ô
-      "Mẫu vật" ngay trên. Nên dùng `<span>`, không dùng `<a>`. */
-.deskrow{grid-column:1 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:9px;
-  margin-top:11px;padding-top:12px;border-top:1px dashed rgba(150,180,255,.18);}
-.deskrow[hidden]{display:none;}
-.dk-tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--ink-faint);flex:none;}
-.dk-list{display:flex;flex-wrap:wrap;gap:8px;min-width:0;}
-.dchip{display:inline-flex;align-items:center;gap:6px;max-width:100%;
-  font-family:var(--font-display);font-weight:600;font-size:12px;color:var(--ink);
-  padding:5px 11px 5px 8px;border-radius:999px;
-  border:1px solid rgba(var(--neon-rgb),.34);background:rgba(var(--neon-rgb),.09);
-  box-shadow:inset 0 0 14px -8px rgba(var(--neon-rgb),.9);}
-.dchip .dk-ic{font-size:14px;line-height:1;}
+/* Một VÁCH = một cột móc, canh giữa theo chiều dọc. Xếp bằng flex chứ không gán
+   `top` cho từng móc: cỡ móc co giãn theo màn, nên mọi bộ toạ độ cố định đều đè
+   nhau ở một khổ nào đó — đúng lỗi mà vế chiều cao ở trên vừa chặn.
+   ⚠️ `transform` ở đây KHÔNG phá `position:fixed` của `.desk-float`: nó nằm ở con,
+      không phải tổ tiên. Bẫy "tổ tiên có transform nuốt fixed" đã trả giá hai lần
+      (menu avatar 15/08, và chính phép kiểm [c] của `probe_desk.py`). */
+.dfw{position:absolute;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:14px;}
+.dfw--L{left:0;} .dfw--R{right:0;}
+/* Móc trống: ô vô hình GIỮ CHỖ, không phải ô bị bỏ đi. Xem ghi chú ở `paintDesk`. */
+.dfp-void{width:var(--dfw);height:var(--dfw);visibility:hidden;pointer-events:none;}
+.dfp{position:relative;pointer-events:auto;
+  width:var(--dfw);height:var(--dfw);
+  display:grid;place-items:center;text-decoration:none;
+  border:1px solid rgba(192,132,252,.34);
+  background:radial-gradient(circle at 50% 42%, rgba(192,132,252,.16), rgba(15,23,42,.55));
+  box-shadow:inset 0 0 26px -12px rgba(192,132,252,.95), 0 12px 30px -18px rgba(0,0,0,.9);
+  transition:transform .35s var(--jelly),border-color .25s,box-shadow .25s;}
+/* Mép phía vách DẸT, mép phía trong bo tròn — hình dáng nói ra rằng nó đang tựa
+   vào một cái gì đó chứ không lơ lửng. */
+.dfw--L .dfp{border-left:none; border-radius:0 999px 999px 0;}
+.dfw--R .dfp{border-right:none; border-radius:999px 0 0 999px;}
+/* Hai con vít giữ khoang vào vách. Không có chúng thì cái mép dẹt đọc ra như hình
+   bị cắt cụt ở mép màn chứ không như đồ được bắt vào tường. */
+.dfp::before, .dfp::after{content:"";position:absolute;width:5px;height:5px;
+  border-radius:50%;background:rgba(150,180,255,.5);
+  box-shadow:0 0 6px -1px rgba(192,132,252,.9);}
+.dfp::before{top:24%;} .dfp::after{bottom:24%;}
+.dfw--L .dfp::before, .dfw--L .dfp::after{left:7px;}
+.dfw--R .dfp::before, .dfw--R .dfp::after{right:7px;}
+/* Chỗ để dành: nét đứt, KHÔNG có chữ. Phải đọc ra là "còn chỗ", không phải nút. */
+.dfp--empty{background:rgba(15,23,42,.28);border-style:dashed;
+  border-color:rgba(150,180,255,.3);box-shadow:none;}
+.dfp--empty::before, .dfp--empty::after{opacity:.4;}
+.dfp--empty .dp-plus{font-family:var(--font-display);font-weight:700;
+  font-size:calc(var(--dfw) * .28);color:var(--ink-faint);}
+.dfp--empty:hover{border-color:rgba(192,132,252,.75);}
+
+/* ⚠️⚠️ BỒNG BỀNH LÀ MẪU VẬT BÊN TRONG, KHÔNG PHẢI CẢ CÁI KHOANG. Một khoang bắt
+   vít vào vách mà tự nhún nhảy là sai vật lý và đọc ra như lỗi vẽ; mẫu vật trôi
+   trong khoang kính thì đúng — và đó cũng là ngôn ngữ hình `specimen-vault.html`
+   đã dùng (`.pod .sp` với `podFloat`). Ba khoang lệch pha nhau: cùng pha thì ba
+   món nhấp nhô đồng loạt, đọc ra như cả buồng lái đang rung.
+   `common.css` đã tắt mọi animation ở `prefers-reduced-motion`, không khai lại. */
+.dfp .dp-sp{font-size:calc(var(--dfw) * .5);line-height:1;
+  filter:drop-shadow(0 0 16px rgba(192,132,252,.75));
+  animation:dfpFloat 6.5s ease-in-out infinite;}
+@keyframes dfpFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+/* Lệch pha theo vị trí trên vách. Năm nhịp lẻ nhau, KHÔNG chia hết cho nhau —
+   trùng chu kỳ thì cứ vài giây cả cột lại nhấp nhô đồng loạt một lần. */
+.dfw > :nth-child(1) .dp-sp{animation-duration:6.5s;animation-delay:0s;}
+.dfw > :nth-child(2) .dp-sp{animation-duration:7.8s;animation-delay:-2.4s;}
+.dfw > :nth-child(3) .dp-sp{animation-duration:5.9s;animation-delay:-4.1s;}
+.dfw > :nth-child(4) .dp-sp{animation-duration:7.1s;animation-delay:-1.3s;}
+.dfw > :nth-child(5) .dp-sp{animation-duration:6.2s;animation-delay:-3.5s;}
+.dfw--R > :nth-child(1) .dp-sp{animation-delay:-1.7s;}
+.dfw--R > :nth-child(3) .dp-sp{animation-delay:-0.8s;}
+.dfp:hover{border-color:rgba(192,132,252,.85);
+  box-shadow:inset 0 0 30px -10px rgba(192,132,252,1), 0 14px 34px -16px rgba(0,0,0,.95);}
+.dfp:hover .dp-sp{filter:drop-shadow(0 0 26px rgba(192,132,252,1));}
+.dfp:active{transform:scale(.97);}
+
+/* ⚠️ NGƯỠNG 1180px LÀ SÀN CỨNG, ĐO RA CHỨ KHÔNG CHỌN CHO ĐẸP. `main` rộng tối đa
+   1120px và padding là `clamp(20px,4vw,54px)`, nên lề thật = 41px @1024 · 77px
+   @1180 · 177px @1366. Với khoang tối thiểu 64px thì 1180 còn cách chữ 13px, còn
+   1024 ra **−23px** tức khoang đè lên chữ.
+   ⇒ CÓ: desktop · laptop · iPad Air/Pro NẰM NGANG.
+   ⇒ KHÔNG: iPad mini nằm ngang (1024), mọi tablet DỌC (cột khung bị cover cắt mất),
+     điện thoại. Chỗ MẤT có ý thức — chủ dự án chốt *"có những tính năng mình sẽ ko
+     thể hiện được ở mobile"*; phép kiểm [6] canh đúng điều đó. */
+@media (min-width:1180px){
+  .desk-float{display:block;}
+  .desk-float[hidden]{display:none;}
+}
+  .desk-float[hidden]{display:none;}
+}
 
 /* ══ DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP (thêm 13/08/2026) ═══════════════════════════
    Vì sao có: 13/08 đo được ví thật của chủ dự án là 21 tt trong khi HUD hiện 866.
@@ -476,7 +551,6 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .m-btn:hover{background:rgba(255,255,255,.12);border-color:var(--glass-brd-strong);}
 .m-btn:active{transform:scale(.93);}
 .m-btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#04060f;border-color:transparent;}
-
 
 /* ⚠️ MÁY TÍNH BẢNG & HẸP HƠN: HÀNG ĐỒNG HỒ XUỐNG MỘT DÒNG RIÊNG.
    Không phải cho gọn mắt — để chiều cao header KHÔNG phụ thuộc bề rộng của bảng

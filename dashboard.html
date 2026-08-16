@@ -77,6 +77,30 @@
   </picture>
 </div>
 
+<!-- ============ MẪU VẬT THẢ NỔI TRONG BUỒNG LÁI (16/08/2026) ============
+     Chủ dự án: *"trang trí thì chỉ có HÌNH, ko có tên đi kèm"* + *"lơ lửng như
+     trong không gian… kích thước lớn hơn"*. Bản hàng-chip-có-tên trước đó đọc ra
+     là một BẢNG KIỂM KÊ, không phải đồ trang trí.
+
+  ⚠️⚠️ PHẢI NẰM Ở ĐÂY, NGANG HÀNG `.bg-photo` — KHÔNG ĐƯỢC ĐẶT TRONG `.stats-hud`.
+     Khối đó có `backdrop-filter:blur(18px)`, mà một tổ tiên có `filter`/
+     `backdrop-filter`/`transform` thì trở thành KHỐI CHỨA của mọi con
+     `position:fixed` — "thả nổi giữa buồng lái" sẽ hoá ra thả nổi trong cái bảng
+     thống kê. Đúng bẫy đã trả giá với tấm thả của menu avatar (15/08).
+
+  ⚠️ CHỖ THẢ LÀ **LỀ CỦA NỘI DUNG**, không phải một điểm trên ẢNH NỀN. Đo được lề
+     rộng 214px ở 1440 · 454px ở 1920 · **20px ở 390**.
+  ⚠️ DƯỚI 1280px KHÔNG HIỆN MẪU VẬT Ở ĐÂU CẢ. Trước đó có đường lùi là một hàng
+     biểu tượng trong bảng Thống Kê; chủ dự án bỏ hẳn ngày 16/08/2026 (*"không
+     muốn nó xuất hiện ở đây"*). Làn trống dưới ngưỡng chỉ còn ~77px, không chứa
+     nổi một khoang 92px — nên đây là chỗ MẤT có ý thức, không phải bỏ sót. Cố ý KHÔNG
+     neo vào một chi tiết vẽ trong ảnh: `object-fit:cover` cắt mỗi khổ một kiểu nên
+     cùng một điểm của ảnh rơi vào `y = 625·873·676·751·841` tuỳ màn (trải 248px).
+
+  ⚠️ `pointer-events:none` ở lớp bọc, chỉ khoang mới nhận cú bấm — lớp phủ toàn
+     màn hình mà ăn cú bấm là lỗi `#loader` của explorer đã trả giá. -->
+<div class="desk-float" id="desk-float" aria-hidden="true"></div>
+
 <!-- ============ HEADER = BẢNG TRẠNG THÁI TÀU ============ -->
 <header class="statusbar">
   <div class="ship-id"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"><span class="ship-name" id="ship-nm" hidden></span><!--
@@ -320,20 +344,7 @@
 
       </div>
 
-      <!-- MẪU VẬT TRƯNG Ở BÀN ĐIỀU KHIỂN (thêm 13/08/2026).
-           ⚠️ VÌ SAO CÓ: `specimen-vault.html` mời trẻ "Đặt lên Bàn Điều Khiển Khoang
-              Lái", lưu được lựa chọn đó lên server — nhưng buồng lái **chưa bao giờ
-              vẽ nó ra** (đếm được 0 chỗ nhắc `desk` trong file này trước lượt sửa).
-              App hứa một chỗ trưng bày rồi không trưng gì cả.
-           ⚠️ CHƯA TRƯNG GÌ THÌ ẨN HẲN, không hiện hàng rỗng có nhãn — cùng lý do
-              `.ship-name` và `.decal` phải ẩn: một nhãn trống đọc ra như chỗ bị lỗi.
-           ⚠️ Đây là chỗ TRƯNG BÀY, không phải đường đi: chip không bấm được. Muốn đổi
-              thì vào ô "Mẫu vật" ngay trên — hai đường vào cho một việc là hai chỗ
-              phải sửa mỗi lần đổi tên (bài học Sổ Tay Thuật Ngữ 04/08). -->
-      <div class="deskrow" id="deskrow" hidden>
-        <span class="dk-tag" data-i18n="desk_tag">TRƯNG Ở BÀN ĐIỀU KHIỂN</span>
-        <span class="dk-list" id="dk-list"></span>
-      </div>
+
 
   </section>
 
@@ -525,7 +536,7 @@
          lên — nút chỉ có ảnh + tên nên không có nhãn nào khác. */
       a_menu:"Menu của tôi", menu_me:"Của tôi", menu_grown:"Dành cho người lớn",
       pt_profile:"Hồ sơ", pt_awards:"Thành tích", pt_vault:"Mẫu vật",
-      pt_vault_sub:"Bộ sưu tập", desk_tag:"TRƯNG Ở BÀN ĐIỀU KHIỂN", pt_badges_unit:"huy hiệu",
+      pt_vault_sub:"Bộ sưu tập", desk_add:"Đặt mẫu vật", pt_badges_unit:"huy hiệu",
       pt_shop_nm:"Kho Trang Trí", pt_shop_sub:"Tông đèn · tên tàu",
       pt_parent_nm:"Dành cho bố mẹ", pt_parent_sub:"Báo cáo tuần của con",
       /* Bộ chọn ngôn ngữ. `lang_soon_*` nói THẬT rằng những tiếng đó chưa có nội
@@ -592,7 +603,7 @@
       banner_eyebrow:"🧭 Navigation Hub", welcome_pre:"Welcome back,",
       a_menu:"My menu", menu_me:"Mine", menu_grown:"For grown-ups",
       pt_profile:"Profile", pt_awards:"Badges", pt_vault:"Specimens",
-      pt_vault_sub:"Collection", desk_tag:"ON THE CONSOLE", pt_badges_unit:"badges",
+      pt_vault_sub:"Collection", desk_add:"Place a specimen", pt_badges_unit:"badges",
       pt_shop_nm:"Decoration Deck", pt_shop_sub:"Cockpit lights · ship name",
       pt_parent_nm:"For parents", pt_parent_sub:"Your child's weekly report",
       lang_head:"Language", lang_soon_h:"Being translated",
@@ -762,7 +773,7 @@
          `js/cosmetics.js` da ap tong tu cache LUC NAP nen buong lai khong nhap
          mot cai tu tong mac dinh sang tong cua tre. */
       if(window.AstroQCos){ AstroQCos.absorb(d.equipped, d.ship); paintShip(); }
-      paintDesk((d.progress && d.progress.desk) || []);
+      paintDesk(deskFrom(d.progress) || []);
       STATS.level = d.level || STATS.level;
       STATS.progress = d.progress || STATS.progress;
       STATS.badges = a.badges || [];
@@ -791,22 +802,102 @@
      ⚠️ Thiếu `js/specimens.js` thì `name()` trả về chính id — trang không vỡ, chỉ
         xấu; nhưng ẩn hàng luôn ở ca đó thì trẻ mất hẳn thứ nó đã chọn, nên vẫn vẽ. */
   var DESK_MAX = 3;
-  var DESK = [];
+  var DESK = [];            /* [{hook,id}] — móc do TRẺ chọn, không phải do mã định */
+  var DESK_KNOWN = false;   /* đã đọc được `desk` từ server lần nào chưa */
+
+  /* Đọc bàn điều khiển từ `progress`. Server từ 16/08/2026 trả `deskHooks`
+     (`[{hook,id}]`); bản cũ — và bản đang nằm trong cache trình duyệt — chỉ có
+     `desk` (mảng id trần). Nhận cả hai, thiếu móc thì để rỗng rồi `paintDesk`
+     xếp vào móc trống đầu tiên: thà treo tạm đúng thứ tự cũ còn hơn bàn rỗng. */
+  function deskFrom(p){
+    if(!p) return null;
+    if(Object.prototype.toString.call(p.deskHooks) === "[object Array]"){
+      return p.deskHooks
+        .filter(function(x){ return x && typeof x.id === "string" && x.id; })
+        .map(function(x){ return { hook: String(x.hook || ""), id: x.id }; });
+    }
+    if(Object.prototype.toString.call(p.desk) === "[object Array]"){
+      return p.desk
+        .filter(function(x){ return typeof x === "string" && x; })
+        .map(function(id){ return { hook: "", id: id }; });
+    }
+    return null;
+  }
+  /* ⚠️ VẼ RA HAI CHỖ, MỘT NGUỒN: `#desk-float` (thả nổi, màn rộng) và `#dk-list`
+     (hàng biểu tượng trong bảng, màn hẹp). CSS cho hiện ĐÚNG MỘT — xem `.desk-float`
+     ở `css/dashboard.css`. Chỗ bị `display:none` cũng biến khỏi cây trợ năng nên
+     trình đọc màn hình không đọc hai lần.
+     ⚠️ TUYỆT ĐỐI KHÔNG VẼ TÊN Ở HAI CHỖ NÀY — chủ dự án chốt *"trang trí thì chỉ
+     có hình"*. Tên đi vào `title`/`aria-label`, tức vẫn đọc được bằng trình đọc
+     màn hình và vẫn hiện khi rê chuột, chỉ không nằm trên mặt tranh. */
   function paintDesk(list){
-    if(list) DESK = list;
-    var row = $("deskrow"), box = $("dk-list");
-    if(!row || !box) return;
-    var ids = (DESK || []).filter(function(x){ return typeof x === "string" && x; })
-                          .slice(0, DESK_MAX);
-    if(!ids.length){ row.hidden = true; box.innerHTML = ""; return; }
+    if(list){ DESK = list; DESK_KNOWN = true; }
+    var flo = $("desk-float");
+    if(!flo) return;
+    /* Chưa biết gì thì đừng vẽ chỗ để dành: một lời mời đặt mẫu vật gửi tới đứa
+       trẻ chưa đăng nhập là mời nó làm một việc nó chưa làm được. */
+    if(!DESK_KNOWN){ flo.innerHTML = ""; flo.hidden = true; return; }
     var sp = window.AstroQSpecimens;
-    box.innerHTML = ids.map(function(id){
+    var HOOKS = sp && sp.hooks ? sp.hooks()
+              : ["L1","L2","L3","L4","L5","R1","R2","R3","R4","R5"];
+
+    /* Móc nào đang treo gì. Mục thiếu móc (server cũ) hoặc trỏ vào móc lạ / móc
+       đã có mẫu khác thì rơi xuống móc trống đầu tiên — mất chỗ trẻ chọn thì tiếc,
+       nhưng bỏ hẳn mẫu vật khỏi bàn thì mất thứ nó đã thu thập được. */
+    function firstFree(at){
+      for(var i=0;i<HOOKS.length;i++) if(!at[HOOKS[i]]) return HOOKS[i];
+      return "";
+    }
+    var at = {}, taken = 0;
+    (DESK || []).slice(0, DESK_MAX).forEach(function(it){
+      if(!it || !it.id) return;
+      var h = it.hook;
+      if(!h || HOOKS.indexOf(h) === -1 || at[h]) h = firstFree(at);
+      if(h){ at[h] = it.id; taken++; }
+    });
+    /* Chỗ để dành: ĐÚNG MỘT móc nét đứt, không phải mọi móc còn trống. Chín vòng
+       nét đứt dọc hai vách đọc ra như lỗi vẽ chứ không như chỗ còn để dành. */
+    var invite = taken < DESK_MAX ? firstFree(at) : "";
+
+    function pod(h){
+      var id = at[h];
       var nm = sp ? sp.name(id, LANG) : id;
       var ic = sp ? sp.icon(id) : "🧪";
-      return '<span class="dchip"><span class="dk-ic" aria-hidden="true">' +
-             AstroQ.esc(ic) + '</span>' + AstroQ.esc(nm) + '</span>';
+      var hn = sp && sp.hookName ? sp.hookName(h, LANG) : h;
+      /* ⚠️ TÊN KHÔNG BAO GIỜ VẼ RA — chủ dự án chốt *"trang trí thì chỉ có hình"*.
+         Nó nằm ở `title`/`aria-label` nên vẫn hiện khi rê chuột và trình đọc màn
+         hình vẫn đọc được, chỉ không nằm trên mặt tranh. Tên móc đi kèm vì với
+         người dùng trình đọc màn hình thì "ở đâu" là thông tin duy nhất bị mất
+         khi bố cục biến thành một danh sách đọc tuần tự. */
+      var lb = AstroQ.esc(nm + " — " + hn);
+      return '<a class="dfp" href="specimen-vault.html"' +
+             ' title="' + lb + '" aria-label="' + lb + '">' +
+             '<span class="dp-sp" aria-hidden="true">' + AstroQ.esc(ic) + '</span></a>';
+    }
+    function emptyPod(){
+      var lb = AstroQ.esc(t("desk_add"));
+      return '<a class="dfp dfp--empty" href="specimen-vault.html"' +
+             ' aria-label="' + lb + '" title="' + lb + '">' +
+             '<span class="dp-plus" aria-hidden="true">+</span></a>';
+    }
+
+    /* Móc trống KHÔNG biến mất khỏi bố cục — nó thành ô vô hình cùng cỡ. Vách xếp
+       bằng flex theo thứ tự `HOOKS`, nên bỏ ô đi là mọi mẫu vật phía dưới trượt
+       lên và L5 hiện ra ở đúng chỗ của L1. */
+    flo.innerHTML = ["L","R"].map(function(w){
+      var cells = HOOKS.filter(function(h){ return h.charAt(0) === w; })
+        .map(function(h){
+          if(at[h]) return pod(h);
+          if(h === invite) return emptyPod();
+          return '<span class="dfp-void" aria-hidden="true"></span>';
+        }).join("");
+      return '<div class="dfw dfw--' + w + '">' + cells + '</div>';
     }).join("");
-    row.hidden = false;
+    flo.hidden = false;
+    /* Lớp bọc khai `aria-hidden="true"` trong markup vì lúc đó nó rỗng. Có nội dung
+       rồi thì trả lại quyền đọc — nay đây là chỗ DUY NHẤT mẫu vật xuất hiện, ẩn
+       khỏi trình đọc màn hình là mất hẳn. */
+    flo.setAttribute("aria-hidden", "false");
   }
 
   /* ══ DẢI NHẮC MẤT PHIÊN ĐĂNG NHẬP ═══════════════════════════════════════════

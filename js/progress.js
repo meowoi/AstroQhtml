@@ -596,17 +596,17 @@
     },
 
     /**
-     * Đặt mẫu vật lên bàn điều khiển khoang lái (tối đa 3). Đây là thứ DUY NHẤT
-     * của kho mẫu vật mà client được quyết — nhưng server vẫn kiểm từng id phải
-     * có thật và đã mở khoá.
+     * Treo mẫu vật lên móc ở vách khoang lái (tối đa 3). `items` = mảng
+     * `{hook, id}`. Đây là thứ DUY NHẤT của kho mẫu vật mà client được quyết —
+     * nhưng server vẫn kiểm từng id phải có thật, đã mở khoá, và móc phải hợp lệ.
      *
      * KHÔNG xếp hàng chờ như các việc khác: đây là lựa chọn trang trí, gửi lại
      * sau nhiều giờ thì có thể ghi đè lựa chọn mới hơn ở máy khác.
      */
-    setDesk: function (ids) {
+    setDesk: function (items) {
       return waitAuth(2500).then(function (a) {
         if (!a || !a.setSpecimenDesk) return { ok: false, reason: "auth" };
-        return a.setSpecimenDesk(ids);
+        return a.setSpecimenDesk(items);
       }).catch(function () { return { ok: false, reason: "error" }; });
     },
 

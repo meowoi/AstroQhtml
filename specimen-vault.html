@@ -142,8 +142,8 @@
       none_here:"Không có mẫu vật nào ở nhóm này.",
       pod_cta:"[ SOI CHI TIẾT ]", pod_unknown:"???",
       tag_desk:"Bàn điều khiển", desk_title:"Mẫu vật trưng ở khoang lái",
-      desk_intro:"Chọn tối đa {n} mẫu vật để đặt lên bàn điều khiển. Mở một khoang rồi bấm “Đặt lên Bàn Điều Khiển”.",
-      slot_empty:"Chỗ trống",
+      desk_intro:"Chọn tối đa {n} mẫu vật, và tự chọn móc treo trên hai vách khoang lái. Mở một khoang rồi bấm “Treo lên vách”.",
+      slot_empty:"Móc trống",
       scope_tag:"[ MICROSCOPE SCANNER {x} ]",
       zoom_in:"[ 🔍 Soi Phóng To (Zoom Mode) ]", zoom_out:"[ 🔍 Thu Nhỏ Lại ]",
       hud_zoom:"ZOOM: {x}", hud_temp:"STASIS: −80°C · OK", hud_int:"INTEGRITY: 100%",
@@ -152,14 +152,19 @@
       state_on:"Đã thu thập", state_off:"Chưa mở khoá",
       say_lbl:"[ {who} · NHẬT KÝ THOẠI ]", fact_lbl:"[ FUN FACT · DỮ LIỆU KHOA HỌC ]",
       src_lbl:"Nguồn tham chiếu: {s}",
-      desk_put:"🚀 Đặt lên Bàn Điều Khiển Khoang Lái",
-      desk_take:"✓ Đang trên bàn — bấm để lấy xuống",
-      desk_full:"Bàn điều khiển đã đầy — lấy bớt một mẫu vật xuống trước nhé.",
+      desk_put:"🚀 Treo lên vách khoang lái",
+      desk_take:"✓ Đang treo — bấm để lấy xuống",
+      desk_move:"↔ Đổi móc khác",
+      desk_full:"Hai vách đã đủ {n} mẫu vật — lấy bớt một mẫu xuống trước nhé.",
+      pick_h:"Chọn móc để treo",
+      pick_cancel:"Thôi, để sau",
+      hook_free:"trống", hook_busy:"đã có mẫu khác",
       locked_note:"Khoang này chưa mở. {h}.",
       go_notebook:"📖 Sổ Tay Khám Phá", go_map:"🗺️ Bản Đồ Thiên Hà", go_awards:"🏆 Kho Thành Tích",
       off_guest:"Bạn chưa đăng nhập nên chưa có kho mẫu vật. <a href=\"landing-app.html\">Đăng nhập</a> để drone bắt đầu thu thập mẫu cho bạn.",
       off_net:"Không kết nối được máy chủ nên chưa xem được kho mẫu vật. Các khoang dưới đây đang hiện ở trạng thái khoá. Thử tải lại trang sau nhé.",
-      t_put:"🚀 Đã đặt {n} lên bàn điều khiển!", t_take:"Đã lấy {n} xuống khỏi bàn điều khiển.",
+      t_put:"🚀 Đã treo {n} lên {h}!", t_take:"Đã lấy {n} xuống khỏi vách.",
+      t_move:"↔ Đã chuyển {n} sang {h}.",
       t_err:"Chưa lưu được lựa chọn lên máy chủ. Thử lại sau nhé.",
       title:"AstroQ — Kho Mẫu Vật Vũ Trụ"
     },
@@ -174,8 +179,8 @@
       none_here:"No specimens in this group.",
       pod_cta:"[ INSPECT ]", pod_unknown:"???",
       tag_desk:"Cockpit desk", desk_title:"Specimens on display in the cockpit",
-      desk_intro:"Pick up to {n} specimens to place on the cockpit desk. Open a pod, then press “Place on Cockpit Desk”.",
-      slot_empty:"Empty slot",
+      desk_intro:"Pick up to {n} specimens, and choose which hook on the cockpit walls each one hangs from. Open a pod, then press “Hang on a wall”.",
+      slot_empty:"Empty hook",
       scope_tag:"[ MICROSCOPE SCANNER {x} ]",
       zoom_in:"[ 🔍 Zoom Mode ]", zoom_out:"[ 🔍 Zoom Out ]",
       hud_zoom:"ZOOM: {x}", hud_temp:"STASIS: −80°C · OK", hud_int:"INTEGRITY: 100%",
@@ -184,14 +189,19 @@
       state_on:"Collected", state_off:"Locked",
       say_lbl:"[ {who} · VOICE LOG ]", fact_lbl:"[ FUN FACT · SCIENCE DATA ]",
       src_lbl:"Reference: {s}",
-      desk_put:"🚀 Place on Cockpit Desk",
-      desk_take:"✓ On the desk — tap to take it off",
-      desk_full:"The cockpit desk is full — take one specimen off first.",
+      desk_put:"🚀 Hang on a cockpit wall",
+      desk_take:"✓ Hanging — tap to take it down",
+      desk_move:"↔ Move to another hook",
+      desk_full:"The walls already hold {n} specimens — take one down first.",
+      pick_h:"Choose a hook",
+      pick_cancel:"Not now",
+      hook_free:"free", hook_busy:"another specimen is here",
       locked_note:"This pod is still sealed. {h}.",
       go_notebook:"📖 Discovery Notebook", go_map:"🗺️ Galaxy Map", go_awards:"🏆 Trophy Hold",
       off_guest:"You are not signed in, so there is no vault yet. <a href=\"landing-app.html\">Sign in</a> and the drones will start collecting for you.",
       off_net:"Can't reach the server, so the vault is unavailable. The pods below are shown locked. Try reloading later.",
-      t_put:"🚀 {n} is now on the cockpit desk!", t_take:"Took {n} off the cockpit desk.",
+      t_put:"🚀 {n} is now hanging on {h}!", t_take:"Took {n} down off the wall.",
+      t_move:"↔ Moved {n} to {h}.",
       t_err:"Couldn't save your choice to the server. Try again later.",
       title:"AstroQ — Specimen Vault"
     }
@@ -203,18 +213,62 @@
 
   var SLOTS_FALLBACK = 3;   // chỉ dùng khi chưa gọi được server; server là nguồn thật
 
+  /* `desk` là mảng `{hook,id}` — móc do TRẺ chọn. Trước 16/08/2026 nó là mảng id
+     trần và chỗ treo do mã định sẵn; xem `Specimens.Hooks` ở server. */
   var VIEW = { ok:false, reason:"", items:[], desk:[],
                summary:{ collected:0, total:0, rare:0, rareTotal:0, deskSlots:SLOTS_FALLBACK } };
   var FILTER = "all";
   var OPEN = null;      // id mẫu vật đang soi
   var LAST = "";        // khoang vừa mở — để trả tiêu điểm về đó lúc đóng modal
   var ZOOM = false;
+  var PICK = false;     // đang mở bảng chọn móc trong màn soi
   var saving = false;   // chặn bấm liên tiếp làm 2 lời gọi chồng nhau
 
   function slots(){ return VIEW.summary.deskSlots || SLOTS_FALLBACK; }
   function item(id){
     for(var i=0;i<VIEW.items.length;i++) if(VIEW.items[i].id===id) return VIEW.items[i];
     return null;
+  }
+
+  /* ---------------- Bàn điều khiển: đọc trạng thái ----------------
+     Ba hàm nhỏ này là chỗ DUY NHẤT biết `VIEW.desk` có hình dạng gì. Mọi nơi khác
+     hỏi qua chúng — trước đây cả trang gọi thẳng `VIEW.desk.indexOf(id)` ở 7 chỗ,
+     và đổi hình dạng dữ liệu là phải đi sửa đủ 7 chỗ mà không có gì nhắc. */
+  function deskHas(id){
+    for(var i=0;i<VIEW.desk.length;i++) if(VIEW.desk[i].id===id) return true;
+    return false;
+  }
+  function hookOf(id){
+    for(var i=0;i<VIEW.desk.length;i++) if(VIEW.desk[i].id===id) return VIEW.desk[i].hook;
+    return "";
+  }
+  function ownerOf(hook){
+    for(var i=0;i<VIEW.desk.length;i++) if(VIEW.desk[i].hook===hook) return VIEW.desk[i].id;
+    return "";
+  }
+  /** Móc trống đầu tiên — dùng khi trẻ bấm "treo lên" mà chưa chọn móc nào. */
+  function firstFreeHook(){
+    var hs = AstroQSpecimens.hooks();
+    for(var i=0;i<hs.length;i++) if(!ownerOf(hs[i])) return hs[i];
+    return "";
+  }
+  /** Đồng bộ cờ `equipped` của từng thẻ theo bàn hiện tại. */
+  function syncEquipped(){
+    VIEW.items.forEach(function(x){ x.equipped = deskHas(x.id); });
+  }
+
+  /* Server mới trả `deskHooks`; bản cũ chỉ có `desk` (mảng id trần). Nhận cả hai —
+     cùng lý do đã ghi ở `deskFrom` của dashboard.html. */
+  function readDesk(s){
+    if(Object.prototype.toString.call(s.deskHooks) === "[object Array]"){
+      return s.deskHooks
+        .filter(function(x){ return x && typeof x.id === "string" && x.id; })
+        .map(function(x){ return { hook:String(x.hook || ""), id:x.id }; });
+    }
+    var hs = AstroQSpecimens.hooks();
+    return (s.desk || [])
+      .filter(function(x){ return typeof x === "string" && x; })
+      .map(function(id, i){ return { hook: hs[i] || "", id:id }; });
   }
 
   /* ---------------- Nạp ----------------
@@ -234,7 +288,7 @@
         var s = (r.data && r.data.specimens) || {};
         VIEW.ok = true;
         VIEW.items = s.specimens || [];
-        VIEW.desk = s.desk || [];
+        VIEW.desk = readDesk(s);
         VIEW.summary = s.summary || VIEW.summary;
       } else {
         VIEW.ok = false;
@@ -347,20 +401,35 @@
     });
   }
 
-  /* ---------------- Vẽ: kệ bàn điều khiển ---------------- */
+  /* ---------------- Vẽ: bản đồ hai vách ----------------
+     Đây là chỗ trẻ NHÌN THẤY bố cục thật của buồng lái: hai cột móc, đúng thứ tự
+     trên→dưới như `dashboard.html` vẽ ra. Vẽ mọi móc kể cả móc trống — bản đồ mà
+     chỉ hiện chỗ đã treo thì không nói được "còn treo được ở đâu", mà đó chính là
+     câu hỏi tính năng này sinh ra để trả lời.
+     ⚠️ Móc CÓ mẫu vật là `<button>` (mở màn soi chính mẫu đó), móc trống là `<span>`
+        — một cái nút bấm vào chẳng để làm gì là một ngõ cụt. Muốn treo thì đi qua
+        khoang mẫu vật, đường đó có sẵn và có ngữ cảnh. */
   function renderShelf(){
-    var html = "";
-    for(var i=0;i<slots();i++){
-      var id = VIEW.desk[i];
-      if(id){
-        html += '<span class="slot full"><span class="sp" aria-hidden="true">'+
-                AstroQSpecimens.icon(id)+'</span>'+esc(AstroQSpecimens.name(id, LANG))+'</span>';
-      } else {
-        html += '<span class="slot empty"><span class="sp" aria-hidden="true">➕</span>'+
-                esc(t("slot_empty"))+'</span>';
-      }
-    }
-    $("shelf").innerHTML = html;
+    var sp = AstroQSpecimens;
+    $("shelf").innerHTML = ["L","R"].map(function(w){
+      var cells = sp.hooksOf(w).map(function(h){
+        var id = ownerOf(h);
+        if(id){
+          return '<button type="button" class="slot full" data-open="'+esc(id)+'"'+
+                 ' title="'+esc(sp.hookName(h, LANG))+'">'+
+                 '<span class="sp" aria-hidden="true">'+sp.icon(id)+'</span>'+
+                 esc(sp.name(id, LANG))+'</button>';
+        }
+        return '<span class="slot empty"><span class="sp" aria-hidden="true">·</span>'+
+               esc(t("slot_empty"))+' '+esc(String(h).slice(1))+'</span>';
+      }).join("");
+      return '<div class="wm-wall"><span class="wm-lbl">'+esc(sp.wallName(w, LANG))+
+             '</span>'+cells+'</div>';
+    }).join("");
+
+    Array.prototype.forEach.call($("shelf").querySelectorAll("[data-open]"), function(b){
+      b.addEventListener("click", function(){ openInsp(b.getAttribute("data-open")); });
+    });
   }
 
   function renderBanner(){
@@ -379,7 +448,7 @@
   function openInsp(id){
     var x = item(id);
     if(!x || !x.unlocked) return;
-    OPEN = id; LAST = id; ZOOM = false;
+    OPEN = id; LAST = id; ZOOM = false; PICK = false;
     renderInsp();
     var m = $("insp");
     // Bật class ở khung sau để transition opacity của .modal chạy được (từ 0 → 1)
@@ -388,7 +457,7 @@
   }
 
   function closeInsp(){
-    OPEN = null; ZOOM = false;
+    OPEN = null; ZOOM = false; PICK = false;
     $("insp").classList.remove("show");
     // Trả tiêu điểm về đúng khoang vừa xem để người dùng bàn phím không bị mất chỗ
     var back = document.querySelector('.pod[data-id="' + CSS.escape(LAST || "") + '"]');
@@ -398,7 +467,7 @@
   function renderInsp(){
     var x = item(OPEN);
     if(!x) return;
-    var eq = VIEW.desk.indexOf(x.id) !== -1;
+    var eq = deskHas(x.id);
     var full = VIEW.desk.length >= slots();
     var say = AstroQSpecimens.mascot(x.id, LANG);
     var src = AstroQSpecimens.source(x.id);
@@ -452,52 +521,114 @@
                    esc(t("src_lbl").replace("{s}", src.label))+' ↗</a>' : '')+
           '</div>'+
           '<div class="insp-acts">'+
-            '<button class="pbtn desk-btn'+(eq?" eq":"")+'" id="desk-btn" type="button"'+
-              ((!eq && full) ? ' disabled' : '')+' aria-pressed="'+eq+'">'+
-              esc(eq ? t("desk_take") : t("desk_put"))+'</button>'+
-            ((!eq && full) ? '<p class="insp-note">'+esc(t("desk_full"))+'</p>' : '')+
+            (PICK ? hookPicker(x.id) :
+              '<button class="pbtn desk-btn'+(eq?" eq":"")+'" id="desk-btn" type="button"'+
+                ((!eq && full) ? ' disabled' : '')+' aria-pressed="'+eq+'">'+
+                esc(eq ? t("desk_take") : t("desk_put"))+'</button>'+
+              (eq ? '<button class="pbtn ghost" id="move-btn" type="button">'+
+                    esc(t("desk_move"))+'</button>' : '')+
+              ((!eq && full) ? '<p class="insp-note">'+
+                esc(t("desk_full").replace("{n}", slots()))+'</p>' : ''))+
           '</div>'+
         '</div>'+
       '</div>';
 
     $("insp-x").addEventListener("click", closeInsp);
     $("zoom").addEventListener("click", function(){ ZOOM = !ZOOM; renderInsp(); });
-    $("desk-btn").addEventListener("click", function(){ toggleDesk(x.id); });
+    if(PICK){
+      Array.prototype.forEach.call($("insp-card").querySelectorAll(".hk[data-hook]"),
+        function(b){
+          b.addEventListener("click", function(){ placeAt(x.id, b.getAttribute("data-hook")); });
+        });
+      $("pick-cancel").addEventListener("click", function(){ PICK = false; renderInsp(); });
+    } else {
+      /* Bấm "treo lên" KHÔNG treo ngay — nó mở bảng chọn móc. Treo thẳng vào móc
+         trống đầu tiên rồi bắt trẻ đi đổi lại là đúng thứ tính năng này đang bỏ. */
+      $("desk-btn").addEventListener("click", function(){
+        if(eq) takeDown(x.id); else { PICK = true; renderInsp(); }
+      });
+      if(eq) $("move-btn").addEventListener("click", function(){ PICK = true; renderInsp(); });
+    }
+  }
+
+  /* ---------------- Bảng chọn móc ----------------
+     Hai cột đúng bằng hai vách, mỗi nút là một móc. Móc đang có mẫu KHÁC thì
+     `disabled` — chặn ở chính cái nút chứ không chặn bằng một câu `if`, để trẻ
+     dùng bàn phím cũng biết nó không bấm được (bài học `mission-tree.html`).
+     ⚠️ Chặn hẳn thì phải nói ra lý do: `aria-label`/`title` của nút bận ghi rõ
+        "đã có mẫu khác", không thì nó chỉ là một ô xám vô cớ. */
+  function hookPicker(curId){
+    var sp = AstroQSpecimens;
+    var walls = ["L","R"].map(function(w){
+      var cells = sp.hooksOf(w).map(function(h){
+        var owner = ownerOf(h);
+        var mine = owner === curId;
+        var busy = owner && !mine;
+        var lb = sp.hookName(h, LANG) + " — " +
+                 (busy ? t("hook_busy")
+                       : (mine ? sp.name(curId, LANG) : t("hook_free")));
+        return '<button type="button" class="hk'+(mine?" mine":"")+(busy?" busy":"")+'"'+
+               ' data-hook="'+esc(h)+'"'+(busy?' disabled':'')+
+               ' aria-pressed="'+(mine?"true":"false")+'"'+
+               ' title="'+esc(lb)+'" aria-label="'+esc(lb)+'">'+
+               (owner ? '<span class="hk-sp" aria-hidden="true">'+sp.icon(owner)+'</span>'
+                      : '<span class="hk-n" aria-hidden="true">'+esc(String(h).slice(1))+'</span>')+
+               '</button>';
+      }).join("");
+      return '<div class="hk-wall"><span class="hk-lbl">'+esc(sp.wallName(w, LANG))+
+             '</span>'+cells+'</div>';
+    }).join("");
+    return '<p class="pick-h">'+esc(t("pick_h"))+'</p>'+
+           '<div class="hk-grid">'+walls+'</div>'+
+           '<button class="pbtn ghost" id="pick-cancel" type="button">'+
+           esc(t("pick_cancel"))+'</button>';
   }
 
   /* ---------------- Đặt / lấy mẫu vật khỏi bàn điều khiển ----------------
      Đổi giao diện NGAY rồi mới gọi API (cùng lý do như đổi trang phục ở
      profile.html: chờ mạng xong mới nhấp nháy thì cảm giác như bấm không ăn).
      Server từ chối → trả lại đúng trạng thái cũ + toast, không im lặng. */
-  function toggleDesk(id){
+  function placeAt(id, hook){
     if(saving) return;
-    var was = VIEW.desk.slice();
-    var i = VIEW.desk.indexOf(id);
-    var adding = i === -1;
-
-    if(adding){
-      if(VIEW.desk.length >= slots()){ toast(t("desk_full"), "bad"); return; }
-      VIEW.desk.push(id);
-    } else {
-      VIEW.desk.splice(i, 1);
+    var moving = deskHas(id);
+    if(!moving && VIEW.desk.length >= slots()){
+      toast(t("desk_full").replace("{n}", slots()), "bad"); return;
     }
-    // Cờ `equipped` trong VIEW.items phải đi theo, không thì huy hiệu trên thẻ lệch
-    VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+    // Bỏ mục cũ của chính mẫu này VÀ mục đang chiếm móc đích (nút móc bận vốn đã
+    // `disabled`, đây là lớp chặn thứ hai để không bao giờ có hai mẫu một móc).
+    var next = VIEW.desk.filter(function(d){ return d.id !== id && d.hook !== hook; });
+    next.push({ hook:hook, id:id });
+    saveDesk(next, moving ? "t_move" : "t_put", id, hook);
+  }
+
+  function takeDown(id){
+    if(saving) return;
+    saveDesk(VIEW.desk.filter(function(d){ return d.id !== id; }), "t_take", id, "");
+  }
+
+  function saveDesk(next, kind, id, hook){
+    var was = VIEW.desk;
+    VIEW.desk = next;
+    syncEquipped();
+    PICK = false;
     render();
 
     var name = AstroQSpecimens.name(id, LANG);
+    var hn = hook ? AstroQSpecimens.hookName(hook, LANG) : "";
     saving = true;
-    AstroQProgress.setDesk(VIEW.desk.slice()).then(function(r){
+    AstroQProgress.setDesk(VIEW.desk.map(function(d){
+      return { hook:d.hook, id:d.id };
+    })).then(function(r){
       saving = false;
       if(r && r.ok){
-        // Server là nguồn thật: nhận lại đúng danh sách nó đã lưu
-        VIEW.desk = (r.data && r.data.desk) || VIEW.desk;
-        VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+        // Server là nguồn thật: nhận lại đúng bàn nó đã lưu, kể cả móc nó xếp lại
+        VIEW.desk = readDesk((r && r.data) || {});
+        syncEquipped();
         render();
-        toast(t(adding ? "t_put" : "t_take").replace("{n}", name), "ok");
+        toast(t(kind).replace("{n}", name).replace("{h}", hn), "ok");
       } else {
         VIEW.desk = was;
-        VIEW.items.forEach(function(x){ x.equipped = VIEW.desk.indexOf(x.id) !== -1; });
+        syncEquipped();
         render();
         toast(t("t_err"), "bad");
       }

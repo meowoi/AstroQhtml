@@ -113,15 +113,24 @@ def wipe(uid):
 
 
 def vault(token):
-    """→ (summary, {id: item}, desk)"""
+    """→ (summary, {id: item}, desk, deskHooks)
+
+    `desk` la mang id tran (dang CU, giu cho client con trong cache trinh duyet);
+    `deskHooks` la mang {hook,id} — dang THAT tu 16/08/2026.
+    """
     st, d = call("GET", "/me/specimens", token=token)
     s = (d.get("specimens") or {})
     by_id = {x["id"]: x for x in (s.get("specimens") or [])}
-    return s.get("summary") or {}, by_id, s.get("desk")
+    return s.get("summary") or {}, by_id, s.get("desk"), s.get("deskHooks")
+
+
+def hooks_now(token):
+    """→ [(hook, id), …] cua ban hien tai, doc tu GET."""
+    return [(h["hook"], h["id"]) for h in (vault(token)[3] or [])]
 
 
 def unlocked_ids(token):
-    _, by_id, _ = vault(token)
+    _, by_id, _, _ = vault(token)
     return sorted(k for k, v in by_id.items() if v["unlocked"])
 
 
@@ -157,7 +166,7 @@ def main():
         check("Tao ho so (chua co PROGRESS)", ok, err)
 
         print("\n[3] Tai khoan moi — khong mau vat nao, khong bia so")
-        summary, by_id, desk = vault(token)
+        summary, by_id, desk, dhooks = vault(token)
         # ⚠️ KHONG GAN CUNG SO MAU. Test nay tung doi dung 20 mau va bao hong khi
         #    mau thu 21 duoc them — trong khi khong co gi sai. Hoi DIEU MUON BIET:
         #    "API bao dung bang so mau NO DANG CO", va "bo goc khong bi xoa bot".
@@ -198,7 +207,7 @@ def main():
                              "specimens": ["europa-brine", "neptune-diamond-dust"],
                              "desk": ["europa-brine"], "unlocked": True})
         check("POST /me/progress nhan 200", st == 200, f"{st} {d}")
-        summary, by_id, desk = vault(token)
+        summary, by_id, desk, dhooks = vault(token)
         check("Truong `specimens` gui kem BI BO QUA",
               not by_id["europa-brine"]["unlocked"] and not by_id["neptune-diamond-dust"]["unlocked"])
         check("Truong `desk` gui kem BI BO QUA", desk == [], str(desk))
@@ -211,14 +220,14 @@ def main():
         prog(token, {"type": "game", "game": "dodge", "score": 10, "seconds": 5})
         check("Choi 1 luot -> penguin-feather mo", "penguin-feather" in unlocked_ids(token))
         prog(token, {"type": "planet", "id": "earth"})
-        summary, by_id, _ = vault(token)
+        summary, by_id, _, _ = vault(token)
         check("Ghe Trai Dat -> ancient-seawater mo", by_id["ancient-seawater"]["unlocked"])
         check("Bo dem mau hiem len 1/5", summary.get("rare") == 1, str(summary.get("rare")))
         check("Ghe Trai Dat KHONG mo mau Sao Hoa", not by_id["mars-red-ice"]["unlocked"])
         check("lunar-regolith con khoa khi moi ghe 1 hanh tinh",
               not by_id["lunar-regolith"]["unlocked"])
         prog(token, {"type": "planet", "id": "mars"})
-        summary, by_id, _ = vault(token)
+        summary, by_id, _, _ = vault(token)
         check("Ghe Sao Hoa -> mars-red-ice mo", by_id["mars-red-ice"]["unlocked"])
         check("Du 2 hanh tinh -> lunar-regolith mo", by_id["lunar-regolith"]["unlocked"])
         check("Mau hiem len 3/5", summary.get("rare") == 3, str(summary.get("rare")))
@@ -228,29 +237,118 @@ def main():
         check("`current` khong bao gio vuot `goal`",
               all(v["current"] <= v["goal"] for v in by_id.values()))
         prog(token, {"type": "game", "game": "dodge", "score": 999999, "seconds": 5})
-        _, by_id, _ = vault(token)
+        _, by_id, _, _ = vault(token)
         check("Ky luc 300 diem -> iron-meteorite mo", by_id["iron-meteorite"]["unlocked"])
         check("current da bi kep ve goal", by_id["iron-meteorite"]["current"] == 300,
               str(by_id["iron-meteorite"]["current"]))
         prog(token, {"type": "game", "game": "constellation", "id": "orion",
                      "score": 5, "seconds": 20})
-        _, by_id, _ = vault(token)
+        _, by_id, _, _ = vault(token)
         check("Ghep chom Lap Ho -> orion-stardust mo", by_id["orion-stardust"]["unlocked"])
 
         got = unlocked_ids(token)
         print(f"       (da mo {len(got)} mau: {', '.join(got)})")
 
-        print("\n[7] Ban dieu khien khoang lai")
+        print("\n[7] Ban dieu khien khoang lai — dang CU (id tran)")
+        # ⚠️ DANG CU PHAI CON CHAY. Client nam trong cache trinh duyet van gui len
+        #    mang id tran sau khi deploy; tu choi no la tre bam "treo len" roi nhan
+        #    loi do cho toi khi cache het han. Server tu xep vao moc trong dau tien.
         st, d = call("PUT", "/me/specimens/desk", token=token,
                      body={"desk": ["ancient-seawater"]})
-        check("Dat 1 mau da mo -> 200", st == 200 and d.get("desk") == ["ancient-seawater"],
-              f"{st} {d}")
-        _, by_id, desk = vault(token)
+        check("Dat 1 mau da mo (id tran) -> 200",
+              st == 200 and d.get("desk") == ["ancient-seawater"], f"{st} {d}")
+        check("Server tu gan moc trong dau tien",
+              d.get("deskHooks") == [{"hook": "L1", "id": "ancient-seawater"}],
+              str(d.get("deskHooks")))
+        check("Tra kem danh sach moc de client khoi doan",
+              isinstance(d.get("hooks"), list) and len(d["hooks"]) > 3, str(d.get("hooks")))
+        _, by_id, desk, dhooks = vault(token)
         check("GET tra dung desk + co ban do `equipped`",
               desk == ["ancient-seawater"] and by_id["ancient-seawater"]["equipped"], str(desk))
+        check("GET tra kem deskHooks", dhooks == [{"hook": "L1", "id": "ancient-seawater"}],
+              str(dhooks))
         check("Mau khac khong bi danh dau equipped",
               not by_id["amazon-leaf"]["equipped"])
 
+        print("\n[7b] Tre TU CHON MOC")
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "R3", "id": "ancient-seawater"}]})
+        check("Treo vao dung moc da chon -> 200",
+              st == 200 and d.get("deskHooks") == [{"hook": "R3", "id": "ancient-seawater"}],
+              f"{st} {d.get('deskHooks')}")
+        check("Moc GIU NGUYEN qua GET (khong bi xep lai tu dau)",
+              hooks_now(token) == [("R3", "ancient-seawater")], str(hooks_now(token)))
+        check("Truong `desk` cu van tra id tran cho client cu",
+              vault(token)[2] == ["ancient-seawater"], str(vault(token)[2]))
+
+        # Doi moc = viec rieng, khong phai go xuong roi treo lai.
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "L4", "id": "ancient-seawater"}]})
+        check("Doi sang moc khac -> 200 + moc moi",
+              st == 200 and hooks_now(token) == [("L4", "ancient-seawater")],
+              str(hooks_now(token)))
+
+        # Chu thuong: server chuan hoa ve chu hoa. Khong chuan hoa thi "l4" thanh mot
+        # moc la va bi tu choi, trong khi tre khong lam gi sai.
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "l4", "id": "ancient-seawater"}]})
+        check("Moc viet thuong duoc chuan hoa -> 200",
+              st == 200 and hooks_now(token) == [("L4", "ancient-seawater")],
+              f"{st} {hooks_now(token)}")
+
+        # ⚠️ PHEP KIEM QUAN TRONG NHAT CUA CA LUOT: kieu thuoc tinh trong DynamoDB
+        #    KHONG DOI (van la danh sach chuoi), chi doi noi dung tung chuoi. Do la
+        #    ly do `DynamoContext` khong phai sua mot dong nao va khong can migration.
+        row = next((r for r in rows(uid) if r["SK"]["S"] == "PROGRESS"), None)
+        stored = [x.get("S") for x in ((row or {}).get("desk") or {}).get("L", [])]
+        check('DB luu dang chuoi "<moc>:<id>", kieu thuoc tinh giu nguyen',
+              stored == ["L4:ancient-seawater"], str(stored))
+
+        # ── Ban ghi CU trong DB (id tran, chua co moc) — doc duoc, 0 migration ──
+        aws("dynamodb", "update-item", "--table-name", TABLE,
+            "--key", json.dumps({"PK": {"S": f"USER#{uid}"}, "SK": {"S": "PROGRESS"}}),
+            "--update-expression", "SET #d = :d",
+            "--expression-attribute-names", json.dumps({"#d": "desk"}),
+            "--expression-attribute-values",
+            json.dumps({":d": {"L": [{"S": "amazon-leaf"}, {"S": "ancient-seawater"}]}}))
+        check("Ban ghi CU (id tran) van doc duoc, gan moc theo dung thu tu cu",
+              hooks_now(token) == [("L1", "amazon-leaf"), ("L2", "ancient-seawater")],
+              str(hooks_now(token)))
+        # Dat lai de cac phep kiem duoi co moc so sanh da biet
+        call("PUT", "/me/specimens/desk", token=token,
+             body={"desk": [{"hook": "L4", "id": "ancient-seawater"}]})
+
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "Z9", "id": "ancient-seawater"}]})
+        check("Moc KHONG CO THAT -> 400 bad-specimen",
+              st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
+        check("Ban giu nguyen sau khi bi tu choi moc la",
+              hooks_now(token) == [("L4", "ancient-seawater")], str(hooks_now(token)))
+
+        two = got[:2]
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "L2", "id": two[0]},
+                                    {"hook": "L2", "id": two[1]}]})
+        check("HAI mau CUNG MOT MOC -> 400", st == 400 and d.get("code") == "bad-specimen",
+              f"{st} {d}")
+        check("Ban giu nguyen sau khi bi tu choi moc trung",
+              hooks_now(token) == [("L4", "ancient-seawater")], str(hooks_now(token)))
+
+        # Tron hai dang trong CUNG mot mang: mot phan tu co moc, mot phan tu id tran.
+        st, d = call("PUT", "/me/specimens/desk", token=token,
+                     body={"desk": [{"hook": "R5", "id": two[0]}, two[1]]})
+        check("Tron hai dang -> 200, phan tu thieu moc xuong moc trong dau tien",
+              st == 200 and sorted(hooks_now(token)) == sorted([("R5", two[0]), ("L1", two[1])]),
+              f"{st} {hooks_now(token)}")
+
+        st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": [123]})
+        check("Phan tu sai kieu (so) -> 400", st == 400 and d.get("code") == "bad-specimen",
+              f"{st} {d}")
+
+        print("\n[7c] Tu choi mau vat khong hop le")
+        # Dat lai moc so sanh: khoi [7b] vua doi ban, ma cac phep kiem duoi day do
+        # "ban CO GIU NGUYEN sau khi bi tu choi" nen can mot trang thai da biet.
+        call("PUT", "/me/specimens/desk", token=token, body={"desk": ["ancient-seawater"]})
         st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": ["europa-brine"]})
         check("Dat mau CHUA MO KHOA -> 400 bad-specimen",
               st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
@@ -281,7 +379,7 @@ def main():
 
         st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": []})
         check("Don sach ban -> 200 + desk rong", st == 200 and d.get("desk") == [], f"{st} {d}")
-        _, by_id, desk = vault(token)
+        _, by_id, desk, dhooks = vault(token)
         check("Khong con mau nao equipped",
               desk == [] and not any(v["equipped"] for v in by_id.values()))
 

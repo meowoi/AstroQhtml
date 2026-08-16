@@ -68,14 +68,18 @@ def fake_payload(unlocked_ids, desk):
     for s in CAT:
         on = s["id"] in unlocked_ids
         items.append(dict(s, current=s["goal"] if on else 0,
-                          unlocked=on, equipped=s["id"] in desk))
+                          unlocked=on, equipped=s["id"] in {d["id"] for d in desk}))
     rare_total = sum(1 for s in CAT if s["rarity"] in ("rare", "legendary"))
     rare_got = sum(1 for s in CAT if s["rarity"] in ("rare", "legendary") and s["id"] in unlocked_ids)
     return {
         "specimens": {
             "summary": {"collected": len(unlocked_ids), "total": len(CAT),
                         "rare": rare_got, "rareTotal": rare_total, "deskSlots": 3},
-            "desk": desk,
+            # `desk` = dang CU (id tran) van tra ve cho client con trong cache;
+            # `deskHooks` la dang THAT tu 16/08/2026. Ban gia phai tra CA HAI de
+            # no giong het server that — tra thieu la do mot thu khong ton tai.
+            "desk": [d["id"] for d in desk],
+            "deskHooks": [dict(d) for d in desk],
             "specimens": items,
         },
         "wallet": {"meteors": 42},
@@ -93,11 +97,15 @@ STUB = """
     postProgress: async () => ({ ok: true, data: {} }),
     getWallet:    async () => ({ ok: true, data: { meteors: 42 } }),
     getSpecimens: async () => ({ ok: true, data: window.__payload }),
-    setSpecimenDesk: async (ids) => {
-      window.__deskCalls.push(ids.slice());
+    setSpecimenDesk: async (items) => {
+      // Luu nguyen ca {hook,id} — rut ra mang id la bo mat chinh thu dang do.
+      window.__deskCalls.push(items.map(x => ({ hook: x.hook, id: x.id })));
       if (window.__rejectDesk) return { ok: false, reason: "http", code: "bad-specimen" };
-      window.__payload.specimens.desk = ids.slice();
-      return { ok: true, data: { desk: ids.slice(), slots: 3 } };
+      window.__payload.specimens.desk = items.map(x => x.id);
+      window.__payload.specimens.deskHooks = items.map(x => ({ hook: x.hook, id: x.id }));
+      return { ok: true, data: { desk: items.map(x => x.id),
+                                 deskHooks: items.map(x => ({ hook: x.hook, id: x.id })),
+                                 slots: 3 } };
     }
   };
   window.__payload = payload;
@@ -269,20 +277,66 @@ def main():
                   abs(pg.eval_on_selector(".scope .sp",
                       "e => parseFloat(getComputedStyle(e).fontSize)") - sp0) < 1)
 
-            # ---------- [7] Bàn điều khiển ----------
-            print("\n[7] Ban dieu khien khoang lai")
-            name0 = pg.inner_text("#insp-name").strip()
+            # ---------- [7] Treo len vach: TRE tu chon moc ----------
+            print("\n[7] Treo len vach — tre TU CHON moc")
+            id0 = pg.locator(".pod.on").first.get_attribute("data-id")
             pg.click("#desk-btn")
+            pg.wait_for_timeout(400)
+            # Bam "treo len" ma LUU NGAY la dung thu tinh nang nay bo di. Kiem CA HAI
+            # ve: bang chon hien ra VA chua co loi goi nao len server.
+            check("Bam 'treo len' KHONG luu ngay, ma mo bang chon moc",
+                  pg.locator(".hk-grid").count() == 1
+                  and pg.evaluate("() => window.__deskCalls.length") == 0,
+                  str(pg.evaluate("() => window.__deskCalls")))
+            check("Bang chon du 10 moc, chia hai vach",
+                  pg.locator(".hk").count() == 10 and pg.locator(".hk-wall").count() == 2,
+                  "%d moc / %d vach" % (pg.locator(".hk").count(),
+                                        pg.locator(".hk-wall").count()))
+            check("Moi moc >=48px (WCAG 2.5.5 + bien an toan)",
+                  pg.eval_on_selector_all(
+                      ".hk", "es => es.every(e => e.getBoundingClientRect().height >= 47.5)"))
+            pg.click('.hk[data-hook="R3"]')
             pg.wait_for_timeout(700)
             calls = pg.evaluate("() => window.__deskCalls")
-            check("Goi PUT desk dung 1 lan voi 1 id", len(calls) == 1 and len(calls[0]) == 1,
-                  str(calls))
+            check("Goi PUT dung 1 lan, KEM moc tre da chon",
+                  calls == [[{"hook": "R3", "id": id0}]], str(calls))
             check("Ban dieu khien len 1/3", pg.inner_text("#desk-v") == "1/3",
                   pg.inner_text("#desk-v"))
-            check("Ke bay 1 cho da day", pg.locator(".slot.full").count() == 1)
+            check("Ban do vach: dung 1 moc co mau vat", pg.locator(".slot.full").count() == 1)
+            # Ban do phai ve DU 10 o. Chi ve cho da treo thi no khong tra loi duoc cau
+            # "con treo duoc o dau", ma do la ca ly do bang nay ton tai.
+            check("Ban do vach ve du 10 moc / 2 vach",
+                  pg.locator("#shelf .slot").count() == 10
+                  and pg.locator("#shelf .wm-wall").count() == 2,
+                  "%d o / %d vach" % (pg.locator("#shelf .slot").count(),
+                                      pg.locator("#shelf .wm-wall").count()))
+            full_at = ("w => [...w.querySelectorAll('.slot')]"
+                       ".findIndex(s => s.classList.contains('full'))")
+            check("Mau vat nam o VACH PHAI, dung o thu 3",
+                  pg.eval_on_selector("#shelf .wm-wall:nth-child(2)", full_at) == 2,
+                  str(pg.eval_on_selector("#shelf .wm-wall:nth-child(2)", full_at)))
             check("Nut doi thanh 'lay xuong'",
                   pg.get_attribute("#desk-btn", "aria-pressed") == "true")
-            check("Toast bao da dat len ban", pg.is_visible("#toast.show"))
+            check("Toast bao da treo len", pg.is_visible("#toast.show"))
+
+            print("\n[7b] Doi moc")
+            check("Da treo roi thi co nut 'doi moc'", pg.is_visible("#move-btn"))
+            pg.click("#move-btn")
+            pg.wait_for_timeout(350)
+            check("Moc dang treo duoc danh dau la CUA MINH",
+                  pg.locator(".hk.mine").count() == 1
+                  and pg.get_attribute('.hk[data-hook="R3"]', "aria-pressed") == "true",
+                  str(pg.locator(".hk.mine").count()))
+            pg.click('.hk[data-hook="L2"]')
+            pg.wait_for_timeout(700)
+            calls = pg.evaluate("() => window.__deskCalls")
+            check("Doi moc -> PUT lan 2 voi moc MOI",
+                  len(calls) == 2 and calls[1] == [{"hook": "L2", "id": id0}], str(calls[-1:]))
+            check("Van la 1/3 (doi cho chu khong phai them mau)",
+                  pg.inner_text("#desk-v") == "1/3", pg.inner_text("#desk-v"))
+            check("Ban do: nay o VACH TRAI, o thu 2",
+                  pg.eval_on_selector("#shelf .wm-wall:nth-child(1)", full_at) == 1,
+                  str(pg.eval_on_selector("#shelf .wm-wall:nth-child(1)", full_at)))
             pg.keyboard.press("Escape")
             pg.wait_for_timeout(350)
             check("Escape dong modal", not pg.is_visible("#insp.show"))
@@ -291,10 +345,19 @@ def main():
                   pg.evaluate("() => document.activeElement.classList.contains('pod')"))
 
             # đầy 3 chỗ
-            for i in (1, 2):
+            for i, hk in ((1, "L5"), (2, "R1")):
                 pg.locator(".pod.on").nth(i).click()
                 pg.wait_for_selector("#insp.show")
                 pg.click("#desk-btn")
+                pg.wait_for_timeout(300)
+                # Moc dang co mau KHAC phai bi chan o CHINH CAI NUT, khong chan bang
+                # mot cau `if` — chan bang `if` thi nut van nhan tieu diem ban phim va
+                # van bao voi trinh doc man hinh rang no bam duoc.
+                check("Moc da co mau khac thi khong bam duoc (buoc %s)" % hk,
+                      pg.get_attribute('.hk[data-hook="L2"]', "disabled") is not None
+                      and "busy" in (pg.get_attribute('.hk[data-hook="L2"]', "class") or ""),
+                      str(pg.get_attribute('.hk[data-hook="L2"]', "class")))
+                pg.click('.hk[data-hook="%s"]' % hk)
                 pg.wait_for_timeout(600)
                 pg.keyboard.press("Escape")
                 pg.wait_for_timeout(300)
@@ -303,8 +366,11 @@ def main():
             pg.wait_for_selector("#insp.show")
             check("Ban day -> nut bi vo hieu", pg.get_attribute("#desk-btn", "disabled") is not None)
             check("Ban day -> co cau giai thich", pg.is_visible(".insp-note"))
-            check("KHONG im lang: cau noi ro ban da day",
-                  "đầy" in pg.inner_text(".insp-note").lower(), pg.inner_text(".insp-note"))
+            note = pg.inner_text(".insp-note").lower()
+            check("KHONG im lang: cau noi ro het cho VA phai lam gi",
+                  ("đầy" in note or "đủ" in note) and "lấy" in note, note)
+            check("Cau do neu dung so cho lay tu server (khong gan cung)",
+                  "3" in note, note)
             pg.keyboard.press("Escape")
             pg.wait_for_timeout(300)
 
@@ -343,8 +409,8 @@ def main():
             pg.locator(".pod.on").first.click()
             pg.wait_for_selector("#insp.show")
             btn_en = pg.inner_text("#desk-btn")
-            check("Modal EN: nut ban dieu khien dich dung (dat len HOAC lay xuong)",
-                  ("Cockpit Desk" in btn_en or "On the desk" in btn_en)
+            check("Modal EN: nut treo/lay xuong dich dung",
+                  ("cockpit wall" in btn_en.lower() or "hanging" in btn_en.lower())
                   and not re.search(r"[ăâđêôơư]", btn_en), btn_en)
             check("Modal EN: fun fact dich dung",
                   not re.search(r"[ăâđêôơư]", pg.inner_text(".box.fact")),
@@ -356,7 +422,7 @@ def main():
 
             # ---------- [10] Điện thoại 390x844 ----------
             print("\n[10] Dien thoai 390x844")
-            pg = open_page(390, 844, stub=fake_payload(unlocked, [unlocked[0]]))
+            pg = open_page(390, 844, stub=fake_payload(unlocked, [{"hook": "R2", "id": unlocked[0]}]))
             pg.wait_for_selector(".pod.on", timeout=8000)
             sw = pg.evaluate("() => document.documentElement.scrollWidth")
             check("Khong tran ngang", sw <= 391, f"scrollWidth={sw}")

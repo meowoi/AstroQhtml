@@ -229,13 +229,54 @@
   box-shadow:none;}
 .insp-note{font-size:11.5px;line-height:1.5;color:#ffd7a6;text-align:center;margin:0;}
 
-/* ============ KỆ BÀN ĐIỀU KHIỂN ============ */
-.shelf{display:flex;flex-wrap:wrap;gap:9px;}
-.slot{display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border-radius:14px;
-  border:1px solid var(--brd);background:rgba(15,23,42,.5);font-size:12.8px;color:var(--ink-faint);}
-.slot.full{border-color:rgba(192,132,252,.45);background:rgba(46,20,72,.3);color:var(--ink);}
-.slot .sp{font-size:19px;line-height:1;filter:drop-shadow(0 0 8px rgba(192,132,252,.65));}
+/* ============ BẢN ĐỒ HAI VÁCH KHOANG LÁI ============
+   Từ 16/08/2026 đây không còn là "ba chỗ trưng" mà là bản đồ chỗ treo THẬT: hai
+   cột đúng bằng hai vách, mỗi cột 5 móc theo đúng thứ tự trên→dưới mà
+   `css/dashboard.css` vẽ ra. Trẻ nhìn bảng này là biết còn treo được ở đâu.
+   ⚠️ MÓC TRỐNG VẪN VẼ RA Ở ĐÂY — khác hẳn buồng lái (chỉ vẽ MỘT móc nét đứt mời
+      gọi). Ở buồng lái chúng là trang trí nên chín vòng rỗng đọc ra như lỗi vẽ;
+      ở đây chúng LÀ nội dung, bỏ đi thì bảng không trả lời được câu "treo ở đâu". */
+.shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+@media (max-width:620px){ .shelf{grid-template-columns:1fr;} }
+.wm-wall{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.wm-lbl{font-family:var(--font-display);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-faint);}
+.slot{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:14px;
+  border:1px solid var(--brd);background:rgba(15,23,42,.5);font-size:12.8px;
+  color:var(--ink-faint);text-align:left;min-width:0;
+  /* 48px chứ không 44 — 44 là mốc TỐI THIỂU của WCAG 2.5.5, đặt đúng mốc là không
+     còn biên an toàn nào (quy tắc 10 mục 6 của CLAUDE.md). */
+  min-height:48px;}
+.slot.full{border-color:rgba(192,132,252,.45);background:rgba(46,20,72,.3);color:var(--ink);
+  font-family:inherit;font-size:12.8px;cursor:pointer;width:100%;
+  transition:border-color .2s,background .2s,transform .2s var(--jelly);}
+.slot.full:hover{border-color:rgba(192,132,252,.8);background:rgba(46,20,72,.5);}
+.slot.full:active{transform:scale(.98);}
+.slot .sp{font-size:19px;line-height:1;flex:none;
+  filter:drop-shadow(0 0 8px rgba(192,132,252,.65));}
 .slot.empty .sp{filter:none;opacity:.35;}
+
+/* ============ BẢNG CHỌN MÓC (trong màn soi) ============
+   ⚠️ Móc đang có mẫu KHÁC thì `disabled` ở chính cái nút, không chặn bằng một câu
+      `if`: chặn bằng `if` thì nút vẫn nhận tiêu điểm bàn phím và vẫn báo với trình
+      đọc màn hình rằng nó bấm được (bài học `mission-tree.html`). */
+.pick-h{font-size:12.5px;color:var(--ink-soft);text-align:center;margin:0 0 2px;}
+.hk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.hk-wall{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.hk-lbl{font-family:var(--font-display);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);text-align:center;}
+.hk{width:100%;min-height:48px;border-radius:12px;
+  border:1px dashed rgba(150,180,255,.32);background:rgba(15,23,42,.45);
+  color:var(--ink-faint);cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,background .2s,transform .2s var(--jelly);}
+.hk:hover:not(:disabled){border-color:rgba(192,132,252,.8);background:rgba(46,20,72,.42);}
+.hk:active:not(:disabled){transform:scale(.97);}
+/* Móc đang treo CHÍNH mẫu vật đang soi — xanh lá, cùng tông với nút "đang treo". */
+.hk.mine{border-style:solid;border-color:rgba(74,222,128,.6);background:rgba(10,32,24,.5);}
+.hk.busy{border-style:solid;border-color:var(--brd);opacity:.5;cursor:not-allowed;}
+.hk-sp{font-size:20px;line-height:1;}
+.hk-n{font-family:var(--font-display);font-size:12px;letter-spacing:.08em;}
 
 .foot-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;justify-content:center;}
 

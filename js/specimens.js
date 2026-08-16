@@ -357,9 +357,45 @@
     return (lang === "en" ? obj.en : obj.vi) || obj.vi || "";
   }
 
+  /* ─────────────────── MÓC TREO TRÊN VÁCH KHOANG LÁI ───────────────────
+     Chỗ DUY NHẤT ở client khai danh sách móc — `dashboard.html` (vẽ ra buồng lái)
+     và `specimen-vault.html` (cho trẻ chọn) đều đọc ở đây. Khai hai bản là hai nơi
+     nói hai bộ móc, mà server chỉ nhận một bộ.
+
+     ⚠️ PHẢI KHỚP `Specimens.Hooks` Ở SERVER — server mới là bên quyết định giá trị
+        nào ghi được vào DB. `check_pages.py` mục [11] đối chiếu hai bên; lệch thì
+        trẻ chọn được một móc rồi nhận lỗi đỏ, hoặc ngược lại.
+     ⚠️ THỨ TỰ TRONG MẢNG LÀ THỨ TỰ TỪ TRÊN XUỐNG của mỗi vách — `css/dashboard.css`
+        xếp chúng bằng flex theo đúng thứ tự này, không gán toạ độ cho từng móc.
+        Đảo thứ tự ở đây là đảo chỗ treo của mọi mẫu vật đã lưu. */
+  var HOOKS = ["L1", "L2", "L3", "L4", "L5", "R1", "R2", "R3", "R4", "R5"];
+  var WALL_NAME = {
+    L: { vi: "Vách trái", en: "Left wall" },
+    R: { vi: "Vách phải", en: "Right wall" }
+  };
+
   global.AstroQSpecimens = {
     /** Mẫu vật server có mà đây chưa có tên → trả chính id (trang không vỡ). */
     name: function (id, lang) { var d = pick(id, lang); return d ? d.n : id; },
+
+    /** Danh sách móc, thứ tự trên→dưới của vách trái rồi vách phải. */
+    hooks: function () { return HOOKS.slice(); },
+    /** Móc của một vách: "L" hoặc "R". */
+    hooksOf: function (wall) {
+      return HOOKS.filter(function (h) { return h.charAt(0) === wall; });
+    },
+    isHook: function (h) { return HOOKS.indexOf(h) !== -1; },
+    /** "L" → "Vách trái". Nhận cả "L2" (lấy chữ đầu) cho tiện chỗ gọi. */
+    wallName: function (w, lang) {
+      var x = WALL_NAME[String(w || "").charAt(0)];
+      return x ? (lang === "en" ? x.en : x.vi) : String(w || "");
+    },
+    /** "L2" → "Vách trái · Móc 2" — dùng cho `aria-label`, không vẽ ra mặt tranh. */
+    hookName: function (h, lang) {
+      if (!WALL_NAME[String(h || "").charAt(0)]) return String(h || "");
+      return this.wallName(h, lang) + " · " +
+             (lang === "en" ? "Hook " : "Móc ") + String(h).slice(1);
+    },
     icon: function (id) { return (S[id] && S[id].ic) || "🧪"; },
     classification: function (id) { return (S[id] && S[id].cls) || ""; },
     fact: function (id, lang) { return S[id] ? bi(S[id].f, lang) : ""; },

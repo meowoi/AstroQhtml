@@ -403,11 +403,14 @@ const AstroQAuth = {
     return r.ok ? { ok:true, data:r.data } : r;
   },
 
-  /** Đặt mẫu vật lên bàn điều khiển khoang lái. `ids` = mảng id, tối đa 3.
-      Gửi mẫu chưa mở khoá / trùng / quá 3 → { ok:false, code:"bad-specimen", rejected }. */
-  async setSpecimenDesk(ids){
+  /** Treo mẫu vật lên móc ở vách khoang lái. `items` = mảng `{hook, id}`, tối đa 3.
+      Gửi mẫu chưa mở khoá / trùng / móc lạ / móc đã có mẫu khác / quá 3
+      → { ok:false, code:"bad-specimen", rejected }.
+      ⚠️ Gửi nguyên object chứ không rút ra mảng id: móc là thứ TRẺ chọn, rút mất
+         thì server tự xếp lại từ đầu và mọi mẫu vật nhảy chỗ sau mỗi lần lưu. */
+  async setSpecimenDesk(items){
     const r = await this._authed(t =>
-      apiPutAuth("/me/specimens/desk", { desk: Array.isArray(ids) ? ids : [] }, t));
+      apiPutAuth("/me/specimens/desk", { desk: Array.isArray(items) ? items : [] }, t));
     if(r.ok) return { ok:true, data:r.data };
     return Object.assign({}, r, { rejected: r.data && r.data.rejected });
   },
