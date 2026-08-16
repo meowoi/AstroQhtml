@@ -72,6 +72,7 @@ PAGES = [
     "game-survival.html",
     "game-comms.html",
     "game-recycle.html",
+    "game-units.html",
     "explorer.html", "mission-earth.html", "mission-orbit.html",
 ]
 

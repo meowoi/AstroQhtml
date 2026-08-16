@@ -376,6 +376,16 @@
             '<ellipse cx="39" cy="12" rx="9" ry="5" transform="rotate(-26 39 12)"/>',
       line: '<path d="M11.5 22v20M52.5 22v20M4 32h15M45 32h15M25 32h14M34 24l3-7"/>',
       lite: '<path d="M22 27h7v3h-7Z"/>' + spark(53, 48, 4.5) + dust(9, 51, 1.2)
+    },
+
+    /* ⚠️ Vach chia PHAI dai ngan xen ke va toa ra tu MOT canh. Ke deu tap tap thi
+          o co nho no doc ra thanh cai thang; xen ke moi ra cai thuoc. Cung ho voi
+          bai hoc `rock` (hai net song song doc thanh chu so "17"). */
+    ruler: { /* 📏 Tram Doi Chieu (ARCADE-10) — chuong trinh Kiem chung du lieu */
+      body: '<path d="M56 19 45 8 8 45l11 11Z"/>',
+      line: '<path d="M38.8 14.2 44.5 19.9M32.7 20.3 36.2 23.8M26.5 26.5 32.2 32.2' +
+            'M20.3 32.7 23.8 36.2M14.2 38.8 19.9 44.5"/>',
+      lite: '<path d="M45 8 34 19l3 3L48 11Z"/>' + spark(14, 15, 5) + dust(52, 47, 1.3)
     }
   };
 

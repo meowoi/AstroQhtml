@@ -1,0 +1,111 @@
+/* ARCADE-10 Trạm Đối Chiếu — phần RIÊNG. Nạp sau css/decision-game.css.
+   Khuôn: SOI MỘT BẢNG DỮ LIỆU RỒI ĐÁNH DẤU CHỖ SAI. Nó cần hai thứ mà ba game
+   lớp quyết định trước không có: một BẢNG hai cột đọc so được với nhau, và một
+   dấu bật/tắt trên từng hàng.
+   ⚠️ Để ở đây chứ không nhét vào file dùng chung — hôm nay chỉ một game dùng, mà
+      nhét vào chung là mời game sau dùng lại khuôn này (`docs/decisions/002`). */
+
+/* ── Bảng ────────────────────────────────────────────────────────────────── */
+/* ⚠️ HÀNG TIÊU ĐỀ VÀ HÀNG DỮ LIỆU DÙNG CHUNG MỘT `grid-template-columns`. Khai
+   rời hai bộ là hai cột trôi khỏi nhau ở một khổ màn nào đó, và lúc đó bảng nói
+   sai: con số nằm dưới nhãn của cột KIA. Sửa cột thì sửa cả hai chỗ. */
+.uc-grid{--uc-cols:26px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr);}
+
+.uc-head{display:grid;grid-template-columns:var(--uc-cols);gap:8px;
+  padding:0 10px 6px;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);}
+.uc-head span:nth-child(3),.uc-head span:nth-child(4){text-align:center;}
+
+.uc-rows{display:flex;flex-direction:column;gap:7px;}
+
+/* Cả hàng là NÚT — vùng chạm bằng đúng thứ mắt đọc. Bấm vào một chỗ nhỏ xíu bên
+   trái để đánh dấu cả một hàng là chỗ trẻ bấm trượt rồi tưởng mình bấm sai. */
+.uc-row{display:grid;grid-template-columns:var(--uc-cols);gap:8px;align-items:center;
+  width:100%;text-align:left;min-height:48px;padding:8px 10px;border-radius:12px;
+  border:1px solid rgba(120,160,255,.2);background:rgba(15,23,42,.55);
+  color:var(--ink);font:inherit;cursor:pointer;
+  transition:border-color .18s,background .18s,transform .16s var(--jelly);}
+.uc-row:hover:not(:disabled){border-color:rgba(56,189,248,.55);}
+.uc-row:active:not(:disabled){transform:scale(.995);}
+.uc-row:disabled{cursor:default;}
+
+.uc-flag{width:22px;height:22px;border-radius:7px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(120,160,255,.35);background:rgba(9,14,34,.7);
+  font-size:12px;line-height:1;color:transparent;transition:color .16s,border-color .16s,background .16s;}
+.uc-row[aria-pressed="true"]{border-color:rgba(251,191,36,.75);background:rgba(60,42,10,.5);}
+.uc-row[aria-pressed="true"] .uc-flag{color:#ffd7a6;border-color:rgba(251,191,36,.8);
+  background:rgba(251,191,36,.18);}
+
+.uc-nm{min-width:0;font-size:12.4px;line-height:1.3;font-weight:600;}
+
+/* ⚠️ `tabular-nums` + không `nowrap`: số phải xếp thẳng cột để mắt so được hai
+   bên, nhưng "4,25 năm ánh sáng" thì PHẢI được xuống dòng. Cắt bằng ellipsis ở
+   đây là giấu đúng thứ trẻ cần đọc để phán — audit_viewports canh chuyện đó. */
+.uc-v{min-width:0;text-align:center;font-family:var(--font-display);font-weight:700;
+  font-size:12.6px;line-height:1.25;font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere;}
+
+/* ── Sau khi duyệt ───────────────────────────────────────────────────────── */
+/* ⚠️ KHÔNG TÔ ĐỎ. Đây là màn học, và ba trong bốn trạng thái nói về việc trẻ vừa
+   làm chứ không về một hỏng hóc của hệ thống — đỏ ở đó đọc ra thành "em sai rồi".
+   Cùng nguyên tắc `.sum-note` ở quiz và cột "cần luyện thêm" ở trang phụ huynh. */
+/* ⚠️ `miss` VÀ `wrong` LÀ HAI LỖI NGƯỢC NHAU — phải tách nhau ra bằng thứ KHÁC
+   ngoài màu. Bản đầu cho cả hai cùng tông hổ phách và cùng cái cờ, render ra thì
+   không phân biệt được, tức trẻ biết mình sai mà không biết sai kiểu gì. Nay:
+   dấu khác nhau (`!` vs `⚑`, đặt trong JS), nhãn chữ khác nhau, và ô dấu của
+   `wrong` để RỖNG ruột — nó nói "bạn có đánh dấu, nhưng hàng này không sai". */
+.uc-row.hit  {border-color:rgba(74,222,128,.6);background:rgba(12,44,28,.5);}
+.uc-row.hit   .uc-flag{color:#b9f6d0;border-color:rgba(74,222,128,.7);background:rgba(74,222,128,.18);}
+.uc-row.miss {border-color:rgba(251,191,36,.75);background:rgba(60,42,10,.55);}
+.uc-row.miss  .uc-flag{color:#0b1020;border-color:rgba(251,191,36,.9);
+  background:rgba(251,191,36,.9);font-weight:800;}
+.uc-row.wrong{border-color:rgba(251,191,36,.4);background:rgba(46,36,14,.34);}
+.uc-row.wrong .uc-flag{color:#ffd7a6;border-style:dashed;background:transparent;}
+.uc-row.fine {opacity:.72;}
+
+/* Nhãn chữ mở đầu lời giải thích — chỗ nói THẲNG trẻ vừa làm gì, thay vì để
+   nó tự suy ra từ màu. */
+.uc-st{font-weight:700;}
+.uc-st.hit{color:#b9f6d0;} .uc-st.miss,.uc-st.wrong{color:#ffd7a6;}
+
+/* Lời giải thích trải hết bề rộng hàng — nó là chỗ bài học nằm, không phải chú
+   thích bên lề. ⚠️ MỌI hàng đều có một câu, kể cả hàng đúng: bỏ trống hàng đúng
+   là trẻ phán đúng mà không biết vì sao mình đúng (bài học của ARCADE-07). */
+.uc-why{grid-column:1/-1;margin-top:4px;padding-top:6px;font-size:11.8px;line-height:1.5;
+  color:var(--ink-soft);border-top:1px dashed rgba(120,160,255,.22);}
+.uc-why b{color:#e9d7ff;}
+.uc-row.hit  .uc-why{color:#cfe9d8;}
+.uc-row.miss .uc-why,.uc-row.wrong .uc-why{color:#f0dcc0;}
+
+/* ── Nhãn kết quả một bảng ───────────────────────────────────────────────── */
+.uc-verdict{flex:none;border-radius:12px;padding:9px 12px;font-size:12.3px;line-height:1.55;
+  border:1px solid rgba(120,160,255,.2);background:rgba(13,20,48,.7);color:var(--ink-soft);}
+.uc-verdict b{color:#e9d7ff;}
+.uc-verdict.pass{border-color:rgba(74,222,128,.45);}
+.uc-verdict.fail{border-color:rgba(251,191,36,.45);}
+
+/* ⚠️ NHÃN "MÔ PHỎNG" KHÔNG ĐƯỢC BỎ ĐI CHO GỌN. 26 hàng số liệu ở đây là bảng
+   DỰNG RA để chơi — NASA không công bố bảng nào như thế. Thứ CÓ nguồn là bài
+   học (vụ Mars Climate Orbiter 1999) và nó nằm ở lời brief cùng các câu giải
+   thích. Cùng bài học nhãn "MINH HOẠ" của 5 mốc thời gian ở Nhiệm vụ 01, nhãn
+   "MÔ PHỎNG" của ảnh màu giả ở Nhiệm vụ 02 và của ba vạch ở ARCADE-09. */
+.uc-sim{flex:none;text-align:center;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:0;}
+
+@media (max-width:560px){
+  .uc-grid{--uc-cols:22px minmax(0,1fr);}
+  /* Màn hẹp: tên hàng chiếm hết một dòng, hai giá trị xuống dòng dưới thành hai
+     cột — vẫn cạnh nhau, vì cả bài tập là SO HAI BÊN. Xếp chồng dọc là mất chỗ
+     dựa để so. */
+  .uc-head{display:none;}
+  .uc-vals{grid-column:2/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .uc-vals .uc-v{padding:4px 6px;border-radius:8px;background:rgba(9,14,34,.55);}
+  .uc-vals .uc-v i{display:block;font-style:normal;font-family:var(--font-mono);
+    font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+    margin-bottom:2px;font-weight:400;}
+}
+@media (min-width:561px){
+  .uc-vals{display:contents;}
+  .uc-vals .uc-v i{display:none;}
+}

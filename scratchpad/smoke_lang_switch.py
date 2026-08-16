@@ -67,6 +67,7 @@ PAGES = [
     ("game-survival.html", None,              None),
     ("game-comms.html",    None,              None),
     ("game-recycle.html",  None,              None),
+    ("game-units.html",    None,              None),
     ("game-maze.html",     None,              None),
     ("game-racer.html",    None,              None),
     ("explorer.html",      "#deck-title",     None),

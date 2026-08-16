@@ -79,6 +79,10 @@
    phân biệt chương trình, còn `--neon` của thẻ chỉ có 6 tông dễ phân biệt và
    hai thẻ này không bao giờ đứng cạnh nhau trong lưới (sort theo trạng thái). */
 .card--recycle{--neon:rgba(52,211,153,.42);--neonS:rgba(52,211,153,.95);--ic-bg:rgba(52,211,153,.18);}
+/* ARCADE-10 Trạm Đối Chiếu — chương trình Kiểm chứng dữ liệu. Vàng hổ phách,
+   cùng tông với 📏 của bài đọc nguồn. Dùng chung `sic--gold` với Ghép Chòm Sao
+   là chấp nhận được (xem ghi chú `.card--recycle` ngay trên). */
+.card--units  {--neon:rgba(255,207,107,.42);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.18);}
 
 /* ============ MODAL "chưa đủ" + TOAST ============ */
 .modal{z-index:60;padding:20px;background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s;}

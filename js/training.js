@@ -70,6 +70,16 @@
        chương trình trên ở chỗ nó không đo tay nhanh mắt tinh mà đo việc CHỌN
        ĐÚNG: kỹ năng thật của phi hành gia phần lớn là ra quyết định đúng dưới
        áp lực, không phải bấm nhanh (`docs/proposals/2026-08-14-…` mục 3). */
+    /* KIỂM CHỨNG DỮ LIỆU — lớp quyết định, khuôn soi lỗi trong bảng (16/08/2026).
+       ⚠️ Đây là chương trình duy nhất mà trẻ KHÔNG dựng ra thứ gì — nó kiểm một
+          bảng người khác đã dựng. Xem lý do tách hẳn ở `Services/Training.cs`. */
+    datacheck: {
+      ic: "📏",
+      name: { vi: "Kiểm chứng dữ liệu", en: "Data checking" },
+      skill: { vi: "Soi một bảng số liệu và tìm ra chỗ hai bên không nói cùng một thứ",
+               en: "Read a data sheet and spot where the two sides do not mean the same thing" }
+    },
+
     /* GIỮ MẠNG SỐNG — lớp quyết định, khuôn chia ngân sách (16/08/2026).
        ⚠️ KHÁC "Quản lý tài nguyên" (Đường Đua): bên kia là cân nhiên liệu để đi
           xa, bên này là giữ một vòng tuần hoàn không đứt. Lý do tách hẳn thành

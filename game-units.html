@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Đối Chiếu</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<link rel="stylesheet" href="css/game-units.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Bảng</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Đúng</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+        <p class="dg-brief" id="brief"></p>
+
+        <div class="dg-body">
+          <div class="uc-grid">
+            <div class="uc-head" id="head" aria-hidden="true"></div>
+            <div class="uc-rows" id="rows"></div>
+          </div>
+          <div class="uc-verdict" id="verdict" hidden></div>
+        </div>
+
+        <p class="uc-sim" id="sim">BẢNG SỐ LIỆU MÔ PHỎNG</p>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="ok" type="button" data-i18n="approve">✔ Duyệt bảng</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Bảng tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">📏</div>
+        <h2 data-i18n="start_title">Trạm Đối Chiếu</h2>
+        <div class="how">
+          <span data-i18n-html="how1">📋 Mỗi bảng có <b>hai cột</b>: số của nhóm dưới mặt đất và số của nhóm trên tàu.</span>
+          <span data-i18n-html="how2">⚑ Đánh dấu hàng nào <b>hai bên không nói cùng một lượng</b>, rồi bấm Duyệt bảng.</span>
+          <span data-i18n-html="how3">⚠️ Khác đơn vị <b>chưa chắc đã sai</b> — 1 km và 1000 m là cùng một lượng.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic" id="over-ic">📏</div>
+        <h2 id="over-h" data-i18n="over_title">Hết ca trực!</h2>
+        <p id="over-p"></p>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Đúng</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-units-lost-a-spacecraft" data-i18n="read_more">📖 Đọc bài: Một con tàu mất vì hai đơn vị</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>4</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM ĐỐI CHIẾU (ARCADE-10) — game LỚP QUYẾT ĐỊNH thứ tư.
+     Khuôn: **SOI MỘT BẢNG ĐÃ CÓ SẴN RỒI ĐÁNH DẤU CHỖ SAI**.
+
+     ⚠️⚠️ KHUÔN THỨ TƯ, KHÁC CẢ BA CÁI TRƯỚC — ràng buộc của `docs/decisions/002`.
+        ARCADE-07 chọn thẻ · ARCADE-08 xếp thứ tự · ARCADE-09 chia ngân sách —
+        cả ba đều là trẻ **DỰNG RA** một thứ. Ở đây trẻ **KIỂM một thứ người khác
+        đã dựng** rồi nói "hàng này sai". Việc soi lỗi là một cách nghĩ khác hẳn
+        việc tạo ra, và đó là lý do nó được làm khuôn thứ tư.
+
+     ⚠️⚠️ VÌ SAO GAME NÀY THAY CHO "XỬ LÝ SỰ CỐ" (đề xuất 14/08). Emergency bị
+        DỪNG vì thiếu nguồn: rà cả kho bài đọc thì **không trang nào của dự án
+        nói THỨ TỰ xử lý một sự cố**, mà bịa ra một quy trình an toàn rồi để trẻ
+        tin đó là cách NASA làm thì nguy hiểm hơn hẳn bịa một con số. Chủ đề này
+        thì ngược lại: nguồn đã có sẵn, đã trích nguyên văn, đã kiểm URL 200.
+
+     ⚠️⚠️ 26 HÀNG SỐ LIỆU Ở ĐÂY LÀ BẢNG DỰNG RA ĐỂ CHƠI, KHÔNG PHẢI SỐ CỦA NASA.
+        Vì thế màn hình có nhãn **MÔ PHỎNG** thường trực. Thứ CÓ nguồn là BÀI HỌC,
+        và nó chỉ được phát biểu đúng bằng những câu trang nguồn nói:
+        ⛔ ĐỪNG thêm con số "170 km thấp hơn dự tính" vào vụ Mars Climate Orbiter
+           — nó nằm ở báo cáo của ban điều tra, KHÔNG có trên trang NASA đang dẫn.
+           `art-units-lost-a-spacecraft` đã ghi cảnh báo đó, và nó cám dỗ vì con
+           số nghe rất "chắc".
+        ⛔ ĐỪNG gán trách nhiệm cho một nhóm cụ thể — trang chỉ nói "ground
+           software" và "onboard software".
+
+     ⚠️ MỌI PHÉP QUY ĐỔI TRONG BẢNG PHẢI ĐÚNG VÀ PHẢI DỄ. Bài học là *hai bên có
+        nói cùng một lượng không*, không phải *bạn nhẩm giỏi tới đâu*. Nên chỉ
+        dùng bội số tròn trong cùng hệ (km↔m, kg↔g, giờ↔phút, tấn↔kg, GB↔MB) —
+        đừng bao giờ bắt trẻ đổi dặm sang ki-lô-mét để phán một hàng.
+
+     ⚠️ MỒI NHỬ PHẢI ĐÚNG MỘT CÁCH TRUNG THỰC. Hàng "khác đơn vị nhưng cùng một
+        lượng" là hàng KHÔNG SAI, và nó là thứ giữ cho game không tụt xuống thành
+        "quét xem hai nhãn đơn vị có khác chữ nhau không". Bỏ mồi nhử đi là bỏ
+        luôn phần phải suy nghĩ.
+
+     NGUỒN — ba bài đọc đã có trong kho, đã trích nguyên văn và kiểm URL 200:
+       `js/article/art-units-lost-a-spacecraft.js`
+         → https://science.nasa.gov/mission/mars-climate-orbiter/
+         · "Ground software used English units, while onboard software worked in
+            metric. The discrepancy caused errors in trajectory calculations
+            which sent the spacecraft too close to Mars."
+         · "Last contact with the spacecraft was on Sept. 23, 1999 … the
+            spacecraft burned up in Mars' atmosphere."
+       `js/article/art-light-year-is-a-distance.js`
+         → https://science.nasa.gov/exoplanets/what-is-a-light-year/
+         · "Light-year is the distance light travels in one year."
+         · "Earth is about eight light minutes from the Sun."
+         · "…plan on arriving in 4.25 years at light speed." (Proxima Centauri)
+       `js/article/art-measuring-stars-with-angles.js`
+         → https://science.nasa.gov/asset/hubble/stellar-parallax/
+         · "This requires viewing the star on two occasions, when Earth is at
+            opposite sides of the Sun."
+         · "…precisely measure the very small angular displacement of the star"
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+  var esc = AstroQ.esc;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Khu Huấn Luyện",
+      gname:"Trạm Đối Chiếu",
+      /* ⚠️ Nhãn chip HUD phải NGẮN — console dọc chỉ cho ~51px. Bài học của
+         ARCADE-07 ("Tình huống"→"Tiến độ") và ARCADE-09 ("Vạch an toàn"→"An toàn"). */
+      round_lbl:"Bảng", score_lbl:"Đúng", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím", sfx_aria:"Âm thanh",
+      sim:"BẢNG SỐ LIỆU MÔ PHỎNG",
+      col_a:"Nhóm mặt đất", col_b:"Trên tàu", col_q:"Đại lượng",
+      start_title:"Trạm Đối Chiếu",
+      how1:"📋 Mỗi bảng có <b>hai cột</b>: số của nhóm dưới mặt đất và số của nhóm trên tàu.",
+      how2:"⚑ Đánh dấu hàng nào <b>hai bên không nói cùng một lượng</b>, rồi bấm Duyệt bảng.",
+      how3:"⚠️ Khác đơn vị <b>chưa chắc đã sai</b> — 1 km và 1000 m là cùng một lượng.",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu",
+      approve:"✔ Duyệt bảng", next:"Bảng tiếp →", finish:"Xem kết quả →",
+      st_hit:"Bắt đúng.", st_miss:"Bỏ sót chỗ này.", st_wrong:"Báo nhầm.",
+      v_pass_clean:"<b>Duyệt đúng.</b> Bảng này không có chỗ nào lệch — và nói “không có lỗi” khi thật sự không có lỗi cũng là một phần của việc đối chiếu.",
+      v_pass:"<b>Duyệt đúng.</b> Bạn tìm ra đủ {n} chỗ lệch, và không báo nhầm hàng nào.",
+      v_miss:"<b>Bảng đi lọt một chỗ lệch.</b> Bỏ sót {n} hàng — trên thật thì cả chuyến bay đi theo con số sai đó.",
+      v_wrong:"<b>Báo nhầm {n} hàng.</b> Mấy hàng đó viết bằng hai đơn vị khác nhau, nhưng cùng nói một lượng.",
+      v_both:"<b>Chưa duyệt được.</b> Bỏ sót {a} hàng lệch và báo nhầm {b} hàng không lệch.",
+      over_title:"Hết ca trực!",
+      over_p:"Bạn duyệt đúng {n} trên {t} bảng số liệu.",
+      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng",
+      read_more:"📖 Đọc bài: Một con tàu mất vì hai đơn vị",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Một lượt tốn {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn",
+      best_toast:"Kỷ lục mới!",
+      title:"AstroQ — Trạm Đối Chiếu"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Training Simulator",
+      gname:"Cross-Check Station",
+      round_lbl:"Sheet", score_lbl:"Right", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors", sfx_aria:"Sound",
+      sim:"SIMULATED DATA SHEET",
+      col_a:"Ground team", col_b:"Onboard", col_q:"Quantity",
+      start_title:"Cross-Check Station",
+      how1:"📋 Every sheet has <b>two columns</b>: the ground team's figure and the onboard figure.",
+      how2:"⚑ Flag any row where <b>the two sides do not mean the same amount</b>, then approve the sheet.",
+      how3:"⚠️ Different units are <b>not automatically wrong</b> — 1 km and 1000 m are the same amount.",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start",
+      approve:"✔ Approve sheet", next:"Next sheet →", finish:"See results →",
+      st_hit:"Caught it.", st_miss:"You missed this one.", st_wrong:"False alarm.",
+      v_pass_clean:"<b>Approved correctly.</b> Nothing on this sheet disagrees — and saying \"no problem\" when there really is none is part of cross-checking too.",
+      v_pass:"<b>Approved correctly.</b> You found all {n} mismatches and raised no false alarms.",
+      v_miss:"<b>A mismatch got through.</b> You missed {n} row(s) — in real life the whole flight follows that wrong number.",
+      v_wrong:"<b>{n} false alarm(s).</b> Those rows use two different units, but they state the same amount.",
+      v_both:"<b>Not approved.</b> You missed {a} mismatch(es) and raised {b} false alarm(s).",
+      over_title:"Shift complete!",
+      over_p:"You cleared {n} of {t} data sheets correctly.",
+      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub",
+      read_more:"📖 Read: A spacecraft lost to two units",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"A run costs {cost} Purple Meteors and you have {bal}. Take a Quiz to earn more!",
+      need_go:"Take a Quiz",
+      paid_line:"Added {n} {tt} to your wallet",
+      best_toast:"New best!",
+      title:"AstroQ — Cross-Check Station"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  var CONFIG = {
+    COST: 4,        // khớp Wallet.Fees["units"] (medium) và `cost` ở GAMES
+    TT_PER_SHEET: 3 // ⚠️ tt cho mỗi bảng duyệt đúng. Điểm cho thang huấn luyện là
+                    //    SỐ BẢNG (0–5), còn thưởng là số bảng × ngần này. Trả 1 tt
+                    //    một bảng thì một lượt hoàn hảo được 5 tt cho phí vào cửa
+                    //    4 tt — tức chơi giỏi hết mức vẫn gần như không được gì.
+  };
+
+  /* ── NĂM BẢNG SỐ LIỆU ────────────────────────────────────────────────────
+     `bad:true` = hai bên KHÔNG nói cùng một lượng.
+     ⚠️ BẢNG THỨ TƯ CỐ Ý KHÔNG CÓ HÀNG NÀO SAI. Nếu bảng nào cũng có ít nhất một
+        chỗ lệch thì trẻ học được một quy luật NGOÀI bài học ("kiểu gì cũng có
+        một hàng") và thôi phải nghĩ. Bảng sạch cũng dạy một thứ khó hơn: dám nói
+        "không có lỗi" giữa ba hàng trông rất đáng ngờ.
+        ⛔ Đừng "cho nó một hàng sai cho đồng bộ". */
+  var ROUNDS = [
+    { brief:{ vi:"Bảng số liệu trước khi phóng một tàu đi Sao Hoả. Hai nhóm điền hai cột — bạn là người đối chiếu cuối cùng.",
+              en:"The pre-launch data sheet for a Mars spacecraft. Two teams filled the two columns — you are the last person to cross-check it." },
+      rows:[
+        { nm:{vi:"Độ cao quỹ đạo",en:"Orbit altitude"}, a:{vi:"400 km",en:"400 km"}, b:{vi:"400.000 m",en:"400,000 m"}, bad:false,
+          why:{vi:"Khác đơn vị nhưng <b>cùng một lượng</b>: 400 km chính là 400.000 m. Khác đơn vị không tự nó là lỗi.",
+               en:"Different units but <b>the same amount</b>: 400 km is exactly 400,000 m. Different units are not an error by themselves."} },
+        { nm:{vi:"Lực đẩy động cơ",en:"Engine thrust"}, a:{vi:"500 pound",en:"500 pounds"}, b:{vi:"500 kg",en:"500 kg"}, bad:true,
+          why:{vi:"Cùng con số, <b>khác hệ đơn vị</b>. Đây đúng là chỗ đã làm mất tàu Mars Climate Orbiter năm 1999: phần mềm dưới mặt đất dùng hệ Anh, phần mềm trên tàu dùng hệ mét.",
+               en:"Same number, <b>different unit systems</b>. This is exactly what lost the Mars Climate Orbiter in 1999: ground software used English units while onboard software worked in metric."} },
+        { nm:{vi:"Thời gian đốt động cơ",en:"Engine burn time"}, a:{vi:"12 giây",en:"12 s"}, b:{vi:"12 giây",en:"12 s"}, bad:false,
+          why:{vi:"Cùng số, cùng đơn vị — khớp hoàn toàn.",
+               en:"Same number, same unit — a perfect match."} },
+        { nm:{vi:"Khối lượng tàu",en:"Spacecraft mass"}, a:{vi:"630 kg",en:"630 kg"}, b:{vi:"630 kg",en:"630 kg"}, bad:false,
+          why:{vi:"Khớp hoàn toàn.", en:"A perfect match."} }
+      ] },
+
+    { brief:{ vi:"Bảng của tàu đổ bộ. Lần này có hàng viết bằng hai đơn vị khác nhau — hãy hỏi xem chúng có nói cùng một lượng không.",
+              en:"The lander's sheet. Some rows are written in two different units — ask whether they state the same amount." },
+      rows:[
+        { nm:{vi:"Nhiệt độ vỏ tối đa",en:"Max shell temperature"}, a:{vi:"120 độ C",en:"120 °C"}, b:{vi:"120 độ F",en:"120 °F"}, bad:true,
+          why:{vi:"Cùng con số, <b>khác thang nhiệt</b>. 120 °C nóng hơn 120 °F rất nhiều — hai bên đang nói về hai mức nhiệt khác hẳn nhau.",
+               en:"Same number, <b>different temperature scales</b>. 120 °C is far hotter than 120 °F — the two sides mean two very different temperatures."} },
+        { nm:{vi:"Thời gian chờ tín hiệu",en:"Signal hold time"}, a:{vi:"2 giờ",en:"2 hours"}, b:{vi:"120 phút",en:"120 minutes"}, bad:false,
+          why:{vi:"2 giờ = 120 phút. Quy đổi đúng, hai bên khớp.",
+               en:"2 hours = 120 minutes. Converted correctly; the two sides agree."} },
+        { nm:{vi:"Khối lượng nhiên liệu",en:"Fuel mass"}, a:{vi:"45 kg",en:"45 kg"}, b:{vi:"45.000 g",en:"45,000 g"}, bad:false,
+          why:{vi:"45 kg = 45.000 g. Quy đổi đúng.", en:"45 kg = 45,000 g. Converted correctly."} },
+        { nm:{vi:"Góc vào khí quyển",en:"Atmospheric entry angle"}, a:{vi:"12 độ",en:"12 degrees"}, b:{vi:"12 độ",en:"12 degrees"}, bad:false,
+          why:{vi:"Khớp hoàn toàn.", en:"A perfect match."} },
+        { nm:{vi:"Tốc độ chạm đất",en:"Touchdown speed"}, a:{vi:"3 m/giây",en:"3 m/s"}, b:{vi:"3 m/giây",en:"3 m/s"}, bad:false,
+          why:{vi:"Khớp hoàn toàn.", en:"A perfect match."} }
+      ] },
+
+    { brief:{ vi:"Bảng của đài quan sát. Ở đây có những đơn vị mà cái TÊN đánh lừa — đọc kỹ xem mỗi bên đang đo cái gì.",
+              en:"The observatory's sheet. Some unit names here are misleading — read carefully what each side is actually measuring." },
+      rows:[
+        { nm:{vi:"Khoảng cách tới Proxima Centauri",en:"Distance to Proxima Centauri"}, a:{vi:"4,25 năm ánh sáng",en:"4.25 light-years"}, b:{vi:"4,25 năm",en:"4.25 years"}, bad:true,
+          why:{vi:"<b>Năm ánh sáng là một KHOẢNG CÁCH, không phải một khoảng thời gian.</b> Một bên ghi phải đi bao XA, bên kia đọc thành đi bao LÂU — hai loại đại lượng khác hẳn nhau.",
+               en:"<b>A light-year is a DISTANCE, not a length of time.</b> One side states how FAR, the other read it as how LONG — two completely different kinds of quantity."} },
+        { nm:{vi:"Trái Đất – Mặt Trời",en:"Earth to the Sun"}, a:{vi:"8 phút ánh sáng",en:"8 light-minutes"}, b:{vi:"8 phút ánh sáng",en:"8 light-minutes"}, bad:false,
+          why:{vi:"Khớp. Theo NASA, Trái Đất cách Mặt Trời khoảng tám phút ánh sáng — cũng là một khoảng cách, không phải thời gian.",
+               en:"A match. NASA gives Earth as about eight light-minutes from the Sun — also a distance, not a time."} },
+        { nm:{vi:"Độ dịch góc của ngôi sao",en:"Star's angular shift"}, a:{vi:"0,7 giây cung",en:"0.7 arcseconds"}, b:{vi:"0,7 giây",en:"0.7 seconds"}, bad:true,
+          why:{vi:"<b>“Giây cung” đo GÓC, còn “giây” đo THỜI GIAN.</b> Kính Hubble đo độ dịch <i>góc</i> rất nhỏ của ngôi sao; ghi thành giây là mất hẳn nghĩa.",
+               en:"<b>An arcsecond measures an ANGLE; a second measures TIME.</b> Hubble measures the star's tiny <i>angular</i> displacement; writing it as seconds loses the meaning entirely."} },
+        { nm:{vi:"Số lần quan sát",en:"Number of observations"}, a:{vi:"2 lần",en:"2 times"}, b:{vi:"2 lần",en:"2 times"}, bad:false,
+          why:{vi:"Khớp. Phải quan sát hai lần, vào lúc Trái Đất ở hai phía đối diện của Mặt Trời.",
+               en:"A match. The star must be viewed on two occasions, when Earth is at opposite sides of the Sun."} },
+        { nm:{vi:"Thời gian phơi sáng",en:"Exposure time"}, a:{vi:"90 giây",en:"90 seconds"}, b:{vi:"1,5 phút",en:"1.5 minutes"}, bad:false,
+          why:{vi:"90 giây = 1,5 phút. Quy đổi đúng.", en:"90 seconds = 1.5 minutes. Converted correctly."} }
+      ] },
+
+    { brief:{ vi:"Bảng của xe tự hành trên Sao Hoả. Đừng đánh dấu vội — hãy tự hỏi từng hàng một.",
+              en:"The Mars rover's sheet. Do not flag in a hurry — ask the question row by row." },
+      rows:[
+        { nm:{vi:"Quãng đường mỗi ngày",en:"Distance per day"}, a:{vi:"100 mét",en:"100 metres"}, b:{vi:"0,1 km",en:"0.1 km"}, bad:false,
+          why:{vi:"100 m = 0,1 km. Quy đổi đúng.", en:"100 m = 0.1 km. Converted correctly."} },
+        { nm:{vi:"Khối lượng mẫu vật",en:"Sample mass"}, a:{vi:"0,5 kg",en:"0.5 kg"}, b:{vi:"500 g",en:"500 g"}, bad:false,
+          why:{vi:"0,5 kg = 500 g. Quy đổi đúng.", en:"0.5 kg = 500 g. Converted correctly."} },
+        { nm:{vi:"Thời gian trễ tín hiệu",en:"Signal delay"}, a:{vi:"7 phút",en:"7 minutes"}, b:{vi:"420 giây",en:"420 seconds"}, bad:false,
+          why:{vi:"7 × 60 = 420 giây. Quy đổi đúng.", en:"7 × 60 = 420 seconds. Converted correctly."} },
+        { nm:{vi:"Nhiệt độ ban đêm",en:"Night temperature"}, a:{vi:"−70 độ C",en:"−70 °C"}, b:{vi:"−70 độ C",en:"−70 °C"}, bad:false,
+          why:{vi:"Khớp hoàn toàn.", en:"A perfect match."} },
+        { nm:{vi:"Bộ nhớ ghi ảnh",en:"Image storage"}, a:{vi:"4 GB",en:"4 GB"}, b:{vi:"4000 MB",en:"4000 MB"}, bad:false,
+          why:{vi:"1 GB = 1000 MB, nên 4 GB = 4000 MB. Quy đổi đúng.",
+               en:"1 GB = 1000 MB, so 4 GB = 4000 MB. Converted correctly."} }
+      ] },
+
+    { brief:{ vi:"Bảng cuối: trạm không gian. Sáu hàng, và lần này chỗ lệch không nằm ở chỗ dễ thấy nhất.",
+              en:"Last sheet: the space station. Six rows, and this time the mismatches are not in the most obvious places." },
+      rows:[
+        { nm:{vi:"Áp suất cabin",en:"Cabin pressure"}, a:{vi:"1 atm",en:"1 atm"}, b:{vi:"1 atm",en:"1 atm"}, bad:false,
+          why:{vi:"Khớp hoàn toàn.", en:"A perfect match."} },
+        { nm:{vi:"Lượng nước dự trữ",en:"Water reserve"}, a:{vi:"1,2 tấn",en:"1.2 tonnes"}, b:{vi:"1200 kg",en:"1200 kg"}, bad:false,
+          why:{vi:"1,2 tấn = 1200 kg. Quy đổi đúng.", en:"1.2 tonnes = 1200 kg. Converted correctly."} },
+        { nm:{vi:"Chu kỳ quay quanh Trái Đất",en:"Time for one orbit"}, a:{vi:"90 phút",en:"90 minutes"}, b:{vi:"90 giây",en:"90 seconds"}, bad:true,
+          why:{vi:"Cùng hệ, cùng loại đại lượng, nhưng <b>lệch đơn vị thời gian</b>: 90 giây chỉ bằng một phần sáu mươi của 90 phút.",
+               en:"Same system, same kind of quantity, but <b>the time unit is wrong</b>: 90 seconds is one sixtieth of 90 minutes."} },
+        { nm:{vi:"Độ cao quỹ đạo",en:"Orbit altitude"}, a:{vi:"400 km",en:"400 km"}, b:{vi:"400 dặm",en:"400 miles"}, bad:true,
+          why:{vi:"Cùng con số, <b>khác hệ đơn vị</b> — đúng cái bẫy đã làm mất một con tàu năm 1999.",
+               en:"Same number, <b>different unit systems</b> — the very trap that lost a spacecraft in 1999."} },
+        { nm:{vi:"Số phi hành đoàn",en:"Crew size"}, a:{vi:"7 người",en:"7 people"}, b:{vi:"7 người",en:"7 people"}, bad:false,
+          why:{vi:"Khớp — và đây là hàng duy nhất trong cả năm bảng <b>đếm được</b> chứ không <b>đo được</b>, nên nó không cần một đơn vị đo nào.",
+               en:"A match — and it is the only row in all five sheets that is <b>counted</b> rather than <b>measured</b>, so it needs no unit of measurement at all."} },
+        { nm:{vi:"Bộ nhớ ghi ảnh",en:"Image storage"}, a:{vi:"4 GB",en:"4 GB"}, b:{vi:"4000 MB",en:"4000 MB"}, bad:false,
+          why:{vi:"1 GB = 1000 MB. Quy đổi đúng.", en:"1 GB = 1000 MB. Converted correctly."} }
+      ] }
+  ];
+  var MAXP = ROUNDS.length;
+
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){ try{ localStorage.setItem(LS_SFX, AstroQSfx.on()?"off":"on"); }catch(e){} },
+    tick:function(){ AstroQSfx.beep(640); },
+    good:function(){ AstroQSfx.ready(); },
+    bad:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var idx = 0;              // bảng đang xem (0-based)
+  var flag = [];            // hàng nào đang được đánh dấu
+  var checked = false;      // đã bấm Duyệt bảng chưa
+  var score = 0, mined = 0;
+
+  var RUN = AstroQGameRun.create({
+    game:"units", cost:CONFIG.COST, t:t,
+    onStart:function(){ idx = 0; score = 0; mined = 0; newSheet(); AstroQSfx.wake(); }
+  });
+
+  function cur(){ return ROUNDS[idx]; }
+  function badSet(){ return cur().rows.map(function(r){ return !!r.bad; }); }
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function paintHud(){
+    $("hb-round").textContent = Math.min(idx+1, MAXP) + "/" + MAXP;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<MAXP;i++){
+      out += '<span class="' + (i<idx ? "dg-dot done" : (i===idx ? "dg-dot now" : "dg-dot")) + '"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  /* ⚠️ BỐN TRẠNG THÁI, VÀ HAI CÁI Ở GIỮA LÀ HAI LỖI NGƯỢC NHAU — phải nhìn ra
+     được là hai thứ khác nhau. Bản đầu cho `miss` và `wrong` cùng tông hổ phách
+     và cùng một cái cờ; render ra thì hàng "bạn bỏ sót" và hàng "bạn báo nhầm"
+     **trông y hệt**, tức trẻ biết mình sai mà không biết sai kiểu gì — mà đó
+     chính là thứ cần học. Nay khác cả DẤU lẫn nhãn chữ, không chỉ khác màu:
+     đọc được kể cả với người phân biệt màu kém. */
+  var GLYPH = { hit:"✓", miss:"!", wrong:"⚑", fine:"" };
+  /* ⚠️ BA KHOÁ VIẾT LITERAL, KHÔNG ghép `t("st_" + st)` — phép kiểm i18n của
+     `check_pages` quét `t("khoá")` dạng CHỮ, nên khoá ghép động là khoá vô hình
+     với nó và sẽ bị báo "khai mà không dùng". Cùng bài học `s1_hit1/2/3` ·
+     `tier1..5` · `gun1..3` · `cat_*`. */
+  function stLabel(st){
+    if(st === "hit")   return t("st_hit");
+    if(st === "miss")  return t("st_miss");
+    if(st === "wrong") return t("st_wrong");
+    return "";
+  }
+  function rowState(i){
+    if(!checked) return "";
+    var bad = !!cur().rows[i].bad, f = !!flag[i];
+    return bad ? (f ? "hit" : "miss") : (f ? "wrong" : "fine");
+  }
+
+  function paintRows(){
+    $("head").innerHTML = '<span></span><span>'+esc(t("col_q"))+'</span>'+
+                          '<span>'+esc(t("col_a"))+'</span><span>'+esc(t("col_b"))+'</span>';
+    $("rows").innerHTML = cur().rows.map(function(r, i){
+      var st = rowState(i);
+      var pre = (st && st !== "fine")
+        ? '<b class="uc-st ' + st + '">' + esc(stLabel(st)) + '</b> ' : '';
+      return '<button type="button" class="uc-row'+(st?" "+st:"")+'" data-i="'+i+'"'+
+               ' aria-pressed="'+(flag[i]?"true":"false")+'"'+ (checked?" disabled":"") +'>'+
+               '<span class="uc-flag" aria-hidden="true">'+(checked?GLYPH[st]:"⚑")+'</span>'+
+               '<span class="uc-nm">'+esc(L(r.nm))+'</span>'+
+               '<span class="uc-vals">'+
+                 '<span class="uc-v"><i>'+esc(t("col_a"))+'</i>'+esc(L(r.a))+'</span>'+
+                 '<span class="uc-v"><i>'+esc(t("col_b"))+'</i>'+esc(L(r.b))+'</span>'+
+               '</span>'+
+               (checked ? '<span class="uc-why">'+pre+L(r.why)+'</span>' : '')+
+             '</button>';
+    }).join("");
+    if(!checked){
+      Array.prototype.forEach.call($("rows").querySelectorAll(".uc-row"), function(b){
+        b.addEventListener("click", function(){ toggle(parseInt(b.getAttribute("data-i"),10)); });
+      });
+    }
+  }
+
+  function render(){
+    paintSteps(); paintRows(); paintHud();
+    $("brief").innerHTML = L(cur().brief);
+    $("sim").textContent = t("sim");
+    $("ok").hidden = checked;
+    $("next").hidden = !checked;
+    $("next").textContent = (idx === MAXP-1) ? t("finish") : t("next");
+  }
+
+  /* ── Chơi ───────────────────────────────────────────────────────────────── */
+  function toggle(i){
+    if(checked) return;
+    flag[i] = !flag[i]; SFX.tick(); paintRows();
+  }
+
+  function approve(){
+    if(checked) return;
+    checked = true;
+
+    /* ⚠️ MỘT BẢNG CHỈ ĐẠT KHI TẬP ĐÁNH DẤU **BẰNG ĐÚNG** TẬP HÀNG SAI — không
+       chấm rời từng hàng. Chấm rời thì một đứa trẻ không đánh dấu gì cả vẫn
+       "đúng" phần lớn số hàng (vì đa số hàng vốn không sai), tức phép chấm
+       thưởng cho việc KHÔNG làm gì. Cùng lý do ARCADE-08 chấm theo đoạn đầu
+       đúng thay vì đếm từng ô. */
+    var bad = badSet(), miss = 0, wrong = 0;
+    for(var i=0;i<bad.length;i++){
+      if(bad[i] && !flag[i]) miss++;
+      if(!bad[i] && flag[i]) wrong++;
+    }
+    var pass = (miss === 0 && wrong === 0);
+    var nBad = bad.filter(Boolean).length;
+
+    if(pass){ score++; mined += CONFIG.TT_PER_SHEET; }
+
+    var box = $("verdict"), msg;
+    if(pass)              msg = nBad === 0 ? t("v_pass_clean") : t("v_pass").replace("{n}", nBad);
+    else if(miss && wrong)msg = t("v_both").replace("{a}", miss).replace("{b}", wrong);
+    else if(miss)         msg = t("v_miss").replace("{n}", miss);
+    else                  msg = t("v_wrong").replace("{n}", wrong);
+    box.className = "uc-verdict " + (pass ? "pass" : "fail");
+    box.innerHTML = msg; box.hidden = false;
+
+    (pass ? SFX.good : SFX.bad)();
+    render();
+    /* ⚠️ CUỘN TỚI ĐÚNG HÀNG PHÁN SAI, KHÔNG CUỘN XUỐNG ĐÁY. Trên 390×844 sáu
+       hàng đã cao hơn sân, nên lời giải thích — thứ game này tồn tại để dạy —
+       nằm ngoài tầm mắt (bài học của ARCADE-07). Nhưng đáy bảng cũng KHÔNG phải
+       chỗ đúng: thứ trẻ cần đọc là hàng nó vừa phán sai, mà hàng đó có thể nằm
+       bất cứ đâu. Duyệt sạch thì mới đưa hộp phán xuống. */
+    var body = document.querySelector(".dg-body");
+    if(body){
+      var focus = $("rows").querySelector(".uc-row.miss, .uc-row.wrong") || $("verdict");
+      body.scrollTop += focus.getBoundingClientRect().top
+                      - body.getBoundingClientRect().top - 8;
+    }
+  }
+
+  function next(){
+    if(!checked) return;
+    if(idx === MAXP-1){ endRun(); return; }
+    idx++; newSheet();
+  }
+
+  function newSheet(){
+    flag = cur().rows.map(function(){ return false; });
+    checked = false;
+    $("verdict").hidden = true;
+    render();
+    var body = document.querySelector(".dg-body");
+    if(body) body.scrollTop = 0;
+  }
+
+  function endRun(){
+    var res = RUN.finish({ score:score, seconds:0, meteors:mined });
+    $("over-h").textContent = t("over_title");
+    $("over-p").textContent = t("over_p").replace("{n}", score).replace("{t}", MAXP);
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(RUN.state() !== "idle") render();
+  }
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_units.py`) ─────────────
+     ⚠️ Không hàm nào trả Promise — `page.evaluate` của Playwright tự chờ promise
+        được trả về, nên script test sẽ treo thay vì báo hỏng. */
+  window.__dbg = {
+    cfg: function(){ return { cost:CONFIG.COST, ttPerSheet:CONFIG.TT_PER_SHEET,
+                              sheets:MAXP }; },
+    maxScore: function(){ return MAXP; },
+    sheet: function(){ return idx; },
+    bad: function(){ return badSet(); },
+    flags: function(){ return flag.slice(); },
+    checked: function(){ return checked; },
+    /* Đếm hàng "khác đơn vị nhưng KHÔNG sai" — bộ đo dùng nó để chứng minh mồi
+       nhử có thật, chứ không tin vào một con số gõ tay trong file test. */
+    decoys: function(){
+      return ROUNDS.map(function(r){
+        return r.rows.filter(function(x){ return !x.bad && x.a.vi !== x.b.vi; }).length;
+      });
+    },
+    badCounts: function(){
+      return ROUNDS.map(function(r){
+        return r.rows.filter(function(x){ return !!x.bad; }).length;
+      });
+    },
+    start: function(){ RUN.start(); }
+  };
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("ok").addEventListener("click", approve);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  newSheet();
+})();
+</script>
+</body>
+</html>

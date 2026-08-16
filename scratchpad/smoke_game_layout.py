@@ -33,7 +33,8 @@ GAMES = [("game-dodge.html", 1.6), ("game-defender.html", 1.0),
          # ARCADE-08 — cung lop QUYET DINH, cung `css/decision-game.css` nen
          # cung cap ti le. Khuon choi thi khac han (xep thu tu).
          ("game-comms.html", (2.05, 0.72)),
-         ("game-recycle.html", (2.05, 0.72))]
+         ("game-recycle.html", (2.05, 0.72)),
+         ("game-units.html", (2.05, 0.72))]
 
 ok_n = bad_n = 0
 
