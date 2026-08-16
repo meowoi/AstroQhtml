@@ -418,15 +418,6 @@ def main():
               m4.get("sent") is False and m4.get("reason") == "empty",
               json.dumps(m4)[:90])
 
-    finally:
-        print("\n[don] Xoa du lieu test")
-        if uid:
-            n = wipe(uid)
-            print(f"  Da xoa {n} dong DynamoDB")
-            check("Khong con dong nao sot", len(rows(uid)) == 0)
-        if token:
-            check("Da xoa tai khoan Firebase tam", _fbtest.delete(token))
-
         # ── [12] Diem cao nhat TRONG TUAN (Nhat ky tuan cua tre) ──
         # ⚠️ KHAC HAN `PROGRESS.bests` (ky luc CA DOI). Hai con so phai de canh nhau moi
         #    noi duoc "tuan nay ban cham dung ky luc cua minh", nen endpoint tra ve CA
@@ -479,6 +470,36 @@ def main():
         check("Dong game khong co refId -> KHONG sinh khoa rong",
               "" not in wb2, str(sorted(wb2.keys())))
         check("Va khong lam sai diem cua game khac", wb2.get("dodge") == 1200, str(wb2))
+
+    finally:
+        # ⚠️⚠️ KHOI `finally` CHI DUOC LAM MOT VIEC: DON. Truoc 16/08/2026 muc [12]
+        #    nam LOT TRONG day, ngay SAU phan don — nen no gieo lai 7 dong (PROFILE
+        #    + PROGRESS + 5 HIST) sau khi don xong va **khong ai xoa chung nua**.
+        #    Do la nguon cua dam ban ghi mo coi tren BAN THAT (uid rep-...@simulator,
+        #    moc HIST o dung GIO TRON — chinh chu ky cua `put_hist` o day).
+        #    ⚠️ Va no con chay tren mot tai khoan Firebase DA BI XOA o dong ngay tren:
+        #       cac phep kiem cua [12] van "dat" chi vi ID token la JWT con han
+        #       nguyen mot tieng, chu khong phai vi tai khoan con song. Mot phep kiem
+        #       dat nho mot thu sap het han la mot phep kiem se do vao mot ngay nao do
+        #       ma khong ai doi mot dong ma nao.
+        #    ⛔ DUNG BAO GIO them muc kiem moi vao duoi day. Muc moi thi dat TRONG
+        #       `try`, tren khoi nay.
+        print("\n[don] Xoa du lieu test")
+        if uid:
+            n = wipe(uid)
+            print(f"  Da xoa {n} dong DynamoDB")
+            check("Khong con dong nao sot", len(rows(uid)) == 0)
+        if token:
+            check("Da xoa tai khoan Firebase tam", _fbtest.delete(token))
+
+    # ⚠️ LUOI AN TOAN CUOI CUNG — do lai SAU khi ca khoi try/finally da chay xong.
+    #    Phep kiem nam TRONG `finally` khong the bat duoc ca "them mot muc kiem vao
+    #    duoi phan don", vi no chay TRUOC doan them vao — va chinh cai khe do da de
+    #    lai 7 dong mo coi tren ban that. Dong nay dung ngoai nen bat duoc.
+    if uid:
+        left = rows(uid)
+        check("[don] Do lai sau cung: 0 dong sot", len(left) == 0,
+              str([r["SK"]["S"] for r in left])[:140])
 
     print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
     return 0 if bad_n == 0 else 1
