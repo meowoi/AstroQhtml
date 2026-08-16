@@ -66,6 +66,12 @@ PAGES = [
     # dễ tràn ngang nhất khi màn thấp (Win 1366x768, iPad ngang).
     "game-dodge.html", "game-defender.html", "game-constellation.html",
     "game-catch.html", "game-maze.html", "game-racer.html",
+    # ARCADE-07 — game lop QUYET DINH dau tien. Khac 6 game tren: san doi ti le
+    # theo kho man (rong 1.5 / hep 0.72) va noi dung la CHU CO THE CUON, nen day
+    # la trang de cat chu nhat trong ca bo.
+    "game-survival.html",
+    "game-comms.html",
+    "game-recycle.html",
     "explorer.html", "mission-earth.html", "mission-orbit.html",
 ]
 

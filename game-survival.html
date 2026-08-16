@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Sinh Tồn</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<!-- ⚠️ `data-rotate="off"`: KHÔNG nhắc xoay ngang. Đây là game chữ để ĐỌC — hộp
+     thấp-mà-rộng khó đọc hơn hộp cao-mà-hẹp, nên xoay ngang làm nó tệ đi. Lý do
+     đầy đủ ở đầu `css/decision-game.css`. -->
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Tiến độ</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Đúng</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+        <div class="dg-brief">
+          <span class="lbl" id="brief-lbl">[ TÌNH HUỐNG ]</span>
+          <p id="brief"></p>
+        </div>
+        <div class="dg-body">
+          <div class="dg-grid" id="grid"></div>
+          <div class="dg-why" id="why" hidden></div>
+        </div>
+        <p class="dg-note" id="note"></p>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="confirm" type="button" data-i18n="confirm">Chốt lựa chọn</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Tình huống tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">🧭</div>
+        <h2 data-i18n="start_title">Trạm Sinh Tồn</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🧭 <b>Bốn tình huống</b> — mỗi lần chọn đúng những thứ giữ được mạng sống.</span>
+          <span data-i18n-html="how2">💡 Chọn xong bấm <b>Chốt lựa chọn</b>, rồi đọc vì sao đúng hoặc chưa đúng.</span>
+          <span data-i18n-html="how3">📖 Không có ai thua ở đây — mọi lựa chọn đều được giải thích.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic">🛟</div>
+        <h2 data-i18n="over_title">Xong ca trực!</h2>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Đúng</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-what-life-needs" data-i18n="read_more">📖 Đọc bài: Sự sống cần gì?</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>3</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM SINH TỒN (ARCADE-07) — game LỚP QUYẾT ĐỊNH đầu tiên của dự án.
+     Khuôn: **chọn đồ + giải thích vì sao**. Không có canvas, không có vòng vẽ,
+     không có va chạm — và không có cách nào THUA.
+
+     ⚠️⚠️ MỌI SỰ THẬT Ở ĐÂY LẤY TỪ HAI BÀI ĐỌC ĐÃ CÓ TRONG KHO, không tra nguồn
+        mới. Hai bài đó đã trích nguyên văn NASA và đã kiểm URL 200:
+          · `js/article/art-what-life-needs.js`
+            → https://science.nasa.gov/astrobiology/learning-resources/alp/what-does-life-need-for-survival/
+            "All life on Earth is made up of DNA and requires several basic needs
+             to survive, such as water and sources of energy."
+            "A protective atmosphere is also needed for life to survive in order
+             to protect it from UV radiation from its host star."
+          · `js/article/art-life-support-recycles-water.js`
+            → https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/
+            "ECLSS includes three key components — the Water Recovery System, the
+             Air Revitalization System and the Oxygen Generation System."
+            "…reclaiming wastewater (including water from crew members' urine),
+             cabin humidity condensate, and water from the hydration system inside
+             crew members' Extra Vehicular Activity suits."
+            "the cell stack, which electrolyzes, or breaks apart, water"
+        Đây chính là điều mục 6 của `docs/proposals/2026-08-14-…` chỉ ra: hai khu
+        lớn nhất của app (Trạm Tri Thức và Khu Huấn Luyện) **không hề biết nhau** —
+        0 chỗ trong 6 game nhắc tới một bài đọc nào. Game này nối *đọc → làm*, và
+        nó **không tốn thêm một nguồn mới nào**.
+
+     ⚠️⚠️ BA THỨ SỰ SỐNG CẦN, VIẾT ĐÚNG NHƯ TRANG NÓI: **nước · nguồn năng lượng ·
+        khí quyển bảo vệ**. ĐỪNG thêm "nhiệt độ vừa phải", "từ trường", "trọng
+        lực" — nghe rất hợp lý nhưng trang KHÔNG nói, và `art-what-life-needs`
+        đã ghi thẳng lời cảnh báo đó sau khi dự án suýt bịa ra "CHNOPS".
+
+     ⚠️ MỒI NHỬ PHẢI SAI MỘT CÁCH TRUNG THỰC. Không dùng thứ mà NASA thật sự có
+        làm (ví dụ **trồng cây** — `art-growing-plants-in-space` có thật) rồi đánh
+        dấu là "sai": đó là dạy sai. Mồi nhử ở đây là những thứ hoặc không liên
+        quan tới ba điều kiện, hoặc chứa một lời hứa bất khả thi ("đủ dùng mãi mãi").
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+  var esc = AstroQ.esc;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Khu Huấn Luyện",
+      gname:"Trạm Sinh Tồn",
+      /* ⚠️ Nhãn chip HUD phải NGẮN. `audit_viewports` đo được "Tình huống" cần
+         56px trong ô 51px của console dọc (≥901px) → bị cắt thành "Tình hu…".
+         Không đặt tên thứ hai cho "tình huống" — đổi sang gọi đúng thứ chip
+         này thật sự hiện: TIẾN ĐỘ (1/4). */
+      round_lbl:"Tiến độ", score_lbl:"Đúng", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím",
+      brief_lbl:"[ TÌNH HUỐNG ]",
+      sfx_aria:"Âm thanh",
+      start_title:"Trạm Sinh Tồn",
+      how1:"🧭 <b>Bốn tình huống</b> — mỗi lần chọn đúng những thứ giữ được mạng sống.",
+      how2:"💡 Chọn xong bấm <b>Chốt lựa chọn</b>, rồi đọc vì sao đúng hoặc chưa đúng.",
+      how3:"📖 Không có ai thua ở đây — mọi lựa chọn đều được giải thích.",
+      cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu",
+      confirm:"Chốt lựa chọn", next:"Tình huống tiếp →", finish:"Xem kết quả →",
+      pick_n:"Chọn <b>{n}</b> thứ · đã chọn <b>{k}</b>",
+      pick_one:"Chọn <b>1</b> thứ",
+      over_title:"Xong ca trực!",
+      again_btn:"Chơi lại · <b>3</b>", to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng",
+      read_more:"📖 Đọc bài: Sự sống cần gì?",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Một lượt tốn {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn",
+      all_right:"Tuyệt đối chính xác!", some_right:"Gần đúng rồi!",
+      best_toast:"Kỷ lục mới!",
+      title:"AstroQ — Trạm Sinh Tồn"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Training Simulator",
+      gname:"Survival Station",
+      round_lbl:"Progress", score_lbl:"Correct", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors",
+      brief_lbl:"[ SCENARIO ]",
+      sfx_aria:"Sound",
+      start_title:"Survival Station",
+      how1:"🧭 <b>Four scenarios</b> — each time, pick the things that keep people alive.",
+      how2:"💡 Pick, then press <b>Lock in</b> and read why each choice works or doesn't.",
+      how3:"📖 Nobody loses here — every choice gets an explanation.",
+      cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start",
+      confirm:"Lock in", next:"Next scenario →", finish:"See results →",
+      pick_n:"Pick <b>{n}</b> things · picked <b>{k}</b>",
+      pick_one:"Pick <b>1</b>",
+      over_title:"Shift complete!",
+      again_btn:"Play again · <b>3</b>", to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub",
+      read_more:"📖 Read: What does life need?",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"A run costs {cost} Purple Meteors and you have {bal}. Take a Quiz to earn more!",
+      need_go:"Take a Quiz",
+      paid_line:"Added {n} {tt} to your wallet",
+      all_right:"Spot on!", some_right:"Close!",
+      best_toast:"New best!",
+      title:"AstroQ — Survival Station"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  var CONFIG = {
+    COST: 3,          // khớp Wallet.Fees["survival"] và `cost` ở mảng GAMES
+    /* Thưởng Thiên thạch tím: 1 viên mỗi câu đúng. Trần của server là 60/lượt
+       (`Wallet.MaxPerGame`) nên 12 viên nằm rất xa trần — con số này là ở CLIENT,
+       server vẫn kẹp lại, xem `js/game-run.js`. */
+    PER_RIGHT: 1
+  };
+
+  /* ── DỮ LIỆU 4 TÌNH HUỐNG ────────────────────────────────────────────────
+     `need` = phải chọn đúng bao nhiêu thứ. `ok:true` = đúng.
+     `why` viết cho CẢ hai loại lựa chọn: đúng thì nói vì sao đúng, chưa đúng thì
+     nói vì sao chưa — không có mục nào bị bỏ trống. */
+  var ROUNDS = [
+    {
+      brief:{ vi:"Trạm vừa đặt xuống một mặt trăng băng giá. Kho hàng chỉ còn chỗ cho <b>ba</b> thứ. Theo NASA, sự sống cần đúng ba điều kiện cơ bản — chọn ba thứ lo được chúng.",
+              en:"Your station has just landed on an icy moon. There is room in the hold for only <b>three</b> things. NASA lists exactly three basic needs for life — pick the three that cover them." },
+      need:3,
+      items:[
+        { ic:"💧", nm:{vi:"Kho nước",en:"Water store"}, ok:true,
+          why:{vi:"NASA xếp <b>nước</b> vào nhóm nhu cầu cơ bản nhất của mọi sự sống trên Trái Đất.",
+               en:"NASA lists <b>water</b> among the most basic needs of all life on Earth."} },
+        { ic:"⚡", nm:{vi:"Tấm pin mặt trời",en:"Solar array"}, ok:true,
+          why:{vi:"Điều kiện thứ hai là một <b>nguồn năng lượng</b>. Ánh nắng là một nguồn như thế.",
+               en:"The second condition is a <b>source of energy</b>. Sunlight is one."} },
+        { ic:"🛡️", nm:{vi:"Lớp vỏ chắn tia cực tím",en:"UV shielding shell"}, ok:true,
+          why:{vi:"Điều kiện thứ ba: một <b>lớp che chắn</b> khỏi tia cực tím của ngôi sao mẹ — trên Trái Đất việc đó do khí quyển làm.",
+               en:"The third condition: <b>shielding</b> from the host star's UV radiation — on Earth the atmosphere does that job."} },
+        { ic:"🔭", nm:{vi:"Kính thiên văn",en:"Telescope"}, ok:false,
+          why:{vi:"Rất hữu ích để <i>quan sát</i>, nhưng nó không nằm trong ba điều kiện giữ mạng sống.",
+               en:"Great for <i>observing</i>, but it is not one of the three conditions that keep you alive."} },
+        { ic:"🗺️", nm:{vi:"Bản đồ sao in giấy",en:"Printed star chart"}, ok:false,
+          why:{vi:"Giúp tìm đường, không giúp thở. Danh sách của NASA ngắn hơn ta tưởng.",
+               en:"Helps you navigate, not breathe. NASA's list is shorter than people expect."} },
+        { ic:"🎮", nm:{vi:"Máy chơi game",en:"Games console"}, ok:false,
+          why:{vi:"Vui thì có vui — nhưng chỗ trong kho hàng thì chỉ có ba.",
+               en:"Fun, certainly — but there were only three slots in the hold."} }
+      ]
+    },
+    {
+      brief:{ vi:"Hệ thu hồi nước của trạm cần nguyên liệu. Chọn <b>ba</b> nguồn nước mà hệ thống trên Trạm Vũ trụ Quốc tế THẬT SỰ tái chế được.",
+              en:"The station's water recovery system needs input. Pick the <b>three</b> water sources the real system on the ISS actually reclaims." },
+      need:3,
+      items:[
+        { ic:"🚻", nm:{vi:"Nước tiểu của phi hành đoàn",en:"Crew urine"}, ok:true,
+          why:{vi:"Đúng, và NASA nói thẳng như vậy. Nước uống hôm nay từng là nước tiểu hôm qua.",
+               en:"Yes — NASA says so plainly. Today's drinking water was yesterday's urine."} },
+        { ic:"💨", nm:{vi:"Hơi ẩm ngưng tụ trong cabin",en:"Cabin humidity condensate"}, ok:true,
+          why:{vi:"Hơi nước phi hành đoàn thở ra được hứng lại — không một giọt nào được phép mất.",
+               en:"The moisture the crew breathes out is caught again — not a drop may be lost."} },
+        { ic:"🧑‍🚀", nm:{vi:"Nước trong bộ đồ đi ra ngoài tàu",en:"Water from spacewalk suits"}, ok:true,
+          why:{vi:"Hệ thống uống nước bên trong bộ đồ EVA cũng nằm trong danh sách NASA liệt kê.",
+               en:"The hydration system inside the EVA suit is on NASA's list too."} },
+        { ic:"🌧️", nm:{vi:"Nước mưa",en:"Rainwater"}, ok:false,
+          why:{vi:"Không có mưa trên quỹ đạo. Trạm không có \"đầu vào\" nào từ bên ngoài cả.",
+               en:"It does not rain in orbit. The station has no outside \"input\" at all."} },
+        { ic:"🌊", nm:{vi:"Nước biển",en:"Seawater"}, ok:false,
+          why:{vi:"Biển ở cách đó khoảng 400 km theo phương thẳng đứng — và không có ống dẫn nào.",
+               en:"The sea is a few hundred kilometres straight down — and there is no pipe."} },
+        { ic:"☄️", nm:{vi:"Băng lấy từ sao chổi",en:"Ice mined from a comet"}, ok:false,
+          why:{vi:"Nghe hay, nhưng đó không phải cách trạm thật đang làm. Nó tái chế thứ đã có sẵn bên trong.",
+               en:"A nice idea, but not what the real station does. It recycles what is already inside."} }
+      ]
+    },
+    {
+      brief:{ vi:"Bảng điều khiển hỏi: ECLSS — cỗ máy giữ mạng sống trên Trạm Vũ trụ Quốc tế — gồm <b>ba</b> bộ phận chính nào?",
+              en:"The console asks: ECLSS — the machine that keeps people alive on the ISS — has which <b>three</b> key components?" },
+      need:3,
+      items:[
+        { ic:"💧", nm:{vi:"Hệ thu hồi nước",en:"Water Recovery System"}, ok:true,
+          why:{vi:"Một trong ba bộ phận chính NASA liệt kê.",
+               en:"One of the three key components NASA lists."} },
+        { ic:"🌬️", nm:{vi:"Hệ làm mới không khí",en:"Air Revitalization System"}, ok:true,
+          why:{vi:"Nó gỡ khí carbonic phi hành đoàn thở ra, cùng chất bẩn vi lượng từ đồ điện tử và nhựa.",
+               en:"It removes the carbon dioxide the crew exhales, plus trace contaminants from electronics and plastics."} },
+        { ic:"🫧", nm:{vi:"Hệ sinh oxy",en:"Oxygen Generation System"}, ok:true,
+          why:{vi:"Bộ phận thứ ba — và nó làm ra oxy từ chính nước đã tái chế.",
+               en:"The third component — and it makes oxygen out of the recycled water itself."} },
+        { ic:"🧭", nm:{vi:"Hệ định vị",en:"Navigation system"}, ok:false,
+          why:{vi:"Trạm có hệ này, nhưng nó không thuộc ECLSS. ECLSS lo <i>mạng sống</i>, không lo đường đi.",
+               en:"The station has one, but it is not part of ECLSS. ECLSS handles <i>life</i>, not direction."} },
+        { ic:"🚀", nm:{vi:"Hệ động cơ đẩy",en:"Propulsion system"}, ok:false,
+          why:{vi:"Động cơ hỏng thì con tàu đứng yên; ECLSS hỏng thì không còn ai để sửa nó.",
+               en:"If an engine fails the craft stops moving; if ECLSS fails there is nobody left to repair it."} },
+        { ic:"📡", nm:{vi:"Hệ liên lạc",en:"Communications system"}, ok:false,
+          why:{vi:"Quan trọng, nhưng nằm ngoài ba bộ phận của ECLSS.",
+               en:"Important, but outside the three ECLSS components."} }
+      ]
+    },
+    {
+      brief:{ vi:"Câu cuối, và là câu bất ngờ nhất: <b>oxy để thở trên trạm đến từ đâu?</b> Chọn <b>một</b>.",
+              en:"Last one, and the most surprising: <b>where does the oxygen you breathe on the station come from?</b> Pick <b>one</b>." },
+      need:1,
+      items:[
+        { ic:"💧", nm:{vi:"Từ nước — tách nước ra bằng dòng điện",en:"From water — split apart by electricity"}, ok:true,
+          why:{vi:"Đúng. Bộ sinh oxy có một chồng pin <b>điện phân</b> nước, và một trong hai mảnh tách ra chính là oxy.",
+               en:"Correct. The oxygen generator has a cell stack that <b>electrolyzes</b> water, and one of the two pieces is oxygen."} },
+        { ic:"🛢️", nm:{vi:"Từ bình khí mang theo, đủ dùng mãi mãi",en:"From tanks brought along, enough forever"}, ok:false,
+          why:{vi:"Không thứ gì \"đủ mãi mãi\". Trạm phải <i>tự làm ra</i> oxy, không thể chỉ mang theo.",
+               en:"Nothing lasts forever. The station has to <i>make</i> its oxygen, not just carry it."} },
+        { ic:"🪨", nm:{vi:"Từ đá nghiền trên Mặt Trăng",en:"From crushed Moon rock"}, ok:false,
+          why:{vi:"Trạm bay quanh Trái Đất, không có mỏ đá nào. Nguyên liệu của nó là nước đã tái chế.",
+               en:"The station orbits Earth and has no quarry. Its raw material is recycled water."} },
+        { ic:"⚡", nm:{vi:"Từ tấm pin mặt trời",en:"From the solar panels"}, ok:false,
+          why:{vi:"Pin cho <i>điện</i>, và điện là thứ chạy máy điện phân — nhưng oxy thì ra từ nước.",
+               en:"Panels give <i>electricity</i>, which powers the electrolyzer — but the oxygen comes out of water."} }
+      ]
+    }
+  ];
+
+  var MAXP = ROUNDS.reduce(function(a,r){
+    return a + r.items.filter(function(x){ return x.ok; }).length;
+  }, 0);
+
+  /* ── Âm thanh ────────────────────────────────────────────────────────────
+     Dùng `js/sfx.js` và CHUNG khoá tắt tiếng `astroq-sfx` của cả app — đừng dựng
+     khoá thứ hai.
+     ⚠️ `AstroQSfx` KHÔNG có `toggle()`/`unlock()`/`enabled()`. API thật đúng là:
+        `on · ctx · wake · tone · beep(f) · arp · ready · pickup · nope · ignite ·
+        fanfare · rumble`. Đoán API của file dùng chung là lỗi đã trả giá ở
+        `mission-earth.html` (gọi ba hàm không tồn tại) — mở file ra đọc. */
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){
+      try{ localStorage.setItem(LS_SFX, AstroQSfx.on() ? "off" : "on"); }catch(e){}
+    },
+    pick:function(){ AstroQSfx.beep(760); },
+    good:function(){ AstroQSfx.ready(); },
+    soft:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var idx = 0;          // tình huống đang chơi
+  var picked = {};      // chỉ số item đang chọn
+  var locked = false;   // đã chốt tình huống này chưa
+  var score = 0, mined = 0;
+
+  var RUN = AstroQGameRun.create({
+    game:"survival", cost:CONFIG.COST, t:t,
+    onStart:function(){
+      idx = 0; score = 0; mined = 0;
+      newRound();
+      AstroQSfx.wake();
+    }
+  });
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function round(){ return ROUNDS[idx]; }
+  function needOf(){ return round().need; }
+  function pickedCount(){ return Object.keys(picked).length; }
+
+  function paintHud(){
+    $("hb-round").textContent = (idx+1) + "/" + ROUNDS.length;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<ROUNDS.length;i++){
+      var cls = i < idx ? "dg-dot done" : (i === idx ? "dg-dot now" : "dg-dot");
+      out += '<span class="'+cls+'"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  function paintNote(){
+    var n = needOf();
+    if(locked){ $("note").innerHTML = ""; return; }
+    $("note").innerHTML = n === 1
+      ? t("pick_one")
+      : t("pick_n").replace("{n}", n).replace("{k}", pickedCount());
+  }
+
+  function paintGrid(){
+    var r = round();
+    $("grid").innerHTML = r.items.map(function(it, i){
+      var cls = "dg-card";
+      if(locked) cls += it.ok ? " ok" : (picked[i] ? " no" : "");
+      else if(picked[i]) cls += " picked";
+      return '<button type="button" class="'+cls+'" data-i="'+i+'"'+
+             (locked ? " disabled" : "")+
+             ' aria-pressed="'+(picked[i]?"true":"false")+'">'+
+             '<span class="ic" aria-hidden="true">'+esc(it.ic)+'</span>'+
+             '<span class="nm">'+esc(L(it.nm))+'</span></button>';
+    }).join("");
+
+    if(!locked){
+      Array.prototype.forEach.call($("grid").querySelectorAll(".dg-card"), function(b){
+        b.addEventListener("click", function(){ pick(parseInt(b.getAttribute("data-i"),10)); });
+      });
+    }
+  }
+
+  function paintBrief(){
+    $("brief").innerHTML = L(round().brief);
+    $("brief-lbl").textContent = t("brief_lbl");
+  }
+
+  function render(){
+    paintBrief(); paintSteps(); paintGrid(); paintNote(); paintHud();
+    $("confirm").hidden = locked;
+    $("confirm").disabled = pickedCount() !== needOf();
+    $("next").hidden = !locked;
+    $("next").textContent = (idx === ROUNDS.length-1) ? t("finish") : t("next");
+  }
+
+  /* ── Chơi ───────────────────────────────────────────────────────────────── */
+  function pick(i){
+    if(locked) return;
+    if(picked[i]){ delete picked[i]; }
+    else {
+      /* Chọn quá số cho phép thì BỎ cái chọn sớm nhất thay vì chặn im lặng —
+         chặn im lặng là trẻ bấm mà không có gì xảy ra và tưởng nút hỏng. */
+      var keys = Object.keys(picked);
+      if(keys.length >= needOf()) delete picked[keys[0]];
+      picked[i] = true;
+    }
+    SFX.pick();
+    render();
+  }
+
+  function confirm(){
+    if(locked || pickedCount() !== needOf()) return;
+    locked = true;
+
+    var r = round(), right = 0;
+    r.items.forEach(function(it,i){ if(picked[i] && it.ok) right++; });
+    score += right;
+    mined += right * CONFIG.PER_RIGHT;
+
+    /* Hộp giải thích nói về ĐÚNG những thẻ trẻ vừa chọn — kể cả thẻ chọn sai.
+       Liệt kê hết mọi thẻ thì hộp dài và trẻ không biết chỗ nào nói về mình. */
+    var lines = r.items.map(function(it,i){
+      if(!picked[i]) return null;
+      return '<b>'+esc(L(it.nm))+'</b> — ' + L(it.why);
+    }).filter(Boolean);
+
+    var all = right === needOf();
+    var box = $("why");
+    box.className = "dg-why " + (all ? "good" : "soft");
+    box.innerHTML = '<b>'+esc(all ? t("all_right") : t("some_right"))+'</b><br/>' +
+                    lines.join("<br/>");
+    box.hidden = false;
+
+    (all ? SFX.good : SFX.soft)();
+    render();
+
+    /* ⚠️ KÉO HỘP GIẢI THÍCH VÀO TẦM MẮT. Trên điện thoại dọc, sáu thẻ lựa chọn xếp
+       một cột đã cao hơn cả sân, nên hộp "vì sao" nằm HẲN dưới mép — trẻ chốt xong
+       thấy thẻ đổi màu rồi hết, mà chính lời giải thích mới là thứ game này tồn tại
+       để dạy. Soi ảnh chụp 390×844 mới thấy; đọc code thì không.
+       Hộp luôn là con CUỐI của vùng cuộn nên cuộn hết đáy là đúng chỗ nó. */
+    var body = document.querySelector(".dg-body");
+    if(body) body.scrollTop = body.scrollHeight;
+  }
+
+  function next(){
+    if(!locked) return;
+    if(idx === ROUNDS.length-1){ endRound(); return; }
+    idx++; newRound();
+  }
+
+  function newRound(){
+    picked = {}; locked = false;
+    $("why").hidden = true; $("why").innerHTML = "";
+    render();
+  }
+
+  function endRound(){
+    var res = RUN.finish({ score:score, seconds:0, meteors:mined });
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    /* Dòng "đã cộng n tt" do JS sinh nên `applyTexts` không với tới — bài học
+       ARCADE-01, nay do `js/game-run.js` giữ nhưng vẫn phải GỌI ở đây. */
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(RUN.state() !== "idle") render();
+  }
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("confirm").addEventListener("click", confirm);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_survival.py`) ──────────
+     ⚠️ Bộ đo ĐỌC dữ liệu tình huống ở đây thay vì chép lại đáp án sang file test:
+        chép là hai nơi giữ một sự thật, và bên lệch sẽ là bộ đo báo hỏng oan.
+     ⚠️ Mọi hàm ở đây CỐ Ý không trả Promise — `page.evaluate` của Playwright tự
+        chờ promise được trả về, nên một hàm chờ cú bấm sẽ làm script test TREO
+        thay vì báo hỏng (bài học `window.__mission` ở mission-earth.html). */
+  window.__dbg = {
+    rounds: function(){
+      return ROUNDS.map(function(r){
+        return { need:r.need, items:r.items.map(function(it){
+          return { ok:!!it.ok, why:!!L(it.why) };
+        }) };
+      });
+    },
+    maxScore: function(){ return MAXP; },
+    start: function(){ RUN.start(); },
+    state: function(){ return RUN.state(); }
+  };
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  render();
+})();
+</script>
+</body>
+</html>

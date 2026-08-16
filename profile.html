@@ -218,7 +218,8 @@
       tag_wk:"Tuần này", wk_h:"So với tuần trước",
       rec_dodge:"Né Thiên Thạch", rec_defender:"Phòng Thủ Không Gian", rec_constellation:"Ghép Chòm Sao",
       rec_catch:"Bắt Sao Băng", rec_maze:"Mê Cung Thiên Hà", rec_racer:"Đường Đua Sao Chổi",
-      rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm",
+      rec_survival:"Trạm Sinh Tồn", rec_comms:"Trạm Liên Lạc", rec_recycle:"Trạm Tuần Hoàn",
+      rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm", rec_right:"đúng", rec_cmd:"lệnh", rec_gauge:"vạch",
       off_guest:"Bạn đang xem dữ liệu tạm trong máy này. <a href=\"landing-app.html\">Đăng nhập</a> để hồ sơ theo bạn sang mọi thiết bị.",
       off_net:"Không kết nối được máy chủ — đang hiện số liệu lưu trong máy. Thử tải lại trang sau nhé.",
       saved_name:"Đã đổi tên thành \"{n}\"", saved_suit:"Đã đổi trang phục sang {n}",
@@ -254,7 +255,8 @@
       tag_wk:"This week", wk_h:"Compared with last week",
       rec_dodge:"Asteroid Dodge", rec_defender:"Space Defender", rec_constellation:"Constellation Match",
       rec_catch:"Star Catcher", rec_maze:"Galaxy Maze", rec_racer:"Comet Racer",
-      rec_none:"None yet", rec_pts:"pts", rec_done:"done",
+      rec_survival:"Survival Station", rec_comms:"Comms Station", rec_recycle:"Recycling Station",
+      rec_none:"None yet", rec_pts:"pts", rec_done:"done", rec_right:"correct", rec_cmd:"cmds", rec_gauge:"gauges",
       off_guest:"You are viewing data saved on this device. <a href=\"landing-app.html\">Sign in</a> so your profile follows you everywhere.",
       off_net:"Can't reach the server — showing numbers stored on this device. Try reloading later.",
       saved_name:"Name changed to \"{n}\"", saved_suit:"Suit changed to {n}",
@@ -532,7 +534,16 @@
          `PROGRESS.bests` khong hien ra dau ca — tre lap ky luc ma khong thay no. */
       { key:"catch",         ic:"🌟", nm:t("rec_catch"),         unit:t("rec_pts"), ls:"astroq-catch-best" },
       { key:"maze",          ic:"🌀", nm:t("rec_maze"),          unit:t("rec_pts"), ls:"astroq-maze-best" },
-      { key:"racer",         ic:"🚀", nm:t("rec_racer"),         unit:t("rec_pts"), ls:"astroq-racer-best" }
+      { key:"racer",         ic:"🚀", nm:t("rec_racer"),         unit:t("rec_pts"), ls:"astroq-racer-best" },
+      /* ARCADE-07 — game lop QUYET DINH dau tien. `unit` la "dung" chu khong
+         phai "diem": diem o day la SO LUA CHON DUNG, goi la diem thi tre tuong
+         no cung thang do voi diem cua game canh no. */
+      { key:"survival",      ic:"🛟", nm:t("rec_survival"),      unit:t("rec_right"), ls:"astroq-survival-best" },
+      /* ARCADE-08 — `unit` la "lenh" chu khong phai "diem": diem o day la SO
+         LENH DUNG TINH TU DAU DAY, goi la diem thi tre tuong no cung thang do
+         voi diem cua game canh no. */
+      { key:"comms",         ic:"📡", nm:t("rec_comms"),         unit:t("rec_cmd"),   ls:"astroq-comms-best" },
+      { key:"recycle",       ic:"♻️", nm:t("rec_recycle"),       unit:t("rec_gauge"), ls:"astroq-recycle-best" }
     ];
     $("recs").innerHTML = rows.map(function(r){
       var v = r.key === "constellation" ? num(cDone) : num(bests[r.key]);

@@ -64,6 +64,36 @@
       name: { vi: "Quan sát thiên văn", en: "Sky observation" },
       skill: { vi: "Nhận ra hình dạng thật của bầu trời đêm",
                en: "Recognise the real shapes of the night sky" }
+    },
+
+    /* SINH TỒN — chương trình LỚP QUYẾT ĐỊNH đầu tiên (16/08/2026). Khác năm
+       chương trình trên ở chỗ nó không đo tay nhanh mắt tinh mà đo việc CHỌN
+       ĐÚNG: kỹ năng thật của phi hành gia phần lớn là ra quyết định đúng dưới
+       áp lực, không phải bấm nhanh (`docs/proposals/2026-08-14-…` mục 3). */
+    /* GIỮ MẠNG SỐNG — lớp quyết định, khuôn chia ngân sách (16/08/2026).
+       ⚠️ KHÁC "Quản lý tài nguyên" (Đường Đua): bên kia là cân nhiên liệu để đi
+          xa, bên này là giữ một vòng tuần hoàn không đứt. Lý do tách hẳn thành
+          chương trình riêng ghi ở `Services/Training.cs`. */
+    lifesupport: {
+      ic: "♻️",
+      name: { vi: "Giữ mạng sống", en: "Life support" },
+      skill: { vi: "Chia một nguồn có hạn cho những thứ đều cần, và thấy được cái vòng nối chúng",
+               en: "Split a limited supply between things that all need it — and see the loop that links them" }
+    },
+
+    /* LIÊN LẠC — lớp quyết định, khuôn xếp thứ tự (16/08/2026). */
+    communication: {
+      ic: "📡",
+      name: { vi: "Liên lạc", en: "Communication" },
+      skill: { vi: "Nghĩ trọn cả dãy trước khi bấm, vì lệnh đi rồi thì không gọi lại được",
+               en: "Think the whole sequence through first — once sent, it cannot be called back" }
+    },
+
+    survival: {
+      ic: "🛟",
+      name: { vi: "Sinh tồn", en: "Survival" },
+      skill: { vi: "Biết thứ gì giữ được mạng sống, và thứ gì chỉ để cho vui",
+               en: "Know what keeps people alive — and what is just nice to have" }
     }
   };
 

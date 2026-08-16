@@ -80,7 +80,12 @@
        lối `LEGACY_SRC` / `PENDING_BANK` đã dùng ở chỗ khác) để thêm một icon
        ngủ thứ bảy là phép kiểm `check_pages` mục [21] báo ngay.
 
-       ⚠️ `wave` · `leaf` · `rock` vẽ cho 4 NHÓM QUYỂN của Kho Mẫu Vật, rồi ĐO
+       ⚠️ `leaf` ĐÃ THÔI NGỦ 16/08/2026 — thẻ Trạm Tuần Hoàn (ARCADE-09) ở
+          `games.html` dùng nó, và ô icon của thẻ game là **64px**, thừa sàn 22px.
+          Đó đúng là cách danh sách này được rút ngắn: tìm một ô ĐỦ LỚN cho icon
+          đã vẽ, chứ không nhét icon vào ô nhỏ.
+
+       ⚠️ `wave` · `rock` (và `leaf` trước 16/08) vẽ cho 4 NHÓM QUYỂN của Kho Mẫu Vật, rồi ĐO
           mới thấy nhóm quyển không có ô nào đủ lớn: chip `.cc` **10,5px**, nút
           lọc là chữ inline, tiêu đề `.panel h2 .ic` **19px** — đều dưới sàn
           22px của bộ này. Ô thật sự lớn ở trang đó là **`.pod .sp` 46px**, tức

@@ -22,7 +22,18 @@ GAMES = [("game-dodge.html", 1.6), ("game-defender.html", 1.0),
          # ARCADE-05 them 12/08/2026 — cung khung game-shell, ti le 8:5.
          ("game-maze.html", 1.6),
          # ARCADE-03 them 12/08/2026 — ca SAU mini-game nay cung mot khung.
-         ("game-racer.html", 1.6)]
+         ("game-racer.html", 1.6),
+         # ARCADE-07 them 16/08/2026 — game LOP QUYET DINH dau tien. Cung khung
+         # `game-shell` nhung ti le 2.05 (rong-va-thap) chu khong phai 8:5: noi
+         # dung la CHU DE DOC, khong phai san canvas. Xem `css/decision-game.css`.
+         # ⚠️ CAP (rong, hep): day la game DUY NHAT doi ti le theo kho man —
+         #    noi dung la CHU DE DOC nen man hep phai cho hop CAO, khong phai
+         #    hop thap-ma-rong. Sau game kia dung mot ti le o moi kho.
+         ("game-survival.html", (2.05, 0.72)),
+         # ARCADE-08 — cung lop QUYET DINH, cung `css/decision-game.css` nen
+         # cung cap ti le. Khuon choi thi khac han (xep thu tu).
+         ("game-comms.html", (2.05, 0.72)),
+         ("game-recycle.html", (2.05, 0.72))]
 
 ok_n = bad_n = 0
 
@@ -62,9 +73,13 @@ with sync_playwright() as pw:
 
     # ══════════════════════════════════════════════════════════════════════
     print("=== [1] San chiem het cho, ti le KHONG vo ===")
-    for game, ar in GAMES:
+    for game, ar_spec in GAMES:
         for name, w, h in [("FullHD", 1920, 1080), ("MacBook-Air", 1470, 956),
                            ("Win-1366", 1366, 768), ("iPhone-doc", 390, 844)]:
+            # ⚠️ Moc doi ti le la 900px, khai o `css/decision-game.css`. Game nao
+            #    chi co MOT ti le thi cap nay la mot so — giu nguyen cach cu.
+            ar = ar_spec if not isinstance(ar_spec, tuple) else (
+                 ar_spec[0] if w > 900 else ar_spec[1])
             pg = new(b, w, h, dpr=1)
             errs = []
             pg.on("pageerror", lambda e: errs.append(str(e)))
@@ -216,12 +231,25 @@ with sync_playwright() as pw:
           "Xoay" in t_vi, t_vi)
     pg.close()
 
-    # (g) ca 3 game deu co (vi no o file dung chung)
+    # (g) Loi nhac o file DUNG CHUNG nen moi game deu nhan duoc — TRU game tu khai
+    #     `data-rotate="off"`.
+    #     ⚠️ PHAT BIEU DOI 16/08/2026, VA MANH LEN. Ban cu doi MOI game phai co loi
+    #        nhac; ARCADE-07 la game CHU DE DOC, o do xoay ngang lam hop chu thap
+    #        di va kho doc hon — nhac xoay la bao tre lam cho trai nghiem te di.
+    #        Nay kiem CA HAI CHIEU: khong khai co thi PHAI co loi nhac, khai co thi
+    #        PHAI khong co. Chieu thu hai la thu ban cu khong hoi toi, nen day la
+    #        siet chat chu khong phai noi long.
     for game, _ in GAMES:
         pg = new(b, 390, 844, touch=True)
         pg.goto(BASE + game); pg.wait_for_timeout(700)
-        check("[3g] %s: co loi nhac (dung chung, khong chep 3 ban)" % game,
-              pg.locator(".rot.show").count() == 1)
+        off = pg.evaluate("() => document.querySelector('.stage')"
+                          ".getAttribute('data-rotate') === 'off'")
+        n = pg.locator(".rot.show").count()
+        if off:
+            check("[3g] %s: CO Y khong nhac xoay (game chu)" % game, n == 0, str(n))
+        else:
+            check("[3g] %s: co loi nhac (dung chung, khong chep nhieu ban)" % game,
+                  n == 1, str(n))
         pg.close()
 
     b.close()

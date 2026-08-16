@@ -64,6 +64,9 @@ PAGES = [
     ("game-constellation.html", None,         None),
     # ARCADE-06 them 12/08/2026
     ("game-catch.html",    None,              None),
+    ("game-survival.html", None,              None),
+    ("game-comms.html",    None,              None),
+    ("game-recycle.html",  None,              None),
     ("game-maze.html",     None,              None),
     ("game-racer.html",    None,              None),
     ("explorer.html",      "#deck-title",     None),

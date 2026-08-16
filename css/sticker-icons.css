@@ -97,6 +97,12 @@
    năm bảng + tím mặc định — tức hai khu buộc phải dùng chung một màu. `gold` để cho
    Sổ Tay (hổ phách), `orange` cho Khu Huấn Luyện (cam). */
 .sic--orange{ --sic-a: #ffe0c2; --sic-b: #fb923c; --sic-c: #9a3412; }
+/* ⚠️ BẢNG MÀU THỨ BẢY, thêm 16/08/2026 cho chương trình SINH TỒN (ARCADE-07).
+   Không dùng lại `lime` — đó là màu của Mê Cung (chương trình Định hướng), và hai
+   chương trình KHÔNG liên quan gì nhau mà cùng một tông thì màu thôi mang nghĩa.
+   Dùng chung màu chỉ đúng khi hai game thuộc CÙNG chương trình, như Né Thiên Thạch
+   và Bắt Sao Băng đều `cyan` (Phản xạ). */
+.sic--teal  { --sic-a: #ccfbf1; --sic-b: #2dd4bf; --sic-c: #115e59; }
 
 /* Trạng thái KHOÁ / CHƯA MỞ — bạc xám + nhạt bớt.
    ⚠️ KHÔNG dùng `filter:grayscale()` (bài học đã trả giá 3 lần trong dự án: trên

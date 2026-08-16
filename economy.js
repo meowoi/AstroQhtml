@@ -45,8 +45,8 @@
      Khó 5. Bảng này chỉ là BẢN SAO để giao diện hiện phí trước khi gọi server —
      server vẫn là nơi quyết định trừ bao nhiêu. `check_pages` mục [3d] đối chiếu
      cả ba nơi (Wallet.cs · economy.js · mảng GAMES ở games.html). */
-  var FEES = { constellation: 3, maze: 3,
-             catch: 4, racer: 4, defender: 4,
+  var FEES = { constellation: 3, maze: 3, survival: 3,
+             catch: 4, racer: 4, defender: 4, comms: 4, recycle: 4,
              dodge: 5 };
 
   // Bộ nhớ dự phòng khi localStorage không dùng được (chế độ riêng tư…).

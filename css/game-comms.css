@@ -1,0 +1,57 @@
+/* ARCADE-08 Trạm Liên Lạc — phần RIÊNG. Nạp sau css/decision-game.css.
+   Khuôn của game này là XẾP THỨ TỰ, không phải chọn thẻ — nên nó cần hai thứ mà
+   `decision-game.css` không có: một DẢI LỆNH đã xếp, và một nhịp CHỜ TÍN HIỆU.
+   ⚠️ Đặt ở đây chứ không nhét vào file dùng chung: hôm nay chỉ một game dùng, mà
+      nhét vào file chung là mời game sau dùng lại một khuôn — đúng thứ
+      `docs/decisions/002` cấm (một khuôn không quá 2 lần). Khi có game thứ hai
+      thật sự xếp thứ tự thì hãy chuyển lên. */
+
+/* ── Dải lệnh đã xếp ─────────────────────────────────────────────────────── */
+.cm-strip{flex:none;display:flex;flex-direction:column;gap:6px;
+  border:1px dashed rgba(150,180,255,.3);border-radius:13px;padding:9px;
+  background:rgba(15,23,42,.4);}
+.cm-strip.full{border-style:solid;border-color:rgba(56,189,248,.5);}
+.cm-empty{margin:0;text-align:center;font-size:12px;color:var(--ink-faint);padding:6px 0;}
+
+.cm-slot{display:flex;align-items:center;gap:9px;min-height:44px;
+  padding:7px 11px;border-radius:11px;font-family:inherit;font-size:12.6px;
+  text-align:left;color:var(--ink);cursor:pointer;width:100%;
+  border:1px solid rgba(120,160,255,.25);background:rgba(20,32,64,.72);
+  transition:border-color .2s,background .2s,transform .2s var(--jelly);}
+.cm-slot:hover:not(:disabled){border-color:rgba(255,138,138,.6);}
+.cm-slot:active:not(:disabled){transform:scale(.985);}
+.cm-slot:disabled{cursor:default;}
+/* Số thứ tự — thứ duy nhất nói ra rằng đây là một DÃY chứ không phải một đống. */
+.cm-n{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  background:rgba(56,189,248,.18);color:#bfe9ff;}
+.cm-slot .tx{min-width:0;}
+
+/* Kết quả sau khi phát: đúng vị trí · chỗ ĐẦU TIÊN sai · phần không kịp chạy.
+   ⚠️ Ba trạng thái, không phải hai — "chưa chạy tới" khác hẳn "sai". Gộp chúng
+      lại là nói với trẻ rằng nó sai 4 lệnh trong khi thực ra nó sai đúng 1. */
+.cm-slot.ok  {border-color:rgba(74,222,128,.6);background:rgba(10,32,24,.6);}
+.cm-slot.bad {border-color:rgba(255,138,138,.6);background:rgba(48,14,14,.5);}
+.cm-slot.skip{opacity:.4;}
+.cm-slot.ok   .cm-n{background:rgba(74,222,128,.25);color:#b9f6d0;}
+.cm-slot.bad  .cm-n{background:rgba(255,138,138,.22);color:#ffc9c9;}
+
+/* ── Nhịp CHỜ TÍN HIỆU ───────────────────────────────────────────────────
+   ⚠️ ĐÂY LÀ BÀI HỌC CỦA CẢ GAME, KHÔNG PHẢI HIỆU ỨNG CHO ĐẸP. Trẻ phải CẢM
+      được rằng lệnh đã rời tay mình và không gọi lại được — nếu bấm phát xong
+      thấy kết quả ngay thì độ trễ chỉ là một con số trong đề bài.
+   `prefers-reduced-motion` đã tắt animation toàn cục ở common.css; lúc đó vệt
+   đứng yên nhưng CHỮ vẫn nói ra quãng chờ, nên bài học không mất. */
+.cm-wait{flex:none;border-radius:13px;padding:11px 13px;text-align:center;
+  border:1px solid rgba(56,189,248,.35);background:rgba(8,26,48,.8);}
+.cm-wait p{margin:0 0 8px;font-size:12.6px;color:#bfe9ff;}
+.cm-bar{position:relative;height:6px;border-radius:99px;overflow:hidden;
+  background:rgba(120,160,255,.16);}
+.cm-bar i{position:absolute;inset:0;width:0;border-radius:99px;
+  background:linear-gradient(90deg,#5fd3ff,#8f7bff);}
+.cm-bar i.go{animation:cmFly var(--cm-ms,1600ms) linear forwards;}
+@keyframes cmFly{from{width:0;}to{width:100%;}}
+
+@media (max-width:560px){
+  .cm-slot{font-size:12px;padding:6px 9px;}
+}

@@ -1,0 +1,132 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   KHUNG DÙNG CHUNG CỦA GAME "LỚP QUYẾT ĐỊNH" (thêm 16/08/2026)
+   Nạp SAU css/game-shell.css, TRƯỚC css/<game>.css.
+
+   Vì sao có: đề xuất 14/08 (`docs/proposals/2026-08-14-…`) chỉ ra dự án đã xây
+   **6/6 game thuộc lớp HÀNH ĐỘNG** (canvas, vòng vẽ 60fps, va chạm) và chưa có
+   cái nào thuộc lớp QUYẾT ĐỊNH — mà lớp đó **rẻ hơn ~3 lần** và dạy đúng thứ một
+   phi hành gia thật làm nhiều nhất: *ra quyết định đúng dưới áp lực*, không phải
+   bấm nhanh.
+
+   File này giữ phần NHÌN dùng chung của lớp đó: bảng tình huống · thẻ lựa chọn ·
+   hộp giải thích · dãy chấm bước. Mỗi game vẫn có **khuôn chơi riêng** (chọn đồ ·
+   xếp thứ tự · quy trình có hẹn giờ · chia tài nguyên) — `docs/decisions/002`
+   cấm dùng lại một khuôn quá 2 lần, và bốn game này cố ý là bốn khuôn khác nhau.
+
+   ⚠️⚠️ TỈ LỆ SÂN ĐẢO CHIỀU SO VỚI 6 GAME KIA, VÀ ĐÓ LÀ SỐ ĐO CHỨ KHÔNG PHẢI SỞ
+      THÍCH. `js/game-shell.js` tính `--field-w = min(bề rộng, chiều cao × --ar)`.
+      Với game canvas thì nằm ngang cho sân rộng gấp đôi (iPad mini: 699×437 dọc
+      vs 992×620 ngang). Ở đây nội dung là CHỮ ĐỂ ĐỌC: trên điện thoại dọc
+      390×844, `--ar:1.5` cho ra hộp 390×260 — một khe chữ phải cuộn liên tục.
+      Nên `--ar` đổi theo khổ màn: rộng thì 1.5 (khớp khung "ô cửa" của 6 game
+      kia), hẹp thì 0.72 (hộp cao, đọc được). Và trang khai `data-rotate="off"`
+      để KHÔNG nhắc xoay ngang — xoay ngang ở đây làm mọi thứ tệ đi.
+
+   ⚠️ MỌI VÙNG CHẠM ≥48px, không phải 44. 44 là mốc TỐI THIỂU của WCAG 2.5.5;
+      đặt đúng mốc là không còn biên an toàn nào (quy tắc 10 mục 6 của CLAUDE.md).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ PHẢI KHAI CẢ `--ar` LẪN `aspect-ratio`, VÀ HAI CON SỐ PHẢI BẰNG NHAU.
+   Chúng phục vụ hai việc khác nhau: `--ar` là thứ `js/game-shell.js` đọc để tính
+   BỀ RỘNG (`--field-w = min(w, h × --ar)`), còn `aspect-ratio` là thứ cho `.field`
+   một CHIỀU CAO. Bản đầu chỉ khai `--ar` và đo được sân **1086×2px**: `.dg` là
+   `position:absolute` nên không đẩy chiều cao cho cha, `.field` co về đúng viền,
+   và mọi thẻ lựa chọn rơi ra ngoài — Playwright báo `.play intercepts pointer
+   events`, tức trẻ bấm không trúng gì cả. Lỗi chỉ lộ ra khi RENDER; đọc CSS thì
+   cả hai dòng đều hợp lệ. */
+/* ⚠️ 2.05 chứ không phải 1.5: soi ảnh chụp ở 1440×900 thấy sân cao 724px trong khi
+   nội dung chỉ chiếm ~350px — gần **400px trống** dưới hộp giải thích, đọc ra như
+   trang tải hỏng. 2.05 cho sân ~546px, vừa đủ chỗ cho tình huống dài nhất mà không
+   để lại một mảng rỗng. (Thẻ brief cao ~340px nên vẫn nằm gọn trong sân.) */
+.field{--ar:2.05;aspect-ratio:2.05;max-width:1120px;}
+@media (max-width:900px){ .field{--ar:.72;aspect-ratio:.72;} }
+
+/* Sân của game quyết định KHÔNG có canvas — nó là một bảng chữ có thể cuộn.
+   `min-height:0` là bắt buộc: thiếu nó thì con `overflow-y:auto` không co lại
+   được và cả bảng tràn ra ngoài khung thay vì cuộn bên trong. */
+.dg{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
+  padding:14px;min-height:0;
+  background:radial-gradient(circle at 50% 0%, rgba(56,189,248,.07), transparent 62%);}
+
+/* ── Thanh bước: trẻ luôn biết còn mấy tình huống nữa ───────────────────── */
+.dg-steps{display:flex;gap:6px;justify-content:center;flex:none;}
+.dg-dot{width:9px;height:9px;border-radius:50%;background:rgba(150,180,255,.24);
+  transition:background .25s,transform .25s var(--jelly);}
+.dg-dot.done{background:rgba(74,222,128,.75);}
+.dg-dot.now{background:var(--cyan,#38bdf8);transform:scale(1.34);}
+
+/* ── Bảng tình huống ────────────────────────────────────────────────────── */
+.dg-brief{flex:none;border:1px solid rgba(120,160,255,.2);border-radius:14px;
+  padding:11px 14px;background:rgba(13,20,48,.62);}
+.dg-brief .lbl{display:block;font-family:var(--font-display);font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;}
+.dg-brief p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink);}
+.dg-brief b{color:#e9d7ff;}
+
+/* ── Vùng cuộn: CHỈ phần lựa chọn cuộn, bảng tình huống và nút thì không ──
+   Cuộn cả bảng thì trẻ kéo xuống chọn xong không còn thấy đề bài nữa. */
+.dg-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:9px;padding-right:2px;}
+
+/* ── Thẻ lựa chọn ───────────────────────────────────────────────────────── */
+.dg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:9px;}
+.dg-card{display:flex;align-items:center;gap:10px;min-height:48px;
+  padding:10px 12px;border-radius:13px;text-align:left;font-family:inherit;
+  font-size:12.8px;line-height:1.4;color:var(--ink);cursor:pointer;
+  border:1px solid rgba(120,160,255,.22);background:rgba(15,23,42,.55);
+  transition:border-color .2s,background .2s,transform .2s var(--jelly);}
+.dg-card:hover:not(:disabled){border-color:rgba(56,189,248,.7);background:rgba(20,38,72,.7);}
+.dg-card:active:not(:disabled){transform:scale(.985);}
+.dg-card .ic{font-size:21px;line-height:1;flex:none;}
+.dg-card .nm{min-width:0;}
+/* Đang chọn — CHƯA chấm đúng/sai. Ba trạng thái này phải khác nhau rõ: trẻ cần
+   phân biệt "mình vừa bấm" với "cái này đúng". */
+.dg-card.picked{border-color:rgba(192,132,252,.85);background:rgba(46,20,72,.6);}
+.dg-card.ok{border-color:rgba(74,222,128,.7);background:rgba(10,32,24,.6);}
+.dg-card.no{border-color:rgba(255,138,138,.55);background:rgba(48,14,14,.5);opacity:.85;}
+.dg-card:disabled{cursor:default;}
+
+/* ── Hộp giải thích ─────────────────────────────────────────────────────
+   ⚠️ SAI KHÔNG TÔ ĐỎ RỰC và không có chữ "sai". Đây là màn học: mọi lựa chọn đều
+      được giải thích VÌ SAO, đúng cũng như chưa đúng. Cùng nguyên tắc đã chốt cho
+      `.sum-note` ở quiz và cột "cần luyện thêm" ở trang phụ huynh — tông hổ phách,
+      không phải đỏ. */
+.dg-why{flex:none;border-radius:13px;padding:10px 13px;font-size:12.6px;
+  line-height:1.55;border:1px solid rgba(120,160,255,.22);
+  background:rgba(13,20,48,.72);color:var(--ink-soft);}
+.dg-why.good{border-color:rgba(74,222,128,.45);background:rgba(10,32,24,.5);color:#b9f6d0;}
+.dg-why.soft{border-color:rgba(255,207,107,.45);background:rgba(40,30,8,.45);color:#ffd7a6;}
+.dg-why b{color:inherit;}
+
+/* ── Hàng nút dưới cùng ─────────────────────────────────────────────────── */
+.dg-acts{flex:none;display:flex;gap:9px;justify-content:center;flex-wrap:wrap;}
+.dg-btn{min-height:48px;padding:0 20px;border-radius:13px;font-family:var(--font-display);
+  font-weight:700;font-size:13px;letter-spacing:.04em;cursor:pointer;
+  border:1px solid rgba(120,160,255,.3);background:rgba(15,23,42,.6);color:var(--ink);
+  transition:border-color .2s,background .2s,transform .2s var(--jelly);}
+.dg-btn:hover:not(:disabled){border-color:rgba(56,189,248,.75);}
+.dg-btn:active:not(:disabled){transform:scale(.97);}
+.dg-btn.primary{border-color:transparent;color:#04121f;
+  background:linear-gradient(135deg,#5fd3ff,#8f7bff);}
+.dg-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* ── Dòng nhắc số lượng còn phải chọn ───────────────────────────────────── */
+.dg-note{flex:none;text-align:center;font-size:11.8px;color:var(--ink-faint);margin:0;}
+.dg-note b{color:#e9d7ff;}
+
+/* ── Dải "đọc thêm": nối Trung Tâm Đào Tạo với Trạm Tri Thức ────────────
+   ⚠️ CHỈ hiện ở màn KẾT QUẢ, không hiện ở màn brief. Đặt một đường dẫn sang
+      trang khác ngay chỗ trẻ vừa quyết định chơi là một cửa thoát đúng chỗ sai —
+      đúng lý do chủ dự án đã bỏ "đọc thêm" khỏi thẻ game ngày 15/08. Xong lượt
+      rồi thì nó là phần thưởng, không phải cửa thoát. */
+.dg-read{display:inline-flex;align-items:center;gap:7px;min-height:48px;
+  padding:0 16px;border-radius:13px;text-decoration:none;font-size:12.6px;
+  border:1px dashed rgba(150,180,255,.35);background:rgba(15,23,42,.45);
+  color:var(--ink-soft);transition:border-color .2s,color .2s;}
+.dg-read:hover{border-color:rgba(56,189,248,.8);color:var(--ink);}
+
+@media (max-width:560px){
+  .dg{padding:11px;gap:8px;}
+  .dg-grid{grid-template-columns:1fr;}
+  .dg-brief p{font-size:12.8px;}
+}

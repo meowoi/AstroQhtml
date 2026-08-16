@@ -67,6 +67,18 @@
 .card--maze   {--neon:rgba(74,222,128,.42);--neonS:rgba(74,222,128,.95);--ic-bg:rgba(74,222,128,.18);}
 .card--catch  {--neon:rgba(255,207,107,.45);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.2);}
 .card--match  {--neon:rgba(192,132,252,.42);--neonS:rgba(192,132,252,.95);--ic-bg:rgba(192,132,252,.18);}
+/* ARCADE-07 Trạm Sinh Tồn — chương trình Sinh tồn. Tông ngọc lam RIÊNG, không
+   mượn xanh lá của Mê Cung: hai chương trình khác nhau mà cùng màu thì màu
+   thôi mang nghĩa (xem ghi chú `.sic--teal` ở css/sticker-icons.css). */
+.card--survival{--neon:rgba(45,212,191,.42);--neonS:rgba(45,212,191,.95);--ic-bg:rgba(45,212,191,.18);}
+/* ARCADE-08 Trạm Liên Lạc — chương trình Liên lạc. Tông chàm, tách khỏi cyan
+   của Phản xạ: hai chương trình khác nhau thì màu phải khác. */
+.card--comms  {--neon:rgba(129,140,248,.42);--neonS:rgba(129,140,248,.95);--ic-bg:rgba(129,140,248,.18);}
+/* ARCADE-09 Trạm Tuần Hoàn — chương trình Giữ mạng sống. Xanh lá dùng CHUNG
+   với Mê Cung là chấp nhận được ở đây: bảng màu icon (`sic--*`) mới là thứ
+   phân biệt chương trình, còn `--neon` của thẻ chỉ có 6 tông dễ phân biệt và
+   hai thẻ này không bao giờ đứng cạnh nhau trong lưới (sort theo trạng thái). */
+.card--recycle{--neon:rgba(52,211,153,.42);--neonS:rgba(52,211,153,.95);--ic-bg:rgba(52,211,153,.18);}
 
 /* ============ MODAL "chưa đủ" + TOAST ============ */
 .modal{z-index:60;padding:20px;background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s;}

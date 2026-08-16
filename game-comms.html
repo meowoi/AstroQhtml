@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Liên Lạc</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<link rel="stylesheet" href="css/game-comms.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Tiến độ</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Lệnh đúng</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+        <div class="dg-brief">
+          <span class="lbl" id="brief-lbl">[ NHIỆM VỤ ]</span>
+          <p id="brief"></p>
+        </div>
+        <div class="dg-body">
+          <!-- Dải lệnh ĐÃ XẾP: đây là thứ sẽ được "phát đi" -->
+          <div class="cm-strip" id="strip"></div>
+          <!-- Kho lệnh còn lại -->
+          <div class="dg-grid" id="pool"></div>
+          <div class="cm-wait" id="wait" hidden>
+            <p id="wait-txt"></p>
+            <span class="cm-bar"><i id="wait-bar"></i></span>
+          </div>
+          <div class="dg-why" id="why" hidden></div>
+        </div>
+        <p class="dg-note" id="note"></p>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="send" type="button" data-i18n="send">📡 Phát lệnh đi</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Nhiệm vụ tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">📡</div>
+        <h2 data-i18n="start_title">Trạm Liên Lạc</h2>
+        <div class="how">
+          <span data-i18n-html="how1">📡 <b>Xếp lệnh đúng thứ tự</b> rồi mới phát đi — không sửa được nữa.</span>
+          <span data-i18n-html="how2">⏳ Tín hiệu tới Sao Hoả mất <b>bảy phút</b>. Không có ai cầm lái ở đó.</span>
+          <span data-i18n-html="how3">✅ Tính điểm theo số lệnh đúng <b>tính từ đầu dãy</b> — lệnh sai đầu tiên là dừng.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic">🛰️</div>
+        <h2 data-i18n="over_title">Hết ca liên lạc!</h2>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Lệnh đúng</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-code-written-before-launch" data-i18n="read_more">📖 Đọc bài: Không ai cầm tay lái khi tàu hạ cánh</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>4</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM LIÊN LẠC (ARCADE-08) — game LỚP QUYẾT ĐỊNH thứ hai.
+     Khuôn: **XẾP THỨ TỰ, RỒI PHÁT ĐI VÀ KHÔNG SỬA ĐƯỢC NỮA**.
+
+     ⚠️⚠️ KHUÔN NÀY PHẢI KHÁC ARCADE-07, VÀ ĐÓ LÀ RÀNG BUỘC CHỨ KHÔNG PHẢI SỞ
+        THÍCH. `docs/decisions/002`: một khuôn không dùng quá 2 lần. ARCADE-07 là
+        "chọn thẻ rồi đọc giải thích"; nếu game này cũng thế thì bốn game lớp
+        quyết định sẽ đọc ra như một game chơi bốn lần. Ở đây trẻ **sắp một DÃY**,
+        và cái sai không phải "chọn nhầm món" mà là **sai thứ tự** — một loại sai
+        khác hẳn, cần một cách nghĩ khác.
+
+     ⚠️⚠️ ĐỘ TRỄ LÀ BÀI HỌC, KHÔNG PHẢI HIỆU ỨNG. Trẻ phải bấm "phát" rồi NGỒI
+        CHỜ tín hiệu bay — nếu thấy kết quả ngay thì bảy phút chỉ là một con số
+        trong đề bài. Đây chính là điều `art-code-written-before-launch` dạy:
+        *"lập trình nghĩa là viết trước mọi câu trả lời cho những câu hỏi chưa
+        xảy ra"*. Vì thế **không** cho sửa dãy sau khi phát.
+
+     ⚠️ TÍNH ĐIỂM THEO ĐOẠN ĐẦU ĐÚNG (prefix), không phải "đếm số lệnh đặt đúng
+        chỗ". Lý do là nội dung chứ không phải kỹ thuật: một dãy lệnh gửi lên tàu
+        chạy TUẦN TỰ, nên lệnh sai đầu tiên là chỗ mọi thứ dừng lại — các lệnh sau
+        nó không bao giờ chạy tới. Chấm theo prefix nói đúng điều đó; chấm rời
+        từng ô thì thưởng cho một thứ không xảy ra ngoài đời.
+
+     ⚠️⚠️ MỌI SỰ THẬT LẤY TỪ BA BÀI ĐỌC ĐÃ CÓ, không tra nguồn mới:
+       · `art-code-written-before-launch`
+         → https://www.jpl.nasa.gov/edu/resources/project/code-a-mars-landing/
+         "It takes a signal around seven minutes to be sent from Earth to Mars and
+          another seven minutes to come back"
+         "we can't control the spacecraft in real-time like one would in a video game"
+         "hundreds of thousands of lines of code, providing instructions for each of
+          the maneuvers it will need to perform to land safely"
+         "Entry, descent, and landing … from the time a spacecraft encounters the top
+          of the Martian atmosphere until it safely touches down"
+       · `art-how-data-gets-home` → https://spaceplace.nasa.gov/dsn-antennas/en/
+         tàu chỉ có ăng-ten nhỏ ⇒ tín hiệu về rất YẾU; ăng-ten lớn nhất mỗi trạm
+         rộng 70 mét.
+       · `art-three-stations-120-degrees`
+         → https://www.nasa.gov/directorates/somd/space-communications-navigation-program/what-is-the-deep-space-network/
+         BA trạm cách nhau ~120° kinh tuyến (Goldstone · Madrid · Canberra); Trái
+         Đất quay nên trạm này mất dấu thì trạm kia bắt tiếp.
+
+     ⚠️ ĐỪNG THÊM BƯỚC NGHE HỢP LÝ MÀ NGUỒN KHÔNG NÓI (nén ảnh, mã hoá, bắt tay
+        giao thức…). Dãy lệnh ở đây chỉ gồm những việc ba trang trên phát biểu.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+  var esc = AstroQ.esc;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Khu Huấn Luyện",
+      gname:"Trạm Liên Lạc",
+      round_lbl:"Tiến độ", score_lbl:"Lệnh đúng", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím",
+      brief_lbl:"[ NHIỆM VỤ ]", sfx_aria:"Âm thanh",
+      start_title:"Trạm Liên Lạc",
+      how1:"📡 <b>Xếp lệnh đúng thứ tự</b> rồi mới phát đi — không sửa được nữa.",
+      how2:"⏳ Tín hiệu tới Sao Hoả mất <b>bảy phút</b>. Không có ai cầm lái ở đó.",
+      how3:"✅ Tính điểm theo số lệnh đúng <b>tính từ đầu dãy</b> — lệnh sai đầu tiên là dừng.",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu",
+      send:"📡 Phát lệnh đi", next:"Nhiệm vụ tiếp →", finish:"Xem kết quả →",
+      strip_empty:"Chưa có lệnh nào. Bấm vào kho lệnh bên dưới để xếp dãy.",
+      note_build:"Đã xếp <b>{k}</b>/<b>{n}</b> lệnh · bấm một lệnh trong dãy để bỏ ra",
+      note_sent:"Đã phát — không gọi lại được nữa.",
+      wait_out:"Tín hiệu đang bay tới tàu… <b>7 phút</b>",
+      wait_run:"Tàu đang thi hành dãy lệnh…",
+      wait_back:"Tin báo đang bay về Trái Đất… <b>7 phút</b> nữa",
+      all_right:"Cả dãy chạy trọn vẹn!",
+      some_right:"Tàu dừng ở lệnh thứ {i}.",
+      none_right:"Lệnh đầu tiên đã sai, tàu không đi được bước nào.",
+      why_ok:"<b>{n}</b> lệnh chạy đúng.",
+      why_stop:"Lệnh <b>{n}</b> đáng lẽ phải là: <b>{c}</b>",
+      why_skip:"Những lệnh sau đó không bao giờ chạy tới — tàu đã dừng rồi.",
+      over_title:"Hết ca liên lạc!",
+      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng",
+      read_more:"📖 Đọc bài: Không ai cầm tay lái khi tàu hạ cánh",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Một lượt tốn {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn",
+      best_toast:"Kỷ lục mới!",
+      title:"AstroQ — Trạm Liên Lạc"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Training Simulator",
+      gname:"Comms Station",
+      round_lbl:"Progress", score_lbl:"Correct", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors",
+      brief_lbl:"[ TASK ]", sfx_aria:"Sound",
+      start_title:"Comms Station",
+      how1:"📡 <b>Put the commands in order</b>, then send — no edits after that.",
+      how2:"⏳ A signal takes <b>seven minutes</b> to reach Mars. Nobody is steering out there.",
+      how3:"✅ You score the commands that are right <b>from the start of the line</b> — the first wrong one stops it.",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start",
+      send:"📡 Transmit", next:"Next task →", finish:"See results →",
+      strip_empty:"No commands yet. Tap the command pool below to build the sequence.",
+      note_build:"<b>{k}</b>/<b>{n}</b> commands queued · tap one in the line to take it out",
+      note_sent:"Transmitted — you cannot call it back.",
+      wait_out:"Signal on its way to the spacecraft… <b>7 minutes</b>",
+      wait_run:"The spacecraft is running your sequence…",
+      wait_back:"Report flying back to Earth… <b>7 minutes</b> more",
+      all_right:"The whole sequence ran!",
+      some_right:"The spacecraft stopped at command {i}.",
+      none_right:"The very first command was wrong — it never moved.",
+      why_ok:"<b>{n}</b> commands ran correctly.",
+      why_stop:"Command <b>{n}</b> should have been: <b>{c}</b>",
+      why_skip:"Everything after that never ran — the spacecraft had already stopped.",
+      over_title:"Comms shift over!",
+      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub",
+      read_more:"📖 Read: Nobody is at the wheel when a spacecraft lands",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"A run costs {cost} Purple Meteors and you have {bal}. Take a Quiz to earn more!",
+      need_go:"Take a Quiz",
+      paid_line:"Added {n} {tt} to your wallet",
+      best_toast:"New best!",
+      title:"AstroQ — Comms Station"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  var CONFIG = {
+    COST: 4,            // khớp Wallet.Fees["comms"] (medium) và `cost` ở mảng GAMES
+    PER_RIGHT: 1,       // 1 tt mỗi lệnh đúng
+    /* Ba nhịp chờ, cộng lại ~2,6 giây. Đủ dài để trẻ CẢM được là lệnh đã rời tay
+       mình, đủ ngắn để không thành thời gian chết. ⚠️ Đừng rút về 0 "cho nhanh":
+       cái chờ chính là bài học của game này. */
+    OUT_MS: 1100, RUN_MS: 900, BACK_MS: 700
+  };
+
+  /* ── DỮ LIỆU 4 NHIỆM VỤ ──────────────────────────────────────────────────
+     `seq` = thứ tự ĐÚNG. Kho lệnh hiện ra theo thứ tự xáo, nhưng xáo TẤT ĐỊNH
+     (xem `shuffled`) — random thật thì hai lượt chạy của bộ đo cho hai bố cục
+     khác nhau và phép kiểm thành chập chờn. */
+  var ROUNDS = [
+    {
+      brief:{ vi:"Tàu thăm dò vừa chụp xong một tấm ảnh trên Sao Hoả. Xếp lại đường đi của tấm ảnh đó cho tới khi nó hiện trên màn hình ở Trái Đất.",
+              en:"A probe has just taken a picture on Mars. Put the picture's journey home in the right order." },
+      seq:[
+        { ic:"📷", tx:{vi:"Tàu chụp ảnh trên Sao Hoả", en:"The probe takes the picture on Mars"} },
+        { ic:"📶", tx:{vi:"Ăng-ten NHỎ của tàu phát tín hiệu YẾU về Trái Đất", en:"The probe's SMALL antenna beams a WEAK signal home"} },
+        { ic:"📡", tx:{vi:"Ăng-ten rộng 70 mét ở Trái Đất nghe được tín hiệu yếu đó", en:"A 70-metre antenna on Earth hears that weak signal"} },
+        { ic:"🖥️", tx:{vi:"Tấm ảnh hiện lên màn hình", en:"The picture appears on a screen"} }
+      ]
+    },
+    {
+      brief:{ vi:"Bạn muốn bảo tàu trên Sao Hoả rẽ trái. Xếp lại đúng những gì xảy ra, từ lúc bạn bấm nút tới lúc bạn biết kết quả.",
+              en:"You want to tell a rover on Mars to turn left. Put in order what actually happens, from your button press to the moment you know the result." },
+      seq:[
+        { ic:"👆", tx:{vi:"Bạn bấm nút “rẽ trái” ở Trái Đất", en:"You press \"turn left\" on Earth"} },
+        { ic:"⏳", tx:{vi:"Lệnh bay 7 phút để tới Sao Hoả", en:"The command flies for 7 minutes to reach Mars"} },
+        { ic:"🤖", tx:{vi:"Tàu nhận lệnh và rẽ trái", en:"The rover receives it and turns left"} },
+        { ic:"⏳", tx:{vi:"Tin báo bay 7 phút để về Trái Đất", en:"The report flies 7 minutes back to Earth"} },
+        { ic:"👀", tx:{vi:"Bạn thấy kết quả — 14 phút sau khi bấm", en:"You see the result — 14 minutes after pressing"} }
+      ]
+    },
+    {
+      brief:{ vi:"Sắp tới lượt hạ cánh (EDL) — cả chuỗi chỉ kéo dài vài phút, mà một lệnh từ Trái Đất mất bảy phút mới tới. Xếp lại cách đội kỹ sư thật sự làm việc này.",
+              en:"Landing (EDL) is coming — the whole thing lasts a few minutes, while a command from Earth takes seven to arrive. Put the engineers' real approach in order." },
+      seq:[
+        { ic:"⌨️", tx:{vi:"Viết hàng trăm nghìn dòng lệnh cho từng thao tác", en:"Write hundreds of thousands of lines of code, one for each manoeuvre"} },
+        { ic:"💾", tx:{vi:"Nạp toàn bộ vào máy tính của tàu TRƯỚC khi phóng", en:"Load all of it into the spacecraft's computer BEFORE launch"} },
+        { ic:"🚀", tx:{vi:"Tàu chạm mép khí quyển Sao Hoả", en:"The spacecraft meets the top of the Martian atmosphere"} },
+        { ic:"🤖", tx:{vi:"Tàu TỰ thi hành cả chuỗi, không chờ ai", en:"The spacecraft runs the whole sequence ITSELF, waiting for nobody"} },
+        { ic:"📻", tx:{vi:"Đội ở Trái Đất nghe tin khi mọi chuyện đã xong", en:"The team on Earth hears about it once it is all over"} }
+      ]
+    },
+    {
+      brief:{ vi:"Trái Đất quay, nên một ăng-ten chỉ nhìn thấy con tàu trong một phần của ngày. Xếp lại cách Mạng Không Gian Sâu giữ cho liên lạc không đứt.",
+              en:"Earth turns, so one antenna can only see a spacecraft for part of the day. Put in order how the Deep Space Network keeps the link unbroken." },
+      seq:[
+        { ic:"🇺🇸", tx:{vi:"Goldstone (California) đang bắt được tín hiệu", en:"Goldstone (California) is holding the signal"} },
+        { ic:"🌍", tx:{vi:"Trái Đất quay, con tàu lặn dần xuống chân trời ở đó", en:"Earth turns and the spacecraft sinks toward the horizon there"} },
+        { ic:"🇪🇸", tx:{vi:"Madrid — cách 120 độ kinh tuyến — bắt tín hiệu và nói tiếp", en:"Madrid — 120 degrees of longitude away — picks it up and carries on"} },
+        { ic:"🔗", tx:{vi:"Liên lạc không đứt một giây nào", en:"The link is never broken"} }
+      ]
+    }
+  ];
+
+  var MAXP = ROUNDS.reduce(function(a,r){ return a + r.seq.length; }, 0);
+
+  /* Xáo TẤT ĐỊNH theo chỉ số vòng — hai lượt chạy cho ra cùng một bố cục, nên bộ
+     đo không chập chờn. (Cùng lý do `js/brag.js` vẽ sao nền tất định.) */
+  function shuffled(n, salt){
+    var a = [], i;
+    for(i=0;i<n;i++) a.push(i);
+    for(i=n-1;i>0;i--){
+      var j = (i*7 + salt*13 + 5) % (i+1);
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){ try{ localStorage.setItem(LS_SFX, AstroQSfx.on()?"off":"on"); }catch(e){} },
+    pick:function(){ AstroQSfx.beep(700); },
+    drop:function(){ AstroQSfx.beep(420); },
+    send:function(){ AstroQSfx.ignite(); },
+    good:function(){ AstroQSfx.ready(); },
+    soft:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var idx = 0;
+  var order = [];        // chỉ số lệnh đã xếp, theo thứ tự trẻ chọn
+  var sent = false;      // đã phát đi chưa (phát rồi thì KHÔNG sửa được)
+  var right = 0;         // số lệnh đúng của vòng này (prefix)
+  var score = 0, mined = 0;
+  var busy = false;      // đang chạy nhịp chờ — chặn mọi cú bấm
+
+  var RUN = AstroQGameRun.create({
+    game:"comms", cost:CONFIG.COST, t:t,
+    onStart:function(){ idx=0; score=0; mined=0; newRound(); AstroQSfx.wake(); }
+  });
+
+  function round(){ return ROUNDS[idx]; }
+  function total(){ return round().seq.length; }
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function paintHud(){
+    $("hb-round").textContent = (idx+1) + "/" + ROUNDS.length;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<ROUNDS.length;i++){
+      out += '<span class="' + (i<idx ? "dg-dot done" : (i===idx ? "dg-dot now" : "dg-dot")) + '"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  function slotClass(pos){
+    if(!sent) return "cm-slot";
+    if(pos < right) return "cm-slot ok";
+    if(pos === right) return "cm-slot bad";
+    return "cm-slot skip";
+  }
+
+  function paintStrip(){
+    var el = $("strip"), r = round();
+    el.classList.toggle("full", order.length === total());
+    if(!order.length){
+      el.innerHTML = '<p class="cm-empty">' + esc(t("strip_empty")) + '</p>';
+      return;
+    }
+    el.innerHTML = order.map(function(ci, pos){
+      var it = r.seq[ci];
+      return '<button type="button" class="'+slotClass(pos)+'" data-pos="'+pos+'"'+
+             (sent ? " disabled" : "")+'>'+
+             '<span class="cm-n" aria-hidden="true">'+(pos+1)+'</span>'+
+             '<span class="tx">'+esc(L(it.tx))+'</span></button>';
+    }).join("");
+    if(!sent){
+      Array.prototype.forEach.call(el.querySelectorAll(".cm-slot"), function(b){
+        b.addEventListener("click", function(){ unpick(parseInt(b.getAttribute("data-pos"),10)); });
+      });
+    }
+  }
+
+  function paintPool(){
+    var r = round(), el = $("pool");
+    if(sent){ el.innerHTML = ""; return; }
+    var left = shuffled(r.seq.length, idx).filter(function(ci){
+      return order.indexOf(ci) === -1;
+    });
+    el.innerHTML = left.map(function(ci){
+      var it = r.seq[ci];
+      return '<button type="button" class="dg-card" data-ci="'+ci+'">'+
+             '<span class="ic" aria-hidden="true">'+esc(it.ic)+'</span>'+
+             '<span class="nm">'+esc(L(it.tx))+'</span></button>';
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".dg-card"), function(b){
+      b.addEventListener("click", function(){ pick(parseInt(b.getAttribute("data-ci"),10)); });
+    });
+  }
+
+  function paintNote(){
+    $("note").innerHTML = sent
+      ? esc(t("note_sent"))
+      : t("note_build").replace("{k}", order.length).replace("{n}", total());
+  }
+
+  function render(){
+    $("brief").innerHTML = L(round().brief);
+    $("brief-lbl").textContent = t("brief_lbl");
+    paintSteps(); paintStrip(); paintPool(); paintNote(); paintHud();
+    $("send").hidden = sent;
+    $("send").disabled = busy || order.length !== total();
+    $("next").hidden = !sent || busy;
+    $("next").textContent = (idx === ROUNDS.length-1) ? t("finish") : t("next");
+  }
+
+  /* ── Chơi ───────────────────────────────────────────────────────────────── */
+  function pick(ci){
+    if(sent || busy || order.length >= total()) return;
+    order.push(ci); SFX.pick(); render();
+  }
+  function unpick(pos){
+    if(sent || busy) return;
+    order.splice(pos, 1); SFX.drop(); render();
+  }
+
+  /** Ba nhịp chờ nối nhau: đi 7 phút → tàu chạy → tin về 7 phút. */
+  function flight(step, done){
+    var TX = ["wait_out", "wait_run", "wait_back"];
+    var MS = [CONFIG.OUT_MS, CONFIG.RUN_MS, CONFIG.BACK_MS];
+    if(step >= TX.length){ $("wait").hidden = true; done(); return; }
+    var box = $("wait"), bar = $("wait-bar");
+    box.hidden = false;
+    $("wait-txt").innerHTML = t(TX[step]);
+    box.style.setProperty("--cm-ms", MS[step] + "ms");
+    bar.classList.remove("go"); void bar.offsetWidth; bar.classList.add("go");
+    setTimeout(function(){ flight(step+1, done); }, MS[step]);
+  }
+
+  function send(){
+    if(sent || busy || order.length !== total()) return;
+    sent = true; busy = true;
+    SFX.send();
+
+    var r = round();
+    /* PREFIX: đếm từ đầu dãy tới lệnh sai ĐẦU TIÊN — xem ghi chú đầu file. */
+    right = 0;
+    while(right < order.length && order[right] === right) right++;
+
+    render();
+    /* Cuộn xuống để trẻ nhìn thấy nhịp chờ — trên màn hẹp nó nằm dưới kho lệnh. */
+    var body = document.querySelector(".dg-body");
+    if(body) body.scrollTop = body.scrollHeight;
+
+    flight(0, function(){
+      score += right;
+      mined += right * CONFIG.PER_RIGHT;
+
+      var all = right === total();
+      var lines = [t("why_ok").replace("{n}", right)];
+      if(!all){
+        lines.push(t("why_stop")
+          .replace("{n}", right + 1)
+          .replace("{c}", esc(L(r.seq[right].tx))));
+        if(right + 1 < total()) lines.push(t("why_skip"));
+      }
+      var head = all ? t("all_right")
+                     : (right === 0 ? t("none_right")
+                                    : t("some_right").replace("{i}", right + 1));
+      var box = $("why");
+      box.className = "dg-why " + (all ? "good" : "soft");
+      box.innerHTML = "<b>" + esc(head) + "</b><br/>" + lines.join("<br/>");
+      box.hidden = false;
+
+      busy = false;
+      (all ? SFX.good : SFX.soft)();
+      render();
+      if(body) body.scrollTop = body.scrollHeight;
+    });
+  }
+
+  function next(){
+    if(!sent || busy) return;
+    if(idx === ROUNDS.length-1){ endRound(); return; }
+    idx++; newRound();
+  }
+
+  function newRound(){
+    order = []; sent = false; right = 0; busy = false;
+    $("why").hidden = true; $("why").innerHTML = "";
+    $("wait").hidden = true;
+    render();
+  }
+
+  function endRound(){
+    var res = RUN.finish({ score:score, seconds:0, meteors:mined });
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(RUN.state() !== "idle") render();
+  }
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_comms.py`) ─────────────
+     ⚠️ KHÔNG hàm nào trả Promise — `page.evaluate` tự chờ promise, mà `send()`
+        có ba nhịp `setTimeout` nên script test sẽ TREO thay vì báo hỏng. */
+  window.__dbg = {
+    rounds: function(){
+      return ROUNDS.map(function(r){ return { n:r.seq.length }; });
+    },
+    maxScore: function(){ return MAXP; },
+    /** Thứ tự ĐÚNG hiện ra trong kho lệnh, theo chỉ số nút đang vẽ. */
+    poolOrder: function(){
+      return Array.prototype.map.call(
+        document.querySelectorAll("#pool .dg-card"),
+        function(b){ return parseInt(b.getAttribute("data-ci"), 10); });
+    },
+    busy: function(){ return busy; },
+    waitMs: function(){ return CONFIG.OUT_MS + CONFIG.RUN_MS + CONFIG.BACK_MS; },
+    start: function(){ RUN.start(); }
+  };
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("send").addEventListener("click", send);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  render();
+})();
+</script>
+</body>
+</html>

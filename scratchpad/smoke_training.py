@@ -83,7 +83,12 @@ with sync_playwright() as p:
     # ═══════ [3] Nhan the = TEN CHUONG TRINH ═══════
     print("\n[3] Nhan tren the la ten chuong trinh, khong phai the loai game")
     tags = pg.eval_on_selector_all(".gcard .tag", "e=>e.map(x=>x.textContent.trim())")
-    ck("moi the co nhan", len(tags) == 6, str(len(tags)))
+    # ⚠️ KHONG gan cung so the: them game thu 7 (ARCADE-07, 16/08) la phep kiem
+    #    nay bao hong dung luc san pham lam dung. Hoi DIEU MUON BIET —
+    #    "MOI the deu co nhan" — bang cach so voi so THE thay vi mot con so.
+    n_card = pg.locator(".gcard").count()
+    ck("moi the co nhan", n_card > 0 and len(tags) == n_card,
+       f"{len(tags)} nhan / {n_card} the")
     # ⚠️ CHI liet ke nhan the loai KHONG trung ten chuong trinh nao. Ban dau toi
     #    de ca "Phản xạ" vao day — nhung do cung la TEN CHUONG TRINH moi, nen phep
     #    kiem khong bao gio xanh duoc du san pham lam dung. Phep kiem hong, khong
@@ -100,8 +105,8 @@ with sync_playwright() as p:
 
     # ═══════ [4] Dong ky nang + duong doc bai ═══════
     print("\n[4] Dong ky nang va duong sang bai doc")
-    ck("moi the co dong ky nang", pg.locator(".gcard .skill").count() == 6,
-       str(pg.locator(".gcard .skill").count()))
+    ck("moi the co dong ky nang", pg.locator(".gcard .skill").count() == n_card,
+       f'{pg.locator(".gcard .skill").count()} / {n_card} the')
     ck("KHONG con duong doc bai tren the", pg.locator(".gcard .readlink").count() == 0,
        str(pg.locator(".gcard .readlink").count()))
     # Nut Choi ngay van bam duoc va khong `disabled`

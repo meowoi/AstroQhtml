@@ -1,0 +1,72 @@
+/* ARCADE-09 Trạm Tuần Hoàn — phần RIÊNG. Nạp sau css/decision-game.css.
+   Khuôn: CHIA TÀI NGUYÊN THEO LƯỢT. Nó cần hai thứ mà hai game lớp quyết định
+   trước không có: ba VẠCH trạng thái đọc được liên tục, và một bảng CHIA ĐIỆN.
+   ⚠️ Để ở đây chứ không nhét vào file dùng chung — hôm nay chỉ một game dùng, mà
+      nhét vào chung là mời game sau dùng lại khuôn này (`docs/decisions/002`). */
+
+/* ── Ba vạch trạng thái ──────────────────────────────────────────────────── */
+.rc-gauges{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.rc-g{border:1px solid rgba(120,160,255,.2);border-radius:12px;padding:8px 10px;
+  background:rgba(13,20,48,.6);min-width:0;}
+.rc-g .hd{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.rc-g .ic{font-size:15px;line-height:1;flex:none;}
+.rc-g .nm{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* ⚠️ Số dùng `tabular-nums` + bề rộng cố định: không có nó thì "100" và "8" cho
+   hai bề rộng khác nhau và cả hàng nhích qua nhích lại mỗi lượt (bài học thanh
+   HUD của Né Thiên Thạch, 14/08). */
+.rc-g .v{margin-left:auto;flex:none;font-family:var(--font-display);font-weight:700;
+  font-size:13px;font-variant-numeric:tabular-nums;min-width:3ch;text-align:right;}
+.rc-bar{height:7px;border-radius:99px;overflow:hidden;background:rgba(120,160,255,.14);}
+.rc-bar i{display:block;height:100%;border-radius:99px;transition:width .45s var(--ease);}
+
+/* Ba mức: ổn · thấp · nguy cấp. ⚠️ Đỏ ở đây là trạng thái CỦA TRẠM, không phải
+   lời phán xét về đứa trẻ — khác hẳn chỗ cấm dùng đỏ ở báo cáo phụ huynh và ở
+   bảng tổng kết quiz. Cùng cách Phòng Thủ Không Gian tô thanh giáp xanh→cam→đỏ. */
+.rc-g.ok   .v{color:#b9f6d0;} .rc-g.ok   .rc-bar i{background:linear-gradient(90deg,#4ade80,#22d3ee);}
+.rc-g.low  .v{color:#ffd7a6;} .rc-g.low  .rc-bar i{background:linear-gradient(90deg,#fbbf24,#fb923c);}
+.rc-g.crit .v{color:#ffb4b4;} .rc-g.crit .rc-bar i{background:linear-gradient(90deg,#f87171,#ef4444);}
+
+/* ── Bảng chia điện ──────────────────────────────────────────────────────── */
+.rc-power{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:12.5px;color:var(--ink-soft);}
+.rc-power b{font-family:var(--font-display);font-size:15px;color:#e9d7ff;
+  font-variant-numeric:tabular-nums;}
+
+.rc-rows{display:flex;flex-direction:column;gap:8px;}
+.rc-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;
+  border:1px solid rgba(120,160,255,.2);background:rgba(15,23,42,.55);}
+.rc-row .ic{font-size:19px;line-height:1;flex:none;}
+.rc-row .tx{min-width:0;font-size:12.4px;line-height:1.35;}
+.rc-row .tx b{display:block;color:var(--ink);}
+.rc-row .tx span{color:var(--ink-faint);font-size:11.4px;}
+.rc-stepper{margin-left:auto;flex:none;display:flex;align-items:center;gap:6px;}
+/* 48px chứ không 44 — quy tắc 10 mục 6 của CLAUDE.md. */
+.rc-btn{width:48px;height:48px;border-radius:12px;flex:none;
+  font-family:var(--font-display);font-size:19px;font-weight:700;cursor:pointer;
+  border:1px solid rgba(120,160,255,.3);background:rgba(20,32,64,.75);color:var(--ink);
+  transition:border-color .2s,background .2s,transform .18s var(--jelly);}
+.rc-btn:hover:not(:disabled){border-color:rgba(56,189,248,.8);}
+.rc-btn:active:not(:disabled){transform:scale(.94);}
+.rc-btn:disabled{opacity:.35;cursor:not-allowed;}
+.rc-n{min-width:2.2ch;text-align:center;font-family:var(--font-display);font-weight:700;
+  font-size:16px;font-variant-numeric:tabular-nums;}
+
+/* ── Nhật ký một ngày ────────────────────────────────────────────────────── */
+.rc-log{flex:none;border-radius:12px;padding:9px 12px;font-size:12.3px;line-height:1.55;
+  border:1px solid rgba(120,160,255,.2);background:rgba(13,20,48,.7);color:var(--ink-soft);}
+.rc-log b{color:#e9d7ff;}
+.rc-log .warn{color:#ffd7a6;}
+
+/* ⚠️ NHÃN "MÔ PHỎNG" KHÔNG ĐƯỢC BỎ ĐI CHO GỌN. Ba vạch và mọi con số ở đây là
+   một mô hình ĐƠN GIẢN HOÁ để chơi — NASA không công bố bộ số nào như thế. Cùng
+   bài học nhãn "MINH HOẠ" của 5 mốc thời gian ở Nhiệm vụ 01 và nhãn "MÔ PHỎNG"
+   của ảnh màu giả ở Nhiệm vụ 02. */
+.rc-sim{flex:none;text-align:center;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:0;}
+
+@media (max-width:560px){
+  .rc-gauges{grid-template-columns:1fr;gap:6px;}
+  .rc-row .tx span{display:none;}
+}

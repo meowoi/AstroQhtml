@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Tuần Hoàn</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<link rel="stylesheet" href="css/game-recycle.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Ngày</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">An toàn</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+
+        <!-- Ba vạch: đọc được liên tục, không cuộn mất -->
+        <div class="rc-gauges" id="gauges"></div>
+
+        <div class="dg-body">
+          <p class="dg-note" id="hint"></p>
+          <div class="rc-power" id="power"></div>
+          <div class="rc-rows" id="rows"></div>
+          <div class="rc-log" id="log" hidden></div>
+          <div class="dg-why" id="why" hidden></div>
+        </div>
+
+        <p class="rc-sim" id="sim">MÔ PHỎNG ĐƠN GIẢN HOÁ</p>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="run" type="button" data-i18n="run_day">▶ Chạy một ngày</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Ngày tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">♻️</div>
+        <h2 data-i18n="start_title">Trạm Tuần Hoàn</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🔋 Mỗi ngày bạn chỉ có <b>5 phần điện</b> để chia cho ba hệ thống.</span>
+          <span data-i18n-html="how2">♻️ Oxy được làm ra bằng cách <b>tách nước</b> — nên chạy máy oxy là tốn nước.</span>
+          <span data-i18n-html="how3">⚠️ Một vạch chạm 0 là phi hành đoàn phải rời trạm. Giữ cả ba sống!</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic" id="over-ic">♻️</div>
+        <h2 id="over-h" data-i18n="over_title">Hết ca trực!</h2>
+        <p id="over-p"></p>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">An toàn</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-life-support-recycles-water" data-i18n="read_more">📖 Đọc bài: Cỗ máy giữ mạng sống</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>4</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM TUẦN HOÀN (ARCADE-09) — game LỚP QUYẾT ĐỊNH thứ ba.
+     Khuôn: **CHIA MỘT NGÂN SÁCH CÓ HẠN THEO TỪNG LƯỢT**.
+
+     ⚠️⚠️ KHUÔN THỨ BA, KHÁC HAI CÁI TRƯỚC — ràng buộc của `docs/decisions/002`.
+        ARCADE-07 chọn thẻ (một quyết định rời) · ARCADE-08 xếp thứ tự (một dãy) ·
+        ở đây trẻ **chia một nguồn có hạn giữa những thứ ĐỀU cần**, và hậu quả
+        không hiện ra ngay mà dồn lại qua nhiều lượt. Đó là loại quyết định thứ
+        ba, và là loại khó nhất trong ba.
+
+     ⚠️⚠️ CHỖ DẠY THẬT NẰM Ở MỘT DÂY NỐI CÓ NGUỒN: **oxy làm ra bằng cách TÁCH
+        NƯỚC**, nên chạy máy oxy là TỐN NƯỚC. Vì thế "chia đều ba phần" không
+        phải lời giải, và trẻ phải tự nhận ra cái vòng. Nếu bỏ dây nối đó đi thì
+        game này chỉ còn là ba thanh trượt độc lập — tức mất hẳn bài học.
+
+     ⚠️⚠️ MỌI CON SỐ Ở ĐÂY LÀ MÔ HÌNH ĐƠN GIẢN HOÁ, KHÔNG PHẢI SỐ CỦA NASA.
+        Trang nguồn KHÔNG công bố bộ số nào (bao nhiêu điện, tái chế bao nhiêu
+        phần trăm). Vì thế màn hình có nhãn **MÔ PHỎNG** thường trực và lời brief
+        không hứa đây là số thật — cùng luật đã áp cho 5 mốc thời gian ở Nhiệm vụ
+        01 ("MINH HOẠ") và ảnh màu giả ở Nhiệm vụ 02 ("MÔ PHỎNG").
+        ⛔ ĐỪNG thêm "≈90% nước được tái chế" hay "lò Sabatier": cả hai đến từ
+           BẢN TÓM TẮT của bộ tra cứu, `art-life-support-recycles-water` đã ghi
+           rõ là **không đọc thấy trên trang NASA**.
+
+     NGUỒN — một bài đọc đã có trong kho, đã trích nguyên văn và kiểm URL 200:
+       `js/article/art-life-support-recycles-water.js`
+       → https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/
+       · "ECLSS includes three key components — the Water Recovery System, the Air
+          Revitalization System and the Oxygen Generation System."
+       · "The Water Recovery System provides clean water by reclaiming wastewater
+          (including water from crew members' urine), cabin humidity condensate…"
+       · "The Air Revitalization System is dedicated to cleaning the circulating
+          cabin air … including carbon dioxide exhaled by the crew"
+       · "the cell stack, which electrolyzes, or breaks apart, water"
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+  var esc = AstroQ.esc;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Khu Huấn Luyện",
+      gname:"Trạm Tuần Hoàn",
+      /* ⚠️ Nhãn chip HUD phải NGẮN — console dọc chỉ cho ~51px. "Vạch an toàn"
+         đo được 63px và bị cắt thành "Vạch an…" (audit_viewports bắt được). */
+      round_lbl:"Ngày", score_lbl:"An toàn", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím", sfx_aria:"Âm thanh",
+      sim:"MÔ PHỎNG ĐƠN GIẢN HOÁ",
+      start_title:"Trạm Tuần Hoàn",
+      how1:"🔋 Mỗi ngày bạn chỉ có <b>5 phần điện</b> để chia cho ba hệ thống.",
+      how2:"♻️ Oxy được làm ra bằng cách <b>tách nước</b> — nên chạy máy oxy là tốn nước.",
+      how3:"⚠️ Một vạch chạm 0 là phi hành đoàn phải rời trạm. Giữ cả ba sống!",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Bắt đầu",
+      run_day:"▶ Chạy một ngày", next:"Ngày tiếp →", finish:"Xem kết quả →",
+      g_water:"Nước", g_air:"Khí sạch", g_oxy:"Oxy",
+      s_water:"Hệ thu hồi nước", s_air:"Hệ làm mới không khí", s_oxy:"Hệ sinh oxy",
+      d_water:"lọc lại nước thải và hơi ẩm trong cabin",
+      d_air:"gỡ khí carbonic phi hành đoàn thở ra",
+      d_oxy:"tách nước để lấy oxy — <b>tốn nước</b>",
+      power_left:"Điện còn lại hôm nay: <b>{n}</b> / {t} phần",
+      hint_spend:"Chia hết điện rồi bấm “Chạy một ngày”.",
+      hint_ready:"Đã chia xong — chạy thử xem trạm sống thế nào.",
+      log_head:"<b>Ngày {d}:</b> ",
+      log_w:"nước {a}", log_a:"khí sạch {a}", log_o:"oxy {a}",
+      log_oxy_cost:" · máy oxy đã dùng thêm <b>{n}</b> nước",
+      log_safe:" — <b>{n}</b> vạch còn an toàn.",
+      log_warn:" ⚠️ có vạch đang xuống thấp!",
+      over_title:"Hết ca trực!", over_dead:"Trạm phải sơ tán!",
+      over_p_ok:"Bạn giữ được cả ba hệ thống suốt {d} ngày.",
+      over_p_dead:"{g} đã cạn ở ngày {d} — phi hành đoàn phải rời trạm.",
+      why_loop:"<b>Cái vòng:</b> nước được lọc lại từ chính hơi ẩm và nước thải; rồi nước ấy bị <b>tách ra</b> để lấy oxy để thở. Cùng một mớ vật chất đi vòng mãi — nên chạy máy oxy mà bỏ đói máy nước là cả vòng đứt.",
+      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng",
+      read_more:"📖 Đọc bài: Cỗ máy giữ mạng sống",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Một lượt tốn {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn",
+      best_toast:"Kỷ lục mới!",
+      title:"AstroQ — Trạm Tuần Hoàn"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Training Simulator",
+      gname:"Recycling Station",
+      round_lbl:"Day", score_lbl:"Safe", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors", sfx_aria:"Sound",
+      sim:"SIMPLIFIED SIMULATION",
+      start_title:"Recycling Station",
+      how1:"🔋 Each day you get only <b>5 units of power</b> to split between three systems.",
+      how2:"♻️ Oxygen is made by <b>splitting water</b> — so running the oxygen plant costs water.",
+      how3:"⚠️ If any gauge hits 0 the crew must leave. Keep all three alive!",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      start_btn:"Start",
+      run_day:"▶ Run one day", next:"Next day →", finish:"See results →",
+      g_water:"Water", g_air:"Clean air", g_oxy:"Oxygen",
+      s_water:"Water Recovery System", s_air:"Air Revitalization System", s_oxy:"Oxygen Generation System",
+      d_water:"reclaims wastewater and cabin humidity",
+      d_air:"removes the carbon dioxide the crew breathes out",
+      d_oxy:"splits water to make oxygen — <b>uses water</b>",
+      power_left:"Power left today: <b>{n}</b> / {t} units",
+      hint_spend:"Spend all the power, then press \"Run one day\".",
+      hint_ready:"All allocated — run the day and see how the station copes.",
+      log_head:"<b>Day {d}:</b> ",
+      log_w:"water {a}", log_a:"clean air {a}", log_o:"oxygen {a}",
+      log_oxy_cost:" · the oxygen plant used <b>{n}</b> more water",
+      log_safe:" — <b>{n}</b> gauges still safe.",
+      log_warn:" ⚠️ a gauge is running low!",
+      over_title:"Shift complete!", over_dead:"Station evacuated!",
+      over_p_ok:"You kept all three systems alive for {d} days.",
+      over_p_dead:"{g} ran out on day {d} — the crew had to leave.",
+      why_loop:"<b>The loop:</b> water is reclaimed from the crew's own humidity and wastewater; that water is then <b>split apart</b> to give the oxygen they breathe. The same handful of matter, going round and round — so starving the water system while running the oxygen plant breaks the whole loop.",
+      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub",
+      read_more:"📖 Read: The machine that keeps you alive",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"A run costs {cost} Purple Meteors and you have {bal}. Take a Quiz to earn more!",
+      need_go:"Take a Quiz",
+      paid_line:"Added {n} {tt} to your wallet",
+      best_toast:"New best!",
+      title:"AstroQ — Recycling Station"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  /* ── LUẬT MÔ PHỎNG ───────────────────────────────────────────────────────
+     ⚠️ Bộ số này CHỌN ĐỂ CHƠI ĐƯỢC, không phải số của NASA — xem ghi chú đầu file.
+     Cân bằng có chủ đích: với 5 phần điện thì **không giữ nổi cả ba vạch đứng
+     yên** trong cùng một ngày, nên trẻ buộc phải luân phiên. Kiểm bằng phép tính:
+       · dồn 2/2/1 → nước −1 · khí +4 · oxy −4
+       · dồn 3/1/1 → nước +7 · khí −5 · oxy −4
+       · dồn 2/1/2 → nước −6 · khí −5 · oxy +5
+     Không tổ hợp nào cho cả ba ≥ 0 ⇒ phải chọn hôm nay bỏ đói cái nào. Đó CHÍNH
+     LÀ bài tập. ⛔ Nới `POWER` lên 6 là mọi tổ hợp đều sống và game hết ý nghĩa. */
+  var CONFIG = {
+    COST: 4,            // khớp Wallet.Fees["recycle"] (medium) và `cost` ở GAMES
+    DAYS: 5,
+    POWER: 5,
+    START: 70, MAXV: 100,
+    SAFE: 30,           // dưới mốc này là "thấp"; chạm 0 là hết lượt
+    DRAIN: { w:12, a:14, o:13 },   // phi hành đoàn tiêu mỗi ngày
+    GAIN:  { w:8,  a:9,  o:9  },   // mỗi phần điện hồi được bao nhiêu
+    OXY_WATER: 5        // ⚠️ DÂY NỐI CÓ NGUỒN: mỗi phần điện cho máy oxy tốn ngần
+                        //    này nước, vì oxy làm ra bằng cách TÁCH NƯỚC.
+  };
+  var MAXP = CONFIG.DAYS * 3;      // mỗi ngày tối đa 3 vạch an toàn
+
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){ try{ localStorage.setItem(LS_SFX, AstroQSfx.on()?"off":"on"); }catch(e){} },
+    tick:function(){ AstroQSfx.beep(640); },
+    day:function(){ AstroQSfx.ignite(); },
+    good:function(){ AstroQSfx.ready(); },
+    bad:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var day = 0;                       // ngày đang chia điện (0-based)
+  var lv = { w:0, a:0, o:0 };        // ba vạch
+  var alloc = { w:0, a:0, o:0 };     // điện đã chia hôm nay
+  var ran = false;                   // đã chạy ngày này chưa
+  var dead = "";                     // vạch nào cạn (khoá) — rỗng = còn sống
+  var score = 0, mined = 0;
+
+  var RUN = AstroQGameRun.create({
+    game:"recycle", cost:CONFIG.COST, t:t,
+    onStart:function(){
+      day = 0; score = 0; mined = 0; dead = "";
+      lv = { w:CONFIG.START, a:CONFIG.START, o:CONFIG.START };
+      newDay(); AstroQSfx.wake();
+    }
+  });
+
+  var KEYS = ["w", "a", "o"];
+  var META = {
+    w:{ ic:"💧", g:"g_water", s:"s_water", d:"d_water" },
+    a:{ ic:"🌬️", g:"g_air",   s:"s_air",   d:"d_air"   },
+    o:{ ic:"🫧", g:"g_oxy",   s:"s_oxy",   d:"d_oxy"   }
+  };
+
+  function spent(){ return alloc.w + alloc.a + alloc.o; }
+  function left(){ return CONFIG.POWER - spent(); }
+  function band(v){ return v <= 0 ? "crit" : (v < CONFIG.SAFE ? "low" : "ok"); }
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function paintHud(){
+    $("hb-round").textContent = Math.min(day+1, CONFIG.DAYS) + "/" + CONFIG.DAYS;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<CONFIG.DAYS;i++){
+      out += '<span class="' + (i<day ? "dg-dot done" : (i===day ? "dg-dot now" : "dg-dot")) + '"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  function paintGauges(){
+    $("gauges").innerHTML = KEYS.map(function(k){
+      var v = Math.max(0, Math.round(lv[k]));
+      return '<div class="rc-g '+band(v)+'">'+
+               '<div class="hd"><span class="ic" aria-hidden="true">'+META[k].ic+'</span>'+
+                 '<span class="nm">'+esc(t(META[k].g))+'</span>'+
+                 '<span class="v">'+v+'</span></div>'+
+               '<span class="rc-bar"><i style="width:'+v+'%"></i></span>'+
+             '</div>';
+    }).join("");
+  }
+
+  function paintRows(){
+    if(ran){ $("rows").innerHTML = ""; $("power").innerHTML = ""; return; }
+    $("power").innerHTML = t("power_left").replace("{n}", left()).replace("{t}", CONFIG.POWER);
+    $("rows").innerHTML = KEYS.map(function(k){
+      return '<div class="rc-row">'+
+               '<span class="ic" aria-hidden="true">'+META[k].ic+'</span>'+
+               '<span class="tx"><b>'+esc(t(META[k].s))+'</b><span>'+t(META[k].d)+'</span></span>'+
+               '<span class="rc-stepper">'+
+                 '<button type="button" class="rc-btn" data-k="'+k+'" data-d="-1"'+
+                   (alloc[k]<=0 ? " disabled" : "")+
+                   ' aria-label="'+esc(t(META[k].s))+' −">−</button>'+
+                 '<span class="rc-n">'+alloc[k]+'</span>'+
+                 '<button type="button" class="rc-btn" data-k="'+k+'" data-d="1"'+
+                   (left()<=0 ? " disabled" : "")+
+                   ' aria-label="'+esc(t(META[k].s))+' +">+</button>'+
+               '</span></div>';
+    }).join("");
+    Array.prototype.forEach.call($("rows").querySelectorAll(".rc-btn"), function(b){
+      b.addEventListener("click", function(){
+        step(b.getAttribute("data-k"), parseInt(b.getAttribute("data-d"),10));
+      });
+    });
+  }
+
+  function render(){
+    paintSteps(); paintGauges(); paintRows(); paintHud();
+    $("sim").textContent = t("sim");
+    $("hint").textContent = ran ? "" : (left() === 0 ? t("hint_ready") : t("hint_spend"));
+    /* ⚠️ ĐÒI CHIA HẾT ĐIỆN. Cho chạy khi còn thừa thì trẻ bấm bừa cho xong và
+       không bao giờ gặp phải sự đánh đổi — mà đánh đổi mới là cả bài tập. */
+    $("run").hidden = ran;
+    $("run").disabled = left() !== 0;
+    $("next").hidden = !ran;
+    $("next").textContent = (day === CONFIG.DAYS-1 || dead) ? t("finish") : t("next");
+  }
+
+  /* ── Chơi ───────────────────────────────────────────────────────────────── */
+  function step(k, d){
+    if(ran) return;
+    var v = alloc[k] + d;
+    if(v < 0 || (d > 0 && left() <= 0)) return;
+    alloc[k] = v; SFX.tick(); render();
+  }
+
+  function runDay(){
+    if(ran || left() !== 0) return;
+    ran = true;
+    SFX.day();
+
+    var before = { w:lv.w, a:lv.a, o:lv.o };
+    /* ⚠️ TÍNH NƯỚC MẤT DO MÁY OXY *TRƯỚC* khi kẹp trần — nếu cộng nước rồi mới
+       trừ thì máy nước "bù" được phần máy oxy vừa dùng ngay trong cùng một ngày
+       và dây nối mất tác dụng. Thứ tự ở đây chính là thứ làm cái vòng có thật. */
+    var oxyWater = alloc.o * CONFIG.OXY_WATER;
+    lv.w = lv.w - CONFIG.DRAIN.w - oxyWater + alloc.w * CONFIG.GAIN.w;
+    lv.a = lv.a - CONFIG.DRAIN.a + alloc.a * CONFIG.GAIN.a;
+    lv.o = lv.o - CONFIG.DRAIN.o + alloc.o * CONFIG.GAIN.o;
+    KEYS.forEach(function(k){ lv[k] = Math.min(CONFIG.MAXV, lv[k]); });
+
+    /* Vạch nào cạn thì lượt dừng ở đây. Lấy vạch THẤP NHẤT để câu kết nói đúng
+       cái đã cạn, không nói chung chung. */
+    var worst = KEYS.reduce(function(m,k){ return lv[k] < lv[m] ? k : m; }, "w");
+    if(lv[worst] <= 0) dead = worst;
+
+    var safe = KEYS.filter(function(k){ return lv[k] >= CONFIG.SAFE; }).length;
+    score += safe;
+    mined += safe;
+
+    function arrow(k){
+      var d = Math.round(lv[k] - before[k]);
+      return (d > 0 ? "▲+" : (d < 0 ? "▼" : "•")) + (d === 0 ? "" : d);
+    }
+    var msg = t("log_head").replace("{d}", day+1)
+            + t("log_w").replace("{a}", arrow("w")) + " · "
+            + t("log_a").replace("{a}", arrow("a")) + " · "
+            + t("log_o").replace("{a}", arrow("o"));
+    if(oxyWater > 0) msg += t("log_oxy_cost").replace("{n}", oxyWater);
+    msg += t("log_safe").replace("{n}", safe);
+    if(safe < 3) msg += '<span class="warn">' + t("log_warn") + "</span>";
+    var log = $("log");
+    log.innerHTML = msg; log.hidden = false;
+
+    /* Hộp giải thích cái VÒNG chỉ hiện MỘT LẦN — đúng lúc trẻ vừa thấy máy oxy
+       ăn mất nước của mình. Hiện lại mỗi ngày thì nó thành nhiễu. */
+    if(oxyWater > 0 && $("why").hidden){
+      var box = $("why");
+      box.className = "dg-why";
+      box.innerHTML = t("why_loop");
+      box.hidden = false;
+    }
+
+    (safe === 3 ? SFX.good : SFX.bad)();
+    render();
+    var body = document.querySelector(".dg-body");
+    if(body) body.scrollTop = body.scrollHeight;
+  }
+
+  function next(){
+    if(!ran) return;
+    if(dead || day === CONFIG.DAYS-1){ endRun(); return; }
+    day++; newDay();
+  }
+
+  function newDay(){
+    alloc = { w:0, a:0, o:0 }; ran = false;
+    $("log").hidden = true;
+    render();
+  }
+
+  function endRun(){
+    var res = RUN.finish({ score:score, seconds:0, meteors:mined });
+    $("over-ic").textContent = dead ? "🚨" : "♻️";
+    $("over-h").textContent  = dead ? t("over_dead") : t("over_title");
+    $("over-p").textContent  = dead
+      ? t("over_p_dead").replace("{g}", t(META[dead].g)).replace("{d}", day+1)
+      : t("over_p_ok").replace("{d}", CONFIG.DAYS);
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(RUN.state() !== "idle") render();
+  }
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_recycle.py`) ───────────
+     ⚠️ Không hàm nào trả Promise — xem ghi chú cùng chỗ ở hai game kia. */
+  window.__dbg = {
+    cfg: function(){ return { days:CONFIG.DAYS, power:CONFIG.POWER, safe:CONFIG.SAFE,
+                              start:CONFIG.START, oxyWater:CONFIG.OXY_WATER,
+                              drain:CONFIG.DRAIN, gain:CONFIG.GAIN }; },
+    maxScore: function(){ return MAXP; },
+    levels: function(){ return { w:lv.w, a:lv.a, o:lv.o }; },
+    setLevels: function(w,a,o){ lv.w=w; lv.a=a; lv.o=o; render(); },
+    alloc: function(){ return { w:alloc.w, a:alloc.a, o:alloc.o }; },
+    dead: function(){ return dead; },
+    day: function(){ return day; },
+    start: function(){ RUN.start(); }
+  };
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("run").addEventListener("click", runDay);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  render();
+})();
+</script>
+</body>
+</html>

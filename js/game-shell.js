@@ -258,8 +258,20 @@
     return true;
   }
 
+  /* ⚠️ GAME NÀO CŨNG NHẮC "XOAY NGANG" LÀ SAI — thêm cửa TẮT 16/08/2026.
+     Lời nhắc này sinh ra cho game canvas: ở đó nằm ngang cho sân rộng gấp đôi
+     (đo được trên iPad mini: 699×437 dọc vs 992×620 ngang). Nhưng game **quyết
+     định** thì ngược hẳn — nó là chữ để ĐỌC, và một hộp chữ thấp-mà-rộng khó đọc
+     hơn hộp cao-mà-hẹp. Nhắc xoay ở đó là bảo trẻ làm cho trải nghiệm của nó tệ đi.
+     ⇒ Trang tự khai `data-rotate="off"` trên `.stage`. Mặc định VẪN BẬT, nên 6
+       game canvas không phải sửa một dòng nào. */
+  function rotateOff() {
+    var stage = doc.querySelector(".stage");
+    return !!(stage && stage.getAttribute("data-rotate") === "off");
+  }
+
   function refresh() {
-    if (!mqPortrait) return;
+    if (!mqPortrait || rotateOff()) { hide(); return; }
     if (!mqPortrait.matches || skipped()) { hide(); return; }
     if (playing()) return;          /* đừng cắt ngang một lượt đang chơi */
     mount();
