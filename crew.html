@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Phi Hành Đoàn Đầu Tiên</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/crew.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/characters.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<div class="wrap">
+  <header class="hub-top">
+    <button class="back-btn" id="back" type="button"><span>&lt;</span> <span data-i18n="back">Về Trung Tâm Điều Hướng</span></button>
+    <span class="hub-tag">[ FOUNDING_CREW ]</span>
+    <!-- ⚠️ KHÔNG bọc trong `.head-right`: class đó khai ở `css/shop.css`, mà trang
+         này không nạp file đó. Ở đây chỉ có một khối bên phải nên không cần bọc. -->
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Ngôn ngữ">
+      <button type="button" data-lang="vi">VI</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 data-i18n="h1">Phi Hành Đoàn Đầu Tiên</h1>
+    <p data-i18n="sub">Những người có mặt từ trước ngày astroQ mở cửa.</p>
+  </section>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="panel">
+    <span class="panel-tag" data-i18n="p_tag">[ DANH SÁCH CHỖ ]</span>
+    <div class="cw-count">
+      <b id="taken">—</b><span id="of"></span>
+    </div>
+    <div class="cw-track"><i id="track" style="width:0%"></i></div>
+    <p class="cw-note" id="note"></p>
+
+    <p class="cw-you" id="you" hidden></p>
+
+    <ul class="cw-grid" id="grid" aria-live="polite"></ul>
+    <div class="cw-empty" id="empty" hidden>
+      <span class="ic" aria-hidden="true">🚀</span>
+      <span data-i18n="empty">Chưa có ai trong danh sách. Bạn có thể là người đầu tiên.</span>
+    </div>
+
+    <!-- ⚠️ `.cw-acts` riêng chứ không mượn `.acts`: class đó khai ở
+         `css/game-shell.css` (khung mini-game), trang này không nạp. Và không
+         dùng style inline tĩnh — quy tắc 1 mục 2. -->
+    <div class="cw-acts">
+      <a class="pbtn" id="join" href="/" data-i18n="join">Ghi tên vào danh sách →</a>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     PHI HÀNH ĐOÀN ĐẦU TIÊN — mục C3 của `docs/proposals/2026-08-12`.
+
+     ⚠️⚠️ TRANG NÀY KHÔNG ĐĂNG TÊN AI, VÀ ĐÓ LÀ CHỖ ĐỀ XUẤT NÓI SAI. Đề xuất viết
+        *"một trang tĩnh đọc tên (chỉ biệt danh phi hành gia)"*. Nhưng **không có
+        biệt danh nào tồn tại**: bản ghi waitlist chỉ có email, còn thứ duy nhất
+        gọi là "tên phi hành gia" là `PROFILE.name` — chữ TỰ DO trẻ tự gõ vào ô ghi
+        thẳng *"Nhập tên của bạn…"* ở `select.html`. Đăng nó lên một trang công
+        khai là **đăng tên thật của trẻ em**.
+        ⇒ Một chỗ ngồi ở đây là **số hiệu + nhân vật đã chọn**: số hiệu do thứ tự
+          đăng ký quyết định, nhân vật là một trong mười hình vẽ hoạt hình. Trẻ vẫn
+          nhận ra mình ("mình là #7, con chó Sirius") mà trang không mang một chữ
+          nào của riêng ai.
+        ⛔ ĐỪNG thêm tên vào đây "cho thân thiện". Lý do đầy đủ ở `Services/Crew.cs`.
+
+     ⚠️ CHỈ VẼ CHỖ ĐÃ CÓ NGƯỜI, không vẽ đủ 500 ô rồi làm mờ 498 cái. Một bức
+        tường gần như trống rỗng nói đúng điều ngược với thứ trang này tồn tại để
+        nói. Con số "n / 500" đã đủ cho biết còn bao nhiêu chỗ.
+
+     ⚠️ Trang CÓ THỂ xem khi chưa đăng nhập — đó là chủ đích: nó để nói "có cả một
+        nhóm ở đây". Chỗ của CHÍNH trẻ thì cần token, nên phần đó chỉ hiện thêm khi
+        đã đăng nhập, và **thiếu nó thì trang vẫn đủ nghĩa**.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", back:"Về Trung Tâm Điều Hướng",
+      title:"AstroQ — Phi Hành Đoàn Đầu Tiên",
+      h1:"Phi Hành Đoàn Đầu Tiên",
+      sub:"Những người có mặt từ trước ngày astroQ mở cửa.",
+      p_tag:"[ DANH SÁCH CHỖ ]",
+      of:"/ {cap} chỗ",
+      note:"Mỗi chỗ là một người đã ghi tên trước ngày mở cửa. Chỗ chưa có hình là người chưa chọn nhân vật.",
+      you:"Chỗ của bạn là <b>#{no}</b> — bạn là người thứ {no} có mặt.",
+      you_no:"Bạn chưa có trong danh sách này. Ghi tên ở trang chủ để giữ một chỗ nhé!",
+      empty:"Chưa có ai trong danh sách. Bạn có thể là người đầu tiên.",
+      join:"Ghi tên vào danh sách →",
+      err_net:"Chưa đọc được danh sách — có thể mạng đang trục trặc. Thử lại sau nhé.",
+      loading:"Đang đọc danh sách…"
+    },
+    en:{
+      a_lang:"Language", back:"Back to Navigation Hub",
+      title:"AstroQ — The Founding Crew",
+      h1:"The Founding Crew",
+      sub:"The people who were here before astroQ opened its doors.",
+      p_tag:"[ CREW ROSTER ]",
+      of:"/ {cap} seats",
+      note:"Each seat is someone who signed up before opening day. A seat with no portrait is someone who has not picked a character yet.",
+      you:"Your seat is <b>#{no}</b> — you were the {no}th to arrive.",
+      you_no:"You are not on this list yet. Sign up on the home page to hold a seat!",
+      empty:"Nobody here yet. You could be the first.",
+      join:"Put my name on the list →",
+      err_net:"Could not load the roster — the network may be having trouble. Try again later.",
+      loading:"Loading the roster…"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  var VIEW = { ok:false, cap:0, taken:0, seats:[], mine:null };
+
+  /* Ảnh nhân vật lấy từ `js/characters.js` — CHỖ DUY NHẤT khai roster. Nhân vật
+     server trả về mà client chưa biết thì hiện mũ chung, KHÔNG vỡ. */
+  function avaOf(id){
+    var c = id && AstroQChars.byId(id);
+    return c ? c.ava : null;
+  }
+
+  function paint(){
+    $("of").textContent = t("of").replace("{cap}", VIEW.cap || "—");
+    $("taken").textContent = VIEW.ok ? String(VIEW.taken) : "—";
+    $("track").style.width = (VIEW.ok && VIEW.cap
+      ? Math.min(100, VIEW.taken / VIEW.cap * 100) : 0) + "%";
+    $("note").textContent = VIEW.ok ? t("note") : t("loading");
+
+    var g = $("grid"), out = "";
+    for (var i = 0; i < VIEW.seats.length; i++){
+      var s = VIEW.seats[i], av = avaOf(s.ch);
+      var me = (VIEW.mine != null && s.no === VIEW.mine);
+      out += '<li class="cw-seat' + (me ? " me" : "") + '">' +
+             (av ? '<img src="' + av + '" alt="" />'
+                 : '<span class="cw-helm" aria-hidden="true">🧑‍🚀</span>') +
+             '<span class="cw-no">#' + String(s.no).padStart(3, "0") + "</span></li>";
+    }
+    g.innerHTML = out;
+    $("empty").hidden = !(VIEW.ok && VIEW.seats.length === 0);
+
+    var you = $("you");
+    if (VIEW.mine != null){
+      you.innerHTML = t("you").replace(/\{no\}/g, VIEW.mine);
+      you.hidden = false;
+    } else if (VIEW.mineKnown){
+      you.textContent = t("you_no");
+      you.hidden = false;
+    } else {
+      you.hidden = true;
+    }
+  }
+
+  function banner(msg){
+    var b = $("banner");
+    if (!msg){ b.hidden = true; b.classList.remove("show"); return; }
+    b.textContent = msg; b.hidden = false; b.classList.add("show");
+  }
+
+  /* ⚠️ `js/api.js` LÀ ES MODULE, nạp bằng `import()` chứ không phải thẻ `<script>`.
+     Và đường dẫn suy từ `currentScript` chứ không viết `"./js/api.js"`: trong một
+     script CỔ ĐIỂN, `import()` giải theo URL của TÀI LIỆU — dự án đã trả giá một
+     lần vì đúng chuyện đó (form waitlist ở `/en/` chết câm suốt 6 ngày, 07/08). */
+  var JS_DIR = (function(){
+    var s = document.currentScript;
+    if (s && s.src) return s.src.replace(/[^/]+$/, "") + "js/";
+    return new URL("js/", location.href).href;
+  })();
+
+  var apiMod = null;
+  function api(){
+    if (!apiMod) apiMod = import(JS_DIR + "api.js");
+    return apiMod;
+  }
+
+  async function load(){
+    var mod;
+    try { mod = await api(); }
+    catch (e) { banner(t("err_net")); paint(); return; }
+    var apiGet = mod.apiGet, apiGetAuth = mod.apiGetAuth;
+
+    var r = await apiGet("/crew");
+    if (!r.ok || !r.data){
+      /* ⚠️ NÓI THẬT là chưa đọc được, đừng vẽ một danh sách rỗng — "0 người" là
+         một lời khẳng định SAI. Cùng nguyên tắc dấu `—` của `missions.html`. */
+      banner(t("err_net"));
+      paint();
+      return;
+    }
+    banner(null);
+    VIEW.ok = true;
+    VIEW.cap = r.data.cap || 0;
+    VIEW.taken = r.data.taken || 0;
+    VIEW.seats = r.data.seats || [];
+    paint();
+
+    /* Chỗ của chính trẻ — chỉ hỏi khi thật sự có phiên đăng nhập. Trang này CỐ Ý
+       không nạp SDK Firebase (64,2 KB): nó là trang đọc, và phần lớn người mở nó
+       chưa đăng nhập. Nếu một trang khác đã ghi phiên thì `AstroQAuth` có sẵn. */
+    try {
+      var auth = window.AstroQAuth;
+      if (auth && auth.idToken){
+        var tok = await auth.idToken();
+        if (tok){
+          var m = await apiGetAuth("/me/crew", tok);
+          if (m.ok && m.data){
+            VIEW.mineKnown = true;
+            VIEW.mine = (typeof m.data.no === "number") ? m.data.no : null;
+            paint();
+          }
+        }
+      }
+    } catch (e) { /* không có phiên thì thôi — trang vẫn đủ nghĩa */ }
+  }
+
+  function applyLang(lang){
+    if (lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    paint();
+  }
+
+  $("back").addEventListener("click", function(){ location.href = "dashboard.html"; });
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  load();
+})();
+</script>
+</body>
+</html>

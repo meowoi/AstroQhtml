@@ -1,0 +1,56 @@
+/* PHI HÀNH ĐOÀN ĐẦU TIÊN — phần RIÊNG. Nạp sau css/page-shell.css.
+   ⚠️ Khung trang (nền · `.wrap` · `.hub-top` · `.hero` · `.panel` · `.banner` ·
+      `.pbtn`) lấy từ `css/page-shell.css`, KHÔNG chép lại — quy tắc 2 mục 2. */
+
+/* ── Vạch đếm chỗ ─────────────────────────────────────────────────────── */
+.cw-count{display:flex;align-items:baseline;justify-content:center;gap:8px;
+  margin:0 0 10px;font-family:var(--font-display);}
+.cw-count b{font-size:34px;font-weight:800;color:#e9d7ff;
+  font-variant-numeric:tabular-nums;}
+.cw-count span{font-size:14px;color:var(--ink-soft);}
+.cw-track{height:8px;border-radius:99px;overflow:hidden;
+  background:rgba(120,160,255,.14);margin-bottom:6px;}
+.cw-track i{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#38bdf8,#c084fc);transition:width .5s var(--ease);}
+.cw-note{text-align:center;font-size:12.4px;line-height:1.55;color:var(--ink-faint);margin:0;}
+
+/* ── Lưới chỗ ngồi ────────────────────────────────────────────────────── */
+/* ⚠️ SỐ CỘT CỐ ĐỊNH theo khổ màn, KHÔNG `auto-fill minmax()`. Bài học của lưới
+   khoang mẫu vật: `auto-fill` + `minmax(196px,…)` rơi về MỘT cột ở màn 390px và
+   mỗi ô to bằng cả màn hình. Ở đây ô nhỏ nên đặt thẳng số cột là đúng và đọc được. */
+.cw-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
+  list-style:none;padding:0;margin:0;}
+@media (min-width:560px){ .cw-grid{grid-template-columns:repeat(6,minmax(0,1fr));} }
+@media (min-width:900px){ .cw-grid{grid-template-columns:repeat(8,minmax(0,1fr));} }
+
+.cw-seat{display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:9px 4px 8px;border-radius:12px;
+  border:1px solid rgba(120,160,255,.2);background:rgba(15,23,42,.55);}
+.cw-seat img{width:44px;height:44px;object-fit:contain;border-radius:50%;
+  background:rgba(9,14,34,.6);}
+/* Chỗ của người ĐÃ đăng ký waitlist nhưng CHƯA lập tài khoản: chưa chọn nhân vật
+   nào, nên là một cái mũ chung. ⚠️ Đừng gán bừa một nhân vật cho họ — chỗ ngồi
+   phải nói đúng thứ đã biết. */
+.cw-seat .cw-helm{display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:50%;font-size:21px;line-height:1;
+  background:rgba(9,14,34,.6);border:1px dashed rgba(120,160,255,.28);}
+.cw-no{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;
+  color:var(--ink-faint);font-variant-numeric:tabular-nums;}
+
+/* Chỗ của CHÍNH trẻ — thứ làm cả trang có nghĩa với nó. */
+.cw-seat.me{border-color:rgba(56,189,248,.75);background:rgba(8,32,52,.62);
+  box-shadow:0 0 18px -4px rgba(56,189,248,.55);}
+.cw-seat.me .cw-no{color:#bfe9ff;font-weight:700;}
+.cw-you{margin:14px 0 0;text-align:center;font-size:13px;color:#bfe9ff;}
+.cw-you b{color:#e9d7ff;}
+
+.cw-acts{display:flex;justify-content:center;margin-top:20px;}
+
+/* ── Trạng thái ───────────────────────────────────────────────────────── */
+.cw-empty{text-align:center;padding:26px 14px;font-size:13px;line-height:1.6;
+  color:var(--ink-soft);}
+.cw-empty .ic{display:block;font-size:30px;margin-bottom:8px;}
+
+@media (prefers-reduced-motion: reduce){
+  .cw-track i{transition:none;}
+}

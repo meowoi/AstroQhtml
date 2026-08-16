@@ -201,7 +201,9 @@ for page in ("profile.html",
              # Cung khuon page-shell nen soi duoc bang dung bo phep kiem nay.
              "mission-map.html",
              "mission-planet.html",
-             "mission-tree.html"):
+             "mission-tree.html",
+             # crew.html them 16/08/2026 — Phi Hanh Doan Dau Tien (muc C3).
+             "crew.html"):
     css = page_css(page)
     html = rd(page)
     js = inline_js(html)

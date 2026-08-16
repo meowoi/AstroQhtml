@@ -20,6 +20,7 @@ VÌ SAO CẦN BỘ NÀY, dù `check_pages.py` mục [14] đã canh tĩnh:
    dấu là UnicodeEncodeError ném GIỮA LÚC CHẠY, bỏ dở mọi phép kiểm phía sau.
 """
 import json
+import re
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -59,6 +60,7 @@ PAGES = [
     # shop.html them 12/08/2026 — Kho Trang Tri (buong lai cua con). TEN MON do
     # js/cosmetics.js sinh nen chung phai dich theo, khong chi cac nhan tinh.
     ("shop.html",          "h1",              None),
+    ("crew.html",          "h1",              None),
     ("game-dodge.html",    None,              None),
     ("game-defender.html", None,              None),
     ("game-constellation.html", None,         None),
@@ -138,6 +140,16 @@ with sync_playwright() as p:
             headers={"access-control-allow-origin": "*"},
             body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
                  '"trialDays":14,"graceDays":7,"offers":[]}'))
+        # `crew.html` hoi `GET /crew` (cung route CONG KHAI) ngay khi mo trang —
+        # cung mot ly do, cung mot cach chan.
+        # ⚠️ PHAI DUNG REGEX NEO CUOI CHUOI, KHONG dung glob `**/crew*`: glob do
+        #    khop CA `/crew.html`, tuc chan luon chinh TAI LIEU va tra JSON thay
+        #    cho trang — bo do doc ra "0 nut VI/EN" trong khi trang hoan toan dung.
+        pg.route(re.compile(r".*/crew(\?.*)?$"), lambda r: r.fulfill(
+            status=200, content_type="application/json",
+            headers={"access-control-allow-origin": "*"},
+            body='{"cap":500,"taken":2,"seats":['
+                 '{"no":1,"ch":"cho"},{"no":2,"ch":null}]}'))
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)

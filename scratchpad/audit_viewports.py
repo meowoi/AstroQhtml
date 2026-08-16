@@ -23,6 +23,7 @@ audit_viewports.py — rà TƯƠNG THÍCH KÍCH CỠ / UI trên iPad · MacBook 
    là UnicodeEncodeError ném GIỮA LÚC CHẠY và bỏ dở mọi phép kiểm phía sau.
 """
 import json
+import re
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -60,6 +61,7 @@ PAGES = [
     # 3 cot, hai thu de tran ngang nhat tren man hep.
     "pricing.html",
     "parent.html",
+    "crew.html",
     # checkout.html them 11/08/2026 — trang thanh toan, bo cuc 2 cot + o nhap
     "checkout.html",
     # Mini-game + 2 trang 3D: sân chơi khoá theo `aspect-ratio` nên đây là chỗ
@@ -236,6 +238,19 @@ with sync_playwright() as p:
                      '{"plan":"crew","cycle":"month","currency":"VND","amount":169000},'
                      '{"plan":"crew","cycle":"year","currency":"VND","amount":1290000},'
                      '{"plan":"found","cycle":"once","currency":"VND","amount":1490000}]}'))
+            # `crew.html` hoi `GET /crew` ngay khi mo trang — cung ly do phai chan.
+            # ⚠️ Danh sach cho chinh la trang thai THAT cua hom nay, va no du de
+            #    trang ve ra luoi cho ngoi (rong thi trang chuyen sang mot bo cuc
+            #    khac han, tuc bo do se do nham mot man hinh khong ai thay).
+            # ⚠️ PHAI DUNG REGEX NEO CUOI CHUOI, KHONG dung glob `**/crew*`: glob
+            #    do khop CA `/crew.html`, tuc chan luon chinh TAI LIEU va tra JSON
+            #    thay cho trang — moi phep do bo cuc sau do deu do mot man hinh
+            #    khong ai nhin thay.
+            pg.route(re.compile(r".*/crew(\?.*)?$"), lambda r: r.fulfill(
+                status=200, content_type="application/json",
+                headers={"access-control-allow-origin": "*"},
+                body='{"cap":500,"taken":3,"seats":['
+                     '{"no":1,"ch":"cho"},{"no":2,"ch":null},{"no":3,"ch":"m"}]}'))
             errs, bad404 = [], []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)

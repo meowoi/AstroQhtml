@@ -85,6 +85,7 @@
 .um-item.um-awards  .um-nm{color:#ffe9bd;}
 .um-item.um-vault   .um-ic{border-color:rgba(192,132,252,.42);background:rgba(26,12,44,.6);}
 .um-item.um-shop    .um-ic{border-color:rgba(99,230,168,.4);background:rgba(6,32,24,.6);}
+.um-item.um-crew    .um-ic{border-color:rgba(56,189,248,.42);background:rgba(8,28,46,.6);}
 
 /* Khu của NGƯỜI LỚN: nét đứt + chữ nhạt, khác hẳn các mục của trẻ ở trên.
    Cùng lý do `.pt-parent` từng dùng nét đứt — hai loại đối tượng, hai vẻ ngoài,
