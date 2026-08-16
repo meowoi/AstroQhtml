@@ -33,15 +33,26 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "background")
 
-# Khớp ảnh đang chạy: 1920×1253 (tỉ lệ 1,532) và bản 1280 rộng.
+# Tỉ lệ khớp ảnh đang chạy: 1920×1253 → 1,532.
 TARGET_RATIO = 1920 / 1253
 RATIO_TOL = 0.18          # lệch quá mức này thì cover sẽ cắt mất một mảng lớn
-WIDTHS = (1920, 1280)
-MIN_SRC_W = 1920          # nhỏ hơn thì phóng to = nhoè, đừng nhận
 
-# Trần cỡ file, lấy từ chính bộ đang chạy (avif 101,7 KB · webp 152,6 KB ở 1920).
-BUDGET = {("avif", 1920): 130_000, ("webp", 1920): 200_000,
-          ("avif", 1280): 80_000,  ("webp", 1280): 120_000}
+# ⚠️ BỀ RỘNG HẠ TỪ 1920 XUỐNG 1536 (16/08/2026) — CÓ CHỦ ĐÍCH, KHÔNG PHẢI NỚI TAY.
+#    Ảnh nền do chủ dự án sinh bằng ChatGPT ra cỡ 1536×1024. Ba hướng đã cân:
+#    ① đòi ≥1920 → công cụ không cho, phải upscale = pixel BỊA;
+#    ② phóng 1536→1920 bằng LANCZOS → đo được: nhoè sẵn rồi mới nén nên hỏng KÉP,
+#       phải hạ tới q35 mới vừa trần và lúc đó mất hẳn một lớp sao mờ (đã so 1:1);
+#    ③ sinh biến thể ĐÚNG bề rộng gốc → không byte nào là pixel bịa; màn 1920 để
+#       trình duyệt tự phóng 1,25×, cùng độ nét mà không phải tải thêm.
+#    Chọn ③. Đổi bộ này thì `<picture>` ở dashboard.html phải đổi srcset theo.
+WIDTHS = (1536, 1024)
+MIN_SRC_W = 1536          # nhỏ hơn thì phóng to = nhoè, đừng nhận
+
+# Trần cỡ file giữ nguyên theo VAI TRÒ biến thể (lớn/nhỏ), lấy từ bộ đang chạy
+# (avif 101,7 KB · webp 152,6 KB ở bản lớn). Đây là ngân sách BYTE trên đường
+# truyền, không phải ngân sách theo pixel — nên hạ bề rộng KHÔNG được nới trần.
+BUDGET = {("avif", 1536): 130_000, ("webp", 1536): 200_000,
+          ("avif", 1024): 80_000,  ("webp", 1024): 120_000}
 
 # Độ sáng dải giữa (nơi chữ hero nằm). Ảnh đang chạy đo được ~46 → mốc cảnh báo 96.
 MID_BRIGHT_WARN = 96

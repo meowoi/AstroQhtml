@@ -48,6 +48,14 @@ img/earth/_src/
 # ⚠️ Chỉ chặn `.png`, KHÔNG chặn cả thư mục: asset `.avif`/`.webp` PHẢI được commit.
 img/era/*.png
 
+# ---- Ảnh gốc của nền buồng lái ----
+# Chỗ chủ dự án thả ảnh nền gốc vào; `scratchpad/make_bg_assets.py` đọc từ đây rồi
+# sinh `background/<slug>-{1280,1920}.{avif,webp}`. Bản gốc là ảnh dạng photo cỡ
+# ≥1920px — đúng loại đã cắt từ 6,9 MB xuống 99 KB một lần rồi, đừng commit lại.
+# ⚠️ Chỉ chặn thư mục `originals/`, KHÔNG chặn `background/` — 4 biến thể sinh ra
+#    PHẢI được commit thì trang mới có nền.
+background/originals/
+
 scratchpad/__pycache__/
 
 # ---- Ảnh chụp rơi ra GỐC REPO ----
