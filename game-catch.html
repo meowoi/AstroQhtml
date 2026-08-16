@@ -505,14 +505,15 @@
         drops.splice(i,1);
         if(d.kind==="bad"){
           lives--; combo=0; hurtT=0.45; shakeT=0.35;
-          burst(d.x,d.y,"#ff8a8a",16); SFX.hit(); toast(t("hit_toast"), "bad");
+          burst(d.x,d.y,"#ff8a8a",16); SFX.hit(); AstroQGameShell.mate("oops");
+          toast(t("hit_toast"), "bad");
           if(lives<=0){ paintHud(); endRound(); return; }
         } else {
           caught++; combo++; if(combo>comboBest) comboBest=combo;
           var bonus=Math.min(CONFIG.comboMax, Math.floor(combo/CONFIG.comboStep));
           score += (d.kind==="gem" ? CONFIG.gem.pts : CONFIG.star.pts) + bonus;
           if(d.kind==="gem"){
-            mined += CONFIG.gem.mtr; SFX.gem();
+            mined += CONFIG.gem.mtr; SFX.gem(); AstroQGameShell.mate("cheer");
             toast(t("gem_toast").replace("{tt}", "{tt}"), "ok");
             burst(d.x,d.y,"#c084fc",18);
           } else {

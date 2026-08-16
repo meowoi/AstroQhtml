@@ -501,6 +501,7 @@
 
       busy = false;
       (all ? SFX.good : SFX.soft)();
+      AstroQGameShell.mate(all ? "cheer" : "oops");
       render();
       if(body) body.scrollTop = body.scrollHeight;
     });

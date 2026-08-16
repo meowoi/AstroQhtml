@@ -443,6 +443,7 @@
     }
 
     (safe === 3 ? SFX.good : SFX.bad)();
+    AstroQGameShell.mate(safe === 3 ? "cheer" : "oops");
     render();
     var body = document.querySelector(".dg-body");
     if(body) body.scrollTop = body.scrollHeight;

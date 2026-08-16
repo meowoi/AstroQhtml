@@ -367,16 +367,50 @@ canvas{width:100%;height:100%;}
 .gs-cap{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
   color:var(--ink-faint);text-align:center;}
 
-/* ===== Console phải: bạn đồng hành ===== */
+/* ===== Console phải: bạn đồng hành =====
+   ⚠️⚠️ TỪ 16/08/2026 LINH VẬT PHẢN ỨNG THẬT (mục C2 của đề xuất 12/08). Trước đó
+      đây chỉ là chân dung tĩnh, vì ghi chú cũ nói "mỗi linh vật chỉ có MỘT ảnh".
+      Ghi chú đó SAI: art biểu cảm đã nằm sẵn trong `img/` từ đợt 26/07 (m2/m4 ·
+      b3/b4) trong danh sách "chưa ai dùng". `scratchpad/make_mate_assets.py` đưa
+      chúng về `img/mate/` cùng một khung 208×208.
+   ⚠️ VÌ SAO PHẢI CÙNG KHUNG: sáu tư thế có tỉ lệ rất khác nhau (Comet bay thì
+      NGANG, Comet đứng thì DỌC). Thả thẳng vào một ô `object-fit:contain` thì mỗi
+      lần đổi biểu cảm nhân vật NHẢY CỠ — đúng cái lỗi "số trên HUD nhảy" đã phải
+      chữa bằng `tabular-nums`. */
 .gs-mate{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;
   border-radius:14px;background:rgba(9,14,28,.6);border:1px solid var(--brd);
-  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
-.gs-mate img{width:76px;height:76px;object-fit:contain;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:border-color .25s,background .25s;}
+/* 104px chứ không 76: cột console rộng 128px, trừ padding còn 112 — và ở 76px thì
+   biểu cảm của Comet (mèo, cả người) đọc không ra. Đã render cả sáu ảnh ở đúng cỡ
+   rồi mới chọn con số này. */
+.gs-mate img{width:104px;height:104px;object-fit:contain;
   filter:drop-shadow(0 0 14px rgba(56,189,248,.45));animation:gsFloat 4.2s ease-in-out infinite;}
-.gs-mate .nm{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);}
+.gs-mate .nm{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);
+  transition:color .25s;}
 @keyframes gsFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
-/* ⚠️ CHỈ có nhịp trôi, KHÔNG có câu thoại đổi theo việc trẻ làm và KHÔNG có phản ứng
-   (chủ dự án chưa chọn món đó). Một câu cố định đứng mãi ở đó thì tệ hơn không nói —
-   nó hứa một sự tương tác không tồn tại. Móc để thêm phản ứng về sau: gắn class
-   `cheer`/`ouch` lên `.gs-mate`, và lúc đó CẦN ẢNH GỐC cho biểu cảm. */
-@media (prefers-reduced-motion: reduce){ .gs-mate img{animation:none;} }
+
+/* Hai trạng thái phản ứng. ⚠️ KHÔNG dùng đỏ cho `oops` — đây là màn học, và một
+   khung đỏ chớp lên mỗi lần trẻ sai là lời phán xét chứ không phải bạn đồng hành.
+   Tông hổ phách, cùng nguyên tắc `.sum-note` ở quiz. */
+.gs-mate.cheer{border-color:rgba(74,222,128,.65);background:rgba(12,40,26,.6);}
+.gs-mate.cheer .nm{color:#b9f6d0;}
+.gs-mate.cheer img{filter:drop-shadow(0 0 18px rgba(74,222,128,.7));
+  animation:gsCheer .62s var(--jelly, cubic-bezier(.34,1.56,.64,1)) 1;}
+.gs-mate.oops{border-color:rgba(251,191,36,.6);background:rgba(48,36,10,.55);}
+.gs-mate.oops .nm{color:#ffd7a6;}
+.gs-mate.oops img{filter:drop-shadow(0 0 18px rgba(251,191,36,.6));
+  animation:gsOops .5s ease-in-out 1;}
+@keyframes gsCheer{0%{transform:translateY(0) scale(1);}
+  40%{transform:translateY(-13px) scale(1.07);}100%{transform:translateY(0) scale(1);}}
+@keyframes gsOops{0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+/* ⚠️ TẮT CHUYỂN ĐỘNG THÌ VẪN PHẢI CÒN PHẢN ỨNG. Ảnh đã đổi sang biểu cảm khác và
+   viền đã đổi màu — hai thứ đó là nội dung, không phải hiệu ứng. Bỏ nốt chúng ở
+   đây là ở `prefers-reduced-motion` linh vật lại thành tĩnh y như cũ. Cùng bài học
+   với vòng sáng chỉ đường của màn Comet dẫn tham quan. */
+@media (prefers-reduced-motion: reduce){
+  .gs-mate img{animation:none;}
+  .gs-mate.cheer img,.gs-mate.oops img{animation:none;}
+}

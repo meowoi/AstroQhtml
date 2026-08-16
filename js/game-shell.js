@@ -92,25 +92,110 @@
   /* ── ①c Console phải + thanh tiến độ cấp ───────────────────────────────
      Dựng bằng JS để markup 3 game không phải sửa một dòng nào. */
 
-  /* Ai là bạn đồng hành của game nào — khai MỘT chỗ.
-     ⚠️ Ảnh lấy từ `ava/` đã có; KHÔNG có biểu cảm thay thế, nên console này chỉ có
-        nhịp trôi. Muốn Byte/Comet phản ứng theo việc trẻ làm thì cần ẢNH GỐC. */
-  var MATE = { "game-dodge": ["ava/avab.png", "BYTE"],
-               "game-defender": ["ava/avab.png", "BYTE"],
-               "game-constellation": ["ava/avam.png", "COMET"] };
+  /* ── Bạn đồng hành: ai đi với game nào, và ba biểu cảm ──────────────────
+     ⚠️⚠️ TRƯỚC 16/08/2026 CHỖ NÀY CHỈ CÓ 3 GAME và một chân dung TĨNH, kèm ghi
+        chú "mỗi linh vật chỉ có MỘT ảnh nên không phản ứng được". Ghi chú đó SAI:
+        art biểu cảm đã nằm trong `img/` từ đợt tối ưu 26/07 (m2/m4 · b3/b4), nằm
+        đúng trong danh sách "11 ảnh chưa ai dùng". Nay `img/mate/` là bản đã đưa
+        về cùng khung; xem `scratchpad/make_mate_assets.py`.
+     ⚠️ KHAI ĐỦ CẢ 10 GAME. Bỏ trống 7 game như trước thì bảy màn chơi không có ai
+        bên cạnh — mà "trẻ chơi một mình" chính là chỗ tính năng này sinh ra để
+        chữa. Thêm game mới thì thêm một dòng ở đây.
+     ⚠️ CHỌN AI ĐI VỚI GAME NÀO THEO NỘI DUNG, không rải cho đều: Byte (robot) đi
+        với thứ máy móc/dữ liệu, Comet đi với thứ bầu trời/sinh tồn/khám phá. */
+  var MASCOT = {
+    byte:  { nm: "BYTE",  dir: "img/mate/byte-"  },
+    comet: { nm: "COMET", dir: "img/mate/comet-" }
+  };
+  var MATE = { "game-dodge":         "byte",
+               "game-defender":      "byte",
+               "game-constellation": "comet",
+               "game-racer":         "comet",
+               "game-maze":          "byte",
+               "game-catch":         "comet",
+               "game-survival":      "comet",   /* sinh tồn — chọn thứ cần để sống */
+               "game-comms":         "byte",    /* dãy lệnh gửi lên tàu */
+               "game-recycle":       "byte",    /* ba hệ thống của trạm */
+               "game-units":         "byte" };  /* soi bảng số liệu */
+
+  var mateEl = null, mateImg = null, mateSrc = null, mateTimer = 0;
+
+  function mateUrl(kind, state) { return MASCOT[kind].dir + state + ".png"; }
 
   function mountSide() {
     var stage = doc.querySelector(".stage");
     if (!stage || doc.querySelector(".gs-side")) return;
     var key = (location.pathname.split("/").pop() || "").replace(".html", "");
-    var m = MATE[key];
-    if (!m) return;                       /* game mới chưa khai thì thôi, không vỡ */
+    var kind = MATE[key];
+    if (!kind) return;                    /* game mới chưa khai thì thôi, không vỡ */
     var side = doc.createElement("aside");
     side.className = "gs-side";
     side.setAttribute("aria-hidden", "true");   /* trang trí — trình đọc màn hình bỏ qua */
-    side.innerHTML = '<div class="gs-mate"><img src="' + m[0] + '" alt="">' +
-                     '<span class="nm">' + m[1] + "</span></div>";
+    side.innerHTML = '<div class="gs-mate"><img src="' + mateUrl(kind, "idle") +
+                     '" alt=""><span class="nm">' + MASCOT[kind].nm + "</span></div>";
     stage.appendChild(side);
+    mateEl = side.querySelector(".gs-mate");
+    mateImg = mateEl.querySelector("img");
+    mateSrc = "idle";
+
+    /* ⚠️ TẢI TRƯỚC HAI ẢNH PHẢN ỨNG. Không tải trước thì lần đầu trẻ làm đúng,
+       trình duyệt mới bắt đầu kéo ảnh về — và trong lúc chờ nó **vẫn vẽ khung ảnh
+       CŨ**, tức linh vật "phản ứng" bằng đúng khuôn mặt bình thường rồi mới đổi
+       muộn. Đó chính là lỗi ảnh mốc thời gian của Nhiệm vụ 01 (03/08). */
+    ["cheer", "oops"].forEach(function (s) {
+      var p = new Image(); p.src = mateUrl(kind, s);
+    });
+  }
+
+  /* Game gọi: AstroQGameShell.mate("cheer" | "oops")  → đổi biểu cảm rồi tự về
+     bình thường sau `MATE_MS`. Gọi `mate(null)` để về ngay (lúc bắt đầu lượt mới).
+     ⚠️ TUYỆT ĐỐI KHÔNG GỌI TỪ VÒNG VẼ. Nó ghi `src` + `className`, tức ép trình
+        duyệt tính lại bố cục; gọi 60 lần/giây là đúng cái lỗi `setLevel` đã mắc và
+        đã phải chữa bằng `barCache`. Chỉ gọi ở đúng lúc có KẾT QUẢ. */
+  var MATE_MS = 1500;      /* giữ biểu cảm bao lâu rồi tự về bình thường */
+  /* ⚠️⚠️ VAN CHẶN GHI DOM DỒN DẬP — BẮT BUỘC, VÀ ĐÂY LÀ SỐ ĐO CHỨ KHÔNG PHẢI ĐỀ
+     PHÒNG SUÔNG. Ở 4 game canvas, lời gọi nằm trong nhánh `if` của `update()` —
+     tức không chạy mỗi khung hình, NHƯNG một loạt viên thiên thạch nhặt liên tiếp
+     (hoặc mấy hòn đá đâm vào Trạm trong cùng một giây) thì gọi nhiều lần/giây, mà
+     mỗi lần lại `classList.remove` + đọc `offsetWidth` = **ép trình duyệt tính lại
+     bố cục NGAY TRONG vòng vẽ game**. Đúng cái lỗi `setLevel` đã mắc và đã phải
+     chữa bằng `barCache`.
+     400ms chọn để hai thứ cùng đúng: một loạt sự kiện trong cùng một giây chỉ ghi
+     DOM một lần, còn ba câu trả lời đúng cách nhau vài giây thì VẪN chạy lại hoạt
+     cảnh từng lần (không thì lần thứ hai trông như không có gì xảy ra). */
+  var MATE_MIN_MS = 400;
+  var mateAt = 0;
+
+  function mate(state) {
+    if (!mateEl) return;                  /* màn hẹp không dựng console — bỏ qua */
+    var want = (state === "cheer" || state === "oops") ? state : "idle";
+    var now = Date.now();
+
+    if (want === mateSrc) {
+      if (want === "idle") return;
+      /* Cùng biểu cảm lần nữa: chỉ chạy lại hoạt cảnh nếu đã đủ xa lần trước —
+         còn không thì chỉ gia hạn đồng hồ, KHÔNG đụng DOM. */
+      if (mateTimer) { clearTimeout(mateTimer); }
+      if (now - mateAt >= MATE_MIN_MS) {
+        mateEl.classList.remove(want);
+        void mateEl.offsetWidth;          /* ép trình duyệt nhận lại animation */
+        mateEl.classList.add(want);
+        mateAt = now;
+      }
+      mateTimer = setTimeout(function () { mate(null); }, MATE_MS);
+      return;
+    }
+
+    if (mateTimer) { clearTimeout(mateTimer); mateTimer = 0; }
+    var key = (location.pathname.split("/").pop() || "").replace(".html", "");
+    mateImg.src = mateUrl(MATE[key], want);
+    mateEl.classList.remove("cheer", "oops");
+    if (want !== "idle") {
+      mateEl.classList.add(want);
+      mateAt = now;
+      mateTimer = setTimeout(function () { mate(null); }, MATE_MS);
+    }
+    mateSrc = want;
   }
 
   /* Hai góc còn lại của vành kim loại. `.play` chỉ có `::before`/`::after` = 2 góc, mà
@@ -306,5 +391,5 @@
   else boot();
 
   global.AstroQGameShell = { sizeField: sizeField, refreshRotate: refresh,
-                             dpr: dprFor, setLevel: setLevel };
+                             dpr: dprFor, setLevel: setLevel, mate: mate };
 })(window);

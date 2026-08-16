@@ -753,7 +753,8 @@
     if(ok){
       hull=Math.min(CONFIG.hullStart, hull+CONFIG.quizHeal);
       meteors+=CONFIG.quizReward;
-      SFX.heal(); toast(t("quiz_ok"), "ok"); paintHud();
+      SFX.heal(); AstroQGameShell.mate("cheer");
+      toast(t("quiz_ok"), "ok"); paintHud();
     } else {
       toast(t("quiz_no"), "bad");
     }
@@ -856,7 +857,7 @@
         hull-=T.dmg;
         foes.splice(j,1);
         burst(e.x,e.y,"#ff9c9c",REDUCE?6:16,200);
-        SFX.hurt();
+        SFX.hurt(); AstroQGameShell.mate("oops");
         if(!REDUCE){ shake=Math.min(20,shake+11); flash=Math.min(1,flash+0.75); }
         paintHud();
         if(hull<=0){ hull=0; paintHud(); die(); return; }

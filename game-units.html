@@ -502,6 +502,7 @@
     box.innerHTML = msg; box.hidden = false;
 
     (pass ? SFX.good : SFX.bad)();
+    AstroQGameShell.mate(pass ? "cheer" : "oops");
     render();
     /* ⚠️ CUỘN TỚI ĐÚNG HÀNG PHÁN SAI, KHÔNG CUỘN XUỐNG ĐÁY. Trên 390×844 sáu
        hàng đã cao hơn sân, nên lời giải thích — thứ game này tồn tại để dạy —

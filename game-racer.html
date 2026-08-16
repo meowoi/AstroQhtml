@@ -549,12 +549,14 @@
       if(o.kind==="rock"){
         fuel -= CONFIG.hitCost; hurtT=0.4; shakeT=0.3;
         burst(o.x, laneY(o.lane), "#ff9d8a", 16);
-        SFX.hit(); toast(t("hit_toast"), "bad");
+        SFX.hit(); AstroQGameShell.mate("oops");
+        toast(t("hit_toast"), "bad");
         items.splice(i,1);
       } else if(o.kind==="can"){
         fuel = Math.min(100, fuel + CONFIG.fuelCan);
         burst(o.x, laneY(o.lane), "#63e6a8", 14);
-        SFX.fuel(); toast(t("fuel_toast").replace("{n}", CONFIG.fuelCan), "ok");
+        SFX.fuel(); AstroQGameShell.mate("cheer");
+        toast(t("fuel_toast").replace("{n}", CONFIG.fuelCan), "ok");
         items.splice(i,1);
         lowWarned=false;        // nạp rồi thì cho phép nhắc lại nếu cạn lần nữa
       } else {

@@ -644,7 +644,8 @@
       var g=gems[i];
       if(!g.got && g.c===nc && g.r===nr){
         g.got=true; mined++;
-        SFX.gem(); burst(cx(nc),cy(nr),"#c084fc",16);
+        SFX.gem(); AstroQGameShell.mate("cheer");
+        burst(cx(nc),cy(nr),"#c084fc",16);
         toast(t("gem_toast").replace("{tt}","{tt}"), "ok");
         if(mined===gems.length) toast(t("all_gems"), "ok");
       }
@@ -660,7 +661,7 @@
     if(nc===exitC && nr===exitR){
       if(mined>=gems.length) finish();
       else {
-        SFX.bump();
+        SFX.bump(); AstroQGameShell.mate("oops");
         toast(t("gate_locked").replace("{n}", String(gems.length-mined)), "bad");
       }
     }

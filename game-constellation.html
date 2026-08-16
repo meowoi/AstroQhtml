@@ -656,13 +656,13 @@
       links.push({a:need, b:need+1});
       progress++; idleT=0;
       sts[need].pop=1; sts[need+1].pop=1;
-      SFX.ping(links.length-1);
+      SFX.ping(links.length-1); AstroQGameShell.mate("cheer");
       sparkle(sts[need+1].x, sts[need+1].y, REDUCE?3:8, 110);
       if(progress>=sts.length-1) complete();
       else paintHud();
     } else {
       wrong={a:i, b:j, t:CONFIG.wrongT};
-      misses++; idleT=0; SFX.bad();
+      misses++; idleT=0; SFX.bad(); AstroQGameShell.mate("oops");
       toast(t("wrong_toast").replace("{a}", sts[need].id).replace("{b}", sts[need+1].id), "bad");
       paintHud();
     }
