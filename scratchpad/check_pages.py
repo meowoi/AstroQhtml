@@ -1377,7 +1377,8 @@ fee_by_diff = dict((m[0], int(m[1]))
 sv_diff = dict(re.findall(r'\["([a-z-]+)"\]\s*=\s*"([a-z]+)"',
                           _m_diff.group(1) if _m_diff else ""))
 sv_fees = {g: fee_by_diff[d] for g, d in sv_diff.items() if d in fee_by_diff}
-check("suy ra duoc phi cua ca 6 game", len(sv_fees) == 6, str(sv_fees))
+check("suy ra duoc phi cua MOI game server khai",
+      len(sv_fees) > 0 and len(sv_fees) == len(sv_diff), str(sv_fees))
 check("chi co dung 3 muc do kho", sorted(fee_by_diff) == ["easy", "hard", "medium"],
       str(sorted(fee_by_diff)))
 check("kho hon thi dat hon (phi tang theo do kho)",
@@ -1403,9 +1404,14 @@ check("Nhan do kho o games.html khop bang Diff cua server",
       f"hub={hub_diff} server={sv_diff}")
 
 # (4) CONFIG.COST trong TUNG trang game
-_GAME_FILE = {"dodge": "game-dodge.html", "defender": "game-defender.html",
-              "constellation": "game-constellation.html", "catch": "game-catch.html",
-              "maze": "game-maze.html", "racer": "game-racer.html"}
+# ⚠️ SUY TU MANG `GAMES` o games.html, KHONG gan cung. Ban cu liet ke tay 6 game,
+#    nen them game thu 7 la no AM THAM khong kiem `CONFIG.COST` cua game do — mot
+#    lo hong im lang, khong phai mot phep kiem bao hong. Cung lop loi "gan cung con
+#    so" da lap nhieu lan (14 icon · 25 cau · 20 mau vat · 5 buoc · 6 game).
+_GAME_FILE = dict(re.findall(r'key:"([a-z]+)"[^}]*?file:"([a-z-]+\.html)"', _hub))
+check("Doc duoc file cua MOI game co phi tu games.html",
+      set(_GAME_FILE) == set(sv_fees),
+      f"hub={sorted(_GAME_FILE)} server={sorted(sv_fees)}")
 _bad_cost = []
 for _g, _f in _GAME_FILE.items():
     _m = re.search(r"COST:\s*(\d+)", rd(_f))
@@ -1500,6 +1506,43 @@ check("Chi co 2 route /me/specimens (GET + PUT desk), khong co route 'collect'",
 check("Client KHONG tu quyet mau nao da mo khoa",
       "unlocked =" not in rd("specimen-vault.html")
       and "unlocked=" not in rd("specimen-vault.html"))
+
+# ── MÓC TREO: server giu LUAT (gia tri nao ghi duoc), client giu HINH + TEN ──
+# Lech hai ben la mot lop loi IM LANG theo ca hai chieu: mot moc chi co o client
+# thi tre chon duoc roi nhan 400; mot moc chi co o server thi khong bao gio ve ra.
+sv_hooks = re.search(r"Hooks\s*=\s*\n?\s*\[([^\]]+)\]", spc)
+sv_hook_ids = re.findall(r'"([A-Z0-9]+)"', sv_hooks.group(1)) if sv_hooks else []
+cl_hooks = re.search(r"var HOOKS\s*=\s*\[([^\]]+)\]", spec_js)
+cl_hook_ids = re.findall(r'"([A-Z0-9]+)"', cl_hooks.group(1)) if cl_hooks else []
+check("Doc duoc danh sach moc o CA hai ben", len(sv_hook_ids) > 0 and len(cl_hook_ids) > 0,
+      f"server={len(sv_hook_ids)} client={len(cl_hook_ids)}")
+check("Danh sach moc client == server (ke ca THU TU)", sv_hook_ids == cl_hook_ids,
+      f"{sv_hook_ids} vs {cl_hook_ids}")
+# Dau ':' la ky tu ngan cua dang luu "<moc>:<id mau vat>" — moc chua ':' la
+# `ParseStored` cat sai va mau vat bien mat khoi ban ma khong bao gi.
+check("Khong id moc nao chua dau ':'", all(":" not in h for h in sv_hook_ids))
+# So moc phai NHIEU HON so cho trung, khong thi "tre tu chon moc" la mot lua chon
+# gia — moi mau vat chi con dung mot cho de vao.
+sv_slots = int(re.search(r"DeskSlots\s*=\s*(\d+)", spc).group(1))
+check("So moc nhieu hon so cho trung", len(sv_hook_ids) > sv_slots,
+      f"{len(sv_hook_ids)} moc / {sv_slots} cho")
+# Moi moc phai co o CA hai vach de bang do khong lech mot ben.
+check("Hai vach L/R deu co moc",
+      len([h for h in sv_hook_ids if h[0] == "L"]) > 0
+      and len([h for h in sv_hook_ids if h[0] == "R"]) > 0)
+# `css/dashboard.css` xep moc bang flex theo thu tu DOM, va bu lech pha bang
+# `:nth-child`. Thieu mot nhanh nth-child la moc cuoi cung nhap nho cung pha voi
+# moc dau — doc ra nhu ca cot dang rung.
+dcss = rd("css/dashboard.css")
+per_wall = max(len([h for h in sv_hook_ids if h[0] == "L"]),
+               len([h for h in sv_hook_ids if h[0] == "R"]))
+check("css/dashboard.css khai du nhip lech pha cho moi moc tren vach",
+      all(f":nth-child({i})" in dcss for i in range(1, per_wall + 1)),
+      str([i for i in range(1, per_wall + 1) if f":nth-child({i})" not in dcss]))
+# Cai kep theo CHIEU CAO moi la cai giu 5 moc khong de len nhau — xem ghi chu o
+# `.desk-float`. Bo no di thi mot man 1600x720 cho ra cot cao hon ca khung nhin.
+check("Co moc bi kep theo CHIEU CAO khung nhin, khong chi be rong",
+      "100vh" in dcss.split(".desk-float", 1)[1].split(".dfw", 1)[0])
 # Chỉ soi trong từ điển HINT — ghi chú ở đầu file CÓ chứa chữ "Mission 02" đúng
 # để cảnh báo đừng dùng, quét cả file thì tự báo hỏng chính lời cảnh báo đó.
 hint_block = spec_js.split("var HINT = {", 1)[1].split("\n  };", 1)[0]
@@ -3395,7 +3438,10 @@ check("[21] moi ten icon duoc goi deu CO ban ve", not (USED - SIC_NAMES),
 # ⚠️ DANH SACH ICON NGU LA MOT DANH SACH KIN, ghim y nhu `LEGACY_SRC`/`PENDING_BANK`:
 #    ve them mot icon roi de do la them mot mang ma chet, ma du an da tra gia nhieu
 #    lan cho chuyen do. Ly do tung cai ghi trong `js/sticker-icons.js`.
-SIC_IDLE = {"globe", "map", "lock", "wave", "leaf", "rock"}
+# ⚠️ `leaf` RA KHOI danh sach 16/08/2026 — ARCADE-09 dung no cho the Tram Tuan
+#    Hoan. Danh sach nay la mot DANH SACH KIN dung de bat moi lan dung/thoi dung
+#    mot icon phai la quyet dinh CO Y THUC; no da lam dung viec do o luot nay.
+SIC_IDLE = {"globe", "map", "lock", "wave", "rock"}
 check("[21] tap icon CHUA ai dung dung bang danh sach da ghim",
       (SIC_NAMES - USED) == SIC_IDLE,
       "ngu=" + str(sorted(SIC_NAMES - USED)) + " ghim=" + str(sorted(SIC_IDLE)))
