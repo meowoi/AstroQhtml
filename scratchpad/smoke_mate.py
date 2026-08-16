@@ -190,18 +190,53 @@ def main():
         check("0 loi trang", not errs, str(errs[:1])[:90])
         ctx.close()
 
-        # ---------- [7] Màn hẹp: không có console thì KHÔNG được vỡ ----------
-        print("\n[7] Man hep — khong co console thi phai im lang, khong vo")
+        # ---------- [7] Màn hẹp: BẢN THU NHỎ ----------
+        # ⚠️ Muc nay truoc 16/08 khang dinh "man hep KHONG co console" — dung voi
+        #    trang thai cu, nen no bao hong dung luc san pham lam dung. Nay doi phat
+        #    bieu VA SIET THEM: khong chi doi co ban thu nho, ma doi no KHONG DE LEN
+        #    san va KHONG lam san hut o dien thoai.
+        print("\n[7] Man hep — ban thu nho, va KHONG duoc de len san")
+        for vn, w, h in (("dt doc", 390, 844), ("dt nho", 360, 780),
+                         ("iPad mini doc", 768, 1024)):
+            for page in ("game-units.html", "game-dodge.html"):
+                ctx, pg, errs = open_game(br, page, w=w, h=h)
+                d = pg.evaluate("""() => {
+                  const m = document.querySelector('.gs-mate');
+                  const f = document.querySelector('.field');
+                  if (!m || !f) return null;
+                  const a = m.getBoundingClientRect(), b = f.getBoundingClientRect();
+                  const cs = getComputedStyle(m);
+                  const ovX = Math.max(0, Math.min(a.right,b.right) - Math.max(a.left,b.left));
+                  const ovY = Math.max(0, Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top));
+                  return { seen: a.width > 0 && a.top >= 0 && a.bottom <= innerHeight + 1,
+                           w: Math.round(a.width), h: Math.round(a.height),
+                           img: Math.round(m.querySelector('img').getBoundingClientRect().width),
+                           row: cs.flexDirection === 'row',
+                           overlap: Math.round(ovX * ovY),
+                           ovfX: document.documentElement.scrollWidth - innerWidth };
+                }""")
+                tag = f"{vn} · {page}"
+                check(f"{tag}: co ban thu nho, nam trong khung nhin",
+                      d and d["seen"], str(d))
+                check(f"{tag}: xep NGANG va nho lai", d and d["row"] and d["img"] <= 40,
+                      f'ngang={d and d["row"]} anh={d and d["img"]}px')
+                # ⚠️ PHEP KIEM QUAN TRONG NHAT CUA MUC NAY.
+                check(f"{tag}: KHONG de len san mot pixel nao",
+                      d and d["overlap"] == 0, f'{d and d["overlap"]}px²')
+                check(f"{tag}: khong tran ngang", d and d["ovfX"] <= 1,
+                      f'{d and d["ovfX"]}px')
+                check(f"{tag}: 0 loi trang", not errs, str(errs[:1])[:80])
+                ctx.close()
+
+        # Phan ung phai chay THAT o man hep, khong chi hien ra roi dung im.
         ctx, pg, errs = open_game(br, "game-units.html", w=390, h=844)
-        check("man hep khong dung console (dung thiet ke)",
-              pg.locator(".gs-mate").count() == 0 or
-              not pg.locator(".gs-mate").first.is_visible())
-        pg.evaluate("() => AstroQGameShell.mate('cheer')")
-        pg.wait_for_timeout(120)
-        check("goi mate() van khong nem loi", not errs, str(errs[:1])[:90])
-        pg.click("#start-btn"); pg.wait_for_timeout(300)
-        pg.click("#ok"); pg.wait_for_timeout(300)
-        check("choi duoc binh thuong tren dien thoai", not errs, str(errs[:1])[:90])
+        s0 = state(pg)
+        pg.click("#start-btn"); pg.wait_for_timeout(400)
+        pg.click("#ok"); pg.wait_for_timeout(300)          # bo sot het -> oops
+        s1 = state(pg)
+        check("man hep: phan ung doi ANH that", s0["src"] != s1["src"],
+              f'{s0["src"]} -> {s1["src"]}')
+        check("man hep: 0 loi trang", not errs, str(errs[:1])[:90])
         ctx.close()
 
         # ---------- [8] prefers-reduced-motion ----------
