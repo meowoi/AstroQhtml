@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <!-- Trang landing cũ của app (trước đây là index.html). Từ 2026-07-26 trang chủ là
      landing "Sắp ra mắt" ở index.html, nên để noindex cho 2 trang khỏi tranh từ khoá.
-     Bỏ dòng robots này khi app chính thức mở cửa. -->
+
+     ⚠️ CHÚ THÍCH CŨ GHI "Bỏ dòng robots này khi app chính thức mở cửa" — ĐÃ XÉT LẠI
+        18/08/2026 VÀ QUYẾT ĐỊNH **GIỮ NGUYÊN `noindex`**. Hai lý do:
+        ① Lý do ban đầu (hai trang tranh từ khoá) KHÔNG mất đi khi mở cửa — `index.html`
+          vẫn là trang tiếp thị mang FAQ + 2 khối JSON-LD + hreflang, còn trang này là
+          cửa đăng nhập. Để cả hai cùng lập chỉ mục là tự chia đôi tín hiệu.
+        ② Một trang ĐĂNG NHẬP đứng trong kết quả tìm kiếm là một kết quả tệ cho phụ
+          huynh gõ "astroQ" — họ cần trang nói app là gì, không cần ô nhập mật khẩu.
+        Cửa vào app KHÔNG phụ thuộc chỉ mục: `index.html` nay có nút "Vào chơi ngay"
+        tự hiện khi đồng hồ về 0 (xem khối `hero-actions` ở trang đó). Đường dẫn từ
+        fanpage/tin nhắn vẫn tới thẳng đây bình thường — `noindex` chỉ chặn LẬP CHỈ MỤC,
+        không chặn truy cập. `follow` vẫn cho bot đi tiếp vào các trang app. -->
 <meta name="robots" content="noindex,follow" />
 <title>AstroQ — Khám phá Hệ Mặt Trời</title>
 
@@ -15,6 +26,7 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/landing-app.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/utm.js"></script>
 </head>
 <body>
 <div id="stars"></div>

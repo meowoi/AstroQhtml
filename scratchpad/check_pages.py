@@ -4173,5 +4173,245 @@ if True:
     check("[27] library.html mo duoc mot bai theo `?a=`",
           'get("a")' in _lib and "openReader(want)" in _lib)
 
+# ═════════════════════════ [28] THE CHIA SE (Open Graph) ═════════════════════════
+# ⚠️ VI SAO CAN PHEP KIEM NAY: `og:image` tro vao mot tep KHONG TON TAI thi
+#    Facebook dung the xem truoc RONG — va **khong co gi bao loi**: trang van mo
+#    binh thuong, console sach, chi nguoi la nhin thay mot o xam. Day dung lop loi
+#    im lang ma du an da tra gia (`sic()` tra chuoi rong khi ten icon sai).
+# ⚠️ Va no doi chieu TIEU DE the voi `games.html` — the chia se la chuoi NGUOI LA
+#    doc dau tien, lech mot ten game o day con te hon lech trong app.
+print("")
+print("=== [28] The chia se: anh co that, tieu de khop games.html ===")
+
+_OGM = "<!-- OG:BEGIN"
+_og_pages = {}
+_gsrc = rd("games.html")
+_gblk = re.search(r"var GAMES\s*=\s*\[(.*?)\n\s*\];", _gsrc, re.S)
+if _gblk:
+    for _m in re.finditer(r"\{(.*?)\}\s*\}\s*,?", _gblk.group(1), re.S):
+        _b = _m.group(1)
+        _f = re.search(r'file\s*:\s*"([^"]*)"', _b)
+        _n = re.search(r'name\s*:\s*\{\s*vi\s*:\s*"([^"]*)"', _b)
+        if _f and _n:
+            _og_pages[_f.group(1)] = _n.group(1)
+
+check("[28] doc duoc >= 10 game tu games.html", len(_og_pages) >= 10,
+      "doc duoc %d" % len(_og_pages))
+
+_og_extra = ["games.html", "lab.html", "crew.html",
+             "mission-earth.html", "mission-orbit.html"]
+_all_og = sorted(set(list(_og_pages) + _og_extra))
+
+_miss_block, _miss_img, _bad_title, _bad_dim, _rel_url = [], [], [], [], []
+for _pg in _all_og:
+    _path = os.path.join(ROOT, _pg)
+    if not os.path.exists(_path):
+        _miss_block.append(_pg + " (thieu trang)")
+        continue
+    _src = io.open(_path, encoding="utf-8").read()
+    if _OGM not in _src:
+        _miss_block.append(_pg)
+        continue
+
+    _im = re.search(r'property="og:image" content="https://astroq\.org(/[^"]+)"', _src)
+    if not _im:
+        _miss_img.append(_pg + " (thieu the og:image)")
+    else:
+        _rel = _im.group(1).lstrip("/")
+        if not os.path.exists(os.path.join(ROOT, _rel)):
+            _miss_img.append("%s -> %s" % (_pg, _rel))
+
+    if _pg in _og_pages:
+        _t = re.search(r'property="og:title" content="([^"]*)"', _src)
+        if not _t or _og_pages[_pg] not in _t.group(1):
+            _bad_title.append("%s: the=%r games.html=%r"
+                              % (_pg, _t.group(1) if _t else "?", _og_pages[_pg]))
+
+    if 'content="1200"' not in _src or 'content="630"' not in _src:
+        _bad_dim.append(_pg)
+
+    # ⚠️ `og:url` phai TUYET DOI: the nay duoc doc tren may chu cua Facebook,
+    #    khong co ngu canh trang — duong dan tuong doi la mot the vo nghia.
+    if 'property="og:url" content="https://' not in _src:
+        _rel_url.append(_pg)
+
+check("[28] moi trang dang fanpage deu co khoi OG", not _miss_block,
+      "thieu: %s" % _miss_block[:4])
+check("[28] moi `og:image` tro vao tep CO THAT", not _miss_img,
+      "hong: %s" % _miss_img[:4])
+check("[28] tieu de OG mang dung ten game cua games.html", not _bad_title,
+      "lech: %s" % _bad_title[:3])
+check("[28] the khai dung 1200x630", not _bad_dim, "sai: %s" % _bad_dim[:4])
+check("[28] moi `og:url` la duong dan tuyet doi", not _rel_url, "hong: %s" % _rel_url[:4])
+
+# ⚠️ Anh phai DUNG 1200x630 THAT, khong chi khai trong the — khai mot dang ma tep
+#    mot neo thi Facebook cat xen theo TEP, va the xem truoc met mo.
+_og_dir = os.path.join(ROOT, "img", "og")
+_wrong_size = []
+_have_pil = True
+try:
+    from PIL import Image as _PILImage
+except ImportError:
+    _have_pil = False
+
+if _have_pil and os.path.isdir(_og_dir):
+    for _f in sorted(os.listdir(_og_dir)):
+        if _f.endswith(".jpg"):
+            with _PILImage.open(os.path.join(_og_dir, _f)) as _i:
+                if _i.size != (1200, 630):
+                    _wrong_size.append("%s=%s" % (_f, _i.size))
+
+check("[28] moi anh trong img/og/ dung 1200x630" if _have_pil
+      else "[28] anh OG dung co (bo qua: khong co Pillow)",
+      not _wrong_size, "sai co: %s" % _wrong_size[:4])
+
+# ⚠️ Khoi OG SINH RA bang script; sua tay la lan chay sau mat. Phep kiem nay chi
+#    doi khoi con nguyen hai moc — no khong doc duoc "ai da sua tay", nhung no
+#    chan duoc ca xoa moc lan cat doi khoi.
+_broken = [p for p in _all_og
+           if os.path.exists(os.path.join(ROOT, p))
+           and (io.open(os.path.join(ROOT, p), encoding="utf-8").read().count(_OGM)
+                != io.open(os.path.join(ROOT, p), encoding="utf-8").read().count("<!-- OG:END -->"))]
+check("[28] khoi OG con du ca hai moc BEGIN/END", not _broken, "hong: %s" % _broken[:4])
+
+# ═════════════════════ [29] QUY NGUON (UTM) ═════════════════════
+# ⚠️ VI SAO CAN: chuoi nay do CLIENT gui len, ma no di thang vao DynamoDB roi hien
+#    ra o trang bao cao admin. `js/utm.js` loc mot lan cho gon giao dien; hang rao
+#    THAT la `Services/Campaign.cs`. Hai ben LECH LUAT thi client hien mot dang ma
+#    DB luu mot neo, va nguoi doc bao cao khong doi chieu duoc voi link da dang.
+# ⚠️ Va no canh mot chuyen quan trong hon: trang chu la trang DUY NHAT duoc lap chi
+#    muc, no co y khong nap SDK Firebase (64 KB) va khong nap trinh theo doi nao.
+#    Mot `fetch` len trong `js/utm.js` la mo lai dung canh cua da dong.
+print("")
+print("=== [29] Quy nguon: client va server cung mot luat ===")
+
+def rd_sv(rel):
+    """Doc ma nguon backend (nam NGOAI repo, o ../AstroqSV/)."""
+    return rd_abs(os.path.join(SV, "src/AstroqSV.Api", rel))
+
+
+_UTM_PAGES = sorted([os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "*.html"))]
+                    + ["en/index.html"])
+
+_utm = rd("js/utm.js")
+_cam = rd_sv("Services/Campaign.cs")
+_utm_code = strip_comments(_utm)
+
+# --- luat loc phai khop hai ben ---
+_m1 = re.search(r"MAX_AGE_DAYS\s*=\s*(\d+)", _utm)
+_m2 = re.search(r"MAX_PART\s*=\s*(\d+)", _utm)
+_s1 = re.search(r"MaxPart\s*=\s*(\d+)", _cam)
+_s2 = re.search(r"MaxParts\s*=\s*(\d+)", _cam)
+check("[29] client khai duoc tran do dai moi phan", bool(_m2), _m2 and _m2.group(1))
+check("[29] server khai duoc tran do dai moi phan", bool(_s1), _s1 and _s1.group(1))
+check("[29] tran do dai KHOP hai ben", bool(_m2 and _s1) and _m2.group(1) == _s1.group(1),
+      "client=%s server=%s" % (_m2 and _m2.group(1), _s1 and _s1.group(1)))
+check("[29] server chi nhan toi da 3 phan", bool(_s2) and _s2.group(1) == "3",
+      _s2 and _s2.group(1))
+check("[29] client cung ghep toi da 3 phan (source/medium/campaign)",
+      _utm_code.count("o.source") >= 1 and "o.medium" in _utm_code and "o.campaign" in _utm_code)
+check("[29] han luu co that va > 0 ngay", bool(_m1) and int(_m1.group(1)) > 0,
+      _m1 and _m1.group(1))
+
+# ⚠️ Bo ky tu phai giong nhau. Client dung regex, server duyet tung ky tu - khong so
+#    duoc bang chuoi, nen doi DUNG bon loai duoc phep xuat hien o ca hai ben.
+check("[29] client chi nhan a-z 0-9 . _ -", "[^a-z0-9._-]" in _utm_code, )
+check("[29] server cung chi nhan a-z 0-9 . _ -",
+      all(t in _cam for t in ("'a'", "'z'", "'0'", "'9'", "'.'", "'_'", "'-'")))
+
+# --- 0 byte ra ngoai ---
+# ⚠️ Do tren ma DA BOC CHU THICH: chinh doan giai thich "vi sao khong dung Google
+#    Analytics" co chua chu `fetch`/`request`. Bai hoc lap lai lan thu ~19.
+for _bad in ("fetch(", "XMLHttpRequest", "sendBeacon", "new Image(", "document.cookie",
+             "googletagmanager", "google-analytics"):
+    check("[29] js/utm.js khong dung `%s`" % _bad, _bad not in _utm_code)
+
+# --- da nap o dung ba trang, va KHONG nap o trang khac ---
+# ⚠️ Nap thua o 15 trang khac la ~1 KB chet moi trang cho mot thu khong ai doc:
+#    nhan chi duoc BAT o cua vao (trang chu / landing) va DOC o hai cho gui form.
+_utm_want = {"index.html", "en/index.html", "landing-app.html"}
+_utm_has = set()
+for _pg in _UTM_PAGES:
+    _p = os.path.join(ROOT, _pg)
+    if os.path.exists(_p) and re.search(r'src="[^"]*js/utm\.js"',
+                                        io.open(_p, encoding="utf-8").read()):
+        _utm_has.add(_pg)
+check("[29] nap js/utm.js o dung ba cua vao", _utm_has == _utm_want,
+      "thua: %s  thieu: %s" % (sorted(_utm_has - _utm_want), sorted(_utm_want - _utm_has)))
+
+# --- hai cho gui phai mang nhan di ---
+check("[29] waitlist gui kem `src`",
+      re.search(r"src:\s*\(window\.AstroQUtm", strip_comments(rd("js/index.js"))) is not None)
+check("[29] dang ky tai khoan gui kem `src`",
+      "AstroQUtm" in strip_comments(rd("js/firebase-auth.js"))
+      and re.search(r'apiPost\("/auth/register",\s*\{[^}]*src',
+                    strip_comments(rd("js/firebase-auth.js"))) is not None)
+
+# --- server loc lai o CA HAI cua ---
+_wep = rd_sv("Endpoints/WaitlistEndpoints.cs")
+_aep = rd_sv("Endpoints/AuthEndpoints.cs")
+check("[29] /waitlist loc lai bang Campaign.Clean", "Campaign.Clean(req.Src)" in _wep)
+check("[29] /auth/register loc lai bang Campaign.Clean", "Campaign.Clean(req?.Src)" in _aep)
+
+# ⚠️ GIU LUOT CHAM DAU TIEN. Cau hoi la "cai gi mang nguoi nay toi" - do la lan DAU.
+#    Ghi de theo luot cuoi thi cong cua bai dang bien mat va moi bai deu trong nhu
+#    vo dung; con o duong dang ky no la mot lo hong nho (nguoi thu hai dang ky de len
+#    mot dia chi dang cho se viet lai duoc nguon cua nan nhan).
+check("[29] waitlist giu nhan cua luot DAU", "IsNullOrEmpty(existing?.Src)" in _wep)
+check("[29] dang ky giu nhan cua luot DAU",
+      re.search(r"effSrc\s*=\s*resend\s*&&\s*!string\.IsNullOrEmpty\(existing!?\.Src\)", _aep)
+      is not None)
+check("[29] nhan di tiep sang HO SO luc kich hoat", "CreateUserAsync(uid, email, p.Name, p.Src)" in _aep)
+
+# ⚠️ `source` (header Origin) la TRUONG KHAC. Ghi de no la vua mat du lieu cu vua tron
+#    hai nghia vao mot cho - va Origin thi luon la "https://astroq.org", vo dung cho
+#    viec quy nguon. Hai truong, hai cau hoi.
+check("[29] `source` (Origin) van duoc ghi rieng, khong bi `src` ghi de",
+      "Source:     ctx.Request.Headers.Origin" in _wep)
+_dyn = rd_sv("Data/DynamoContext.cs")
+check("[29] ban ghi waitlist luu ca hai truong",
+      '["source"]     = S(w.Source)' in _dyn and '["src"]        = S(w.Src)' in _dyn)
+check("[29] ban ghi cho luu `src`", '["src"]         = S(p.Src)' in _dyn)
+check("[29] ho so luu `src`", '["src"]       = S(src)' in _dyn)
+
+# --- bao cao admin phai co cho HIEN RA ---
+# ⚠️ Thieu phep kiem nay thi nhan co that, luu that, ma khong hien ra o dau - dung
+#    lop loi im lang da tra gia o lan them loai mon thu ba cho cua hang.
+_ins = rd_sv("Services/Insights.cs")
+_adm = rd("js/admin-report.js")
+check("[29] server tra bang nguon", "SrcRow(" in _ins and "Sources: sources" in _ins)
+check("[29] bang nguon co ca hang cho lan tai khoan",
+      re.search(r"SrcRow\(string Src, long Waitlist, long Signups, long Active7, long EarthDone\)",
+                _ins) is not None)
+check("[29] client co the `sources`", 'sources: {' in _adm and '"p-src"' in _adm)
+check("[29] trang bao cao co o ve `p-src`", 'id="p-src"' in rd("admin-report.html"))
+# ⚠️ MOI KY TU TRONG NHAN DO CLIENT SINH PHAI NAM TRONG SUBSET FONT TU HOST.
+#    Font cua du an chi co latin + vietnamese (cat 621->101 KB ngay 26/07/2026), nen
+#    mot ky hieu ngoai subset se lui ve font he thong va render ra GLYPH KHAC HAN -
+#    da gap that voi "↳" (U+21B3) o nhan hang con cua bang nguon. Doc CSS thi khong
+#    thay; chi render moi thay. Phep kiem nay chan duong quay lai.
+_ranges = []
+for _m in re.finditer(r"unicode-range:\s*([^;]+);", rd("css/fonts.css")):
+    for _part in _m.group(1).split(","):
+        _part = _part.strip().upper().replace("U+", "")
+        if "-" in _part:
+            _a, _b = _part.split("-"); _ranges.append((int(_a, 16), int(_b, 16)))
+        elif _part:
+            _ranges.append((int(_part.replace("?", "0"), 16),
+                            int(_part.replace("?", "F"), 16)))
+check("[29] doc duoc unicode-range cua font tu host", len(_ranges) >= 2, len(_ranges))
+
+def _in_font(ch):
+    return any(a <= ord(ch) <= b for a, b in _ranges)
+
+_labels = re.findall(r'label:\s*"([^"]*)"', _adm) + re.findall(r'name:\s*x\.src \? x\.src : "([^"]*)"', _adm)
+_out_font = sorted({ch for lab in _labels for ch in lab if not _in_font(ch)})
+check("[29] moi ky tu trong nhan do admin-report sinh deu co trong font tu host",
+      not _out_font, "ngoai subset: %s" % [(c, hex(ord(c))) for c in _out_font])
+
+check("[29] nhan rong duoc doi ra chu, khong de o trong",
+      "không rõ nguồn" in _adm)
+
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)
