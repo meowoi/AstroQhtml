@@ -9,14 +9,19 @@
      voi phan hien thi la Google coi nhu du lieu sai, con thu SES lech la noi sai voi khach
      da dang ky. Cung ly le voi `stamp_version.py`.
 
-     CLAUDE.md tung ghi "7 cho" — dem lai 12/08/2026 ra **15**. Con so trong tai lieu
+     CLAUDE.md tung ghi "7 cho" roi "17 cho" — dem lai 12/08/2026 ra **9**. Con so trong tai lieu
      da duoc sua theo.
 
-BON DANG VIET cua cung mot ngay, moi dang mot muc dich:
+BA DANG VIET cua cung mot ngay, moi dang mot muc dich:
      09/08/2026     ban VI hien ra + LaunchDateVi (thu SES tieng Viet)
      2026-08-09     LAUNCH_AT (dong ho dem nguoc) + datePublished cua JSON-LD
      9 August 2026  ban EN hien ra + LaunchDateEn
-     9 Aug 2026     <title> ban EN (rut ngan cho vua thanh tieu de)
+
+⚠️ DANG THU TU `9 Aug 2026` DA THANH MO COI tu 18/08/2026: no chi dung o <title>
+   ban EN, ma tieu de da bo ngay di co chu dich (bo mat bi bat thu ba CACHE khong
+   duoc mang loi hua se het han — xem scratchpad/set_launch_copy.py). `forms()` van
+   tra ve `en_short` nhung KHONG job nao dung; giu lai de khoi pha ham dung chung,
+   va de neu co cho moi can dang do thi da co san.
 
 ⚠️ SAU KHI CHAY, BAT BUOC hai buoc:
      1. python scratchpad/gen_home_en.py     (sinh lai en/index.html — DUNG sua tay)
@@ -82,18 +87,16 @@ def main():
     # (duong dan, [(cu, moi, so lan PHAI khop, muc dich)])
     jobs = [
         (os.path.join(ROOT, "index.html"), [
-            (o["vi"], n["vi"], 5, "title . description . FAQ JSON-LD . wl-hint . a5"),
+            (o["vi"], n["vi"], 2, "FAQ JSON-LD . a5"),
             (o["iso"], n["iso"], 1, "datePublished cua JSON-LD"),
         ]),
         (os.path.join(ROOT, "js", "index.js"), [
             ('new Date("%sT00:00:00+07:00")' % o["iso"],
              'new Date("%sT00:00:00+07:00")' % n["iso"], 1, "LAUNCH_AT (dong ho dem nguoc)"),
-            (o["vi"], n["vi"], 3, "tu dien vi: title . wl_hint . a5"),
-            (o["en_long"], n["en_long"], 2, "tu dien en: wl_hint . a5"),
-            (o["en_short"], n["en_short"], 1, "tu dien en: title"),
+            (o["vi"], n["vi"], 1, "tu dien vi: a5"),
+            (o["en_long"], n["en_long"], 1, "tu dien en: a5"),
         ]),
         (os.path.join(HERE, "gen_home_en.py"), [
-            (o["en_long"], n["en_long"], 1, "EN_META description"),
             (o["iso"], n["iso"], 1, "EN_APP_JSONLD datePublished"),
         ]),
         (os.path.join(SV, "Endpoints", "WaitlistEndpoints.cs"), [

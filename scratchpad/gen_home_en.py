@@ -54,17 +54,16 @@ U_EN = "https://astroq.org/en/"
 # ---------------------------------------------------------------------------
 EN_META = {
     "description": "astroQ.org is an interactive 3D STEM learning platform about "
-                   "Space, AI and Quantum Physics for children and beginners. Join the "
-                   "waitlist to get 500 Purple Meteors and an early-access pass before "
-                   "the 20 August 2026 launch.",
+                   "Space, AI and Quantum Physics for children and beginners. Sign up "
+                   "by email to get 500 starter Purple Meteors.",
     "og_title": "astroQ.org — Explore the Galaxy of Knowledge",
     "og_description": "An interactive learning platform on Space, AI & Quantum Physics "
-                      "for young explorers. Join early and get 500 Purple Meteors.",
+                      "for young explorers. Sign up by email for 500 starter Purple Meteors.",
     "tw_title": "astroQ.org — Explore the Galaxy of Knowledge",
     "tw_description": "Learn Astronomy, AI & Quantum Physics through cosmic missions. "
-                      "Join the waitlist for 500 Purple Meteors.",
+                      "Sign up for 500 starter Purple Meteors.",
     "img_alt": "astroQ.org — Explore the Galaxy of Knowledge. Comet the cat and Byte "
-               "the robot, with 500 Purple Meteors for early sign-ups.",
+               "the robot, with 500 starter Purple Meteors for new sign-ups.",
 }
 
 EN_APP_JSONLD = """{
@@ -365,9 +364,14 @@ def main():
     m = re.search(r'LAUNCH_AT\s*=\s*new Date\("(\d{4})-(\d{2})-(\d{2})', js)
     if m:
         y, mo, dd = m.groups()
-        check("%s August %s" % (str(int(dd)), y) in EN_META["description"]
-              or "%s Aug %s" % (str(int(dd)), y) in en.get("title", ""),
-              "ngay ra mat ban EN khop LAUNCH_AT", "LAUNCH_AT=%s-%s-%s" % (y, mo, dd))
+        # ⚠️ Doc o `en["a5"]` — tu 18/08/2026 do la cho DUY NHAT con mang ngay ra mat
+        #    trong tu dien EN (title + description da bo, xem scratchpad/set_launch_copy.py).
+        #    Va no cung la doan dung de dung khoi FAQPage ban EN, nen sai o day la sai ca
+        #    phan hien ra lan phan du lieu co cau truc.
+        check("%s August %s" % (str(int(dd)), y) in en.get("a5", ""),
+              "ngay ra mat ban EN khop LAUNCH_AT (doc o en.a5)",
+              "LAUNCH_AT=%s-%s-%s — sua a5 trong tu dien `en` cua js/index.js"
+              % (y, mo, dd))
 
     if _bad:
         print("\n  DUNG LAI: tu dien chua san sang, khong sinh gi.")

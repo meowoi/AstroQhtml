@@ -99,82 +99,124 @@ def main():
         pg.goto(f"{BASE}/lab.html", wait_until="domcontentloaded")
         pg.wait_for_selector(".lcard", timeout=8000)
 
-        badge = pg.locator(".lcard[data-card='float'] .lc-tag")
-        check("Co nhan trang thai tren the bi khoa", badge.count() == 1)
-        check("Nhan noi thu nay THUOC GOI nao (khong phai 'sap ra mat')",
-              "PHI HÀNH GIA" in badge.inner_text().upper(), badge.inner_text().strip())
-        check("Nhan mang class `pro`, khong phai `soon`",
-              "pro" in (badge.get_attribute("class") or ""))
-        # ⚠️ Nhan phai KHOP trang thai khai trong js/locks.js — bam theo hang so thoi
-        #    la phep kiem van xanh khi ai do doi state ma quen sua cho ve nhan.
-        st = pg.evaluate("AstroQLocks.state('lab:float')")
-        check("Class nhan KHOP state khai trong locks.js",
-              st in (badge.get_attribute("class") or ""), f"state={st}")
-        # Va mot the CHUA DUNG XONG phai mang nhan KHAC — hai loai, hai cach noi.
+        # ⚠️⚠️ SUY TU js/locks.js, KHONG GHIM `float` LA `pro`. Ngay 18/08/2026 muc ①
+        #    ("mo free de test nguoi dung that") da GO HET cac muc `pro` khoi ITEMS —
+        #    nen mot bo do ghim `float` la thu tra phi dang BAO VE dung cai paywall vua
+        #    co y bo, tuc no bao hong ngay luc san pham lam dung. Day la lop loi "phep
+        #    kiem giu trang thai cu" da lap rat nhieu lan trong du an (nut Mat Trang,
+        #    the game soon, thang cap "da dat"...).
+        #    Cach sua: hoi CHINH DU LIEU xem con muc `pro` nao khong, roi kiem dieu
+        #    dung voi trang thai do. Nho vay bat lai paywall la bo do tu chay lai nhanh
+        #    tra phi, khong phai sua mot dong nao.
+        pro_keys = pg.evaluate(
+            "AstroQLocks.all().filter(function(k){return AstroQLocks.state(k)==='pro';})")
+        lab_pro = [k for k in pro_keys if k.startswith("lab:")]
+        print("    (locks.js dang khai %d muc `pro`, trong do %d o lab)"
+              % (len(pro_keys), len(lab_pro)))
+
+        if lab_pro:
+            # ── Con muc tra phi: kiem tron nhanh do (ban goc, chi doi khoa cung) ──
+            key = lab_pro[0]
+            card = key.split(":", 1)[1]
+            sel = ".lcard[data-card='%s']" % card
+            badge = pg.locator(sel + " .lc-tag")
+            check("Co nhan trang thai tren the bi khoa", badge.count() == 1)
+            check("Nhan noi thu nay THUOC GOI nao (khong phai 'sap ra mat')",
+                  "PHI HÀNH GIA" in badge.inner_text().upper(), badge.inner_text().strip())
+            check("Nhan mang class `pro`, khong phai `soon`",
+                  "pro" in (badge.get_attribute("class") or ""))
+            st = pg.evaluate("AstroQLocks.state('%s')" % key)
+            check("Class nhan KHOP state khai trong locks.js",
+                  st in (badge.get_attribute("class") or ""), "state=%s" % st)
+
+            btn = pg.locator(sel)
+            check("The BAM DUOC (khong disabled)", not btn.is_disabled())
+            bb = btn.bounding_box()
+            check("Vung cham the >= 44px", bb and bb["height"] >= 44,
+                  "%.0fpx" % bb["height"] if bb else "?")
+
+            open_modal(pg, sel)
+            title = pg.inner_text("#lk-title")
+            body = pg.inner_text("#lk-body")
+            check("Modal mo ra", pg.locator("#aq-lock.show").count() == 1)
+            # ⚠️ So bang casefold() — ghim mot cach viet hoa la phep kiem bao hong oan
+            #    ngay lan doi cau chu dau tien (quy tac 8 muc 6 CLAUDE.md).
+            check("Tieu de KHONG noi 'da khoa vi chua tra tien'",
+                  "chưa trả" not in title.casefold(), title)
+            check("Tieu de noi ro thuoc goi nao", "Phi Hành Gia" in title, title)
+            check("Than bai nhac ten goi", "Phi Hành Gia" in body, body[:70])
+            # ⚠️ Phep kiem quan trong nhat: KHONG hoi thuc mot dua tre bo tien.
+            low = (title + " " + body + " " + pg.inner_text("#lk-go")).lower()
+            check("KHONG co chu 'mo khoa ngay' / 'mua ngay' / 'nang cap ngay'",
+                  not any(w in low for w in
+                          ["mở khoá ngay", "mở khóa ngay", "mua ngay", "nâng cấp ngay"]),
+                  low[:80])
+            check("Co danh sach quyen loi", pg.locator("#lk-feats li").count() >= 3,
+                  str(pg.locator("#lk-feats li").count()))
+            go = pg.locator("#lk-go")
+            check("CO nut dan sang trang gia", go.is_visible())
+            check("nut do tro dung pricing.html",
+                  (go.get_attribute("href") or "").endswith("pricing.html"),
+                  go.get_attribute("href"))
+            check("Co cau nho bo me xem giup (khong hoi thuc tre)",
+                  "bố mẹ" in pg.inner_text("#lk-note"), pg.inner_text("#lk-note")[:60])
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(250)
+            check("Escape dong modal", pg.locator("#aq-lock.show").count() == 0)
+            check("Tieu diem tra ve dung the vua bam",
+                  pg.evaluate("document.activeElement && "
+                              "document.activeElement.getAttribute('data-card')") == card)
+        else:
+            # ── KHONG con muc tra phi: kiem dung LOI HUA cua viec "mo free" ──
+            # ⚠️ Day moi la phan dang doc. Bo phep kiem di khi paywall bien mat la mat
+            #    luon kha nang phat hien no LEN LAI mot cach im lang.
+            check("locks.js KHONG con muc `pro` nao", not pro_keys, pro_keys[:4])
+            check("`lab:float` (tung tra phi) nay la `free`",
+                  pg.evaluate("AstroQLocks.state('lab:float')") == "free",
+                  pg.evaluate("AstroQLocks.state('lab:float')"))
+            check("KHONG the nao tren lab.html mang nhan tra phi",
+                  pg.locator(".lcard .lc-tag.pro").count() == 0,
+                  pg.locator(".lcard .lc-tag.pro").count())
+            # ⚠️ Do THAT SU BAM VAO: mot the free ma van mo hop khoa thi tre bi chan
+            #    o dung cho vua mo ra. Doc class khong tra loi duoc cau do.
+            pg.click(".lcard[data-card='float']")
+            pg.wait_for_timeout(600)
+            check("Bam the free KHONG mo hop khoa (vao choi duoc ngay)",
+                  pg.locator("#aq-lock.show").count() == 0)
+            # ⚠️ Va khong con duong nao tu lab.html dan sang trang gia — mot loi moi
+            #    mua nam tren mot khu da mien phi la mot cau noi sai.
+            check("KHONG con duong nao tu lab.html dan sang pricing.html",
+                  pg.locator("a[href$='pricing.html']").count() == 0,
+                  pg.locator("a[href$='pricing.html']").count())
+
+        # ⚠️ TAI LAI TRANG. O nhanh free o tren, cu bam vao the DA MO THI NGHIEM ra
+        #    (dung hanh vi mong muon) nen luoi the khong con tren man hinh — phep do
+        #    tiep theo se cho mai mot cai nut khong bao gio hien. Chinh cho nay chung
+        #    minh cu bam that su LAM MOT VIEC, chu khong phai khong lam gi.
+        pg.goto(f"{BASE}/lab.html", wait_until="domcontentloaded")
+        pg.wait_for_selector(".lcard", timeout=8000)
+
+        # ── Phan nay SONG o ca hai nhanh: the CHUA DUNG XONG van phai noi that ──
+        # ⚠️ Giu lai vi no do mot loi hua KHAC va van con hieu luc: khu chua co noi
+        #    dung thi phai noi "dang duoc xay", khong duoc im lang.
+        soon_card = pg.locator(".lcard[data-card='mix'] .lc-tag")
         check("The chua dung xong mang nhan `soon`",
-              "soon" in (pg.locator(".lcard[data-card='mix'] .lc-tag")
-                           .get_attribute("class") or ""))
-
-        btn = pg.locator(".lcard[data-card='float']")
-        check("The BAM DUOC (khong disabled)", not btn.is_disabled())
-        bb = btn.bounding_box()
-        check("Vung cham the >= 44px", bb and bb["height"] >= 44,
-              f'{bb["height"]:.0f}px' if bb else "?")
-
-        open_modal(pg, ".lcard[data-card='float']")
-        title = pg.inner_text("#lk-title")
-        body = pg.inner_text("#lk-body")
-        check("Modal mo ra", pg.locator("#aq-lock.show").count() == 1)
-        # ⚠️ So bang casefold(): tieu de co the mo dau bang cum nay (chu HOA) hoac
-        #    dat no giua cau. Ghim dung mot cach viet hoa la phep kiem bao hong oan
-        #    ngay lan doi cau chu dau tien — du an da tra gia BA lan vi loai loi nay
-        #    (xem quy tac 8 muc 6 cua CLAUDE.md).
-        # ⚠️ DOI PHAT BIEU 12/08/2026: bien the "chua mo ban" da bo (chu du an chot coi
-        #    nhu da mo ban). Dieu can bao ve van nguyen: hop khoa noi that thu nay
-        #    thuoc goi nao, va KHONG noi kieu "khoa vi chua tra tien".
-        check("Tieu de KHONG noi 'da khoa vi chua tra tien'",
-              "chưa trả" not in title.casefold(), title)
-        check("Tieu de noi ro thuoc goi nao", "Phi Hành Gia" in title, title)
-        check("Than bai KHONG con noi 'chua mo ban'",
-              "chưa mở bán" not in body.casefold(), body[:80])
-        check("Than bai KHONG noi 'dang duoc xay' (thu nay DA lam xong)",
-              "đang được xây" not in body.casefold(), body[:80])
-        check("Than bai nhac ten goi", "Phi Hành Gia" in body, body[:70])
-        # ⚠️ Phep kiem quan trong nhat ca bo
-        low = (title + " " + body + " " + pg.inner_text("#lk-go")).lower()
-        check("KHONG co chu 'mo khoa ngay' / 'mua ngay' / 'nang cap ngay'",
-              not any(w in low for w in ["mở khoá ngay", "mở khóa ngay", "mua ngay", "nâng cấp ngay"]),
-              low[:80])
-        check("Co danh sach quyen loi", pg.locator("#lk-feats li").count() >= 3,
-              str(pg.locator("#lk-feats li").count()))
-        # ⚠️ The tra phi phai co MOT DUONG DI THAT: nut dan sang pricing.html. Mot hop
-        #    khoa khong co duong ra nao la mot ngo cut — te hon ca mot nut `disabled`.
-        go = pg.locator("#lk-go")
-        check("CO nut dan sang trang gia", go.is_visible())
-        check("nut do tro dung pricing.html",
-              (go.get_attribute("href") or "").endswith("pricing.html"),
-              go.get_attribute("href"))
-        check("Co cau nho bo me xem giup (khong hoi thuc tre)",
-              "bố mẹ" in pg.inner_text("#lk-note"), pg.inner_text("#lk-note")[:60])
-
-        # Escape dong + tra tieu diem
+              "soon" in (soon_card.get_attribute("class") or ""),
+              soon_card.get_attribute("class"))
+        open_modal(pg, ".lcard[data-card='mix']")
+        sbody = pg.inner_text("#lk-body")
+        check("Hop 'sap co' noi that la dang duoc xay",
+              "đang được xây" in sbody.casefold() or "dựng" in sbody.casefold(), sbody[:70])
         pg.keyboard.press("Escape")
         pg.wait_for_timeout(250)
-        check("Escape dong modal", pg.locator("#aq-lock.show").count() == 0)
-        check("Tieu diem tra ve dung the vua bam",
-              pg.evaluate("""document.activeElement
-                             && document.activeElement.getAttribute('data-card')""") == "float")
 
-        # Doi ngon ngu -> nhan va modal dich theo
+        # Doi ngon ngu -> nhan dich theo
         pg.click('.lang-switch button[data-lang="en"]')
         pg.wait_for_timeout(350)
-        check("Nhan the dich sang EN",
-              "ASTRONAUT" in pg.inner_text(".lcard[data-card='float'] .lc-tag").upper(),
-              pg.inner_text(".lcard[data-card='float'] .lc-tag").strip())
-        open_modal(pg, ".lcard[data-card='float']")
-        check("Modal dich sang EN", "plan" in pg.inner_text("#lk-body").casefold(),
-              pg.inner_text("#lk-body")[:70])
-        pg.keyboard.press("Escape")
+        check("Nhan the `soon` dich sang EN",
+              pg.inner_text(".lcard[data-card='mix'] .lc-tag").strip().upper()
+              not in ("SẮP CÓ", "SẮP RA MẮT"),
+              pg.inner_text(".lcard[data-card='mix'] .lc-tag").strip())
         check("0 loi console/pageerror o lab.html", not errs, str(errs[:2]))
         ctx.close()
 

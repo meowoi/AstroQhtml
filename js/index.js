@@ -22,14 +22,16 @@
       a_crew:"Phi hành đoàn đồng hành",
       a_comet:"Mèo Comet — phi công vũ trụ, linh vật của astroQ.org",
       a_byte:"Robot Byte — trợ lý AI, linh vật của astroQ.org",
-      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Sắp Ra Mắt 20/08/2026",
-      status:"TRẠM ĐANG KHỞI ĐỘNG",
-      eyebrow:"PRE-LAUNCH · MISSION 001",
+      title:"astroQ.org — Khám Phá Ngân Hà Tri Thức | Vũ Trụ · AI · Lượng Tử",
+      status:"TRẠM ASTROQ",
+      eyebrow:"MISSION 001",
       h1:"Khám Phá Ngân Hà Tri Thức Cùng astroQ.org",
       lede:"Nền tảng học tập tương tác chủ đề Vũ trụ, AI & Vật lý Lượng tử dành cho các nhà khám phá trẻ. Biến lý thuyết phức tạp thành các nhiệm vụ vũ trụ kỳ thú.",
       cd_label:"HỆ THỐNG MỞ CỬA SAU", cd_d:"ngày", cd_h:"giờ", cd_m:"phút", cd_s:"giây",
       cd_live:"HỆ THỐNG ĐÃ MỞ CỬA",
-      hero_cta:"Nhận vé mời sớm 🚀", hero_cta2:"astroQ.org là gì?",
+      hero_cta:"Nhận 500 Purple Meteors 🚀", hero_cta2:"astroQ.org là gì?",
+      /* Chỉ hiện sau khi đồng hồ về 0 — xem `renderCountdown`. */
+      hero_live:"Vào chơi ngay 🚀",
       crew_comet:"Mèo phi công vũ trụ — dẫn đường qua từng hành tinh và giao nhiệm vụ khám phá cho bạn.",
       crew_byte:"Robot trợ lý AI — giải thích thuật ngữ khó bằng ngôn ngữ của trẻ em và chấm bài quiz.",
 
@@ -37,20 +39,20 @@
       wl_title:"Đăng Ký Nhận Vé Mời Sớm & Nhận Quà Khởi Đầu!",
       wl_desc:"Đăng ký ngay hôm nay để nhận ngay <b>500 PURPLE METEORS</b> (đơn vị tiền thưởng trên astroQ.org) dùng để nâng cấp phi thuyền &amp; mở khóa hành tinh ngay khi hệ thống ra mắt!",
       wl_label:"Địa chỉ email", wl_ph:"phihanhgia@astroq.org",
-      wl_cta:"Nhận 500 Purple Meteors & Vé Sớm 🚀",
+      wl_cta:"Nhận 500 Purple Meteors 🚀",
       wl_sending:"Đang gửi...",
-      wl_hint:"Không spam. Nhận thông báo ra mắt chính thức vào ngày 20/08/2026.",
+      wl_hint:"Không spam. Chỉ một thư chào mừng.",
       mob_title:"Trải nghiệm tốt nhất trên máy tính",
       mob_body:"astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!",
       mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
-      done_title:"🚀 Đã nhận vé sớm & 500 Purple Meteors thành công!",
-      done_body:'Kiểm tra hòm thư của bạn nhé — vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. 500 Purple Meteors sẽ nằm sẵn trong khoang khi astroQ.org mở cửa.',
+      done_title:"🚀 Đã giữ chỗ & 500 Purple Meteors thành công!",
+      done_body:'Kiểm tra hòm thư của bạn nhé — chỗ của <b id="wl-done-mail">bạn</b> đã được giữ. 500 Purple Meteors sẽ nằm sẵn trong khoang khi bạn vào.',
       // Dùng khi server nhận được đăng ký nhưng SES chưa gửi được thư. Đừng bảo
       // "kiểm tra hòm thư" về một lá thư chưa đi.
-      done_body_nomail:'Vé mời sớm đã giữ cho <b id="wl-done-mail">bạn</b>. Thư xác nhận đang gặp trục trặc nên có thể chưa tới, nhưng chỗ của bạn vẫn được giữ — chúng mình sẽ báo khi astroQ.org mở cửa.',
+      done_body_nomail:'Đã ghi nhận email của <b id="wl-done-mail">bạn</b>. Thư xác nhận đang gặp trục trặc nên có thể chưa tới, nhưng chỗ của bạn vẫn được giữ.',
       done_again:"Đăng ký email khác",
 
-      err_empty:"Nhập email của bạn để nhận vé mời sớm nhé!",
+      err_empty:"Nhập email của bạn để nhận 500 Purple Meteors nhé!",
       err_format:"Email chưa đúng định dạng — kiểm tra lại giúp Byte nhé.",
       ok_short:"Ghi danh thành công! 500 {tt} đang chờ bạn.",
       ok_dup:"Email này đã có trong phi hành đoàn — đã cập nhật lại!",
@@ -74,7 +76,7 @@
       q4:"Purple Meteors là gì?",
       a4:"Purple Meteors (Thiên thạch tím) là đơn vị phần thưởng trong astroQ.org. Người học kiếm Purple Meteors khi hoàn thành quiz, đọc bài và chơi mini-game, rồi dùng để nâng cấp phi thuyền và mở khóa hành tinh mới.",
       q5:"Khi nào astroQ.org ra mắt?",
-      a5:"astroQ.org dự kiến ra mắt chính thức vào ngày 20/08/2026. Người đăng ký waitlist bằng email sẽ nhận vé mời sớm cùng 500 Purple Meteors khởi đầu ngay khi hệ thống mở cửa.",
+      a5:"astroQ.org mở cửa ngày 20/08/2026. Người đăng ký bằng email nhận 500 Purple Meteors khởi đầu.",
 
       /* Dải mời sang bản ngôn ngữ kia. Chữ này hiện trên trang TIẾNG ANH cho
          khách được đoán là người Việt — nên nó viết bằng tiếng Việt. */
@@ -91,14 +93,15 @@
       a_crew:"Your companion crew",
       a_comet:"Comet the cat — space pilot, astroQ.org mascot",
       a_byte:"Byte the robot — AI assistant, astroQ.org mascot",
-      title:"astroQ.org — Explore the Galaxy of Knowledge | Launching 20 Aug 2026",
-      status:"STATION WARMING UP",
-      eyebrow:"PRE-LAUNCH · MISSION 001",
+      title:"astroQ.org — Explore the Galaxy of Knowledge | Space · AI · Quantum",
+      status:"ASTROQ STATION",
+      eyebrow:"MISSION 001",
       h1:"Explore the Galaxy of Knowledge with astroQ.org",
       lede:"An interactive learning platform on Space, AI & Quantum Physics for young explorers. We turn complex theory into thrilling cosmic missions.",
       cd_label:"SYSTEM GOES LIVE IN", cd_d:"days", cd_h:"hours", cd_m:"mins", cd_s:"secs",
       cd_live:"SYSTEM IS LIVE",
-      hero_cta:"Get early access 🚀", hero_cta2:"What is astroQ.org?",
+      hero_cta:"Get 500 Purple Meteors 🚀", hero_cta2:"What is astroQ.org?",
+      hero_live:"Play now 🚀",
       crew_comet:"Space-pilot cat — guides you planet by planet and hands out exploration missions.",
       crew_byte:"AI assistant robot — explains hard terms in kid-friendly language and grades your quizzes.",
 
@@ -106,18 +109,18 @@
       wl_title:"Join the Waitlist & Claim Your Starter Gift!",
       wl_desc:"Sign up today and get <b>500 PURPLE METEORS</b> (the reward currency on astroQ.org) to upgrade your ship &amp; unlock planets the moment we launch!",
       wl_label:"Email address", wl_ph:"astronaut@astroq.org",
-      wl_cta:"Claim 500 Purple Meteors & Early Access 🚀",
+      wl_cta:"Claim 500 Purple Meteors 🚀",
       wl_sending:"Sending...",
-      wl_hint:"No spam. You'll only hear from us at the official launch on 20 August 2026.",
+      wl_hint:"No spam. Just one welcome email.",
       mob_title:"Best experienced on a computer",
       mob_body:"astroQ has a 3D galaxy map and mini-games that need a wide screen. You can still browse this page on a phone, but open it on a <b>laptop or PC</b> for the full ride!",
       mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
-      done_title:"🚀 Early pass & 500 Purple Meteors secured!",
-      done_body:'Check your inbox — the early-access pass is reserved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when astroQ.org opens.',
-      done_body_nomail:'Your early-access pass is reserved for <b id="wl-done-mail">you</b>. The confirmation email hit a snag and may not arrive, but your spot is held — we\'ll write when astroQ.org opens.',
+      done_title:"🚀 Your spot & 500 Purple Meteors are secured!",
+      done_body:'Check your inbox — your spot is saved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when you log in.',
+      done_body_nomail:'We saved the spot for <b id="wl-done-mail">you</b>. The confirmation email hit a snag and may not arrive, but your spot is held.',
       done_again:"Use another email",
 
-      err_empty:"Enter your email to grab an early-access pass!",
+      err_empty:"Enter your email to grab 500 Purple Meteors!",
       err_format:"That email looks off — mind double-checking it for Byte?",
       ok_short:"You're in! 500 {tt} are waiting for you.",
       ok_dup:"This email was already on the crew list — record updated!",
@@ -141,7 +144,7 @@
       q4:"What are Purple Meteors?",
       a4:"Purple Meteors are the reward currency inside astroQ.org. Learners earn them by finishing quizzes, reading articles and playing mini-games, then spend them to upgrade their ship and unlock new planets.",
       q5:"When does astroQ.org launch?",
-      a5:"astroQ.org is scheduled to launch on 20 August 2026. Everyone on the email waitlist gets an early-access pass plus 500 starter Purple Meteors the moment the system opens.",
+      a5:"astroQ.org opens on 20 August 2026. Everyone who signs up by email gets 500 starter Purple Meteors.",
 
       /* Hiện trên trang TIẾNG VIỆT cho khách quốc tế — nên viết bằng tiếng Anh.
          Mời một người Nhật sang bản tiếng Anh bằng một câu tiếng Việt thì dải
@@ -212,6 +215,7 @@
     if(left <= 0){
       if(lbl) lbl.textContent = t("cd_live");
       ["cd-d","cd-h","cd-m","cd-s"].forEach(function(id){ $(id).textContent = "00"; });
+      openDoor();
       return false;                                  // dừng vòng lặp
     }
     var s = Math.floor(left / 1000);
@@ -220,6 +224,22 @@
     $("cd-m").textContent = pad(Math.floor(s % 3600 / 60));
     $("cd-s").textContent = pad(s % 60);
     return true;
+  }
+
+  /* ============================ Mở cửa vào app ============================
+     Gỡ `hidden` khỏi nút "Vào chơi ngay" và hạ nút waitlist xuống hạng phụ.
+
+     ⚠️ BẤT BIẾN THEO SỐ LẦN GỌI. `renderCountdown()` chạy cả trong `applyLang()`
+        (mỗi lần đổi ngôn ngữ) lẫn trong `ticker`, nên hàm này bị gọi lại nhiều
+        lần sau khi đã mở — phải cho ra đúng một kết quả, không cộng dồn class.
+
+     ⚠️ KHÔNG đụng chữ trong nút: `applyLang` đã lo phần đó qua `data-i18n`.
+        Ghi chữ ở đây là dựng bản sao thứ hai của một chuỗi, và bản sao sẽ không
+        đổi theo ngôn ngữ. */
+  function openDoor(){
+    var live = $("hero-live"), wl = $("hero-wl");
+    if(live) live.hidden = false;
+    if(wl){ wl.classList.remove("btn-primary"); wl.classList.add("btn-ghost"); }
   }
 
   /* ============================ Kho waitlist (localStorage) ============================ */
@@ -274,7 +294,9 @@
       return m.apiPost("/waitlist", {
         email: email,
         lang:  LANG,                                 // để biết gửi thư bản VI hay EN
-        hp:    ($("wl-gotcha") || {}).value || ""    // bẫy bot, server lọc lại lần nữa
+        hp:    ($("wl-gotcha") || {}).value || "",    // bẫy bot, server lọc lại lần nữa
+        // Nhan chien dich, de biet bai fanpage nao ra nguoi that. Rong khi khong co.
+        src:   (window.AstroQUtm ? AstroQUtm.get() : "")
       });
     }).then(function(r){
       // apiPost không bao giờ ném lỗi — luôn trả { ok, status, data, netError? }.
