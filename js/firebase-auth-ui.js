@@ -29,6 +29,11 @@ const TXT = {
         sent:"Đã gửi email đặt lại mật khẩu. Kiểm tra hòm thư nhé!",
         v_sent:"Đã gửi lại email kích hoạt!",
         v_nomail:"Chưa gửi được email. Bấm “Gửi lại” giúp mình nhé.",
+        /* Email này đã có một đăng ký đang chờ kích hoạt, và server GIỮ mật khẩu
+           của lượt đầu (chốt chặn chiếm quyền — xem AuthEndpoints). Không nói ra
+           thì người dùng kích hoạt xong sẽ đăng nhập bằng mật khẩu vừa gõ và không
+           vào được, mà chẳng có gì giải thích. */
+        v_pwkept:"Email này đang có một đăng ký chờ kích hoạt. Mình đã gửi lại link, nhưng mật khẩu vẫn là mật khẩu bạn đặt lần đầu nhé.",
         // Thông báo sau khi bấm link trong email (server chuyển hướng kèm ?activated=…&reason=…)
         a_ok:"Kích hoạt thành công! Đăng nhập để lên tàu nhé.",
         a_already:"Tài khoản này đã kích hoạt rồi. Đăng nhập thôi!",
@@ -41,6 +46,7 @@ const TXT = {
         sent:"Password reset email sent. Check your inbox!",
         v_sent:"Activation email sent again!",
         v_nomail:"We couldn't send the email. Please tap “Resend”.",
+        v_pwkept:"This email already has a sign-up waiting to be activated. We resent the link, but your password stays the one you set the first time.",
         a_ok:"Activated! Sign in to board the ship.",
         a_already:"This account is already active. Just sign in!",
         a_expired:"That link has expired. Register again to get a new one.",
@@ -155,7 +161,10 @@ $("auth-register").addEventListener("submit", async (e) => {
 
   // CHƯA có tài khoản nào cả — chỉ mới ghi nhận đăng ký và gửi link kích hoạt.
   showVerify(res.email || email);
-  if(!res.mailSent) UI.toast(tx("v_nomail"));
+  /* Một toast thôi. Không gửi được email là việc CẦN LÀM NGAY ("bấm Gửi lại"),
+     nên nó thắng; chồng hai toast lên nhau thì cái sau che mất cái trước. */
+  if(!res.mailSent)          UI.toast(tx("v_nomail"));
+  else if(res.passwordKept)  UI.toast(tx("v_pwkept"));
 });
 
 /* ---------------- Nút trong màn chờ kích hoạt ---------------- */

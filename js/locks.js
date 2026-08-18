@@ -59,22 +59,32 @@
        Thay vào đó là khoá theo TỪNG THẺ hoạt động bên trong. Nhờ vậy dashboard
        còn 0 card khoá; `check_pages` mục [7b] đã đổi phát biểu theo.
        LAB-01 KHÔNG có mục ở đây: nó là thẻ miễn phí để trải nghiệm. */
-    "lab:float": {
-      state: "pro", plan: "astronaut", ic: "🧑‍🚀",
-      feats: ["f_lab_1", "f_lab_2", "f_lab_3"]
-    },
-    "lab:weigh": {
-      state: "pro", plan: "astronaut", ic: "⚖️",
-      feats: ["f_lab_1", "f_lab_2", "f_lab_3"]
-    },
-    /* Ba thẻ chưa dựng xong → `soon`, KHÔNG phải `pro`. Gắn `pro` cho thứ chưa
-       tồn tại là nói với phụ huynh "trả tiền sẽ mở được" — xem cảnh báo đầu file. */
-    /* LAB-07 + LAB-08: DA DUNG XONG, nen `pro` chu khong `soon`. Xem canh bao dau
-       file: gan `pro` cho thu chua dung xong moi la loi. */
-    "lab:sky":   { state: "pro", plan: "astronaut", ic: "🌇",
-                   feats: ["f_lab_1", "f_lab_2", "f_lab_3"] },
-    "lab:drops": { state: "pro", plan: "astronaut", ic: "💧",
-                   feats: ["f_lab_1", "f_lab_2", "f_lab_3"] },
+    /* ⚠️⚠️ BỐN THẺ `lab:float` · `lab:weigh` · `lab:sky` · `lab:drops` ĐÃ BỎ KHỎI
+       BẢNG NÀY 18/08/2026 — chúng nay MIỄN PHÍ (vắng mặt ở `ITEMS` = `free`).
+
+       Vì sao: bốn thẻ đó là **toàn bộ** nội dung `pro` của cả app. Bán bốn hoạt
+       động Phòng Nghiên Cứu với giá 99.000₫/tháng là một lời chào mời không đứng
+       vững, và ngày mở cửa thì người đầu tiên bước vào gặp ngay bức tường ấy.
+       Chủ dự án chốt 18/08/2026: mở miễn phí trước để đo người dùng thật — đo được
+       rồi mới bàn chuyện thu tiền (`docs/decisions/009` mục "Điều kiện bật Pha 1"
+       vẫn chưa đạt: 2/3 nhiệm vụ · 106/300 câu quiz · D30 không có gì để đo).
+
+       ⚠️ ĐƯỜNG KẺ MỚI: **miễn phí hết Trái Đất, bức tường đặt ở Mặt Trăng.** Nên
+          `mission:moon` bên dưới vẫn là `soon` — và đó là trạng thái ĐÚNG: nhiệm vụ
+          đó chưa dựng, nên app đang nói thật rằng chưa có gì để bán.
+
+       ⚠️ HỆ QUẢ: HÔM NAY **KHÔNG CÒN MỤC `pro` NÀO**, tức nhánh vẽ `pro` (nhãn
+          `badge_pro`, tiêu đề `title_pro`, thân `body_pro`, `plan_*`, nút sang trang
+          giá, `founder_note`) tạm thời KHÔNG có ai dùng.
+          ⚠️ GIỮ LẠI CÓ CHỦ ĐÍCH, và đây là ngoại lệ CÓ ĐIỀU KIỆN với luật "đừng để
+             mã chết" mà file này viện dẫn ở đầu. Khác với các ca mã chết dự án đã
+             trả giá (`AstroQRanks.ALL` ngủ 8 ngày · `lv` khai ở 71 file với 0 chỗ
+             đọc), nhánh này **đã chạy thật, đã có bộ đo**, và có một mốc kích hoạt
+             ĐÃ ĐẶT TÊN: ngày `mission:moon` dựng xong thì nó đổi `soon` → `pro` và
+             nhánh này sống lại nguyên vẹn.
+             ⛔ Nếu tới lúc đó hướng đi đã đổi (không bán nữa, hoặc bán theo cách
+                khác) thì **XOÁ HẲN** nhánh `pro` — đừng để nó nằm thêm một vòng nữa
+                với lý do "sắp dùng tới". */
     "lab:throw": { state: "soon", plan: "astronaut", ic: "🎯" },
     "lab:tide":  { state: "soon", plan: "astronaut", ic: "🌊" },
     "lab:mix":   { state: "soon", plan: "astronaut", ic: "⚗️" },

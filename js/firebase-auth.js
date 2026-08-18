@@ -175,7 +175,8 @@ const AstroQAuth = {
     if(!isApiConfigured) return NOT_CONFIGURED;
     pendingName = name || "";
 
-    const r = await apiPost("/auth/register", { name, email, password });
+    const src = (typeof window !== "undefined" && window.AstroQUtm) ? window.AstroQUtm.get() : "";
+    const r = await apiPost("/auth/register", { name, email, password, src });
     if(r.netError)       return { ok: false, code: "net", message: errMsg("net") };
     if(r.notConfigured)  return NOT_CONFIGURED;
     if(!r.ok)            return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
@@ -185,7 +186,14 @@ const AstroQAuth = {
       email: r.data.email || email,
       expiresInMinutes: r.data.expiresInMinutes || 10,
       // Email gửi hỏng thì vẫn trả ok (bản ghi chờ đã lưu) nhưng báo để mời bấm "Gửi lại".
-      mailSent: r.data.mailSent !== false
+      mailSent: r.data.mailSent !== false,
+      /* Email này đã có một đăng ký đang chờ, và mật khẩu vừa gõ KHÁC mật khẩu của lượt
+         đầu nên server BỎ QUA nó (chốt chặn chiếm quyền đăng ký chưa kích hoạt — xem
+         AuthEndpoints). Giao diện phải nói ra: người dùng kích hoạt xong rồi đăng nhập
+         bằng mật khẩu vừa gõ sẽ không vào được, mà không có gì giải thích vì sao.
+         ⚠️ `=== true`, không phải truthy: server cũ chưa có trường này thì `undefined`
+            → false, và màn hình giữ nguyên như trước. */
+      passwordKept: r.data.passwordKept === true
     };
   },
 
