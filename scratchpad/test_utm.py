@@ -76,12 +76,18 @@ class _NoRedir(urllib.request.HTTPRedirectHandler):
 
 
 def get_nofollow(path):
+    """
+    ⚠️ HA CHU THUONG MOI TEN HEADER. API Gateway HTTP API tra ve `location` (chu
+       thuong), con Kestrel o may tra `Location`. `dict(r.headers)` giu nguyen chu
+       goc nen mot phep kiem doc `hdr["Location"]` DAT o may va HONG tren ban that —
+       vi mot ly do khong lien quan gi toi san pham. Da gap that 18/08/2026.
+    """
     op = urllib.request.build_opener(_NoRedir)
     try:
         with op.open(BASE + path, timeout=40) as r:
-            return r.status, dict(r.headers)
+            return r.status, {k.lower(): v for k, v in r.headers.items()}
     except urllib.error.HTTPError as e:
-        return e.code, dict(e.headers)
+        return e.code, {k.lower(): v for k, v in e.headers.items()}
 
 
 def ddb(argv):
@@ -239,7 +245,7 @@ try:
     st, hdr = get_nofollow("/auth/activate?e=%s&t=%s"
                            % (urllib.parse.quote(e8), token))
     check("kich hoat tra ve mot cu chuyen huong", st in (301, 302, 303, 307), st)
-    loc = hdr.get("Location", "")
+    loc = hdr.get("location", "")
     check("chuyen huong bao kich hoat thanh cong", "activated=1" in loc, loc[:120])
 
     em = item_of("EMAIL#" + e8, "ACCOUNT")
