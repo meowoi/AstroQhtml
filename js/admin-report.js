@@ -300,6 +300,73 @@
      ở js/viz.js). */
   var CARDS = {
 
+    /* ⚠️ HAI CON SO TREN MOT HANG, va chung KHONG cung don vi nguoi:
+          "hang cho" la dia chi email, "tai khoan" la nguoi da kich hoat. Ve chung
+          mot khung thanh la doc ra nhu mot dai luong bi chia doi. Nen khung chi ve
+          TAI KHOAN (thu dang quan tam), con hang cho va ti le o lai nam o dong ghi
+          chu ben canh — noi du ma khong bia ra mot phep so sai.
+       ⚠️ NHAN RONG = "khong ro nguon", KHONG phai mot nguon ten rong. Phai doi ten
+          ra chu, khong thi hang do ve ra mot thanh khong co nhan. */
+    /* ⚠️ HAI HANG MOI NGUON, KHONG PHAI MOT. Cot dang doc nhat la "con hoat dong" -
+          no phan biet mot bai mang toi dung nguoi voi mot bai chi mang toi luot bam.
+          Bo do dau tien nhet no vao `note`, ma `note` cua hbars CHI HIEN O TOOLTIP:
+          tren dien thoai khong re chuot duoc, tuc con so quan trong nhat bien mat o
+          dung thiet bi phu huynh hay dung. Hai hang thi mat doc thang bang mat.
+       ⚠️ KHONG TRUYEN `unit` LA MOT CHU cho hbars: no noi thang vao sau so, khong co
+          khoang trang (`fmt(v)+unit`, xem js/viz.js) - dung vi co noi truyen "%" va
+          "78 %" moi la sai. Do duoc: "17tai khoan" vua dinh chu vua TRAN ra ngoai
+          khung 12px, vi o giu cho gia tri chi rong 52px. Don vi noi o tieu de.
+       ⚠️ NHAN RONG = "khong ro nguon", KHONG phai mot nguon ten rong. Phai doi ra chu,
+          khong thi hang do ve ra mot thanh khong co nhan. */
+    sources: {
+      plot: "p-src",
+      rows: function(){
+        return (R.sources || []).map(function(x){
+          return {
+            src:  x.src || "",
+            name: x.src ? x.src : "(không rõ nguồn)",
+            wait: x.waitlist  || 0,
+            n:    x.signups   || 0,
+            a7:   x.active7   || 0,
+            done: x.earthDone || 0
+          };
+        });
+      },
+      chart: function(el){
+        var out = [];
+        CARDS.sources.rows().forEach(function(r){
+          out.push({
+            label: r.name, value: r.n, cls: r.src ? "s1" : "s2",
+            note: r.wait + " địa chỉ trong hàng chờ · " + r.done + " người xong Trái Đất"
+          });
+          /* Nguon chua ra tai khoan nao thi KHONG ve hang thu hai: mot thanh 0 kem
+             chu "con hoat dong" doc ra thanh mot loi phan xet, trong khi that ra
+             chua co gi de do. */
+          /* ⚠️ DAU "·" (U+00B7) CHU KHONG PHAI "↳" (U+21B3). Font tu host chi co
+             subset latin + vietnamese (dot cat 621->101 KB ngay 26/07/2026), va
+             U+21B3 KHONG nam trong do - render that ra mot glyph khac han cua font
+             he thong. Doc bang unicode-range o css/fonts.css truoc khi dung mot ky
+             hieu moi; muc [29] cua check_pages canh dung chuyen nay. */
+          if (r.n > 0)
+            out.push({ label: "· còn hoạt động", value: r.a7, cls: "s3",
+                       note: "trong " + r.n + " tài khoản đến từ nguồn này" });
+        });
+        V.hbars(el, {
+          rows: out, labelW: 240,
+          emptyMsg:"Chưa có ai đến từ một link có gắn nhãn chiến dịch."
+        });
+      },
+      table: function(el){
+        V.table(el, {
+          caption:"Nhãn chiến dịch lấy từ chính link mình đăng. Mỗi người được tính theo LƯỢT CHẠM ĐẦU TIÊN — đăng ký lại không đổi nguồn.",
+          head:["Nguồn","Hàng chờ","Tài khoản","Còn hoạt động (7 ngày)","Xong Trái Đất"],
+          rows: CARDS.sources.rows().map(function(r){
+            return [r.name, num(r.wait), num(r.n), num(r.a7), num(r.done)];
+          })
+        });
+      }
+    },
+
     dau: {
       plot: "p-dau",
       chart: function(el){
