@@ -96,6 +96,58 @@ with sync_playwright() as p:
               txt(pg, "#c-code"))
         ctx.close()
 
+    # ═══════════ [1b] KHÔNG MỘT CHỮ NÀO BỊ NƯỚNG VÀO HÌNH ═══════════
+    print("\n=== [1b] Trang trí không chứa chữ, và MỌI chữ đổi theo ngôn ngữ ===")
+    # ⚠️⚠️ ĐÂY LÀ PHÉP KIỂM GIỮ ĐÚNG YÊU CẦU CỦA CHỦ DỰ ÁN 19/08/2026: *"ngôn ngữ sẽ
+    #    thay đổi tuỳ theo ngôn ngữ mà người chơi chọn"*. Cách dễ nhất để làm tờ giấy
+    #    đẹp là dùng một ẢNH NỀN có sẵn chữ — và đó cũng là cách chắc chắn nhất để
+    #    KHÔNG BAO GIỜ dịch được. Hai phép kiểm dưới đây chặn đúng đường đó.
+    ctx = b.new_context(viewport={"width": 1280, "height": 900})
+    ctx.add_init_script("try{localStorage.setItem('astroq-lang','vi')}catch(e){}")
+    pg = ctx.new_page()
+    pg.goto(BASE + "/certificate.html?preview=1&rank=cadet&name=Test", wait_until="load")
+    pg.wait_for_timeout(1500)
+    art = pg.evaluate("""()=>{
+        const a=document.querySelector('.cert-art');
+        if(!a) return null;
+        return { text: a.querySelectorAll('text,tspan').length,
+                 img: a.querySelectorAll('image,img').length,
+                 shapes: a.querySelectorAll('circle,ellipse,path,rect').length };
+    }""")
+    check("lớp trang trí tồn tại", art is not None)
+    if art:
+        check("0 phần tử <text>/<tspan> trong trang trí (không chữ nướng sẵn)",
+              art["text"] == 0, str(art["text"]))
+        check("0 ảnh raster trong trang trí (vẽ bằng SVG nên in không mờ)",
+              art["img"] == 0, str(art["img"]))
+        check("trang trí có hình thật (không phải khối rỗng)", art["shapes"] >= 20,
+              "%d hình" % art["shapes"])
+
+    # Đổi ngôn ngữ NGAY TRÊN TRANG rồi so từng chuỗi: chuỗi nào không đổi là chuỗi
+    # bị gõ cứng đâu đó.
+    def snap():
+        return pg.evaluate("""()=>{
+            const g=s=>{const e=document.querySelector(s);return e?(e.innerText||'').trim():''};
+            return {org:g('.cert-org'), h:g('.cert-h'), sub:g('.cert-sub'),
+                    forr:g('.cert-for'), kd:g('.cert-cell .cert-k'),
+                    sign:g('.cert-sign .cert-v'), who:g('.cert-sign .who'),
+                    body:g('#c-body'), sample:g('#c-sample')};
+        }""")
+    vi = snap()
+    pg.click('.lang-switch button[data-lang="en"]')
+    pg.wait_for_timeout(900)
+    en = snap()
+    khac = [k for k in vi if vi[k] and vi[k] != en[k]]
+    giong = [k for k in vi if vi[k] and vi[k] == en[k]]
+    check("bấm EN thì MỌI chuỗi trên tờ giấy đổi theo (không sót chuỗi gõ cứng)",
+          not giong, "chưa đổi: %s" % giong)
+    print("      đổi được %d/%d chuỗi: %s" % (len(khac), len([k for k in vi if vi[k]]),
+                                              ", ".join(khac)))
+    check("tiêu đề bản EN đúng", "CERTIFICATE" in en["h"].upper(), en["h"][:50])
+    check("dấu MẪU cũng dịch (MẪU → SAMPLE)", en["sample"].upper() == "SAMPLE",
+          en["sample"])
+    ctx.close()
+
     # ═══════════ [2] Dấu MẪU phải ĐI VÀO BẢN IN ═══════════
     print("\n=== [2] Bản in (emulate_media print) ===")
     ctx = b.new_context(viewport={"width": 1280, "height": 900})

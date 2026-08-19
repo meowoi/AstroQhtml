@@ -47,40 +47,159 @@
 
   <!-- ============ TỜ CHỨNG NHẬN ============ -->
   <article class="cert" id="cert">
-    <div class="cert-brand">
-      <!-- Logo trên chip tối: xem lý do ở css/certificate.css (.cert-brand). -->
-      <span class="chip"><img src="img/astroq-logo.png" width="117" height="34" alt="astroQ" /></span>
-      <span class="cert-org" data-i18n="org">Học viện Phi hành gia astroQ</span>
+
+    <!-- ══════════════ LỚP TRANG TRÍ ══════════════
+         ⚠️⚠️ KHÔNG MỘT CHỮ NÀO trong khối này. Chủ dự án chốt 19/08/2026: *"ngôn ngữ
+            sẽ thay đổi tuỳ theo ngôn ngữ mà người chơi chọn"* — nên mọi chữ phải là
+            HTML sống ở lớp `.cert-in` bên dưới. Một ảnh nền đẹp có sẵn chữ "CHỨNG
+            NHẬN HOÀN THÀNH" là thứ KHÔNG THỂ dịch, và nó cũng mờ khi in to.
+         ⚠️ `aria-hidden` + `focusable="false"`: đây là trang trí thuần, trình đọc màn
+            hình phải bỏ qua để nó đọc thẳng vào nội dung.
+         ⚠️ `preserveAspectRatio="none"` để hình phủ đúng khung A4 ngang ở mọi cỡ. -->
+    <div class="cert-art" aria-hidden="true">
+      <svg viewBox="0 0 1188 840" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <radialGradient id="cg-p1" cx="35%" cy="30%">
+            <stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/>
+          </radialGradient>
+          <radialGradient id="cg-p2" cx="34%" cy="28%">
+            <stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#1d4ed8"/>
+          </radialGradient>
+          <radialGradient id="cg-p3" cx="36%" cy="30%">
+            <stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/>
+          </radialGradient>
+          <linearGradient id="cg-flame" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fb7185"/><stop offset=".55" stop-color="#fbbf24"/>
+            <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="cg-laurel" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c7d2fe"/><stop offset="1" stop-color="#a5b4fc"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Hành tinh lớn góc trên-trái, có vành nghiêng -->
+        <g>
+          <!-- ⚠️ Do duoc o ban dung dau: r=104 tai (96,86) lam hanh tinh nay AT ca
+               goc tren-trai va lan vao vung chu. Thu nho + day ra mep: no vien phai
+               la TRANG TRI, khong duoc tranh cho voi ten dua tre. -->
+          <circle cx="58" cy="52" r="76" fill="url(#cg-p1)" opacity=".9"/>
+          <ellipse cx="58" cy="52" rx="112" ry="30" fill="none" stroke="#c4b5fd"
+                   stroke-width="4" opacity=".7" transform="rotate(-24 58 52)"/>
+          <circle cx="196" cy="118" r="19" fill="url(#cg-p2)"/>
+        </g>
+
+        <!-- Hành tinh phải: một cái nhỏ trên, một cái lớn có hố dưới -->
+        <circle cx="1128" cy="150" r="31" fill="url(#cg-p2)" opacity=".88"/>
+        <ellipse cx="1128" cy="150" rx="48" ry="13" fill="none" stroke="#93c5fd"
+                 stroke-width="3.5" opacity=".75" transform="rotate(-18 1128 150)"/>
+        <g>
+          <!-- ⚠️ Ban dau r=132 tai (1092,596): mep hanh tinh cham vao dong "Dau Truong
+               Kien Thuc" cua than bai (do duoc le phai than bai chi cach mep 207px).
+               Nho lai va day ra goc. -->
+          <!-- ⚠️ TOA DO CHON THEO SO DO, KHONG THEO CAM GIAC. Do duoc trong he viewBox
+               1188x840: chan trang chiem x 131..1057, than bai x 214..974. Nen hanh tinh
+               + vanh cua no phai bat dau tu x > 1057, khong thi vanh cat qua cot "KY TEN"
+               (dung loi cua hai ban dung truoc). Voi tam (1180,768) r=112 thi mep trai o
+               x=1070 tai y=768 va x=1086 tai y=703 — vua sat, khong cham. -->
+          <circle cx="1180" cy="768" r="112" fill="url(#cg-p3)" opacity=".92"/>
+          <circle cx="1148" cy="736" r="13" fill="#1e40af" opacity=".26"/>
+          <circle cx="1196" cy="790" r="9"  fill="#1e40af" opacity=".24"/>
+          <circle cx="1152" cy="806" r="7"  fill="#1e40af" opacity=".22"/>
+          <ellipse cx="1180" cy="768" rx="120" ry="32" fill="none" stroke="#bfdbfe"
+                   stroke-width="5" opacity=".6" transform="rotate(-22 1180 768)"/>
+        </g>
+
+        <!-- Tên lửa góc dưới-trái + vệt lửa -->
+        <g transform="translate(84 672) rotate(-38) scale(.86)">
+          <path d="M0 -46 C 17 -24 22 4 18 34 L -18 34 C -22 4 -17 -24 0 -46 Z"
+                fill="#eef2ff" stroke="#c7d2fe" stroke-width="3"/>
+          <circle cx="0" cy="-6" r="10" fill="#60a5fa" stroke="#1d4ed8" stroke-width="3"/>
+          <path d="M-18 12 L -36 40 L -18 34 Z" fill="#a5b4fc"/>
+          <path d="M18 12 L 36 40 L 18 34 Z"  fill="#a5b4fc"/>
+          <path d="M-13 34 L 0 96 L 13 34 Z" fill="url(#cg-flame)"/>
+        </g>
+
+        <!-- Nhánh lá hai bên khung tên -->
+        <g fill="url(#cg-laurel)" opacity=".85">
+          <!-- ⚠️ Ban dau dat o (214,430) va (974,430) khong co ti le: la roi vao GIUA
+               trang, doc ra nhu canh hoa vuong vai chu khong ra vong nguyet que. Ep sat
+               hai ben khung ten va thu nho con 0,66. -->
+          <!-- Khung ten do duoc o x 238..950, tam doc y=417. Nhanh la dat NGOAI khung
+               (x 160..231 va 957..1028) nen no vien thay vi nam de sau chu — hai ban
+               dung truoc dat o giua trang nen la doc ra nhu canh hoa vuong vai. -->
+          <g transform="translate(160 372) scale(.66)">
+            <path d="M0 0 C 26 -8 50 -2 64 14 C 44 22 20 18 0 0 Z"/>
+            <path d="M6 40 C 32 32 56 38 70 54 C 50 62 26 58 6 40 Z"/>
+            <path d="M20 80 C 46 72 70 78 84 94 C 64 102 40 98 20 80 Z"/>
+            <path d="M44 118 C 70 110 94 116 108 132 C 88 140 64 136 44 118 Z"/>
+          </g>
+          <g transform="translate(1028 372) scale(-.66 .66)">
+            <path d="M0 0 C 26 -8 50 -2 64 14 C 44 22 20 18 0 0 Z"/>
+            <path d="M6 40 C 32 32 56 38 70 54 C 50 62 26 58 6 40 Z"/>
+            <path d="M20 80 C 46 72 70 78 84 94 C 64 102 40 98 20 80 Z"/>
+            <path d="M44 118 C 70 110 94 116 108 132 C 88 140 64 136 44 118 Z"/>
+          </g>
+        </g>
+
+        <!-- Sao lấp lánh: bốn cánh, rải quanh mép để không chen vào chữ -->
+        <g fill="#93c5fd">
+          <path d="M300 60 l7 16 16 7 -16 7 -7 16 -7-16 -16-7 16-7 z"/>
+          <path d="M886 96 l6 14 14 6 -14 6 -6 14 -6-14 -14-6 14-6 z" fill="#c4b5fd"/>
+          <path d="M1006 300 l5 12 12 5 -12 5 -5 12 -5-12 -12-5 12-5 z" fill="#fbbf24"/>
+          <path d="M180 300 l5 12 12 5 -12 5 -5 12 -5-12 -12-5 12-5 z" fill="#c4b5fd"/>
+          <path d="M262 748 l5 12 12 5 -12 5 -5 12 -5-12 -12-5 12-5 z"/>
+          <path d="M940 764 l5 12 12 5 -12 5 -5 12 -5-12 -12-5 12-5 z" fill="#f9a8d4"/>
+          <circle cx="352" cy="150" r="6" fill="#fbbf24"/>
+          <circle cx="828" cy="228" r="5" fill="#93c5fd"/>
+          <circle cx="1042" cy="742" r="6" fill="#c4b5fd"/>
+          <circle cx="140" cy="470" r="5" fill="#f9a8d4"/>
+        </g>
+      </svg>
     </div>
 
-    <h1 class="cert-h" data-i18n="cert_h">Chứng nhận hoàn thành</h1>
-    <p class="cert-sub" data-i18n="cert_sub">Một chặng trong lộ trình huấn luyện phi hành gia</p>
-
-    <div class="cert-mid">
-    <p class="cert-for" data-i18n="cert_for">Trao cho</p>
-    <p class="cert-name" id="c-name">—</p>
-    <span class="cert-rule"></span>
-
-    <p class="cert-body" id="c-body"></p>
-
-    <div class="cert-rank">
-      <span class="ic" id="c-ic" aria-hidden="true">🎓</span>
-      <span class="nm" id="c-rank">—</span>
-    </div>
-    </div>
-
-    <div class="cert-foot">
-      <div>
-        <div class="cert-k" data-i18n="k_date">Ngày hoàn thành</div>
-        <div class="cert-v" id="c-date">—</div>
+    <!-- ══════════════ NỘI DUNG (chữ sống, đổi theo ngôn ngữ) ══════════════ -->
+    <div class="cert-in">
+      <div class="cert-brand">
+        <!-- ⚠️ BẢN LOGO TỐI. `img/astroq-logo.png` là bản SÁNG cho nền tối của app (đo
+             được 192/255) nên trên giấy trắng nó thành vệt xám mờ. `astroq-logo-dark.png`
+             sinh từ chính ảnh đó bằng `scratchpad/make_logo_dark.py` — chỉ đổi phần
+             CHỮ sang navy, giữ nguyên màu chữ Q. -->
+        <img src="img/astroq-logo-dark.png" width="392" height="114" alt="astroQ" />
+        <span class="cert-org" data-i18n="org">Học viện Phi hành gia astroQ</span>
       </div>
-      <div>
-        <div class="cert-k" data-i18n="k_code">Mã chứng nhận</div>
-        <div class="cert-v" id="c-code">—</div>
+
+      <h1 class="cert-h"><span class="df">✦</span><span data-i18n="cert_h">Chứng nhận hoàn thành</span><span class="df">✦</span></h1>
+      <p class="cert-sub" data-i18n="cert_sub">Một chặng trong lộ trình huấn luyện phi hành gia</p>
+
+      <span class="cert-div"></span>
+      <p class="cert-for" data-i18n="cert_for">Trao cho</p>
+      <div class="cert-namebox"><p class="cert-name" id="c-name">—</p></div>
+
+      <p class="cert-body" id="c-body"></p>
+
+      <div class="cert-seal">
+        <span class="ring"></span><span class="disc"></span>
+        <span class="ic" id="c-ic" aria-hidden="true">🎓</span>
       </div>
-      <div class="cert-sign">
-        <div class="cert-k" data-i18n="k_sign">Ký tên</div>
-        <div class="cert-v" data-i18n="sign">Mèo Comet &amp; Robot Byte</div>
+      <p class="cert-rankname" id="c-rank">—</p>
+
+      <div class="cert-foot">
+        <div class="cert-cell">
+          <span class="cic" aria-hidden="true">📅</span>
+          <span class="cert-k" data-i18n="k_date">Ngày hoàn thành</span>
+          <span class="cert-v" id="c-date">—</span>
+        </div>
+        <div class="cert-cell">
+          <span class="cic" aria-hidden="true">🛡️</span>
+          <span class="cert-k" data-i18n="k_code">Mã chứng nhận</span>
+          <span class="cert-v" id="c-code">—</span>
+        </div>
+        <div class="cert-cell cert-sign">
+          <span class="cic" aria-hidden="true">🚀</span>
+          <span class="cert-k" data-i18n="k_sign">Ký tên</span>
+          <span class="cert-v" data-i18n="sign">Mèo Comet &amp; Robot Byte</span>
+          <span class="who" data-i18n="sign_who">Đồng sáng lập astroQ</span>
+        </div>
       </div>
     </div>
 
@@ -106,7 +225,7 @@
       /* {rank} = tên bậc, {from}–{to} = khoảng cấp độ của bậc đó. */
       body:"đã hoàn thành chặng huấn luyện <b>{rank}</b> (cấp {from}–{to}) trong lộ trình huấn luyện phi hành gia của astroQ, qua các nhiệm vụ khám phá, bài đọc và Đấu Trường Kiến Thức.",
       k_date:"Ngày hoàn thành", k_code:"Mã chứng nhận", k_sign:"Ký tên",
-      sign:"Mèo Comet & Robot Byte",
+      sign:"Mèo Comet & Robot Byte", sign_who:"Đồng sáng lập astroQ",
       sample:"MẪU",
       note_real:"Bấm “Xuất PDF” rồi chọn <b>Lưu thành PDF</b> trong hộp in của trình duyệt.",
       /* ⚠️ Câu này PHẢI nói rõ đây là bản xem thử — xem cảnh báo ở `paintSample`. */
@@ -125,7 +244,7 @@
       cert_for:"Awarded to",
       body:"has completed the <b>{rank}</b> training stage (levels {from}–{to}) of astroQ's astronaut training path, through exploration missions, reading and the Knowledge Arena.",
       k_date:"Date completed", k_code:"Certificate code", k_sign:"Signed",
-      sign:"Comet the Cat & Byte the Robot",
+      sign:"Comet the Cat & Byte the Robot", sign_who:"astroQ co-founders",
       sample:"SAMPLE",
       note_real:"Press “Export PDF”, then choose <b>Save as PDF</b> in your browser's print dialog.",
       note_preview:"This is a <b>preview</b> for reviewing the template, so it carries a “SAMPLE” watermark. A real certificate takes the name and level from the child's account.",
