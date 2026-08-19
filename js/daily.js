@@ -13,6 +13,14 @@
       chưa kịp có tên thì `info()` trả về một tên tạm — đúng luật đã dùng cho huy hiệu
       ("thiếu tên thì trang hiện chính id"). Có phép kiểm đối chiếu hai bên.
 
+   ⚠️⚠️ HAI DÒNG GIẢI THÍCH LUẬT ĐÃ BỎ 19/08/2026 (chủ dự án: *"trẻ tự hiểu"*) —
+      `.dl-sub` ("hôm nay đã được tính vào chuỗi · tuần này còn n ngày nghỉ") và
+      `.dl-rule` (đoạn luật ở chân bảng). Bảng nay chỉ còn 🔥 số ngày + kỷ lục + ba
+      hàng việc. Điều ⑤ ở `Daily.cs` vì thế **không còn được thoả ở tầng giao diện**;
+      xem ghi chú tại chỗ khai nó để biết cái gì còn giữ và cái gì đã mất.
+      ⛔ Đừng "chữa" bằng cách nhét luật vào tooltip hay một nút "?": đó là cùng một
+         đoạn chữ, chỉ khó đọc hơn.
+
    ⚠️⚠️ BA THỨ TUYỆT ĐỐI KHÔNG ĐƯỢC THÊM VÀO ĐÂY (xem năm điều kiện ở Daily.cs):
       · **đồng hồ đếm ngược** dưới mọi hình thức ("còn 4 giờ", "hết hạn lúc 00:00").
         Server cố ý không trả về mốc hết hạn nào, nên thêm được thì phải TỰ TÍNH nửa
@@ -52,28 +60,16 @@
       streak: "Chuỗi {n} ngày",
       streak0: "Chưa có chuỗi nào",
       best: "Kỷ lục {n} ngày",
-      todayIn: "Hôm nay đã được tính vào chuỗi.",
-      todayOut: "Hôm nay chưa được tính vào chuỗi.",
-      grace: "Tuần này còn {n} ngày nghỉ mà chuỗi vẫn không đứt.",
-      grace1: "Tuần này còn 1 ngày nghỉ mà chuỗi vẫn không đứt.",
-      grace0: "Tuần này đã dùng hết {g} ngày nghỉ.",
       got: "Đã nhận {n} / {t}",
       done: "xong",
-      rule: "Mỗi ngày làm ít nhất một việc là một ngày trong chuỗi. Mỗi tuần được nghỉ {g} ngày mà chuỗi vẫn không đứt. Nghỉ nhiều hơn thì chuỗi bắt đầu lại — <b>kỷ lục thì giữ nguyên</b>, không ai lấy lại được.",
       unknown: "Chưa đọc được việc hôm nay nên bảng đang hiện dấu “—”."
     },
     en: {
       streak: "{n}-day streak",
       streak0: "No streak yet",
       best: "Best {n} days",
-      todayIn: "Today already counts towards your streak.",
-      todayOut: "Today does not count towards your streak yet.",
-      grace: "You can still skip {n} days this week without breaking the streak.",
-      grace1: "You can still skip 1 day this week without breaking the streak.",
-      grace0: "You have used all {g} skip days this week.",
       got: "Earned {n} / {t}",
       done: "done",
-      rule: "Doing at least one task a day adds a day to your streak. Every week you may skip {g} days and keep it. Skip more and the streak restarts — <b>your best is kept</b>, nobody takes it away.",
       unknown: "Today's tasks could not be loaded, so the board shows “—”."
     }
   };
@@ -116,9 +112,7 @@
 
     /* ── Chưa đọc được → dấu "—" và nói rõ lý do, KHÔNG hiện 0 ──
        "0/1 việc" là một lời khẳng định SAI về việc hôm nay của trẻ; cùng nguyên tắc
-       với dấu "—" ở missions.html và achievements.html. Luật thì VẪN in ra (điều ⑤:
-       nói trước luật) — nó đúng bất kể có đọc được số hay không, nhưng số ngày ân hạn
-       do server trả nên chỗ này để trống chứ không gõ "2". */
+       với dấu "—" ở missions.html và achievements.html. */
     if (!snap) {
       box.innerHTML =
         '<div class="dl-head"><span class="dl-fire" aria-hidden="true">🔥</span>' +
@@ -128,8 +122,6 @@
     }
 
     var s = snap.streak || {};
-    var g = s.grace;
-    var left = s.graceLeft;
 
     var head =
       '<div class="dl-head">' +
@@ -140,13 +132,7 @@
         (s.best > 0
           ? '<span class="dl-best">' + esc(tx(lg, "best").replace("{n}", s.best)) + "</span>"
           : "") +
-      "</div>" +
-      '<p class="dl-sub">' +
-        esc(s.todayIn ? tx(lg, "todayIn") : tx(lg, "todayOut")) + " " +
-        esc(left === 0 ? tx(lg, "grace0").replace("{g}", g)
-            : left === 1 ? tx(lg, "grace1")
-            : tx(lg, "grace").replace("{n}", left)) +
-      "</p>";
+      "</div>";
 
     var rows = (snap.tasks || []).map(function (task) {
       var i = info(task.id, lg, task.goal);
@@ -172,8 +158,7 @@
       '<p class="dl-got">' +
         esc(tx(lg, "got").replace("{n}", snap.gotTt).replace("{t}", snap.totalTt)) +
         " " + ttImg() +
-      "</p>" +
-      '<p class="dl-rule">' + tx(lg, "rule").replace("{g}", g) + "</p>";
+      "</p>";
 
     box.innerHTML = head + '<div class="dl-list">' + rows + "</div>" + foot;
   }

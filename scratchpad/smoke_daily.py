@@ -144,16 +144,14 @@ def main():
         chk("19" in pg.eval_on_selector("#daily .dl-best", "e => e.innerText"),
             "② ky luc hien dung 19")
 
-        # ── ⑤ Luat NHIN THAY DUOC, va noi dung so an han cua server ──
-        chk(pg.locator("#daily .dl-rule").is_visible(), "⑤ dong luat nhin thay duoc")
-        rule = pg.eval_on_selector("#daily .dl-rule", "e => e.innerText")
-        chk("4" in rule, "⑤ luat noi dung so ngay an han server gieo (4)",
-            re.sub(r"\s+", " ", rule)[:100])
-        chk("kỷ lục" in rule.lower() or "best" in rule.lower(),
-            "⑤ luat noi ro ky luc duoc giu nguyen")
-        grace_line = pg.eval_on_selector("#daily .dl-sub", "e => e.innerText")
-        chk("3" in grace_line, "con 3 ngay an han (server gieo graceLeft=3)",
-            re.sub(r"\s+", " ", grace_line)[:90])
+        # ── Bang KHONG con hai dong giai thich luat (bo 19/08/2026) ──
+        chk(pg.locator("#daily .dl-rule").count() == 0, "khong con dong luat o chan bang")
+        chk(pg.locator("#daily .dl-sub").count() == 0, "khong con dong 'hom nay/an han'")
+        # Thu PHAI GIU du bo chu: ky luc van hien ra, va bang khong bao gio noi ve
+        # viec MAT chuoi — do la thu bien mot ban ghi chep thanh mot loi de doa.
+        panel_txt = pg.eval_on_selector("#daily-panel", "e => e.innerText").lower()
+        for bad in ("mất chuỗi", "đứt", "lose your streak", "break the streak"):
+            chk(bad not in panel_txt, f"bang khong noi ve viec mat chuoi ('{bad}')")
 
         # ══════════════════════════════════════════════════════════════
         head("[2] ③ KHONG CO DONG HO DEM NGUOC")
@@ -267,7 +265,10 @@ def main():
         chk("streak" in en.lower(), "ban EN dich phan chuoi", en[:60])
         chk("Chuỗi" not in en and "Kỷ lục" not in en and "Tuần" not in en,
             "ban EN khong con chu tieng Viet nao", en[:80])
-        chk("Today" in en or "today" in en, "nhan bang dich sang EN")
+        # ⚠️ Truoc 19/08/2026 phep kiem nay do chu "Today" cua dong `todayIn` — dong
+        #    do da bo, nen no khang dinh dung trang thai CU. Nay do hai chuoi KHAC
+        #    do JS sinh (`best` + `got`), tuc van dung thu can biet: bang co dich.
+        chk("Best" in en and "Earned" in en, "nhan bang dich sang EN", en[:80])
 
         # Doi sang VI o mot tab khac -> bang phai dich theo (su kien `storage`)
         other = ctx4.new_page()
@@ -280,8 +281,8 @@ def main():
             timeout=8000)
         vi = pg4.eval_on_selector("#daily-panel", "e => e.innerText")
         chk("Chuỗi" in vi, "doi VI o tab khac -> bang dich theo", vi[:60])
-        chk("4" in pg4.eval_on_selector("#daily .dl-rule", "e => e.innerText"),
-            "luat sau khi dich VAN noi dung so an han cua server")
+        chk(pg4.locator("#daily .dl-rule").count() == 0,
+            "sau khi dich VAN khong co dong luat nao")
         chk(len(errs4) == 0, "0 loi console", "; ".join(errs4[:3]))
         ctx4.close()
 
@@ -295,7 +296,7 @@ def main():
         chk(pg5.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"),
             "khong tran ngang")
         cut = pg5.eval_on_selector_all(
-            "#daily .dl-txt b, #daily .dl-rule, #daily .dl-sub",
+            "#daily .dl-txt b, #daily .dl-cur, #daily .dl-best",
             "es => es.filter(e => e.scrollWidth > e.clientWidth + 1)"
             ".map(e => e.innerText.slice(0,28))")
         chk(not cut, "khong chu nao bi cat", str(cut))
