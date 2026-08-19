@@ -12,7 +12,7 @@
 <meta property="og:locale" content="vi_VN" />
 <meta property="og:url" content="https://astroq.org/game-maze.html" />
 <meta property="og:title" content="Mê Cung Thiên Hà · astroQ.org" />
-<meta property="og:description" content="Dẫn phi hành gia qua mê cung sao: thu BẰNG HẾT tinh thể thì cổng mới mở. Mê cung mới mỗi lượt, giải xong là lượt sau to hơn — và không có thua!" />
+<meta property="og:description" content="Dẫn đường cho phi hành gia vượt mê cung sao! Phải gom TẤT CẢ tinh thể thì cổng mới mở. Mê cung mỗi lượt lại rộng thêm, thử thách bất ngờ đang chờ phía trước!" />
 <meta property="og:image" content="https://astroq.org/img/og/game-maze.jpg" />
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
@@ -20,7 +20,7 @@
 <meta property="og:image:alt" content="Thẻ chia sẻ astroQ.org — Mê Cung Thiên Hà" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Mê Cung Thiên Hà · astroQ.org" />
-<meta name="twitter:description" content="Dẫn phi hành gia qua mê cung sao: thu BẰNG HẾT tinh thể thì cổng mới mở. Mê cung mới mỗi lượt, giải xong là lượt sau to hơn — và không có thua!" />
+<meta name="twitter:description" content="Dẫn đường cho phi hành gia vượt mê cung sao! Phải gom TẤT CẢ tinh thể thì cổng mới mở. Mê cung mỗi lượt lại rộng thêm, thử thách bất ngờ đang chờ phía trước!" />
 <meta name="twitter:image" content="https://astroq.org/img/og/game-maze.jpg" />
 <meta name="twitter:image:alt" content="Thẻ chia sẻ astroQ.org — Mê Cung Thiên Hà" />
 <!-- OG:END -->
@@ -89,7 +89,7 @@
         <div class="ov-ic">🌀</div>
         <h2 data-i18n="start_title">Mê Cung Thiên Hà</h2>
         <div class="how">
-          <span data-i18n-html="how1">🧑‍🚀 <b>Dẫn phi hành gia</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.</span>
+          <span data-i18n-html="how1">☄️ <b>Dẫn Comet</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.</span>
           <span data-i18n-html="how2">💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.</span>
           <span data-i18n-html="how3">🌟 <b>Tới cổng sáng</b> để về đích. Không có thua — đi sai thì chỉ mất thêm bước.</span>
         </div>
@@ -184,6 +184,10 @@
   var CONFIG = {
     COST: 3,                  // khớp Wallet.Fees["maze"]
     VW: 800, VH: 500,
+    /* Nhân vật điều khiển = Comet; tinh thể = đúng ảnh Thiên thạch tím của app.
+       ⚠️ Ảnh trống hoặc lỗi → tự lùi về bản vẽ vector còn nguyên ở nhánh `else`. */
+    heroSprite: "img/mate/comet-idle.png",
+    gemSprite:  "img/tt.png",
 
     /* ⚠️ BỐN CẤP, TỰ LÊN CẤP SAU MỖI LẦN GIẢI (15/08/2026). Trước đó mê cung
        chỉ có MỘT cỡ 15×9 và 5 tinh thể — chơi lần thứ hai giống hệt lần đầu, mà
@@ -209,6 +213,22 @@
     bgStars: 70
   };
   var VW=CONFIG.VW, VH=CONFIG.VH, TAU=Math.PI*2;
+
+  /* Hai ảnh của sân. Cả hai đều VUÔNG nên vẽ theo một cạnh là đủ; ảnh nào lỗi thì
+     riêng ảnh đó lùi về bản vẽ vector, không kéo cái kia theo. */
+  var heroImg=null, heroReady=false, gemImg=null, gemReady=false;
+  if(CONFIG.heroSprite){
+    heroImg=new Image();
+    heroImg.onload=function(){ heroReady=true; };
+    heroImg.onerror=function(){ heroReady=false; };
+    heroImg.src=CONFIG.heroSprite;
+  }
+  if(CONFIG.gemSprite){
+    gemImg=new Image();
+    gemImg.onload=function(){ gemReady=true; };
+    gemImg.onerror=function(){ gemReady=false; };
+    gemImg.src=CONFIG.gemSprite;
+  }
   var BEST_KEY="astroq-maze-best";
   var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -218,7 +238,7 @@
       gems_lbl:"Tinh thể", time_lbl:"Thời gian", steps_lbl:"Số bước", best_lbl:"Kỷ lục",
       reward_lbl:"Thưởng Thiên thạch tím", dpad_aria:"Điều hướng",
       start_title:"Mê Cung Thiên Hà",
-      how1:"🧑‍🚀 <b>Dẫn phi hành gia</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.",
+      how1:"☄️ <b>Dẫn Comet</b> bằng ◀ ▲ ▼ ▶ / W A S D — trên máy cảm ứng thì <b>quệt</b> hoặc bấm bốn nút.",
       how2:"💎 <b>Thu hết tinh thể</b> trên đường: mỗi viên là một Thiên thạch tím.",
       how3:"🌟 <b>Đủ tinh thể thì cổng mới mở.</b> Không có thua — đi sai chỉ mất thêm bước, và mê cung sau sẽ to hơn.",
       cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
@@ -247,7 +267,7 @@
       gems_lbl:"Crystals", time_lbl:"Time", steps_lbl:"Steps", best_lbl:"Best",
       reward_lbl:"Purple Meteor reward", dpad_aria:"Move",
       start_title:"Galaxy Maze",
-      how1:"🧑‍🚀 <b>Guide the astronaut</b> with ◀ ▲ ▼ ▶ / W A S D — on touch screens <b>swipe</b> or use the four buttons.",
+      how1:"☄️ <b>Guide Comet</b> with ◀ ▲ ▼ ▶ / W A S D — on touch screens <b>swipe</b> or use the four buttons.",
       how2:"💎 <b>Collect every crystal</b> on the way: each one is a Purple Meteor.",
       how3:"🌟 <b>The gate opens only when every crystal is yours.</b> There's no losing — a wrong turn just costs steps, and the next maze gets bigger.",
       cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
@@ -809,12 +829,20 @@
       var x=cx(g.c), y=cy(g.r), r=CELL*0.2;
       var k = REDUCE ? 1 : 0.9+0.1*Math.sin(elapsed*3.4+g.ph);
       glow(x,y,CELL*0.62,"rgba(192,132,252,.5)","rgba(192,132,252,0)");
-      ctx.fillStyle="#c084fc";
-      ctx.beginPath();
-      ctx.moveTo(x,y-r*k); ctx.lineTo(x+r*0.78*k,y); ctx.lineTo(x,y+r*k); ctx.lineTo(x-r*0.78*k,y);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle="rgba(255,255,255,.7)";
-      ctx.beginPath(); ctx.arc(x-r*0.18,y-r*0.2,r*0.2,0,TAU); ctx.fill();
+      if(gemReady){
+        /* Nhịp nhấp nháy giữ nguyên (đổi CỠ vẽ), nên ở `prefers-reduced-motion`
+           nó vẫn đứng yên như bản vector. Cỡ nới từ 0,40 lên 0,52 bề rộng ô: ở
+           cấp 4 ô chỉ ~30px, mà một ảnh dưới ~15px thì đọc không ra hình gì. */
+        var gs=CELL*0.52*k;
+        ctx.drawImage(gemImg, x-gs/2, y-gs/2, gs, gs);
+      } else {
+        ctx.fillStyle="#c084fc";
+        ctx.beginPath();
+        ctx.moveTo(x,y-r*k); ctx.lineTo(x+r*0.78*k,y); ctx.lineTo(x,y+r*k); ctx.lineTo(x-r*0.78*k,y);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.7)";
+        ctx.beginPath(); ctx.arc(x-r*0.18,y-r*0.2,r*0.2,0,TAU); ctx.fill();
+      }
     }
   }
 
@@ -827,13 +855,21 @@
     } else { px=cx(pos.c); py=cy(pos.r); }
     var r=CELL*0.3;
     glow(px,py,CELL*0.8,"rgba(56,189,248,.5)","rgba(56,189,248,0)");
-    // Mũ phi hành gia: cầu trắng + kính tối + vệt sáng
-    ctx.fillStyle="#eaf6ff";
-    ctx.beginPath(); ctx.arc(px,py,r,0,TAU); ctx.fill();
-    ctx.fillStyle="#123055";
-    ctx.beginPath(); ctx.ellipse(px, py-r*0.05, r*0.66, r*0.5, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle="rgba(255,255,255,.62)";
-    ctx.beginPath(); ctx.ellipse(px-r*0.24, py-r*0.2, r*0.2, r*0.13, -0.5, 0, TAU); ctx.fill();
+    if(heroReady){
+      /* Ôm gần trọn ô (chừa lề 8% để không dính vào tường): 0,84 bề rộng ô, tức
+         to hơn bản vector (0,6) — đọc ra được ở cấp 4, và KHÔNG đổi luật chơi vì
+         va chạm ở game này tính theo Ô chứ không theo pixel. */
+      var hs=CELL*0.84;
+      ctx.drawImage(heroImg, px-hs/2, py-hs/2, hs, hs);
+    } else {
+      // Mũ phi hành gia: cầu trắng + kính tối + vệt sáng
+      ctx.fillStyle="#eaf6ff";
+      ctx.beginPath(); ctx.arc(px,py,r,0,TAU); ctx.fill();
+      ctx.fillStyle="#123055";
+      ctx.beginPath(); ctx.ellipse(px, py-r*0.05, r*0.66, r*0.5, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.62)";
+      ctx.beginPath(); ctx.ellipse(px-r*0.24, py-r*0.2, r*0.2, r*0.13, -0.5, 0, TAU); ctx.fill();
+    }
   }
 
   function drawParts(){

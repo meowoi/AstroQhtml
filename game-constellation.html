@@ -15,7 +15,7 @@
 <meta property="og:locale" content="vi_VN" />
 <meta property="og:url" content="https://astroq.org/game-constellation.html" />
 <meta property="og:title" content="Ghép Chòm Sao · astroQ.org" />
-<meta property="og:description" content="Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!" />
+<meta property="og:description" content="Nối các ngôi sao theo đúng thứ tự số để vẽ nên chòm sao thật trên trời! Hoàn thành hình vẽ để khai quật ngay những bí mật vũ trụ cực kỳ thú vị!" />
 <meta property="og:image" content="https://astroq.org/img/og/game-constellation.jpg" />
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
 <meta property="og:image:alt" content="Thẻ chia sẻ astroQ.org — Ghép Chòm Sao" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Ghép Chòm Sao · astroQ.org" />
-<meta name="twitter:description" content="Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!" />
+<meta name="twitter:description" content="Nối các ngôi sao theo đúng thứ tự số để vẽ nên chòm sao thật trên trời! Hoàn thành hình vẽ để khai quật ngay những bí mật vũ trụ cực kỳ thú vị!" />
 <meta name="twitter:image" content="https://astroq.org/img/og/game-constellation.jpg" />
 <meta name="twitter:image:alt" content="Thẻ chia sẻ astroQ.org — Ghép Chòm Sao" />
 <!-- OG:END -->
@@ -109,7 +109,9 @@
   <div class="ov ov-fact" id="ov-fact">
     <div class="ov-card">
       <span class="ov-tag">[ STAR_LOG ]</span>
-      <div class="ov-ic">🔭</div>
+      <!-- ⚠️ KHÔNG phải emoji: đây là chính hình trẻ vừa nối, vẽ từ `cons.stars`.
+           Xem `paintFactArt()` để biết vì sao dựng bằng SVG chứ không chụp canvas. -->
+      <div class="fact-art" id="fact-art" aria-hidden="true"></div>
       <h2 id="fact-name">—</h2>
       <div class="fact-sub" id="fact-sub">—</div>
       <p class="fact-text" id="fact-text"></p>
@@ -578,11 +580,46 @@
     paintFact();
     showOv("ov-fact");
   }
+  /* Hình chòm sao vừa ghép, vẽ lại bằng SVG từ CHÍNH `cons.stars` — cùng một
+     nguồn dữ liệu với sân chơi, nên hình trong modal không bao giờ khác hình trẻ
+     vừa nối. Ba lý do dùng SVG chứ không chụp lại canvas:
+       · canvas lúc này đã bừng sáng + có hạt bay, chụp ra một mảng loè sáng chứ
+         không ra HÌNH DẠNG — mà hình dạng mới là thứ trẻ cần nhìn lại;
+       · chụp canvas phải chờ đúng khung hình và tốn một ảnh nền 800×500 chỉ để
+         hiện ở cỡ ~210px;
+       · SVG co giãn theo màn, nét không rỗ trên máy DPR cao.
+     ⚠️ TỰ TÍNH KHUNG BAO rồi mới scale: bốn chòm sao có bề rộng/cao rất khác nhau
+        (Bọ Cạp dài, Thiên Hậu bè), lấy cứng hệ 800×500 thì chòm nhỏ nằm lọt một
+        góc và trông như vẽ lệch. */
+  function factArtSvg(c){
+    if(!c || !c.stars || c.stars.length < 2) return "";
+    var W=210, H=120, PAD=16, i, st=c.stars;
+    var xs=st.map(function(s){return s.x;}), ys=st.map(function(s){return s.y;});
+    var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs);
+    var y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
+    /* Một chòm gần như thẳng hàng thì bề rộng hoặc cao có thể ~0 → chặn chia cho 0
+       và giữ đúng tỉ lệ (scale CHUNG cho cả hai trục, không bóp méo hình sao). */
+    var sc=Math.min((W-PAD*2)/Math.max(1,x1-x0), (H-PAD*2)/Math.max(1,y1-y0));
+    var ox=(W-(x1-x0)*sc)/2 - x0*sc, oy=(H-(y1-y0)*sc)/2 - y0*sc;
+    function px(v){ return Math.round((v*sc+ox)*10)/10; }
+    function py(v){ return Math.round((v*sc+oy)*10)/10; }
+    var pts=st.map(function(s){ return px(s.x)+","+py(s.y); }).join(" ");
+    var out='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" focusable="false">';
+    out+='<polyline points="'+pts+'" fill="none" stroke="#7fd8ff" stroke-width="2" '+
+         'stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>';
+    for(i=0;i<st.length;i++){
+      out+='<circle cx="'+px(st[i].x)+'" cy="'+py(st[i].y)+'" r="3.4" fill="#eaf6ff"/>';
+    }
+    return out+'</svg>';
+  }
   function paintFact(){
     if(!cons) return;
     $("fact-name").textContent = L(cons.name);
     $("fact-sub").textContent  = L(cons.sub);
     $("fact-text").innerHTML   = L(cons.fact);
+    /* Hình do CODE dựng nên không đi qua `esc()`; dữ liệu là toạ độ SỐ của chính
+       `SKY`, không có chữ nào của người dùng đi vào đây. */
+    $("fact-art").innerHTML    = factArtSvg(cons);
   }
   function showResult(){
     state="over"; syncBtns();

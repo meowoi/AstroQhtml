@@ -12,7 +12,7 @@
 <meta property="og:locale" content="vi_VN" />
 <meta property="og:url" content="https://astroq.org/game-racer.html" />
 <meta property="og:title" content="Đường Đua Sao Chổi · astroQ.org" />
-<meta property="og:description" content="Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về tới đích trước khi cạn nhiên liệu!" />
+<meta property="og:description" content="Đổi làn liên tục để né thiên thạch, ăn thùng nhiên liệu và tinh thể tím! Cú nhấn ga nín thở để về đích trước khi cạn nhiên liệu đang chờ bạn đấy!" />
 <meta property="og:image" content="https://astroq.org/img/og/game-racer.jpg" />
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
@@ -20,7 +20,7 @@
 <meta property="og:image:alt" content="Thẻ chia sẻ astroQ.org — Đường Đua Sao Chổi" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Đường Đua Sao Chổi · astroQ.org" />
-<meta name="twitter:description" content="Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về tới đích trước khi cạn nhiên liệu!" />
+<meta name="twitter:description" content="Đổi làn liên tục để né thiên thạch, ăn thùng nhiên liệu và tinh thể tím! Cú nhấn ga nín thở để về đích trước khi cạn nhiên liệu đang chờ bạn đấy!" />
 <meta name="twitter:image" content="https://astroq.org/img/og/game-racer.jpg" />
 <meta name="twitter:image:alt" content="Thẻ chia sẻ astroQ.org — Đường Đua Sao Chổi" />
 <!-- OG:END -->
@@ -177,7 +177,11 @@
 
     lanes: 4,
     laneTop: 118, laneH: 84,    // 4 làn × 84 = 336px, chừa chỗ cho dải sao trên/dưới
-    shipX: 150, shipW: 58, shipH: 30,
+    shipX: 150, shipW: 56, shipH: 30,
+    /* Phi thuyền Luna nằm ngang (mũi chỉ SANG PHẢI = đúng hướng bay, nên không
+       phải quay). Cùng một ảnh với ARCADE-01: một nhân vật thì một hình.
+       ⚠️ Ảnh trống hoặc lỗi → tự lùi về bản vẽ vector còn nguyên ở nhánh `else`. */
+    spritePath: "img/luna-side.png",
     hopMs: 130,                 // thời gian trượt sang làn kế
 
     /* ⚠️⚠️ ĐỘ DÀI ĐƯỜNG ĐUA PHẢI ĐO BẰNG GIÂY, KHÔNG BẰNG CẢM GIÁC — LỖI CÂN BẰNG
@@ -300,6 +304,23 @@
     dry:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble(); },
     start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); }
   };
+
+  /* Phi thuyền Luna. `SPR` là cỡ VẼ; vùng chết vẫn là `shipW`/`shipH` —
+     bề rộng vẽ suy ra từ tỉ lệ ảnh thật nên đổi ảnh khác không bị bóp méo. */
+  var sprite=null, spriteReady=false, SPR={w:CONFIG.shipW, h:CONFIG.shipH};
+  if(CONFIG.spritePath){
+    sprite=new Image();
+    sprite.onload=function(){
+      var ar=(sprite.naturalWidth||1)/(sprite.naturalHeight||1);
+      /* Ôm TRỌN trong vùng chết (contain): hình không bao giờ chìa ra ngoài hộp
+         va chạm, tức không có chỗ nào "mắt thấy còn hở mà đã thua". */
+      SPR.h=Math.min(CONFIG.shipH, CONFIG.shipW/ar);
+      SPR.w=SPR.h*ar;
+      spriteReady=true;
+    };
+    sprite.onerror=function(){ spriteReady=false; };
+    sprite.src=CONFIG.spritePath;
+  }
 
   /* ===== Canvas ===== */
   var cv=$("cv"), ctx=cv.getContext("2d");
@@ -703,17 +724,28 @@
     ctx.globalCompositeOperation="source-over";
 
     glow(x,y,w*0.7,"rgba(56,189,248,.4)","rgba(56,189,248,0)");
-    var b=ctx.createLinearGradient(x-w/2,y-h/2,x+w/2,y+h/2);
-    b.addColorStop(0,"#2b6fa8"); b.addColorStop(0.5,"#bfefff"); b.addColorStop(1,"#2b6fa8");
-    ctx.fillStyle = hurtT>0 ? "#ffb3b3" : b;
-    ctx.beginPath();
-    ctx.moveTo(x+w/2, y);                       // mũi chỉ sang PHẢI = hướng bay
-    ctx.lineTo(x-w/2, y-h/2);
-    ctx.lineTo(x-w*0.28, y);
-    ctx.lineTo(x-w/2, y+h/2);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle="#0e1a2f";
-    ctx.beginPath(); ctx.ellipse(x+w*0.1,y,w*0.12,h*0.24,0,0,TAU); ctx.fill();
+
+    if(spriteReady){
+      /* ⚠️ VỪA BỊ ĐÂM THÌ BÁO BẰNG QUẦNG SÁNG ĐỎ, KHÔNG TÔ ĐỎ THÂN TÀU. Ảnh PNG
+         không tô lại màu được mà không dựng canvas phụ mỗi khung hình; quầng sáng
+         nói đúng một điều ("vừa trúng đòn") và rẻ hơn hẳn. */
+      if(hurtT>0) glow(x,y,w*0.85,"rgba(255,120,120,.55)","rgba(255,120,120,0)");
+      /* Không dùng shadowBlur cho ảnh có alpha: bóng đổ phải tô theo viền từng
+         pixel, đắt hơn vẽ vector, mà thân tàu vốn đã tự phát sáng. */
+      ctx.drawImage(sprite, x-SPR.w/2, y-SPR.h/2, SPR.w, SPR.h);
+    } else {
+      var b=ctx.createLinearGradient(x-w/2,y-h/2,x+w/2,y+h/2);
+      b.addColorStop(0,"#2b6fa8"); b.addColorStop(0.5,"#bfefff"); b.addColorStop(1,"#2b6fa8");
+      ctx.fillStyle = hurtT>0 ? "#ffb3b3" : b;
+      ctx.beginPath();
+      ctx.moveTo(x+w/2, y);                     // mũi chỉ sang PHẢI = hướng bay
+      ctx.lineTo(x-w/2, y-h/2);
+      ctx.lineTo(x-w*0.28, y);
+      ctx.lineTo(x-w/2, y+h/2);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#0e1a2f";
+      ctx.beginPath(); ctx.ellipse(x+w*0.1,y,w*0.12,h*0.24,0,0,TAU); ctx.fill();
+    }
   }
 
   function drawParts(){

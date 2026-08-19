@@ -22,13 +22,28 @@ canvas.hot{cursor:pointer;}
    tên chòm sao (đo được: 'Cassiopeia · the W shape' tràn ở 1366px). Sửa ở ĐÂY chứ
    không ở `css/game-shell.css`: chip này là của riêng game Ghép Chòm Sao, nhét một
    class riêng vào file dùng chung là mở đường cho mọi game khác làm thế. */
-@media (min-width:901px){ .chip.cons{max-width:none;} }
+@media (min-width:901px){
+  .chip.cons{max-width:none;}
+  /* ⚠️⚠️ CHỮA CHỮ BỊ CĂN PHẢI VÀ CHÈN KHUNG (19/08/2026). `css/game-shell.css` đặt
+     `.hud .chip .v{min-width:5.5ch;text-align:right;flex:none}` — rule đó dành cho
+     CON SỐ (điểm · quãng đường · kỷ lục), nên đặt trước chỗ cho số dài nhất và căn
+     phải cho các chữ số thẳng cột. Nhưng `.chip.cons .v` là TÊN CHÒM SAO, tức chữ:
+     căn phải thì tên lệch hẳn khỏi nhãn bên dưới, `flex:none` thì nó không co được
+     nên tên hai dòng chèn ra ngoài khung chip. Sửa ở ĐÂY chứ không ở file dùng
+     chung: chip này là của riêng game Ghép Chòm Sao. */
+  .hud .chip.cons .v{text-align:left;min-width:0;flex:0 1 auto;}
+  .chip.cons{justify-content:flex-start;text-align:left;}
+}
 .chip.cons .v{font-size:13.5px;line-height:1.2;white-space:normal;}
 .chip.cons .sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;}
 
 /* ===== Modal thông tin thiên văn (bật ngay khi ghép xong) ===== */
 .ov-fact .ov-card{--card-brd:rgba(192,132,252,.5);--card-glow:rgba(192,132,252,.5);}
 .ov-fact .ov-tag{color:var(--purple);border-color:rgba(192,132,252,.45);}
+/* Khung hình chòm sao vừa ghép (thay ô emoji `.ov-ic` cũ). Cỡ do SVG tự khai nên
+   ở đây chỉ lo chỗ đứng + quầng sáng cho nó nổi trên nền thẻ. */
+.fact-art{margin-top:10px;display:flex;justify-content:center;}
+.fact-art svg{max-width:100%;height:auto;filter:drop-shadow(0 0 10px rgba(127,216,255,.45));}
 .fact-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-faint);
   text-transform:uppercase;margin-top:5px;}
 .fact-text{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:15px 0 0;text-align:left;
