@@ -291,8 +291,19 @@ with sync_playwright() as pw:
           str(pg.get_attribute("html", "data-cockpit")))
     check("ten tau hien o buong lai", pg.is_visible("#ship-nm")
           and "LUNA MOT" in pg.inner_text("#ship-nm").upper(), pg.inner_text("#ship-nm"))
-    check("co duong vao Kho Trang Tri", pg.is_visible(".pt-shop"))
-    check("duong vao tro dung shop.html", pg.get_attribute(".pt-shop", "href") == "shop.html")
+    # ⚠️ DOI SELECTOR 19/08/2026: `.pt-shop` KHONG CON TON TAI — bang Phi Hanh Gia
+    #    da bo tu 15/08/2026 va ca cum chuyen vao MENU THA sau avatar (`.um-item`).
+    #    Bo do vi the CHET CAM o `get_attribute` (het gio 30s, khong in mot dong ket
+    #    qua nao) tu hom do, khong phai do luot 19/08. Dieu can bao ve khong doi:
+    #    *dashboard co mot duong vao Kho Trang Tri, va no tro dung shop.html*.
+    #    ⚠️ Muc trong menu tha nen `is_visible()` la false khi menu dang dong — hoi
+    #    `count()` + `href` moi la cau dung, va van bat duoc ca "mat han duong vao".
+    shop_link = pg.locator("a.um-shop")
+    check("co duong vao Kho Trang Tri (muc trong menu tha)", shop_link.count() == 1,
+          "tim thay %d muc" % shop_link.count())
+    check("duong vao tro dung shop.html",
+          shop_link.get_attribute("href") == "shop.html",
+          str(shop_link.get_attribute("href")))
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
     ctx.close()
 

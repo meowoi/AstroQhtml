@@ -107,33 +107,32 @@ with sync_playwright() as pw:
     check("khong loi trang", pg.perr == [], "; ".join(pg.perr[:2]))
 
     # ══════════════════════════════════════════════════════ [2] Duong (c): chua mo ban
-    print("\n[2] The tra phi: noi ro thuoc goi nao va CO duong di that")
-    pg.click(".lcard[data-card='float']")
-    pg.wait_for_selector("#aq-lock.show", timeout=5000)
-    lk = pg.inner_text("#aq-lock")
-    check("hop khoa mo ra", pg.is_visible("#aq-lock"))
-    # ⚠️ DOI PHAT BIEU 12/08/2026: chu du an chot "coi nhu da mo ban roi", nen bien
-    #    the "chua mo ban" da bo. Dieu can bao ve KHONG doi — hop khoa noi that, khong
-    #    hoi thuc mua, va CO mot duong di that su bam duoc — chi doi cau hoi:
-    #    nay the tra phi PHAI co nut dan sang trang gia (truoc day phai KHONG co).
-    check("KHONG con noi 'chua mo ban' (loi van nay la ban CHINH THUC)",
-          "chưa mở bán" not in lk.casefold(), lk[:70].replace("\n", " "))
-    check("noi ro thu nay thuoc goi nao", "Phi Hành Gia" in lk, lk[:70].replace("\n", " "))
-    check("KHONG noi 'dang duoc xay' (thu nay DA lam xong)",
-          "đang được xây" not in lk.casefold())
-    go = pg.locator("#lk-go")
-    check("CO nut dan sang trang gia", go.is_visible())
-    check("nut do tro dung pricing.html",
-          (go.get_attribute("href") or "").endswith("pricing.html"),
-          go.get_attribute("href"))
-    check("co cau nho bo me xem giup (khong hoi thuc tre)",
-          "bố mẹ" in pg.inner_text("#lk-note"), pg.inner_text("#lk-note")[:60])
-    # ⚠️ Van KHONG duoc hoi thuc: day la modal TRE doc, phu huynh moi la nguoi tra tien.
-    _low = lk.casefold()
-    check("KHONG hoi thuc 'mua ngay' / 'mo khoa ngay' / 'nang cap ngay'",
-          not any(w in _low for w in ["mua ngay", "mở khoá ngay", "mở khóa ngay",
-                                     "nâng cấp ngay"]), _low[:70])
-    pg.keyboard.press("Escape")
+    print("\n[2] Lab KHONG con the tra phi nao (do duoc 19/08/2026)")
+    # ⚠️⚠️ DOI PHAT BIEU 19/08/2026. Muc nay tung bam `lab:float` roi doi hop khoa
+    #    noi "thuoc goi Phi Hanh Gia" — nhung do tren trang thi ca 5 the dau deu
+    #    mang nhan MIEN PHI va `AstroQLocks.get("lab:float")` tra `null`, nen bo do
+    #    CHET CAM o `wait_for_selector` (khong in mot dong ket qua nao — dung cai
+    #    bay ma quy tac 6 muc 6 canh bao). Loi nay CO SAN, khong do luot 19/08:
+    #    `lab.html` va `js/lab-catalog.js` khong bi doi.
+    #    Dieu can bao ve doi thanh mot cau MANH HON ban cu: lab hien khong con the
+    #    `pro` nao, va ngay nao co lai thi bo do phai BAO chu khong duoc chet.
+    pro_cards = pg.eval_on_selector_all(".lcard", """es=>es.map(e=>({
+        card:e.getAttribute('data-card'),
+        pro:(e.className||'').split(/\\s+/).indexOf('pro')>=0,
+        lock:window.AstroQLocks ? !!AstroQLocks.get('lab:'+e.getAttribute('data-card')) : null,
+        state:window.AstroQLocks && AstroQLocks.get('lab:'+e.getAttribute('data-card'))
+              ? AstroQLocks.get('lab:'+e.getAttribute('data-card')).state : null}))""")
+    _pro = [c["card"] for c in pro_cards if c["state"] == "pro"]
+    check("khong the nao trong lab o trang thai `pro`", not _pro, str(_pro))
+    # Moi the CO muc khoa thi phai la `soon`, va moi the `soon` tren man phai co muc
+    # khoa — thieu mot chieu thi hoac tre bam vao mot the im lang, hoac mot the da
+    # dung xong van bi noi la chua mo.
+    _soon_dom = set(c["card"] for c in pro_cards
+                    if "soon" in (pg.eval_on_selector(
+                        ".lcard[data-card='%s']" % c["card"], "e=>e.className")))
+    _soon_lock = set(c["card"] for c in pro_cards if c["state"] == "soon")
+    check("moi the `soon` tren man deu co muc khoa o js/locks.js",
+          _soon_dom == _soon_lock, "man=%s locks=%s" % (sorted(_soon_dom), sorted(_soon_lock)))
 
     print("\n[2b] The chua dung xong thi noi kieu KHAC (khong phai 'chua mo ban')")
     pg.click(".lcard[data-card='mix']")
@@ -143,6 +142,14 @@ with sync_playwright() as pw:
           lk2[:60].replace("\n", " "))
     check("the chua dung xong KHONG hua mo bang tien",
           "vào được ngay" not in lk2.casefold(), lk2[:70].replace("\n", " "))
+    # ⚠️ Phan chong-hoi-thuc chuyen tu muc [2] xuong day: nay [2b] la cho DUY NHAT
+    #    do hop khoa cua lab, bo phan do di la mat luon mot hang rao.
+    _low2 = lk2.casefold()
+    check("KHONG hoi thuc 'mua ngay' / 'mo khoa ngay' / 'nang cap ngay'",
+          not any(w in _low2 for w in ["mua ngay", "mở khoá ngay", "mở khóa ngay",
+                                       "nâng cấp ngay"]), _low2[:70])
+    check("hop khoa noi that: co chu 'dang duoc xay', khong noi 'chua mo ban'",
+          "chưa mở bán" not in _low2, _low2[:70])
     pg.keyboard.press("Escape")
     ctx.close()
 
@@ -607,7 +614,10 @@ with sync_playwright() as pw:
     print("\n[6] Duong ve luoi va ve dashboard")
     ctx, pg = mk(br)
     pg.goto(URL, wait_until="load")
-    pg.click(".lcard[data-card='weigh']")           # the tra phi -> hop khoa
+    # ⚠️ DOI THE 19/08/2026: `weigh` nay la the MIEN PHI (khong con the `pro` nao
+    #    trong lab — xem muc [2]), nen bam vao no mo thi nghiem chu khong mo hop
+    #    khoa, va bo do chet cam o day. Dung mot the `soon` co that.
+    pg.click(".lcard[data-card='mix']")             # the chua dung xong -> hop khoa
     pg.wait_for_selector("#aq-lock.show", timeout=5000)
     pg.click("#lk-close")
     pg.wait_for_timeout(200)

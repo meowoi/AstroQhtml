@@ -85,6 +85,13 @@
              ⛔ Nếu tới lúc đó hướng đi đã đổi (không bán nữa, hoặc bán theo cách
                 khác) thì **XOÁ HẲN** nhánh `pro` — đừng để nó nằm thêm một vòng nữa
                 với lý do "sắp dùng tới". */
+    /* ⚠️ KHOÁ LẠI THẺ MOD-05 19/08/2026 (chủ dự án chốt). `lab.html` vẫn còn trên
+       đĩa; đây là mục khoá cho ĐƯỜNG VÀO ở dashboard. Ba mục `lab:*` ngay dưới là
+       khoá cho từng thí nghiệm BÊN TRONG lab — hai tầng khác nhau, đừng gộp. */
+    "lab": {
+      state: "soon", plan: "astronaut", ic: "🔬",
+      feats: ["f_lab_1", "f_lab_2", "f_lab_3"]
+    },
     "lab:throw": { state: "soon", plan: "astronaut", ic: "🎯" },
     "lab:tide":  { state: "soon", plan: "astronaut", ic: "🌊" },
     "lab:mix":   { state: "soon", plan: "astronaut", ic: "⚗️" },
@@ -92,16 +99,25 @@
       state: "soon", plan: "astronaut", ic: "🌙",
       feats: ["f_moon_1", "f_moon_2", "f_moon_3"]
     },
-    /* Ba mini-game: sắp ra mắt và SẼ MIỄN PHÍ → không mời mua. */
-    /* ⚠️ `game:racer` DA BO 12/08/2026 — Duong Dua Sao Choi da dung xong
-       (`game-racer.html`). Ba muc `game:*` cua mang nay nay RONG: ca sau mini-game
-       da chay that, nen khong con the game nao khoa. */
-    /* ⚠️ `game:maze` DA BO 12/08/2026 — Me Cung Thien Ha da dung xong
-       (`game-maze.html`). Giu muc khoa cho mot game da choi duoc la noi voi tre
-       rang no chua mo. */
-    /* ⚠️ `game:catch` ĐÃ BỎ 12/08/2026 — Bat Sao Bang da dung xong
-       (`game-catch.html`), nen thẻ đó không còn khoá. Giữ mục cho một game đã
-       chạy được là nói với trẻ rằng nó chưa mở. */
+    /* ── Mini-game: sắp ra mắt và SẼ MIỄN PHÍ → không mời mua ──
+       ⚠️ `plan: null` là điều kiện, không phải chỗ để trống: bốn game này KHÔNG nằm
+          trong phần trả phí của `docs/decisions/009`, nên modal của chúng không có
+          nút dẫn sang bảng giá và không có dòng mời bố mẹ. Gắn một tên gói vào đây
+          là mời mua một thứ không bán.
+       ⚠️ BỐN GAME LỚP QUYẾT ĐỊNH KHOÁ LẠI 19/08/2026 (chủ dự án chốt) — mã game
+          VẪN CÒN NGUYÊN và bộ đo của chúng vẫn chạy (`play_survival` · `play_comms`
+          · `play_recycle` · `play_units`); chỉ thẻ ở Khu Huấn Luyện là `soon`. Mở
+          lại = đổi `status` về `"ready"` ở `games.html` **và** gỡ mục ở đây —
+          thiếu một chân thì hoặc trẻ bấm vào một trang không mở được, hoặc một
+          game đã chạy được vẫn bị nói là chưa mở.
+       ⚠️ `smoke_locks` mục [3] đối chiếu SỐ thẻ `soon` với SỐ mục `"game:` ở đây,
+          nên hai bên phải sửa cùng lúc. */
+    "game:survival": { state: "soon", plan: null, ic: "🛡️" },
+    "game:comms":    { state: "soon", plan: null, ic: "📡" },
+    "game:recycle":  { state: "soon", plan: null, ic: "♻️" },
+    "game:units":    { state: "soon", plan: null, ic: "📏" },
+    /* ⚠️ `game:racer` · `game:maze` · `game:catch` ĐÃ BỎ 12/08/2026 — ba game đó đã
+       dựng xong. Giữ mục khoá cho một game đã chơi được là nói với trẻ rằng nó chưa mở. */
   };
 
   var T = {

@@ -14,6 +14,7 @@
 
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/cockpit.css" />
+<link rel="stylesheet" href="css/locks.css" />
 <link rel="stylesheet" href="css/sticker-icons.css" />
 <!-- Menu thả từ avatar + bộ chọn ngôn ngữ (khung + hành vi dùng chung, xem
      css/user-menu.css và js/user-menu.js) -->
@@ -25,6 +26,7 @@
 <link rel="stylesheet" href="css/warp-screen.css" />
 <script src="js/icons.js"></script>
 <script src="js/sticker-icons.js"></script>
+<script src="js/locks.js"></script>
 <script src="js/ui-common.js"></script>
 <!-- Menu thả dùng chung. ⚠️ `AstroQUserMenu.init()` phải chạy TRƯỚC
      `AstroQ.initLang()` — lý do ghi ở đầu js/user-menu.js. -->
@@ -480,23 +482,25 @@
          ⚠️ HUY HIỆU LÀ "SẮP RA MẮT", KHÔNG PHẢI "TRẢ PHÍ" — khu này chưa có nội
             dung, gắn nhãn trả phí là hứa rằng trả tiền sẽ mở được. Xem ba trạng
             thái ở js/locks.js. -->
-    <!-- ⚠️ MỞ KHOÁ 12/08/2026: khu này nay có trang thật `lab.html`, nên bỏ hẳn
-         `.soon`, đèn về `ok` và nhãn về SYS.ONLINE. `SYS.STANDBY` màu hổ phách
-         cạnh một cái nút bấm được là hai thông điệp ngược nhau.
-         ⚠️ Huy hiệu `.lk-badge` và hàm `paintLockBadge()` ĐÃ BỎ THEO: mục `"lab"`
-         không còn trong js/locks.js (khoá nay theo TỪNG THẺ bên trong lab), nên
-         `AstroQLocks.get("lab")` trả null và huy hiệu sẽ đứng RỖNG.
-         ⚠️ `lab_desc` GIỮ NGUYÊN lời hứa cũ — "trộn nguyên tố" là thẻ LAB-06 ở
-         trạng thái `soon` bên trong, nên câu này vẫn đúng; xem mục 12 của đề xuất.
-         ⚠️ Dashboard giờ còn 0 card khoá → `check_pages` mục [7b] đã đổi phát biểu. -->
-    <article class="hud card--lab">
-      <div class="hud-line top"><span><span class="led ok"></span>MOD-05</span><span data-i18n="sys_online">SYS.ONLINE</span></div>
-      <div class="ic" data-sic="flask" data-sic-cls="sic--mag"></div>
+    <!-- ⚠️ KHOÁ LẠI 19/08/2026 (chủ dự án chốt): thẻ về trạng thái "sắp ra mắt".
+         `lab.html` VẪN CÒN trên đĩa và `smoke_lab` vẫn chạy — chỉ ĐƯỜNG VÀO từ
+         dashboard là đóng. Mở lại = bỏ `.soon`, đèn về `ok`, nhãn về SYS.ONLINE,
+         gỡ mục `"lab"` khỏi js/locks.js VÀ đổi lại phép kiểm [7b] của check_pages.
+         ⚠️ Nút KHÔNG `disabled` — nó mở modal nói vì sao khoá + khi mở sẽ được gì.
+         Nút `disabled` là ngõ cụt: trẻ bấm không ăn và chỉ tưởng mình bấm trượt.
+         ⚠️ Đèn `standby` NGỪNG nhấp nháy + nhãn hổ phách `SYS.STANDBY` — đèn xanh
+         `SYS.ONLINE` cạnh một cái nút không vào được là hai thông điệp ngược nhau.
+         ⚠️ Icon dùng bảng màu `sic--off` (bạc màu), KHÔNG dùng `filter:grayscale()`
+         — trên nền gradient sáng nó cho ra khối xám SÁNG HƠN thẻ dùng được. -->
+    <article class="hud card--lab soon">
+      <div class="hud-line top"><span><span class="led standby"></span>MOD-05</span><span class="standby" data-i18n="soon_sys">SYS.STANDBY</span></div>
+      <span class="lk-badge soon lk-pin" id="lab-badge"></span>
+      <div class="ic" data-sic="flask" data-sic-cls="sic--off"></div>
       <span class="tag" data-i18n="lab_tag">Thí nghiệm ảo</span>
       <h3 data-i18n="lab_title">Phòng Nghiên Cứu</h3>
       <p data-i18n="lab_desc">Tự tay làm thí nghiệm: trộn nguyên tố, thả rơi vật thể ở các mức trọng lực khác nhau.</p>
-      <button class="jelly-btn" id="lab-btn" type="button" data-i18n="lab_open">Vào phòng thí nghiệm</button>
-      <div class="hud-line bot"><span>LAB: ONLINE</span><span data-i18n="lab_ready">SẴN SÀNG</span></div>
+      <button class="jelly-btn lk-open" id="lab-btn" type="button" data-i18n="lab_why">Xem trước</button>
+      <div class="hud-line bot"><span>LAB: OFFLINE</span><span data-i18n="soon_eta">ETA: SẮP TỚI</span></div>
     </article>
 
   </section>
@@ -597,7 +601,7 @@
       codex_tag:"Tra cứu thuật ngữ", codex_title:"Sổ Tay Thuật Ngữ",
       codex_desc:"Bộ thuật ngữ thiên văn. Trả lời đúng một thuật ngữ trong Quiz là thẻ của nó được giải mã.",
       codex_btn:"Mở Sổ Tay",
-      lab_open:"Vào phòng thí nghiệm", lab_ready:"SẴN SÀNG",
+      lab_why:"Xem trước",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SẮP TỚI",
       sys_online:"SYS.ONLINE",
       need_title:"Chưa đủ Thiên thạch tím!",
@@ -659,7 +663,7 @@
       codex_tag:"Term reference", codex_title:"Terminology Codex",
       codex_desc:"Your astronomy glossary. Answer a term correctly in the Quiz and its card is decoded.",
       codex_btn:"Open the Codex",
-      lab_open:"Enter the lab", lab_ready:"READY",
+      lab_why:"Sneak peek",
       soon_sys:"SYS.STANDBY", soon_eta:"ETA: SOON",
       sys_online:"SYS.ONLINE",
       need_title:"Not enough Purple Asteroids!",
@@ -1150,6 +1154,7 @@
     // Màn giới thiệu / màn loading đang mở thì dịch theo luôn (chúng tự vẽ lại).
     if(window.AstroQTour){ AstroQTour.setLang(LANG); AstroQTour.setName(name); }
     if(window.AstroQWarp) AstroQWarp.setLang(LANG);
+    paintLockBadge();
   }
 
   /* Huy hiệu khoá của thẻ MOD-05. Chữ nằm ở js/locks.js (chỗ duy nhất khai), nên
@@ -1160,18 +1165,34 @@
         RA MẮT" trong khi modal đã nói "thuộc gói Phi Hành Gia" — hai thông điệp
         ngược nhau, và nó xảy ra ĐÚNG LÚC cơ chế này được dùng tới (ngày bật cờ).
         mission-map.html và games.html vốn đã suy từ `lk.state`; chỉ chỗ này lệch. */
-  /* ⚠️ `paintLockBadge()` ĐÃ BỎ 12/08/2026 cùng lúc mở khoá MOD-05: mục `"lab"`
-     không còn trong js/locks.js nên `AstroQLocks.get("lab")` trả null, và một
-     huy hiệu không bao giờ được điền chữ là một huy hiệu RỖNG nằm trên thẻ.
-     Dashboard hiện KHÔNG còn card nào bị khoá; ngày có card khoá thứ hai thì
-     dựng lại theo đúng khuôn cũ — suy chữ và class TỪ `state`, đừng gõ cứng. */
+  function paintLockBadge(){
+    var b = $("lab-badge");
+    if(!b || !window.AstroQLocks) return;
+    var it = AstroQLocks.get("lab");
+    if(!it) return;
+    b.textContent = AstroQLocks.text(it.state === "soon" ? "badge_soon" : "badge_pro");
+    b.className = "lk-badge lk-pin " + it.state;
+    /* ⚠️ ẨN CHỮ TRẠNG THÁI Ở Ô PHẢI KHI HUY HIỆU ĐÃ CÓ CHỮ — `.lk-pin` neo tuyệt
+       đối đúng chỗ đó, nên để cả hai là chồng chữ lên nhau ("SẮP RA MẮT" đè
+       "SYS.STANDBY"), đọc ra như lỗi render. Ẩn ở ĐÂY chứ không xoá khỏi markup:
+       `js/locks.js` không nạp được thì `paintLockBadge` thoát sớm và chữ trạng thái
+       vẫn còn — hỏng theo hướng an toàn, thẻ không bao giờ mất trạng thái. */
+    /* ⚠️ `:not(.led)` LÀ BẮT BUỘC — dòng đó có HAI phần tử `.standby`: đèn
+       (`<span class="led standby">`) và chữ trạng thái. `querySelector` trả về cái
+       ĐẦU TIÊN, nên thiếu bộ lọc này là ẩn mất ĐÈN và để nguyên chữ đè nhau: đúng
+       ngược lại điều muốn làm, mà đọc code thì không thấy. */
+    var st = document.querySelector(".card--lab .hud-line.top .standby:not(.led)");
+    if(st) st.hidden = true;
+  }
 
   /* ---- Modal ---- */
   function closeModal(el){ el.classList.remove("show"); el.setAttribute("aria-hidden","true"); }
   function renderNeedBody(){ $("need-body").innerHTML = t("need_body").replace("{have}", Economy.getAsteroids()); }
 
-  /* ---- Phòng Nghiên Cứu (MOD-05) → lab.html ---- */
-  $("lab-btn").addEventListener("click", function(){ window.location.href="lab.html"; });
+  /* ---- Phòng Nghiên Cứu (MOD-05) đang khoá: bấm là mở modal giải thích ----
+     ⚠️ `AstroQLocks.wire` chứ không phải `location.href` — đưa trẻ sang một khu
+        đang khoá là để nó vào rồi mới biết chưa có gì. */
+  if(window.AstroQLocks) AstroQLocks.wire($("lab-btn"), "lab");
 
   /* ---- Khu Huấn Luyện → Sảnh Trò Chơi (games.html). Phí/gating xử lý tại từng game trong hub. ---- */
   $("btn-game").addEventListener("click", function(){ window.location.href="games.html"; });

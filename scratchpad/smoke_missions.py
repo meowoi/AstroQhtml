@@ -166,7 +166,11 @@ def main():
         #    thanh mot cau manh hon: MOI card MOD phai dan sang mot trang CO THAT,
         #    tuc khong card nao la ngo cut. `check_pages` muc [7b] doi chieu tren dia.
         soons = [h for h in hud if h["soon"]]
-        chk(len(soons) == 0, "0 card 'Sap ra mat' (moi khu deu co trang that)",
+        # ⚠️⚠️ DOI PHAT BIEU 19/08/2026 — chu du an chot khoa lai Phong Nghien Cuu,
+        #    nen con so 0 khang dinh dung trang thai CU. Dieu can bao ve khong doi
+        #    (*dashboard noi that ve khu nao chua vao duoc*), chi doi con so; va no
+        #    van CO RANG theo hai chieu nho `check_pages` [7b] doi chieu tren dia.
+        chk(len(soons) == 1, "dung 1 card 'Sap ra mat' (Phong Nghien Cuu)",
             str([h["name"] for h in soons]))
         # ⚠️ KHONG them mot phep kiem "moi card co duong di" o day: ban dau toi viet
         #    `chk(... or True, ...)` — mot TAUTOLOGY khong bao gio do duoc, tuc mot
@@ -186,16 +190,28 @@ def main():
         #    phai dan sang MOT TRANG CO THAT, khong phai vao ngo cut.
         #    Khoa nay chuyen xuong tung THE trong lab.html — smoke_lab.py va
         #    smoke_locks.py muc [1] do phan do.
-        lab_href = pg.eval_on_selector(
-            ".card--lab .jelly-btn",
-            """b => { const s = document.documentElement.innerHTML;
-                      return /lab-btn[\s\S]{0,200}?lab\.html/.test(s)
-                          || /location\.href\s*=\s*"lab\.html"/.test(s); }""")
-        chk(lab_href, "nut MOD-05 dan sang lab.html")
-        chk(pg.locator(".card--lab.soon").count() == 0,
-            "card MOD-05 KHONG con o trang thai 'soon'")
-        chk(pg.locator("#lab-badge").count() == 0,
-            "KHONG con huy hieu khoa rong tren card MOD-05")
+        # ⚠️⚠️ DOI PHAT BIEU 19/08/2026 — MOD-05 KHOA LAI. Ba phep kiem cu ("dan sang
+        #    lab.html" · "khong con soon" · "khong con huy hieu") khang dinh dung
+        #    trang thai CU. Ban moi do THU MANH HON ban 12/08: nut phai that su MO
+        #    DUOC MODAL (khong phai chi "bam duoc"), va huy hieu phai CO CHU — mot
+        #    huy hieu rong nam tren the la chinh cai loi 12/08 da phai go bo.
+        chk(pg.locator(".card--lab.soon").count() == 1,
+            "card MOD-05 o trang thai 'soon'")
+        badge = pg.locator("#lab-badge")
+        chk(badge.count() == 1, "card MOD-05 co huy hieu khoa")
+        chk((badge.inner_text() or "").strip() != "",
+            "huy hieu khoa CO CHU (khong dung rong)", repr(badge.inner_text()))
+        pg.click(".card--lab .jelly-btn")
+        pg.wait_for_selector(".lk-card", timeout=8000)
+        chk(pg.locator(".lk-card").is_visible(), "bam MOD-05 thi MO MODAL giai thich")
+        # Khu chua dung xong thi KHONG mo mua ban: modal cua no khong co nut dan sang
+        # trang gia (`plan` cua muc `lab` la "astronaut" nen co, nhung `SALE_OPEN`
+        # dang tat -> bien the loi van thu tu; chi doi modal noi ro dang duoc xay).
+        mtxt = pg.eval_on_selector(".lk-card", "e => e.innerText").lower()
+        chk("xây" in mtxt or "dựng" in mtxt or "sắp" in mtxt,
+            "modal noi ro khu nay dang duoc xay", mtxt[:70])
+        pg.keyboard.press("Escape")
+        pg.wait_for_timeout(250)
         # ⚠️ DUA CHUOT RA KHOI NUT truoc khi do bo cuc phia duoi. Cu `pg.click` o tren
         #    de lai con tro DUNG TREN nut, ma `.jelly-btn:hover` co `translateY(-2px)`
         #    — phep do "nut trong cung mot hang thang hang tuyet doi" se doc ra lech
