@@ -306,13 +306,11 @@ footer a:hover{color:var(--accent);}
 
 /* ---- Nút chuyển ngôn ngữ ---- */
 .lang-switch{position:fixed;top:20px;right:20px;z-index:20;align-items:center;background:var(--glass);border:1px solid var(--glass-brd);-webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));box-shadow:var(--shadow-soft);animation:fadeUp .7s var(--ease) both;}
-.lang-switch button{
-  border:none;background:transparent;color:var(--ink-soft);
-  font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.04em;
-  padding:7px 14px;border-radius:999px;
-  transition:background .2s var(--ease), color .2s var(--ease);
-}
-.lang-switch button:hover{color:var(--ink);}
+/* ⚠️ HÌNH DẠNG nút lấy từ css/common.css (gộp 19/08/2026). Màn chào từng khai
+   `font-size:13px` + `padding:7px 14px` nên chip ở đây 40×30 — to hơn 11 màn khác
+   một nửa. Vị trí `fixed` phía trên VẪN giữ: thẻ này nổi ở góc màn chào, không nằm
+   trong header như các trang app. Màu nhấn vàng nắng ở dưới cũng giữ. */
+.lang-switch button{transition:background .2s var(--ease), color .2s var(--ease);}
 .lang-switch button.active{
   color:#0a1030;
   background:linear-gradient(120deg, var(--sun) 0%, var(--sun-warm) 100%);

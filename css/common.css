@@ -37,6 +37,21 @@ canvas{display:block;}
 .currency .c-val{font-family:var(--font-display);font-weight:700;color:#e9d7ff;}
 @keyframes gemBump{0%{transform:scale(1);}40%{transform:scale(1.4);}100%{transform:scale(1);}}
 .lang-switch{display:inline-flex;gap:2px;padding:4px;border-radius:999px;}
+/* ── NÚT NGÔN NGỮ — KHAI DUY NHẤT MỘT LẦN, 19/08/2026 ──────────────────────────
+   Trước đó rule này bị chép gần y nguyên ở SÁU file (`page-shell` · `game-shell` ·
+   `quiz` · `select` · `index` · `mission-stage`) và lệch dần: đo được **6 kiểu chip
+   khác nhau trên 13 trang** (28×24 · 26×24 · 28×23 · 33×28 · 40×31 · và một cái
+   10,5px bo góc 16px). Chủ dự án nhìn ra bằng mắt trước khi tôi đo.
+   ⚠️ MÀU NỀN/VIỀN của khung vẫn do từng page-shell đặt — chúng theo bảng màu của
+      từng khu và đó là chủ đích. Cái phải giống nhau là HÌNH DẠNG và CHỮ.
+   ⚠️ Trang nào cần khác thì phải GHI LÝ DO tại chỗ, đừng chép lại cả rule. */
+.lang-switch button,.lang-switch a{border:none;background:transparent;
+  color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);
+  font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;
+  line-height:1.2;text-decoration:none;}
+.lang-switch button:hover,.lang-switch a:hover{color:var(--ink);}
+.lang-switch button.active,.lang-switch a.active{color:#04060f;
+  background:linear-gradient(120deg,var(--cyan),var(--purple));}
 .hero .eyebrow{font-family:var(--font-mono);letter-spacing:.28em;text-transform:uppercase;text-shadow:0 0 12px rgba(95,211,255,.6);}
 @keyframes blink{0%,70%{opacity:1;}71%,100%{opacity:.25;}}
 .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;}

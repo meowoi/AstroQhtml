@@ -90,6 +90,9 @@
        khoá cho từng thí nghiệm BÊN TRONG lab — hai tầng khác nhau, đừng gộp. */
     "lab": {
       state: "soon", plan: "astronaut", ic: "🔬",
+      /* `nm` = tên khu, `bd` = thân bài riêng. Xem chú thích đầu bảng chữ: popup
+         này dùng chung, nên lời văn riêng phải khai theo TỪNG MỤC. */
+      nm: "nm_lab", bd: "bd_lab",
       feats: ["f_lab_1", "f_lab_2", "f_lab_3"]
     },
     "lab:throw": { state: "soon", plan: "astronaut", ic: "🎯" },
@@ -123,24 +126,38 @@
   var T = {
     vi: {
       badge_soon: "SẮP RA MẮT",
-      badge_pro: "GÓI PHI HÀNH GIA",
+      badge_pro: "CHƯA MỞ KHOÁ",
+      /* Tên khu — chỉ khai cho mục CÓ lời văn riêng. Bốn game cố ý không có, xem
+         chú thích ở `nm` trong bảng ITEMS. */
+      nm_lab: "Phòng Nghiên Cứu",
       /* ⚠️ Câu chữ ở đây phải đọc được cho CẢ một khu (Phòng Nghiên Cứu) và một
          NHIỆM VỤ (Mặt Trăng) — cùng một bảng chữ phục vụ hai loại. Vì thế không
          gọi tên loại ("khu này" cho một nhiệm vụ là câu sai). */
       title_soon: "Đang được xây, sắp xong rồi",
-      title_pro: "Dành cho gói {plan}",
+      /* Bản CÓ TÊN — dùng khi mục khai `nm`. Mục không khai thì rơi về câu trên. */
+      title_soon_nm: "{name} đang được hoàn thiện",
+      title_pro: "Khu vực này thuộc hành trình nâng cao",
 
       /* ⚠️ Câu `soon` KHÔNG được hứa mở bằng tiền — nó chưa tồn tại. */
       body_soon_plan: "Bọn mình đang dựng nốt. Xong rồi thì nó nằm trong gói {plan}.",
       body_soon_free: "Bọn mình đang dựng nốt. Xong rồi thì ai cũng chơi được — không mất phí.",
-      body_pro: "Mở gói {plan} là vào được ngay.",
+      /* Thân bài riêng của Phòng Nghiên Cứu (chủ dự án gửi 19/08/2026). */
+      bd_lab: "Một khu vực mới đang được xây dựng để con có thể tự khám phá các hiện tượng khoa học qua những hoạt động và thí nghiệm tương tác.",
+      body_pro: "Nội dung đã có sẵn, nhưng cần gói AstroQ phù hợp để truy cập.",
+      /* ⚠️⚠️ CÂU NÀY PHỤ THUỘC TRẠNG THÁI MỞ BÁN, mà `js/locks.js` KHÔNG hỏi server.
+         Nó đúng vì `Billing.SALE_OPEN` mặc định ĐÓNG. Ngày bật bán thì câu này thành
+         nói sai — nên `check_pages` mục [33] buộc hai bên đi cùng nhau: còn chuỗi này
+         thì `SALE_OPEN` phải còn mặc định `false`. */
+      body_pro_closed: "Các gói hiện chưa mở bán. Khi chính thức ra mắt, bố mẹ có thể đăng ký để mở khoá khu vực này cho con.",
 
       will_get: "Trong này sẽ có:",
+      will_get_nm: "Trong {name} sẽ có:",
       parent_note: "Chuyện gói và giá là việc của người lớn — rủ bố mẹ xem cùng nhé.",
-      founder_note: "Bố mẹ lấy Vé Sáng Lập từ bây giờ là có sẵn ngay hôm mở cửa.",
+      founder_note: "Gia đình sở hữu Vé Sáng Lập sẽ được mở quyền sử dụng ngay khi tính năng này hoàn thành.",
+      plan_note_nm: "{name} sẽ nằm trong gói {plan} khi chính thức ra mắt.",
 
       cta_pricing: "Xem các gói",
-      cta_close: "Đã hiểu",
+      cta_close: "Tiếp tục khám phá",
 
       plan_astronaut: "Phi Hành Gia",
       plan_crew: "Phi Hành Đoàn",
@@ -153,36 +170,42 @@
          Trang Space Place chỉ nhắc Sao Hoả khi nói về KHỐI LƯỢNG, không cho tỉ lệ
          cân nặng nào — kể Sao Hoả ở đây là bịa một con số trong một lời chào mời.
          Đổi số nơi thật sự ship thì phải đổi dòng này; `check_pages` canh hai bên. */
-      f_lab_1: "Vì sao phi hành gia trôi trong không gian",
-      f_lab_2: "Cân của em ở Mặt Trăng, Sao Thuỷ, Sao Mộc",
-      f_lab_3: "Lời giải thích có hai độ sâu, lớn thêm là đọc sâu thêm",
+      f_lab_1: "Vì sao phi hành gia có thể lơ lửng trong không gian?",
+      f_lab_2: "Cân nặng của chúng ta sẽ thay đổi thế nào trên Mặt Trăng, Sao Thuỷ hay Sao Mộc?",
+      f_lab_3: "Mỗi chủ đề có phần giải thích ngắn gọn và phần Khám phá sâu hơn dành cho những bạn muốn tìm hiểu thêm.",
       f_moon_1: "Cả một nhiệm vụ dài trên Mặt Trăng",
       f_moon_2: "Mẫu vật và huy hiệu chỉ Mặt Trăng mới có",
       f_moon_3: "Mở đường bay tới hành tinh kế tiếp"
     },
     en: {
       badge_soon: "COMING SOON",
-      badge_pro: "ASTRONAUT PLAN",
+      badge_pro: "NOT UNLOCKED YET",
+      nm_lab: "The Research Lab",
       title_soon: "Still being built — almost there",
-      title_pro: "Part of the {plan} plan",
+      title_soon_nm: "{name} is being finished",
+      title_pro: "This area is part of the advanced journey",
 
       body_soon_plan: "We're still putting this together. Once it lands, it comes with the {plan} plan.",
       body_soon_free: "We're still putting this together. Once it lands, everyone can play — free.",
-      body_pro: "Open the {plan} plan and you're straight in.",
+      bd_lab: "A new area is being built where your child can explore science for themselves through hands-on, interactive experiments.",
+      body_pro: "The content is ready, but it needs the right AstroQ plan to open.",
+      body_pro_closed: "Plans are not on sale yet. When they open, a parent can subscribe to unlock this area.",
 
       will_get: "Inside you'll find:",
+      will_get_nm: "{name} will include:",
       parent_note: "Plans and prices are a grown-up thing — ask a parent to look with you.",
-      founder_note: "If a parent grabs the Founder Pass now, it's included the day it opens.",
+      founder_note: "Families with the Founder Pass get access the moment this feature is finished.",
+      plan_note_nm: "{name} will be part of the {plan} plan when it launches.",
 
       cta_pricing: "See the plans",
-      cta_close: "Got it",
+      cta_close: "Keep exploring",
 
       plan_astronaut: "Astronaut",
       plan_crew: "Crew",
 
-      f_lab_1: "Why astronauts float in space",
-      f_lab_2: "Your weight on the Moon, Mercury and Jupiter",
-      f_lab_3: "Two depths of explanation — read deeper as you grow",
+      f_lab_1: "Why can astronauts float in space?",
+      f_lab_2: "How would your weight change on the Moon, Mercury or Jupiter?",
+      f_lab_3: "Every topic has a short explanation plus a Go deeper section for those who want more.",
       f_moon_1: "A whole mission up on the Moon",
       f_moon_2: "Specimens and badges only the Moon has",
       f_moon_3: "Opens the route to the next planet"
@@ -259,18 +282,29 @@
     el.querySelector("#lk-badge").textContent = t(isSoon ? "badge_soon" : "badge_pro", L);
     el.querySelector("#lk-badge").className = "lk-badge" + (isSoon ? " soon" : " pro");
 
-    el.querySelector("#lk-title").textContent =
-      (isSoon ? t("title_soon", L) : t("title_pro", L)).replace("{plan}", planName);
+    /* Tên khu: chỉ mục nào KHAI `nm` mới có. Không khai thì mọi câu rơi về bản
+       chung — đó là hành vi đúng cho 4 game, xem chú thích ở bảng ITEMS. */
+    var areaName = it.nm ? t(it.nm, L) : "";
 
+    var ttl = isSoon
+      ? (it.nm ? t("title_soon_nm", L).replace("{name}", areaName) : t("title_soon", L))
+      : t("title_pro", L);
+    el.querySelector("#lk-title").textContent = ttl.replace("{plan}", planName);
+
+    /* ⚠️ Trạng thái `pro` gồm HAI câu: cái gì đang bị khoá, và vì sao chưa mở được
+       ngay hôm nay. Nhập chúng thành một chuỗi thì ngày bật bán phải sửa cả câu đầu;
+       tách ra thì chỉ cần bỏ câu thứ hai. */
     var body = !it.plan ? t("body_soon_free", L)
-             : isSoon   ? t("body_soon_plan", L)
-             :            t("body_pro", L);
+             : isSoon   ? (it.bd ? t(it.bd, L) : t("body_soon_plan", L))
+             :            t("body_pro", L) + " " + t("body_pro_closed", L);
     el.querySelector("#lk-body").textContent = body.replace("{plan}", planName);
 
     // Danh sách quyền lợi — chỉ khi có gói VÀ có khai `feats`
     var wrap = el.querySelector("#lk-feats");
     if (it.plan && it.feats && it.feats.length) {
-      el.querySelector("#lk-feats-h").textContent = t("will_get", L);
+      el.querySelector("#lk-feats-h").textContent = it.nm
+        ? t("will_get_nm", L).replace("{name}", areaName)
+        : t("will_get", L);
       el.querySelector("#lk-list").innerHTML =
         it.feats.map(function (k) { return "<li>" + esc(t(k, L)) + "</li>"; }).join("");
       wrap.hidden = false;
@@ -282,7 +316,12 @@
        thêm một dòng nói về tiền vào đó là quảng cáo chen vào chỗ không cần. */
     var note = el.querySelector("#lk-note");
     if (it.plan) {
-      note.textContent = (isSoon ? t("founder_note", L) + " " : "") + t("parent_note", L);
+      /* Mục CÓ tên thì nói rõ nó thuộc gói nào; mục không tên giữ câu chung về
+         "chuyện gói giá là việc người lớn". */
+      note.textContent = it.nm
+        ? t("plan_note_nm", L).replace("{name}", areaName).replace("{plan}", planName) +
+          (isSoon ? " " + t("founder_note", L) : "")
+        : (isSoon ? t("founder_note", L) + " " : "") + t("parent_note", L);
       note.hidden = false;
     } else {
       note.hidden = true;

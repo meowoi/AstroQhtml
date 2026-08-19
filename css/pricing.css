@@ -107,13 +107,22 @@
 .who-col li::before{content:"✓";position:absolute;left:1px;top:0;
   color:#7ee7a6;font-size:11.5px;font-weight:700;}
 
-/* ── Ưu đãi ── */
-.perks{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));}
-.perk{display:flex;gap:9px;align-items:flex-start;border-radius:12px;padding:12px 13px;
-  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);}
-.perk .ic{color:var(--cyan,#38bdf8);font-size:12px;line-height:1.6;flex:none;}
-.perk p{margin:0;font-size:13.2px;line-height:1.6;color:var(--ink-soft,#9fb2d9);}
-.perk b{color:var(--ink,#eaf1ff);}
+/* ── Khối "Ưu đãi đi kèm" ĐÃ XOÁ 19/08/2026 (chủ dự án chốt) ──
+   Bỏ luôn `.perks`/`.perk` vì không còn chỗ nào dùng — đã kiểm cả *.html và *.js.
+   Giữ CSS mồ côi lại là để lần đọc sau tưởng khối đó vẫn tồn tại. */
+
+/* ── Ghi chú riêng của một gói (vd "Tối đa 4 hồ sơ trẻ em") ──
+   Nằm GIỮA bảng giá và nút, nên nó phải nhẹ hơn giá và đậm hơn mô tả. */
+.p-note{margin:2px 0 0;font-size:12.6px;line-height:1.5;color:var(--ink,#eaf1ff);
+  padding:7px 9px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);}
+
+/* ── Đoạn kết dưới một khối (vd "Không cần quyết định ngay") ── */
+.panel-foot{margin:14px 0 0;font-size:13.2px;line-height:1.65;
+  color:var(--ink-soft,#9fb2d9);}
+
+/* Dòng quyền lợi nay mở đầu bằng <b> — cho phần đậm sáng hơn phần còn lại. */
+.who-col li b{color:var(--ink,#eaf1ff);}
 
 /* ── FAQ ── */
 .faq{display:flex;flex-direction:column;gap:8px;}

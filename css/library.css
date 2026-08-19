@@ -30,7 +30,6 @@
 .currency .c-val{font-size:15px;}
 .gem{width:24px;height:24px;}
 .gem img{width:16px;height:16px;}
-.lang-switch button{padding:5px 8px;}
 /* ============ Ô TÌM KIẾM + LỌC NGUỒN (chỉ trang này có) ============ */
 .search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:12px;
   background:rgba(9,14,28,.7);border:1px solid var(--brd);color:var(--cyan);}

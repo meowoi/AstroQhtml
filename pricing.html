@@ -76,6 +76,7 @@
     <h2><span class="ic" aria-hidden="true">⚖️</span><span data-i18n="cmp_h">Miễn phí có gì, trả phí thêm gì</span></h2>
     <p class="panel-sub" data-i18n="cmp_sub">Những gì con kiếm được là của con: huy hiệu, mẫu vật, tiến độ và Thiên thạch tím giữ nguyên kể cả khi hết hạn gói. Chỉ nội dung mới là khoá lại.</p>
     <div class="cmp" id="cmp"></div>
+    <p class="panel-foot" data-i18n="cmp_foot">Không cần quyết định ngay. Hãy để con bắt đầu với astroQ miễn phí, tự khám phá một chút, rồi bố mẹ có thể cân nhắc mở thêm những hành trình phù hợp.</p>
   </section>
 
   <!-- ============ TRẺ NHẬN GÌ / BỐ MẸ NHẬN GÌ ============ -->
@@ -83,13 +84,6 @@
     <span class="panel-tag"><span class="led"></span><span data-i18n="tag_who">QUYỀN LỢI</span></span>
     <h2><span class="ic" aria-hidden="true">🎁</span><span data-i18n="who_h">Ai nhận được gì</span></h2>
     <div class="who" id="who"></div>
-  </section>
-
-  <!-- ============ ƯU ĐÃI ============ -->
-  <section class="panel">
-    <span class="panel-tag"><span class="led"></span><span data-i18n="tag_perk">ƯU ĐÃI</span></span>
-    <h2><span class="ic" aria-hidden="true">✨</span><span data-i18n="perk_h">Ưu đãi đi kèm</span></h2>
-    <div class="perks" id="perks"></div>
   </section>
 
   <!-- ============ FAQ ============ -->
@@ -102,13 +96,19 @@
   <!-- ============ CTA ============ -->
   <section class="pr-cta">
     <h2 id="cta-h" data-i18n="cta_h">Muốn biết khi nào mở cửa?</h2>
-    <p id="cta-p" data-i18n="cta_p">Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</p>
+    <!-- ⚠️ `data-i18n-html`, KHÔNG phải `data-i18n`: câu này chứa <b> để nhấn "Vé Sáng
+         Lập giới hạn". Dùng bản escape thì phụ huynh đọc thấy chữ "<b>" — đã đo
+         thấy đúng vậy ở lần dựng đầu 19/08/2026. -->
+    <p id="cta-p" data-i18n-html="cta_p">Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.</p>
     <div class="pr-acts">
       <!-- ⚠️ Nút này đổi CẢ CHỮ LẪN ĐÍCH theo `SALE.open`: chưa bán thì về form
            waitlist ở trang chủ, đã bán thì sang chính bảng gói phía trên. Gõ cứng một
            trong hai là ngày bật bán có một nút nói sai việc nó làm. -->
       <a class="pbtn primary" id="cta-btn" href="/" data-i18n="cta_btn">Báo tôi khi mở cửa</a>
-      <a class="pbtn ghost" href="parent.html" data-i18n="cta_parent">Xem bảng theo dõi</a>
+      <!-- ⚠️ ĐÍCH ĐỔI 19/08/2026: nút này là "Xem các gói" nên phải cuộn về bảng gói
+           NGAY TRÊN TRANG NÀY, không dẫn sang `parent.html`. Một nút tên "Xem các
+           gói" mà mở bảng theo dõi là nói sai việc nó làm. -->
+      <a class="pbtn ghost" href="#plans" data-i18n="cta_parent">Xem các gói</a>
       <a class="pbtn ghost" href="dashboard.html" data-i18n="cta_back">Quay lại khám phá</a>
     </div>
     <p class="pr-fine" data-i18n="fine">Giá đã chốt. Mọi gói đều do người lớn đăng ký và thanh toán.</p>
@@ -165,7 +165,6 @@
     parent: ["w_p1","w_p2","w_p3","w_p4"]
   };
 
-  var PERKS = ["p_founder","p_year","p_ref","p_trial","p_refund","p_season","p_school","p_grant"];
   var FAQ   = ["q_when","q_pay","q_expire","q_ads","q_cancel"];
 
   /* ⚠️ TRẠNG THÁI MỞ BÁN — hỏi server, mặc định ĐÓNG.
@@ -217,12 +216,16 @@
     var b = $("cta-btn");
     if(open){
       $("cta-h").textContent = t("cta_h_open");
-      $("cta-p").textContent = t("cta_p_open");
+      /* ⚠️ `innerHTML` cho câu mô tả: từ 19/08/2026 nó chứa <b> để nhấn "Vé Sáng Lập
+         giới hạn". Đã đo: để `textContent` thì phụ huynh đọc thấy chữ "<b>" — và
+         `data-i18n-html` ở thẻ KHÔNG cứu được, vì hàm này ghi đè sau đó. Chuỗi do dự
+         án viết, không phải dữ liệu người dùng. Tiêu đề vẫn `textContent`. */
+      $("cta-p").innerHTML = t("cta_p_open");
       b.textContent = t("cta_btn_open");
       b.setAttribute("href", "#plans");
     }else{
       $("cta-h").textContent = t("cta_h");
-      $("cta-p").textContent = t("cta_p");
+      $("cta-p").innerHTML = t("cta_p");      // xem chú thích ở nhánh trên
       b.textContent = t("cta_btn");
       b.setAttribute("href", "/");
     }
@@ -241,9 +244,9 @@
   var I18N = {
     vi:{
       a_lang:"Ngôn ngữ", title:"AstroQ — Gói & Ưu đãi", back:"Về Trung Tâm Điều Hướng",
-      eyebrow:"💳 Gói & Ưu đãi", title_h:"Mở cả thiên hà cho con khám phá",
-      intro:"Phần miễn phí luôn còn đó, không bao giờ mất. Gói trả phí mở thêm các hành tinh khác, Phòng Nghiên Cứu và bản tin hằng tuần về việc học của con.",
-      parent_banner:"Trang này dành cho <b>bố mẹ</b>. Giá dưới đây <b>đã chốt</b>, nhưng astroQ <b>chưa mở bán</b> nên chưa có nút thanh toán nào.",
+      eyebrow:"💳 Gói thành viên astroQ", title_h:"Chọn hành trình phù hợp với gia đình bạn",
+      intro:"Con luôn có thể bắt đầu miễn phí. Khi muốn mở thêm hành tinh, nhiệm vụ và các tính năng dành cho bố mẹ, gia đình có thể lựa chọn một trong các gói dưới đây.",
+      parent_banner:"👨‍👩‍👧 <b>Khu vực này dành cho bố mẹ.</b> astroQ chưa chính thức mở bán, vì vậy hiện chưa có nút thanh toán. Bạn có thể xem trước các gói và đăng ký nhận thông báo khi mở cửa.",
       /* Lời văn cho trạng thái ĐÃ MỞ BÁN. ⚠️ Nói ngay chuyện thẻ do cổng giữ: đó là
          câu phụ huynh cần nhất trước khi bấm, và nó đúng theo kiến trúc đã chốt ở
          `docs/decisions/009` (astroQ nằm ngoài phạm vi PCI-DSS, không có ô nhập thẻ). */
@@ -254,74 +257,67 @@
       cta_p_open:"Chọn gói ở bảng trên. Huỷ lúc nào cũng được, và những gì con kiếm được vẫn là của con.",
       cta_btn_open:"Xem lại các gói",
 
-      cta_h:"Muốn biết khi nào mở cửa?",
-      cta_p:"Để lại email ở trang chủ, chúng tôi báo ngay khi mở — kèm suất Vé Sáng Lập giới hạn.",
-      cta_btn:"Báo tôi khi mở cửa", cta_back:"Quay lại khám phá",
-      cta_parent:"Xem bảng theo dõi",
-      fine:"Giá đã chốt. Mọi gói đều do người lớn đăng ký và thanh toán.",
-      tag_cmp:"So sánh", cmp_h:"Miễn phí có gì, trả phí thêm gì",
-      cmp_sub:"Những gì con kiếm được là của con: huy hiệu, mẫu vật, tiến độ và Thiên thạch tím giữ nguyên kể cả khi hết hạn gói. Chỉ nội dung mới là khoá lại.",
-      tag_who:"Quyền lợi", who_h:"Ai nhận được gì",
-      tag_perk:"Ưu đãi", perk_h:"Ưu đãi đi kèm",
-      tag_faq:"Hỏi đáp", faq_h:"Bố mẹ hay hỏi",
+      cta_h:"Muốn biết khi nào astroQ chính thức mở cửa?",
+      cta_p:"Để lại email, astroQ sẽ gửi thông báo ngay khi các gói chính thức mở đăng ký — kèm thông tin về <b>Vé Sáng Lập giới hạn</b> dành cho những gia đình tham gia từ sớm.",
+      cta_btn:"Báo mình khi astroQ mở cửa", cta_back:"Quay lại khám phá",
+      cta_parent:"Xem các gói",
+      fine:"Các gói trả phí chỉ dành cho người lớn đăng ký và thanh toán.",
+      tag_cmp:"So sánh", cmp_h:"Con có thể trải nghiệm gì miễn phí?",
+      cmp_sub:"astroQ luôn có một phần trải nghiệm miễn phí để con có thể bắt đầu khám phá trước khi bố mẹ quyết định có cần mở rộng hành trình hay không. Và những gì con đã kiếm được trong quá trình chơi — huy hiệu, mẫu vật, tiến độ hay Thiên thạch tím — đều được giữ lại, kể cả khi gói trả phí hết hạn.",
+      tag_who:"Lợi ích", who_h:"Lợi ích",
+      tag_faq:"Hỏi đáp", faq_h:"Những điều bố mẹ thường muốn biết trước khi đăng ký",
 
       col_free:"Miễn phí", col_paid:"Gói trả phí",
       st_have:"đã có", st_soon:"đang phát triển",
-      who_kid:"👦 Con nhận được", who_parent:"👨‍👩‍👧 Bố mẹ nhận được",
+      who_kid:"👧 Con sẽ có thêm những gì?", who_parent:"👨‍👩‍👧 Bố mẹ sẽ nhận được gì?",
 
-      per_month:"/tháng", per_year:"/năm", once:"trả một lần",
-      save:"tiết kiệm {n}%", free_price:"0₫", month_eq:"≈ {v}/tháng",
-      badge_popular:"PHỔ BIẾN NHẤT", badge_limited:"GIỚI HẠN 500 SUẤT",
-      cta_plan:"Nhận thông báo", cta_free:"Đang dùng", cta_buy:"Chọn gói này",
+      per_month:"/tháng", per_year:"/năm", once:"Thanh toán một lần",
+      save:"tiết kiệm {n}%", free_price:"0đ", month_eq:"≈ {v}/tháng",
+      badge_popular:"ĐƯỢC LỰA CHỌN NHIỀU", badge_limited:"GIỚI HẠN 500 VÉ",
+      cta_plan:"Báo mình khi mở bán", cta_free:"Đang sử dụng", cta_buy:"Chọn gói này",
 
-      pl_free_n:"Phi Hành Gia Tập Sự", pl_free_d:"Miễn phí mãi mãi. Không cần thẻ.",
-      pl_astro_n:"Phi Hành Gia", pl_astro_d:"Cho một bạn nhỏ. Mở hết nhiệm vụ và Phòng Nghiên Cứu.",
-      pl_crew_n:"Phi Hành Đoàn", pl_crew_d:"Cả nhà tới 4 bạn nhỏ, mỗi bạn một hồ sơ riêng.",
-      pl_found_n:"Vé Sáng Lập", pl_found_d:"Trả một lần, dùng mãi. Chỉ có trong 60 ngày đầu.",
+      pl_free_n:"Phi Hành Gia Tập Sự", pl_free_d:"Bắt đầu hành trình cùng astroQ với các nội dung miễn phí cơ bản.",
+      pl_astro_n:"Phi Hành Gia", pl_astro_d:"Dành cho một bạn nhỏ muốn khám phá đầy đủ các nhiệm vụ và hoạt động của astroQ.",
+      pl_crew_n:"Phi Hành Đoàn", pl_crew_d:"Dành cho gia đình có nhiều bạn nhỏ — mỗi bạn có một hồ sơ và hành trình riêng.",
+      pl_found_n:"Vé Sáng Lập", pl_found_d:"Một lần đăng ký, sử dụng lâu dài các quyền lợi thuộc gói Phi Hành Gia.",
 
-      c_mission1:"Nhiệm vụ 01 — Hành Tinh Xanh (7 bước)",
-      c_map:"Bản Đồ Thiên Hà 3D, đủ 8 hành tinh",
-      c_games:"Mini-game ở Khu Huấn Luyện",
-      c_codex:"Sổ Tay Thuật Ngữ + Kho Thành Tích + Kho Mẫu Vật",
-      c_awards:"Huy hiệu, cấp bậc, lộ trình huấn luyện",
-      c_quiz:"Đấu Trường Kiến Thức",
-      c_missions:"Nhiệm vụ ở 7 hành tinh còn lại",
-      c_lab:"Phòng Nghiên Cứu — tự tay làm thí nghiệm",
-      c_level:"Quiz thoải mái, đề vừa sức con",
-      c_report:"Bản tin hằng tuần gửi bố mẹ",
-      c_kids:"Nhiều hồ sơ con trên một tài khoản",
-      c_cert:"Chứng chỉ in ra được sau mỗi nhiệm vụ",
+      c_mission1:"🌍 Nhiệm vụ đầu tiên: Hành Tinh Xanh",
+      c_map:"🪐 Khám phá Bản Đồ Thiên Hà 3D với 8 hành tinh",
+      c_games:"🎮 Mini-game tại Khu Huấn Luyện",
+      c_codex:"📚 Sổ Tay Thuật Ngữ, Kho Thành Tích & Kho Mẫu Vật",
+      c_awards:"🏅 Huy hiệu, cấp bậc và lộ trình huấn luyện",
+      c_quiz:"🧠 Đấu Trường Kiến Thức",
+      c_missions:"🚀 Nhiệm vụ tại các hành tinh tiếp theo",
+      c_lab:"🔬 Phòng Nghiên Cứu — tự tay khám phá qua thí nghiệm",
+      c_level:"🧩 Quiz luyện tập theo khả năng của con",
+      c_report:"📩 Bản tin tiến độ gửi bố mẹ mỗi tuần",
+      c_kids:"👨‍👩‍👧‍👦 Nhiều hồ sơ trẻ em trong cùng một tài khoản",
+      c_cert:"📜 Chứng nhận sau mỗi chặng nhiệm vụ",
       c_quiz_lim:"3 lượt/ngày",
 
-      w_k1:"Mỗi hành tinh một nhiệm vụ mới để khám phá",
-      w_k2:"Mẫu vật hiếm và huy hiệu chỉ khu này mới có",
-      w_k3:"Làm Quiz thoải mái, đề vừa sức mình",
-      w_k4:"Chứng chỉ mang tên mình sau mỗi nhiệm vụ",
-      w_p1:"Cuối tuần một email ngắn: con học bao lâu, làm được bao nhiêu",
-      w_p2:"Thấy rõ con vững chủ đề nào, còn vướng chỗ nào",
-      w_p3:"Tới 4 hồ sơ riêng, tiến độ các con không lẫn nhau",
-      w_p4:"Không quảng cáo, không bán vật phẩm cho con — mãi mãi",
+      w_k1:"🚀 <b>Mỗi hành tinh mở ra một nhiệm vụ mới</b> — không chỉ đọc kiến thức, con sẽ đi qua từng thử thách, quan sát, suy luận và tự tìm câu trả lời.",
+      w_k2:"🏅 <b>Những phần thưởng riêng của từng hành trình</b> — mẫu vật hiếm, huy hiệu và thành tích giúp con nhìn thấy mình đã đi được bao xa.",
+      w_k3:"🧠 <b>Được luyện tập theo nhịp của chính mình</b> — con có thể làm quiz nhiều lần, thử lại khi sai và học tiếp khi đã sẵn sàng.",
+      w_k4:"📜 <b>Một dấu mốc sau mỗi nhiệm vụ hoàn thành</b> — mỗi chặng khám phá đều có thể trở thành một thành tích mà con muốn lưu lại.",
+      w_p1:"📩 <b>Một bản cập nhật ngắn vào cuối tuần</b> — biết con đã học bao lâu, hoàn thành những gì và đang hứng thú với chủ đề nào.",
+      w_p2:"🔎 <b>Nhìn thấy con đang mạnh ở đâu và cần hỗ trợ ở đâu</b> — không cần ngồi cạnh con suốt quá trình chơi vẫn có thể theo dõi hành trình học.",
+      w_p3:"👨‍👩‍👧‍👦 <b>Tạo tối đa 4 hồ sơ trẻ em</b> — mỗi bạn có hành trình, thành tích và tiến độ riêng, không bị lẫn với nhau.",
+      w_p4:"🛡️ <b>Một không gian dành cho việc khám phá, không phải mua sắm</b> — không quảng cáo chen ngang, không bán vật phẩm để thúc trẻ chi tiền trong game.",
 
-      p_founder:"<b>Vé Sáng Lập</b> — 500 người đầu tiên nhận thêm 3 tháng Phi Hành Gia, huy hiệu 🏅 riêng và tên trong danh sách phi hành đoàn đầu tiên.",
-      p_year:"<b>Gói năm tiết kiệm 33–36%</b> so với trả từng tháng.",
-      p_ref:"<b>Rủ bạn cùng bay</b> — bạn kích hoạt gói, cả hai nhà thêm 1 tháng.",
-      p_trial:"<b>Dùng thử 14 ngày</b>, không cần nhập thẻ.",
-      p_refund:"<b>Đổi ý trong 14 ngày</b> thì hoàn tiền, không hỏi lý do.",
-      p_season:"<b>Gói Hè và gói Tết</b> — 3 tháng, tính tiền 2 tháng.",
-      p_school:"<b>Gói lớp học</b> cho trung tâm và CLB thiên văn, từ 20 chỗ.",
-      p_grant:"<b>Học bổng</b> — 50 suất miễn phí mỗi tháng cho các bạn nhỏ khó khăn, đăng ký qua nhà trường.",
-
-      q_when:"Khi nào mở bán?|Khi nội dung đủ dày. Chúng tôi chỉ bật gói trả phí khi đã có ít nhất 3 nhiệm vụ hoàn chỉnh và 300 câu hỏi.",
-      q_pay:"Trả tiền là con vào được ngay chứ?|Những mục ghi <b>“đang phát triển”</b> thì chưa. Bảng trên ghi rõ trạng thái từng mục để bố mẹ biết mình đang mua gì.",
-      q_expire:"Hết hạn gói thì con mất tiến độ không?|Không. Huy hiệu, mẫu vật, cấp bậc, Thiên thạch tím và tiến độ nhiệm vụ là của con mãi mãi. Chỉ nội dung mới khoá lại.",
-      q_ads:"Có quảng cáo hay bán vật phẩm trong game không?|Không, và sẽ không bao giờ có. Thiên thạch tím chỉ kiếm được bằng cách làm Quiz đạt và chơi mini-game — <b>không bán bằng tiền thật</b>.",
-      q_cancel:"Huỷ có dễ không?|Huỷ bất cứ lúc nào ngay trong trang tài khoản, không cần gọi ai. Gói đã trả vẫn dùng hết kỳ."
+      q_when:"Khi nào astroQ mở gói trả phí?|astroQ đang hoàn thiện những hành tinh và nhiệm vụ tiếp theo. Khi gói trả phí chính thức sẵn sàng, thông tin sẽ được công bố ngay trên website và các kênh của astroQ.<br><br>Trong lúc đó, con vẫn có thể bắt đầu với những nội dung miễn phí đã mở.",
+      q_pay:"Trả phí xong là con dùng được ngay phải không?|Có. Sau khi gói được kích hoạt, những khu vực và nội dung thuộc gói của con sẽ được mở ngay trên tài khoản.<br><br>Riêng những mục còn ghi <b>“đang phát triển”</b> trong bảng trên thì mở khi chúng hoàn thành — bảng ghi rõ trạng thái từng mục để bố mẹ biết mình đang mua gì.",
+      q_expire:"Nếu hết hạn gói thì con có mất những gì đã làm không?|Không. <b>Tiến độ, huy hiệu, mẫu vật và phần thưởng con đã kiếm được vẫn được giữ nguyên.</b><br><br>Chỉ những nội dung thuộc gói trả phí sẽ tạm khoá lại cho tới khi bố mẹ gia hạn.",
+      q_ads:"astroQ có quảng cáo hay bán vật phẩm trong game không?|Không. astroQ không dùng quảng cáo chen ngang trải nghiệm của trẻ và không thiết kế các vật phẩm mua trong game để khiến trẻ phải xin bố mẹ chi thêm tiền.<br><br>Bố mẹ trả cho <b>nội dung học và trải nghiệm</b>, không phải cho những món đồ ảo.",
+      q_cancel:"Nếu không còn muốn sử dụng thì huỷ có khó không?|Không. Gói có thể được huỷ để không tự gia hạn cho kỳ tiếp theo.<br><br>Con vẫn sử dụng được quyền lợi đến hết thời gian đã thanh toán, và toàn bộ tiến độ đã đạt được vẫn được lưu lại.",
+      pl_crew_note:"Tối đa 4 hồ sơ trẻ em",
+      pl_found_note:"Chỉ mở trong giai đoạn đầu và giới hạn số lượng.",
+      cmp_foot:"Không cần quyết định ngay. Hãy để con bắt đầu với astroQ miễn phí, tự khám phá một chút, rồi bố mẹ có thể cân nhắc mở thêm những hành trình phù hợp."
     },
     en:{
       a_lang:"Language", title:"AstroQ — Plans & Perks", back:"Back to Navigation Hub",
-      eyebrow:"💳 Plans & Perks", title_h:"Open the whole galaxy for your child",
-      intro:"The free tier stays free, always. Paid plans add the other planets, the Research Lab, and a short weekly note on how your child is doing.",
-      parent_banner:"This page is for <b>parents</b>. The prices below are <b>final</b>, but astroQ is <b>not on sale yet</b>, so there is no payment button anywhere.",
+      eyebrow:"💳 astroQ membership", title_h:"Pick the journey that fits your family",
+      intro:"Your child can always start for free. When you want to open more planets, missions and parent features, the family can choose one of the plans below.",
+      parent_banner:"👨‍👩‍👧 <b>This area is for parents.</b> astroQ is not on sale yet, so there is no payment button. You can preview the plans and sign up to hear when we open.",
       parent_banner_open:"This page is for <b>parents</b>. Pick a plan and you go straight to checkout — <b>your card stays with the payment provider</b>; astroQ never stores card numbers.",
       prev_note:"PREVIEW of the on-sale wording. The live site is still not on sale.",
       prev_off:"Turn preview off",
@@ -329,68 +325,61 @@
       cta_p_open:"Pick a plan in the table above. Cancel any time — and whatever your child has earned stays theirs.",
       cta_btn_open:"Back to the plans",
 
-      cta_h:"Want to know when we open?",
-      cta_p:"Leave your email on the home page and we'll tell you the moment we open — Founder seats included.",
-      cta_btn:"Tell me when it opens", cta_back:"Back to exploring",
-      cta_parent:"Open parent dashboard",
-      fine:"Prices are final. Every plan is signed up and paid for by an adult.",
-      tag_cmp:"Compare", cmp_h:"What's free, what a plan adds",
-      cmp_sub:"What your child earns stays theirs: badges, specimens, rank, meteors and progress all survive a lapsed plan. Only new content locks.",
-      tag_who:"Benefits", who_h:"Who gets what",
-      tag_perk:"Perks", perk_h:"Perks included",
-      tag_faq:"FAQ", faq_h:"Parents often ask",
+      cta_h:"Want to know when astroQ officially opens?",
+      cta_p:"Leave your email and astroQ will let you know the moment plans open for sign-up — including details of the <b>limited Founder Pass</b> for families who join early.",
+      cta_btn:"Tell me when astroQ opens", cta_back:"Back to exploring",
+      cta_parent:"See the plans",
+      fine:"Paid plans are signed up for and paid by an adult only.",
+      tag_cmp:"Compare", cmp_h:"What can your child try for free?",
+      cmp_sub:"astroQ always keeps a free part of the experience so your child can start exploring before you decide whether to widen the journey. And whatever your child earns along the way — badges, specimens, progress or Purple Meteors — stays theirs, even after a paid plan lapses.",
+      tag_who:"Benefits", who_h:"Benefits",
+      tag_faq:"FAQ", faq_h:"What parents usually want to know before signing up",
 
       col_free:"Free", col_paid:"Paid plan",
       st_have:"live", st_soon:"in development",
-      who_kid:"👦 Your child gets", who_parent:"👨‍👩‍👧 You get",
+      who_kid:"👧 What else does your child get?", who_parent:"👨‍👩‍👧 What do parents get?",
 
-      per_month:"/mo", per_year:"/yr", once:"one-time",
+      per_month:"/mo", per_year:"/yr", once:"One-time payment",
       save:"save {n}%", free_price:"$0", month_eq:"≈ {v}/mo",
-      badge_popular:"MOST POPULAR", badge_limited:"LIMITED — 500 SEATS",
-      cta_plan:"Notify me", cta_free:"You're on it", cta_buy:"Choose this plan",
+      badge_popular:"MOST CHOSEN", badge_limited:"LIMITED TO 500",
+      cta_plan:"Tell me when it's on sale", cta_free:"Currently using", cta_buy:"Choose this plan",
 
-      pl_free_n:"Rookie", pl_free_d:"Free forever. No card needed.",
-      pl_astro_n:"Astronaut", pl_astro_d:"For one child. Opens every mission and the Research Lab.",
-      pl_crew_n:"Crew", pl_crew_d:"Up to 4 children, each with their own profile.",
-      pl_found_n:"Founder Pass", pl_found_d:"Pay once, keep it for good. Only in the first 60 days.",
+      pl_free_n:"Cadet", pl_free_d:"Start the journey with astroQ's core free content.",
+      pl_astro_n:"Astronaut", pl_astro_d:"For one child who wants the full run of astroQ's missions and activities.",
+      pl_crew_n:"Crew", pl_crew_d:"For families with several children — each gets their own profile and journey.",
+      pl_found_n:"Founder Pass", pl_found_d:"Sign up once, keep the Astronaut plan benefits long-term.",
 
-      c_mission1:"Mission 01 — The Blue Planet (7 steps)",
-      c_map:"3D Galaxy Map, all 8 planets",
-      c_games:"Mini-games in the Training Simulator",
-      c_codex:"Terminology Codex + Achievements + Specimen Vault",
-      c_awards:"Badges, ranks, training ladder",
-      c_quiz:"Knowledge Arena",
-      c_missions:"Missions on the other 7 planets",
-      c_lab:"Research Lab — run your own experiments",
-      c_level:"Quiz as much as you like, matched to your level",
-      c_report:"A weekly note for parents",
-      c_kids:"Several child profiles on one account",
-      c_cert:"A printable certificate after each mission",
+      c_mission1:"🌍 The first mission: The Blue Planet",
+      c_map:"🪐 Explore the 3D Galaxy Map with 8 planets",
+      c_games:"🎮 Mini-games at the Training Grounds",
+      c_codex:"📚 Glossary, Achievements & Specimen Vault",
+      c_awards:"🏅 Badges, ranks and the training path",
+      c_quiz:"🧠 Knowledge Arena",
+      c_missions:"🚀 Missions on the planets that follow",
+      c_lab:"🔬 Research Lab — explore hands-on through experiments",
+      c_level:"🧩 Quiz practice matched to your child's level",
+      c_report:"📩 A weekly progress note for parents",
+      c_kids:"👨‍👩‍👧‍👦 Several child profiles on one account",
+      c_cert:"📜 A certificate after each mission stage",
       c_quiz_lim:"3 rounds/day",
 
-      w_k1:"A new mission to explore on every planet",
-      w_k2:"Rare specimens and badges only found here",
-      w_k3:"Quiz as much as you like, at your own level",
-      w_k4:"A certificate with your name after each mission",
-      w_p1:"A short weekend email: how long they studied, how much they got through",
-      w_p2:"See which topics are solid and which still need work",
-      w_p3:"Up to 4 separate profiles, progress never mixed up",
-      w_p4:"No ads, nothing sold to your child — ever",
+      w_k1:"🚀 <b>Every planet opens a new mission</b> — not just reading facts: your child works through challenges, observes, reasons and finds the answer themselves.",
+      w_k2:"🏅 <b>Rewards that belong to each journey</b> — rare specimens, badges and achievements let your child see how far they've come.",
+      w_k3:"🧠 <b>Practice at their own pace</b> — quizzes can be retaken, mistakes retried, and learning continues when they're ready.",
+      w_k4:"📜 <b>A milestone after each finished mission</b> — every leg of the journey can become an achievement worth keeping.",
+      w_p1:"📩 <b>A short weekend update</b> — how long your child studied, what they finished, and which topics they're into.",
+      w_p2:"🔎 <b>See where your child is strong and where they need help</b> — you can follow the learning journey without sitting beside them the whole time.",
+      w_p3:"👨‍👩‍👧‍👦 <b>Create up to 4 child profiles</b> — each child gets their own journey, achievements and progress, never mixed together.",
+      w_p4:"🛡️ <b>A space for exploring, not for shopping</b> — no ads interrupting, and no in-game items designed to push children into asking for money.",
 
-      p_founder:"<b>Founder Pass</b> — the first 500 get 3 extra months of Astronaut, their own 🏅 badge and a place on the first-crew roster.",
-      p_year:"<b>Yearly saves 33–36%</b> against paying monthly.",
-      p_ref:"<b>Bring a friend along</b> — when they activate, both families get an extra month.",
-      p_trial:"<b>14-day trial</b>, no card required.",
-      p_refund:"<b>Change your mind within 14 days</b> and we refund it, no questions asked.",
-      p_season:"<b>Summer and Tet bundles</b> — 3 months for the price of 2.",
-      p_school:"<b>Classroom plans</b> for centres and astronomy clubs, from 20 seats.",
-      p_grant:"<b>Scholarships</b> — 50 free seats a month for children in need, arranged through schools.",
-
-      q_when:"When does it go on sale?|Once there is enough to sell. We only switch the plans on when there are at least 3 complete missions and 300 questions.",
-      q_pay:"If I pay, can my child use it right away?|Not the items marked <b>“in development”</b>. The table above labels every item so you know exactly what you are buying.",
-      q_expire:"If the plan lapses, does my child lose progress?|No. Badges, specimens, ranks, meteors and mission progress are theirs for good. Only new content locks again.",
-      q_ads:"Are there ads or in-game purchases?|No, and there never will be. Purple Meteors are earned only by passing quizzes and playing mini-games — <b>never sold for real money</b>.",
-      q_cancel:"Is cancelling easy?|Cancel any time from the account page, no phone call. A plan you've paid for runs to the end of its term."
+      q_when:"When does astroQ open paid plans?|astroQ is still finishing the next planets and missions. When paid plans are ready, we'll announce it on the website and astroQ's channels.<br><br>In the meantime, your child can start with the free content that's already open.",
+      q_pay:"Once we pay, can my child use it right away?|Yes. Once a plan is activated, the areas and content it covers open on the account immediately.<br><br>Items still marked <b>“in development”</b> in the table above open when they're finished — the table states each item's status so you know what you're buying.",
+      q_expire:"If the plan lapses, does my child lose what they've done?|No. <b>Progress, badges, specimens and earned rewards all stay.</b><br><br>Only the paid content locks again until you renew.",
+      q_ads:"Does astroQ have ads or sell in-game items?|No. astroQ does not interrupt children's experience with ads, and does not design in-game purchases that push children to ask parents for more money.<br><br>You pay for <b>learning content and experience</b>, not for virtual trinkets.",
+      q_cancel:"If we stop wanting it, is cancelling hard?|No. A plan can be cancelled so it doesn't renew for the next period.<br><br>Your child keeps the benefits until the end of the period you paid for, and all progress earned stays saved.",
+      pl_crew_note:"Up to 4 child profiles",
+      pl_found_note:"Only during the early period, and limited in number.",
+      cmp_foot:"No need to decide right away. Let your child start with astroQ for free, explore a little, and then you can consider opening up the journeys that fit."
     }
   };
 
@@ -455,11 +444,24 @@
         act = '<a class="p-cta" href="/">'+AstroQ.esc(t("cta_plan"))+'</a>';
       }
 
+      /* Ghi chú riêng của gói.
+         ⚠️⚠️ HAI KHOÁ VIẾT LITERAL, KHÔNG ghép `t("pl_"+p.key+"_note")`. Phép kiểm
+            i18n của `check_pages` quét `t("khoá")` dạng CHỮ, nên khoá ghép động bị
+            báo "khai mà bỏ không" — và tôi đã ăn đúng lỗi đó ở lần dựng đầu
+            19/08/2026. Cùng bài học đã ghi cho `cta_h_open` ngay trong file này,
+            và cho `s1_hit1/2/3` · `tier1..5` · `gun1..3` · `cat_*` ở nơi khác.
+            Đó là lý do khối này là ba dòng `if` chứ không phải một phép ghép chuỗi. */
+      var nt = "";
+      if(p.key === "crew")  nt = t("pl_crew_note");
+      if(p.key === "found") nt = t("pl_found_note");
+      var note = nt ? '<p class="p-note">'+AstroQ.esc(nt)+'</p>' : '';
+
       return '<article class="plan'+(p.badge?" has-badge":"")+(p.key==="astro"?" hot":"")+'">'+
         badge+
         '<h3>'+AstroQ.esc(t("pl_"+p.key+"_n"))+'</h3>'+
         '<p class="p-desc">'+AstroQ.esc(t("pl_"+p.key+"_d"))+'</p>'+
         '<div class="p-price">'+rows+'</div>'+
+        note+
         act+
       '</article>';
     }).join("");
@@ -491,19 +493,15 @@
   /* ================= Ai nhận gì ================= */
   function renderWho(){
     function col(title, keys){
+      /* ⚠️ KHÔNG escape phần thân: từ 19/08/2026 mỗi dòng quyền lợi mở đầu bằng
+         <b>…</b> để nhấn ý chính (bản chữ chủ dự án gửi). Escape thì trẻ đọc thấy
+         chữ "<b>". Chuỗi ở đây là do dự án viết, không phải dữ liệu người dùng —
+         cùng lý do khối ưu đãi cũ cũng dùng innerHTML. Tiêu đề cột VẪN escape. */
       return '<div class="who-col"><h3>'+AstroQ.esc(t(title))+'</h3><ul>'+
-        keys.map(function(k){ return '<li>'+AstroQ.esc(t(k))+'</li>'; }).join("")+
+        keys.map(function(k){ return '<li>'+t(k)+'</li>'; }).join("")+
       '</ul></div>';
     }
     $("who").innerHTML = col("who_kid", WHO.kid) + col("who_parent", WHO.parent);
-  }
-
-  /* ================= Ưu đãi ================= */
-  function renderPerks(){
-    // innerHTML có chủ đích: chuỗi ưu đãi chứa <b> để nhấn phần đáng đọc nhất.
-    $("perks").innerHTML = PERKS.map(function(k){
-      return '<div class="perk"><span class="ic" aria-hidden="true">✦</span><p>'+t(k)+'</p></div>';
-    }).join("");
   }
 
   /* ================= FAQ ================= */
@@ -524,8 +522,8 @@
     document.title = t("title");
     AstroQ.applyTexts(t);
     AstroQ.markLangButtons(LANG);
-    // Bốn khối dưới do JS sinh nên phải vẽ LẠI — applyTexts không với tới chúng.
-    renderPlans(); renderCmp(); renderWho(); renderPerks(); renderFaq();
+    // Ba khối dưới do JS sinh nên phải vẽ LẠI — applyTexts không với tới chúng.
+    renderPlans(); renderCmp(); renderWho(); renderFaq();
   }
 
   $("back").addEventListener("click", function(){ location.href="dashboard.html"; });

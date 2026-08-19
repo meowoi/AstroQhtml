@@ -354,8 +354,13 @@ def main():
 
         check("Co cot 'Con nhan duoc' va 'Bo me nhan duoc'",
               pg.locator(".who-col").count() == 2)
-        check("Co 8 uu dai", pg.locator(".perk").count() == 8,
-              str(pg.locator(".perk").count()))
+        # ⚠️ DOI PHAT BIEU 19/08/2026: khoi "Uu dai di kem" (8 muc) DA XOA theo yeu
+        #    cau chu du an. Phat bieu moi la NGUOC LAI — khong con khoi do — de neu
+        #    ngay nao no quay lai thi bo do noi ra, thay vi im lang.
+        check("KHONG con khoi 'uu dai di kem' (da xoa 19/08/2026)",
+              pg.locator(".perk").count() == 0 and pg.locator("#perks").count() == 0,
+              "perk=%d #perks=%d" % (pg.locator(".perk").count(),
+                                     pg.locator("#perks").count()))
         check("Co 5 cau hoi dap", pg.locator(".fq").count() == 5,
               str(pg.locator(".fq").count()))
         # ⚠️⚠️ ĐO `is_visible()` TRƯỚC, RỒI MỚI ĐO CHỮ. `.banner` cua page-shell.css
@@ -365,9 +370,13 @@ def main():
         #    KHONG chung minh nguoi dung nhin thay chu.
         check("Dai nhac PHAI HIEN RA THAT (khong bi display:none)",
               pg.locator("#pr-note-closed").is_visible())
-        check("Dai nhac 'danh cho bo me' + 'chua mo ban'",
-              "bố mẹ" in pg.inner_text("#pr-note-closed")
-              and "chưa mở bán" in pg.inner_text("#pr-note-closed"))
+        # ⚠️ DO BANG BIEU THUC, KHONG bang chuoi cung. Ban chu 19/08/2026 viet "chưa
+        #    CHÍNH THỨC mở bán", nen chuoi cung `"chưa mở bán"` khong con khop — trong
+        #    khi DIEU CAN BAO VE (trang noi ro chua ban) van dat. Mot phep kiem bao
+        #    hong vi mot chu chen giua thi som muon bi ai do noi long cho xong.
+        _cl = pg.inner_text("#pr-note-closed")
+        check("Dai nhac 'danh cho bo me' + noi ro CHUA MO BAN",
+              "bố mẹ" in _cl and re.search(r"chưa\s+(chính thức\s+)?mở bán", _cl))
 
         # ⚠️ GIA DA CHOT 09/08/2026 (docs/decisions/009 -> `da chot`), NHUNG CHOT GIA
         #    va MO BAN la HAI viec. Trang phai bo chu "du kien" MA VAN noi ro chua ban
@@ -376,13 +385,21 @@ def main():
         #    ban mot thu chua ban duoc.
         body_txt = pg.inner_text("body")
         check("KHONG con noi gia la 'du kien'", "dự kiến" not in body_txt)
-        check("Dai noi ro gia DA CHOT", "đã chốt" in pg.inner_text("#pr-note-closed"))
+        # ⚠️ BO PHAT BIEU "gia DA CHOT" 19/08/2026: ban chu moi cua chu du an khong
+        #    con cau do. Doi lai bang mot phat bieu MANH HON va dung dieu can bao ve:
+        #    dai phai MOI XEM TRUOC + MOI GHI DANH, tuc noi ro nguoi doc lam gi duoc
+        #    ngay hom nay thay vi de ho doi mot cai nut khong ton tai.
+        _closed = pg.inner_text("#pr-note-closed")
+        check("Dai moi xem truoc goi + ghi danh nhan thong bao",
+              ("xem trước" in _closed.lower() or "xem truoc" in _closed.lower())
+              and "thông báo" in _closed, _closed[:80].replace("\n", " "))
         # ⚠️ Dai cua trang thai DA MO BAN phai dang AN o ban that — hai dai cung hien
         #    la hai cau noi nguoc nhau tren cung mot trang.
         check("dai 'da mo ban' dang AN", not pg.locator("#pr-note-open").is_visible())
         check("dai XEM TRUOC dang AN (khong co co)",
               not pg.locator("#pr-preview").is_visible())
-        check("VAN noi ro CHUA MO BAN", "chưa mở bán" in body_txt)
+        check("VAN noi ro CHUA MO BAN",
+              bool(re.search(r"chưa\s+(chính thức\s+)?mở bán", body_txt)))
 
         # FAQ mo ra doc duoc
         pg.click(".fq summary")
@@ -402,8 +419,10 @@ def main():
         check("Ban EN KHONG con VND", "₫" not in txt_en)
         check("Bang so sanh dich sang EN", "in development" in pg.inner_text("#cmp"))
         en_txt = pg.inner_text("body")
-        check("Ban EN: gia la 'final', khong con 'planned prices'",
-              "final" in en_txt and "planned price" not in en_txt.lower())
+        # ⚠️ Cung ly do nhu ban VI: ban chu moi khong con noi "prices are final".
+        #    Dieu VAN phai dung: khong duoc noi gia la "du kien/planned".
+        check("Ban EN: KHONG noi gia la 'planned'",
+              "planned price" not in en_txt.lower())
         check("Ban EN: van noi 'not on sale yet'", "not on sale yet" in en_txt)
 
         # ══════════ pricing.html o trang thai DA MO BAN (co `?sale=1`) ══════════

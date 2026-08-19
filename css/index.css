@@ -69,16 +69,18 @@ a{text-decoration:none;}
   background:var(--green);box-shadow:0 0 9px var(--green);animation:blink 1.6s steps(1,end) infinite;}
 @media (max-width:560px){ .status-pill{display:none;} }
 
+/* Nút ngôn ngữ dùng bản CHUNG ở css/common.css (gộp 19/08/2026 — trước đó sáu file
+   chép lại rule này và lệch thành 6 kiểu chip khác nhau). */
 .lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
 /* ⚠️ `a` nằm cùng quy tắc với `button`, KHÔNG khai bản thứ hai (quy tắc 2 mục 2).
    Trang chủ có HAI URL tĩnh nên nút đổi ngôn ngữ ở đây là <a href> thật —
    crawler đi được, và đó là nửa còn lại của hreflang. 17 trang app vẫn dùng
    <button> vì mỗi trang chỉ có một URL. */
-.lang-switch button,.lang-switch a{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
-  font-family:var(--font-display);font-weight:600;font-size:11px;padding:6px 11px;border-radius:999px;
-  text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
-  transition:background .18s,color .18s;}
-.lang-switch button.active,.lang-switch a.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
+/* ⚠️ Cỡ chữ / padding / bo góc lấy từ css/common.css (gộp 19/08/2026): `padding:
+   6px 11px` ở đây làm chip trang chủ thành 32×25 trong khi 11 trang khác là 28×23.
+   Chỉ giữ phần THẬT SỰ riêng: căn giữa cho thẻ <a> và hiệu ứng chuyển. */
+.lang-switch a{display:inline-flex;align-items:center;justify-content:center;}
+.lang-switch button,.lang-switch a{transition:background .18s,color .18s;}
 
 /* ============================== HERO ============================== */
 .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,54px);

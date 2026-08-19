@@ -27,9 +27,9 @@ body{height:100vh;overflow:hidden;background:radial-gradient(ellipse at 50% -10%
 .gem{width:24px;height:24px;box-shadow:0 0 14px rgba(192,132,252,.8), inset 0 0 9px rgba(192,132,252,.5);}
 .gem img{width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(192,132,252,.95));}
 .currency .c-val{font-size:15px;}
+/* Nút ngôn ngữ dùng bản CHUNG ở css/common.css (gộp 19/08/2026 — trước đó sáu file
+   chép lại rule này và lệch thành 6 kiểu chip khác nhau). */
 .lang-switch{background:rgba(8,14,38,.6);border:1px solid var(--brd);}
-.lang-switch button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:11px;padding:5px 9px;border-radius:999px;}
-.lang-switch button.active{color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));}
 
 /* ===== Khung sân =====
    .stage xếp dọc: thanh HUD ở trên, .play (sân + overlay) chiếm phần còn lại.
