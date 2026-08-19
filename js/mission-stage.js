@@ -333,6 +333,14 @@
       $("say-ava").src = who === "byte" ? "img/b1.png" : "img/m1.png";
       $("say-who").textContent = who === "byte" ? T("byte") : T("comet");
       $("say-line").innerHTML = html;
+      /* ⚠️ NHẤC LÊN KHỎI BẢNG ĐÁY NGAY Ở ĐÂY — LỖI THẬT 19/08/2026. Chặng ① của
+         `mission-orbit.html` gọi `say()` thẳng lúc bảng "HỆ THỐNG QUAN SÁT" còn mở;
+         hai hộp cùng neo đáy nên bảng đè kín box thoại, che luôn nút "OK" — mà đó là
+         đường DUY NHẤT đi tiếp (chủ dự án chơi thật rồi gửi ảnh). Trước đó việc nhấc
+         nằm ở `boardSay()`, tức mỗi chỗ gọi phải TỰ NHỚ dùng hàm nào; luật "chỗ nào
+         cũng phải nhớ" thì sớm muộn có một chỗ quên. Nay `say()` tự đo: không bảng
+         nào mở thì `liftAboveBoards` bỏ `.lift`, nên bước không có bảng không đổi gì. */
+      liftAboveBoards(el);
       el.classList.add("show");
       var next = $("say-next");
       next.textContent = T("next");
@@ -341,20 +349,6 @@
       return new Promise(function (res) { sayResolve = res; });
     }
     function hideSay() { $("say").classList.remove("show", "lift"); }
-
-    /**
-     * Lời khích lệ khi một bảng ĐANG mở. Box thoại và bảng cùng neo ở đáy màn
-     * hình, nên nói mà không nhấc box lên thì nó phủ kín đúng mấy cái ô trẻ
-     * đang phải thao tác — trẻ đọc được câu "thử lại xem nào" nhưng không thấy
-     * chỗ để thử. Đo chiều cao bảng NGAY LÚC GỌI (bảng cao dần theo số thẻ đã
-     * xếp), đừng gán cứng.
-     */
-    function boardSay(boardId, who, html) {
-      var b = $(boardId);
-      $("say").style.setProperty("--board-h", (b.offsetHeight + 12) + "px");
-      $("say").classList.add("lift");
-      return say(who, html, { wait: false });
-    }
 
     /* ───────────────────── Bảng mục tiêu ───────────────────── */
     function objective(o) {
@@ -383,14 +377,23 @@
        ⚠️ CŨNG PHẢI NÂNG `z-index`: thẻ là `aria-modal="true"` mà `.me-board`
           nằm SAU nó trong DOM, không có z-index thì bảng vẽ ĐÈ LÊN thẻ. Một
           hộp thoại modal bị chính trang đè lên là hộp thoại nói dối. */
-    function liftCard() {
-      var el = $("card");
+    /* Đo bảng đáy CAO NHẤT đang mở rồi nhấc `el` lên khỏi nó qua `--board-h`. MỘT phép
+       đo cho HAI thứ neo khác nhau: thẻ (`.me-card.lift` canh giữa khoảng CÒN LẠI phía
+       trên bảng) và box thoại (`.me-say.lift` neo ngay trên mép bảng). Hai công thức CSS
+       khác nhau, cùng một con số — nên chỉ một chỗ đo.
+       ⚠️ ĐO NGAY LÚC GỌI, đừng gán cứng: bảng cao dần theo số thẻ đã xếp, và dòng nhắc
+          dài ra thì bảng cũng cao thêm một dòng.
+       ⚠️ Không bảng nào đang mở → BỎ `.lift` và bỏ luôn biến, không để lại số cũ: bước
+          sau không có bảng mà vẫn nhấc thì hộp lơ lửng giữa khung nhìn. */
+    function liftAboveBoards(el) {
       var b = Array.prototype.slice.call(document.querySelectorAll(".me-board.show"))
         .reduce(function (h, n) { return Math.max(h, n.offsetHeight); }, 0);
       if (!b) { el.style.removeProperty("--board-h"); el.classList.remove("lift"); return; }
       el.style.setProperty("--board-h", (b + 12) + "px");
       el.classList.add("lift");
     }
+
+    function liftCard() { liftAboveBoards($("card")); }
 
     function showCard(c) {
       sfx("pickup");
@@ -442,10 +445,11 @@
       });
     }
 
-    /** Nhấp nháy dòng nhắc + lời khích lệ rồi tự trả lại câu hướng dẫn cũ. */
-    function nudge(boardId, hintId, wrongText, hintText) {
+    /** Nhấp nháy dòng nhắc + lời khích lệ rồi tự trả lại câu hướng dẫn cũ.
+        Không cần tên bảng: `say()` tự đo bảng đang mở để nhấc box thoại lên. */
+    function nudge(hintId, wrongText, hintText) {
       $(hintId).textContent = wrongText;
-      boardSay(boardId, "byte", wrongText);
+      say("byte", wrongText, { wait: false });
       clearTimeout(nudgeTimers[hintId]);
       nudgeTimers[hintId] = setTimeout(function () {
         $(hintId).textContent = hintText;
@@ -786,7 +790,6 @@
 
       say: say,
       hideSay: hideSay,
-      boardSay: boardSay,
 
       objective: objective,
       progress: progress,

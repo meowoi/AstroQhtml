@@ -1099,7 +1099,6 @@ ST.mount();
 const toast     = ST.toast;
 const say       = ST.say;
 const hideSay   = ST.hideSay;
-const boardSay  = ST.boardSay;
 const objective = ST.objective;
 const progress  = ST.progress;
 const showCard  = ST.showCard;
@@ -1110,8 +1109,8 @@ const sfx       = ST.sfx;
 const showWin   = ST.showWin;
 /* `nudge` nhận KHOÁ i18n (bốn chỗ gọi đều truyền khoá), còn vỏ nhận CHỮ ĐÃ DỊCH —
    vỏ không đọc được từ điển của trang. Dịch ngay tại đây, đúng một chỗ. */
-const nudge = (boardId, hintId, wrongKey, hintKey) =>
-  ST.nudge(boardId, hintId, t(wrongKey), t(hintKey));
+const nudge = (hintId, wrongKey, hintKey) =>
+  ST.nudge(hintId, t(wrongKey), t(hintKey));
 
 let RUN = null;
 /* Trình điều phối — dựng SAU sổ đăng ký `steps` (xem chỗ gọi `AstroQMission.create`).
@@ -2058,7 +2057,7 @@ function buildEnergy() {
       el.classList.add('used');
       steps.energy.onPlace(el.getAttribute('data-want'));
     },
-    onMiss() { nudge('energy', 'energy-hint', 'ce_wrong', 'ce_hint'); }
+    onMiss() { nudge('energy-hint', 'ce_wrong', 'ce_hint'); }
   });
 }
 
@@ -2092,7 +2091,7 @@ function buildEco() {
       el.classList.add('used');
       steps.eco.onSort();
     },
-    onMiss() { nudge('eco', 'eco-hint', 'ec_wrong', 'ec_hint'); }
+    onMiss() { nudge('eco-hint', 'ec_wrong', 'ec_hint'); }
   });
 }
 

@@ -430,14 +430,13 @@ ST.mount();
 const toast     = ST.toast;
 const say       = ST.say;
 const hideSay   = ST.hideSay;
-const boardSay  = ST.boardSay;
 const objective = ST.objective;
 const showCard  = ST.showCard;
 const dragDrop  = ST.dragDrop;
 const buildAsk  = ST.buildAsk;
 const sfx       = ST.sfx;
-const nudge = (boardId, hintId, wrongKey, hintKey) =>
-  ST.nudge(boardId, hintId, t(wrongKey), t(hintKey));
+const nudge = (hintId, wrongKey, hintKey) =>
+  ST.nudge(hintId, t(wrongKey), t(hintKey));
 
 let RUN = null;
 let world = null;
@@ -544,7 +543,7 @@ function buildNight() {
       el.classList.add('used');
       steps.night.onPlace();
     },
-    onMiss() { nudge('night', 'night-hint', 's3_wrong', 's3_hint'); }
+    onMiss() { nudge('night-hint', 's3_wrong', 's3_hint'); }
   });
 }
 
