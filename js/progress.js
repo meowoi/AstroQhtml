@@ -404,6 +404,13 @@
              `missions()` thì có một khe: dashboard vừa gọi `/me/missions` xong TRƯỚC
              khi hàng chờ gửi hết → cache thiếu đúng mấy bước trẻ vừa chơi. */
           absorbMissions(r.data);
+          /* Cap do Quiz cung phai cap nhat o DAY, khong chi o `profile()`.
+             ⚠️ Do duoc 19/08/2026 (`e2e_quizlv_login.py`): dang nhap that roi vao
+                THANG `quiz.html` thi cache khong bao gio duoc ghi, vi chi 3 trang
+                goi `profile()`/`achievements()`. Tre vao bang duong khac se lam de
+                cua cap 1 mai. Day la CUNG mot khe da mo ta cho `absorbMissions`
+                ngay tren — nen bit bang cung mot cach. */
+          absorbQuizLv(r.data);
           i++;
           return step();
         });
@@ -422,6 +429,10 @@
         if (!r || !r.ok) { enqueue(ev); return { ok: false, reason: (r && r.reason) || "http", queued: true }; }
         syncWallet(r.data);
         absorbMissions(r.data);   // chỉ có tác dụng với ev.type === "mission"
+        /* Sau MỖI lượt quiz được ghi nhận, cấp độ được server tính lại ngay —
+           đúng thứ cần cho một tính năng gọi là "tự điều chỉnh". Xem khối chú
+           thích ở `flush()` để biết vì sao phải có ở CẢ HAI đường. */
+        absorbQuizLv(r.data);
         return r;
       });
     }).catch(function () {
