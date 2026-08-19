@@ -95,6 +95,21 @@
         (`Wallet.AwardQuiz`). Nên ở đây không cần chống giả mạo. */
   var LS_QUIZLV = "astroq-quiz-lv";
 
+  /* Số lượt Quiz còn lại HÔM NAY (thêm 19/08/2026 — hạn mức 5 lượt/ngày).
+     ⚠️ CẦU NỐI BẮT BUỘC, cùng lý do với LS_QUIZLV ngay trên: `quiz.html` không có
+        token nên không tự hỏi `/me/daily` được. Không có cache này thì trẻ chơi xong
+        lượt thứ 6 mới phát hiện nó không được tính — mà lúc đó đã muộn.
+     ⚠️ CHỈ CHỨA con số server trả về (`quizRoundsLeft`/`quizRoundsPerDay`). Client
+        KHÔNG tự đếm: đếm ở hai nơi là hai câu trả lời khác nhau, và nơi sai sẽ là nơi
+        nói với trẻ. Luật + con số ở `Services/QuizAccess.cs`.
+     ⚠️ ĐÓNG DẤU `uid` + NGÀY. Hai đứa trẻ dùng chung máy thì hạn mức không được dùng
+        chung; và cache của hôm qua phải tự hết hiệu lực, không thì sáng ra trẻ vẫn
+        thấy "hết lượt". Ngày lấy theo giờ máy — chỉ để BỎ cache cũ, không phải để
+        quyết hạn mức (server mới quyết, và nó dùng giờ Việt Nam).
+     ⚠️ KHÔNG PHẢI HÀNG RÀO: xoá localStorage là chơi tiếp được. Hàng rào thật ở
+        server — nó không tính, không thưởng, không ghi nhật ký. */
+  var LS_QUIZLEFT = "astroq-quiz-left";
+
   /** Mã lượt duy nhất, sinh MỘT LẦN lúc tạo việc (xem điều 4 ở đầu file). */
   function newOpId() {
     try {
@@ -245,6 +260,45 @@
       return { known: false, lv: 0 };
     }
     return { known: true, lv: box.lv | 0 };
+  }
+
+  /** Hôm nay là ngày nào theo giờ máy — chỉ dùng để bỏ cache của ngày cũ. */
+  function todayKey() {
+    try {
+      var d = new Date();
+      return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    } catch (e) { return ""; }
+  }
+
+  /**
+   * Rót `quizRoundsLeft` của một câu trả lời server vào cache. true nếu ghi được.
+   *
+   * ⚠️ ĐÒI SỐ NGUYÊN HỢP LỆ, không `| 0` cho xong: server cũ chưa có trường này thì
+   *    `undefined | 0` = 0 — tức lặng lẽ nói với trẻ là đã hết lượt.
+   */
+  function absorbQuizLeft(data) {
+    if (!data) return false;
+    var left = data.quizRoundsLeft, per = data.quizRoundsPerDay;
+    if (typeof left !== "number" || !isFinite(left) || left < 0) return false;
+    var box = { uid: uidNow(), day: todayKey(), left: Math.round(left) };
+    if (typeof per === "number" && isFinite(per) && per > 0) box.per = Math.round(per);
+    write(LS_QUIZLEFT, box);
+    return true;
+  }
+
+  /**
+   * Còn mấy lượt Quiz hôm nay.
+   * `known:false` = **chưa biết** (chưa đăng nhập / chưa đọc được server / cache của
+   * ngày khác hoặc của trẻ khác). Nơi gọi phải cho chơi bình thường — KHÔNG được
+   * đoán là hết lượt. Đoán sai theo hướng đó là chặn một đứa trẻ chưa chơi gì.
+   */
+  function quizLeftCache() {
+    var box = read(LS_QUIZLEFT, null);
+    if (!box || typeof box !== "object" || box.uid !== uidNow() ||
+        box.day !== todayKey() || typeof box.left !== "number" || box.left < 0) {
+      return { known: false, left: 0, per: 0 };
+    }
+    return { known: true, left: box.left | 0, per: box.per | 0 };
   }
 
   /** Số dư ví thật từ server → ghi đè cache của economy.js. */
@@ -411,6 +465,7 @@
                 cua cap 1 mai. Day la CUNG mot khe da mo ta cho `absorbMissions`
                 ngay tren — nen bit bang cung mot cach. */
           absorbQuizLv(r.data);
+          absorbQuizLeft(r.data);   // hạn mức lượt Quiz — xem LS_QUIZLEFT
           i++;
           return step();
         });
@@ -432,7 +487,8 @@
         /* Sau MỖI lượt quiz được ghi nhận, cấp độ được server tính lại ngay —
            đúng thứ cần cho một tính năng gọi là "tự điều chỉnh". Xem khối chú
            thích ở `flush()` để biết vì sao phải có ở CẢ HAI đường. */
-        absorbQuizLv(r.data);
+absorbQuizLv(r.data);
+        absorbQuizLeft(r.data);
         return r;
       });
     }).catch(function () {
@@ -613,7 +669,7 @@
       return waitAuth(2500).then(function (a) {
         if (!a || !a.getDaily) return { ok: false, reason: "auth" };
         return a.getDaily().then(function (r) {
-          if (r && r.ok) syncWallet(r.data);
+          if (r && r.ok) { syncWallet(r.data); absorbQuizLeft(r.data); }
           return r;
         });
       }).catch(function () { return { ok: false, reason: "error" }; });
@@ -634,6 +690,8 @@
     training: function () { return trainingCache(); },
     /** Cấp độ câu hỏi Quiz server đã tính → `{known, lv}`. Xem LS_QUIZLV. */
     quizLv: function () { return quizLvCache(); },
+    /** Còn mấy lượt Quiz hôm nay → `{known, left, per}`. Xem LS_QUIZLEFT. */
+    quizLeft: function () { return quizLeftCache(); },
 
     missionSteps: function (mission) {
       var box = read(LS_MSTEPS, null);
@@ -703,6 +761,7 @@
         localStorage.removeItem(LS_MSTEPS);
         localStorage.removeItem(LS_TRAIN);
         localStorage.removeItem(LS_QUIZLV);
+        localStorage.removeItem(LS_QUIZLEFT);
       } catch (e) {}
     }
   };

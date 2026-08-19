@@ -348,3 +348,10 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 50
 @media (pointer: coarse){
   .exit-btn{min-height:44px;}
 }
+
+/* ── Dải nhắc số lượt còn lại trong ngày (19/08/2026) ──
+   Cố ý NHẸ và đặt TRÊN câu hỏi: nó là thông tin phụ, không được tranh chỗ với đề.
+   Chỉ hiện khi còn ≤ 2 lượt — xem `paintLeft` ở quiz.html. */
+.q-left{margin:0 0 8px;font-size:12.8px;line-height:1.55;text-align:center;
+  color:var(--ink-soft,#9fb2d9);}
+.q-left:not([hidden]){display:block;}

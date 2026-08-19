@@ -68,6 +68,9 @@
         <span class="vtag">[ ASTEROID_FIELD ]</span>
       </div>
 
+      <!-- Dải nhắc số lượt còn lại trong ngày. Mặc định ẨN: chỉ hiện khi BIẾT
+           và khi còn ít lượt (xem `paintLeft`). CSS ở css/quiz.css. -->
+      <p class="q-left" id="q-left" role="status" hidden></p>
       <h2 class="q-text" id="q-text">…</h2>
       <div class="q-options" id="q-options"></div>
     </section>
@@ -225,7 +228,11 @@
       pu_shield_msg:"🛡️ Khiên Tím đã sẵn sàng bảo vệ!", pu_time_msg:"⏳ Thời gian tạm ngưng!",
       pu_boost_msg:"🚀 Câu đúng tiếp theo x2 thiên thạch!",
       shield_title:"ĐƯỢC BẢO VỆ!", shield_body:"🛡️ Khiên Tím đã giữ chuỗi của bạn an toàn. Đáp án đúng đã được tô sáng để bạn ghi nhớ nhé!",
-      timeup_bubble:"Hết giờ rồi! Byte cần nhanh hơn ở câu sau nhé.", correct_bubble:"Tuyệt vời! Byte đã né được thiên thạch! 🎉"
+      timeup_bubble:"Hết giờ rồi! Byte cần nhanh hơn ở câu sau nhé.", correct_bubble:"Tuyệt vời! Byte đã né được thiên thạch! 🎉",
+      left_n:"Hôm nay con còn {n} lượt.",
+      left_0:"Hôm nay con đã dùng hết lượt.",
+      out_h:"Hôm nay con đã làm hết lượt rồi!",
+      out_b:"Mai lượt mới sẽ có lại. Trong lúc chờ, con có thể đọc bài ở Góc Khám Phá hoặc luyện phản xạ ở Khu Huấn Luyện."
     },
     en:{
       tt_name:"Purple Meteor",
@@ -254,7 +261,11 @@
       pu_shield_msg:"🛡️ Purple Shield armed!", pu_time_msg:"⏳ Time frozen!",
       pu_boost_msg:"🚀 Next correct answer x2 meteors!",
       shield_title:"PROTECTED!", shield_body:"🛡️ Purple Shield kept your streak safe. The correct answer is highlighted so you remember it!",
-      timeup_bubble:"Time's up! Byte must be quicker next time.", correct_bubble:"Awesome! Byte dodged the asteroid! 🎉"
+      timeup_bubble:"Time's up! Byte must be quicker next time.", correct_bubble:"Awesome! Byte dodged the asteroid! 🎉",
+      left_n:"{n} rounds left today.",
+      left_0:"You've used all of today's rounds.",
+      out_h:"That's all your rounds for today!",
+      out_b:"New rounds arrive tomorrow. Meanwhile you can read in the Discovery Corner or train at the Training Grounds."
     }
   };
   var LANG = AstroQ.getLang();
@@ -750,16 +761,63 @@
     paintEnergy(); renderPowerups(); renderMission(); renderQuestion();
   }
 
+  /* ================= HẠN MỨC LƯỢT MỘT NGÀY (19/08/2026) =================
+     Bản miễn phí có 5 lượt/ngày. Luật + con số ở `Services/QuizAccess.cs`; trang này
+     chỉ ĐỌC lại qua cache `astroq-quiz-left` mà trang có token đã ghi (xem
+     `LS_QUIZLEFT` trong js/progress.js).
+
+     ⚠️ KHÔNG TỰ ĐẾM Ở ĐÂY. Đếm ở client là con số thứ hai cho cùng một luật, và nó
+        sẽ lệch ngay khi trẻ chơi trên hai thiết bị.
+     ⚠️ CHƯA BIẾT thì CHO CHƠI. Máy sạch / chưa đăng nhập / cache của ngày khác đều
+        rơi vào đây. Đoán theo hướng "hết lượt" là chặn một đứa trẻ chưa chơi gì —
+        sai theo hướng tệ nhất.
+     ⚠️ ĐÂY LÀ CHẶN MỀM, không phải hàng rào. Xoá localStorage là chơi tiếp được, và
+        điều đó không sao: server không tính, không thưởng, không ghi nhật ký lượt
+        thứ 6. Việc của trang này là NÓI CHO TRẺ BIẾT, không phải canh cổng. */
+  function quizLeft(){
+    try{
+      var c = window.AstroQProgress && AstroQProgress.quizLeft
+              ? AstroQProgress.quizLeft() : null;
+      return (c && c.known) ? c : null;
+    }catch(e){ return null; }
+  }
+
+  /* Dải nhắc số lượt còn lại. Chỉ hiện khi BIẾT, và chỉ khi còn ít — khoe "còn 5
+     lượt" ngay lượt đầu là dựng một cái đồng hồ đếm ngược cho việc học. */
+  function paintLeft(){
+    var el = $("q-left"); if(!el) return;
+    var c = quizLeft();
+    if(!c || c.left > 2){ el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = c.left > 0
+      ? t("left_n").replace("{n}", String(c.left))
+      : t("left_0");
+  }
+
+  /* Hết lượt: dừng tử tế và nói rõ vì sao + khi nào có lại. KHÔNG mời mua gói ở
+     đây — trang này là chỗ trẻ đang học, và `009` chưa mở bán. */
+  function showOutOfRounds(){
+    $("q-text").textContent = t("out_h");
+    $("q-options").innerHTML = "";
+    $("engage").disabled = true;
+    var el = $("q-left");
+    if(el){ el.hidden = false; el.textContent = t("out_b"); }
+  }
+
   /* Rút đề rồi vào lượt. Dùng cho CẢ lượt đầu và "Làm lại" — một đường duy nhất,
      nên đường lùi lúc mất mạng giống nhau ở hai chỗ. */
   function beginRound(){
+    /* ⚠️ CHẶN Ở ĐÂY, TRƯỚC KHI RÚT ĐỀ: rút đề rồi mới chặn là tải 5 file câu hỏi
+       cho một lượt không bao giờ chơi, và trẻ thấy đề nhấp nháy rồi biến mất. */
+    var c = quizLeft();
+    if(c && c.left <= 0){ showOutOfRounds(); return Promise.resolve([]); }
     resetRoundState();
     QUESTIONS = [];
     $("q-options").innerHTML = "";
     $("q-text").textContent = t("loading_q");
     $("engage").disabled = true;
     paintEnergy();
-    return drawRound().then(startRound);
+    return drawRound().then(function(qs){ startRound(qs); paintLeft(); });
   }
 
   function restart(){

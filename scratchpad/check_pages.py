@@ -4543,5 +4543,52 @@ check("muc luc: pickKeys nhan tham so cap do",
 check("muc luc: co duong lui noi sang cap lan can (`nearest`)",
       "function nearest(ks, lv)" in _qidx)
 
+print("\n=== [34] HAN MUC LUOT QUIZ: trang gia noi dung con so server ap ===")
+# Chot 19/08/2026 (chu du an: "gioi han 5 luot/ngay o server").
+# ⚠️ Truoc luot nay trang gia quang cao "3 luot/ngay" ma server KHONG gioi han gi —
+#    tuc ban mien phi that ra choi khong han che. Muc nay chan lop loi do lap lai.
+_qa = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/QuizAccess.cs"))
+_pr34 = rd("pricing.html")
+
+check("server: co Services/QuizAccess.cs", bool(_qa.strip()))
+m34 = re.search(r"FreeRoundsPerDay\s*=\s*(\d+)", _qa)
+check("server: khai FreeRoundsPerDay", bool(m34), str(m34))
+
+if m34:
+    _n = m34.group(1)
+    # Trang gia mo ta con so nay o `c_quiz_lim`, CA HAI ngon ngu.
+    _lims = re.findall(r'c_quiz_lim:"([^"]*)"', _pr34)
+    check("pricing.html khai `c_quiz_lim` o ca hai ngon ngu", len(_lims) == 2, str(_lims))
+    _bad34 = [x for x in _lims if _n not in x]
+    check("moi ban dich cua `c_quiz_lim` deu dung con so server (%s)" % _n,
+          not _bad34, "lech: %s" % _bad34)
+    # Va khong duoc con con so CU nao lang vang tren trang.
+    for _old in ("3 lượt/ngày", "3 rounds/day"):
+        check("pricing.html KHONG con con so cu '%s'" % _old, _old not in _pr34)
+
+# --- Cong phai duoc AP THAT o endpoint, khong chi khai hang so ---
+check("server: POST /me/progress goi QuizAccess.Allowed",
+      "QuizAccess.Allowed(" in _ep)
+check("server: het luot thi tra `counted:false` + reason (khong tra 4xx)",
+      'reason = "quiz-daily-limit"' in _ep)
+# ⚠️ Cong phai dem TRUOC khi ghi nhat ky. Neu dem sau thi luot dang nop da nam trong
+#    nhat ky va cong dem ca chinh no — han muc 5 thanh 4.
+_i_gate = _ep.find("QuizAccess.RoundsToday(")
+_i_hist = _ep.find("await db.AddHistoryAsync(")
+check("server: dem luot TRUOC khi ghi nhat ky", 0 < _i_gate < _i_hist,
+      "gate@%d hist@%d" % (_i_gate, _i_hist))
+# --- So luot con lai phai ra duoc ngoai cho client doc ---
+check("server: tra `quizRoundsLeft` ra client", "quizRoundsLeft" in _ep)
+check("server: GET /me/daily cung tra so luot con lai",
+      _ep.count("quizRoundsLeft") >= 3, "%d cho" % _ep.count("quizRoundsLeft"))
+
+# --- Dem MOI luot, khong chi luot DAT ---
+# ⚠️ `Daily.Build` dem `quizPassed` (chi luot DAT) vi do la VIEC HANG NGAY co thuong.
+#    Han muc thi phai dem moi luot. Hai phep dem khac nhau, dung gop.
+check("server: han muc dem MOI dong type=='quiz' (khong loc theo dat)",
+      'r.Type, "quiz"' in _qa and "QuizPassed" not in _qa)
+check("server: 'ngay' lay tu Daily, khong khai lai mui gio",
+      "TzOffsetHours" not in _qa and "AddHours" not in _qa)
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)
