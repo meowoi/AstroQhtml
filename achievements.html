@@ -180,7 +180,7 @@
       tag_ladder:"Lộ trình", ladder_h:"Lộ trình huấn luyện phi hành gia",
       ladder_p:"Mười bậc huấn luyện, mỗi bậc 5 cấp — đây là toàn bộ con đường phía trước, không chỉ chỗ bạn đang đứng. Cấp độ do máy chủ tính từ XP bạn kiếm được khi làm Quiz, đọc bài, chơi ở Khu Huấn Luyện và ghé các hành tinh.",
       ld_count:"{n} bậc · {m} cấp",
-      ld_range:"Cấp {a}–{b}", ld_xp:"từ {n} XP", ld_here:"Bạn đang ở đây",
+      ld_range:"Cấp {a}–{b}", ld_xp:"từ {n} XP", ld_here:"Bạn đang ở đây", ld_cert:"📜 Chứng nhận",
       ld_unknown:"Chưa đọc được cấp độ của bạn nên chưa đánh dấu bạn đang ở bậc nào.",
       filter_state:"Trạng thái", filter_group:"Nhóm",
       f_all:"Tất cả", f_on:"Đã mở", f_off:"Chưa mở",
@@ -213,7 +213,7 @@
       tag_ladder:"Track", ladder_h:"Astronaut training track",
       ladder_p:"Ten ranks, five levels each — this is the whole road ahead, not just where you stand now. Levels are computed by the server from the XP you earn in quizzes, readings, the Training Simulator and planet visits.",
       ld_count:"{n} ranks · {m} levels",
-      ld_range:"Level {a}–{b}", ld_xp:"from {n} XP", ld_here:"You are here",
+      ld_range:"Level {a}–{b}", ld_xp:"from {n} XP", ld_here:"You are here", ld_cert:"📜 Certificate",
       ld_unknown:"Your level couldn't be loaded, so no rank is marked as yours yet.",
       filter_state:"Status", filter_group:"Group",
       f_all:"All", f_on:"Unlocked", f_off:"Locked",
@@ -363,6 +363,12 @@
           '</span>'+
         '</span>'+
         (st === "now" ? '<span class="here">'+AstroQ.esc(t("ld_here"))+'</span>' : '')+
+        /* Chứng nhận: CHỈ bậc đã hoàn thành (`done`). Bậc đang đi (`now`) chưa xong —
+           mời in một tờ chứng nhận cho chặng chưa đi hết là nói sai. */
+        (st === "done"
+          ? '<a class="rk-cert" href="certificate.html?rank='+encodeURIComponent(rk.key)+
+            '" data-cert="'+AstroQ.esc(rk.key)+'">'+AstroQ.esc(t("ld_cert"))+'</a>'
+          : '')+
         '</li>';
     }).join("");
 

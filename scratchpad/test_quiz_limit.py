@@ -72,11 +72,27 @@ def aws(*a):
 
 
 def rows(pk):
+    # ⚠️⚠️ CHI LAY `PK,SK`. Ban dau khong khai projection nen `aws` phai in ca truong
+    #    `name` — va voi mot cai ten tieng Viet ("Tran Khanh Linh") thi CLI chet o
+    #    cp1252: `'charmap' codec can't encode character '\u1ea7'`. Khi do phep dem
+    #    duoi day tra [] va phan don in ra "da xoa 0 dong, con lai 0" — tuc BAO THANH
+    #    CONG trong khi bon tai khoan test nam lai trong bang that (do duoc 19/08/2026).
+    #    Dat PYTHONIOENCODING cho tien trinh con KHONG cuu duoc; bo truong do ra thi cuu.
     r = aws("dynamodb", "query", "--table-name", TABLE, "--consistent-read",
             "--key-condition-expression", "PK = :p",
             "--expression-attribute-values", json.dumps({":p": {"S": pk}}),
+            # `type` la TU KHOA DU TRU cua DynamoDB nen phai di qua `#t`. Giu lai
+            # truong nay vi phep kiem nhat ky dem theo no; con `name` (cho co dau
+            # tieng Viet lam `aws` chet o cp1252) thi KHONG lay.
+            "--projection-expression", "PK,SK,#t",
+            "--expression-attribute-names", json.dumps({"#t": "type"}),
             "--output", "json")
-    if r.returncode != 0 or not r.stdout.strip():
+    if r.returncode != 0:
+        # ⚠️ NOI RA, dung tra [] cho xong. Mot phep do noi doi theo huong an tam la
+        #    thu te nhat trong ca bo do.
+        print("      ⚠️ TRUY VAN HONG cho %s: %s" % (pk, (r.stderr or "").strip()[:120]))
+        raise RuntimeError("khong doc duoc bang de don du lieu test")
+    if not r.stdout.strip():
         return []
     return json.loads(r.stdout).get("Items", [])
 

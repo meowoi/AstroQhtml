@@ -1033,9 +1033,15 @@ print("\n=== [4] Chi cac trang noi dung duoc nap SDK Firebase ===")
 # va cung khong duoc phep tru. Day la trang thu hai co duong tieu Thien thach tim,
 # canh 3 mini-game (chung tru phi qua economy.js, khong can SDK vi js/progress.js
 # xep hang cho).
+# certificate.html them 19/08/2026: to chung nhan phai lay TEN va CAP DO tu SERVER.
+# Doc hai thu do tu URL hoac tu localStorage la bien trang nay thanh mot cai may in
+# chung nhan mang ten bat ky — mot to giay trong nhu that ma khong chung nhan gi. Che
+# do `?preview=1` van cho truyen ten qua URL nhung BAT BUOC in kem dau "MAU", va dau
+# do nam TRONG `.cert` nen no di ca vao ban in.
 allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.html",
            "specimen-vault.html", "missions.html", "codex.html", "parent.html",
-           "admin-report.html", "checkout.html", "mission-tree.html", "shop.html"}
+           "admin-report.html", "checkout.html", "mission-tree.html", "shop.html",
+           "certificate.html"}
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue

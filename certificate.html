@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang app chưa mở cửa — noindex, cùng lý do 17 trang app khác.
+     ⚠️ VÀ CÒN MỘT LÝ DO RIÊNG: đây là một VĂN BẢN mang tên một đứa trẻ. Để Google
+        lập chỉ mục một URL sinh ra chứng nhận là mời cả internet vào xem/chế tờ giấy
+        của con người khác. XOÁ dòng robots này thì phải nghĩ lại điều đó. -->
+<meta name="robots" content="noindex,nofollow" />
+<title>AstroQ — Chứng nhận huấn luyện</title>
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/page-shell.css" />
+<link rel="stylesheet" href="css/certificate.css" />
+<script src="js/ui-common.js"></script>
+<script src="js/ranks.js"></script>
+<script src="js/progress.js"></script>
+<!-- ⚠️ CÓ nạp js/firebase-auth.js: tờ chứng nhận THẬT phải lấy tên và cấp độ từ
+     SERVER, không lấy từ URL. Xem khối cảnh báo ở `readReal()` bên dưới. -->
+<script type="module" src="js/firebase-auth.js"></script>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="starfield"></div>
+
+<header class="hub-top">
+  <button class="back-btn" id="back" type="button" data-i18n="back">← Về Trung Tâm Điều Hướng</button>
+  <span class="hub-tag">[ <span data-i18n="tag">CERTIFICATE</span> ]</span>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="cert-page">
+
+  <p class="cert-note" id="cert-note" data-i18n="note_real">Bấm “Xuất PDF” rồi chọn <b>Lưu thành PDF</b> trong hộp in của trình duyệt.</p>
+
+  <div class="cert-acts">
+    <button class="pbtn primary" id="btn-print" type="button" data-i18n="print">Xuất PDF</button>
+    <a class="pbtn ghost" href="achievements.html" data-i18n="acts_awards">Xem Kho Thành Tích</a>
+    <a class="pbtn ghost" href="dashboard.html" data-i18n="acts_back">Quay lại khám phá</a>
+  </div>
+
+  <!-- ============ TỜ CHỨNG NHẬN ============ -->
+  <article class="cert" id="cert">
+    <div class="cert-brand">
+      <!-- Logo trên chip tối: xem lý do ở css/certificate.css (.cert-brand). -->
+      <span class="chip"><img src="img/astroq-logo.png" width="117" height="34" alt="astroQ" /></span>
+      <span class="cert-org" data-i18n="org">Học viện Phi hành gia astroQ</span>
+    </div>
+
+    <h1 class="cert-h" data-i18n="cert_h">Chứng nhận hoàn thành</h1>
+    <p class="cert-sub" data-i18n="cert_sub">Một chặng trong lộ trình huấn luyện phi hành gia</p>
+
+    <div class="cert-mid">
+    <p class="cert-for" data-i18n="cert_for">Trao cho</p>
+    <p class="cert-name" id="c-name">—</p>
+    <span class="cert-rule"></span>
+
+    <p class="cert-body" id="c-body"></p>
+
+    <div class="cert-rank">
+      <span class="ic" id="c-ic" aria-hidden="true">🎓</span>
+      <span class="nm" id="c-rank">—</span>
+    </div>
+    </div>
+
+    <div class="cert-foot">
+      <div>
+        <div class="cert-k" data-i18n="k_date">Ngày hoàn thành</div>
+        <div class="cert-v" id="c-date">—</div>
+      </div>
+      <div>
+        <div class="cert-k" data-i18n="k_code">Mã chứng nhận</div>
+        <div class="cert-v" id="c-code">—</div>
+      </div>
+      <div class="cert-sign">
+        <div class="cert-k" data-i18n="k_sign">Ký tên</div>
+        <div class="cert-v" data-i18n="sign">Mèo Comet &amp; Robot Byte</div>
+      </div>
+    </div>
+
+    <!-- Dấu MẪU — chỉ hiện ở chế độ xem trước. Xem cảnh báo ở css/certificate.css. -->
+    <div class="cert-sample" id="c-sample" hidden><span data-i18n="sample">MẪU</span></div>
+  </article>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = AstroQ.$;
+
+  var I18N = {
+    vi:{
+      title:"AstroQ — Chứng nhận huấn luyện", tag:"CHỨNG NHẬN",
+      back:"← Về Trung Tâm Điều Hướng",
+      print:"Xuất PDF", acts_awards:"Xem Kho Thành Tích", acts_back:"Quay lại khám phá",
+      org:"Học viện Phi hành gia astroQ",
+      cert_h:"Chứng nhận hoàn thành",
+      cert_sub:"Một chặng trong lộ trình huấn luyện phi hành gia",
+      cert_for:"Trao cho",
+      /* {rank} = tên bậc, {from}–{to} = khoảng cấp độ của bậc đó. */
+      body:"đã hoàn thành chặng huấn luyện <b>{rank}</b> (cấp {from}–{to}) trong lộ trình huấn luyện phi hành gia của astroQ, qua các nhiệm vụ khám phá, bài đọc và Đấu Trường Kiến Thức.",
+      k_date:"Ngày hoàn thành", k_code:"Mã chứng nhận", k_sign:"Ký tên",
+      sign:"Mèo Comet & Robot Byte",
+      sample:"MẪU",
+      note_real:"Bấm “Xuất PDF” rồi chọn <b>Lưu thành PDF</b> trong hộp in của trình duyệt.",
+      /* ⚠️ Câu này PHẢI nói rõ đây là bản xem thử — xem cảnh báo ở `paintSample`. */
+      note_preview:"Đây là <b>bản xem thử</b> để duyệt mẫu, nên có dấu “MẪU” in kèm. Tờ chứng nhận thật lấy tên và cấp độ từ tài khoản của trẻ.",
+      note_none:"Chưa đọc được cấp độ của trẻ. Hãy <b>đăng nhập</b> rồi mở lại trang này — chứng nhận luôn lấy dữ liệu từ tài khoản, không tự điền.",
+      note_early:"Con chưa hoàn thành chặng huấn luyện nào, nên chưa có chứng nhận. Cứ khám phá tiếp — xong chặng đầu là tờ giấy này có tên con.",
+      note_notyet:"Chặng con yêu cầu <b>chưa hoàn thành</b>, nên trang hiển thị chặng gần nhất con đã xong."
+    },
+    en:{
+      title:"AstroQ — Training certificate", tag:"CERTIFICATE",
+      back:"← Back to Navigation Hub",
+      print:"Export PDF", acts_awards:"Open Achievements", acts_back:"Back to exploring",
+      org:"astroQ Astronaut Academy",
+      cert_h:"Certificate of completion",
+      cert_sub:"A stage of the astronaut training path",
+      cert_for:"Awarded to",
+      body:"has completed the <b>{rank}</b> training stage (levels {from}–{to}) of astroQ's astronaut training path, through exploration missions, reading and the Knowledge Arena.",
+      k_date:"Date completed", k_code:"Certificate code", k_sign:"Signed",
+      sign:"Comet the Cat & Byte the Robot",
+      sample:"SAMPLE",
+      note_real:"Press “Export PDF”, then choose <b>Save as PDF</b> in your browser's print dialog.",
+      note_preview:"This is a <b>preview</b> for reviewing the template, so it carries a “SAMPLE” watermark. A real certificate takes the name and level from the child's account.",
+      note_none:"We couldn't read your child's level. Please <b>log in</b> and reopen this page — a certificate always takes its data from the account, it never fills itself in.",
+      note_early:"Your child hasn't finished a training stage yet, so there's no certificate. Keep exploring — the first finished stage puts their name on this page.",
+      note_notyet:"The stage you asked for is <b>not finished yet</b>, so this shows the most recent stage your child has completed."
+    }
+  };
+
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+
+  var Q = new URLSearchParams(location.search);
+
+  /* ════════════════════════════════════════════════════════════════════
+     ⚠️⚠️ HAI CHẾ ĐỘ, VÀ ĐÓ LÀ MỘT QUYẾT ĐỊNH VỀ SỰ THẬT, KHÔNG PHẢI TIỆN LỢI.
+
+     · THẬT   — tên và cấp độ đọc từ SERVER (`AstroQProgress.load()` → hồ sơ + cấp).
+                Không đọc được thì trang NÓI RA và không vẽ tên nào.
+     · XEM THỬ (`?preview=1`) — cho phép truyền `name`/`rank` qua URL để duyệt mẫu,
+                nhưng BẮT BUỘC in kèm dấu "MẪU".
+
+     Vì sao phải tách: nếu tên lấy từ URL mà không có dấu, trang này thành một cái máy
+     in chứng nhận mang tên bất kỳ — một tờ giấy trông như thật nhưng không chứng nhận
+     điều gì. Dự án đã có luật "đừng hứa thứ hệ thống không giữ"; một chứng nhận giả
+     là dạng nặng nhất của lỗi đó.
+     ⚠️ Dấu "MẪU" nằm TRONG `.cert` nên nó đi cả vào bản in. Đặt nó thành overlay của
+        màn hình là in ra tờ giấy sạch — tức mất hẳn hàng rào.
+     ════════════════════════════════════════════════════════════════════ */
+  var preview = Q.get("preview") === "1";
+
+  /** Mã chứng nhận — SUY RA từ dữ liệu, để in lại hai lần vẫn ra một mã. */
+  function code(uid, rankKey){
+    var seed = String(uid||"") + "|" + String(rankKey||"");
+    var h = 0;
+    for (var i=0;i<seed.length;i++){ h = ((h<<5)-h + seed.charCodeAt(i)) | 0; }
+    var hex = Math.abs(h).toString(36).toUpperCase();
+    while (hex.length < 6) hex = "0" + hex;
+    return "AQ-" + hex.slice(0,6);
+  }
+
+  function fmtDate(d){
+    try{
+      return d.toLocaleDateString(LANG==="en"?"en-GB":"vi-VN",
+        { day:"2-digit", month:"2-digit", year:"numeric" });
+    }catch(e){ return ""; }
+  }
+
+  /* Vẽ tờ giấy từ một khối dữ liệu đã rõ ràng. Hàm này KHÔNG đi đọc ở đâu cả —
+     nhờ vậy hai chế độ dùng chung đúng một đường vẽ. */
+  function paint(d){
+    $("c-name").textContent = d.name || "—";
+    $("c-rank").textContent = d.rankName || "—";
+    $("c-ic").textContent   = d.icon || "🎓";
+    $("c-date").textContent = d.date || "—";
+    $("c-code").textContent = d.code || "—";
+    /* innerHTML có chủ đích: câu này chứa <b> quanh tên bậc. Tên trẻ thì KHÔNG bao giờ
+       đi qua đây — nó vào `textContent` ở trên. */
+    $("c-body").innerHTML = t("body")
+      .replace("{rank}", AstroQ.esc(d.rankName || ""))
+      .replace("{from}", String(d.from||""))
+      .replace("{to}",   String(d.to||""));
+  }
+
+  /** Khoảng cấp độ của một bậc — suy từ js/ranks.js, không gõ lại con số nào. */
+  function rangeOf(i){
+    var from = AstroQRanks.levelOf(i);
+    var to   = (i+1 < AstroQRanks.ALL.length) ? AstroQRanks.levelOf(i+1)-1
+                                              : AstroQRanks.MAX_LEVEL;
+    return { from: from, to: to };
+  }
+
+  function paintSample(on){
+    $("c-sample").hidden = !on;
+    $("cert-note").innerHTML = on ? t("note_preview") : t("note_real");
+  }
+
+  /* ── Chế độ XEM THỬ ── */
+  function drawPreview(){
+    var key = (Q.get("rank")||"cadet").toLowerCase();
+    var i = 0;
+    for (var k=0;k<AstroQRanks.ALL.length;k++)
+      if (AstroQRanks.ALL[k].key === key) i = k;
+    var r = AstroQRanks.ALL[i], rg = rangeOf(i);
+    paint({
+      name: Q.get("name") || (LANG==="en" ? "Child's name" : "Tên của trẻ"),
+      rankName: r[LANG] || r.vi, icon: r.ic,
+      from: rg.from, to: rg.to,
+      date: fmtDate(new Date()),
+      code: code("preview", r.key)
+    });
+    paintSample(true);
+  }
+
+  /* ── Chế độ THẬT ── */
+  function drawReal(){
+    paintSample(false);
+    $("cert-note").innerHTML = t("note_real");
+    AstroQProgress.load().then(function(r){
+      var d = (r && r.data) || {};
+      var prof = d.profile || {};
+      var lv = (d.level && d.level.level) || 0;
+      /* ⚠️ KHÔNG ĐỌC ĐƯỢC THÌ KHÔNG VẼ. Điền một cái tên mặc định hay cấp 1 là in ra
+         một tờ giấy chứng nhận điều chưa xảy ra. Nói ra và dừng. */
+      if (!r || !r.ok || !prof.name || !lv){
+        $("cert-note").innerHTML = t("note_none");
+        $("c-name").textContent = "—";
+        $("c-body").textContent = "";
+        $("btn-print").disabled = true;
+        return;
+      }
+      /* ── Bậc nào? ──
+         `?rank=` cho phép in lại chứng nhận của một bậc ĐÃ QUA (trẻ lên bậc 5 vẫn
+         muốn in lại tờ của bậc 2). Nhưng bậc đó phải THẬT SỰ hoàn thành theo cấp độ
+         server trả về.
+         ⚠️ "Hoàn thành một bậc" = cấp độ đã VƯỢT QUA cấp cuối của bậc đó (`lv > hi`).
+            Đang Ở TRONG bậc thì CHƯA xong — cấp một tờ chứng nhận cho một chặng đang
+            đi là nói sai, và nó làm tờ giấy mất hết ý nghĩa với những bậc sau.
+         ⚠️ Yêu cầu một bậc chưa xong thì KHÔNG im lặng hạ xuống bậc khác: nói ra, rồi
+            mới vẽ bậc cao nhất đã hoàn thành. Im lặng đổi nội dung một văn bản là
+            cách tệ nhất để xử một yêu cầu không hợp lệ. */
+      var iCur  = AstroQRanks.indexOf(lv);
+      var iDone = -1;                       // bậc cao nhất ĐÃ hoàn thành
+      for (var k = 0; k < AstroQRanks.ALL.length; k++)
+        if (lv > rangeOf(k).to) iDone = k;
+
+      if (iDone < 0){
+        /* Chưa hoàn thành bậc nào — nói thật thay vì in tờ giấy đầu tiên. */
+        $("cert-note").innerHTML = t("note_early");
+        $("c-name").textContent = prof.name;
+        $("c-body").textContent = "";
+        $("c-rank").textContent = "—";
+        $("btn-print").disabled = true;
+        return;
+      }
+
+      var want = (Q.get("rank") || "").toLowerCase(), i = iDone;
+      if (want){
+        var iWant = -1;
+        for (var j = 0; j < AstroQRanks.ALL.length; j++)
+          if (AstroQRanks.ALL[j].key === want) iWant = j;
+        if (iWant >= 0 && iWant <= iDone) i = iWant;
+        else if (iWant >= 0) $("cert-note").innerHTML = t("note_notyet");
+      }
+
+      var rg = rangeOf(i), rk = AstroQRanks.ALL[i];
+      paint({
+        name: prof.name, rankName: rk[LANG] || rk.vi, icon: rk.ic,
+        from: rg.from, to: rg.to,
+        date: fmtDate(new Date()),
+        code: code(prof.uid || prof.email || "", rk.key)
+      });
+    })["catch"](function(){
+      $("cert-note").innerHTML = t("note_none");
+      $("btn-print").disabled = true;
+    });
+  }
+
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    // Tờ giấy do JS vẽ nên phải vẽ LẠI — applyTexts không với tới nó.
+    if(preview) drawPreview(); else drawReal();
+  }
+
+  $("back").addEventListener("click", function(){ location.href="dashboard.html"; });
+  $("btn-print").addEventListener("click", function(){ window.print(); });
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+})();
+</script>
+</body>
+</html>
