@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The material isn't lost — it <b>enriches molecular clouds</b> and becomes raw material for later stars." },
   hint: { vi: "Nhớ lại câu hỏi về tinh vân: ngôi sao được sinh ra từ <b>mây khí và bụi</b>.",
           en: "Recall the nebula question: stars are born from <b>clouds of gas and dust</b>." },
+  lv: 3,
   src: "star"
 };

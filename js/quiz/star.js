@@ -23,5 +23,6 @@ export default {
         en: "Not quite! A star is a <b>ball of hot gas that shines on its own</b> — not rock, not ice." },
   hint: { vi: "Mặt Trời là một ngôi sao. Nó nóng, nó sáng, và nó <b>không hề rắn</b>.",
           en: "The Sun is a star. It's hot, it's bright, and it is <b>not solid</b>." },
+  lv: 1,
   src: "star"
 };

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The third criterion is <b>clearing its orbital neighbourhood</b> — nothing about moons or air. Planets don't make light either; they reflect their star's." },
   hint: { vi: "Nghĩ tới cái sân: hành tinh phải <b>dọn sạch sân</b> của mình.",
           en: "Think of a playground: a planet has to <b>sweep its own yard</b> clean." },
+  lv: 3,
   src: "dwarf"
 };

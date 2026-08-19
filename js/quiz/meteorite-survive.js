@@ -23,5 +23,6 @@ export default {
         en: "Not quite! <b>Less than 5%</b>. Earth's atmosphere is a remarkably good shield." },
   hint: { vi: "Khí quyển bảo vệ chúng ta rất tốt — nên con số này <b>rất nhỏ</b>.",
           en: "The atmosphere protects us well — so this number is <b>very small</b>." },
+  lv: 3,
   src: "meteor"
 };

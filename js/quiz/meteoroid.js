@@ -23,5 +23,6 @@ export default {
         en: "Not quite! A meteoroid is still <b>in space</b>. The streak in the sky is a <b>meteor</b>; the rock on the ground is a <b>meteorite</b>." },
   hint: { vi: "Cả ba từ meteoroid / meteor / meteorite chỉ khác nhau ở <b>nơi</b> hòn đá đang ở.",
           en: "Meteoroid / meteor / meteorite differ only by <b>where</b> the rock is." },
+  lv: 1,
   src: "meteor"
 };

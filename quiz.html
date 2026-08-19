@@ -301,15 +301,37 @@
     return raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   }
 
+  /* ================= ĐỘ KHÓ TỰ ĐIỀU CHỈNH ("vai ②", 19/08/2026) =================
+     Cấp độ (1..3) do SERVER tính từ tỉ lệ trả lời đúng — `Services/Adapt.cs`. Trang
+     này chỉ ĐỌC lại con số đó qua cache `astroq-quiz-lv` mà trang có token đã ghi
+     (xem `LS_QUIZLV` trong js/progress.js).
+
+     ⚠️ KHÔNG TỰ TÍNH CẤP ĐỘ Ở ĐÂY, kể cả khi thấy `quizAccuracy` ngay trong cùng
+        câu trả lời: hai nơi tính là hai câu trả lời khác nhau cho cùng một đứa trẻ.
+     ⚠️ CHƯA BIẾT thì rút như cũ (`lv = 0`), KHÔNG đoán. Máy sạch / chưa đăng nhập /
+        cache của đứa trẻ khác đều rơi vào đây, và một cấp đoán sai đẩy trẻ mới vào
+        toàn câu giải thích cơ chế — tệ hơn hẳn là không lọc gì.
+     ⚠️ CHỈ ÁP CHO ĐỀ NGẪU NHIÊN. Đường `?terms=` từ bài đọc là "hỏi đúng thứ vừa
+        đọc"; lọc theo cấp ở đó là thay đúng những câu mà cả đường vào ấy tồn tại để
+        hỏi. */
+  function quizLevel() {
+    try {
+      var c = window.AstroQProgress && AstroQProgress.quizLv
+              ? AstroQProgress.quizLv() : null;
+      return (c && c.known) ? c.lv : 0;
+    } catch (e) { return 0; }
+  }
+
   /* Rút một lượt. Trả về Promise<[câu]>; rỗng nghĩa là KHÔNG tải được gì. */
   function drawRound() {
     var want = AstroQQuestions.keysOfTerms(wantedTerms());
+    var lv = quizLevel();
     var p = want.length ? AstroQQuestions.byTerms(want, ROUND_SIZE)
-                        : AstroQQuestions.round(ROUND_SIZE);
+                        : AstroQQuestions.round(ROUND_SIZE, lv);
     return p.then(function (qs) {
       /* Khoá `?terms=` sai hết → đề ngẫu nhiên. Cũng che luôn ca "khoá đúng
          nhưng file của nó hỏng": thà đổi đề còn hơn báo trẻ là quiz chết. */
-      if (!qs.length && want.length) return AstroQQuestions.round(ROUND_SIZE);
+      if (!qs.length && want.length) return AstroQQuestions.round(ROUND_SIZE, lv);
       return qs;
     })["catch"](function () { return []; });
   }

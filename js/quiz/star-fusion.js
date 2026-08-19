@@ -23,5 +23,6 @@ export default {
         en: "Not quite! Hydrogen fuses into <b>helium</b> — that's what powers every star." },
   hint: { vi: "Nguyên tố nhẹ thứ hai trong bảng tuần hoàn — cùng loại khí người ta bơm vào bóng bay!",
           en: "The second-lightest element on the periodic table — the same gas that fills party balloons!" },
+  lv: 2,
   src: "star"
 };

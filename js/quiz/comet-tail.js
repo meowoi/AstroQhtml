@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The tail is blown <b>away from the Sun</b> — it doesn't depend on which way the comet is moving." },
   hint: { vi: "Cứ hình dung có một cơn gió thổi từ Mặt Trời ra mọi phía.",
           en: "Picture a wind blowing outward from the Sun in every direction." },
+  lv: 3,
   src: "comet"
 };

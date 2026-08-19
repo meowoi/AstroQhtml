@@ -23,5 +23,6 @@ export default {
         en: "Not quite! What's missing is <b>clearing the orbital neighbourhood</b>. A dwarf planet can still have moons and still spin normally." },
   hint: { vi: "Cùng một câu chuyện “dọn sân” — nhưng lần này là <b>chưa dọn xong</b>.",
           en: "Same “sweep the yard” story — except this time the yard <b>isn't swept</b>." },
+  lv: 3,
   src: "dwarf"
 };

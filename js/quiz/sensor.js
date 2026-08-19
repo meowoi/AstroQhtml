@@ -22,5 +22,6 @@ export default {
   no: { vi: "Chưa đúng! Robot “nhìn” bằng <b>cảm biến</b>, không phải bộ phận này.",
         en: "Not quite! A robot 'sees' with a <b>sensor</b>, not this part." },
   hint: { vi: "Bộ phận nào giúp robot <b>thu thập thông tin</b> xung quanh?",
-          en: "Which part helps a robot <b>gather info</b> around it?" }
+          en: "Which part helps a robot <b>gather info</b> around it?" },
+  lv: 1
 };

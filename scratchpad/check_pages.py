@@ -4479,5 +4479,69 @@ check("[30] moi cho goi `nudge` dung chu ky 3 tham so", not _nud_bad, "%s" % _nu
 check("[30] tham so dau cua `nudge` la id DONG NHAC co that", not _nud_id, "%s" % _nud_id[:3])
 
 
+print("\n=== [31] DO KHO TU DIEU CHINH: server va client cung mot bo moc ===")
+# Chot 19/08/2026 ("vai (2)"). Cap do do SERVER tinh (Services/Adapt.cs), client chi
+# doc lai. Muc nay doi chieu HAI BEN — cung ly do voi [3d]: mot ben doi mot ben khong
+# thi tre doc con so cua client nhung nhan de bai theo con so cua server.
+_adapt = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Adapt.cs"))
+_prog = rd("js/progress.js")
+_qidx = rd("js/quiz-index.js")
+_quiz31 = rd("quiz.html")
+
+check("server: co Services/Adapt.cs", bool(_adapt.strip()))
+
+# --- (1) Tran cap do: server khai 3, client kep 3, bank co toi 3 ---
+m_max = re.search(r"MaxQuizLevel\s*=\s*(\d+)", _adapt)
+check("server: khai MaxQuizLevel", bool(m_max), str(m_max))
+# Bank: doc bang LV cua muc luc (SINH RA tu js/quiz/*.js) roi lay gia tri lon nhat.
+_lvs = [int(x) for x in re.findall(r'"[^"]+":\s*(\d+)',
+        _qidx.split("var LV = {")[1].split("};")[0])] if "var LV = {" in _qidx else []
+check("muc luc co bang LV va khong rong", len(_lvs) > 0, "%d cau khai lv" % len(_lvs))
+if m_max and _lvs:
+    check("tran cap do cua server = cap lon nhat bank THAT SU co",
+          int(m_max.group(1)) == max(_lvs),
+          "server %s vs bank %d" % (m_max.group(1), max(_lvs)))
+    # ⚠️ Client kep [1..3] o `absorbQuizLv` va `quizLvCache`. Kep chat hon server thi
+    #    cap cao nhat khong bao gio den duoc tay tre; long hon thi Quiz di tim mot cap
+    #    khong ton tai. Hai cho, dem ca hai.
+    # ⚠️ Quet CA HAI dang viet. Ban dau chi tim `lv > N) return` nen bo sot cho thu
+    #    hai (`box.lv < 1 || box.lv > 3` nam trong mot dieu kien ghep) va bao hong OAN.
+    _clamps = re.findall(r"(?:box\.)?lv\s*>\s*(\d+)", _prog)
+    check("js/progress.js kep tran cap do o dung 2 cho (ghi + doc)",
+          len(_clamps) == 2, str(_clamps))
+    check("tran kep o client = tran cua server",
+          all(c == m_max.group(1) for c in _clamps),
+          "client %s vs server %s" % (_clamps, m_max.group(1)))
+
+# --- (2) Moc len cap 2 KHONG duoc go lai bang so ---
+# `Adapt.Level2Ratio` phai TRO vao `Wallet.QuizPassRatio`, khong phai mot ban sao:
+# "dat mot luot" va "du suc lam cau phan biet" la cung mot moc.
+check("server: moc cap 2 tro vao Wallet.QuizPassRatio, khong go lai so",
+      re.search(r"Level2Ratio\s*=\s*Wallet\.QuizPassRatio", _adapt) is not None)
+
+# --- (3) Client KHONG duoc tu tinh cap do ---
+# Day la dieu de vo nhat: `quizAccuracy` nam ngay trong cung cau tra loi, rat de bi
+# dem ra tinh lai o client — roi hai noi cho hai ket qua khac nhau cho cung mot tre.
+for _n, _c in (("quiz.html", strip_comments(_quiz31)),
+               ("js/progress.js", strip_comments(_prog))):
+    check("%s: KHONG tu tinh cap do tu quizAccuracy" % _n,
+          "quizAccuracy" not in _c, "con dung quizAccuracy")
+check("quiz.html: doc cap do qua AstroQProgress.quizLv()",
+      "AstroQProgress.quizLv" in strip_comments(_quiz31))
+check("js/progress.js: cache cap do co DONG DAU uid",
+      re.search(r"write\(LS_QUIZLV,\s*\{\s*uid:\s*uidNow\(\)", _prog) is not None)
+check("js/progress.js: dang xuat co don cache cap do",
+      "removeItem(LS_QUIZLV)" in _prog)
+
+# --- (4) Server phai THUC SU tra `quizLv` ra ngoai ---
+check("server: Snapshot() tra `quizLv`",
+      re.search(r"quizLv\s*=\s*Adapt\.QuizLevel\(p\)", _ep) is not None)
+
+# --- (5) `pickKeys` phai co duong lui, va bang LV la SINH RA ---
+check("muc luc: pickKeys nhan tham so cap do",
+      "function pickKeys(n, lv)" in _qidx)
+check("muc luc: co duong lui noi sang cap lan can (`nearest`)",
+      "function nearest(ks, lv)" in _qidx)
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

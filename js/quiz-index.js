@@ -15,13 +15,18 @@
             khong viet URL — 870 cau viet URL thang la ~870 ban sao cua ~40 dia chi.
      G      cac NHOM. Mot nhom = mot THE So Tay (`js/codex-terms.js`), hoac mot
             cau le chua the nao nhan. `t` = topic hien o badge [ CHU DE · CAU n/m ].
-     LV     do kho 1/2/3, chi khai cho cau DA co. 35/106 cau chua khai —
-            ⚠️ HIEN CHUA AI DOC `lv`. Chu du an chot 07/08/2026: GIU truong nay,
-            cho duong "server tinh cap do roi client rut de theo cap do". Muon noi
-            day thi quiz.html can doc duoc cap do cua tre, ma trang do CO Y khong
-            nap SDK Firebase (233 KB) nen khong co token — phai them mot cache do
-            dashboard ghi, dung khuon `astroq-route-gate`. Dung noi lai ma chua lam
-            cai cache do; va dung xoa `lv` — de bai Dot 2-5 van yeu cau Gemini khai.
+     LV     do kho 1/2/3. 0/126 cau chua khai.
+            DUOC DOC THAT TU 19/08/2026 ("vai ②" — do kho tu dieu chinh):
+              server  Services/Adapt.cs tinh `progress.quizLv` tu ti le tra loi dung
+                      (KHONG tu `xp`/`level`: `level` do THOI GIAN CHOI).
+              cau noi js/progress.js ghi cache `astroq-quiz-lv` co dong dau uid —
+                      `quiz.html` CO Y khong nap SDK Firebase nen khong co token,
+                      dung khuon `astroq-route-gate`/`astroq-training`.
+              dung   `pickKeys(n, lv)` duoi day.
+            ⚠️ `lv` NAM O FILE CAU (`js/quiz/*.js`) moi la nguon su that; bang LV
+               nay SINH RA. Dung go tay vao js/quiz-index.js.
+            ⚠️ Cap do doi CAU NAO TRONG THE, KHONG doi THE NAO duoc vao — xem
+               chu thich `pickKeys`.
 
    ⚠️ `pickKeys()` CHONG TRUNG THEO THE, KHONG THEO `term` — sua 07/08/2026.
       Ban cu loc bang `pool[i].term`, nhung `term` la khoa cua CAU (moi cau mot
@@ -81,63 +86,63 @@ window.AstroQQuestions = (function () {
     { c: "term_star",
       t: { vi: "NGÔI SAO",
            en: "STAR" },
-      q: ["star", "star-fusion"] },
+      q: ["star", "star-fusion", "star-mass-life"] },
     { c: "term_planet",
       t: { vi: "HÀNH TINH",
            en: "PLANET" },
-      q: ["planet", "planet-count"] },
+      q: ["planet", "planet-count", "planet-ice-giants"] },
     { c: "term_dwarf_planet",
       t: { vi: "HÀNH TINH LÙN",
            en: "DWARF PLANET" },
-      q: ["dwarf", "dwarf-ceres"] },
+      q: ["dwarf", "dwarf-ceres", "dwarf-pluto"] },
     { c: "term_moon",
       t: { vi: "VỆ TINH TỰ NHIÊN",
            en: "NATURAL SATELLITE" },
-      q: ["moon", "moon-largest"] },
+      q: ["moon", "moon-largest", "moon-most-not-planets"] },
     { c: "term_asteroid",
       t: { vi: "TIỂU HÀNH TINH",
            en: "ASTEROID" },
-      q: ["asteroid-belt", "asteroid-what"] },
+      q: ["asteroid-belt", "asteroid-what", "asteroid-jupiter-stopped"] },
     { c: "term_comet",
       t: { vi: "SAO CHỔI",
            en: "COMET" },
-      q: ["comet-what", "comet-tail"] },
+      q: ["comet-what", "comet-tail", "comet-two-tails"] },
     { c: "term_meteoroid",
       t: { vi: "THIÊN THẠCH NHỎ",
            en: "METEOROID" },
-      q: ["meteoroid", "meteoroid-chain"] },
+      q: ["meteoroid", "meteoroid-chain", "meteoroid-daily-mass"] },
     { c: "term_meteor",
       t: { vi: "SAO BĂNG",
            en: "METEOR" },
-      q: ["meteor", "meteor-fireball"] },
+      q: ["meteor", "meteor-fireball", "meteor-where"] },
     { c: "term_meteorite",
       t: { vi: "THIÊN THẠCH",
            en: "METEORITE" },
-      q: ["meteorite", "meteorite-survive"] },
+      q: ["meteorite", "meteorite-survive", "meteorite-name"] },
     { c: "term_exoplanet",
       t: { vi: "NGOẠI HÀNH TINH",
            en: "EXOPLANET" },
-      q: ["exoplanet", "exoplanet-transit"] },
+      q: ["exoplanet", "exoplanet-transit", "exo-rogue"] },
     { c: "term_black_hole",
       t: { vi: "LỖ ĐEN",
            en: "BLACK HOLE" },
-      q: ["black-hole", "black-hole-light"] },
+      q: ["black-hole", "black-hole-light", "bh-horizon-boundary", "bh-not-hole"] },
     { c: "term_gravity",
       t: { vi: "LỰC HẤP DẪN",
            en: "GRAVITY" },
-      q: ["gravity", "gravity-distance"] },
+      q: ["gravity", "gravity-distance", "grav-two-rules"] },
     { c: "term_nebula",
       t: { vi: "TINH VÂN",
            en: "NEBULA" },
-      q: ["nebula", "nebula-gas"] },
+      q: ["nebula", "nebula-gas", "nebula-planetary"] },
     { c: "term_supernova",
       t: { vi: "SIÊU TÂN TINH",
            en: "SUPERNOVA" },
-      q: ["supernova", "supernova-elements"] },
+      q: ["supernova", "supernova-elements", "supernova-what"] },
     { c: "term_cmb",
       t: { vi: "BỨC XẠ NỀN VŨ TRỤ",
            en: "COSMIC MICROWAVE BACKGROUND" },
-      q: ["cmb", "cmb-when"] },
+      q: ["cmb", "cmb-when", "cmb-oldest-light"] },
     { c: "term_earth_atmosphere",
       t: { vi: "Trái Đất & Khí Quyển",
            en: "Earth & Atmosphere" },
@@ -157,11 +162,11 @@ window.AstroQQuestions = (function () {
     { c: "term_ai",
       t: { vi: "TRÍ TUỆ NHÂN TẠO",
            en: "ARTIFICIAL INTELLIGENCE" },
-      q: ["ai-what-is", "ai-can-do-what"] },
+      q: ["ai-what-is", "ai-can-do-what", "ai-why-fast"] },
     { c: "term_machine_learning",
       t: { vi: "HỌC MÁY",
            en: "MACHINE LEARNING" },
-      q: ["ml-learns-from-data", "ml-humans-still-check"] },
+      q: ["ml-learns-from-data", "ml-humans-still-check", "ml-trained-by-hubble"] },
     { c: "term_algorithm",
       t: { vi: "THUẬT TOÁN",
            en: "ALGORITHMS" },
@@ -169,39 +174,53 @@ window.AstroQQuestions = (function () {
     { c: "term_sensor",
       t: { vi: "CẢM BIẾN",
            en: "SENSORS" },
-      q: ["sensor", "sensor-robot-sees"] }
+      q: ["sensor", "sensor-robot-sees", "sensor-why-autonomous", "sensor-fans-move"] }
   ];
 
   /* ── DO KHO. Chi khai cho cau DA co `lv`. Xem canh bao dau file. */
   var LV = {
-    "ai-can-do-what": 2, "ai-what-is": 1, "algorithm-is-an-opinion": 3, "atmo-comp-nitrogen": 1,
-    "atmo-comp-ratio": 1, "atmo-exo-end": 3, "atmo-exo-outermost": 1, "atmo-meso-friction": 2,
-    "atmo-meso-location": 2, "atmo-meso-meteors": 1, "atmo-shield-meteoroids": 2,
-    "atmo-shield-radiation": 3, "atmo-strato-location": 3, "atmo-strato-ozone": 1,
-    "atmo-strato-uv": 2, "atmo-thermo-aurora": 3, "atmo-thermo-iss": 2,
-    "atmo-thermo-location": 2, "atmo-tropo-density": 3, "atmo-tropo-lowest": 1,
-    "atmo-tropo-mass": 2, "atmo-tropo-watervapor": 2, "atmo-tropo-weather": 1,
-    "eclipse-annular-farthest-ring": 1, "eclipse-coincidence-size-distance-ratio": 3,
-    "eclipse-corona-outermost-atmosphere": 1, "eclipse-corona-visible-totality": 2,
-    "eclipse-definition-moon-between": 1, "eclipse-hybrid-annular-total": 2,
-    "eclipse-moon-shadows-umbra-penumbra": 3, "eclipse-partial-crescent-shape": 1,
-    "eclipse-penumbra-partially-blocked": 2, "eclipse-phase-new-moon": 3,
-    "eclipse-safety-glasses-reappear": 2, "eclipse-safety-totality-viewing": 2,
-    "eclipse-shadow-umbra-penumbra": 1, "eclipse-umbra-total-blocked": 2,
+    "ai-can-do-what": 2, "ai-what-is": 1, "ai-why-fast": 3, "algorithm": 2,
+    "algorithm-is-an-opinion": 3, "asteroid-belt": 2, "asteroid-jupiter-stopped": 3,
+    "asteroid-what": 1, "atmo-comp-nitrogen": 1, "atmo-comp-ratio": 1, "atmo-exo-end": 3,
+    "atmo-exo-outermost": 1, "atmo-meso-friction": 2, "atmo-meso-location": 2,
+    "atmo-meso-meteors": 1, "atmo-shield-meteoroids": 2, "atmo-shield-radiation": 3,
+    "atmo-strato-location": 3, "atmo-strato-ozone": 1, "atmo-strato-uv": 2,
+    "atmo-thermo-aurora": 3, "atmo-thermo-iss": 2, "atmo-thermo-location": 2,
+    "atmo-tropo-density": 3, "atmo-tropo-lowest": 1, "atmo-tropo-mass": 2,
+    "atmo-tropo-watervapor": 2, "atmo-tropo-weather": 1, "bh-horizon-boundary": 3,
+    "bh-not-hole": 1, "black-hole": 2, "black-hole-light": 2, "cmb": 1, "cmb-oldest-light": 2,
+    "cmb-when": 3, "comet-tail": 3, "comet-two-tails": 2, "comet-what": 1, "condition": 1,
+    "dwarf": 3, "dwarf-ceres": 2, "dwarf-pluto": 1, "eclipse-annular-farthest-ring": 1,
+    "eclipse-coincidence-size-distance-ratio": 3, "eclipse-corona-outermost-atmosphere": 1,
+    "eclipse-corona-visible-totality": 2, "eclipse-definition-moon-between": 1,
+    "eclipse-hybrid-annular-total": 2, "eclipse-moon-shadows-umbra-penumbra": 3,
+    "eclipse-partial-crescent-shape": 1, "eclipse-penumbra-partially-blocked": 2,
+    "eclipse-phase-new-moon": 3, "eclipse-safety-glasses-reappear": 2,
+    "eclipse-safety-totality-viewing": 2, "eclipse-shadow-umbra-penumbra": 1,
+    "eclipse-umbra-total-blocked": 2, "exo-rogue": 3, "exoplanet": 1, "exoplanet-transit": 2,
+    "grav-two-rules": 3, "gravity": 1, "gravity-distance": 2, "loop": 2,
     "lunar-atmosphere-dust-redder": 2, "lunar-definition-earth-shadow": 1,
     "lunar-difference-name-darker": 3, "lunar-earth-between-sun-moon": 1,
     "lunar-night-side-visibility": 3, "lunar-partial-imperfect-alignment": 2,
     "lunar-penumbral-faint-outer-shadow": 2, "lunar-phase-full-moon": 1,
     "lunar-rayleigh-scattering-red-light": 2, "lunar-red-filtered-atmosphere": 2,
     "lunar-shadow-huge-earth": 3, "lunar-sunrises-sunsets-projected": 3,
-    "lunar-umbra-inner-shadow": 1, "ml-humans-still-check": 3, "ml-learns-from-data": 2,
-    "sensor-robot-sees": 1, "star-arcturus-red-giant": 2, "star-betelgeuse-red-giant": 2,
-    "star-blue-hotter-red": 1, "star-closest-main-sequence": 2, "star-color-spectrum-order": 1,
-    "star-color-temp-determine": 1, "star-coolest-star-temperature": 3,
-    "star-prism-wavelengths": 2, "star-properties-range": 2, "star-proxima-red-dwarf": 1,
-    "star-red-dwarf-coolest": 1, "star-red-dwarf-faint": 3, "star-red-dwarf-longevity": 3,
-    "star-red-giant-expansion": 2, "star-sirius-brightest": 1, "star-sun-age-main-sequence": 1,
-    "star-surface-temp-color": 3, "star-visible-wavelength-range": 2
+    "lunar-umbra-inner-shadow": 1, "meteor": 2, "meteor-fireball": 3, "meteor-where": 1,
+    "meteorite": 2, "meteorite-name": 1, "meteorite-survive": 3, "meteoroid": 1,
+    "meteoroid-chain": 3, "meteoroid-daily-mass": 2, "ml-humans-still-check": 3,
+    "ml-learns-from-data": 2, "ml-trained-by-hubble": 1, "moon": 1, "moon-largest": 2,
+    "moon-most-not-planets": 3, "nebula": 1, "nebula-gas": 3, "nebula-planetary": 2,
+    "planet": 3, "planet-count": 1, "planet-ice-giants": 2, "sensor": 1, "sensor-fans-move": 2,
+    "sensor-robot-sees": 1, "sensor-why-autonomous": 3, "sequence": 1, "star": 1,
+    "star-arcturus-red-giant": 2, "star-betelgeuse-red-giant": 2, "star-blue-hotter-red": 1,
+    "star-closest-main-sequence": 2, "star-color-spectrum-order": 1,
+    "star-color-temp-determine": 1, "star-coolest-star-temperature": 3, "star-fusion": 2,
+    "star-mass-life": 3, "star-prism-wavelengths": 2, "star-properties-range": 2,
+    "star-proxima-red-dwarf": 1, "star-red-dwarf-coolest": 1, "star-red-dwarf-faint": 3,
+    "star-red-dwarf-longevity": 3, "star-red-giant-expansion": 2, "star-sirius-brightest": 1,
+    "star-sun-age-main-sequence": 1, "star-surface-temp-color": 3,
+    "star-visible-wavelength-range": 2, "supernova": 2, "supernova-elements": 3,
+    "supernova-what": 1
   };
 
   /* Tron mot BAN SAO — tron tai cho thi luot sau thu tu G/LV da bi doi, va moi
@@ -222,16 +241,43 @@ window.AstroQQuestions = (function () {
   function terms() { return Object.keys(GOF); }
   function has(k) { return !!GOF[k]; }
 
+  /* Sap mot danh sach khoa theo KHOANG CACH den cap `lv`, tron trong cung khoang
+     cach. Cau chua khai `lv` xuong cuoi (khoang cach 9) chu khong bi loai — loai
+     thi mot cau moi chua kip khai do kho se im lang mat khoi moi luot.
+
+     ⚠️ DAY LA DUONG LUI BAT BUOC, KHONG PHAI PHONG XA. Do duoc tren bank
+        19/08/2026: `term_black_hole` co CA HAI cau o cap 2, `term_meteor` va
+        `term_meteorite` la {2,3}. Loc thang `lv === 1` thi ba the nay bien mat
+        khoi moi luot cua tre moi — do kho tu dieu chinh lai di THU HEP kien thuc.
+        Nen chi sap thu tu, khong bao gio loai. */
+  function nearest(ks, lv) {
+    var byd = {}, ds = [], out = [], i;
+    for (i = 0; i < ks.length; i++) {
+      var d = (LV[ks[i]] == null) ? 9 : Math.abs(LV[ks[i]] - lv);
+      if (!byd[d]) { byd[d] = []; ds.push(d); }
+      byd[d].push(ks[i]);
+    }
+    ds.sort(function (a, b) { return a - b; });
+    for (i = 0; i < ds.length; i++) out = out.concat(shuffled(byd[ds[i]]));
+    return out;
+  }
+
   /* Chon n khoa cho mot luot. CHONG TRUNG THEO THE (xem canh bao dau file):
-     rut nhom truoc, moi nhom mot cau. Het nhom moi lay bu cau thu hai. */
-  function pickKeys(n) {
+     rut nhom truoc, moi nhom mot cau. Het nhom moi lay bu cau thu hai.
+
+     `lv` (1..3, bo trong = khong quan tam) la CAP DO SERVER TINH cho tre —
+     Services/Adapt.cs. No quyet dinh CHON CAU NAO TRONG MOI THE, khong quyet dinh
+     the nao duoc vao: moi the vao mot cau nhu cu, chi la cau gan cap `lv` nhat.
+     Nho vay so the moi luot khong doi theo cap do, va khong the co cap nao ra
+     luot rong (`check_quiz_split.py` canh dieu nay). */
+  function pickKeys(n, lv) {
     var gs = shuffled(G), out = [], spare = [], i;
     for (i = 0; i < gs.length && out.length < n; i++) {
-      var ks = shuffled(gs[i].q);
+      var ks = lv ? nearest(gs[i].q, lv) : shuffled(gs[i].q);
       out.push(ks[0]);
       for (var j = 1; j < ks.length; j++) spare.push(ks[j]);
     }
-    spare = shuffled(spare);
+    spare = lv ? nearest(spare, lv) : shuffled(spare);
     for (i = 0; out.length < n && i < spare.length; i++) out.push(spare[i]);
     return out.slice(0, n);
   }
@@ -298,8 +344,8 @@ window.AstroQQuestions = (function () {
 
   /* Mot luot binh thuong: rut n khoa roi tai. Neu co file hong thi bu them
      mot lan cho du n — de tre khong bi mot luot ngan hon vi loi mang. */
-  function round(n) {
-    var keys = pickKeys(n);
+  function round(n, lv) {
+    var keys = pickKeys(n, lv);
     return load(keys).then(function (qs) {
       if (qs.length >= n) return qs;
       var more = fill(qs.map(function (q) { return q.term; }), n)
@@ -325,6 +371,7 @@ window.AstroQQuestions = (function () {
     S: S, G: G, LV: LV,
     terms: terms, has: has, groupOf: function (k) { return GOF[k] || null; },
     shuffled: shuffled, pickKeys: pickKeys, keysOfTerms: keysOfTerms, fill: fill,
+    nearest: nearest,   /* xuat de check_quiz_split.py do duoc luat chon theo cap */
     load: load, round: round, byTerms: byTerms
   };
 })();

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The three words describe <b>location</b>, not material: space → atmosphere → ground." },
   hint: { vi: "Cùng một hòn đá đi qua ba chặng đường. Ba cái tên ứng với <b>ba chặng</b> đó.",
           en: "One rock, three stages of a journey. Three names for <b>three stages</b>." },
+  lv: 3,
   src: "meteor"
 };

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It's a <b>rocky leftover</b> from the solar system's formation. The icy one with a tail is a <b>comet</b>, not an asteroid." },
   hint: { vi: "Từ khoá là <b>đá</b> — băng thì thuộc về một loại vật thể khác.",
           en: "The key word is <b>rock</b> — ice belongs to a different kind of object." },
+  lv: 1,
   src: "aster"
 };

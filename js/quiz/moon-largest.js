@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It's <b>Ganymede</b>, a moon of Jupiter — larger even than the planet Mercury." },
   hint: { vi: "Nó thuộc Sao Mộc, và to hơn cả <b>một hành tinh</b> thật sự.",
           en: "It belongs to Jupiter — and it's bigger than an actual <b>planet</b>." },
+  lv: 2,
   src: "ganym"
 };

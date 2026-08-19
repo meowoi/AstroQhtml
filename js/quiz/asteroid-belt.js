@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The main belt lies <b>between Mars and Jupiter</b>. The region beyond Neptune is the Kuiper Belt, home to icy bodies." },
   hint: { vi: "Nó ngăn giữa hành tinh đỏ và hành tinh khổng lồ nhất.",
           en: "It sits between the red planet and the biggest giant." },
+  lv: 2,
   src: "aster"
 };

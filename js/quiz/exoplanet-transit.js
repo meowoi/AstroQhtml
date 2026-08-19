@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The common way is the <b>transit method</b> — measuring the dip in starlight as a planet crosses. Sound can't travel through the vacuum of space." },
   hint: { vi: "Nếu có ai đi ngang qua trước bóng đèn, ánh sáng sẽ <b>tối đi một chút</b>.",
           en: "When someone walks in front of a lamp, the light <b>dips a little</b>." },
+  lv: 2,
   src: "exo"
 };

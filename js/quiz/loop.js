@@ -22,5 +22,6 @@ export default {
   no: { vi: "Chưa đúng! Để làm lặp lại một việc, ta dùng <b>vòng lặp</b> chứ không phải lệnh này.",
         en: "Not quite! To repeat an action, use a <b>loop</b>, not this command." },
   hint: { vi: "Làm đi làm lại cùng một việc — cấu trúc nào hợp nhất nhỉ?",
-          en: "Doing the same thing over and over — which structure fits?" }
+          en: "Doing the same thing over and over — which structure fits?" },
+  lv: 2
 };

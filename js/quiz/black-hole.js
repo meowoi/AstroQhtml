@@ -23,5 +23,6 @@ export default {
         en: "Not quite! That boundary is the <b>event horizon</b>. Past it, nothing escapes — not even light." },
   hint: { vi: "Nó nghe như một <b>đường chân trời</b>: qua khỏi vạch đó là không quay lại được.",
           en: "It sounds like a <b>horizon</b>: cross that line and there is no coming back." },
+  lv: 2,
   src: "bh"
 };

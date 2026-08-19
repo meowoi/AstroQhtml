@@ -23,5 +23,6 @@ export default {
         en: "Not quite! There are <b>8 planets</b>. Pluto was once counted as the ninth, but in 2006 the IAU reclassified it as a <b>dwarf planet</b>." },
   hint: { vi: "Đếm từ Sao Thuỷ ra tới Sao Hải Vương — và nhớ rằng Sao Diêm Vương đã “đổi nghề”.",
           en: "Count from Mercury out to Neptune — and remember Pluto changed job title." },
+  lv: 1,
   src: "planet"
 };

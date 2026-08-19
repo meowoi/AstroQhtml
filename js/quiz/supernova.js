@@ -23,5 +23,6 @@ export default {
         en: "Not quite! A supernova is how a <b>very massive star</b> ends its life — not a planet or comet event." },
   hint: { vi: "Nó là <b>cái chết</b> của một ngôi sao rất lớn, không phải một vụ đâm nhau.",
           en: "It is the <b>death</b> of a very massive star, not a crash." },
+  lv: 2,
   src: "star"
 };

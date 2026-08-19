@@ -23,5 +23,6 @@ export default {
         en: "Not quite! Gravity pulls everything <b>toward the centre</b> of the planet — not toward a pole, and it never pushes away." },
   hint: { vi: "Ở Việt Nam hay ở Nam Mỹ, thả tay ra là đồ vật đều rơi <b>xuống</b> — “xuống” là về hướng nào?",
           en: "In Vietnam or in South America, a dropped object always falls <b>down</b> — which direction is “down”?" },
+  lv: 1,
   src: "grav"
 };

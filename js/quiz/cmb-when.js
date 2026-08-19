@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The figure NASA gives is about <b>380,000 years</b> after the big bang." },
   hint: { vi: "Không phải ngay lập tức, cũng không phải hàng tỉ năm — mà là <b>vài trăm nghìn</b> năm.",
           en: "Not instantly, and not billions of years — a few <b>hundred thousand</b> years." },
+  lv: 3,
   src: "cosmos"
 };

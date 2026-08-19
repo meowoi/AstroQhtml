@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It's a <b>fireball</b> — still a meteor, just an unusually bright one." },
   hint: { vi: "Tên gọi rất “nóng”, và nó vẫn thuộc họ sao băng.",
           en: "The name sounds hot — and it's still a meteor." },
+  lv: 3,
   src: "meteor"
 };

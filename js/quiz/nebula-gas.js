@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It is <b>gravity</b> that makes the dense clumps collapse and heat up — not wind or collisions." },
   hint: { vi: "Cùng một lực giữ em không bay khỏi mặt đất, nhưng ở đây nó bóp cả một đám mây.",
           en: "The same force that keeps you on the ground — here it squeezes an entire cloud." },
+  lv: 3,
   src: "star"
 };

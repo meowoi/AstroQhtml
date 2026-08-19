@@ -22,5 +22,6 @@ export default {
   no: { vi: "Chưa đúng! Đề yêu cầu <b>tiến trước, rẽ phải sau</b> — đúng thứ tự nhé.",
         en: "Not quite! It says <b>move first, then turn right</b> — order matters." },
   hint: { vi: "Thứ tự rất quan trọng: việc nào làm <b>trước</b>?",
-          en: "Order matters: which step comes <b>first</b>?" }
+          en: "Order matters: which step comes <b>first</b>?" },
+  lv: 1
 };

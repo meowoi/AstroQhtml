@@ -23,5 +23,6 @@ export default {
         en: "Not quite! <b>Nothing</b> escapes, light included — that is exactly why it looks black." },
   hint: { vi: "Nghĩ về cái tên: vì sao ta gọi nó là lỗ <b>đen</b>?",
           en: "Think about the name: why do we call it a <b>black</b> hole?" },
+  lv: 2,
   src: "bh"
 };

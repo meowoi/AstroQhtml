@@ -253,6 +253,102 @@ def main():
             check("byTerms voi khoa khong ton tai tra ve rong (de trang roi ve pickKeys)",
                   bres["ghost"] == 0, bres["ghost"])
 
+            print("\n=== [9] pickKeys(n, lv): do kho tu dieu chinh ('vai 2') ===")
+            lres = pg.evaluate("""() => {
+                const LV = AstroQQuestions.LV;
+                const out = {};
+                // Bang lv co san trong bank — de biet moi cap CO du cau khong.
+                const have = {1:0, 2:0, 3:0, 0:0};
+                for (const k of AstroQQuestions.terms()) have[LV[k] || 0]++;
+                out.have = have;
+
+                // Moi the co nhung cap nao — de chi ra the nao THIEU cap nao.
+                out.gapCards = [];
+                for (const g of AstroQQuestions.G) {
+                  const lvs = new Set(g.q.map(k => LV[k] || 0));
+                  for (const want of [1, 2, 3])
+                    if (!lvs.has(want)) { out.gapCards.push((g.c || g.q[0]) + ":thieu" + want); }
+                }
+
+                // Rut 300 luot moi cap, do phan bo `lv` that su rut ra.
+                out.byLv = {};
+                for (const lv of [0, 1, 2, 3]) {
+                  const dist = {1:0, 2:0, 3:0, 0:0};
+                  let cards = new Set(), sizes = new Set(), clash = 0;
+                  for (let i = 0; i < 300; i++) {
+                    const ks = AstroQQuestions.pickKeys(5, lv || undefined);
+                    sizes.add(ks.length);
+                    const seen = new Set();
+                    for (const k of ks) {
+                      dist[LV[k] || 0]++;
+                      const g = AstroQQuestions.groupOf(k);
+                      const id = g ? (g.c || k) : k;
+                      cards.add(id);
+                      if (seen.has(id)) clash++; else seen.add(id);
+                    }
+                  }
+                  out.byLv[lv] = { dist, cards: cards.size,
+                                   sizes: [...sizes], clash };
+                }
+                return out;
+            }""")
+            _h = lres["have"]
+            print("      cau theo cap trong bank: 1=%d  2=%d  3=%d  (chua khai=%d)"
+                  % (_h["1"], _h["2"], _h["3"], _h["0"]))
+            check("moi cap 1/2/3 deu co cau trong bank",
+                  _h["1"] > 0 and _h["2"] > 0 and _h["3"] > 0, str(_h))
+            check("khong con cau nao chua khai `lv`", _h["0"] == 0,
+                  "%d cau chua khai" % _h["0"])
+
+            # ⚠️ DANH SACH NAY KHONG PHAI LOI — no la LY DO duong lui `nearest()` phai
+            #    ton tai. The nao thieu mot cap thi o cap do no ra cau gan nhat. In ra
+            #    de nguoi doc thay ro con bao nhieu the chua du ba cap (no cang ngan
+            #    khi tra xong no noi dung).
+            print("      the con thieu cap (%d cho): %s"
+                  % (len(lres["gapCards"]), ", ".join(lres["gapCards"][:8])
+                     + (" …" if len(lres["gapCards"]) > 8 else "")))
+
+            for lv in ("0", "1", "2", "3"):
+                r = lres["byLv"][lv]
+                d = r["dist"]
+                tot = d["1"] + d["2"] + d["3"] + d["0"]
+                nhan = "khong loc" if lv == "0" else ("cap " + lv)
+                print("      %-10s -> lv1 %4.1f%%  lv2 %4.1f%%  lv3 %4.1f%%  (%d the ra de)"
+                      % (nhan, 100.0 * d["1"] / tot, 100.0 * d["2"] / tot,
+                         100.0 * d["3"] / tot, r["cards"]))
+                check("%s: 300 luot deu rut dung 5 khoa" % nhan, r["sizes"] == [5],
+                      str(r["sizes"]))
+                check("%s: khong luot nao co hai cau cung mot the" % nhan,
+                      r["clash"] == 0, "%d lan trung" % r["clash"])
+
+            # ĐIEU QUAN TRONG NHAT: cap do phai doi CAU NAO TRONG THE, chu KHONG duoc
+            # thu hep so THE ra de. Mot ban lam sai (loc ca be theo `lv`) se lot qua
+            # phep kiem phan bo o duoi nhung HONG ngay o day.
+            _c0 = lres["byLv"]["0"]["cards"]
+            for lv in ("1", "2", "3"):
+                check("cap %s van ra du %d the nhu khi khong loc" % (lv, _c0),
+                      lres["byLv"][lv]["cards"] == _c0,
+                      "%d the" % lres["byLv"][lv]["cards"])
+
+            # Va phan bo phai THAT SU dich theo cap — neu khong thi `lv` chi la mot
+            # tham so bi bo qua, dung cai bay "noi day nhung khong noi gi" ma chu
+            # thich dau `split_quiz_bank.py` da canh bao tu 07/08/2026.
+            _p = lambda lv, k: 100.0 * lres["byLv"][lv]["dist"][k] / sum(
+                lres["byLv"][lv]["dist"][x] for x in ("1", "2", "3", "0"))
+            check("cap 1 ra nhieu cau lv1 hon cap 3", _p("1", "1") > _p("3", "1"),
+                  "%.1f%% vs %.1f%%" % (_p("1", "1"), _p("3", "1")))
+            check("cap 3 ra nhieu cau lv3 hon cap 1", _p("3", "3") > _p("1", "3"),
+                  "%.1f%% vs %.1f%%" % (_p("3", "3"), _p("1", "3")))
+            check("cap 2 ra nhieu cau lv2 hon ca cap 1 va cap 3",
+                  _p("2", "2") > _p("1", "2") and _p("2", "2") > _p("3", "2"),
+                  "cap1 %.1f%% · cap2 %.1f%% · cap3 %.1f%%"
+                  % (_p("1", "2"), _p("2", "2"), _p("3", "2")))
+            # Cap 1 la cap cua TRE MOI: no phai gan nhu khong bao gio gap cau giai
+            # thich co che. Nguong 15%% chu khong phai 0%% vi cac the thieu cap 1
+            # (in o tren) bat buoc phai lay cau gan nhat.
+            check("cap 1: cau lv3 duoi 15%", _p("1", "3") < 15.0,
+                  "%.1f%%" % _p("1", "3"))
+
             b.close()
     finally:
         os.remove(page)

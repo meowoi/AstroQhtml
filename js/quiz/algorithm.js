@@ -22,5 +22,6 @@ export default {
   no: { vi: "Rất tiếc! <b>MoveForward()</b> sẽ làm Byte đâm thẳng vào thiên thạch đấy. Hãy thử lại!",
         en: "Oops! <b>MoveForward()</b> would crash Byte into the asteroid. Try again!" },
   hint: { vi: "Suy nghĩ kỹ nhé! Thuật toán nào giúp tớ <b>rẽ trái</b>?",
-          en: "Think carefully! Which command turns me <b>left</b>?" }
+          en: "Think carefully! Which command turns me <b>left</b>?" },
+  lv: 2
 };

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The prefix “exo-” means <b>outside</b>: it's a planet <b>outside our solar system</b>." },
   hint: { vi: "Tiền tố “exo-” trong tiếng Hy Lạp nghĩa là <b>bên ngoài</b>.",
           en: "The Greek prefix “exo-” means <b>outside</b>." },
+  lv: 1,
   src: "exo"
 };

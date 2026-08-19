@@ -22,5 +22,6 @@ export default {
   no: { vi: "Chưa đúng! “Nếu… thì…” chính là <b>lệnh điều kiện (If)</b>.",
         en: "Not quite! “If… then…” is exactly an <b>If condition</b>." },
   hint: { vi: "“Nếu… thì…” — nghe giống loại lệnh nào?",
-          en: "“If… then…” — which command does that sound like?" }
+          en: "“If… then…” — which command does that sound like?" },
+  lv: 1
 };

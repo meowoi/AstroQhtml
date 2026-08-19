@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It's <b>Ceres</b>. Pluto, Haumea, Makemake and Eris are all far beyond Neptune, out in the Kuiper Belt." },
   hint: { vi: "Nó là <b>vật thể lớn nhất</b> trong vành đai tiểu hành tinh — tàu Dawn của NASA đã bay tới đó.",
           en: "It's the <b>largest object</b> in the asteroid belt — NASA's Dawn spacecraft visited it." },
+  lv: 2,
   src: "dwarf"
 };

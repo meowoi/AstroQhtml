@@ -23,5 +23,6 @@ export default {
         en: "Not quite! It is the <b>oldest light</b> we can observe, left over from the infant universe — not light from any one star." },
   hint: { vi: "Hãy nghĩ nó như <b>tấm ảnh sơ sinh</b> của cả vũ trụ.",
           en: "Think of it as the universe's <b>newborn photo</b>." },
+  lv: 1,
   src: "cosmos"
 };

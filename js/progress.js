@@ -78,6 +78,23 @@
      không được hiện cho đứa sau. */
   var LS_TRAIN = "astroq-training";
 
+  /* Cấp độ câu hỏi Quiz nên rút (thêm 19/08/2026 — "vai ②", độ khó tự điều chỉnh).
+     ⚠️ CẦU NỐI BẮT BUỘC, cùng lý do với LS_MSTEPS và LS_TRAIN ở trên: `quiz.html`
+        **cố ý không nạp** `js/firebase-auth.js` nên tự nó KHÔNG có token để hỏi
+        `GET /me/profile`. Trang CÓ token (dashboard · profile · library) ghi cache,
+        Quiz đọc.
+     ⚠️ CHỈ CHỨA con số server trả về. **Client không được tự tính cấp độ** từ
+        `quizAccuracy` — luật + các mốc nằm ở `Services/Adapt.cs` phía server, và
+        có hai nơi tính là có hai câu trả lời khác nhau cho cùng một đứa trẻ (đúng
+        cái giá `js/depth.js` đã trả).
+     ⚠️ ĐÓNG DẤU `uid`: hai đứa trẻ dùng chung máy thì cấp độ của đứa trước không
+        được quyết đề bài của đứa sau. Chưa đăng nhập (`uid` rỗng) cũng là một danh
+        tính hợp lệ — trẻ chơi thử vẫn có cấp độ 1 và vẫn làm được bài.
+     ⚠️ KHÔNG PHẢI HÀNG RÀO: sửa localStorage chỉ đổi ĐỘ KHÓ đề bài của chính mình,
+        không mở khoá gì và không sinh thưởng — thưởng do server kẹp trần
+        (`Wallet.AwardQuiz`). Nên ở đây không cần chống giả mạo. */
+  var LS_QUIZLV = "astroq-quiz-lv";
+
   /** Mã lượt duy nhất, sinh MỘT LẦN lúc tạo việc (xem điều 4 ở đầu file). */
   function newOpId() {
     try {
@@ -192,6 +209,42 @@
       total: box.total | 0,
       programs: box.programs.slice()
     };
+  }
+
+  /**
+   * Rót `progress.quizLv` của một câu trả lời server vào cache. Trả true nếu ghi được.
+   *
+   * ⚠️ ĐÒI MỘT SỐ NGUYÊN TRONG KHOẢNG HỢP LỆ, không `| 0` cho xong: server cũ chưa
+   *    có trường này thì `undefined | 0` = 0, mà 0 không phải một cấp độ — nó sẽ
+   *    lặng lẽ ghi đè cấp độ thật bằng một con số vô nghĩa. Thà không ghi gì.
+   * ⚠️ TRẦN 3 khớp `Adapt.MaxQuizLevel`. Lệch thì Quiz đi tìm một cấp không tồn tại;
+   *    `nearest()` có đường lùi nên không vỡ, nhưng cấp 4 chỉ là tên khác của cấp 3.
+   */
+  function absorbQuizLv(data) {
+    var pr = data && data.progress;
+    var lv = pr ? pr.quizLv : null;
+    if (typeof lv !== "number" || !isFinite(lv)) return false;
+    lv = Math.round(lv);
+    if (lv < 1 || lv > 3) return false;
+    write(LS_QUIZLV, { uid: uidNow(), lv: lv });
+    return true;
+  }
+
+  /**
+   * Cấp độ câu hỏi nên rút cho người đang dùng máy này.
+   *
+   * `known:false` = **chưa biết** (chưa đăng nhập, hoặc chưa lần nào đọc được
+   * server, hoặc cache của một đứa trẻ khác). Nơi gọi phải rút đề như trước —
+   * KHÔNG được tự đoán cấp: một cấp đoán sai làm trẻ mới gặp toàn câu giải thích
+   * cơ chế, còn tệ hơn là không lọc gì.
+   */
+  function quizLvCache() {
+    var box = read(LS_QUIZLV, null);
+    if (!box || typeof box !== "object" || box.uid !== uidNow() ||
+        typeof box.lv !== "number" || box.lv < 1 || box.lv > 3) {
+      return { known: false, lv: 0 };
+    }
+    return { known: true, lv: box.lv | 0 };
   }
 
   /** Số dư ví thật từ server → ghi đè cache của economy.js. */
@@ -491,6 +544,7 @@
             return { ok: false, source: "local", reason: (r && r.reason) || "http", data: localData() };
           }
           syncWallet(r.data);        // số dư thật → ghi đè cache của economy.js
+          absorbQuizLv(r.data);      // cấp độ Quiz → cache cho quiz.html (xem LS_QUIZLV)
           return { ok: true, source: "server", data: r.data };
         });
       }).catch(function () {
@@ -503,7 +557,7 @@
       return waitAuth(2500).then(function (a) {
         if (!a || !a.getAchievements) return { ok: false, reason: "auth" };
         return a.getAchievements().then(function (r) {
-          if (r && r.ok) { syncWallet(r.data); absorbTraining(r.data); }
+          if (r && r.ok) { syncWallet(r.data); absorbTraining(r.data); absorbQuizLv(r.data); }
           return r;
         });
       }).catch(function () { return { ok: false, reason: "error" }; });
@@ -567,6 +621,8 @@
      * ⚠️ `known:false` = CHƯA BIẾT, khác "chưa đạt gì" — nơi gọi phải hiện `—`.
      */
     training: function () { return trainingCache(); },
+    /** Cấp độ câu hỏi Quiz server đã tính → `{known, lv}`. Xem LS_QUIZLV. */
+    quizLv: function () { return quizLvCache(); },
 
     missionSteps: function (mission) {
       var box = read(LS_MSTEPS, null);
@@ -635,6 +691,7 @@
         localStorage.removeItem(LS_QUEUE);
         localStorage.removeItem(LS_MSTEPS);
         localStorage.removeItem(LS_TRAIN);
+        localStorage.removeItem(LS_QUIZLV);
       } catch (e) {}
     }
   };

@@ -87,7 +87,7 @@
      src = mảng nguồn (mảng vì một định nghĩa có thể dẫn từ hai trang) */
   var T = [
     {
-      id: "term_star", cat: "space", ic: "cx-star", q: ["star", "star-fusion"],
+      id: "term_star", cat: "space", ic: "cx-star", q: ["star", "star-fusion", "star-mass-life"],
       src: [SRC.stars],
       vi: { t: "Ngôi sao", an: "Lò phản ứng khổng lồ trên trời",
             sum: "Quả cầu khí nóng tự phát sáng — Mặt Trời là một ngôi sao.",
@@ -101,7 +101,7 @@
             dg: ["Core: hydrogen → helium", "Gas layers: mostly hydrogen", "Makes its own light"] }
     },
     {
-      id: "term_planet", cat: "space", ic: "cx-planet", q: ["planet", "planet-count"],
+      id: "term_planet", cat: "space", ic: "cx-planet", q: ["planet", "planet-count", "planet-ice-giants"],
       /* 8 hành tinh: trang Planets · ba tiêu chí IAU: trang Dwarf Planets.
          ⚠️ Trang Planets KHÔNG liệt kê ba tiêu chí đó — ghi một nguồn là dẫn nguồn
             cho một câu mình không đọc ở đó. Vì thế `src` là MẢNG. */
@@ -118,7 +118,7 @@
             dg: ["① Orbits the Sun", "② Nearly round", "③ Orbit cleared"] }
     },
     {
-      id: "term_dwarf_planet", cat: "space", ic: "cx-dwarf", q: ["dwarf", "dwarf-ceres"],
+      id: "term_dwarf_planet", cat: "space", ic: "cx-dwarf", q: ["dwarf", "dwarf-ceres", "dwarf-pluto"],
       src: [SRC.dwarf],
       vi: { t: "Hành tinh lùn", an: "Gần thành hành tinh, chỉ thiếu bước dọn sân",
             sum: "Đủ tròn, đủ quay quanh Mặt Trời — nhưng chưa dọn sạch quỹ đạo.",
@@ -132,7 +132,7 @@
             dg: ["Nearly round ✔", "Orbits the Sun ✔", "Orbit cleared ✘"] }
     },
     {
-      id: "term_moon", cat: "space", ic: "cx-moon", q: ["moon", "moon-largest"],
+      id: "term_moon", cat: "space", ic: "cx-moon", q: ["moon", "moon-largest", "moon-most-not-planets"],
       /* định nghĩa vệ tinh: trang Moons · "Ganymede lớn hơn Sao Thuỷ": trang Ganymede */
       src: [SRC.moons, SRC.ganymede],
       vi: { t: "Vệ tinh tự nhiên", an: "Bạn đồng hành quay quanh hành tinh",
@@ -147,7 +147,7 @@
             dg: ["Formed naturally", "Orbits a planet", "Largest: Ganymede"] }
     },
     {
-      id: "term_asteroid", cat: "space", ic: "cx-asteroid", q: ["asteroid-belt", "asteroid-what"],
+      id: "term_asteroid", cat: "space", ic: "cx-asteroid", q: ["asteroid-belt", "asteroid-what", "asteroid-jupiter-stopped"],
       src: [SRC.asteroid],
       vi: { t: "Tiểu hành tinh", an: "Mảnh vụn còn lại từ buổi xây nhà",
             sum: "Mảnh đá còn sót từ thời hệ Mặt Trời mới hình thành.",
@@ -161,7 +161,7 @@
             dg: ["Rock, not ice", "Belt: Mars – Jupiter", "1.1–1.9 million over 1 km"] }
     },
     {
-      id: "term_comet", cat: "space", ic: "cx-comet", q: ["comet-what", "comet-tail"],
+      id: "term_comet", cat: "space", ic: "cx-comet", q: ["comet-what", "comet-tail", "comet-two-tails"],
       src: [SRC.comet],
       vi: { t: "Sao chổi", an: "Quả cầu tuyết bẩn",
             sum: "Băng lẫn bụi; lại gần Mặt Trời thì mọc đuôi dài.",
@@ -175,7 +175,7 @@
             dg: ["Nucleus: ice + dust", "Coma: surrounding gas", "Tail: always away from Sun"] }
     },
     {
-      id: "term_meteoroid", cat: "space", ic: "cx-meteoroid", q: ["meteoroid", "meteoroid-chain"],
+      id: "term_meteoroid", cat: "space", ic: "cx-meteoroid", q: ["meteoroid", "meteoroid-chain", "meteoroid-daily-mass"],
       src: [SRC.meteor],
       vi: { t: "Thiên thạch nhỏ", an: "Hòn đá đang đi du lịch trong không gian",
             sum: "Đá không gian, từ hạt bụi tới tiểu hành tinh nhỏ — vẫn ở ngoài kia.",
@@ -189,7 +189,7 @@
             dg: ["Still IN SPACE", "Size: dust → small asteroid", "Stage 1 of 3"] }
     },
     {
-      id: "term_meteor", cat: "space", ic: "cx-meteor", q: ["meteor", "meteor-fireball"],
+      id: "term_meteor", cat: "space", ic: "cx-meteor", q: ["meteor", "meteor-fireball", "meteor-where"],
       src: [SRC.meteor],
       vi: { t: "Sao băng", an: "Vệt sáng vụt qua trời đêm",
             sum: "Không phải ngôi sao — là đá không gian đang cháy trong khí quyển.",
@@ -203,7 +203,7 @@
             dg: ["BURNING in the atmosphere", "Brighter than Venus = fireball", "Stage 2 of 3"] }
     },
     {
-      id: "term_meteorite", cat: "space", ic: "cx-meteorite", q: ["meteorite", "meteorite-survive"],
+      id: "term_meteorite", cat: "space", ic: "cx-meteorite", q: ["meteorite", "meteorite-survive", "meteorite-name"],
       src: [SRC.meteor],
       vi: { t: "Thiên thạch", an: "Hòn đá vũ trụ em có thể cầm lên tay",
             sum: "Sống sót qua khí quyển và chạm tới mặt đất.",
@@ -217,7 +217,7 @@
             dg: ["ON THE GROUND", "Survives: usually under 5%", "Stage 3 of 3"] }
     },
     {
-      id: "term_exoplanet", cat: "space", ic: "cx-exoplanet", q: ["exoplanet", "exoplanet-transit"],
+      id: "term_exoplanet", cat: "space", ic: "cx-exoplanet", q: ["exoplanet", "exoplanet-transit", "exo-rogue"],
       src: [SRC.exo],
       vi: { t: "Ngoại hành tinh", an: "Hành tinh ở nhà người khác",
             sum: "Hành tinh nằm ngoài hệ Mặt Trời — đã xác nhận hơn 6.000.",
@@ -231,7 +231,7 @@
             dg: ["Outside the Solar System", "Confirmed: over 6,000", "Found by star dimming"] }
     },
     {
-      id: "term_black_hole", cat: "space", ic: "cx-blackhole", q: ["black-hole", "black-hole-light"],
+      id: "term_black_hole", cat: "space", ic: "cx-blackhole", q: ["black-hole", "black-hole-light", "bh-horizon-boundary", "bh-not-hole"],
       src: [SRC.bh],
       vi: { t: "Lỗ đen", an: "Cái giếng sâu đến mức ánh sáng cũng không leo ra được",
             sum: "Đặc đến mức ngay cả ánh sáng cũng không thoát ra nổi.",
@@ -245,7 +245,7 @@
             dg: ["Event horizon: a boundary", "Light does NOT escape", "Smallest known: 3.8 solar masses"] }
     },
     {
-      id: "term_gravity", cat: "space", ic: "cx-gravity", q: ["gravity", "gravity-distance"],
+      id: "term_gravity", cat: "space", ic: "cx-gravity", q: ["gravity", "gravity-distance", "grav-two-rules"],
       src: [SRC.gravity],
       vi: { t: "Lực hấp dẫn", an: "Sợi dây vô hình mọi vật đều cầm",
             sum: "Lực kéo mọi vật về phía tâm — càng nặng, càng gần thì càng mạnh.",
@@ -259,7 +259,7 @@
             dg: ["More mass → stronger", "Farther → weaker", "Keeps planets in orbit"] }
     },
     {
-      id: "term_nebula", cat: "space", ic: "cx-nebula", q: ["nebula", "nebula-gas"],
+      id: "term_nebula", cat: "space", ic: "cx-nebula", q: ["nebula", "nebula-gas", "nebula-planetary"],
       src: [SRC.stars],
       vi: { t: "Tinh vân", an: "Vườn trẻ của các ngôi sao",
             sum: "Đám mây khí và bụi khổng lồ — nơi các ngôi sao được sinh ra.",
@@ -273,7 +273,7 @@
             dg: ["Gas + dust (mostly hydrogen)", "Dense parts collapse by gravity", "Hot enough → a star is born"] }
     },
     {
-      id: "term_supernova", cat: "space", ic: "cx-supernova", q: ["supernova", "supernova-elements"],
+      id: "term_supernova", cat: "space", ic: "cx-supernova", q: ["supernova", "supernova-elements", "supernova-what"],
       src: [SRC.stars],
       vi: { t: "Siêu tân tinh", an: "Tiếng nổ chia lại vật liệu cho cả vũ trụ",
             sum: "Vụ nổ khổng lồ khi một ngôi sao rất lớn kết thúc cuộc đời.",
@@ -287,7 +287,7 @@
             dg: ["Massive star runs out of fuel", "Core collapses then REBOUNDS", "Shock wave → explosion"] }
     },
     {
-      id: "term_cmb", cat: "space", ic: "cx-cmb", q: ["cmb", "cmb-when"],
+      id: "term_cmb", cat: "space", ic: "cx-cmb", q: ["cmb", "cmb-when", "cmb-oldest-light"],
       src: [SRC.cosmos],
       vi: { t: "Bức xạ nền vũ trụ", an: "Bức ảnh sơ sinh của vũ trụ",
             sum: "Ánh sáng cổ nhất ta quan sát được — còn lại từ thuở vũ trụ sơ sinh.",
@@ -420,7 +420,7 @@
           `check_quiz_bank` đã miễn trừ đúng 5 khoá này. Thẻ thì vẫn có `src` tử tế. */
     {
       id: "term_ai", cat: "ai", ic: "cx-ai",
-      q: ["ai-what-is", "ai-can-do-what"],
+      q: ["ai-what-is", "ai-can-do-what", "ai-why-fast"],
       src: [SRC.nasaWhatIsAi],
       vi: { t: "Trí Tuệ Nhân Tạo", an: "Cái máy học được cách nhận ra mọi thứ",
             sum: "Một loại công nghệ giúp máy có được những khả năng “suy nghĩ” giống con người.",
@@ -436,7 +436,7 @@
 
     {
       id: "term_machine_learning", cat: "ai", ic: "cx-machine-learning",
-      q: ["ml-learns-from-data", "ml-humans-still-check"],
+      q: ["ml-learns-from-data", "ml-humans-still-check", "ml-trained-by-hubble"],
       src: [SRC.nasaWhatIsAi, SRC.aiHubble],
       vi: { t: "Học Máy", an: "Không dạy luật — cho xem ví dụ",
             sum: "Máy xem rất nhiều dữ liệu rồi tự tìm ra luật để đưa ra dự đoán.",
@@ -473,7 +473,7 @@
 
     {
       id: "term_sensor", cat: "robot", ic: "cx-sensor",
-      q: ["sensor", "sensor-robot-sees"],
+      q: ["sensor", "sensor-robot-sees", "sensor-why-autonomous", "sensor-fans-move"],
       src: [SRC.astrobee],
       vi: { t: "Cảm Biến", an: "Giác quan của một cỗ máy",
             sum: "Bộ phận cho robot biết chuyện gì đang xảy ra quanh nó.",

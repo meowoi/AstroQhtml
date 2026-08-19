@@ -225,13 +225,18 @@ HDR_INDEX = """/* js/quiz-index.js — MUC LUC NGAN HANG CAU HOI + BANG NGUON + 
             khong viet URL — 870 cau viet URL thang la ~870 ban sao cua ~40 dia chi.
      G      cac NHOM. Mot nhom = mot THE So Tay (`js/codex-terms.js`), hoac mot
             cau le chua the nao nhan. `t` = topic hien o badge [ CHU DE · CAU n/m ].
-     LV     do kho 1/2/3, chi khai cho cau DA co. %(nolv)d/%(total)d cau chua khai —
-            ⚠️ HIEN CHUA AI DOC `lv`. Chu du an chot 07/08/2026: GIU truong nay,
-            cho duong "server tinh cap do roi client rut de theo cap do". Muon noi
-            day thi quiz.html can doc duoc cap do cua tre, ma trang do CO Y khong
-            nap SDK Firebase (233 KB) nen khong co token — phai them mot cache do
-            dashboard ghi, dung khuon `astroq-route-gate`. Dung noi lai ma chua lam
-            cai cache do; va dung xoa `lv` — de bai Dot 2-5 van yeu cau Gemini khai.
+     LV     do kho 1/2/3. %(nolv)d/%(total)d cau chua khai.
+            DUOC DOC THAT TU 19/08/2026 ("vai ②" — do kho tu dieu chinh):
+              server  Services/Adapt.cs tinh `progress.quizLv` tu ti le tra loi dung
+                      (KHONG tu `xp`/`level`: `level` do THOI GIAN CHOI).
+              cau noi js/progress.js ghi cache `astroq-quiz-lv` co dong dau uid —
+                      `quiz.html` CO Y khong nap SDK Firebase nen khong co token,
+                      dung khuon `astroq-route-gate`/`astroq-training`.
+              dung   `pickKeys(n, lv)` duoi day.
+            ⚠️ `lv` NAM O FILE CAU (`js/quiz/*.js`) moi la nguon su that; bang LV
+               nay SINH RA. Dung go tay vao js/quiz-index.js.
+            ⚠️ Cap do doi CAU NAO TRONG THE, KHONG doi THE NAO duoc vao — xem
+               chu thich `pickKeys`.
 
    ⚠️ `pickKeys()` CHONG TRUNG THEO THE, KHONG THEO `term` — sua 07/08/2026.
       Ban cu loc bang `pool[i].term`, nhung `term` la khoa cua CAU (moi cau mot
@@ -261,16 +266,43 @@ TAIL_INDEX = r"""
   function terms() { return Object.keys(GOF); }
   function has(k) { return !!GOF[k]; }
 
+  /* Sap mot danh sach khoa theo KHOANG CACH den cap `lv`, tron trong cung khoang
+     cach. Cau chua khai `lv` xuong cuoi (khoang cach 9) chu khong bi loai — loai
+     thi mot cau moi chua kip khai do kho se im lang mat khoi moi luot.
+
+     ⚠️ DAY LA DUONG LUI BAT BUOC, KHONG PHAI PHONG XA. Do duoc tren bank
+        19/08/2026: `term_black_hole` co CA HAI cau o cap 2, `term_meteor` va
+        `term_meteorite` la {2,3}. Loc thang `lv === 1` thi ba the nay bien mat
+        khoi moi luot cua tre moi — do kho tu dieu chinh lai di THU HEP kien thuc.
+        Nen chi sap thu tu, khong bao gio loai. */
+  function nearest(ks, lv) {
+    var byd = {}, ds = [], out = [], i;
+    for (i = 0; i < ks.length; i++) {
+      var d = (LV[ks[i]] == null) ? 9 : Math.abs(LV[ks[i]] - lv);
+      if (!byd[d]) { byd[d] = []; ds.push(d); }
+      byd[d].push(ks[i]);
+    }
+    ds.sort(function (a, b) { return a - b; });
+    for (i = 0; i < ds.length; i++) out = out.concat(shuffled(byd[ds[i]]));
+    return out;
+  }
+
   /* Chon n khoa cho mot luot. CHONG TRUNG THEO THE (xem canh bao dau file):
-     rut nhom truoc, moi nhom mot cau. Het nhom moi lay bu cau thu hai. */
-  function pickKeys(n) {
+     rut nhom truoc, moi nhom mot cau. Het nhom moi lay bu cau thu hai.
+
+     `lv` (1..3, bo trong = khong quan tam) la CAP DO SERVER TINH cho tre —
+     Services/Adapt.cs. No quyet dinh CHON CAU NAO TRONG MOI THE, khong quyet dinh
+     the nao duoc vao: moi the vao mot cau nhu cu, chi la cau gan cap `lv` nhat.
+     Nho vay so the moi luot khong doi theo cap do, va khong the co cap nao ra
+     luot rong (`check_quiz_split.py` canh dieu nay). */
+  function pickKeys(n, lv) {
     var gs = shuffled(G), out = [], spare = [], i;
     for (i = 0; i < gs.length && out.length < n; i++) {
-      var ks = shuffled(gs[i].q);
+      var ks = lv ? nearest(gs[i].q, lv) : shuffled(gs[i].q);
       out.push(ks[0]);
       for (var j = 1; j < ks.length; j++) spare.push(ks[j]);
     }
-    spare = shuffled(spare);
+    spare = lv ? nearest(spare, lv) : shuffled(spare);
     for (i = 0; out.length < n && i < spare.length; i++) out.push(spare[i]);
     return out.slice(0, n);
   }
@@ -337,8 +369,8 @@ TAIL_INDEX = r"""
 
   /* Mot luot binh thuong: rut n khoa roi tai. Neu co file hong thi bu them
      mot lan cho du n — de tre khong bi mot luot ngan hon vi loi mang. */
-  function round(n) {
-    var keys = pickKeys(n);
+  function round(n, lv) {
+    var keys = pickKeys(n, lv);
     return load(keys).then(function (qs) {
       if (qs.length >= n) return qs;
       var more = fill(qs.map(function (q) { return q.term; }), n)
@@ -364,6 +396,7 @@ TAIL_INDEX = r"""
     S: S, G: G, LV: LV,
     terms: terms, has: has, groupOf: function (k) { return GOF[k] || null; },
     shuffled: shuffled, pickKeys: pickKeys, keysOfTerms: keysOfTerms, fill: fill,
+    nearest: nearest,   /* xuat de check_quiz_split.py do duoc luat chon theo cap */
     load: load, round: round, byTerms: byTerms
   };
 })();

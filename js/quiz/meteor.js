@@ -23,5 +23,6 @@ export default {
         en: "Not quite! Stars are vastly bigger than Earth and unimaginably far away. A meteor is just <b>a space rock burning up in the atmosphere</b>." },
   hint: { vi: "Nếu nó thật là ngôi sao thì trời đã hết sao từ lâu rồi…",
           en: "If those really were stars, the sky would have run out long ago…" },
+  lv: 2,
   src: "meteor"
 };

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! While it's still blazing overhead it's a <b>meteor</b>. Only once it <b>reaches the ground</b> is it a <b>meteorite</b>." },
   hint: { vi: "Đây là cái tên dành cho hòn đá mà con người có thể <b>cầm lên tay</b>.",
           en: "This is the name for the rock you could actually <b>pick up</b>." },
+  lv: 2,
   src: "meteor"
 };

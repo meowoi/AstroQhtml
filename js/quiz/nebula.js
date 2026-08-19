@@ -23,5 +23,6 @@ export default {
         en: "Not quite! Stars are born in <b>clouds of gas and dust</b>, not in rock or inside planets." },
   hint: { vi: "Muốn nặn một quả cầu khí khổng lồ thì trước hết phải có… rất nhiều <b>khí</b>.",
           en: "To build a giant ball of gas, you first need a great deal of… <b>gas</b>." },
+  lv: 1,
   src: "star"
 };

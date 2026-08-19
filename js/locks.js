@@ -67,7 +67,7 @@
        vững, và ngày mở cửa thì người đầu tiên bước vào gặp ngay bức tường ấy.
        Chủ dự án chốt 18/08/2026: mở miễn phí trước để đo người dùng thật — đo được
        rồi mới bàn chuyện thu tiền (`docs/decisions/009` mục "Điều kiện bật Pha 1"
-       vẫn chưa đạt: 2/3 nhiệm vụ · 106/300 câu quiz · D30 không có gì để đo).
+       vẫn chưa đạt: 2/3 nhiệm vụ · 126/300 câu quiz · D30 không có gì để đo).
 
        ⚠️ ĐƯỜNG KẺ MỚI: **miễn phí hết Trái Đất, bức tường đặt ở Mặt Trăng.** Nên
           `mission:moon` bên dưới vẫn là `soon` — và đó là trạng thái ĐÚNG: nhiệm vụ

@@ -23,5 +23,6 @@ export default {
         en: "Not quite! The farther apart, the <b>weaker</b> gravity gets — and it never turns into a push." },
   hint: { vi: "Mặt Trời rất nặng, nhưng ở đây em không bị nó hút bay đi. Vì sao?",
           en: "The Sun is enormously massive, yet it doesn't yank you off the ground. Why not?" },
+  lv: 2,
   src: "grav"
 };

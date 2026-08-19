@@ -23,5 +23,6 @@ export default {
         en: "Not quite! A natural satellite is a <b>natural body orbiting a planet</b> — the word “natural” is exactly what sets it apart from an artificial one." },
   hint: { vi: "Chữ quan trọng nhất trong câu hỏi là <b>“tự nhiên”</b>.",
           en: "The key word in the question is <b>“natural”</b>." },
+  lv: 1,
   src: "moon"
 };

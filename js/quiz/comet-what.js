@@ -23,5 +23,6 @@ export default {
         en: "Not quite! A comet is mostly <b>ice</b> and dust — that's why it grows a tail near the Sun. The rocky ones are <b>asteroids</b>." },
   hint: { vi: "Vì sao nó mọc đuôi khi lại gần Mặt Trời? Vì có thứ gì đó <b>bốc hơi</b> được.",
           en: "Why does it grow a tail near the Sun? Because something in it can <b>evaporate</b>." },
+  lv: 1,
   src: "comet"
 };
