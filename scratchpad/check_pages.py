@@ -1230,9 +1230,14 @@ for mod in ("MOD-01", "MOD-02", "MOD-03"):
 #    KHONG doi, chi doi cach hoi. Va ban moi MANH HON: no doi moi card MOD dan sang
 #    mot FILE CO THAT, tuc bat duoc ca ca "mo khoa mot khu ma tro vao trang khong
 #    ton tai" — thu ma ban cu khong he hoi toi.
+# ⚠️⚠️ DOI PHAT BIEU 19/08/2026 — chu du an chot KHOA LAI Phong Nghien Cuu
+#    (MOD-05), nen phep kiem "0 card soon" khang dinh dung trang thai CU va bao
+#    hong dung luc san pham lam dung. Dieu can bao ve KHONG doi: *dashboard noi
+#    that ve khu nao chua vao duoc*. Con so 1 la phep kiem CO RANG theo ca hai
+#    chieu: mo khoa mot khu ma quen sua day, hoac khoa them mot khu nua, deu bao.
 _soon_cards = dash_nc.count(" soon\">")
-check("dashboard.html: 0 card 'soon' (moi khu deu co trang that)",
-      _soon_cards == 0, "con %d card khoa" % _soon_cards)
+check("dashboard.html: dung 1 card 'soon' (Phong Nghien Cuu)",
+      _soon_cards == 1, "co %d card khoa" % _soon_cards)
 # Neu ngay nao co card khoa tro lai thi ba luat cu song lai NGUYEN VEN:
 if _soon_cards:
     check("dashboard.html: nut card 'soon' BAM DUOC (khong disabled)",
@@ -1271,8 +1276,16 @@ _dests |= set(re.findall(r'href="([a-z0-9-]+\.html)"', dash_nc))
 for _d in sorted(_dests):
     check("dashboard.html: dich '%s' co that tren dia" % _d,
           os.path.isfile(os.path.join(ROOT, _d)))
-check("dashboard.html: MOD-05 dan sang lab.html",
-      'location.href="lab.html"' in dash_nc.replace(" ", ""))
+# ⚠️ MOD-05 dang khoa (19/08/2026): no MO MODAL chu KHONG dieu huong. Dua tre sang
+#    mot khu dang khoa la de no vao roi moi biet chua co gi.
+check("dashboard.html: MOD-05 khong dieu huong sang lab.html",
+      'location.href="lab.html"' not in dash_nc.replace(" ", ""))
+check("dashboard.html: MOD-05 noi vao AstroQLocks (bam la mo modal)",
+      'AstroQLocks.wire($("lab-btn"), "lab")' in dash_nc)
+# ⚠️ `lab.html` PHAI CON TREN DIA: khoa la dong DUONG VAO, khong phai xoa khu. Xoa
+#    trang di thi mo lai la dung lai tu dau, va `smoke_lab` mat luon doi tuong do.
+check("lab.html van con tren dia (khoa duong vao, khong xoa khu)",
+      os.path.isfile(os.path.join(ROOT, "lab.html")))
 # ⚠️ Huy hieu la SAP RA MAT, KHONG phai TRA PHI: Phong Nghien Cuu chua co noi dung,
 #    gan nhan tra phi la hua rang tra tien se mo duoc. Xem ba trang thai o js/locks.js.
 # ⚠️ Huy hieu phai SUY TU `state` chu khong go cung `badge_soon`: go cung thi ngay
@@ -4411,6 +4424,59 @@ check("[29] moi ky tu trong nhan do admin-report sinh deu co trong font tu host"
 
 check("[29] nhan rong duoc doi ra chu, khong de o trong",
       "không rõ nguồn" in _adm)
+
+
+# ═════════ [30] BOX THOAI KHONG DUOC DE LEN BANG DAY (loi 19/08/2026) ═════════
+# Chu du an choi that chang (1) `mission-orbit.html` va gui anh: bang "HE THONG QUAN
+# SAT" de kin box thoai, che luon nut OK — duong DUY NHAT di tiep. Nguyen nhan: viec
+# nhac box nam o `boardSay()`, tuc MOI CHO GOI phai tu nho dung ham nao, ma chang (1)
+# goi `say()` thang. Nay `say()` tu do bang dang mo. Bon phep kiem duoi giu dung bon
+# dieu de loi do khong quay lai duoi mot cai ten khac.
+print("\n=== [30] Box thoai nhac len khoi bang day ===")
+_st30 = io.open(os.path.join(ROOT, "js", "mission-stage.js"), encoding="utf-8").read()
+
+_say30 = re.search(r"function say\(who, html, opt\) \{(.*?)\n    \}", _st30, re.S)
+check("[30] doc duoc than ham `say()`", bool(_say30))
+check("[30] `say()` TU nhac box len khoi bang day (khong doi cho goi nho)",
+      bool(_say30) and "liftAboveBoards(el)" in _say30.group(1))
+
+# Mot phep do dung cho CA the lan box thoai — hai cho do la hai con so som muon lech nhau.
+check("[30] `liftCard` dung lai chinh phep do do (`liftAboveBoards`)",
+      re.search(r'function liftCard\(\)\s*\{\s*liftAboveBoards\(\$\("card"\)\);\s*\}', _st30) is not None)
+
+# `boardSay` da bo: con mot cho goi ten cu la loi runtime ngay lan tha sai dau tien.
+# ⚠️ BOC COMMENT TRUOC (dung lai `_no_cs_comments`): khoi ghi chu cua chinh ban sua nay
+#    CO NHAC ten `boardSay()` de ke lai loi cu, va dem ca chu trong ghi chu cua minh la
+#    kieu loi du an nay da mac vai lan.
+_bs30 = []
+for _f30 in ["js/mission-stage.js", "mission-earth.html", "mission-orbit.html",
+             "mission-planet.html", "mission-tree.html", "mission-map.html"]:
+    _fp30 = os.path.join(ROOT, _f30)
+    if os.path.exists(_fp30) and "boardSay" in _no_cs_comments(
+            io.open(_fp30, encoding="utf-8").read()):
+        _bs30.append(_f30)
+check("[30] khong con cho nao goi `boardSay` (ham da bo)", not _bs30, "con o: %s" % _bs30)
+
+# ⚠️ `nudge(hintId, wrongText, hintText)` — 3 tham so. Chu ky CU co `boardId` dung dau;
+#    sot mot cho goi 4 tham so thi cau khich le bi ghi vao THE BANG (id bang) con dong
+#    nhac khong doi — bang van trong DUNG, khong ai thay: dung kieu loi im lang.
+_nud_bad, _nud_id = [], []
+for _f30 in ["mission-earth.html", "mission-orbit.html"]:
+    _src30 = io.open(os.path.join(ROOT, _f30), encoding="utf-8").read()
+    for _m30 in re.finditer(r"(?<![\w.])nudge\(([^)]*)\)", _src30):
+        _args30 = [a.strip() for a in _m30.group(1).split(",")]
+        if len(_args30) != 3:
+            _nud_bad.append("%s: nudge(%s)" % (_f30, _m30.group(1)))
+            continue
+        _first30 = _args30[0].strip("'\"")
+        # Chi soi loi goi THAT (tham so dau la chuoi); vo bao boc truyen bien thi bo qua.
+        if _args30[0][:1] in "'\"":
+            if not _first30.endswith("-hint"):
+                _nud_id.append("%s: %s" % (_f30, _first30))
+            elif ('id="%s"' % _first30) not in _src30:
+                _nud_id.append("%s: %s (khong co id nay trong trang)" % (_f30, _first30))
+check("[30] moi cho goi `nudge` dung chu ky 3 tham so", not _nud_bad, "%s" % _nud_bad[:3])
+check("[30] tham so dau cua `nudge` la id DONG NHAC co that", not _nud_id, "%s" % _nud_id[:3])
 
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")

@@ -161,7 +161,7 @@
   var GAMES = [
     { key:"dodge", prog:"reaction", pal:"sic--cyan", code:"ARCADE-01", cls:"card--gravity", icon:"planet", cost:5, diff:"hard", status:"ready", file:"game-dodge.html",
       name:{vi:"Né Thiên Thạch", en:"Asteroid Dodge"},
-      desc:{vi:"Điều khiển Byte nhấp nháy bay ngang qua khe hẹp của vành đai thiên thạch và thu thập Thiên thạch tím trên đường bay!", en:"Blink Byte sideways through the narrow gaps of the asteroid belt and collect Purple Meteors along the way!"} },
+      desc:{vi:"Lái tàu Luna lượn lách qua khe hẹp của vành đai thiên thạch và nhặt thật nhiều Thiên thạch tím trên đường đi! Nhấn ga né đòn, càn quét mọi chướng ngại vật!", en:"Weave the Luna ship through the narrow gaps of the asteroid belt and scoop up every Purple Meteor on the way! Hit the thrusters and dodge everything the belt throws at you!"} },
     { key:"racer", prog:"resource", pal:"sic--orange", code:"ARCADE-03", cls:"card--racer", icon:"comet", cost:4, diff:"medium", status:"ready", file:"game-racer.html",
       name:{vi:"Đường Đua Sao Chổi", en:"Comet Racer"},
       /* ⚠️ KHÔNG ghi lại con số chiều dài đường đua ở đây. Bản cũ ghi "1.200 m"
@@ -169,10 +169,10 @@
          12/08/2026 — thẻ hứa một quãng đường ngắn hơn 11 lần thực tế, và không
          phép kiểm nào hỏi tới. Hai nơi giữ một con số thì bên lệch sẽ là bên nói
          với trẻ; nên mô tả nói VIỆC PHẢI LÀM, còn con số để game tự công bố. */
-      desc:{vi:"Đổi làn để né thiên thạch, hứng thùng nhiên liệu và tinh thể tím — về tới đích trước khi cạn nhiên liệu!", en:"Switch lanes to dodge asteroids, grab fuel cans and purple crystals — reach the finish line before you run dry!"} },
+      desc:{vi:"Đổi làn liên tục để né thiên thạch, ăn thùng nhiên liệu và tinh thể tím! Cú nhấn ga nín thở để về đích trước khi cạn nhiên liệu đang chờ bạn đấy!", en:"Switch lanes to dodge asteroids and grab fuel pods and purple crystals! One breathless dash to the finish line before the tank runs dry!"} },
     { key:"defender", prog:"spatial", pal:"sic--mag", code:"ARCADE-02", cls:"card--blaster", icon:"sat", cost:4, diff:"medium", status:"ready", file:"game-defender.html",
       name:{vi:"Phòng Thủ Không Gian", en:"Space Defender"},
-      desc:{vi:"Xoay pháo Laser 360 độ bảo vệ Trạm Vũ Trụ nằm ở tâm khỏi đợt tấn công từ mọi hướng. Bắn thạch vàng mở Quiz sạc đạn!", en:"Spin your laser cannon a full 360° to shield the Space Station at the centre from attacks on every side. Shoot gold meteors to open a Quiz and recharge ammo!"} },
+      desc:{vi:"Xoay tháp pháo Laser 360 độ để bảo vệ Trạm Vũ Trụ trước các đợt tấn công dồn dập từ mọi hướng! Bắn trúng thiên thạch vàng để giải Quiz hồi giáp và lật ngược thế cờ!", en:"Spin the laser turret a full 360° to defend the space station from waves closing in from every side! Hit a gold asteroid to open a quiz, patch your hull and turn the fight around!"} },
     /* ⚠️ `key` ĐỔI "match" → "constellation" (14/08/2026), do phép kiểm [27] bắt
        được. `match` là một cái tên **chỉ tồn tại ở thẻ này**: server (`Wallet.Fees`),
        `economy.js FEES`, và chính `game-constellation.html` (cả `Economy.spend()`
@@ -182,42 +182,42 @@
           css/games.css mà không được gì; nó không phải khoá dữ liệu. */
     { key:"constellation", prog:"observation", pal:"sic--gold", code:"ARCADE-04", cls:"card--match", icon:"spark", cost:3, diff:"easy", status:"ready", file:"game-constellation.html",
       name:{vi:"Ghép Chòm Sao", en:"Constellation Match"},
-      desc:{vi:"Nối các ngôi sao đúng thứ tự số để vẽ nên chòm sao thật trên trời — ghép xong sẽ mở ra một điều thú vị về nó!", en:"Link the stars in number order to draw a real constellation — finish it and unlock a fun fact about the night sky!"} },
+      desc:{vi:"Nối các ngôi sao theo đúng thứ tự số để vẽ nên chòm sao thật trên trời! Hoàn thành hình vẽ để khai quật ngay những bí mật vũ trụ cực kỳ thú vị!", en:"Join the stars in the right number order to draw a real constellation in the sky! Finish the shape and unlock a genuinely surprising fact about it!"} },
     { key:"maze", prog:"navigation", pal:"sic--lime", code:"ARCADE-05", cls:"card--maze", icon:"maze", cost:3, diff:"easy", status:"ready", file:"game-maze.html",
       name:{vi:"Mê Cung Thiên Hà", en:"Galaxy Maze"},
       /* ⚠️ KHÔNG gõ số tinh thể vào đây: từ 15/08/2026 mê cung có 4 cấp và số tinh thể
            tăng theo cấp (5 → 11). Một con số ở mô tả là một con số sẽ nói sai — đúng
            lỗi thẻ Đường Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
-      desc:{vi:"Dẫn phi hành gia qua mê cung sao: thu BẰNG HẾT tinh thể thì cổng mới mở. Mê cung mới mỗi lượt, giải xong là lượt sau to hơn — và không có thua!", en:"Guide the astronaut through a star maze: the gate opens only when every crystal is yours. A new maze each run, bigger after each win — and no losing!"} },
+      desc:{vi:"Dẫn Comet vượt mê cung sao! Phải gom TẤT CẢ tinh thể thì cổng mới mở. Mê cung mỗi lượt lại rộng thêm, thử thách bất ngờ đang chờ phía trước!", en:"Guide Comet through a star maze! The gate only opens once you have collected EVERY crystal — and each round the maze grows wider!"} },
     { key:"catch", prog:"reaction", pal:"sic--cyan", code:"ARCADE-06", cls:"card--catch", icon:"star", cost:4, diff:"medium", status:"ready", file:"game-catch.html",
       name:{vi:"Bắt Sao Băng", en:"Star Catcher"},
-      desc:{vi:"Hứng sao băng vàng để lấy điểm, hứng sao tím để lấy Thiên thạch tím — và né sao chổi lửa. Bạn có 3 mạng!", en:"Catch gold shooting stars for points and purple ones for Purple Meteors — and dodge the fiery comets. You get 3 lives!"} },
+      desc:{vi:"Hứng sao băng vàng để tích điểm, nhặt sao tím để thu Thiên thạch tím — và né gấp sao chổi lửa kẻo hư tàu! Bạn chỉ có đúng 3 cơ hội thôi đấy!", en:"Catch gold meteors for points and purple ones for Purple Meteors — and swerve away from the fiery comets! You only get 3 lives!"} },
     /* ⚠️ ARCADE-07 LÀ GAME LỚP QUYẾT ĐỊNH ĐẦU TIÊN — không canvas, không vòng vẽ,
        không va chạm. Sáu thẻ trên đều là lớp HÀNH ĐỘNG; xem `docs/proposals/
        2026-08-14-…` mục 3 để biết vì sao lớp này đáng làm và vì sao nó rẻ hơn.
        ⚠️ Mô tả CỐ Ý không hứa một con số nào (số tình huống, số điểm) — bài học
           thẻ Đường Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
-    { key:"survival", prog:"survival", pal:"sic--teal", code:"ARCADE-07", cls:"card--survival", icon:"shield", cost:3, diff:"easy", status:"ready", file:"game-survival.html",
+    { key:"survival", prog:"survival", pal:"sic--teal", code:"ARCADE-07", cls:"card--survival", icon:"shield", cost:3, diff:"easy", status:"soon", file:"game-survival.html",
       name:{vi:"Trạm Sinh Tồn", en:"Survival Station"},
       desc:{vi:"Không bấm nhanh, chỉ chọn đúng: thứ gì thật sự giữ được mạng sống ngoài không gian? Chọn xong là biết ngay vì sao đúng hoặc chưa đúng.", en:"No fast fingers here — just good choices: what actually keeps people alive in space? Every pick comes with the reason it works, or doesn't."} },
     /* ⚠️ ARCADE-08 cùng LỚP QUYẾT ĐỊNH với ARCADE-07 nhưng KHUÔN KHÁC HẲN: ở đó
        trẻ chọn thẻ, ở đây trẻ xếp một DÃY rồi phát đi và không sửa được nữa.
        `docs/decisions/002` cấm dùng lại một khuôn quá 2 lần — bốn game lớp
        quyết định cố ý là bốn khuôn khác nhau, không phải một game chơi bốn lần. */
-    { key:"comms", prog:"communication", pal:"sic--cyan", code:"ARCADE-08", cls:"card--comms", icon:"sat", cost:4, diff:"medium", status:"ready", file:"game-comms.html",
+    { key:"comms", prog:"communication", pal:"sic--cyan", code:"ARCADE-08", cls:"card--comms", icon:"sat", cost:4, diff:"medium", status:"soon", file:"game-comms.html",
       name:{vi:"Trạm Liên Lạc", en:"Comms Station"},
       desc:{vi:"Tín hiệu tới Sao Hoả mất bảy phút, nên không ai lái được theo thời gian thực. Xếp trọn cả dãy lệnh rồi phát đi — và không gọi lại được nữa.", en:"A signal takes seven minutes to reach Mars, so nobody can steer in real time. Queue the whole command sequence, transmit — and you cannot call it back."} },
     /* ⚠️ ARCADE-09 — khuôn thứ BA của lớp quyết định: chia một ngân sách có hạn
        theo từng lượt, hậu quả dồn lại chứ không hiện ra ngay. Ba game lớp này
        cố ý là ba cách nghĩ khác nhau (chọn · xếp · chia), không phải một game
        chơi ba lần — `docs/decisions/002`. */
-    { key:"recycle", prog:"lifesupport", pal:"sic--lime", code:"ARCADE-09", cls:"card--recycle", icon:"leaf", cost:4, diff:"medium", status:"ready", file:"game-recycle.html",
+    { key:"recycle", prog:"lifesupport", pal:"sic--lime", code:"ARCADE-09", cls:"card--recycle", icon:"leaf", cost:4, diff:"medium", status:"soon", file:"game-recycle.html",
       name:{vi:"Trạm Tuần Hoàn", en:"Recycling Station"},
       desc:{vi:"Mỗi ngày chỉ có ngần ấy điện cho nước, không khí và oxy — mà oxy lại làm ra bằng cách tách nước. Giữ cả ba vạch sống qua năm ngày.", en:"Each day there is only so much power for water, air and oxygen — and oxygen is made by splitting water. Keep all three gauges alive for five days."} },
     /* ⚠️ ARCADE-10 — khuôn thứ TƯ của lớp quyết định: soi một bảng đã có sẵn rồi
        đánh dấu chỗ sai. Ba khuôn kia đều là trẻ DỰNG RA một thứ (chọn · xếp ·
        chia); đây là trẻ KIỂM một thứ người khác dựng — `docs/decisions/002`. */
-    { key:"units", prog:"datacheck", pal:"sic--gold", code:"ARCADE-10", cls:"card--units", icon:"ruler", cost:4, diff:"medium", status:"ready", file:"game-units.html",
+    { key:"units", prog:"datacheck", pal:"sic--gold", code:"ARCADE-10", cls:"card--units", icon:"ruler", cost:4, diff:"medium", status:"soon", file:"game-units.html",
       name:{vi:"Trạm Đối Chiếu", en:"Cross-Check Station"},
       desc:{vi:"Năm bảng số liệu, hai cột mỗi bảng. Tìm hàng nào hai bên không nói cùng một lượng — năm 1999 đúng chỗ đó đã làm mất một con tàu.", en:"Five data sheets, two columns each. Find the rows where the two sides do not mean the same amount — in 1999 that very thing lost a spacecraft."} }
   ];
@@ -277,21 +277,24 @@
     $("games").innerHTML = list.map(function(g){
       var soon = g.status!=="ready";
       var code = g.code || "ARCADE-??";
-      var status = soon ? '<span class="soon">'+t("soon")+'</span>' : '<span class="online">SYS.ONLINE</span>';
-      var btn = soon
-        /* Nhan nut khoa la mot cau hoi BAM DUOC — nut nay mo modal, nen nhan
-           phai moi bam chu khong lap lai dung chu "Sap ra mat" ngay phia tren. */
-        ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("when")+'</button>'
-        : '<button class="play-btn" data-key="'+g.key+'">'+t("play")+'</button>';
-      /* Huy hieu khoa. Ba tro nay khi ra mat se MIEN PHI nen trang thai la
-         `soon` (ho phach), khong bao gio la `pro`. */
+      /* ⚠️ Thẻ khoá thì để HUY HIỆU nói trạng thái, không in thêm chữ ở ô phải:
+         `.lk-pin` neo tuyệt đối đúng chỗ đó nên hai thứ chồng lên nhau (lỗi đè chữ
+         sửa 19/08/2026). Dựng huy hiệu TRƯỚC rồi mới quyết — mất `js/locks.js` thì
+         `badge` rỗng và chữ trạng thái vẫn in ra, tức hỏng theo hướng an toàn. */
       var lk = (soon && window.AstroQLocks) ? AstroQLocks.get("game:"+g.key) : null;
       var badge = lk
         ? '<span class="lk-badge '+lk.state+' lk-pin">'+
             AstroQ.esc(AstroQLocks.text(lk.state==="soon" ? "badge_soon" : "badge_pro"))+
           '</span>'
         : '';
-
+      var status = soon
+        ? (badge ? '' : '<span class="soon">'+t("soon")+'</span>')
+        : '<span class="online">SYS.ONLINE</span>';
+      var btn = soon
+        /* Nhan nut khoa la mot cau hoi BAM DUOC — nut nay mo modal, nen nhan
+           phai moi bam chu khong lap lai dung chu "Sap ra mat" ngay phia tren. */
+        ? '<button class="play-btn locked" data-key="'+g.key+'">'+t("when")+'</button>'
+        : '<button class="play-btn" data-key="'+g.key+'">'+t("play")+'</button>';
       /* ── Dòng KỸ NĂNG: chương trình này luyện được cái gì. Đây là thứ biến một
             thẻ game thành một thẻ khoá học. */
       var sk = AstroQTraining.skill(g.prog, LANG);
@@ -343,7 +346,7 @@
       }
 
       return '<article class="gcard '+g.cls+(soon?' soon':'')+(st2&&st2.maxLevel&&st2.level>=st2.maxLevel?' top':'')+'">'+
-        '<div class="hud-line top"><span><span class="led"></span>'+code+'</span>'+status+'</div>'+
+        '<div class="hud-line top"><span><span class="led'+(soon?' standby':'')+'"></span>'+code+'</span>'+status+'</div>'+
         badge+
         /* Bang mau theo TUNG game (`pal`), khong de tat ca roi ve tim mac dinh: sau
            the game cung mot mau doc ra don dieu voi tre — chu du an bat duoc dung

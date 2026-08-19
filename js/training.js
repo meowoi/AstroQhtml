@@ -28,8 +28,8 @@
     reaction: {
       ic: "⚡",
       name: { vi: "Phản xạ", en: "Reaction" },
-      skill: { vi: "Nhìn thấy — quyết định — làm, trong chưa tới một giây",
-               en: "See it, decide, act — in under a second" }
+      skill: { vi: "Phản xạ thần tốc — nhìn thấy, quyết định, xử lý xong trong chưa đầy một giây",
+               en: "Lightning reflexes — see it, decide, deal with it, all in under a second" }
     },
 
     /* NHẬN THỨC KHÔNG GIAN — đây chính là thứ lấy được từ khoá T-38 mà không cần
@@ -38,32 +38,32 @@
     spatial: {
       ic: "🧭",
       name: { vi: "Nhận thức không gian", en: "Spatial awareness" },
-      skill: { vi: "Biết cái gì đang tới từ hướng nào, kể cả sau lưng",
-               en: "Know what is coming from where — including behind you" }
+      skill: { vi: "Cảnh giác cực cao — nhận ra ngay nguy hiểm đến từ hướng nào, kể cả sau lưng",
+               en: "Razor-sharp awareness — spot instantly where danger is coming from, even behind you" }
     },
 
     /* ĐỊNH HƯỚNG */
     navigation: {
       ic: "🗺️",
       name: { vi: "Định hướng", en: "Navigation" },
-      skill: { vi: "Dựng bản đồ trong đầu rồi tìm đường ra",
-               en: "Build a map in your head, then find the way out" }
+      skill: { vi: "Đầu óc siêu trí tuệ — tự vẽ bản đồ trong đầu để tìm đường thoát nhanh nhất",
+               en: "A mind like a map — draw the maze in your head and find the fastest way out" }
     },
 
     /* QUẢN LÝ TÀI NGUYÊN */
     resource: {
       ic: "🔋",
       name: { vi: "Quản lý tài nguyên", en: "Resource management" },
-      skill: { vi: "Cân giữa đi nhanh và giữ đủ nhiên liệu để về đích",
-               en: "Balance going fast against keeping enough fuel to finish" }
+      skill: { vi: "Lái siêu đỉnh — vừa đua nhanh vừa căn nhiên liệu chuẩn chỉnh để về đích",
+               en: "Ace piloting — race hard and ration your fuel well enough to reach the finish" }
     },
 
     /* QUAN SÁT THIÊN VĂN — chương trình duy nhất dạy kiến thức bầu trời thật. */
     observation: {
       ic: "🔭",
       name: { vi: "Quan sát thiên văn", en: "Sky observation" },
-      skill: { vi: "Nhận ra hình dạng thật của bầu trời đêm",
-               en: "Recognise the real shapes of the night sky" }
+      skill: { vi: "Mắt thần quan sát — nhận ra hình dáng thật của các chòm sao trên bầu trời đêm",
+               en: "Eagle eyes — recognise the real shapes of the constellations in the night sky" }
     },
 
     /* SINH TỒN — chương trình LỚP QUYẾT ĐỊNH đầu tiên (16/08/2026). Khác năm
