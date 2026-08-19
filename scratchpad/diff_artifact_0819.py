@@ -9,6 +9,14 @@ Cach lam: rut moi chuoi giong DINH DANH (ten lop / ten phuong thuc / ten truong)
 tu #Strings heap (UTF-8) va moi chuoi literal tu #US heap (UTF-16LE) cua ca hai
 DLL, roi lay hieu hai tap.
 
+⚠️⚠️ BO NAY CHI DE THAM KHAO, KHONG DUOC DUNG LAM CAN CU DUYET DEPLOY.
+   Do duoc 19/08/2026 o luot deploy thu hai: khi hai goi GAN GIONG NHAU, no bao
+   `Adapt`/`quizLv`/`MaxQuizLevel` la "chi co o goi moi" **trong khi ca hai goi deu
+   co** (dem lai bang `bytes.count()`: 1 va 1). Nguyen nhan la buoc quet tho ben
+   duoi + bo loc theo ma nguon khong tach duoc metadata that voi rac.
+   => CAN CU DUYET DEPLOY la `check_artifact_0819.py` (dem DICH DANH tung dau hieu
+      trong ca hai goi). Bo nay chi dung de *phat hien dau hieu la* dang xem ky them.
+
 ⚠️ KET QUA CO THE CO ANH GIA — da bat duoc mot ca 19/08/2026: `x10000` hien ra o
    danh sach "chi co o goi moi", nhung dem lai thi no xuat hien **0 lan** o CA HAI
    ma hoa trong CA HAI goi. Nguyen nhan: buoc `decode("utf-16-le","ignore")` roi
@@ -34,7 +42,7 @@ try:
 except Exception:
     pass
 
-NEW = r"C:\lambda-build\deploy0819.zip"
+NEW = r"C:\lambda-build\deploy0819b.zip"
 OLD = r"C:\lambda-build\rb0819\ROLLBACK-AstroqSV-20260819pre.zip"
 DLL = "AstroqSV.Api.dll"
 

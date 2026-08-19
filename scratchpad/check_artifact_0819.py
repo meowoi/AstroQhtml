@@ -22,8 +22,8 @@ try:
 except Exception:
     pass
 
-NEW = r"C:\lambda-build\deploy0819.zip"
-OLD = r"C:\lambda-build\rb0819\ROLLBACK-AstroqSV-20260819pre.zip"
+NEW = r"C:\lambda-build\deploy0819b.zip"   # luot 2: qua danh sach cho
+OLD = r"C:\lambda-build\deploy0819.zip"     # goi DANG CHAY (luot 1: vai (2))
 DLL = "AstroqSV.Api.dll"
 
 ok = bad = 0
@@ -71,41 +71,36 @@ for s, how in (("QuizPassed", has_u8), ("AwardQuiz", has_u8),
                ("quizAccuracy", has_u16)):
     chk(how(new, s) and how(old, s), "doi chung `%s` co o ca hai goi" % s)
 
-print("\n=== [2] VAI (2) — chi duoc co o goi MOI ===")
-# Ten lop + ten phuong thuc: #Strings heap.
+print("\n=== [2] VAI (2) — nay la DOI CHUNG: phai co o CA HAI goi ===")
+# ⚠️ Luot deploy dau (sang 19/08) da mang vai (2) len AWS, nen tu luot NAY tro di
+#    `Adapt`/`quizLv` khong con la "dau hieu moi" — chung thanh doi chung chung minh
+#    goi moi KHONG lam mat viec vua deploy.
 for s in ("Adapt", "QuizLevel", "MaxQuizLevel", "WarmUpAnswers", "Level3Ratio"):
-    chk(has_u8(new, s), "goi moi CO `%s`" % s)
-chk(not has_u8(old, "MaxQuizLevel"), "goi cu KHONG co `MaxQuizLevel` (dau hieu that su moi)")
-chk(not has_u8(old, "WarmUpAnswers"), "goi cu KHONG co `WarmUpAnswers`")
-# Ten truong cua object tra ve trong Snapshot() la chuoi literal -> #US heap.
-chk(has_u16(new, "quizLv"), "goi moi CO truong `quizLv` (chuoi, #US heap UTF-16LE)")
-chk(not has_u16(old, "quizLv"), "goi cu KHONG co truong `quizLv`")
+    chk(has_u8(new, s) and has_u8(old, s), "vai (2): `%s` con o ca hai goi" % s)
+chk(has_u16(new, "quizLv") and has_u16(old, "quizLv"),
+    "vai (2): truong `quizLv` con o ca hai goi")
 
-print("\n=== [3] NO TU 18/08 — goi nay MANG THEO, phai biet minh dang chuyen gi ===")
-# ⚠️ Luot 18/08 sua `Campaign.cs`/`Insights.cs`/`DynamoContext.cs` de luu nhan
-#    NGUON (`src`) cua nguoi ghi danh, nhung KHONG deploy duoc. Goi hom nay mang
-#    theo ca thay do — day la dieu TOT (moi ngay tri hoan la mot ngay du lieu
-#    nguon khong lay lai duoc), nhung phai NOI RA chu khong de no di lau.
+print("\n=== [2b] QUA DANH SACH CHO — chi duoc co o goi MOI ===")
+for s in ("WaitlistBonus", "ClaimWaitlistBonusAsync", "bonusMeteors"):
+    chk(has_u8(new, s), "goi moi CO `%s`" % s)
+    chk(not has_u8(old, s), "goi dang chay KHONG co `%s` (dau hieu that su moi)" % s)
+# Ten thuoc tinh ghi vao DynamoDB la chuoi literal -> #US heap UTF-16LE.
+for s in ("bonusAt", "bonusAmount"):
+    chk(has_u16(new, s), "goi moi CO thuoc tinh `%s`" % s)
+    chk(not has_u16(old, s), "goi dang chay KHONG co `%s`" % s)
+
+# ⚠️ MUC [3] DA BO 19/08/2026. No tung do "no nhan nguon `src` tu 18/08 co trong goi
+#    khong", nhung da xac minh xong: `Campaign`/`MaxParts` co san trong ban dang chay,
+#    va `test_utm` 28/0 tren ban that. Giu lai mot muc luon in "da co tu truoc" chi lam
+#    ket qua dai ra ma khong bao ve dieu gi.
 _pending = []
-# ⚠️ TEN THAT, khong phai `utm*`: phia C# goi la `Campaign.Clean` va luu vao
-#    truong DynamoDB ten `src`. Ban do dau tien cua toi tim "utmSource" nen bao
-#    "khong tim thay o ca hai goi" — do la TOI DO SAI TEN, khong phai goi thieu.
-for s, how, nhan in (("Campaign", has_u8, "lop `Campaign` (loc nhan nguon)"),
-                     ("MaxParts", has_u8, "tran so phan cua nhan nguon"),
-                     ("srcIn", has_u8, "bien `srcIn` o duong dang ky")):
-    if how(new, s) and not how(old, s):
-        _pending.append(nhan)
-        print("  [MOI]  goi nay mang theo %s (no dong lai tu 18/08)" % nhan)
-    elif how(new, s) and how(old, s):
-        print("  [ ]    %s da co tu truoc" % nhan)
-    else:
-        print("  [ ]    khong tim thay %s o ca hai goi" % nhan)
 
 print("\n=== [4] KHONG mat thu gi dang co ===")
 # Moi thu quan trong cua ban dang chay phai con nguyen o goi moi.
 for s, how in (("SendWaitlistWelcomeAsync", has_u8), ("PutWaitlistAsync", has_u8),
                ("XpLadder", has_u8), ("DeskOf", has_u8),
-               ("/waitlist", has_u16), ("/daily", has_u16)):
+               ("/waitlist", has_u16), ("/daily", has_u16),
+               ("GetWaitlistAsync", has_u8), ("CreditWalletAsync", has_u8)):
     chk(how(new, s), "goi moi VAN co `%s`" % s)
 
 print("\n===== %d dat / %d hong =====" % (ok, bad))
