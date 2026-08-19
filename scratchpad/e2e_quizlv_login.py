@@ -230,6 +230,88 @@ try:
               sum(1 for v in d.values() if v > 0) >= 2, str(d))
         ctx2.close()
 
+        print("\n=== [6] DUONG C — viec gui tu HANG CHO cung phai cap nhat cap ===")
+        # ⚠️ DAY LA NHANH VUA DUOC BIT 19/08/2026, nen phai do rieng.
+        #    `quiz.html` CO Y khong nap SDK Firebase, nen `report()` khong co token
+        #    va xep viec vao hang cho; viec do duoc gui o mot trang CO token. Neu
+        #    `flush()` khong absorb thi cap do chi doi khi tre tinh co mo dung
+        #    dashboard / achievements / codex.
+        #
+        #    Tach nhanh nay bang `missions.html`: trang do CO token nhung chi goi
+        #    `daily()` va `missions()` — KHONG goi `profile()`/`achievements()`, nen
+        #    cache xuat hien o day thi chi co the do `flush()` ghi.
+        ctx3 = b.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
+        ctx3.add_init_script("try{localStorage.setItem('astroq-lang','vi')}catch(e){}")
+        p3 = ctx3.new_page()
+        e3 = []
+        p3.on("console", lambda m: e3.append(m.text) if m.type == "error" else None)
+        p3.on("pageerror", lambda e: e3.append(str(e)))
+
+        # Dang nhap lai trong ngu canh sach nay.
+        p3.goto(SITE + "/landing-app.html", wait_until="load")
+        p3.wait_for_selector("#btn-try", timeout=25000)
+        p3.click("#btn-try")
+        p3.wait_for_selector("#to-login", state="visible", timeout=25000)
+        p3.click("#to-login")
+        p3.wait_for_selector("#login-email", state="visible", timeout=25000)
+        p3.fill("#login-email", email)
+        p3.fill("#login-pass", pw)
+        p3.click("#auth-login button.auth-submit")
+        for _ in range(40):
+            try:
+                if p3.evaluate("() => !!(window.AstroQ && AstroQ.getUser "
+                               "&& AstroQ.getUser())"):
+                    break
+            except Exception:
+                pass
+            p3.wait_for_timeout(500)
+        check("[C] dang nhap lai trong ngu canh sach",
+              p3.evaluate("() => !!(AstroQ.getUser && AstroQ.getUser())"), p3.url)
+
+        # Xoa cache roi dat MOT viec quiz vao hang cho, y nhu `quiz.html` lam khi
+        # khong co token. Viec nay la 0/5 nen no HA ti le dung -> cap phai TUT.
+        p3.evaluate("""() => {
+            localStorage.removeItem('astroq-quiz-lv');
+            localStorage.setItem('astroq-progress-queue', JSON.stringify([
+              { type:'quiz', correct:0, total:5, meteors:0,
+                opId:'e2e-'+Math.random().toString(36).slice(2,12) }
+            ]));
+        }""")
+        check("[C] da xoa cache va dat mot luot 0/5 vao hang cho",
+              p3.evaluate("() => !localStorage.getItem('astroq-quiz-lv') && "
+                          "JSON.parse(localStorage.getItem('astroq-progress-queue')"
+                          "||'[]').length === 1"))
+
+        # Mo `missions.html`: `progress.js` tu goi `flush()` khi hang cho khong rong.
+        p3.goto(SITE + "/missions.html", wait_until="load")
+        cache3 = None
+        for _ in range(50):
+            cache3 = p3.evaluate("() => localStorage.getItem('astroq-quiz-lv')")
+            if cache3:
+                break
+            p3.wait_for_timeout(500)
+        check("[C] `flush()` ghi cache cap do (nhanh vua bit)", bool(cache3),
+              str(cache3))
+        left3 = p3.evaluate("() => JSON.parse("
+                            "localStorage.getItem('astroq-progress-queue')||'[]').length")
+        check("[C] hang cho da gui het", left3 == 0, "con %s viec" % left3)
+        if cache3:
+            box3 = json.loads(cache3)
+            # 4 luot 5/5 (=20/20) + 1 luot 0/5 => 20/25 = 80% -> van cap 3.
+            # Doi chieu voi CHINH server thay vi tu tinh.
+            st, dd = call("GET", "/me/profile", tok)
+            sv = ((dd or {}).get("progress") or {}).get("quizLv")
+            a2 = ((dd or {}).get("progress") or {}).get("quizAnswered")
+            c2 = ((dd or {}).get("progress") or {}).get("quizCorrect")
+            print("      server: %s/%s dung -> cap %s ; cache: %s"
+                  % (c2, a2, sv, json.dumps(box3)))
+            check("[C] cache khop DUNG cap do server dang bao", box3.get("lv") == sv,
+                  "cache %s vs server %s" % (box3.get("lv"), sv))
+            check("[C] server DA nhan luot 0/5 tu hang cho (25 cau da tra loi)",
+                  a2 == 25, "%s cau" % a2)
+        check("[C] 0 loi console / pageerror", not e3, str(e3[:2]))
+        ctx3.close()
+
         # ⚠️ Chot "0 loi" o CUOI, sau khi da di het luong — chot som la bo qua moi
         #    thu xay ra sau do.
         check("0 loi console / pageerror suot ca luong", not errs, str(errs[:2]))
