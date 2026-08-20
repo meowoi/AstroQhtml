@@ -4610,17 +4610,54 @@ if m34:
     for _old in ("3 lượt/ngày", "3 rounds/day"):
         check("pricing.html KHONG con con so cu '%s'" % _old, _old not in _pr34)
 
-# --- Cong phai duoc AP THAT o endpoint, khong chi khai hang so ---
-check("server: POST /me/progress goi QuizAccess.Allowed",
-      "QuizAccess.Allowed(" in _ep)
+# --- Cong phai la PHEP GHI CO DIEU KIEN, khong phai phep so o tang ung dung ---
+# ⚠️⚠️ Ban dau (19/08/2026) dem so dong `HIST#` cua hom nay roi so voi tran o tang
+#    ung dung — tuc DOC-ROI-SO-ROI-GHI. Do duoc 20/08/2026: **12 luot gui SONG SONG
+#    ghi duoc 9 dong trong khi tran la 5**, vi ca 12 loi goi deu doc thay "con suat".
+#    Muc nay chan dung duong quay lai do.
+_dyd = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.Daily.cs"))
+check("server: co TryClaimQuizRoundAsync", "TryClaimQuizRoundAsync" in _dyd)
+_iclaim = _dyd.find("TryClaimQuizRoundAsync")
+_body = _dyd[_iclaim:_iclaim + 2600] if _iclaim >= 0 else ""
+check("server: cong la phep ghi CO DIEU KIEN tren bo dem `quizRounds`",
+      "ConditionExpression" in _body and "quizRounds < :cap" in _body)
+check("server: cong bang phep cong NGUYEN TU (`ADD`), khong phai `SET` so da doc",
+      "ADD quizRounds :one" in _body)
+check("server: tra ve suat vua gianh (UPDATED_NEW) de khoi dem lai nhat ky",
+      "ReturnValue.UPDATED_NEW" in _body)
+check("server: POST /me/progress goi TryClaimQuizRoundAsync",
+      "TryClaimQuizRoundAsync(" in _ep)
 check("server: het luot thi tra `counted:false` + reason (khong tra 4xx)",
       'reason = "quiz-daily-limit"' in _ep)
-# ⚠️ Cong phai dem TRUOC khi ghi nhat ky. Neu dem sau thi luot dang nop da nam trong
-#    nhat ky va cong dem ca chinh no — han muc 5 thanh 4.
-_i_gate = _ep.find("QuizAccess.RoundsToday(")
+# ⚠️ KHONG duoc quay lai cach dem nhat ky de gac — dem bao nhieu lan cung khong
+#    gac duoc ca goi song song.
+for _dead in ("QuizAccess.RoundsToday", "QuizAccess.Allowed"):
+    check("server: KHONG con `%s` (phep so o tang ung dung)" % _dead,
+          _dead not in _ep and _dead not in _qa)
+# ⚠️ Gianh suat TRUOC khi ghi nhat ky (ghi truoc thi cong dem ca chinh luot dang nop),
+#    va SAU phep kiem du lieu vao (gianh suat la MOT CHIEU — mot loi goi rac ma tieu
+#    mat mot suat cua tre la hong; ban cu dat truoc `switch` nen ca `total = 0` luc da
+#    het luot tra 200 `counted:false` thay vi 400).
+_i_gate = _ep.find("TryClaimQuizRoundAsync(")
 _i_hist = _ep.find("await db.AddHistoryAsync(")
-check("server: dem luot TRUOC khi ghi nhat ky", 0 < _i_gate < _i_hist,
+_i_bad  = _ep.find('code = "bad-quiz"')
+check("server: gianh suat TRUOC khi ghi nhat ky", 0 < _i_gate < _i_hist,
       "gate@%d hist@%d" % (_i_gate, _i_hist))
+check("server: gianh suat SAU phep kiem du lieu vao", 0 < _i_bad < _i_gate,
+      "bad-quiz@%d gate@%d" % (_i_bad, _i_gate))
+# ⚠️ `/me/daily` phai doc CHINH bo dem. Dem lai nhat ky o do la hai nguon su that
+#    cho mot con so, va ben lech se la ben noi voi tre con may luot.
+check("server: /me/daily doc bo dem (GetQuizRoundsAsync), khong dem nhat ky",
+      "GetQuizRoundsAsync(" in _ep)
+# ⚠️ Bo do reset phai xoa CA bo dem. Thieu no thi 4 bo do can ban >5 luot/ngay
+#    (test_wallet · test_report · test_quizlv · test_history) do BI AN.
+_fb = rd("scratchpad/_fbtest.py")
+check("reset_quiz_day xoa ca thuoc tinh `quizRounds`",
+      "REMOVE quizRounds" in _fb)
+# ⚠️ Va bo do phai CON muc do SONG SONG — ca tuan tu luon xanh ke ca voi ban da hong.
+_tql = rd("scratchpad/test_quiz_limit.py")
+check("test_quiz_limit con muc do SONG SONG",
+      "ThreadPoolExecutor" in _tql and "song song" in _tql)
 # --- So luot con lai phai ra duoc ngoai cho client doc ---
 check("server: tra `quizRoundsLeft` ra client", "quizRoundsLeft" in _ep)
 check("server: GET /me/daily cung tra so luot con lai",
@@ -4629,10 +4666,48 @@ check("server: GET /me/daily cung tra so luot con lai",
 # --- Dem MOI luot, khong chi luot DAT ---
 # ⚠️ `Daily.Build` dem `quizPassed` (chi luot DAT) vi do la VIEC HANG NGAY co thuong.
 #    Han muc thi phai dem moi luot. Hai phep dem khac nhau, dung gop.
-check("server: han muc dem MOI dong type=='quiz' (khong loc theo dat)",
-      'r.Type, "quiz"' in _qa and "QuizPassed" not in _qa)
+# Sau khi cong thanh bo dem (20/08/2026), cho bao dam khong con o QuizAccess ma o
+# chinh loi goi gianh suat: no nam TRUOC moi phep tinh "dat hay khong".
+_pre = _ep[max(0, _i_gate - 700):_i_gate] if _i_gate > 0 else "QuizPassed"
+check("server: han muc dem MOI luot (gianh suat KHONG xet dat hay khong)",
+      "QuizPassed" not in _pre and "QuizPassed" not in _qa,
+      "co QuizPassed ngay truoc cho gianh suat")
 check("server: 'ngay' lay tu Daily, khong khai lai mui gio",
       "TzOffsetHours" not in _qa and "AddHours" not in _qa)
+
+print("\n=== [35] astroQ KHONG khai la ben DAY hoc ===")
+# Chu du an chot 20/08/2026: *"astroQ ko day nhe, ko nen dung tu day vi chung ta ko
+# phai to chuc giao duc duoc cap phep"*. Day la loi khai ve TU CACH, nen no phai bi
+# chan o CA phan hien ra, CA du lieu co cau truc, va CA ban EN sinh ra.
+#
+# ⚠️ CHI cam khi CHU NGU la astroQ. Nhung cau nhu "MIT Media Lab day hoc sinh…" hay
+#    "Thien van hoc day con nguoi…" la noi ve BEN KHAC va dung su that — cam bua o
+#    day la sua 22 trang wiki + meta description dang bi Google cache vi mot cau
+#    khong he khai gi ve astroQ.
+_home = [("index.html", rd("index.html")),
+         ("en/index.html", rd("en/index.html")),
+         ("js/index.js", rd("js/index.js")),
+         ("llms.txt", rd("llms.txt"))]
+for _f, _t in _home:
+    for _claim in ("astroQ.org dạy", "astroQ dạy",
+                   "astroQ.org teach", "astroQ teaches"):
+        check("%s KHONG khai '%s'" % (_f, _claim), _claim not in _t)
+# ⚠️ `teaches` cua schema.org la loi khai MAY DOC DUOC va manh nhat trong so ca ba.
+#    Thay bang `about` (chu de cua noi dung) — giu duoc tin hieu chu de ma khong khai
+#    minh la ben day.
+for _f, _t in _home[:2]:
+    check("%s: JSON-LD dung `about` chu khong phai `teaches`" % _f,
+          '"teaches"' not in _t and '"about"' in _t)
+# ⚠️ Va generator phai sua theo, khong thi lan sinh sau ghi loi khai tro lai.
+_gen = rd("scratchpad/gen_home_en.py")
+check("gen_home_en.py: KHONG sinh lai `teaches`", '"teaches"' not in _gen)
+check("gen_home_en.py: sinh `about`", '"about"' in _gen)
+# Cau hoi FAQ phai khop 1-1 giua phan hien ra va JSON-LD (luat cu cua trang chu).
+for _f, _lang in (("index.html", "có những chủ đề nào?"),
+                  ("en/index.html", "cover?")):
+    _t = rd(_f)
+    check("%s: cau hoi chu de xuat hien dung 2 lan (hien ra + JSON-LD)" % _f,
+          _t.count(_lang) == 2, "%d lan" % _t.count(_lang))
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

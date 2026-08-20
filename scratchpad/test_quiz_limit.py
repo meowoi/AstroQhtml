@@ -10,6 +10,12 @@
    lời-nói-không-khớp-hành-vi thứ HAI tìm ra ngày 19/08/2026 (cái đầu: 500 Purple
    Meteors hứa mà không cấp). Chủ dự án chốt: 5 lượt/ngày, chặn ở server.
 
+⚠️⚠️ VÀ VÌ SAO BẢN CŨ 21/21 VẪN KHÔNG CHỨNG MINH ĐƯỢC GÌ. Nó chỉ bắn TUẦN TỰ, nên
+   một chốt kiểu đọc-rồi-so-rồi-ghi vẫn xanh — mà đó chính là bản đã hỏng: đo được
+   20/08/2026 **12 lượt SONG SONG ghi được 9 dòng trong khi trần là 5**. Mục [2b] là
+   phép đo duy nhất phân biệt được hai bản. Ca tuần tự luôn xanh; ca song song mới là
+   ca chết người. ⛔ Đừng bỏ nó đi vì 'đã có mục [3] chặn lượt thứ 6'.
+
 ⚠️ ĐO BẰNG SỐ DƯ VÀ BỘ ĐẾM, KHÔNG BẰNG LỜI KHAI. Cờ `counted` có thể đúng trong khi
    `quizAnswered` vẫn tăng — mà bộ đếm mới là thứ quyết huy hiệu và cấp độ.
 
@@ -97,6 +103,31 @@ def rows(pk):
     return json.loads(r.stdout).get("Items", [])
 
 
+def day_vn():
+    """Khoa ngay giờ VN (UTC+7) — đúng `Daily.DayKey` của server."""
+    import datetime as dt
+    return (dt.datetime.now(dt.timezone.utc)
+            + dt.timedelta(hours=7)).strftime('%Y-%m-%d')
+
+
+def counter(uid):
+    """So suat quiz da dung — doc THANG tu ban ghi DAILY#, thu quyet dinh cong.
+
+    ⚠️ KHONG di qua `rows()`: ham do CO Y chi lay `PK,SK,type` (bo `name` de `aws`
+       CLI khong chet o cp1252), nen `quizRounds` khong bao gio ve va phep dem se
+       LUON doc ra 0 — tuc mot phep kiem bao hong oan trong khi cong chay dung.
+       Lay dung mot truong so nen khong co chu tieng Viet nao de ma chet.
+    """
+    r = aws("dynamodb", "get-item", "--table-name", TABLE, "--consistent-read",
+            "--key", json.dumps({"PK": {"S": "USER#%s" % uid},
+                                 "SK": {"S": "DAILY#" + day_vn()}}),
+            "--projection-expression", "quizRounds", "--output", "json")
+    if r.returncode != 0:
+        raise RuntimeError("khong doc duoc bo dem: " + (r.stderr or "")[:120])
+    it = (json.loads(r.stdout or "{}") or {}).get("Item") or {}
+    return int(it.get("quizRounds", {}).get("N", 0))
+
+
 def quiz(tok, correct=5, total=5):
     return call("POST", "/me/progress", token=tok,
                 body={"type": "quiz", "correct": correct, "total": total,
@@ -156,6 +187,66 @@ try:
     print("      sau %d lượt: đã trả lời %s câu, ví %s tt"
           % (LIMIT, answered_at_limit, bal_at_limit))
 
+    print("\n=== [2b] Bộ đếm trên bảng khớp số lượt đã chơi ===")
+    check("`DAILY#<ngày>` có `quizRounds` = %d" % LIMIT, counter(uid) == LIMIT,
+          "doc duoc %s" % counter(uid))
+
+    print("\n=== [2c] GỌI SONG SONG — ca duy nhất phân biệt được cổng nguyên tử ===")
+    # Don sach de bat dau lai tu 0 suat: xoa dong nhat ky VA bo dem.
+    _fbtest.reset_quiz_day(uid, TABLE)
+    check("da don sach bo dem truoc khi do", counter(uid) == 0, str(counter(uid)))
+
+    # ⚠️ Ban N luot CUNG LUC. Chot doc-roi-so-roi-ghi se cho HON `LIMIT` cai thanh
+    #    cong (do duoc 9/12 trong ban cu); chot bang phep ghi CO DIEU KIEN thi dung
+    #    `LIMIT` cai. Day la phep do duy nhat trong ca bo phan biet duoc hai ban.
+    import concurrent.futures as _cf
+    N = LIMIT + 7
+    with _cf.ThreadPoolExecutor(max_workers=N) as ex:
+        res = list(ex.map(lambda _: quiz(tok), range(N)))
+    okc = sum(1 for st, d in res if st == 200 and d.get("counted") is True)
+    blk = sum(1 for st, d in res if st == 200 and d.get("reason") == "quiz-daily-limit")
+    check("%d lời gọi song song → ĐÚNG %d lượt được tính" % (N, LIMIT),
+          okc == LIMIT, "duoc tinh %d luot" % okc)
+    check("%d lượt còn lại đều bị chặn với reason đúng" % (N - LIMIT),
+          blk == N - LIMIT, "bi chan %d luot" % blk)
+    check("bộ đếm trên bảng KHÔNG vượt trần", counter(uid) == LIMIT,
+          "quizRounds = %s" % counter(uid))
+    hp = [i for i in rows("USER#%s" % uid)
+          if i.get("SK", {}).get("S", "").startswith("HIST#")
+          and i.get("type", {}).get("S") == "quiz"]
+    check("nhật ký có ĐÚNG %d dòng quiz (đây là con số bản cũ ghi 9)" % LIMIT,
+          len(hp) == LIMIT, "%d dong" % len(hp))
+    # Moi luot duoc tinh phai noi dung suat thu may CUA NO — khong duoc trung nhau.
+    lefts = sorted(d.get("quizRoundsLeft") for st, d in res
+                   if d.get("counted") is True)
+    check("mỗi lượt được tính nói đúng suất của nó (%s)" % lefts,
+          lefts == list(range(LIMIT)), str(lefts))
+
+    print("\n=== [2d] Lời gọi RÁC không được tiêu mất một suất ===")
+    _fbtest.reset_quiz_day(uid, TABLE)
+    st, d = call("POST", "/me/progress", token=tok,
+                 body={"type": "quiz", "correct": 0, "total": 0, "meteors": 0,
+                       "opId": str(uuid.uuid4())})
+    check("`total = 0` trả 400 (không phải 200 counted:false)", st == 400, str(st))
+    check("và KHÔNG tiêu suất nào — bộ đếm vẫn 0", counter(uid) == 0,
+          "quizRounds = %s" % counter(uid))
+
+    # Bo dem ve 0 roi choi lai du LIMIT luot de cac muc sau chay dung nhu cu.
+    for _ in range(LIMIT):
+        quiz(tok)
+    st, d = call("GET", "/me/profile", token=tok)
+    answered_at_limit = ((d or {}).get("progress") or {}).get("quizAnswered")
+    _st, _w = call("GET", "/me/wallet", token=tok)
+    bal_at_limit = (_w or {}).get("meteors")
+    quiz_taken_now = ((d or {}).get("progress") or {}).get("quizTaken")
+    check("bộ đếm lại đầy sau %d lượt" % LIMIT, counter(uid) == LIMIT,
+          str(counter(uid)))
+    # ⚠️ Moc so dong NHAT KY phai doc lai o day, KHONG dung `quizTaken`: bo dem do
+    #    la TONG CA DOI (15 luc nay) con nhat ky vua bi `reset_quiz_day` xoa bot.
+    hist_now = len([i for i in rows("USER#%s" % uid)
+                    if i.get("SK", {}).get("S", "").startswith("HIST#")
+                    and i.get("type", {}).get("S") == "quiz"])
+
     print("\n=== [3] Lượt thứ %d: BỊ CHẶN ===" % (LIMIT + 1))
     st, d = quiz(tok)
     check("vẫn trả 200 (không phải 4xx — hàng chờ không được thử lại mãi)", st == 200,
@@ -171,8 +262,8 @@ try:
     print("\n=== [4] Lượt bị chặn KHÔNG được để lại dấu vết nào ===")
     st, d = call("GET", "/me/profile", token=tok)
     pr2 = (d or {}).get("progress") or {}
-    check("`quizTaken` KHÔNG tăng", pr2.get("quizTaken") == LIMIT,
-          "%s -> %s" % (LIMIT, pr2.get("quizTaken")))
+    check("`quizTaken` KHÔNG tăng", pr2.get("quizTaken") == quiz_taken_now,
+          "%s -> %s" % (quiz_taken_now, pr2.get("quizTaken")))
     check("`quizAnswered` KHÔNG tăng", pr2.get("quizAnswered") == answered_at_limit,
           "%s -> %s" % (answered_at_limit, pr2.get("quizAnswered")))
     _st, _w = call("GET", "/me/wallet", token=tok)
@@ -182,8 +273,8 @@ try:
     hist = [i for i in rows("USER#%s" % uid)
             if i.get("SK", {}).get("S", "").startswith("HIST#")
             and i.get("type", {}).get("S") == "quiz"]
-    check("nhật ký có ĐÚNG %d dòng quiz (lượt bị chặn không ghi)" % LIMIT,
-          len(hist) == LIMIT, "%d dòng" % len(hist))
+    check("nhật ký KHÔNG có thêm dòng quiz nào (lượt bị chặn không ghi)",
+          len(hist) == hist_now, "%d -> %d dòng" % (hist_now, len(hist)))
 
     print("\n=== [5] Gửi thêm 3 lượt nữa: vẫn chặn, vẫn không đổi gì ===")
     for i in range(3):
@@ -194,8 +285,8 @@ try:
     else:
         check("3 lượt thừa nữa đều bị chặn", True)
     st, d = call("GET", "/me/profile", token=tok)
-    check("bộ đếm vẫn dừng ở %d" % LIMIT,
-          ((d or {}).get("progress") or {}).get("quizTaken") == LIMIT,
+    check("bộ đếm vẫn dừng ở %s" % quiz_taken_now,
+          ((d or {}).get("progress") or {}).get("quizTaken") == quiz_taken_now,
           str(((d or {}).get("progress") or {}).get("quizTaken")))
 
     print("\n=== [6] Hạn mức KHÔNG chặn các loại việc khác ===")
@@ -225,6 +316,8 @@ finally:
             aws("dynamodb", "delete-item", "--table-name", TABLE,
                 "--key", json.dumps({"PK": it["PK"], "SK": it["SK"]}))
             n += 1
+    # `rows()` da lay het moi SK cua USER#<uid>, ke ca DAILY# — nen bo dem cung
+    # bien theo. Kiem lai bang chinh phep dem duoi day.
     left = len(rows("USER#%s" % uid)) if uid else 0
     print("      đã xoá %d dòng, còn lại %d" % (n, left))
     try:

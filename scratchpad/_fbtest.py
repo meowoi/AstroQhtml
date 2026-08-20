@@ -121,7 +121,12 @@ def reset_quiz_day(uid, table="astroq-main", hours=48):
     dep khong duoc pha du lieu cua phep kiem khac. Server dem luot theo NGAY
     VIET NAM (`Daily.DayRange`) nen cua so trai qua hai ngay UTC.
 
-    KHONG xoa ban ghi `DAILY#<ngay>`: string set `paid` o do la chot chong tra
+    ⚠️⚠️ TU 20/08/2026 XOA DONG NHAT KY THOI LA KHONG DU. Chot han muc nay la BO
+    DEM `quizRounds` tren ban ghi `DAILY#<ngay>` (phep ghi co dieu kien, xem
+    `DynamoContext.TryClaimQuizRoundAsync`) — xoa nhat ky ma khong xoa bo dem thi
+    luot thu 6 van bi chan, va moi phep kiem phia sau bao hong mot cach BI AN.
+
+    KHONG xoa ca ban ghi `DAILY#<ngay>`: string set `paid` o do la chot chong tra
     thuong viec hang ngay HAI LAN. Xoa no la bo do tu tao ra tien.
 
     Nguoi goi PHAI tu khang dinh ket qua (`len(...) > 0` va doc lai bang) — mot
@@ -152,4 +157,23 @@ def reset_quiz_day(uid, table="astroq-main", hours=48):
             capture_output=True, text=True, timeout=60)
         if r.returncode == 0:
             done.append(sk)
+
+    # ── Bo dem suat quiz cua ngay ──
+    # ⚠️ CHI xoa THUOC TINH `quizRounds`, KHONG xoa ban ghi: `paid` o do la chot
+    #    chong tra thuong viec hang ngay HAI LAN, xoa no la bo do tu tao ra tien.
+    # ⚠️ Khoa ngay la NGAY VIET NAM (UTC+7) — dung ngay UTC thi ngay dau tien cua
+    #    cua so bi bo qua trong 7 gio moi ngay, va loi do chi hien ra theo gio.
+    vn = _dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(hours=7)
+    days = int(hours // 24) + 2
+    for k in range(days):
+        day = (vn - _dt.timedelta(days=k)).strftime('%Y-%m-%d')
+        r = subprocess.run(
+            ['aws', 'dynamodb', 'update-item', '--table-name', table,
+             '--key', json.dumps({'PK': {'S': 'USER#' + uid},
+                                  'SK': {'S': 'DAILY#' + day}}),
+             '--update-expression', 'REMOVE quizRounds',
+             '--condition-expression', 'attribute_exists(quizRounds)'],
+            capture_output=True, text=True, timeout=60)
+        if r.returncode == 0:
+            done.append('DAILY#' + day + '/quizRounds')
     return done
