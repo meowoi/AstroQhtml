@@ -64,6 +64,25 @@
     'cx-machine-learning':'<circle cx="5.4" cy="7" r="1.7"/><circle cx="5.4" cy="17" r="1.7"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.6" cy="7.6" r="1.7"/><circle cx="18.6" cy="16.4" r="1.7"/><path d="M7 7.7l3.3 3.1M7 16.3l3.3-3.1M13.8 11.2l3.1-2.7M13.8 12.9l3.1 2.6"/>',
     'cx-algorithm':'<rect x="8.6" y="2.8" width="6.8" height="4" rx="1.1"/><path d="M12 6.8v3.1"/><path d="M12 9.9 8.4 13.4h7.2z"/><path d="M12 13.4v3.2"/><rect x="8.6" y="16.6" width="6.8" height="4.2" rx="1.1"/><path d="M15.4 18.7h3.4v-9.1"/>',
     'cx-sensor':'<circle cx="12" cy="17.6" r="2.4"/><path d="M12 15.2V9.4"/><path d="M8.1 9.1a5.6 5.6 0 0 1 7.8 0M5.5 6.3a9.4 9.4 0 0 1 13 0"/>',
+    /* ⚠️ Hai icon cho hai the DAO DUC AI. Ve bang HINH CO NGHIA, khong ve chu.
+          `cx-ai-ethics` = CAI CAN (tru + don ganh + hai dia) — nghia "can nhac".
+
+       ⚠️⚠️ `cx-algorithmic-bias` BAN DAU LA MOT CAI CAN LECH, VA DA PHAI VE LAI.
+          Render that o 26px (co the ve tren the So Tay) thi hai cai can doc ra gan
+          nhu MOT — do nghieng khong du de phan biet, ma chung lai dung canh nhau
+          trong cung nhom "AI". Day dung lop loi da tra gia 7 lan voi bo icon sticker
+          (dem thanh chu so 17 · dau chia thanh vien kim cuong · comet thanh cai thia):
+          **ve dung y ma sai HINH thi nguoi xem doc ra mot do vat khac.**
+          Ban moi lay thang phep vi cua chinh bai doc: day may nhan ra "con chim" ma
+          chi cho xem chim se — gap da dieu no noi khong phai chim. Nen hinh la MOT
+          KHUNG (tap vi du duoc cho xem) co ba cham BEN TRONG va mot cham BI BO RA
+          NGOAI. Khac hoan toan cai can, va doc duoc o 26px.
+       ⚠️ Ban thu hai co them mot dau GACH CHEO qua cham ngoai (y: bi loai). Da bo:
+          render that thi o 26px no lan hoan toan vao net tron (stroke-width 2 tren
+          ban kinh 1,7), tuc no khong song noi o CO SE DUNG, ma o 64px thi chi them
+          nhieu. Mot chi tiet chi doc duoc o co khong ai nhin la mot chi tiet nen bo. */
+    'cx-ai-ethics':'<path d="M12 3.4v16.4"/><path d="M8.4 20.2h7.2"/><path d="M5.2 7.4h13.6"/><path d="M5.2 7.4 2.9 12.6h4.6z"/><path d="M18.8 7.4l-2.3 5.2h4.6z"/>',
+    'cx-algorithmic-bias':'<rect x="2.6" y="6.2" width="12.4" height="11.6" rx="2.4"/><circle cx="6.4" cy="10.4" r="1.15"/><circle cx="11.2" cy="10.4" r="1.15"/><circle cx="8.8" cy="14.4" r="1.15"/><circle cx="19.9" cy="12" r="1.7"/>',
 
     /* ── 4 icon của Đợt 1 (06/08/2026) ──────────────────────────────────
        ⚠️ Phép kiểm `check_pages` mục [12] canh icon HAI CHIỀU: mọi `ic` của thẻ

@@ -27,5 +27,5 @@ export default {
                    en: "Algorithmic bias" },
            text: { vi: "khi một hệ thống đối xử không đều với các nhóm khác nhau — thường vì dữ liệu dạy nó vốn đã lệch. Máy không cố ý; nó học đúng thứ nó được cho xem. 🤖",
                    en: "a system treating groups unevenly — usually because the data that taught it was already skewed. The machine is not being unfair on purpose; it learned exactly what it was shown. 🤖" } },
-  terms: []
+  terms: ["algorithm-is-an-opinion", "bias-who-is-served", "bias-not-on-purpose"]
 };

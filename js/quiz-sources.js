@@ -20,6 +20,16 @@ window.AstroQQuizSources = {
   nasaWhatIsAi:           { name: "NASA — What is AI? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/what-is-ai-grades-5-8/" },
   aiHubble:               { name: "NASA Science — AI and Hubble Science", url: "https://science.nasa.gov/mission/hubble/science/ai-hubble-science/" },
   mitAlgorithms:          { name: "MIT Media Lab — AI + Ethics for Middle School", url: "https://www.media.mit.edu/projects/ai-ethics-for-middle-school/overview/" },
+  /* ⚠️ SAU NGUYEN TAC DAO DUC AI CUA NASA NAM TRONG MOT TAM ANH, KHONG PHAI VAN BAN.
+        Do truc tiep HTML ngay 20/08/2026: "Fair" · "Explainable and Transparent" ·
+        "Accountable" · "Secure and Safe" · "Human-Centric and Societally Beneficial" ·
+        "Scientifically and Technically Robust" — KHONG chuoi nao co trong text cua
+        trang; "bias" va "training data" cung KHONG. Mot ban tom tat tu dong liet ke
+        du sau ten roi lai noi chung khong co trong van ban — mau thuan, va do that
+        thi ban tom tat sai. `check_srcquote.py` doi chieu voi trang THAT nen mot
+        `srcQuote` lay tu anh se bao hong. CHI hai cau duoi day dung duoc lam trich dan;
+        muon dan sau nguyen tac thi phai lay tu ban PDF cua NASA (mot URL khac). */
+  nasaAiEthics:           { name: "NASA — Artificial Intelligence Ethics", url: "https://www.nasa.gov/nasa-artificial-intelligence-ethics/" },
   astrobee:               { name: "NASA — Astrobee", url: "https://www.nasa.gov/astrobee/" },
   aster:          { name: "NASA Science — Asteroid Facts", url: "https://science.nasa.gov/solar-system/asteroids/facts/" },
   bh:           { name: "NASA Science — Black Holes", url: "https://science.nasa.gov/universe/black-holes/" },

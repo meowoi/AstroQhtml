@@ -52,6 +52,11 @@
     nasaWhatIsAi:  { label: "NASA — What is AI? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/what-is-ai-grades-5-8/" },
     aiHubble:      { label: "NASA Science — AI and Hubble Science", url: "https://science.nasa.gov/mission/hubble/science/ai-hubble-science/" },
     mitAlgorithms: { label: "MIT Media Lab — AI + Ethics for Middle School", url: "https://www.media.mit.edu/projects/ai-ethics-for-middle-school/overview/" },
+    /* ⚠️ BANG `SRC` NAY LA BAN THU HAI, KHONG DUNG CHUNG voi `js/quiz-sources.js` —
+          nen them mot nguon la phai them o CA HAI CHO. Bo qua cho nay thi `src` cua
+          the ra `[undefined]`: khong loi, khong canh bao, chi la the mat dong nguon.
+          Do duoc 20/08/2026: `check_pages` van bao 1517/0 voi trang thai do. */
+    nasaAiEthics:  { label: "NASA — Artificial Intelligence Ethics", url: "https://www.nasa.gov/nasa-artificial-intelligence-ethics/" },
     astrobee:      { label: "NASA — Astrobee", url: "https://www.nasa.gov/astrobee/" },
     stars:    { label: "NASA Science — Stars",            url: "https://science.nasa.gov/universe/stars/" },
     planets:  { label: "NASA Science — About the Planets", url: "https://science.nasa.gov/solar-system/planets/" },
@@ -471,6 +476,47 @@
             dg: ["Sequence — in order", "Loop — repeat", "Condition — if… then…"] }
     },
 
+      /* ⚠️ HAI THE DAO DUC AI (them 20/08/2026) — do duoc truoc do: kho bai doc CO 2 bai
+            ve dao duc AI (`art-algorithmic-bias`, `art-algorithms-are-opinions`) nhung
+            So Tay co **0 the** va bank co **0 cau** ve dao duc, tuc noi dung do chi DOC
+            duoc chu khong suu tap duoc — he tien do khong nhin thay no.
+         ⚠️ Sau nguyen tac dao duc AI cua NASA nam trong mot TAM ANH, khong co trong van
+            ban trang (do truc tiep HTML 20/08/2026). Nen `def` duoi day CHI dung hai cau
+            NASA that su viet ra thanh chu; phan con lai la loi giai thich cua astroQ va
+            duoc viet sao cho khong dat mot khang dinh nao vao mieng NASA.
+         ⛔ DUNG them "6 nguyen tac cua NASA" vao day ma chua co nguon van ban — do dung
+            lop loi da mac 4 lan (CHNOPS · "170 km" · Nam Cuc "chau luc cao nhat" · ba
+            tieu chi IAU): mot ban tom tat tu dong liet ke du sau ten, ma trang thi khong. */
+    {
+      id: "term_ai_ethics", cat: "ai", ic: "cx-ai-ethics",
+      q: ["ai-ethics-trustworthy", "ai-ethics-governance"],
+      src: [SRC.nasaAiEthics],
+      vi: { t: "Đạo Đức AI", an: "Câu hỏi NÊN hay KHÔNG NÊN, không phải LÀM ĐƯỢC hay KHÔNG",
+            sum: "Dùng AI sao cho đáng tin cậy và có lợi cho tất cả mọi người.",
+            def: "NASA viết rằng dùng AI theo cách đáng tin cậy và có đạo đức là điều quan trọng với họ, và rằng việc sử dụng nó phải đi kèm sự quản trị cùng các biện pháp bảo vệ, vì lợi ích của tất cả mọi người. Hãy để ý ai đang nói: một cơ quan vũ trụ, không phải một lớp học đạo đức. Câu hỏi kỹ thuật là “máy làm được việc này không?”; câu hỏi đạo đức là “có nên để nó làm không, và nếu nó sai thì ai chịu?”. Hai câu khác nhau, và câu thứ hai không tự trả lời được bằng một cái máy mạnh hơn.",
+            gr: "Bạn viết một chương trình chọn ra ba bạn được đi thi. Nó chạy đúng, không lỗi dòng nào — nhưng nó chọn theo điểm của một kỳ thi mà hai bạn bị ốm không dự được. Máy không hỏng. Cái sai nằm ở chỗ bạn quyết định lấy gì làm căn cứ, và chỗ đó không có dòng lệnh nào sửa được.",
+            dg: ["Máy làm được gì", "Có nên để nó làm", "Ai chịu trách nhiệm"] },
+      en: { t: "AI Ethics", an: "A question of SHOULD, not of CAN",
+            sum: "Using AI in a way that is trustworthy and benefits everyone.",
+            def: "NASA writes that using AI in a trustworthy and ethical manner is important to them, and that its usage must come with governance and protections for the benefit of all. Note who is speaking: a space agency, not an ethics class. The technical question is “can the machine do this?”; the ethical question is “should it, and who answers if it gets it wrong?”. Two different questions — and the second one cannot be answered by a more powerful machine.",
+            gr: "You write a program that picks three classmates for a contest. It runs correctly, not a single bug — but it ranks by the scores of one exam that two classmates missed because they were ill. The machine is not broken. The mistake is in what you chose to judge by, and no line of code fixes that.",
+            dg: ["What a machine can do", "Whether it should", "Who is accountable"] }
+    },
+    {
+      id: "term_algorithmic_bias", cat: "ai", ic: "cx-algorithmic-bias",
+      q: ["bias-not-on-purpose", "bias-who-is-served"],
+      src: [SRC.mitAlgorithms],
+      vi: { t: "Thiên Lệch Thuật Toán", an: "Máy không cố ý — nó học đúng thứ được cho xem",
+            sum: "Khi một hệ thống đối xử không đều với các nhóm khác nhau.",
+            def: "Chương trình AI + Đạo đức của MIT Media Lab dạy học sinh trung học cơ sở các khái niệm kỹ thuật — chẳng hạn cách huấn luyện một bộ phân loại đơn giản — cùng với những hệ quả về đạo đức mà chính các khái niệm đó kéo theo, ví dụ như thiên lệch thuật toán. Chỗ nối ấy mới là điều đáng nhớ: hệ quả đạo đức không phải một môn học sau, nó đi ra từ chính phần kỹ thuật. Bạn dạy máy nhận ra một thứ bằng cách cho nó xem ví dụ; những ví dụ bạn chọn quyết định nó nhận ra gì và bỏ sót gì.",
+            gr: "Dạy một cái máy nhận ra “con chim” mà chỉ cho nó xem ảnh chim sẻ. Gặp con đà điểu, nó nói không phải chim. Nó không ghét đà điểu — nó chưa bao giờ được xem một con nào. MIT còn cho học sinh thử ngay trên thứ chúng dùng hằng ngày: nghĩ về những người có liên quan trong một nền tảng như YouTube, rồi thiết kế lại thuật toán gợi ý cho họ. Phục vụ người xem, người làm video, hay công ty? Ba câu trả lời, ba thuật toán.",
+            dg: ["Ví dụ được chọn", "Máy học theo", "Nhóm bị bỏ sót"] },
+      en: { t: "Algorithmic Bias", an: "Not on purpose — it learned exactly what it was shown",
+            sum: "When a system treats different groups unevenly.",
+            def: "MIT Media Lab's AI + Ethics programme teaches middle school students technical concepts — such as how to train a simple classifier — together with the ethical implications those concepts entail, such as algorithmic bias. That join is the memorable part: the ethical implication is not a later subject, it comes out of the technical part itself. You teach a machine to recognise something by showing it examples; the examples you choose decide what it recognises and what it misses.",
+            gr: "Teach a machine to recognise “a bird” by showing it only sparrows. Show it an ostrich and it says: not a bird. It does not dislike ostriches — it was never shown one. MIT also has students try this on something they use daily: consider the stakeholders in a platform such as YouTube, then redesign its recommendation algorithm for them. Serve the viewer, the creator, or the company? Three answers, three algorithms.",
+            dg: ["Examples chosen", "Machine learns them", "Groups left out"] }
+    },
     {
       id: "term_sensor", cat: "robot", ic: "cx-sensor",
       q: ["sensor", "sensor-robot-sees", "sensor-why-autonomous", "sensor-fans-move"],

@@ -23,5 +23,5 @@ export default {
                    en: "Classifier" },
            text: { vi: "phần AI xếp một thứ vào một nhóm — thư này là rác hay không, ảnh này có mèo hay không. Nó học từ ví dụ. 🤖",
                    en: "A <b>classifier</b> is the part of an AI that sorts something into a group — spam or not, cat or no cat. It learns from examples. 🤖" } },
-  terms: []
+  terms: ["bias-not-on-purpose", "bias-who-is-served"]
 };
