@@ -5,7 +5,8 @@ import sys
 sys.stdout.reconfigure(encoding="utf-8")
 from playwright.sync_api import sync_playwright
 
-BASE = "http://127.0.0.1:8123"
+PROD = "--prod" in sys.argv
+BASE = "https://astroq.org" if PROD else "http://127.0.0.1:8123"
 OK = FAIL = 0
 
 
