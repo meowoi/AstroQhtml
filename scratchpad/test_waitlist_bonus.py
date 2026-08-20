@@ -35,7 +35,9 @@ PROD = "--prod" in sys.argv
 BASE = ("https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com" if PROD
         else "http://localhost:5080")
 TABLE = "astroq-main"
-BONUS = 500          # bản sao của Wallet.WaitlistBonus — xem mục [0]
+WL_BONUS = 500       # bản sao của Wallet.WaitlistBonus  — người đã ghi danh
+ST_BONUS = 100       # bản sao của Wallet.StarterBonus   — mọi tài khoản khác
+BONUS = WL_BONUS     # giữ tên cũ cho phần đã viết theo mức 500
 
 ok_n = bad_n = 0
 
@@ -125,6 +127,7 @@ def activate_link_of(email):
 
 emails = []
 uids = []
+bonus_keys = []   # BONUS#<email>/STARTER - dau vinh vien, phai don sau test
 try:
     print("\n=== [0] Hằng số ở server và bản sao trong bộ đo phải khớp ===")
     import io
@@ -132,17 +135,32 @@ try:
     import re
     wp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                       "..", "AstroqSV", "src", "AstroqSV.Api", "Services", "Wallet.cs")
-    m = re.search(r"WaitlistBonus\s*=\s*(\d+)", io.open(wp, encoding="utf-8").read())
+    wsrc = io.open(wp, encoding="utf-8").read()
+    m = re.search(r"WaitlistBonus\s*=\s*(\d+)", wsrc)
+    m2 = re.search(r"StarterBonus\s*=\s*(\d+)", wsrc)
     check("Wallet.WaitlistBonus tồn tại", bool(m), str(m))
+    check("Wallet.StarterBonus tồn tại", bool(m2), str(m2))
     if m:
-        check("bản sao trong bộ đo khớp hằng số server", int(m.group(1)) == BONUS,
-              "server %s vs bộ đo %d" % (m.group(1), BONUS))
+        check("ban sao WL_BONUS khop hang so server", int(m.group(1)) == WL_BONUS,
+              "server %s vs bo do %d" % (m.group(1), WL_BONUS))
+    if m2:
+        check("ban sao ST_BONUS khop hang so server", int(m2.group(1)) == ST_BONUS,
+              "server %s vs bo do %d" % (m2.group(1), ST_BONUS))
+    # ⚠️ CHỖ DUY NHẤT quyết mức phải là StarterBonusFor — hai đường gửi thư và
+    #    đường cấp tiền đều gọi nó, không chọn hằng số tại chỗ.
+    check("co ham StarterBonusFor(bool) quyet muc", "StarterBonusFor(bool onWaitlist)" in wsrc)
+    check("qua khoi dau LON HON phi vao cua game dat nhat",
+          ST_BONUS > 5, "%d vs 5" % ST_BONUS)
 
     st, h = call("GET", "/health")
     check("/health 200", st == 200, json.dumps(h)[:70])
 
     # ═════════ [1] NGƯỜI TỰ ĐĂNG KÝ, KHÔNG ghi danh → KHÔNG có quà ═════════
-    print("\n=== [1] Tự đăng ký mà chưa ghi danh -> KHÔNG quà, ví = 0 ===")
+    # ⚠️ ĐỔI PHÁT BIỂU 20/08/2026 (đường B). Trước đó mục này khẳng định
+    #    "tự đăng ký thì ví = 0" — nay MỌI tài khoản đều có quà, nên phát biểu
+    #    cũ sẽ báo hỏng đúng lúc sản phẩm làm đúng. Điều cần bảo vệ KHÔNG đổi:
+    #    người chưa ghi danh nhận MỨC THẤP, không nhận mức của người ghi danh.
+    print("\n=== [1] Tu dang ky ma chua ghi danh -> co qua MUC THAP (%d tt) ===" % ST_BONUS)
     e1 = "success+nowl-%s@simulator.amazonses.com" % uuid.uuid4().hex[:8]
     emails.append(e1)
     st, d = call("POST", "/auth/register",
@@ -169,17 +187,18 @@ try:
 
     # ═════════ [3] Ghi có điều kiện: gọi hai lần chỉ thắng một ═════════
     print("\n=== [3] Giành dấu quà: hai lượt song song chỉ MỘT lượt thắng ===")
-    # ⚠️ Đo THẲNG hành vi của DynamoDB thay vì tin chú thích: đúng điều kiện
-    #    `attribute_exists(PK) AND attribute_not_exists(bonusAt)`.
-    def claim(email):
+    # ⚠️ Đo THẲNG hành vi của DynamoDB thay vì tin chú thích. Điều kiện nay chỉ còn
+    #    `attribute_not_exists(bonusAt)` (bỏ `attribute_exists(PK)`) và dấu nằm ở bản
+    #    ghi RIÊNG `BONUS#<email>/STARTER` — xem `ClaimStarterBonusAsync`.
+    def claim(email, amount=None):
         r = aws("dynamodb", "update-item", "--table-name", TABLE,
-                "--key", json.dumps({"PK": {"S": "WAITLIST#%s" % email},
-                                     "SK": {"S": "SIGNUP"}}),
-                "--condition-expression",
-                "attribute_exists(PK) AND attribute_not_exists(bonusAt)",
+                "--key", json.dumps({"PK": {"S": "BONUS#%s" % email},
+                                     "SK": {"S": "STARTER"}}),
+                "--condition-expression", "attribute_not_exists(bonusAt)",
                 "--update-expression", "SET bonusAt = :t, bonusAmount = :a",
                 "--expression-attribute-values",
-                json.dumps({":t": {"S": "2026-08-19T00:00:00Z"}, ":a": {"N": str(BONUS)}}))
+                json.dumps({":t": {"S": "2026-08-20T00:00:00Z"},
+                            ":a": {"N": str(amount if amount is not None else BONUS)}}))
         return r.returncode == 0
 
     e3 = "success+claim-%s@simulator.amazonses.com" % uuid.uuid4().hex[:8]
@@ -189,11 +208,16 @@ try:
     second = claim(e3)
     check("lượt đầu giành được dấu", first is True, str(first))
     check("lượt thứ hai KHÔNG giành được (chống cấp hai lần)", second is False, str(second))
-    # Email chưa từng ghi danh thì không giành được -> và KHÔNG được tự tạo bản ghi.
+    # ⚠️ ĐỔI PHÁT BIỂU: email chưa ghi danh NAY giành được dấu (ai cũng có quà),
+    #    và bản ghi `BONUS#` vừa tạo CHÍNH LÀ dấu vĩnh viễn theo email. Nhưng phải
+    #    canh nó KHÔNG tạo ra bản ghi `WAITLIST#` nào — làm thế là bức tường Phi Hành
+    #    Đoàn (`GetCrewRawAsync` quét WAITLIST#/SIGNUP) đếm cả người chưa ghi danh.
     e4 = "success+ghost-%s@simulator.amazonses.com" % uuid.uuid4().hex[:8]
-    ghost = claim(e4)
-    check("email CHƯA ghi danh: không giành được dấu", ghost is False, str(ghost))
-    check("và KHÔNG tự tạo ra một bản ghi chờ rỗng cho email đó",
+    bonus_keys.append(e4)
+    ghost = claim(e4, ST_BONUS)
+    check("email CHUA ghi danh: VAN gianh duoc dau (ai cung co qua)", ghost is True, str(ghost))
+    check("gianh lan hai thi khong duoc nua", claim(e4, ST_BONUS) is False)
+    check("va KHONG sinh ra ban ghi WAITLIST# nao (khoi lam sai buc tuong Phi Hanh Doan)",
           item("WAITLIST#%s" % e4, "SIGNUP") is None)
 
     # ═════════ [4] Email kích hoạt chỉ hứa quà khi thật sự có quà ═════════
@@ -208,17 +232,20 @@ try:
     ap = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                       "..", "AstroqSV", "src", "AstroqSV.Api", "Endpoints", "AuthEndpoints.cs")
     asrc = io.open(ap, encoding="utf-8").read()
-    check("cả HAI đường gửi thư đều truyền con số thật",
-          asrc.count("Wallet.WaitlistBonus") >= 3, "%d chỗ" % asrc.count("Wallet.WaitlistBonus"))
-    check("chỗ gửi thư CHỈ ĐỌC bản ghi chờ, không giành dấu",
+    check("ca BA cho deu di qua StarterBonusFor (khong chon hang so tai cho)",
+          asrc.count("Wallet.StarterBonusFor(") >= 3,
+          "%d cho" % asrc.count("Wallet.StarterBonusFor("))
+    check("cho gui thu CHI DOC ban ghi cho, khong gianh dau",
           "GetWaitlistAsync(email)" in asrc)
-    check("giành dấu nằm ở đường kích hoạt",
-          "ClaimWaitlistBonusAsync(email, Wallet.WaitlistBonus)" in asrc)
+    check("gianh dau nam o duong kich hoat",
+          "ClaimStarterBonusAsync(email, amount)" in asrc)
+    check("khong con goi ClaimWaitlistBonusAsync (ma chet)",
+          "ClaimWaitlistBonusAsync" not in asrc)
 
     # ═════════ [5] Quà hỏng không được làm kích hoạt hỏng ═════════
     print("\n=== [5] Quà nằm trong try riêng (mất quà còn hơn chặn tài khoản) ===")
     i_create = asrc.index("await db.CreateUserAsync(uid, email, p.Name, p.Src);")
-    i_claim = asrc.index("ClaimWaitlistBonusAsync")
+    i_claim = asrc.index("ClaimStarterBonusAsync")
     i_ok = asrc.index('activated=1&reason=ok')
     check("cấp quà đặt SAU khi tài khoản đã tạo xong", i_create < i_claim)
     check("và TRƯỚC khi chuyển hướng báo thành công", i_claim < i_ok)
@@ -308,11 +335,15 @@ try:
         check("[a] VÍ CÓ ĐÚNG %d tt — lời hứa đã được giữ" % BONUS, bal == BONUS,
               "số dư %s" % bal)
         wl2 = item("WAITLIST#%s" % ew, "SIGNUP")
-        check("[a] bản ghi chờ đã đóng dấu `bonusAt`",
-              wl2 is not None and "bonusAt" in wl2, str(list((wl2 or {}).keys())))
+        # ⚠️ ĐỔI CHỖ ĐO: dấu nay ở bản ghi RIÊNG, không đóng lên bản ghi waitlist.
+        bk2 = item("BONUS#%s" % ew, "STARTER")
+        check("[a] dau da-cap nam o BONUS#/STARTER",
+              bk2 is not None and "bonusAt" in bk2, str(list((bk2 or {}).keys())))
+        check("[a] ban ghi WAITLIST# KHONG bi dong dau (giu nguyen nghia)",
+              wl2 is not None and "bonusAt" not in wl2, str(list((wl2 or {}).keys())))
         check("[a] dấu ghi đúng số tiền đã cấp",
-              wl2 is not None and wl2.get("bonusAmount", {}).get("N") == str(BONUS),
-              str((wl2 or {}).get("bonusAmount")))
+              bk2 is not None and bk2.get("bonusAmount", {}).get("N") == str(BONUS),
+              str((bk2 or {}).get("bonusAmount")))
 
         # ── (b) Bấm lại link lần hai: KHÔNG được cộng thêm ──
         st2, loc2 = activate(ew, tok)
@@ -334,7 +365,13 @@ try:
     check("[c] tài khoản đã được tạo", bool(un), str(un))
     if un:
         baln = wallet_of(un)
-        check("[c] ví = 0 (không ghi danh thì không có quà)", baln == 0, "số dư %s" % baln)
+        check("[c] vi = %d (khong ghi danh thi nhan muc thap)" % ST_BONUS,
+              baln == ST_BONUS, "so du %s" % baln)
+        check("[c] muc thap NHO HON muc cua nguoi ghi danh", ST_BONUS < WL_BONUS)
+        bk = item("BONUS#%s" % en, "STARTER")
+        check("[c] dau da-cap nam o BONUS#/STARTER voi dung so tien",
+              bk is not None and bk.get("bonusAmount", {}).get("N") == str(ST_BONUS),
+              str(bk))
         check("[c] KHÔNG sinh ra bản ghi WAITLIST# nào cho email đó",
               item("WAITLIST#%s" % en, "SIGNUP") is None)
 
@@ -342,10 +379,13 @@ finally:
     print("\n=== [6] Dọn dữ liệu test ===")
     n = 0
     for e in emails:
-        for pk in ("WAITLIST#%s" % e, "PENDING#%s" % e, "EMAIL#%s" % e):
+        for pk in ("WAITLIST#%s" % e, "PENDING#%s" % e, "EMAIL#%s" % e,
+                   "BONUS#%s" % e):
             n += wipe(pk)
     # ⚠️ Mục [7] tạo TÀI KHOẢN THẬT (Firebase + mọi dòng USER#), nên phải dọn cả hai.
     #    Bỏ sót thì lần sau email đó đã "bị giữ chỗ" và bộ đo hỏng một cách khó hiểu.
+    for e in bonus_keys:
+        n += wipe("BONUS#%s" % e)
     for uid, em in uids:
         if uid:
             n += wipe("USER#%s" % uid)

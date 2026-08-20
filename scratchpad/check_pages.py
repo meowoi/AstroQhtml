@@ -2737,49 +2737,32 @@ _wl_em   = rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
                                "Services", "EmailService.cs"))
 _wl_prog = rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api", "Program.cs"))
 
-# --- (a) id honeypot phai khop hai ben, va JS phai doc an toan ---
-_hp_ids = set(re.findall(r'id="(wl-[a-z-]+)"[^>]*class="hp"', _wl_html))
-_hp_ids |= set(re.findall(r'class="hp"[^>]*id="(wl-[a-z-]+)"', _wl_html))
-check("markup co dung 1 o bay bot", len(_hp_ids) == 1, _hp_ids)
-_hp_id = next(iter(_hp_ids), "")
-check("JS doc dung id bay bot cua markup",
-      bool(_hp_id) and f'$("{_hp_id}")' in _wl_code, _hp_id)
-check("JS KHONG goi thang .value tren ket qua $() cua bay bot "
-      "(null la giet ca ham gui form)",
-      re.search(r'\$\("wl-[a-z-]+"\)\.value', _wl_code) is None,
-      re.findall(r'\$\("wl-[a-z-]+"\)\.value', _wl_code))
-# moi id ma JS tra cuu deu phai co that trong markup
-_page_ids = ids_in(_wl_html)
-_miss = sorted({i for i in re.findall(r'\$\("([a-z0-9-]+)"\)', _wl_code)} - _page_ids)
-check("moi $(\"id\") cua js/index.js deu ton tai trong index.html", not _miss, _miss)
-
-# --- (b) khong con dau vet dich vu form ben thu ba ---
-for _rel in ("index.html", "js/index.js", "css/index.css"):
-    check(f"{_rel} khong con dau vet dich vu form ben thu ba",
-          "formspree" not in rd(_rel).lower())
-check("form KHONG con action tro ra ngoai",
-      re.search(r'<form[^>]*id="wl-form"[^>]*action=', _wl_html) is None)
+# ⚠️⚠️ DOI PHAT BIEU 20/08/2026 — FORM WAITLIST DA BO HAN (duong B: qua khoi dau
+#    chuyen vao chinh buoc dang ky tai khoan). Khoi cu khang dinh "co dung 1 o bay
+#    bot", "JS doc dung id bay bot", "payload gui du email+lang+hp"… tuc no BAO VE su
+#    ton tai cua cai form; giu nguyen thi no bao hong dung luc san pham lam dung.
+# ⚠️ Cho nay tung la nguon cua mot loi THAT (02/08/2026): id bay bot lech giua markup
+#    va JS lam ca ham gui form chet cam suot 6 ngay. Bo form la bo luon lop loi do.
+check("trang chu KHONG con form waitlist nao",
+      re.search(r'<form[^>]*id="wl-form"', _wl_html) is None)
+check("khong con o bay bot (khong con form thi khong co gi de bay)",
+      'class="hp"' not in _wl_html and 'id="wl-gotcha"' not in _wl_html)
 check("khong con truong an kieu _subject/_gotcha cua dich vu cu",
       not re.search(r'name="_(subject|gotcha|replyto|next)"', _wl_html))
+check("khoi CTA dan sang trang dang ky",
+      'href="landing-app.html"' in _wl_html and 'data-i18n="wl_cta"' in _wl_html)
+# ⚠️ La <a href> chu khong phai <button>: crawler di duoc, va `gen_home_en.py` tu lui
+#    no thanh `../landing-app.html` cho ban EN (ban EN nam sau them mot cap).
+check("CTA la the <a>, khong phai <button>",
+      re.search(r'<button[^>]*data-i18n="wl_cta"', _wl_html) is None)
 
 # --- day noi client ---
-check("client goi POST /waitlist", '"/waitlist"' in _wl_code)
-# ⚠️ Doi 07/08/2026: truoc day phep kiem ghim nguyen van `import("./api.js")`.
-#    Chuoi do khong con dung ke tu khi trang chu tach lam HAI URL (`/` va `/en/`):
-#    day la script CO DIEN nen `import()` giai theo URL cua TAI LIEU, tuc
-#    `./api.js` se thanh `/en/api.js` va 404 — form waitlist chet cam, dung loai
-#    loi da giet chinh form nay suot 6 ngay (02/08/2026). Nay duong dan suy tu
-#    `document.currentScript` (JS_DIR).
-#    Phep kiem gio hoi DIEU CAN BIET, khong ghim mot chuoi: (a) van la import
-#    DONG, (b) duong dan KHONG con la hang chuoi cung o goc.
-check("client nap js/api.js bang import DONG (trang chu dang toi uu SEO)",
-      re.search(r'import\(\s*JS_DIR\s*\+\s*"api\.js"\s*\)', _wl_code) is not None)
-check("duong dan api.js suy tu currentScript, KHONG phai hang cung",
-      "document.currentScript" in _wl_code and 'import("./api.js")' not in _wl_code)
-check("index.html KHONG dat the <script> cho api.js",
-      "js/api.js" not in _wl_html)
-check("payload gui du email + lang + bay bot",
-      all(k in _wl_code for k in ("email:", "lang:", "hp:")))
+# ⚠️ Route `/waitlist` o BACKEND van GIU (phan server ngay duoi) — no la nguon cua
+#    ban ghi `WAITLIST#`, thu dang quyet muc qua 500 (nguoi ghi danh truoc mo cua) vs
+#    100 (moi nguoi khac). Bo route la nguoi da ghi danh mat luon muc 500.
+check("trang chu KHONG con goi POST /waitlist", '"/waitlist"' not in _wl_code)
+check("trang chu KHONG con nap js/api.js (khong con loi goi mang nao)",
+      "api.js" not in _wl_code and "js/api.js" not in _wl_html)
 
 # --- server ---
 check("Program.cs co dang ky MapWaitlistEndpoints", "MapWaitlistEndpoints()" in _wl_prog)
@@ -2799,17 +2782,21 @@ check("ban ghi waitlist KHONG dat ttl (phai song toi ngay ra mat)",
           rd_abs(os.path.join(ROOT, "..", "AstroqSV", "src", "AstroqSV.Api",
                               "Data", "DynamoContext.cs")), re.S).group(0))
 
-# --- SES hong thi KHONG hua "kiem tra hom thu" ---
+# --- khoa i18n cua form: da bo het, khong de lai khoa chet ---
+# ⚠️ DOI PHAT BIEU: 13 khoa (`wl_label`/`wl_ph`/`wl_sending`/`done_*`/`err_*`/`ok_*`)
+#    da bo cung cai form. Khoi cu doi chung PHAI CO nen giu la bao hong oan. Chieu
+#    can canh nay la nguoc lai: chung khong con sot lai lam khoa chet.
 _vi, _en = i18n_dicts(_wl_js)          # tra ve TAP KHOA, khong phai gia tri
-check("co khoa done_body_nomail o CA vi va en",
-      "done_body_nomail" in (_vi or set()) and "done_body_nomail" in (_en or set()))
-_nomail = re.findall(r"done_body_nomail\s*:\s*(['\"])(.*?)\1", _wl_code, re.S)
-check("doc duoc ca hai ban cua done_body_nomail", len(_nomail) == 2, len(_nomail))
-check("cau 'chua gui duoc thu' KHONG bao kiem tra hom thu",
-      all("Kiểm tra hòm thư" not in v and "Check your inbox" not in v for _q, v in _nomail),
-      [v[:40] for _q, v in _nomail])
-check("cau do van giu o dien ten email", all('id="wl-done-mail"' in v for _q, v in _nomail))
-check("client chon cau theo mailSent cua server", "mailSent" in _wl_code)
+_dead_wl = ("wl_label", "wl_ph", "wl_sending", "done_title", "done_body",
+            "done_body_nomail", "done_again", "err_empty", "err_format",
+            "ok_short", "ok_dup", "err_send", "err_net")
+_left = [k for k in _dead_wl if k in (_vi or set()) or k in (_en or set())]
+check("13 khoa i18n cua form da bo het (khong de lai khoa chet)", not _left, _left)
+check("5 khoa CON DUNG van co du o ca vi va en",
+      all(k in (_vi or set()) and k in (_en or set())
+          for k in ("wl_tag", "wl_title", "wl_desc", "wl_cta", "wl_hint")))
+check("khong con nhac `mailSent` (khong con luot gui thu nao tu trang chu)",
+      "mailSent" not in _wl_code)
 
 # --- (c) ngay ra mat o backend khop client ---
 _m_at = re.search(r'LAUNCH_AT\s*=\s*new Date\("(\d{4})-(\d{2})-(\d{2})', _wl_js)
@@ -4359,8 +4346,12 @@ check("[29] nap js/utm.js o dung ba cua vao", _utm_has == _utm_want,
       "thua: %s  thieu: %s" % (sorted(_utm_has - _utm_want), sorted(_utm_want - _utm_has)))
 
 # --- hai cho gui phai mang nhan di ---
-check("[29] waitlist gui kem `src`",
-      re.search(r"src:\s*\(window\.AstroQUtm", strip_comments(rd("js/index.js"))) is not None)
+# ⚠️ DOI PHAT BIEU 20/08/2026: form waitlist da bo, nen trang chu khong con cho nao
+#    gui nhan nguon. Duong duy nhat con lai la `/auth/register` (phep kiem ngay duoi).
+#    Chieu can canh: trang chu khong con loi goi mang nao — mai nay co lai thi phai
+#    mang nhan nguon theo, khong thi mat quy nguon ma khong ai biet.
+check("[29] trang chu khong con loi goi mang nao (nen khong con cho gui nhan)",
+      "apiPost" not in strip_comments(rd("js/index.js")))
 check("[29] dang ky tai khoan gui kem `src`",
       "AstroQUtm" in strip_comments(rd("js/firebase-auth.js"))
       and re.search(r'apiPost\("/auth/register",\s*\{[^}]*src',

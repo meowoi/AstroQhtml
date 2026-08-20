@@ -267,6 +267,10 @@ finally:
     for e in pend_made:
         del_item("PENDING#" + e, "SIGNUP")
         del_item("EMAIL#" + e, "ACCOUNT")
+        # Duong cap qua khoi dong ghi `BONUS#<email>/STARTER` khi kich hoat.
+        # Ban ghi do CO Y KHONG co `ttl` (dau chong lam dung vinh vien), nen
+        # khong don la moi luot chay de lai mot dong mai mai.
+        del_item("BONUS#" + e, "STARTER")
     for uid in uid_made:
         del_item("USER#" + uid, "PROFILE")
         del_item("USER#" + uid, "WALLET")

@@ -39,6 +39,14 @@ API_KEY = "AIzaSyDljo-O_8S6D8l4KP8YHxutLjO9LqLNx-A"
 IDP = "https://identitytoolkit.googleapis.com/v1/accounts"
 TABLE = "astroq-main"
 
+# Tran luot quiz moi ngay — DOC tu server, khong go tay: doi o `QuizAccess.cs`
+# thi bo do tu dung theo. Tach bang split chu khong regex (chuoi thoat trong
+# script va la mot cai bay da tra gia nhieu lan).
+_qa = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                          "AstroqSV", "src", "AstroqSV.Api", "Services",
+                          "QuizAccess.cs"), encoding="utf-8").read()
+QUIZ_PER_DAY = int(_qa.split("FreeRoundsPerDay")[1].split("=")[1].split(";")[0].strip())
+
 ok_n, bad_n = 0, 0
 
 
@@ -120,6 +128,16 @@ def wipe(uid):
                "--key", json.dumps({"PK": it["PK"], "SK": it["SK"]})).returncode == 0:
             n += 1
     return n
+
+
+def reset_quiz_day(uid, verify=True):
+    """Tra bo dem luot quiz/ngay ve 0 (phan xoa o `_fbtest`, dung chung 3 bo do)."""
+    gone = _fbtest.reset_quiz_day(uid, TABLE)
+    if verify:
+        left = [i for i in rows(uid) if i.get("SK", {}).get("S", "") in gone]
+        check("da don het dong nhat ky quiz cua hom nay (%d dong)" % len(gone),
+              len(left) == 0 and len(gone) > 0, "con %d dong" % len(left))
+    return len(gone)
 
 
 def bal(token):
@@ -301,6 +319,7 @@ def main():
         check("Doc lai bai cu -> counted=false va KHONG cong tien",
               d.get("counted") is False and d.get("awarded", 0) in (0, None), str(d.get("counted")))
 
+        reset_quiz_day(uid)
         # ─── LUAT MOI: QUIZ PHAI DAT (>= 60%) MOI CO THUONG ───
         # Nguong nam o server (`Wallet.QuizPassRatio`), nen client gui `meteors` bao
         # nhieu cung vo nghia khi ti le dung chua toi.
@@ -341,6 +360,7 @@ def main():
         # nen server khong biet tre dung thuat ngu nao va so tay khoa vinh vien.
         print("")
         print("[8b] terms - day noi So Tay Thuat Ngu")
+        reset_quiz_day(uid)
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 2, "total": 5, "meteors": 0,
                            "terms": ["star", "comet-tail"]})
@@ -384,6 +404,7 @@ def main():
         got5 = set(d["progress"].get("terms") or [])
         check("type=lesson thi BO QUA terms", "qubit" not in got5, f"{sorted(got5)}")
 
+        reset_quiz_day(uid)
         # terms rong / null khong lam vo loi goi (SS cua DynamoDB khong nhan tap rong)
         st, d = call("POST", "/me/progress", token=token,
                      body={"type": "quiz", "correct": 3, "total": 5, "meteors": 0, "terms": []})
@@ -398,6 +419,7 @@ def main():
               f"awarded={d.get('awarded')}")
 
         print("\n[9] opId cho /me/progress — gui lai khong cong tien lan hai")
+        reset_quiz_day(uid)
         b2 = bal(token)
         op2 = "pg-" + uuid.uuid4().hex[:12]
         st, e1 = call("POST", "/me/progress", token=token,

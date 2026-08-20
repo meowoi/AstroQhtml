@@ -289,7 +289,12 @@ def main():
         n_before = len(hist(uid))
         BURST = 12
         with cf.ThreadPoolExecutor(max_workers=BURST) as ex:
-            list(ex.map(lambda _: prog(token, {"type": "quiz", "correct": 2, "total": 5,
+            # Dung `game` chu KHONG dung `quiz`: quiz co tran
+            # `QuizAccess.FreeRoundsPerDay` nen luot thu 6 tro di khong ghi dong
+            # nhat ky nao, va muc nay se do mot thu khac han thu no muon do.
+            # Dieu can bao ve khong doi: 12 luot SONG SONG -> 12 dong rieng biet.
+            list(ex.map(lambda _: prog(token, {"type": "game", "game": "dodge",
+                                               "score": 1,
                                                "opId": uuid.uuid4().hex}),
                         range(BURST)))
         got = len(hist(uid)) - n_before

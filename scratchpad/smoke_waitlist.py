@@ -1,5 +1,36 @@
 # -*- coding: utf-8 -*-
 """
+⚠️⚠️ BỘ NÀY ĐÃ NGHỈ HƯU 20/08/2026 — KHÔNG CÒN GÌ ĐỂ ĐO.
+
+Nó đo FORM waitlist ở trang chủ; form đó đã bỏ hẳn cùng lượt chuyển quà khởi đầu
+sang chính bước đăng ký tài khoản (đường B — xem chú thích khối `.waitlist` trong
+`index.html` và `Wallet.StarterBonus`). Mọi phép kiểm của nó đều nói về một ô nhập,
+một bẫy bot và một thẻ "đã đăng ký" không còn tồn tại.
+
+⚠️ KHÔNG XOÁ FILE, và không phải vì tiếc: nó ghi lại CÁCH ĐO của một lỗi thật đã trả
+   giá — id bẫy bot lệch giữa markup và JS làm cả hàm gửi form chết câm suốt 6 ngày
+   (02/08/2026), và mục [10] của nó là bộ đo duy nhất từng gọi THẬT vào bản thật AWS
+   từ một trang tĩnh. Nếu ngày nào đó dựng lại một form nào ở trang chủ thì đây là
+   khuôn để bắt đầu.
+
+⚠️ HAI THỨ NÓ TỪNG GÁC NAY ĐÃ CÓ CHỖ KHÁC — không mất phép kiểm nào:
+   · "form không còn tồn tại / không còn bẫy bot / CTA dẫn đúng chỗ"
+     → `scratchpad/check_pages.py` mục [16] (đã đổi phát biểu sang chiều ngược).
+   · "route POST /waitlist còn chạy đúng" (route VẪN GIỮ — nó là nguồn của bản ghi
+     `WAITLIST#`, thứ quyết mức quà 500 vs 100)
+     → `scratchpad/test_waitlist.py` (39 phép kiểm, đo API trực tiếp).
+
+Chạy nó bây giờ sẽ hỏng ở phép chờ `#wl-form` — đó là hành vi ĐÚNG, không phải hồi quy.
+Tra lại bản đang chạy được: `git show HEAD:scratchpad/smoke_waitlist.py`
+"""
+import sys
+
+print(__doc__)
+print("  ==> BO DO NAY DA NGHI HUU, khong chay nua. Xem chu thich o dau file.")
+sys.exit(0)
+
+# ─────────────────── mã cũ giữ nguyên bên dưới, KHÔNG chạy ───────────────────
+"""
 smoke_waitlist.py — do THAT tren Chromium form waitlist o index.html.
 
 Ba trieu chung chu du an bao (02/08/2026), deu tu MOT goc: submit handler nem

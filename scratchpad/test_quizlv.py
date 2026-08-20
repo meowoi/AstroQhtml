@@ -162,6 +162,10 @@ try:
     check("khop ban sao luat", lv == expect_lv(a or 0, c or 0),
           "server %s vs ban sao %s" % (lv, expect_lv(a or 0, c or 0)))
 
+    # Tra bo dem luot quiz/ngay ve 0: tran la 5 luot, bo do nay nop 10.
+    # Bo dem `quizAnswered`/`quizCorrect` nam o ban ghi PROGRESS nen KHONG
+    # bi anh huong — chi mo lai suat de cac luot sau duoc TINH.
+    _fbtest.reset_quiz_day(uid, TABLE)
     # Luot thu tu -> 20 cau, dung 20/20 = 100% -> phai len cap 3.
     st, d = call("POST", "/me/progress", tok,
                  {"type": "quiz", "correct": 5, "total": 5, "meteors": 0,
@@ -176,6 +180,10 @@ try:
     check("khop ban sao luat", lv == expect_lv(a or 0, c or 0),
           "server %s vs ban sao %s" % (lv, expect_lv(a or 0, c or 0)))
 
+    # Tra bo dem luot quiz/ngay ve 0: tran la 5 luot, bo do nay nop 10.
+    # Bo dem `quizAnswered`/`quizCorrect` nam o ban ghi PROGRESS nen KHONG
+    # bi anh huong — chi mo lai suat de cac luot sau duoc TINH.
+    _fbtest.reset_quiz_day(uid, TABLE)
     # Nop tiep 4 luot 0/5 -> 40 cau, dung 20 = 50% -> tut ve cap 1.
     for i in range(4):
         call("POST", "/me/progress", tok,
@@ -190,6 +198,10 @@ try:
     check("khop ban sao luat", lv == expect_lv(a or 0, c or 0),
           "server %s vs ban sao %s" % (lv, expect_lv(a or 0, c or 0)))
 
+    # Tra bo dem luot quiz/ngay ve 0: tran la 5 luot, bo do nay nop 10.
+    # Bo dem `quizAnswered`/`quizCorrect` nam o ban ghi PROGRESS nen KHONG
+    # bi anh huong — chi mo lai suat de cac luot sau duoc TINH.
+    _fbtest.reset_quiz_day(uid, TABLE)
     # Nop 2 luot 5/5 -> 50 cau, dung 30 = 60% -> dung MEP cap 2.
     for i in range(2):
         call("POST", "/me/progress", tok,

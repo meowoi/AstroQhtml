@@ -111,6 +111,15 @@ def put_hist(uid, at_utc, typ, **kw):
                "--item", json.dumps(it)).returncode == 0
 
 
+def reset_quiz_day(uid):
+    """Tra bo dem luot quiz/ngay ve 0 (phan xoa o `_fbtest`, dung chung 3 bo do)."""
+    gone = _fbtest.reset_quiz_day(uid, TABLE)
+    left = [i for i in rows(uid) if i.get("SK", {}).get("S", "") in gone]
+    check("da don het dong nhat ky quiz cua hom nay (%d dong)" % len(gone),
+          len(left) == 0 and len(gone) > 0, "con %d dong" % len(left))
+    return len(gone)
+
+
 def rows(uid):
     r = aws("dynamodb", "query", "--table-name", TABLE,
             "--key-condition-expression", "PK = :pk",
@@ -355,6 +364,7 @@ def main():
         check("Khoa sai con lai van duoc ghi", tm3.get("meteorite", {}).get("wrong") == 1,
               json.dumps(tm3.get("meteorite")))
 
+        reset_quiz_day(uid)
         # Khoa rac / khoang trang bi loai, khong lam hong ca dong nhat ky
         st, dz = call("POST", "/me/progress", token=token, body={
             "type": "quiz", "correct": 0, "total": 2, "opId": uuid.uuid4().hex,
