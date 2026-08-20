@@ -309,6 +309,19 @@ def build_en(html, en, vi):
     h = re.sub(r'(\b(?:href|src|srcset)=")(css/|js/|img/)', r"\g<1>../\g<2>", h)
     h = h.replace('href="wiki/"', 'href="../wiki/en/"')
 
+    # ⚠️⚠️ TRANG .html Ở GỐC CŨNG PHẢI LÙI MỘT CẤP — lỗi thật, phát hiện
+    #    20/08/2026 (ngày mỞ cửa). Phép thay ở trên chỉ bắt `css/|js/|img/`, nên
+    #    `href="landing-app.html"` của nút "Vào chơi ngay" giứ nguyên và phân giải
+    #    thành `/en/landing-app.html` → **404**. Nút đó `hidden` cho tối khi đồng hồ
+    #    về 0, nên lỗi ngủ suốt từ lúc tách bản EN (07/08) và **thức dậy đúng ngày
+    #    mỞ cửa**: mọi khách tiếng Anh bấm "Play now" rơi vào trang trắng.
+    #    Không phép kiểm nào hỏi tối — phép kiểm cũ chỉ đếm `css/|js/|img/` còn
+    #    sót, tức nó MÙ với mọi đưỡng dẫn TRANG.
+    # ⚠️ Loại trừ đưỡng tuyệt đối (`/`, `/en/` của nút chuyển ngữ) và mọi thứ đã
+    #    mang `../` — phép thay này phải idempotent như cả bộ sinh.
+    h = re.sub(r'(\bhref=")(?!\.\./)([A-Za-z0-9][A-Za-z0-9._-]*\.html\b)',
+               r'\g<1>../\g<2>', h)
+
     # --- nút chuyển ngữ thành LINK ---
     h, nsw = set_switch(h, "en")
     if nsw != 1:
@@ -392,6 +405,13 @@ def main():
     check("../css/" in out and "../js/" in out and "../img/" in out, "duong dan tai nguyen da lui mot cap")
     leftover = re.findall(r'\b(?:href|src|srcset)="(?:css/|js/|img/)[^"]*"', out)
     check(not leftover, "0 duong dan tai nguyen con o goc (se 404 tu /en/)", str(leftover[:3]))
+    # ⚠️ Phep kiem nay sinh ra tu mot loi THAT: `href="landing-app.html"` phan
+    #    giai thanh /en/landing-app.html va 404. Phep kiem 'duong dan tai nguyen'
+    #    o tren chi dem css/js/img nen no MU voi moi duong dan TRANG.
+    pg = re.findall(r'\bhref="(?!\.\./)([A-Za-z0-9][A-Za-z0-9._-]*\.html)"', out)
+    check(not pg, "0 duong dan TRANG con o goc (se 404 tu /en/)", str(pg[:3]))
+    check('href="../landing-app.html"' in out,
+          "nut Play now tro dung ../landing-app.html")
     check("../wiki/en/" in out, "link wiki tro sang ban tieng Anh")
     check('<a href="/" data-lang="vi"' in out and '<a href="/en/" data-lang="en"' in out,
           "nut chuyen ngu la LINK that")

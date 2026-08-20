@@ -10,7 +10,6 @@
 
   /* Ngày mở cửa chính thức (giờ Việt Nam, UTC+7) — dùng cho đồng hồ đếm ngược */
   var LAUNCH_AT = new Date("2026-08-20T00:00:00+07:00").getTime();
-  var LS_WAITLIST = "astroq-waitlist";      // bản sao dự phòng trên máy khách: [{ email, ts, lang, sent }]
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   /* ============================ i18n ============================ */
@@ -29,35 +28,30 @@
       lede:"Nền tảng học tập tương tác chủ đề Vũ trụ, AI & Vật lý Lượng tử dành cho các nhà khám phá trẻ. Biến lý thuyết phức tạp thành các nhiệm vụ vũ trụ kỳ thú.",
       cd_label:"HỆ THỐNG MỞ CỬA SAU", cd_d:"ngày", cd_h:"giờ", cd_m:"phút", cd_s:"giây",
       cd_live:"HỆ THỐNG ĐÃ MỞ CỬA",
-      hero_cta:"Nhận 500 Purple Meteors 🚀", hero_cta2:"astroQ.org là gì?",
+      hero_cta:"Nhận 100 Purple Meteors 🚀", hero_cta2:"astroQ.org là gì?",
       /* Chỉ hiện sau khi đồng hồ về 0 — xem `renderCountdown`. */
       hero_live:"Vào chơi ngay 🚀",
       crew_comet:"Mèo phi công vũ trụ — dẫn đường qua từng hành tinh và giao nhiệm vụ khám phá cho bạn.",
       crew_byte:"Robot trợ lý AI — giải thích thuật ngữ khó bằng ngôn ngữ của trẻ em và chấm bài quiz.",
 
-      wl_tag:"BOARDING PASS · EARLY ACCESS",
-      wl_title:"Đăng Ký Nhận Vé Mời Sớm & Nhận Quà Khởi Đầu!",
-      wl_desc:"Đăng ký ngay hôm nay để nhận ngay <b>500 PURPLE METEORS</b> (đơn vị tiền thưởng trên astroQ.org) dùng để nâng cấp phi thuyền &amp; mở khóa hành tinh ngay khi hệ thống ra mắt!",
-      wl_label:"Địa chỉ email", wl_ph:"phihanhgia@astroq.org",
-      wl_cta:"Nhận 500 Purple Meteors 🚀",
-      wl_sending:"Đang gửi...",
-      wl_hint:"Không spam. Chỉ một thư chào mừng.",
+      /* ⚠️ ĐÃ MỞ CỬA 20/08/2026 — chữ ở đây KHÔNG còn được nói theo thì tương lai.
+         "Vé mời sớm" / "EARLY ACCESS" / "khi hệ thống ra mắt" đều đã hết nghĩa.
+         ⚠️⚠️ VÀ PHẢI NÓI ĐÚNG CƠ CHẾ: `POST /waitlist` KHÔNG cộng tiền cho ai —
+            nó chỉ ghi một bản ghi `WAITLIST#<email>`. 500 tt vào ví ở bước KHÁC:
+            `GET /auth/activate` (AstroqSV) gọi `ClaimWaitlistBonusAsync` khi tài
+            khoản được tạo, và CHỈ khi email tạo tài khoản TRÙNG email đã ghi danh.
+            Câu cũ "nhận ngay 500" là hứa một thứ không xảy ra ở bước đó — người
+            để lại email rồi ngồi đợi sẽ không bao giờ thấy tiền. */
+      wl_tag:"QUÀ KHỞI ĐẦU · 100 PURPLE METEORS",
+      wl_title:"Tạo Tài Khoản, Nhận 100 Purple Meteors!",
+      wl_desc:"Tạo tài khoản miễn phí là có ngay <b>100 PURPLE METEORS</b> trong ví (đơn vị tiền thưởng trên astroQ.org) — dùng để nâng cấp phi thuyền &amp; mở khóa hành tinh.", wl_cta:"Tạo tài khoản 🚀",
+      wl_hint:"Miễn phí. Chỉ cần email và mật khẩu.",
       mob_title:"Trải nghiệm tốt nhất trên máy tính",
       mob_body:"astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!",
       mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
-      done_title:"🚀 Đã giữ chỗ & 500 Purple Meteors thành công!",
-      done_body:'Kiểm tra hòm thư của bạn nhé — chỗ của <b id="wl-done-mail">bạn</b> đã được giữ. 500 Purple Meteors sẽ nằm sẵn trong khoang khi bạn vào.',
       // Dùng khi server nhận được đăng ký nhưng SES chưa gửi được thư. Đừng bảo
       // "kiểm tra hòm thư" về một lá thư chưa đi.
-      done_body_nomail:'Đã ghi nhận email của <b id="wl-done-mail">bạn</b>. Thư xác nhận đang gặp trục trặc nên có thể chưa tới, nhưng chỗ của bạn vẫn được giữ.',
-      done_again:"Đăng ký email khác",
 
-      err_empty:"Nhập email của bạn để nhận 500 Purple Meteors nhé!",
-      err_format:"Email chưa đúng định dạng — kiểm tra lại giúp Byte nhé.",
-      ok_short:"Ghi danh thành công! 500 {tt} đang chờ bạn.",
-      ok_dup:"Email này đã có trong phi hành đoàn — đã cập nhật lại!",
-      err_send:"Trạm mặt đất chưa nhận được tín hiệu. Kiểm tra lại email rồi thử lần nữa nhé.",
-      err_net:"Mất kết nối tới trạm. Email đã được giữ tạm trên máy bạn — thử lại sau vài giây nhé.",
 
       aeo_h2:"astroQ.org là gì?",
       aeo_answer:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Vật lý Lượng tử, AI và Robotics thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
@@ -75,8 +69,8 @@
       a3:"Bốn nhóm chủ đề chính: Thiên văn học và Hệ Mặt Trời, Trí tuệ nhân tạo, Vật lý Lượng tử, và Robotics. Mỗi chủ đề được chia thành các nhiệm vụ ngắn kèm quiz, bài đọc và mô phỏng 3D để người học tiến bộ theo cấp độ.",
       q4:"Purple Meteors là gì?",
       a4:"Purple Meteors (Thiên thạch tím) là đơn vị phần thưởng trong astroQ.org. Người học kiếm Purple Meteors khi hoàn thành quiz, đọc bài và chơi mini-game, rồi dùng để nâng cấp phi thuyền và mở khóa hành tinh mới.",
-      q5:"Khi nào astroQ.org ra mắt?",
-      a5:"astroQ.org mở cửa ngày 20/08/2026. Người đăng ký bằng email nhận 500 Purple Meteors khởi đầu.",
+      q5:"astroQ.org đã mở cửa chưa?",
+      a5:"astroQ.org đã mở cửa từ ngày 20/08/2026, vào chơi được ngay. Mỗi tài khoản tạo mới nhận 100 Purple Meteors khởi đầu, cộng vào ví ngay khi kích hoạt tài khoản qua email.",
 
       /* Dải mời sang bản ngôn ngữ kia. Chữ này hiện trên trang TIẾNG ANH cho
          khách được đoán là người Việt — nên nó viết bằng tiếng Việt. */
@@ -100,32 +94,19 @@
       lede:"An interactive learning platform on Space, AI & Quantum Physics for young explorers. We turn complex theory into thrilling cosmic missions.",
       cd_label:"SYSTEM GOES LIVE IN", cd_d:"days", cd_h:"hours", cd_m:"mins", cd_s:"secs",
       cd_live:"SYSTEM IS LIVE",
-      hero_cta:"Get 500 Purple Meteors 🚀", hero_cta2:"What is astroQ.org?",
+      hero_cta:"Get 100 Purple Meteors 🚀", hero_cta2:"What is astroQ.org?",
       hero_live:"Play now 🚀",
       crew_comet:"Space-pilot cat — guides you planet by planet and hands out exploration missions.",
       crew_byte:"AI assistant robot — explains hard terms in kid-friendly language and grades your quizzes.",
 
-      wl_tag:"BOARDING PASS · EARLY ACCESS",
-      wl_title:"Join the Waitlist & Claim Your Starter Gift!",
-      wl_desc:"Sign up today and get <b>500 PURPLE METEORS</b> (the reward currency on astroQ.org) to upgrade your ship &amp; unlock planets the moment we launch!",
-      wl_label:"Email address", wl_ph:"astronaut@astroq.org",
-      wl_cta:"Claim 500 Purple Meteors 🚀",
-      wl_sending:"Sending...",
-      wl_hint:"No spam. Just one welcome email.",
+      wl_tag:"STARTER GIFT · 100 PURPLE METEORS",
+      wl_title:"Create An Account, Get 100 Purple Meteors!",
+      wl_desc:"Create a free account and <b>100 PURPLE METEORS</b> land in your wallet right away (the reward currency on astroQ.org) — spend them upgrading your ship &amp; unlocking planets.", wl_cta:"Create an account 🚀",
+      wl_hint:"Free. Just an email and a password.",
       mob_title:"Best experienced on a computer",
       mob_body:"astroQ has a 3D galaxy map and mini-games that need a wide screen. You can still browse this page on a phone, but open it on a <b>laptop or PC</b> for the full ride!",
       mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
-      done_title:"🚀 Your spot & 500 Purple Meteors are secured!",
-      done_body:'Check your inbox — your spot is saved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when you log in.',
-      done_body_nomail:'We saved the spot for <b id="wl-done-mail">you</b>. The confirmation email hit a snag and may not arrive, but your spot is held.',
-      done_again:"Use another email",
 
-      err_empty:"Enter your email to grab 500 Purple Meteors!",
-      err_format:"That email looks off — mind double-checking it for Byte?",
-      ok_short:"You're in! 500 {tt} are waiting for you.",
-      ok_dup:"This email was already on the crew list — record updated!",
-      err_send:"Ground control didn't get that. Double-check the address and try once more.",
-      err_net:"Lost contact with the station. Your email is saved locally — try again in a moment.",
 
       aeo_h2:"What is astroQ.org?",
       aeo_answer:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
@@ -143,8 +124,8 @@
       a3:"Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Quantum Physics, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level.",
       q4:"What are Purple Meteors?",
       a4:"Purple Meteors are the reward currency inside astroQ.org. Learners earn them by finishing quizzes, reading articles and playing mini-games, then spend them to upgrade their ship and unlock new planets.",
-      q5:"When does astroQ.org launch?",
-      a5:"astroQ.org opens on 20 August 2026. Everyone who signs up by email gets 500 starter Purple Meteors.",
+      q5:"Is astroQ.org open yet?",
+      a5:"astroQ.org has been open since 20 August 2026 — you can start playing right away. Every new account gets 100 starter Purple Meteors, credited to the wallet as soon as the account is activated by email.",
 
       /* Hiện trên trang TIẾNG VIỆT cho khách quốc tế — nên viết bằng tiếng Anh.
          Mời một người Nhật sang bản tiếng Anh bằng một câu tiếng Việt thì dải
@@ -195,8 +176,6 @@
     document.title = t("title");
     AstroQ.applyTexts(t);            // nội dung + placeholder/title/aria-label/alt
     renderCountdown();
-    paintErr();                        // lời báo lỗi đang hiện phải dịch theo, không đứng lại ở tiếng cũ
-    if(joined) paintDone(joined, joinedMailed);  // giữ nguyên trạng thái đã đăng ký khi đổi ngôn ngữ
   }
 
   /* ============================ Icon 4 trụ kiến thức ============================ */
@@ -237,185 +216,15 @@
         Ghi chữ ở đây là dựng bản sao thứ hai của một chuỗi, và bản sao sẽ không
         đổi theo ngôn ngữ. */
   function openDoor(){
-    var live = $("hero-live"), wl = $("hero-wl");
+    var live = $("hero-live"), wl = $("hero-wl"), cd = $("countdown");
     if(live) live.hidden = false;
     if(wl){ wl.classList.remove("btn-primary"); wl.classList.add("btn-ghost"); }
+    /* Thu 4 ô số lại, chỉ giữ huy hiệu "ĐÃ MỞ CỬA" — kiểu dáng ở
+       `css/index.css`, mục "Đã mở cửa". Đếm ngược xong thì bốn ô đứng ở
+       `00 00 00 00` vĩnh viễn, đọc ra như một cái đồng hồ hỏng.
+       `classList.add` chịu được gọi nhiều lần, đúng bất biến đã ghi ở trên. */
+    if(cd) cd.classList.add("live");
   }
-
-  /* ============================ Kho waitlist (localStorage) ============================ */
-  function readList(){
-    try{
-      var raw = JSON.parse(localStorage.getItem(LS_WAITLIST) || "[]");
-      return Array.isArray(raw) ? raw : [];
-    }catch(e){ return []; }
-  }
-  function writeList(list){
-    try{ localStorage.setItem(LS_WAITLIST, JSON.stringify(list)); }catch(e){}
-  }
-
-  /* Lưu bản sao vào máy khách. Luôn chạy dù server nhận được hay không, để
-     không mất lead khi mạng hỏng — cờ "sent" cho biết đã lên server hay chưa. */
-  /* ⚠️ `mailed` PHẢI được lưu cùng — lỗi có sẵn, sửa 07/08/2026.
-     Trước đó bản ghi chỉ có `sent`, nên lúc mở lại trang (F5, hay bấm sang bản
-     ngôn ngữ kia) thẻ "đã đăng ký" luôn dựng lại bằng câu MẶC ĐỊNH
-     *"Kiểm tra hòm thư của bạn nhé"* — kể cả khi SES vừa báo gửi hỏng. Đó đúng
-     là lời hứa hão mà cả lượt việc 02/08/2026 sinh ra để bỏ: thư không đi mà
-     vẫn bảo người ta đi xem hòm thư. */
-  function backup(email, sent, mailed){
-    var list = readList();
-    var rec = { email: email, ts: new Date().toISOString(), lang: LANG,
-                sent: !!sent, mailed: (mailed !== false) }, dup = false;
-    for(var i = 0; i < list.length; i++){
-      if(list[i] && list[i].email === email){ list[i] = rec; dup = true; break; }
-    }
-    if(!dup) list.push(rec);
-    writeList(list);
-    return dup;                                      // true = email này đã đăng ký trước đó
-  }
-
-  /* ============================ Gửi lên backend ============================
-     POST /waitlist của AstroqSV: lưu vào DynamoDB rồi gửi thư chào mừng qua SES.
-     Trả { ok, dup, mailSent }.
-
-     ⚠️ NẠP `js/api.js` BẰNG IMPORT ĐỘNG, không đặt thẻ <script> ở index.html.
-     Trang chủ là trang DUY NHẤT được lập chỉ mục và đang tối ưu SEO/AEO — nó cố ý
-     không nạp SDK Firebase (233 KB) vì lý do đó. `js/api.js` chỉ ~4 KB nhưng vẫn là
-     một lượt tải mà 99% khách ghé qua không cần: chỉ người thật sự bấm gửi mới cần.
-     Cùng lối `js/firebase-auth.js` đã dùng. Nhớ module lại để bấm lần hai không tải lại. */
-  var apiMod = null;
-  function api(){
-    if(apiMod) return apiMod;
-    apiMod = import(JS_DIR + "api.js");   /* xem JS_DIR: trang chu co 2 do sau thu muc */
-    return apiMod;
-  }
-
-  function submitWaitlist(email){
-    return api().then(function(m){
-      return m.apiPost("/waitlist", {
-        email: email,
-        lang:  LANG,                                 // để biết gửi thư bản VI hay EN
-        hp:    ($("wl-gotcha") || {}).value || "",    // bẫy bot, server lọc lại lần nữa
-        // Nhan chien dich, de biet bai fanpage nao ra nguoi that. Rong khi khong co.
-        src:   (window.AstroQUtm ? AstroQUtm.get() : "")
-      });
-    }).then(function(r){
-      // apiPost không bao giờ ném lỗi — luôn trả { ok, status, data, netError? }.
-      if(r.netError || r.notConfigured) return { ok:false, net:true };
-      if(!r.ok) return { ok:false, status:r.status, code:(r.data && r.data.code) || "" };
-      return { ok:true, dup:!!(r.data && r.data.dup), mailSent:(r.data && r.data.mailSent) !== false };
-    });
-  }
-
-  /* ============================ Form ============================ */
-  var form = $("wl-form"), input = $("wl-email"), submitBtn = $("wl-submit"),
-      doneBox = $("wl-done"), errBox = $("wl-err"), joined = null, joinedMailed = true;
-
-  /* ---------- Lời báo lỗi NGAY DƯỚI ô nhập ----------
-     Không chỉ dựa vào toast: toast neo ở đỉnh khung nhìn (`.toast{top:22px}` trong
-     css/index.css) nên khi người dùng đang ở khối waitlist cuối trang thì nó cách
-     ô email ~465px — đo ngày 02/08/2026 — tức nằm ngoài chỗ họ đang nhìn đúng lúc
-     cần đọc nhất. Bấm nút mà chỉ có viền đỏ thì không ai biết mình thiếu gì.
-     Giữ KHOÁ i18n chứ không giữ chuỗi, để đổi VI/EN giữa chừng thì câu dịch theo. */
-  var errKey = null;
-  var ERR_IC = '<svg class="lic" viewBox="0 0 24 24" aria-hidden="true">' +
-               '<circle cx="12" cy="12" r="9"/><path d="M12 7.4v5.2"/><path d="M12 16.3h.01"/></svg>';
-
-  function paintErr(){
-    if(!errBox) return;
-    if(!errKey){ errBox.hidden = true; errBox.textContent = ""; return; }
-    errBox.innerHTML = ERR_IC + "<span>" + AstroQ.esc(t(errKey)) + "</span>";
-    errBox.hidden = false;
-  }
-  function showErr(key){
-    errKey = key;
-    input.classList.add("invalid");
-    input.setAttribute("aria-invalid", "true");
-    paintErr();
-    input.focus();
-    toast(t(key), "bad");
-  }
-  function clearErr(){
-    errKey = null;
-    input.classList.remove("invalid");
-    input.removeAttribute("aria-invalid");
-    paintErr();
-  }
-
-  /* ⚠️ `mailed` KHÔNG phải chi tiết thừa. Thẻ thành công mặc định viết "Kiểm tra hòm
-     thư của bạn nhé" — câu đó chỉ đúng khi SES đã nhận thư. SES hỏng mà vẫn nói vậy là
-     bắt trẻ ngồi chờ một lá thư không bao giờ tới; khi đó dùng câu `done_body_nomail`
-     nói thật rằng chỗ đã giữ nhưng thư đang trục trặc.
-     Đổi luôn `data-i18n-html` để lần đổi VI/EN sau vẫn ra đúng câu. */
-  function paintDone(email, mailed){
-    joined = email;
-    joinedMailed = (mailed !== false);
-    form.hidden = true;
-    doneBox.hidden = false;
-    var msgEl = $("wl-done-msg");
-    if(msgEl){
-      var key = joinedMailed ? "done_body" : "done_body_nomail";
-      msgEl.setAttribute("data-i18n-html", key);
-      msgEl.innerHTML = t(key);
-    }
-    var slot = $("wl-done-mail");                     // do data-i18n-html render lại nên tìm mỗi lần
-    if(slot) slot.textContent = email;
-  }
-
-  function resetForm(){
-    joined = null;
-    doneBox.hidden = true;
-    form.hidden = false;
-    input.value = "";
-    clearErr();
-    input.focus();
-  }
-
-  function setLoading(on){
-    submitBtn.disabled = on;
-    submitBtn.textContent = on ? t("wl_sending") : t("wl_cta");
-  }
-
-  form.addEventListener("submit", function(e){
-    e.preventDefault();
-    /* ⚠️ BẪY BOT: id PHẢI khớp markup (`wl-gotcha`), và phải đọc ra biến rồi mới
-       kiểm. Trước 02/08/2026 dòng này gọi thẳng `$("wl-company").value` — không có
-       id đó trong index.html nên nó ném TypeError NGAY SAU `preventDefault()` và
-       giết cả hàm gửi form: không lời nhắc khi bỏ trống, không gọi server,
-       không thẻ "đã đăng ký". Trang trông như còn sống vì lỗi chỉ nằm ở console. */
-    var hp = $("wl-gotcha");
-    if(hp && hp.value) return;                        // bot điền bẫy → bỏ qua im lặng
-
-    var email = input.value.trim().toLowerCase();
-    if(!email)                return showErr("err_empty");
-    if(!EMAIL_RE.test(email)) return showErr("err_format");
-    clearErr();
-
-    setLoading(true);
-    submitWaitlist(email).then(function(res){
-      setLoading(false);
-      if(!res.ok){
-        backup(email, false);                        // vẫn giữ lead trên máy khách
-        if(window.console) console.warn("[waitlist] /waitlist", res.status || 0, res.code || "");
-        // Mất mạng thì nói mất mạng (thử lại là được); server từ chối thì bảo xem lại email.
-        return showErr(res.net ? "err_net" : "err_send");
-      }
-      // Server mới là nơi biết email này đã có trong danh sách chưa — bản sao trong
-      // máy chỉ biết chuyện của MÁY NÀY, nên đổi máy là nó báo "mới" cho một địa chỉ cũ.
-      backup(email, true, res.mailSent);
-      input.value = "";                              // reset ô nhập
-      clearErr();
-      paintDone(email, res.mailSent);
-      toast(res.dup ? t("ok_dup") : t("ok_short"), "ok");
-      doneBox.scrollIntoView({ behavior:"smooth", block:"center" });
-    }).catch(function(){                             // import("./api.js") hỏng, hoặc lỗi bất ngờ
-      setLoading(false);
-      backup(email, false);
-      showErr("err_net");
-    });
-  });
-
-  input.addEventListener("input", clearErr);
-  $("wl-again").addEventListener("click", resetForm);
 
   /* ============================ Khởi tạo ============================ */
   $("year").textContent = String(new Date().getFullYear());
@@ -431,19 +240,6 @@
   var ticker = setInterval(function(){
     if(!renderCountdown()) clearInterval(ticker);
   }, 1000);
-
-  /* Nếu máy này đã đăng ký trước đó thì hiện luôn trạng thái thành công.
-     Chỉ tính bản ghi đã LÊN ĐƯỢC server (`sent`): bản ghi `sent:false` là lượt gửi
-     hỏng, hiện thẻ "đã đăng ký" cho nó là nói với người ta rằng họ đã có chỗ trong
-     khi server chưa biết gì — và họ sẽ không thử lại nữa. */
-  var saved = readList().filter(function(r){ return r && r.sent; });
-  if(saved.length){
-    var last = saved[saved.length - 1];
-    /* `mailed !== false` chứ không phải `!!last.mailed`: bản ghi CŨ (lưu trước
-       07/08/2026) không có trường này, và với chúng thì "đã gửi được" là phỏng
-       đoán đúng hơn — chúng được lưu ở thời mà mọi lượt gửi hỏng đều `sent:false`. */
-    paintDone(last.email, last.mailed !== false);
-  }
 
   /* ============================================================
      KHUYẾN NGHỊ DÙNG MÁY TÍNH — chỉ trên thiết bị cảm ứng màn hình nhỏ.

@@ -21,7 +21,7 @@
 <meta property="og:url" content="https://astroq.org/en/" />
 <meta property="og:title" content="astroQ.org — Explore the Galaxy of Knowledge" />
 <meta property="og:description" content="An interactive learning platform on Space, AI &amp; Quantum Physics for young explorers. Sign up by email for 500 starter Purple Meteors." />
-<meta property="og:image" content="https://astroq.org/img/og-cover.jpg" />
+<meta property="og:image" content="https://astroq.org/img/og-cover-v2.jpg" />
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -29,7 +29,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="astroQ.org — Explore the Galaxy of Knowledge" />
 <meta name="twitter:description" content="Learn Astronomy, AI &amp; Quantum Physics through cosmic missions. Sign up for 500 starter Purple Meteors." />
-<meta name="twitter:image" content="https://astroq.org/img/og-cover.jpg" />
+<meta name="twitter:image" content="https://astroq.org/img/og-cover-v2.jpg" />
 <meta name="twitter:image:alt" content="astroQ.org — Explore the Galaxy of Knowledge. Comet the cat and Byte the robot, with 500 starter Purple Meteors for new sign-ups." />
 
 <!-- ===================== JSON-LD: EducationalApplication ===================== -->
@@ -107,10 +107,10 @@
     },
     {
       "@type": "Question",
-      "name": "When does astroQ.org launch?",
+      "name": "Is astroQ.org open yet?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "astroQ.org opens on 20 August 2026. Everyone who signs up by email gets 500 starter Purple Meteors."
+        "text": "astroQ.org has been open since 20 August 2026 — you can start playing right away. Every new account gets 100 starter Purple Meteors, credited to the wallet as soon as the account is activated by email."
       }
     }
   ]
@@ -187,8 +187,8 @@
               chơi mới là việc chính, còn 500 tt là quà kèm. `renderCountdown` hạ nút
               waitlist xuống `btn-ghost` cho khỏi hai nút chính cạnh nhau. -->
       <div class="hero-actions">
-        <a class="btn-primary" id="hero-live" href="landing-app.html" data-i18n="hero_live" hidden>Play now 🚀</a>
-        <a class="btn-primary" id="hero-wl" href="#waitlist" data-i18n="hero_cta">Get 500 Purple Meteors 🚀</a>
+        <a class="btn-primary" id="hero-live" href="../landing-app.html" data-i18n="hero_live" hidden>Play now 🚀</a>
+        <a class="btn-primary" id="hero-wl" href="#waitlist" data-i18n="hero_cta">Get 100 Purple Meteors 🚀</a>
         <a class="btn-ghost" href="#what-is" data-i18n="hero_cta2">What is astroQ.org?</a>
       </div>
     </div>
@@ -222,51 +222,39 @@
   <!-- ============================== WAITLIST ============================== -->
   <section class="waitlist" id="waitlist">
     <div class="wl-card">
-      <div class="wl-tag"><span class="led" aria-hidden="true"></span><span data-i18n="wl_tag">BOARDING PASS · EARLY ACCESS</span></div>
+      <div class="wl-tag"><span class="led" aria-hidden="true"></span><span data-i18n="wl_tag">STARTER GIFT · 100 PURPLE METEORS</span></div>
 
-      <h2 data-i18n="wl_title">Join the Waitlist &amp; Claim Your Starter Gift!</h2>
+      <h2 data-i18n="wl_title">Create An Account, Get 100 Purple Meteors!</h2>
 
-      <p class="wl-desc" data-i18n-html="wl_desc">Sign up today and get <b>500 PURPLE METEORS</b> (the reward currency on astroQ.org) to upgrade your ship &amp; unlock planets the moment we launch!</p>
+      <!-- ⚠️⚠️ ĐỔI 20/08/2026 — BỎ HẲN FORM WAITLIST, quà chuyển vào chính bước ĐĂNG KÝ.
+           Trước mở cửa form đó có một việc: gom email để báo khi mở cửa. Việc đó đã
+           xong. Sau mở cửa nó làm phễu TỆ HƠN — hai bước (bỏ email → rồi đi đăng ký
+           bằng chính email đó) thay cho một bước, mà quà thì dù sao cũng chỉ tới ở
+           bước hai; ai bỏ email rồi dừng lại nhận SỐ KHÔNG nhưng tưởng mình đã có gì.
+           ⚠️ CON SỐ 100 LÀ BẢN SAO của `Wallet.StarterBonus` ở AstroqSV —
+              `check_pages` mục [32] đối chiếu hai bên. Sửa một bên mà quên bên kia là
+              quay lại đúng lỗi đã phải đi sửa 19/08: quảng cáo một con số hệ thống
+              không cấp.
+           ⚠️ Người ĐÃ ghi danh trước ngày mở cửa vẫn nhận **500** (`Wallet.WaitlistBonus`)
+              — lời hứa đã phát ra với họ, không hạ xuống được. Mức do
+              `Wallet.StarterBonusFor` quyết, trang này chỉ nói mức của người mới. -->
+      <p class="wl-desc" data-i18n-html="wl_desc">Create a free account and <b>100 PURPLE METEORS</b> land in your wallet right away (the reward currency on astroQ.org) — spend them upgrading your ship &amp; unlocking planets.</p>
 
       <!-- Phần thưởng minh hoạ -->
       <div class="reward">
         <span class="reward-gem"><img src="../img/tt.png" alt="" /></span>
-        <span class="reward-num">500</span>
+        <span class="reward-num">100</span>
         <span class="reward-unit">PURPLE METEORS</span>
       </div>
 
-      <!-- Form waitlist — gửi bằng fetch tới POST /waitlist của AstroqSV (AWS Lambda + SES).
-           KHÔNG có action/method: không còn dịch vụ form bên thứ ba nào để gửi tới, mà để
-           lại một action trỏ sai còn tệ hơn không có (form sẽ rời trang rồi báo lỗi lạ). -->
-      <form class="wl-form" id="wl-form" novalidate>
-        <label class="sr-only" for="wl-email" data-i18n="wl_label">Email address</label>
-        <div class="field">
-          <input type="email" id="wl-email" name="email" autocomplete="email" required
-                 placeholder="astronaut@astroq.org" data-i18n-ph="wl_ph" aria-describedby="wl-hint" />
-          <!-- ⚠️ BẪY BOT: người thật không bao giờ điền (ô nằm ngoài khung nhìn).
-               id `wl-gotcha` phải khớp js/index.js — sai id ở đây từng giết cả hàm gửi
-               form (xem nhật ký 02/08/2026). Server cũng tự lọc lại qua trường `hp`. -->
-          <input type="text" id="wl-gotcha" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        </div>
-        <button class="btn-primary wl-submit" id="wl-submit" type="submit" data-i18n="wl_cta">Claim 500 Purple Meteors 🚀</button>
-      </form>
-
-      <!-- Lời báo lỗi đặt NGAY DƯỚI ô nhập. Toast neo ở đỉnh khung nhìn nên khi
-           người dùng đang ở cuối trang thì nó nằm ngoài tầm mắt; đây mới là chỗ
-           họ đang nhìn lúc bấm nút. Nội dung do js/index.js đổ vào theo ngôn ngữ. -->
-      <p class="wl-err" id="wl-err" role="alert" hidden></p>
-
-      <p class="wl-hint" id="wl-hint" data-i18n="wl_hint">No spam. Just one welcome email.</p>
-
-      <!-- Trạng thái thành công (JS bật) -->
-      <div class="wl-done" id="wl-done" hidden>
-        <div class="done-ic" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.4l3 3 6-6.4"/></svg>
-        </div>
-        <h3 data-i18n="done_title">🚀 Your spot &amp; 500 Purple Meteors are secured!</h3>
-        <p id="wl-done-msg" data-i18n-html="done_body">Check your inbox — your spot is saved for <b id="wl-done-mail">you</b>. 500 Purple Meteors will be waiting in your cockpit when you log in.</p>
-        <button class="btn-ghost" type="button" id="wl-again" data-i18n="done_again">Use another email</button>
+      <!-- ⚠️ Là <a href> chứ không phải <button>: crawler đi được, và
+           `scratchpad/gen_home_en.py` tự lùi nó thành `../landing-app.html` cho bản
+           EN (bản EN nằm sâu thêm một cấp — xem lỗi 404 đã sửa cùng ngày). -->
+      <div class="wl-cta">
+        <a class="btn-primary" href="../landing-app.html" data-i18n="wl_cta">Create an account 🚀</a>
       </div>
+
+      <p class="wl-hint" data-i18n="wl_hint">Free. Just an email and a password.</p>
     </div>
   </section>
 
@@ -310,8 +298,8 @@
       </details>
 
       <details class="faq-item">
-        <summary data-i18n="q5">When does astroQ.org launch?</summary>
-        <p data-i18n="a5">astroQ.org opens on 20 August 2026. Everyone who signs up by email gets 500 starter Purple Meteors.</p>
+        <summary data-i18n="q5">Is astroQ.org open yet?</summary>
+        <p data-i18n="a5">astroQ.org has been open since 20 August 2026 — you can start playing right away. Every new account gets 100 starter Purple Meteors, credited to the wallet as soon as the account is activated by email.</p>
       </details>
 
       <p class="faq-more">
