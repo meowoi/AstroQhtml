@@ -305,13 +305,27 @@ footer a:hover{color:var(--accent);}
 }
 
 /* ---- Nút chuyển ngôn ngữ ---- */
-.lang-switch{position:fixed;top:20px;right:20px;z-index:20;align-items:center;background:var(--glass);border:1px solid var(--glass-brd);-webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));box-shadow:var(--shadow-soft);animation:fadeUp .7s var(--ease) both;}
+/* ⚠️ DINH VI NAY NAY THUOC `.lang-pick` (vo cua menu tha), KHONG con thuoc
+   `.lang-switch`. Tu 20/08/2026 `.lang-switch` la DANH SACH BEN TRONG tam tha
+   (css/user-menu.css lo), nen de nguyen dinh vi o day thi ca cai danh sach do
+   bi ghim `position:fixed` vao goc man hinh.
+   ⚠️ `backdrop-filter` o day la CO Y va vo hai: `.um-pop` la `position:absolute`
+      nen no neo theo `.um` (co `position:relative`). Neu ngay nao doi tam tha
+      sang `position:fixed` thi PHAI bo blur nay truoc — mot to tien co
+      `backdrop-filter` tro thanh KHOI CHUA cua moi con `fixed`, va tam tha se
+      neo vao chinh cai chip nay chu khong vao khung nhin (bai hoc da tra gia
+      voi `.statusbar` o dashboard). */
+.lang-pick{position:fixed;top:20px;right:20px;z-index:20;
+  animation:fadeUp .7s var(--ease) both;}
+.lang-pick > .um-btn{background:var(--glass);border:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));
+  box-shadow:var(--shadow-soft);}
 /* ⚠️ HÌNH DẠNG nút lấy từ css/common.css (gộp 19/08/2026). Màn chào từng khai
    `font-size:13px` + `padding:7px 14px` nên chip ở đây 40×30 — to hơn 11 màn khác
    một nửa. Vị trí `fixed` phía trên VẪN giữ: thẻ này nổi ở góc màn chào, không nằm
    trong header như các trang app. Màu nhấn vàng nắng ở dưới cũng giữ. */
-.lang-switch button{transition:background .2s var(--ease), color .2s var(--ease);}
-.lang-switch button.active{
+.um-pop .lang-switch button{transition:background .2s var(--ease), color .2s var(--ease);}
+.um-pop .lang-switch button.active{
   color:#0a1030;
   background:linear-gradient(120deg, var(--sun) 0%, var(--sun-warm) 100%);
   box-shadow:0 6px 16px -6px rgba(255,157,61,.6);

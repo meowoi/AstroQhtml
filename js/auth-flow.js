@@ -13,14 +13,14 @@
 
   var I18N = {
     vi:{
-      a_lang:"Ngôn ngữ", title:"CẤP THẺ ID PHI HÀNH GIA", subtitle:"Chọn nhân vật & đặt tên để bắt đầu", pilot:"PHI HÀNH GIA",
+      a_lang:"Ngôn ngữ", lang_head:"Ngôn ngữ", lang_soon_h:"Sắp ra mắt", lang_soon_tag:"Sắp ra mắt", lang_soon_msg:"{n} sắp ra mắt — bọn mình đang dịch nốt!", title:"CẤP THẺ ID PHI HÀNH GIA", subtitle:"Chọn nhân vật & đặt tên để bắt đầu", pilot:"PHI HÀNH GIA",
          name_label:"TÊN PHI HÀNH GIA", name_ph:"Nhập tên của bạn…", start:"BẮT ĐẦU HÀNH TRÌNH",
          choose:"CHỌN NHÂN VẬT", role:"CHỨC VỤ", trait:"TÍNH CÁCH", s_pow:"NĂNG LƯỢNG", s_spd:"TỐC ĐỘ", s_iq:"TRÍ TUỆ",
          err_name:"Hãy nhập tên phi hành gia!", clearance:"QUYỀN: TÂN BINH", tap:"Chạm vào một nhân vật để xem thông tin",
          mystery_toast:"Nhân vật bí ẩn — sắp mở khoá!",
          err_age:"Bạn bao nhiêu tuổi? Chọn một ô nhé!" },
     en:{
-      a_lang:"Language", title:"ASTRONAUT ID ISSUE", subtitle:"Pick a character & name to begin", pilot:"PILOT",
+      a_lang:"Language", lang_head:"Language", lang_soon_h:"Coming soon", lang_soon_tag:"Coming soon", lang_soon_msg:"{n} is coming soon — we're still translating it!", title:"ASTRONAUT ID ISSUE", subtitle:"Pick a character & name to begin", pilot:"PILOT",
          name_label:"PILOT NAME", name_ph:"Enter your name…", start:"START THE JOURNEY",
          choose:"CHOOSE YOUR CHARACTER", role:"ROLE", trait:"PERSONALITY", s_pow:"POWER", s_spd:"SPEED", s_iq:"INTELLECT",
          err_name:"Please enter a pilot name!", clearance:"CLEARANCE: ROOKIE", tap:"Tap a character to view its stats",
@@ -175,6 +175,11 @@
     var aj=$("age-junior"), as=$("age-senior");
     if(aj) aj.addEventListener("click", function(){ pickAge("junior"); });
     if(as) as.addEventListener("click", function(){ pickAge("senior"); });
+    /* ⚠️ TRUOC `applyLang` VA TRUOC `initLang` — xem ly do o dau
+       js/user-menu.js. */
+    if(window.AstroQUserMenu) AstroQUserMenu.init({
+      onSoon: function(l){ toast(t("lang_soon_msg").replace("{n}", l.name)); }
+    });
     applyLang(LANG);
     var sb=$("start-journey"); if(sb) sb.addEventListener("click", startJourney);
     var ni=$("pilot-name"); if(ni) ni.addEventListener("keydown", function(e){ if(e.key==="Enter") startJourney(); });

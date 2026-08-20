@@ -24,8 +24,14 @@
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
+<!-- Menu tha dung chung (bo chon ngon ngu). Nap TRUOC css cua trang de trang
+     con ghi de duoc phan rieng. -->
+<link rel="stylesheet" href="css/user-menu.css" />
 <link rel="stylesheet" href="css/landing-app.css" />
 <script src="js/ui-common.js"></script>
+<!-- ⚠️ `AstroQUserMenu.init()` phai chay TRUOC `AstroQ.initLang()` —
+     ly do ghi o dau js/user-menu.js. -->
+<script src="js/user-menu.js"></script>
 <script src="js/pw-toggle.js"></script>
 <script src="js/utm.js"></script>
 </head>
@@ -54,10 +60,28 @@
   <span>Contact Us</span>
 </a>
 
-<!-- Nút chuyển ngôn ngữ -->
-<div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
-  <button type="button" data-lang="vi">VI</button>
-  <button type="button" data-lang="en">EN</button>
+<!-- Bo chon ngon ngu dang MENU THA. Khung + hanh vi:
+     css/user-menu.css + js/user-menu.js (dung chung voi dashboard).
+     ⚠️ Danh sach ngon ngu do js/user-menu.js dung — hai o rong duoi day
+        la CHO DE NO GHI VAO, dung go tay ten ngon ngu nao o day.
+     ⚠️ `.lang-switch` GIU DUNG TEN: `AstroQ.initLang` gan su kien cho
+        `.lang-switch button`, dat ten rieng la lap lai dung loi da lam
+        `explorer.html` mat han nut doi ngon ngu trong nhieu thang. -->
+<div class="um lang-pick" data-menu>
+  <button class="um-btn" type="button" data-menu-btn
+          data-i18n-aria="a_lang" aria-label="Ngôn ngữ"
+          data-i18n-title="a_lang" title="Ngôn ngữ">
+    <span class="um-code" data-lang-code>VI</span>
+    <span class="um-caret" aria-hidden="true"></span>
+  </button>
+  <div class="um-pop" data-menu-pop hidden>
+    <p class="um-head" data-i18n="lang_head">Ngôn ngữ</p>
+    <div class="lang-switch" role="group" data-i18n-aria="a_lang"
+         aria-label="Language / Ngôn ngữ" data-lang-list></div>
+    <div class="um-sep"></div>
+    <p class="um-head" data-i18n="lang_soon_h">Đang dịch, sắp có</p>
+    <div class="lang-soon" data-lang-soon-list></div>
+  </div>
 </div>
 
 <main class="wrap">
@@ -213,7 +237,7 @@ const I18N = {
     verify_back:"Quay lại đăng nhập",
     verify_note:"Không thấy email? Kiểm tra cả mục Spam / Quảng cáo nhé.",
     auth_forgot:"Quên mật khẩu?",
-      a_lang:"Ngôn ngữ",
+      a_lang:"Ngôn ngữ", lang_head:"Ngôn ngữ", lang_soon_h:"Sắp ra mắt", lang_soon_tag:"Sắp ra mắt", lang_soon_msg:"{n} sắp ra mắt — bọn mình đang dịch nốt!",
       a_close:"Đóng",
       reg_name_ph:"Nguyễn Văn A",
     title: "AstroQ — Khám phá Hệ Mặt Trời",
@@ -261,7 +285,7 @@ const I18N = {
     verify_back:"Back to sign in",
     verify_note:"Can't find it? Check your Spam / Promotions folder too.",
     auth_forgot:"Forgot password?",
-      a_lang:"Language",
+      a_lang:"Language", lang_head:"Language", lang_soon_h:"Coming soon", lang_soon_tag:"Coming soon", lang_soon_msg:"{n} is coming soon — we're still translating it!",
       a_close:"Close",
       reg_name_ph:"Alex Nguyen",
     title: "AstroQ — Explore the Solar System",
@@ -321,6 +345,22 @@ function applyLang(lang){
 
 /* Lượt đầu đoán theo nơi truy cập (guessLang ở js/ui-common.js): lựa chọn đã
    lưu → múi giờ Việt Nam → ngôn ngữ trình duyệt → còn lại là tiếng Anh. */
+/* ⚠️ TRUOC `initLang` VA TRUOC `applyLang`: `initLang` gan su kien cho
+   `.lang-switch button` dung MOT lan, ma may cai nut do do user-menu dung ra
+   — dung sau la chung khong co ai nghe, bam khong an va im lang tuyet doi.
+   Con `applyTexts` thi chi dich nhung gi DANG co trong DOM. */
+/* ⚠️ Toast dung LAZY o day, khong dung `showToast` cua khoi script duoi:
+   `showToast` khai o mot KHOI <script> KHAC va nam sau khoi nay, nen tham
+   chieu no o day la dua vao thu tu khoi. Ham nay chi chay khi tre BAM, luc
+   do phan tu toast chac chan da co. */
+var langToast = null;
+if(window.AstroQUserMenu) AstroQUserMenu.init({
+  onSoon: function(l){
+    var d = I18N[document.documentElement.lang] || I18N.vi;
+    if(!langToast) langToast = AstroQ.makeToast("auth-toast", 2800);
+    langToast((d.lang_soon_msg || "").replace("{n}", l.name));
+  }
+});
 applyLang(AstroQ.getLang());
 AstroQ.initLang(applyLang);
 </script>

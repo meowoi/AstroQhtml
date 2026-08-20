@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/cockpit.css" />
+<link rel="stylesheet" href="css/user-menu.css" />
 <link rel="stylesheet" href="css/select.css" />
 </head>
 <body>
@@ -21,9 +22,28 @@
 <header>
   <a class="brand" href="landing-app.html"><img class="brand-logo" src="img/astroq-logo.png" width="117" height="34" alt="astroQ" decoding="async"></a>
   <span class="spacer"></span>
-  <div class="lang-switch" role="group" data-i18n-aria="a_lang" aria-label="Language / Ngôn ngữ">
-    <button type="button" data-lang="vi">VI</button>
-    <button type="button" data-lang="en">EN</button>
+  <!-- Bo chon ngon ngu dang MENU THA. Khung + hanh vi:
+       css/user-menu.css + js/user-menu.js (dung chung voi dashboard).
+       ⚠️ Danh sach ngon ngu do js/user-menu.js dung — hai o rong duoi day
+          la CHO DE NO GHI VAO, dung go tay ten ngon ngu nao o day.
+       ⚠️ `.lang-switch` GIU DUNG TEN: `AstroQ.initLang` gan su kien cho
+          `.lang-switch button`, dat ten rieng la lap lai dung loi da lam
+          `explorer.html` mat han nut doi ngon ngu trong nhieu thang. -->
+  <div class="um lang-pick" data-menu>
+    <button class="um-btn" type="button" data-menu-btn
+            data-i18n-aria="a_lang" aria-label="Ngôn ngữ"
+            data-i18n-title="a_lang" title="Ngôn ngữ">
+      <span class="um-code" data-lang-code>VI</span>
+      <span class="um-caret" aria-hidden="true"></span>
+    </button>
+    <div class="um-pop" data-menu-pop hidden>
+      <p class="um-head" data-i18n="lang_head">Ngôn ngữ</p>
+      <div class="lang-switch" role="group" data-i18n-aria="a_lang"
+           aria-label="Language / Ngôn ngữ" data-lang-list></div>
+      <div class="um-sep"></div>
+      <p class="um-head" data-i18n="lang_soon_h">Đang dịch, sắp có</p>
+      <div class="lang-soon" data-lang-soon-list></div>
+    </div>
   </div>
 </header>
 
@@ -82,6 +102,8 @@
 <div class="sel-toast" id="sel-toast" role="status" aria-live="polite"></div>
 
 <script src="js/ui-common.js"></script>
+<!-- ⚠️ `AstroQUserMenu.init()` phai chay TRUOC `AstroQ.initLang()`. -->
+<script src="js/user-menu.js"></script>
 <!-- Roster nhân vật dùng chung với profile.html — phải nạp TRƯỚC auth-flow.js -->
 <script src="js/characters.js"></script>
 <script src="js/depth.js"></script>

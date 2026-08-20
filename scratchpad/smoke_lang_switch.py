@@ -83,12 +83,20 @@ PAGES = [
 #    button` va van do `AstroQ.initLang` gan su kien — chi la phai MO MENU truoc
 #    khi do. Bo do phai mo, khong duoc noi long phep kiem: dieu can chung minh van
 #    la "tre bam duoc va chu doi that".
-MENU_PAGES = {"dashboard.html"}
+# ⚠️⚠️ TU PHAT HIEN, KHONG GAN CUNG DANH SACH TRANG.
+#    Ban cu gan cung dung mot trang. Ngay 20/08/2026 menu tha duoc mang sang
+#    `landing-app.html` va `select.html`, va bo do CHET NGAY (`click` vao mot nut
+#    dang nam trong tam tha DONG, het han cho 30 giay) — dung anti-pattern
+#    `_GAME_FILE` gan cung da tra gia: mot danh sach gan cung khong bao hong khi
+#    thieu, no chi lang le thu hep pham vi... hoac lam ca bo do chet.
+#    Nay hoi THANG trang: co `.lang-pick [data-menu-btn]` thi la trang dung menu.
+def uses_menu(pg):
+    return pg.locator(".lang-pick [data-menu-btn]").count() > 0
 
 
 def open_lang_menu(pg, page):
     """Mo tam tha ngon ngu neu trang do dung menu. Tra ve True neu da mo."""
-    if page not in MENU_PAGES:
+    if not uses_menu(pg):
         return False
     pg.click(".lang-pick [data-menu-btn]")
     pg.wait_for_selector(".lang-pick [data-menu-pop]:not([hidden])", timeout=5000)
@@ -197,7 +205,7 @@ with sync_playwright() as p:
         #    `after != before` đúng một cách RỖNG (menu đóng lại là chữ đã khác),
         #    tức phép kiểm "bấm EN thì chữ đổi thật" mất hết tác dụng ở đúng trang
         #    dùng menu.
-        if page in MENU_PAGES:
+        if uses_menu(pg):
             pg.keyboard.press("Escape")
             pg.wait_for_timeout(200)
 
