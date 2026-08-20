@@ -4709,5 +4709,46 @@ for _f, _lang in (("index.html", "có những chủ đề nào?"),
     check("%s: cau hoi chu de xuat hien dung 2 lan (hien ra + JSON-LD)" % _f,
           _t.count(_lang) == 2, "%d lan" % _t.count(_lang))
 
+print("\n=== [36] CONG DAY NGUOI DA DANG NHAP o trang chu ===")
+# ⚠️ VI SAO CO MUC NAY du da co `scratchpad/smoke_index_gate.py`: bo do kia can
+#    may chu tinh + Chromium, con day la hang rao RE chay o moi luot. No canh dung
+#    nhung bat bien ma mot cu "don dep" de pha nhat.
+_gate = rd("js/index-gate.js")
+# Boc chu thich: chinh ghi chu giai thich "vi sao khong go cung landing-app.html"
+# co chua chuoi do — loi "dem ca chu trong ghi chu cua minh" da lap rat nhieu lan.
+_gc = strip_comments(_gate)
+check("gate: dung location.replace, khong dung location.href",
+      "location.replace(" in _gc and "location.href" not in _gc)
+# ⚠️ Go cung "landing-app.html" la tu `/en/` no phan giai thanh /en/landing-app.html
+#    -> 404. Dung lop loi da giet nut "Play now" ban EN (lo ra 20/08/2026).
+check("gate: KHONG go cung duong dan landing-app.html",
+      not re.search(r'["\']landing-app\.html["\']', _gc))
+check("gate: suy duong dan tu document.currentScript",
+      "document.currentScript" in _gc)
+# Bon nhanh O LAI — chung moi la thu giu `/` con la trang duy nhat duoc lap chi muc.
+check("gate: doi `uid` (ho so thoi demo KHONG bi day)", "u.uid" in _gc)
+check("gate: bo qua khi co neo #hash", "location.hash" in _gc)
+check("gate: co cua thoat ?stay", "stay" in _gc)
+check("gate: bo qua khi referer cung host", "location.host" in _gc)
+check("gate: boc try/catch (khong bao gio lam chet trang chu)",
+      "try" in _gc and "catch" in _gc)
+# ⚠️ Gate KHONG duoc tu quyet 'dashboard hay select' — `landing-app.html` giu luat do.
+#    Chep sang day la hai noi giu mot luat, va ban o day se noi cai cu vao dung ngay
+#    luat kia doi (bai hoc js/badges.js, js/route-gate.js, js/mission-catalog.js).
+check("gate: KHONG tu quyet dich cuoi (dashboard/select)",
+      "dashboard.html" not in _gc and "select.html" not in _gc)
+for _f, _pre in (("index.html", "js/"), ("en/index.html", "../js/")):
+    _t = rd(_f)
+    check("%s: nap gate dung 1 lan" % _f, _t.count("index-gate.js") == 1,
+          "%d lan" % _t.count("index-gate.js"))
+    check("%s: duong dan gate dung do sau (%s)" % (_f, _pre),
+          '%sindex-gate.js' % _pre in _t)
+    # Thu tu bat buoc: SAU ui-common.js (can AstroQ.getUser) va SAU utm.js
+    # (phai kip ghi nguon chien dich truoc khi roi trang).
+    check("%s: gate nap SAU ui-common.js" % _f,
+          _t.index("index-gate.js") > _t.index("ui-common.js"))
+    check("%s: gate nap SAU utm.js" % _f,
+          _t.index("index-gate.js") > _t.index("utm.js"))
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

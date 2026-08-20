@@ -161,7 +161,15 @@ with sync_playwright() as p:
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-        pg.goto(f"{BASE}/{page}", wait_until="load", timeout=30000)
+        # ⚠️ TRANG CHU CAN `?stay` — bo do gieo ho so CO `uid` cho ca 30 trang, ma
+        #    tu 20/08/2026 `js/index-gate.js` day nguoi DA DANG NHAP tu `/` sang
+        #    `landing-app.html` khi ho den tu ngoai site (o day referer rong = go
+        #    thang URL). Khong co `?stay` thi trang chu bi day di va cu bam EN het
+        #    han cho vi khong con link nao — doc ra y het mot loi san pham.
+        #    `?stay` la CUA THOAT chinh thuc cua cong do, nen dung no vua giu duoc
+        #    phep do vua thu luon duong thoat tren mot trang that.
+        url = f"{BASE}/{page}" + ("?stay" if page in LINK_PAGES else "")
+        pg.goto(url, wait_until="load", timeout=30000)
         pg.wait_for_timeout(1600)
         # explorer co man cho nap voi `transition:visibility .8s`; cho no thuc su
         # bien han thay vi ngu mot khoang co dinh (xem ghi chu o css/explorer.css).
