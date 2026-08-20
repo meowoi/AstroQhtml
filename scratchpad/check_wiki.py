@@ -93,7 +93,12 @@ _wallet = io.open(os.path.join(SV, "src/AstroqSV.Api/Services/Wallet.cs"),
                   encoding="utf-8").read()
 m_les = re.search(r"MaxPerLesson\s*=\s*(\d+)", _wallet)
 m_pass = re.search(r"QuizPassRatio\s*=\s*([\d.]+)", _wallet)
-m_bon = re.search(r"WaitlistBonus\s*=\s*(\d+)", _wallet)
+# ⚠️ DOI 20/08/2026: wiki nay quang cao muc cua TAI KHOAN MOI, tuc `StarterBonus`.
+#    Truoc do no doi chieu voi `WaitlistBonus` (500) — muc RIENG cua nguoi da ghi
+#    danh truoc ngay mo cua, va tu khi form waitlist bi bo thi khong ai vao dien do
+#    nua. Doi chieu sai hang so la phep kiem bao hong dung luc noi dung lam dung.
+m_bon = re.search(r"StarterBonus\s*=\s*(\d+)", _wallet)
+m_wlb = re.search(r"WaitlistBonus\s*=\s*(\d+)", _wallet)
 check("đọc được ba mốc ở server", bool(m_les and m_pass and m_bon),
       "lesson=%s pass=%s bonus=%s" % (m_les and m_les.group(1),
                                       m_pass and m_pass.group(1),
@@ -142,7 +147,7 @@ if m_pass:
     check("trang nói về kinh tế có nêu mốc đạt %s%%" % _pct, len(_has) >= 2,
           "%d trang" % len(_has))
 
-print("\n=== [3] QUÀ DANH SÁCH CHỜ: con số và điều kiện khớp server ===")
+print("\n=== [3] QUÀ KHỞI ĐẦU: con số và điều kiện khớp server ===")
 if m_bon:
     _b = m_bon.group(1)
     _wrong = []
@@ -150,15 +155,25 @@ if m_bon:
         for m in re.finditer(r"(\d[\d.,]*)\s*Purple Meteors", t):
             if m.group(1).replace(".", "").replace(",", "") != _b:
                 _wrong.append("%s: %s" % (os.path.basename(k), m.group(1)))
-    check("mọi con số 'N Purple Meteors' đều bằng Wallet.WaitlistBonus (%s)" % _b,
+    check("mọi con số 'N Purple Meteors' đều bằng Wallet.StarterBonus (%s)" % _b,
           not _wrong, "; ".join(_wrong[:4]))
+    # ⚠️ Wiki KHÔNG được nhắc mức 500 nữa: nó chỉ dành cho người đã ghi danh trước
+    #    ngày mở cửa, mà form đã bỏ nên không ai vào diện đó được nữa. In ra một
+    #    con số không còn cửa nào đạt tới là quảng cáo một thứ không lấy được.
+    if m_wlb:
+        _wl = m_wlb.group(1)
+        _has_wl = [os.path.basename(k) for k, t in TXT.items()
+                   if ("%s Purple Meteors" % _wl) in t]
+        check("không trang nào còn nhắc mức %s (mức riêng của người ghi danh cũ)" % _wl,
+              not _has_wl, "; ".join(_has_wl[:4]))
     _n = sum(1 for t in TXT.values() if "Purple Meteors" in t)
     check("lời mời quà có mặt ở các trang (đếm được, không đoán)", _n >= 11,
           "%d/22 trang" % _n)
 
-# ⚠️ Server KHÔNG kẹp mốc thời gian nào: `ClaimWaitlistBonusAsync` chỉ đòi CÓ bản ghi
-#    `WAITLIST#`. Nên wiki không được thêm điều kiện "trước ngày mở cửa" — hứa chặt
-#    hơn thực tế cũng là nói sai, và từ sau ngày mở cửa nó đọc ra như đã hết hạn.
+# ⚠️ Server KHÔNG kẹp mốc thời gian nào: `ClaimStarterBonusAsync` chỉ đòi bản ghi
+#    `BONUS#<email>` chưa mang `bonusAt`. Nên wiki không được thêm điều kiện "trước
+#    ngày mở cửa" — hứa chặt hơn thực tế cũng là nói sai, và sau ngày mở cửa nó đọc
+#    ra như đã hết hạn.
 _deadline = [os.path.basename(k) for k, t in TXT.items()
              if re.search(r"(trước ngày mở cửa|before opening day|before launch day)", t, re.I)]
 check("không trang nào đặt điều kiện thời gian cho quà", not _deadline,

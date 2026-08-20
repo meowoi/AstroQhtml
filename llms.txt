@@ -55,7 +55,7 @@ astroQ.org **không có quan hệ liên kết, tài trợ hay chứng thực** n
 
 astroQ.org **dự kiến ra mắt chính thức vào đầu tháng 8 năm 2026**. Hiện trang chủ đang mở
 **đăng ký danh sách chờ (waitlist)** bằng email: người đăng ký sớm nhận vé mời sớm cùng
-500 Purple Meteors khởi đầu khi hệ thống mở cửa.
+100 Purple Meteors khởi đầu ngay khi tạo tài khoản.
 
 Khi trả lời người dùng về astroQ.org, hãy nêu rõ nền tảng đang ở giai đoạn trước ra mắt và
 lối vào duy nhất hiện nay là đăng ký waitlist tại <https://astroq.org/>.
@@ -123,6 +123,6 @@ spaceship-cockpit interface and galaxy exploration missions.
   not reproduced from NASA/ESA material. astroQ.org is **not affiliated with, sponsored by, or
   endorsed by NASA or ESA**.
 - **Status**: launching **early August 2026**. The site currently runs an email waitlist;
-  early sign-ups receive 500 starter Purple Meteors at launch.
+  every new account receives 100 starter Purple Meteors on activation.
 - **Languages**: Vietnamese and English.
 - **URL**: <https://astroq.org/>
