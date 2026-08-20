@@ -16,25 +16,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Một chú mèo"
+          "text": "Một chú mèo",
+          "text_en": "A cat"
         },
         {
           "id": "B",
-          "text": "Một chú robot"
+          "text": "Một chú robot",
+          "text_en": "A robot"
         },
         {
           "id": "C",
-          "text": "Một hành tinh"
+          "text": "Một hành tinh",
+          "text_en": "A planet"
         },
         {
           "id": "D",
-          "text": "Một ngôi sao"
+          "text": "Một ngôi sao",
+          "text_en": "A star"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Byte là một chú robot — cỗ máy do con người chế tạo để làm theo hướng dẫn. Robot không phải sinh vật sống.",
       "source_reference": "Khan Academy – Intro to Computing",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Hi there! I'm Byte. Can you guess what I am?",
+      "question_text_en": "What kind of character is Byte in AstroQ?",
+      "explanation_en": "Byte is a robot — a machine built by people to follow instructions. A robot is not a living creature."
     },
     {
       "id": "ASTRO_AI_LV01_Q002",
@@ -46,25 +55,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Máy móc được dạy để 'suy nghĩ' và làm việc thông minh"
+          "text": "Máy móc được dạy để 'suy nghĩ' và làm việc thông minh",
+          "text_en": "Machines taught to 'think' and work smartly"
         },
         {
           "id": "B",
-          "text": "Máy móc biết bay"
+          "text": "Máy móc biết bay",
+          "text_en": "Machines that can fly"
         },
         {
           "id": "C",
-          "text": "Một loại pin"
+          "text": "Một loại pin",
+          "text_en": "A kind of battery"
         },
         {
           "id": "D",
-          "text": "Một món ăn"
+          "text": "Một món ăn",
+          "text_en": "A kind of food"
         }
       ],
       "correct_option_id": "A",
       "explanation": "AI là trí tuệ nhân tạo: giúp máy tính học và làm những việc cần sự 'thông minh' như nhận diện hình ảnh hay trả lời câu hỏi.",
       "source_reference": "Google AI for Education",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Comet here! Do you know what 'AI' means?",
+      "question_text_en": "What does AI (Artificial Intelligence) mean?",
+      "explanation_en": "AI stands for artificial intelligence: it helps computers learn and do things that need 'smartness', such as recognising pictures or answering questions."
     },
     {
       "id": "ASTRO_AI_LV01_Q003",
@@ -76,25 +94,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Hướng dẫn (lệnh) từ con người"
+          "text": "Hướng dẫn (lệnh) từ con người",
+          "text_en": "Instructions (commands) from people"
         },
         {
           "id": "B",
-          "text": "Thức ăn"
+          "text": "Thức ăn",
+          "text_en": "Food"
         },
         {
           "id": "C",
-          "text": "Giấc ngủ"
+          "text": "Giấc ngủ",
+          "text_en": "Sleep"
         },
         {
           "id": "D",
-          "text": "Nước uống"
+          "text": "Nước uống",
+          "text_en": "Drinking water"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Robot làm theo các lệnh được lập trình. Không có lệnh, robot không tự biết phải làm gì.",
       "source_reference": "MIT OpenCourseWare – Intro to Robotics (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Byte wants to move. What do I need first?",
+      "question_text_en": "What does a robot like Byte need in order to know what to do?",
+      "explanation_en": "Robots follow instructions that were programmed into them. Without instructions, a robot does not work out what to do on its own."
     },
     {
       "id": "ASTRO_AI_LV01_Q004",
@@ -106,25 +133,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Cục tẩy"
+          "text": "Cục tẩy",
+          "text_en": "An eraser"
         },
         {
           "id": "B",
-          "text": "Cái ghế gỗ"
+          "text": "Cái ghế gỗ",
+          "text_en": "A wooden chair"
         },
         {
           "id": "C",
-          "text": "Loa thông minh biết trả lời câu hỏi"
+          "text": "Loa thông minh biết trả lời câu hỏi",
+          "text_en": "A smart speaker that answers questions"
         },
         {
           "id": "D",
-          "text": "Quyển vở"
+          "text": "Quyển vở",
+          "text_en": "A notebook"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Loa thông minh (trợ lý ảo) dùng AI để hiểu giọng nói và trả lời bạn.",
       "source_reference": "Khan Academy – AI in everyday life",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Look around your home — which thing is 'smart'?",
+      "question_text_en": "Which device below is an example of something that uses AI?",
+      "explanation_en": "A smart speaker (voice assistant) uses AI to understand your voice and answer you."
     },
     {
       "id": "ASTRO_AI_LV01_Q005",
@@ -136,25 +172,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Cho AI ăn cá"
+          "text": "Cho AI ăn cá",
+          "text_en": "Feed the AI some fish"
         },
         {
           "id": "B",
-          "text": "Cho AI xem thật nhiều hình con mèo"
+          "text": "Cho AI xem thật nhiều hình con mèo",
+          "text_en": "Show the AI lots and lots of cat pictures"
         },
         {
           "id": "C",
-          "text": "Tắt máy tính đi"
+          "text": "Tắt máy tính đi",
+          "text_en": "Turn the computer off"
         },
         {
           "id": "D",
-          "text": "Vẽ một ngôi sao"
+          "text": "Vẽ một ngôi sao",
+          "text_en": "Draw a star"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI học từ ví dụ. Xem thật nhiều ảnh mèo giúp AI dần nhận ra mèo — đây là ý tưởng của 'máy học'.",
       "source_reference": "Google AI for Education – Machine Learning basics",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Comet wants the AI to recognise me. How do we teach it?",
+      "question_text_en": "To teach an AI to recognise a cat, what should we do?",
+      "explanation_en": "AI learns from examples. Seeing lots of cat pictures helps the AI gradually recognise cats — that is the idea behind 'machine learning'."
     },
     {
       "id": "ASTRO_AI_LV01_Q006",
@@ -166,25 +211,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Robot tự sinh ra"
+          "text": "Robot tự sinh ra",
+          "text_en": "Robots create themselves"
         },
         {
           "id": "B",
-          "text": "Cơn mưa"
+          "text": "Cơn mưa",
+          "text_en": "The rain"
         },
         {
           "id": "C",
-          "text": "Cây cối"
+          "text": "Cây cối",
+          "text_en": "Trees"
         },
         {
           "id": "D",
-          "text": "Con người"
+          "text": "Con người",
+          "text_en": "People"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Robot là máy móc do con người thiết kế và chế tạo, không tự sinh ra như sinh vật sống.",
       "source_reference": "Khan Academy – Intro to Computing",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Quick quiz: who made me — the robot Byte?",
+      "question_text_en": "Who creates robots?",
+      "explanation_en": "A robot is a machine that people design and build; it does not come into being on its own the way a living creature does."
     },
     {
       "id": "ASTRO_AI_LV01_Q007",
@@ -196,25 +250,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Comet cần được lập trình"
+          "text": "Comet cần được lập trình",
+          "text_en": "Comet needs to be programmed"
         },
         {
           "id": "B",
-          "text": "Comet chạy bằng pin"
+          "text": "Comet chạy bằng pin",
+          "text_en": "Comet runs on batteries"
         },
         {
           "id": "C",
-          "text": "Comet làm bằng kim loại"
+          "text": "Comet làm bằng kim loại",
+          "text_en": "Comet is made of metal"
         },
         {
           "id": "D",
-          "text": "Comet cần ăn và ngủ vì là sinh vật sống"
+          "text": "Comet cần ăn và ngủ vì là sinh vật sống",
+          "text_en": "Comet needs to eat and sleep because she is alive"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Mèo là sinh vật sống nên cần ăn, ngủ, lớn lên. Robot là máy móc, hoạt động bằng năng lượng như pin hoặc điện.",
       "source_reference": "Khan Academy – Living vs non-living",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Comet is a real cat, Byte is a machine. What's the difference?",
+      "question_text_en": "What is true of Comet the cat that Byte the robot does NOT have?",
+      "explanation_en": "A cat is a living creature, so it needs to eat, sleep and grow. A robot is a machine that runs on energy such as a battery or mains power."
     },
     {
       "id": "ASTRO_AI_LV01_Q008",
@@ -226,25 +289,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Mùi hương"
+          "text": "Mùi hương",
+          "text_en": "Smells"
         },
         {
           "id": "B",
-          "text": "Suy nghĩ trong đầu bạn"
+          "text": "Suy nghĩ trong đầu bạn",
+          "text_en": "The thoughts inside your head"
         },
         {
           "id": "C",
-          "text": "Giấc mơ ban đêm"
+          "text": "Giấc mơ ban đêm",
+          "text_en": "Dreams at night"
         },
         {
           "id": "D",
-          "text": "Những lệnh, hướng dẫn rõ ràng"
+          "text": "Những lệnh, hướng dẫn rõ ràng",
+          "text_en": "Clear commands and instructions"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Máy tính chỉ làm theo các lệnh rõ ràng mà con người đưa vào; nó không tự đoán được suy nghĩ của bạn.",
       "source_reference": "MIT OpenCourseWare – How computers work (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Computers are clever — but what do they actually 'understand'?",
+      "question_text_en": "What does a computer base its work on?",
+      "explanation_en": "A computer only follows the clear instructions people give it; it cannot guess what you are thinking."
     },
     {
       "id": "ASTRO_AI_LV01_Q009",
@@ -256,25 +328,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Tưới cây"
+          "text": "Tưới cây",
+          "text_en": "Water the plants"
         },
         {
           "id": "B",
-          "text": "Nấu ăn giúp bạn"
+          "text": "Nấu ăn giúp bạn",
+          "text_en": "Cook a meal for you"
         },
         {
           "id": "C",
-          "text": "Giặt quần áo"
+          "text": "Giặt quần áo",
+          "text_en": "Wash the clothes"
         },
         {
           "id": "D",
-          "text": "Hiểu giọng nói của bạn"
+          "text": "Hiểu giọng nói của bạn",
+          "text_en": "Understand your voice"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Trợ lý ảo trong điện thoại dùng AI để nghe và hiểu giọng nói, rồi giúp bạn tìm thông tin hay đặt báo thức.",
       "source_reference": "Google AI for Education",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Your parents' phone has AI in it too!",
+      "question_text_en": "What can the AI in a phone usually do?",
+      "explanation_en": "The voice assistant in a phone uses AI to hear and understand speech, then helps you look things up or set an alarm."
     },
     {
       "id": "ASTRO_AI_LV01_Q010",
@@ -286,25 +367,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Bánh kẹo"
+          "text": "Bánh kẹo",
+          "text_en": "Sweets"
         },
         {
           "id": "B",
-          "text": "Đôi cánh"
+          "text": "Đôi cánh",
+          "text_en": "Wings"
         },
         {
           "id": "C",
-          "text": "Cảm biến"
+          "text": "Cảm biến",
+          "text_en": "Sensors"
         },
         {
           "id": "D",
-          "text": "Màu sơn đẹp"
+          "text": "Màu sơn đẹp",
+          "text_en": "A pretty coat of paint"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Cảm biến giúp robot 'cảm nhận' vật ở xung quanh để dừng lại hoặc rẽ, tránh va chạm.",
       "source_reference": "MIT OpenCourseWare – Sensors (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "How does the vacuum robot at home avoid the walls?",
+      "question_text_en": "A robot vacuum avoids bumping into walls thanks to what?",
+      "explanation_en": "Sensors let the robot 'feel' what is around it so it can stop or turn and avoid a collision."
     },
     {
       "id": "ASTRO_AI_LV01_Q011",
@@ -316,25 +406,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Máy học hỏi từ các ví dụ"
+          "text": "Máy học hỏi từ các ví dụ",
+          "text_en": "A machine learning from examples"
         },
         {
           "id": "B",
-          "text": "Máy đến trường đi học"
+          "text": "Máy đến trường đi học",
+          "text_en": "A machine going to school"
         },
         {
           "id": "C",
-          "text": "Máy nằm ngủ"
+          "text": "Máy nằm ngủ",
+          "text_en": "A machine lying down to sleep"
         },
         {
           "id": "D",
-          "text": "Máy hát karaoke"
+          "text": "Máy hát karaoke",
+          "text_en": "A karaoke machine"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Máy học là cách máy tính trở nên giỏi hơn bằng việc xem nhiều ví dụ, thay vì được lập trình từng bước cụ thể.",
       "source_reference": "Google AI for Education – Machine Learning basics",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "'Machine learning' sounds great — what is it, Byte?",
+      "question_text_en": "What does 'machine learning' mean?",
+      "explanation_en": "Machine learning is how a computer gets better by looking at many examples, instead of being programmed step by step."
     },
     {
       "id": "ASTRO_AI_LV01_Q012",
@@ -346,25 +445,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Camera và cảm biến"
+          "text": "Camera và cảm biến",
+          "text_en": "Cameras and sensors"
         },
         {
           "id": "B",
-          "text": "Đôi mắt thật như người"
+          "text": "Đôi mắt thật như người",
+          "text_en": "Real eyes like a person's"
         },
         {
           "id": "C",
-          "text": "Đôi tai"
+          "text": "Đôi tai",
+          "text_en": "Ears"
         },
         {
           "id": "D",
-          "text": "Cái mũi"
+          "text": "Cái mũi",
+          "text_en": "A nose"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Xe tự lái dùng camera và cảm biến để 'nhìn' đường, xe cộ và người đi bộ, rồi AI xử lý thông tin đó.",
       "source_reference": "Stanford CS – Autonomous vehicles (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "A self-driving car has no eyes like Comet — so how does it 'see'?",
+      "question_text_en": "What does a self-driving car use to 'see' the road?",
+      "explanation_en": "A self-driving car uses cameras and sensors to 'see' the road, other vehicles and pedestrians, and AI then processes that information."
     },
     {
       "id": "ASTRO_AI_LV01_Q013",
@@ -376,25 +484,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Một chú chim biết hót"
+          "text": "Một chú chim biết hót",
+          "text_en": "A songbird"
         },
         {
           "id": "B",
-          "text": "Chương trình trò chuyện bằng chữ với bạn"
+          "text": "Chương trình trò chuyện bằng chữ với bạn",
+          "text_en": "A program that chats with you in writing"
         },
         {
           "id": "C",
-          "text": "Một chiếc bánh"
+          "text": "Một chiếc bánh",
+          "text_en": "A cake"
         },
         {
           "id": "D",
-          "text": "Một hành tinh"
+          "text": "Một hành tinh",
+          "text_en": "A planet"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Chatbot là chương trình máy tính có thể trò chuyện, trả lời câu hỏi bằng chữ hoặc giọng nói.",
       "source_reference": "Khan Academy – AI in everyday life",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "There's a machine friend that chats with me in writing — what's it called?",
+      "question_text_en": "What is a chatbot?",
+      "explanation_en": "A chatbot is a computer program that can hold a conversation and answer questions in text or speech."
     },
     {
       "id": "ASTRO_AI_LV01_Q014",
@@ -406,25 +523,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Hoàn toàn ngẫu nhiên"
+          "text": "Hoàn toàn ngẫu nhiên",
+          "text_en": "Pure chance"
         },
         {
           "id": "B",
-          "text": "Màu áo bạn đang mặc"
+          "text": "Màu áo bạn đang mặc",
+          "text_en": "The colour of the shirt you are wearing"
         },
         {
           "id": "C",
-          "text": "Thời tiết hôm nay"
+          "text": "Thời tiết hôm nay",
+          "text_en": "Today's weather"
         },
         {
           "id": "D",
-          "text": "Những video bạn đã xem trước đó"
+          "text": "Những video bạn đã xem trước đó",
+          "text_en": "The videos you have watched before"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Hệ thống gợi ý học từ lịch sử xem của bạn để đề xuất nội dung tương tự mà bạn có thể thích.",
       "source_reference": "Google AI for Education – Recommender systems",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Why does the app keep suggesting exactly the videos I like?",
+      "question_text_en": "What does AI base its video suggestions on?",
+      "explanation_en": "A recommendation system learns from your watch history to suggest similar things you might enjoy."
     },
     {
       "id": "ASTRO_AI_LV01_Q015",
@@ -436,25 +562,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Nhận diện khuôn mặt"
+          "text": "Nhận diện khuôn mặt",
+          "text_en": "Face recognition"
         },
         {
           "id": "B",
-          "text": "Nghe nhạc"
+          "text": "Nghe nhạc",
+          "text_en": "Listening to music"
         },
         {
           "id": "C",
-          "text": "Chụp X-quang"
+          "text": "Chụp X-quang",
+          "text_en": "Taking an X-ray"
         },
         {
           "id": "D",
-          "text": "Đo nhiệt độ"
+          "text": "Đo nhiệt độ",
+          "text_en": "Measuring temperature"
         }
       ],
       "correct_option_id": "A",
       "explanation": "AI nhận diện khuôn mặt so sánh gương mặt trước camera với gương mặt chủ nhân đã lưu để mở khoá.",
       "source_reference": "IEEE – Face recognition (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "A phone unlocks when it sees its owner's face — clever!",
+      "question_text_en": "Unlocking a phone with your face relies on which technology?",
+      "explanation_en": "Face-recognition AI compares the face in front of the camera with the owner's saved face in order to unlock."
     },
     {
       "id": "ASTRO_AI_LV01_Q016",
@@ -466,25 +601,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Robot tự biết sửa lại cho đúng"
+          "text": "Robot tự biết sửa lại cho đúng",
+          "text_en": "The robot works out the correction by itself"
         },
         {
           "id": "B",
-          "text": "Robot làm sai theo đúng lệnh đã nhận"
+          "text": "Robot làm sai theo đúng lệnh đã nhận",
+          "text_en": "The robot does the wrong thing, exactly as instructed"
         },
         {
           "id": "C",
-          "text": "Robot biến mất"
+          "text": "Robot biến mất",
+          "text_en": "The robot disappears"
         },
         {
           "id": "D",
-          "text": "Robot đi ngủ"
+          "text": "Robot đi ngủ",
+          "text_en": "The robot goes to sleep"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Robot làm đúng y theo lệnh nhận được; lệnh sai sẽ cho kết quả sai. Vì vậy ta phải hướng dẫn thật cẩn thận.",
       "source_reference": "MIT OpenCourseWare – Programming logic (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "What if I give Byte the wrong instruction?",
+      "question_text_en": "If we give a robot the wrong instruction, what happens?",
+      "explanation_en": "A robot does exactly what it is told; a wrong instruction gives a wrong result. That is why we must give instructions carefully."
     },
     {
       "id": "ASTRO_AI_LV01_Q017",
@@ -496,25 +640,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Âm nhạc"
+          "text": "Âm nhạc",
+          "text_en": "Music"
         },
         {
           "id": "B",
-          "text": "Kẹo ngọt"
+          "text": "Kẹo ngọt",
+          "text_en": "Sweets"
         },
         {
           "id": "C",
-          "text": "Ánh nắng"
+          "text": "Ánh nắng",
+          "text_en": "Sunshine"
         },
         {
           "id": "D",
-          "text": "Dữ liệu (thông tin, ví dụ)"
+          "text": "Dữ liệu (thông tin, ví dụ)",
+          "text_en": "Data (information and examples)"
         }
       ],
       "correct_option_id": "D",
       "explanation": "AI học từ dữ liệu — càng nhiều ví dụ tốt thì AI càng học được nhiều điều.",
       "source_reference": "Google AI for Education – Data & learning",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "What does an AI 'eat' to get good? (Not fish, Comet!)",
+      "question_text_en": "What does an AI need in order to learn?",
+      "explanation_en": "AI learns from data — the more good examples it has, the more it can learn."
     },
     {
       "id": "ASTRO_AI_LV01_Q018",
@@ -526,25 +679,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Giúp bạn mọc răng"
+          "text": "Giúp bạn mọc răng",
+          "text_en": "Help your teeth grow"
         },
         {
           "id": "B",
-          "text": "Dịch từ tiếng Anh sang tiếng Việt"
+          "text": "Dịch từ tiếng Anh sang tiếng Việt",
+          "text_en": "Translate from English into Vietnamese"
         },
         {
           "id": "C",
-          "text": "Giúp bạn cao lên"
+          "text": "Giúp bạn cao lên",
+          "text_en": "Make you taller"
         },
         {
           "id": "D",
-          "text": "Thở giúp bạn"
+          "text": "Thở giúp bạn",
+          "text_en": "Breathe for you"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI dịch ngôn ngữ bằng cách học từ rất nhiều câu ở hai thứ tiếng khác nhau.",
       "source_reference": "Khan Academy – AI in everyday life",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Byte can read both English and Vietnamese, you know!",
+      "question_text_en": "Which of these tasks can AI help with?",
+      "explanation_en": "AI translates languages by learning from a great many sentences in two different languages."
     },
     {
       "id": "ASTRO_AI_LV01_Q019",
@@ -556,25 +718,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Bài hát"
+          "text": "Bài hát",
+          "text_en": "A song"
         },
         {
           "id": "B",
-          "text": "Thuật toán"
+          "text": "Thuật toán",
+          "text_en": "An algorithm"
         },
         {
           "id": "C",
-          "text": "Bức tranh"
+          "text": "Bức tranh",
+          "text_en": "A painting"
         },
         {
           "id": "D",
-          "text": "Giấc mơ"
+          "text": "Giấc mơ",
+          "text_en": "A dream"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Thuật toán là danh sách các bước theo thứ tự để giải quyết một việc — giống công thức nấu ăn.",
       "source_reference": "Khan Academy – Algorithms (Hour of Code)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "I work through steps in order. What is that string of steps called?",
+      "question_text_en": "What do we call a sequence of steps in order that gets something done?",
+      "explanation_en": "An algorithm is a list of steps in order for solving a task — much like a cooking recipe."
     },
     {
       "id": "ASTRO_AI_LV01_Q020",
@@ -586,25 +757,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Tự quét nhà bằng chổi"
+          "text": "Tự quét nhà bằng chổi",
+          "text_en": "Sweep the house with a broom on its own"
         },
         {
           "id": "B",
-          "text": "Nấu cơm"
+          "text": "Nấu cơm",
+          "text_en": "Cook the rice"
         },
         {
           "id": "C",
-          "text": "Nghe câu hỏi và trả lời"
+          "text": "Nghe câu hỏi và trả lời",
+          "text_en": "Listen to your question and answer it"
         },
         {
           "id": "D",
-          "text": "Đi bộ ra ngoài"
+          "text": "Đi bộ ra ngoài",
+          "text_en": "Walk outside"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Trợ lý ảo nghe câu hỏi của bạn, dùng AI để hiểu và đưa ra câu trả lời hoặc thực hiện lệnh đơn giản.",
       "source_reference": "Google AI for Education",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "How exactly does a smart speaker help you?",
+      "question_text_en": "How does the voice assistant on a speaker or phone help you?",
+      "explanation_en": "A voice assistant hears your question, uses AI to understand it, and then gives an answer or carries out a simple command."
     },
     {
       "id": "ASTRO_AI_LV01_Q021",
@@ -616,25 +796,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Robot mọc lên từ hạt giống"
+          "text": "Robot mọc lên từ hạt giống",
+          "text_en": "Robots grow from seeds"
         },
         {
           "id": "B",
-          "text": "Robot là một con vật"
+          "text": "Robot là một con vật",
+          "text_en": "A robot is an animal"
         },
         {
           "id": "C",
-          "text": "Robot là máy móc do con người điều khiển và lập trình"
+          "text": "Robot là máy móc do con người điều khiển và lập trình",
+          "text_en": "A robot is a machine that people control and program"
         },
         {
           "id": "D",
-          "text": "Robot tự lớn lên như em bé"
+          "text": "Robot tự lớn lên như em bé",
+          "text_en": "Robots grow up by themselves like babies"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Robot là máy móc; con người thiết kế, chế tạo và lập trình để robot thực hiện công việc.",
       "source_reference": "Khan Academy – Intro to Computing",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Which statement describes a robot best?",
+      "question_text_en": "Which statement about robots is correct?",
+      "explanation_en": "A robot is a machine; people design, build and program it to carry out work."
     },
     {
       "id": "ASTRO_AI_LV01_Q022",
@@ -646,25 +835,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Ăn trang giấy"
+          "text": "Ăn trang giấy",
+          "text_en": "Eating the sheet of paper"
         },
         {
           "id": "B",
-          "text": "Chuyển chữ viết tay thành chữ trên máy tính"
+          "text": "Chuyển chữ viết tay thành chữ trên máy tính",
+          "text_en": "Turning handwriting into text on a computer"
         },
         {
           "id": "C",
-          "text": "Xé quyển vở"
+          "text": "Xé quyển vở",
+          "text_en": "Tearing up the notebook"
         },
         {
           "id": "D",
-          "text": "Tô màu bức tranh"
+          "text": "Tô màu bức tranh",
+          "text_en": "Colouring in a picture"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI có thể 'đọc' chữ viết tay và chuyển thành văn bản số để máy tính lưu và tìm kiếm được.",
       "source_reference": "IEEE – Handwriting recognition (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Byte can read your handwriting and put it into the computer!",
+      "question_text_en": "What is handwriting recognition by AI used for?",
+      "explanation_en": "AI can 'read' handwriting and turn it into digital text so a computer can store and search it."
     },
     {
       "id": "ASTRO_AI_LV01_Q023",
@@ -676,25 +874,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Một bài thơ"
+          "text": "Một bài thơ",
+          "text_en": "A poem"
         },
         {
           "id": "B",
-          "text": "Một ngôi sao"
+          "text": "Một ngôi sao",
+          "text_en": "A star"
         },
         {
           "id": "C",
-          "text": "Nhiều ảnh táo và chuối có dán nhãn tên"
+          "text": "Nhiều ảnh táo và chuối có dán nhãn tên",
+          "text_en": "Many pictures of apples and bananas labelled with their names"
         },
         {
           "id": "D",
-          "text": "Không cho xem gì cả"
+          "text": "Không cho xem gì cả",
+          "text_en": "Nothing at all"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Cho AI xem nhiều ảnh có ghi rõ 'táo' hay 'chuối' giúp nó học cách phân biệt hai loại quả.",
       "source_reference": "Google AI for Education – Image classification",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "How do we teach an AI to tell apples from bananas?",
+      "question_text_en": "To help an AI tell an apple from a banana, what do we show it?",
+      "explanation_en": "Showing the AI many pictures clearly labelled 'apple' or 'banana' helps it learn to tell the two fruits apart."
     },
     {
       "id": "ASTRO_AI_LV01_Q024",
@@ -706,25 +913,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Mèo Comet đang ngủ"
+          "text": "Mèo Comet đang ngủ",
+          "text_en": "Comet the cat, asleep"
         },
         {
           "id": "B",
-          "text": "Robot hút bụi"
+          "text": "Robot hút bụi",
+          "text_en": "A robot vacuum cleaner"
         },
         {
           "id": "C",
-          "text": "Cánh tay máy trong nhà máy"
+          "text": "Cánh tay máy trong nhà máy",
+          "text_en": "A robotic arm in a factory"
         },
         {
           "id": "D",
-          "text": "Robot Byte"
+          "text": "Robot Byte",
+          "text_en": "Byte the robot"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Mèo Comet là sinh vật sống, không phải máy móc. Ba lựa chọn còn lại đều là robot.",
       "source_reference": "Khan Academy – Living vs non-living",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "Out of all these, which one is NOT a robot?",
+      "question_text_en": "Which of these is NOT a robot?",
+      "explanation_en": "Comet the cat is a living creature, not a machine. The other three choices are all robots."
     },
     {
       "id": "ASTRO_AI_LV01_Q025",
@@ -736,25 +952,36 @@
       "options": [
         {
           "id": "A",
-          "text": "Tự mổ một mình không cần bác sĩ"
+          "text": "Tự mổ một mình không cần bác sĩ",
+          "text_en": "Operate on its own with no doctor present"
         },
         {
           "id": "B",
-          "text": "Xem ảnh chụp để hỗ trợ tìm dấu hiệu bệnh"
+          "text": "Xem ảnh chụp để hỗ trợ tìm dấu hiệu bệnh",
+          "text_en": "Look at scans to help spot signs of illness"
         },
         {
           "id": "C",
-          "text": "Thay thế hoàn toàn bác sĩ"
+          "text": "Thay thế hoàn toàn bác sĩ",
+          "text_en": "Replace the doctor completely"
         },
         {
           "id": "D",
-          "text": "Không giúp được gì"
+          "text": "Không giúp được gì",
+          "text_en": "It cannot help at all"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI hỗ trợ bác sĩ phân tích hình ảnh y tế để phát hiện dấu hiệu bất thường, nhưng quyết định cuối cùng vẫn do bác sĩ là con người.",
       "source_reference": "Stanford CS – AI in Healthcare (concept)",
-      "reward_purple_meteors": 10
+      "reward_purple_meteors": 10,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 1 · Primary",
+      "mascot_dialog_en": "AI helps doctors as well!",
+      "question_text_en": "How can AI help a doctor?",
+      "explanation_en": "AI helps doctors analyse medical images to spot unusual signs, but the final decision still rests with the human doctor."
     }
-  ]
+  ],
+  "topic_en": "Artificial Intelligence (AI)",
+  "grade_target_en": "Grade 1 · Primary"
 }

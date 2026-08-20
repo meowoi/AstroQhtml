@@ -16,25 +16,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Màn hình"
+          "text": "Màn hình",
+          "text_en": "The screen"
         },
         {
           "id": "B",
-          "text": "Đầu ra (output)"
+          "text": "Đầu ra (output)",
+          "text_en": "The output"
         },
         {
           "id": "C",
-          "text": "Cục pin"
+          "text": "Cục pin",
+          "text_en": "The battery"
         },
         {
           "id": "D",
-          "text": "Đầu vào (input)"
+          "text": "Đầu vào (input)",
+          "text_en": "The input"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Thông tin ta đưa vào máy (giọng nói, chữ, hình ảnh) gọi là 'đầu vào' (input).",
       "source_reference": "MIT OpenCourseWare – Input/Output (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "When you speak to a smart speaker, what is your voice called?",
+      "question_text_en": "When you speak a question to a smart speaker, what is that voice called?",
+      "explanation_en": "Information we put into a machine (voice, text, pictures) is called the 'input'."
     },
     {
       "id": "ASTRO_AI_LV02_Q002",
@@ -46,25 +55,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Đầu vào (input)"
+          "text": "Đầu vào (input)",
+          "text_en": "The input"
         },
         {
           "id": "B",
-          "text": "Đầu ra (output)"
+          "text": "Đầu ra (output)",
+          "text_en": "The output"
         },
         {
           "id": "C",
-          "text": "Dây điện"
+          "text": "Dây điện",
+          "text_en": "The power cable"
         },
         {
           "id": "D",
-          "text": "Nút bấm"
+          "text": "Nút bấm",
+          "text_en": "The button"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Kết quả máy tạo ra sau khi xử lý (câu trả lời, hình ảnh) gọi là 'đầu ra' (output).",
       "source_reference": "MIT OpenCourseWare – Input/Output (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "So what do we call the answer the speaker gives back?",
+      "question_text_en": "What is the answer that the smart speaker says back to you called?",
+      "explanation_en": "The result a machine produces after processing (an answer, an image) is called the 'output'."
     },
     {
       "id": "ASTRO_AI_LV02_Q003",
@@ -76,25 +94,34 @@
       "options": [
         {
           "id": "A",
-          "text": "AI đôi khi cũng mắc lỗi, không phải lúc nào cũng đúng"
+          "text": "AI đôi khi cũng mắc lỗi, không phải lúc nào cũng đúng",
+          "text_en": "AI makes mistakes sometimes; it is not always right"
         },
         {
           "id": "B",
-          "text": "AI luôn luôn đúng 100%"
+          "text": "AI luôn luôn đúng 100%",
+          "text_en": "AI is always 100% correct"
         },
         {
           "id": "C",
-          "text": "AI không bao giờ cần dữ liệu"
+          "text": "AI không bao giờ cần dữ liệu",
+          "text_en": "AI never needs any data"
         },
         {
           "id": "D",
-          "text": "AI là phép thuật"
+          "text": "AI là phép thuật",
+          "text_en": "AI is magic"
         }
       ],
       "correct_option_id": "A",
       "explanation": "AI học từ dữ liệu nên có thể đoán sai, nhất là khi gặp thứ lạ hoặc dữ liệu chưa tốt. Vì vậy con người cần kiểm tra lại.",
       "source_reference": "Khan Academy – Limitations of AI",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Byte will be honest: sometimes I get things wrong too!",
+      "question_text_en": "Which of the following is true about AI?",
+      "explanation_en": "AI learns from data, so it can guess wrong — especially with something unfamiliar or when the data is poor. That is why people need to check its work."
     },
     {
       "id": "ASTRO_AI_LV02_Q004",
@@ -106,25 +133,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Lau màn hình"
+          "text": "Lau màn hình",
+          "text_en": "Wiping the screen"
         },
         {
           "id": "B",
-          "text": "Tắt máy"
+          "text": "Tắt máy",
+          "text_en": "Switching off"
         },
         {
           "id": "C",
-          "text": "Sạc pin"
+          "text": "Sạc pin",
+          "text_en": "Charging the battery"
         },
         {
           "id": "D",
-          "text": "Huấn luyện (training)"
+          "text": "Huấn luyện (training)",
+          "text_en": "Training"
         }
       ],
       "correct_option_id": "D",
       "explanation": "'Huấn luyện' là quá trình đưa nhiều dữ liệu vào để AI học ra quy luật và làm tốt nhiệm vụ.",
       "source_reference": "Google AI for Education – Training a model",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Teaching an AI from data has its own name!",
+      "question_text_en": "What is the process of letting an AI learn from many examples called?",
+      "explanation_en": "'Training' is the process of feeding in lots of data so the AI can learn the patterns and do its task well."
     },
     {
       "id": "ASTRO_AI_LV02_Q005",
@@ -136,25 +172,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Chơi bóng"
+          "text": "Chơi bóng",
+          "text_en": "Playing ball"
         },
         {
           "id": "B",
-          "text": "Nhận diện khuôn mặt"
+          "text": "Nhận diện khuôn mặt",
+          "text_en": "Face recognition"
         },
         {
           "id": "C",
-          "text": "Vẽ tranh"
+          "text": "Vẽ tranh",
+          "text_en": "Painting"
         },
         {
           "id": "D",
-          "text": "Nhận diện giọng nói"
+          "text": "Nhận diện giọng nói",
+          "text_en": "Speech recognition"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Nhận diện giọng nói giúp máy chuyển lời nói thành chữ hoặc lệnh; khác với nhận diện khuôn mặt (xử lý hình ảnh).",
       "source_reference": "IEEE – Speech recognition (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Hearing a voice and seeing a picture are two different jobs!",
+      "question_text_en": "What is it called when an AI 'hears and understands speech'?",
+      "explanation_en": "Speech recognition lets a machine turn spoken words into text or commands; that is different from face recognition, which works on images."
     },
     {
       "id": "ASTRO_AI_LV02_Q006",
@@ -166,25 +211,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Một giấc ngủ trưa"
+          "text": "Một giấc ngủ trưa",
+          "text_en": "An afternoon nap"
         },
         {
           "id": "B",
-          "text": "Nguồn năng lượng như pin hoặc điện"
+          "text": "Nguồn năng lượng như pin hoặc điện",
+          "text_en": "A source of energy such as a battery or mains power"
         },
         {
           "id": "C",
-          "text": "Một bữa cơm"
+          "text": "Một bữa cơm",
+          "text_en": "A bowl of rice"
         },
         {
           "id": "D",
-          "text": "Một cốc nước"
+          "text": "Một cốc nước",
+          "text_en": "A glass of water"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Robot là máy móc nên cần năng lượng (pin, điện) để các bộ phận hoạt động.",
       "source_reference": "Khan Academy – How machines get power",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A robot needs this before it can do anything!",
+      "question_text_en": "What does a robot need in order to operate?",
+      "explanation_en": "A robot is a machine, so it needs energy (a battery or mains power) for its parts to work."
     },
     {
       "id": "ASTRO_AI_LV02_Q007",
@@ -196,25 +250,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Bài hát tên gì"
+          "text": "Bài hát tên gì",
+          "text_en": "What a song is called"
         },
         {
           "id": "B",
-          "text": "Món ăn có ngon không"
+          "text": "Món ăn có ngon không",
+          "text_en": "Whether the food tastes good"
         },
         {
           "id": "C",
-          "text": "Xung quanh đang sáng hay tối"
+          "text": "Xung quanh đang sáng hay tối",
+          "text_en": "Whether it is light or dark around it"
         },
         {
           "id": "D",
-          "text": "Hôm nay thứ mấy"
+          "text": "Hôm nay thứ mấy",
+          "text_en": "What day of the week it is"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Cảm biến ánh sáng đo lượng ánh sáng, giúp thiết bị biết khi nào sáng, khi nào tối (ví dụ đèn tự bật ban đêm).",
       "source_reference": "MIT OpenCourseWare – Sensors (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "There is a sensor that can tell whether it is light or dark!",
+      "question_text_en": "What does a light sensor let a robot know?",
+      "explanation_en": "A light sensor measures how much light there is, so a device knows when it is bright and when it is dark (a lamp that switches on at night, for example)."
     },
     {
       "id": "ASTRO_AI_LV02_Q008",
@@ -226,25 +289,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Đèn pin"
+          "text": "Đèn pin",
+          "text_en": "A torch"
         },
         {
           "id": "B",
-          "text": "Bánh xe"
+          "text": "Bánh xe",
+          "text_en": "A wheel"
         },
         {
           "id": "C",
-          "text": "Micro (cảm biến âm thanh)"
+          "text": "Micro (cảm biến âm thanh)",
+          "text_en": "A microphone (sound sensor)"
         },
         {
           "id": "D",
-          "text": "Cục tẩy"
+          "text": "Cục tẩy",
+          "text_en": "An eraser"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Micro thu âm thanh và chuyển thành tín hiệu để máy xử lý — nhờ đó loa thông minh nghe được bạn nói.",
       "source_reference": "IEEE – Microphones & audio (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "And which part lets a robot 'hear' sound?",
+      "question_text_en": "Which part lets a device 'hear' sound?",
+      "explanation_en": "A microphone picks up sound and turns it into a signal the machine can process — that is how a smart speaker hears you speak."
     },
     {
       "id": "ASTRO_AI_LV02_Q009",
@@ -256,25 +328,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Mùi vị món ăn"
+          "text": "Mùi vị món ăn",
+          "text_en": "The flavour of food"
         },
         {
           "id": "B",
-          "text": "Quy luật, mẫu lặp lại (pattern)"
+          "text": "Quy luật, mẫu lặp lại (pattern)",
+          "text_en": "Rules and repeating patterns"
         },
         {
           "id": "C",
-          "text": "Cảm xúc thật của con người"
+          "text": "Cảm xúc thật của con người",
+          "text_en": "People's real feelings"
         },
         {
           "id": "D",
-          "text": "Giấc mơ"
+          "text": "Giấc mơ",
+          "text_en": "Dreams"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI rất mạnh trong việc phát hiện mẫu (pattern) lặp lại trong dữ liệu, ví dụ nhận ra chữ số hay hình dạng.",
       "source_reference": "Stanford CS – Pattern recognition (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "AI is very good at spotting things that repeat!",
+      "question_text_en": "What is AI usually good at finding in data?",
+      "explanation_en": "AI is very strong at spotting patterns that repeat in data — recognising digits or shapes, for example."
     },
     {
       "id": "ASTRO_AI_LV02_Q010",
@@ -286,25 +367,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Không có dữ liệu nào"
+          "text": "Không có dữ liệu nào",
+          "text_en": "No data at all"
         },
         {
           "id": "B",
-          "text": "Có nhiều dữ liệu tốt và đúng"
+          "text": "Có nhiều dữ liệu tốt và đúng",
+          "text_en": "Plenty of good, correct data"
         },
         {
           "id": "C",
-          "text": "Chỉ một tấm ảnh duy nhất"
+          "text": "Chỉ một tấm ảnh duy nhất",
+          "text_en": "Just one single picture"
         },
         {
           "id": "D",
-          "text": "Dữ liệu bị sai hết"
+          "text": "Dữ liệu bị sai hết",
+          "text_en": "Data that is all wrong"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Càng nhiều dữ liệu đúng và đa dạng, AI càng học được nhiều và dự đoán chính xác hơn.",
       "source_reference": "Google AI for Education – Data quality",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "What should the data be like for an AI to learn well?",
+      "question_text_en": "What helps an AI learn better?",
+      "explanation_en": "The more correct and varied the data, the more an AI can learn and the more accurate its predictions become."
     },
     {
       "id": "ASTRO_AI_LV02_Q011",
@@ -316,25 +406,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Có, chúng biết đau"
+          "text": "Có, chúng biết đau",
+          "text_en": "Yes, they feel pain"
         },
         {
           "id": "B",
-          "text": "Có, chúng buồn vui y như người"
+          "text": "Có, chúng buồn vui y như người",
+          "text_en": "Yes, they feel sad and happy just like people"
         },
         {
           "id": "C",
-          "text": "Có, chúng biết yêu thương"
+          "text": "Có, chúng biết yêu thương",
+          "text_en": "Yes, they feel love"
         },
         {
           "id": "D",
-          "text": "Không, chúng chỉ bắt chước chứ không có cảm xúc thật"
+          "text": "Không, chúng chỉ bắt chước chứ không có cảm xúc thật",
+          "text_en": "No, they only imitate; they have no real feelings"
         }
       ],
       "correct_option_id": "D",
       "explanation": "AI có thể bắt chước biểu cảm hay giọng điệu, nhưng không có cảm xúc thật như con người.",
       "source_reference": "Khan Academy – What AI can and cannot do",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Byte looks cheerful — but do I really have feelings?",
+      "question_text_en": "Do AI and robots have real feelings the way people do?",
+      "explanation_en": "AI can imitate expressions or tone of voice, but it does not have real feelings the way people do."
     },
     {
       "id": "ASTRO_AI_LV02_Q012",
@@ -346,25 +445,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Cái thước kẻ"
+          "text": "Cái thước kẻ",
+          "text_en": "A ruler"
         },
         {
           "id": "B",
-          "text": "Cái bút chì"
+          "text": "Cái bút chì",
+          "text_en": "A pencil"
         },
         {
           "id": "C",
-          "text": "Quả bóng bay"
+          "text": "Quả bóng bay",
+          "text_en": "A balloon"
         },
         {
           "id": "D",
-          "text": "Trợ lý giọng nói trên điện thoại thông minh"
+          "text": "Trợ lý giọng nói trên điện thoại thông minh",
+          "text_en": "The voice assistant on a smartphone"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Các trợ lý giọng nói trên điện thoại/loa thông minh dùng AI để nghe, hiểu và trả lời bạn.",
       "source_reference": "Google AI for Education",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Name a 'voice assistant' you have heard of!",
+      "question_text_en": "Which of these is an example of a voice assistant that uses AI?",
+      "explanation_en": "The voice assistants on phones and smart speakers use AI to hear, understand and answer you."
     },
     {
       "id": "ASTRO_AI_LV02_Q013",
@@ -376,25 +484,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Kể chuyện cổ tích"
+          "text": "Kể chuyện cổ tích",
+          "text_en": "Telling fairy tales"
         },
         {
           "id": "B",
-          "text": "Lắp ráp sản phẩm lặp đi lặp lại thật chính xác"
+          "text": "Lắp ráp sản phẩm lặp đi lặp lại thật chính xác",
+          "text_en": "Assembling products over and over with great precision"
         },
         {
           "id": "C",
-          "text": "Hát ru em bé"
+          "text": "Hát ru em bé",
+          "text_en": "Singing lullabies to babies"
         },
         {
           "id": "D",
-          "text": "Trồng hoa ngoài vườn"
+          "text": "Trồng hoa ngoài vườn",
+          "text_en": "Growing flowers in the garden"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Robot công nghiệp giỏi làm các việc lặp lại, chính xác và không mệt, ví dụ lắp ráp xe hơi.",
       "source_reference": "IEEE – Industrial robotics (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "In a factory, what are robots best at?",
+      "question_text_en": "What are robots in a factory usually used for?",
+      "explanation_en": "Industrial robots are good at repetitive, precise work that never tires them — assembling cars, for example."
     },
     {
       "id": "ASTRO_AI_LV02_Q014",
@@ -406,25 +523,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Xoá hết mọi email"
+          "text": "Xoá hết mọi email",
+          "text_en": "Delete every email"
         },
         {
           "id": "B",
-          "text": "Gửi email thay bạn khi bạn ngủ"
+          "text": "Gửi email thay bạn khi bạn ngủ",
+          "text_en": "Send emails for you while you sleep"
         },
         {
           "id": "C",
-          "text": "In email ra giấy"
+          "text": "In email ra giấy",
+          "text_en": "Print emails onto paper"
         },
         {
           "id": "D",
-          "text": "Lọc bớt thư rác (spam) không mong muốn"
+          "text": "Lọc bớt thư rác (spam) không mong muốn",
+          "text_en": "Filter out unwanted junk mail (spam)"
         }
       ],
       "correct_option_id": "D",
       "explanation": "AI học cách nhận ra thư rác và tự đưa chúng vào thư mục spam, giúp hộp thư của bạn gọn gàng.",
       "source_reference": "Stanford CS – Spam filtering (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "The inbox filters out junk mail by itself — who does that?",
+      "question_text_en": "How does AI help your email?",
+      "explanation_en": "AI learns to recognise junk mail and moves it into the spam folder by itself, keeping your inbox tidy."
     },
     {
       "id": "ASTRO_AI_LV02_Q015",
@@ -436,25 +562,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Tìm đường đi ngắn hoặc nhanh cho bạn"
+          "text": "Tìm đường đi ngắn hoặc nhanh cho bạn",
+          "text_en": "Finding a short or fast route for you"
         },
         {
           "id": "B",
-          "text": "Vẽ tranh phong cảnh"
+          "text": "Vẽ tranh phong cảnh",
+          "text_en": "Painting landscapes"
         },
         {
           "id": "C",
-          "text": "Đo chiều cao của bạn"
+          "text": "Đo chiều cao của bạn",
+          "text_en": "Measuring how tall you are"
         },
         {
           "id": "D",
-          "text": "Nấu bữa tối"
+          "text": "Nấu bữa tối",
+          "text_en": "Cooking dinner"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Ứng dụng bản đồ dùng thuật toán và AI để tìm quãng đường ngắn/nhanh, có xét cả tình trạng giao thông.",
       "source_reference": "MIT OpenCourseWare – Shortest path (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "How does a map app find a fast route?",
+      "question_text_en": "What does a map and directions app use AI for?",
+      "explanation_en": "Map apps use algorithms and AI to find a short or fast route, taking traffic conditions into account as well."
     },
     {
       "id": "ASTRO_AI_LV02_Q016",
@@ -466,25 +601,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Nhận ra xe ra vào bãi đỗ tự động"
+          "text": "Nhận ra xe ra vào bãi đỗ tự động",
+          "text_en": "Recognising cars entering and leaving a car park automatically"
         },
         {
           "id": "B",
-          "text": "Sơn lại chiếc xe"
+          "text": "Sơn lại chiếc xe",
+          "text_en": "Repainting the car"
         },
         {
           "id": "C",
-          "text": "Bơm bánh xe"
+          "text": "Bơm bánh xe",
+          "text_en": "Pumping up the tyres"
         },
         {
           "id": "D",
-          "text": "Rửa xe"
+          "text": "Rửa xe",
+          "text_en": "Washing the car"
         }
       ],
       "correct_option_id": "A",
       "explanation": "AI 'đọc' biển số (nhận dạng ký tự) giúp bãi xe tự nhận ra xe ra/vào mà không cần nhập tay.",
       "source_reference": "IEEE – Optical Character Recognition (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A camera can read a number plate — impressive!",
+      "question_text_en": "What is AI reading the letters and numbers on a number plate used for?",
+      "explanation_en": "AI 'reads' the number plate (character recognition) so a car park can register vehicles coming and going without anyone typing them in."
     },
     {
       "id": "ASTRO_AI_LV02_Q017",
@@ -496,25 +640,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Giúp cây lớn nhanh hơn"
+          "text": "Giúp cây lớn nhanh hơn",
+          "text_en": "Making plants grow faster"
         },
         {
           "id": "B",
-          "text": "Giúp hai người nói hai thứ tiếng hiểu nhau"
+          "text": "Giúp hai người nói hai thứ tiếng hiểu nhau",
+          "text_en": "Helping two people who speak different languages understand each other"
         },
         {
           "id": "C",
-          "text": "Làm trời mưa"
+          "text": "Làm trời mưa",
+          "text_en": "Making it rain"
         },
         {
           "id": "D",
-          "text": "Tăng điểm kiểm tra tự động"
+          "text": "Tăng điểm kiểm tra tự động",
+          "text_en": "Raising your test score automatically"
         }
       ],
       "correct_option_id": "B",
       "explanation": "AI nghe một thứ tiếng và nói ra thứ tiếng khác gần như ngay lập tức, giúp mọi người giao tiếp dễ hơn.",
       "source_reference": "Google AI for Education – Speech translation",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "There is AI that translates speech into another language on the spot!",
+      "question_text_en": "What is live speech translation by AI useful for?",
+      "explanation_en": "AI listens in one language and speaks another almost instantly, making it easier for people to communicate."
     },
     {
       "id": "ASTRO_AI_LV02_Q018",
@@ -526,25 +679,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Một bức ảnh"
+          "text": "Một bức ảnh",
+          "text_en": "A photograph"
         },
         {
           "id": "B",
-          "text": "Một bài hát"
+          "text": "Một bài hát",
+          "text_en": "A song"
         },
         {
           "id": "C",
-          "text": "Một quyết định theo điều kiện (nếu... thì...)"
+          "text": "Một quyết định theo điều kiện (nếu... thì...)",
+          "text_en": "A decision based on a condition (if... then...)"
         },
         {
           "id": "D",
-          "text": "Một cục pin"
+          "text": "Một cục pin",
+          "text_en": "A battery"
         }
       ],
       "correct_option_id": "C",
       "explanation": "Máy móc ra quyết định đơn giản theo điều kiện: 'nếu... thì...'. Đây là nền tảng của tư duy lập trình.",
       "source_reference": "Khan Academy – Conditionals (Hour of Code)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "'IF it is dark THEN turn on the light' — what kind of thinking is that?",
+      "question_text_en": "'IF it is dark THEN turn on the light' is an example of what?",
+      "explanation_en": "Machines make simple decisions based on a condition: 'if... then...'. This is the foundation of programming thinking."
     },
     {
       "id": "ASTRO_AI_LV02_Q019",
@@ -556,25 +718,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Ước mơ của bạn"
+          "text": "Ước mơ của bạn",
+          "text_en": "Your dreams for the future"
         },
         {
           "id": "B",
-          "text": "Suy nghĩ của con mèo"
+          "text": "Suy nghĩ của con mèo",
+          "text_en": "What the cat is thinking"
         },
         {
           "id": "C",
-          "text": "Bài tập về nhà của bạn"
+          "text": "Bài tập về nhà của bạn",
+          "text_en": "Your homework"
         },
         {
           "id": "D",
-          "text": "Có chuyển động hoặc có người xuất hiện"
+          "text": "Có chuyển động hoặc có người xuất hiện",
+          "text_en": "That there is movement, or that a person has appeared"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Camera thông minh dùng AI để phát hiện chuyển động hoặc người, rồi báo cho chủ nhà.",
       "source_reference": "IEEE – Motion detection (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A security camera knows when someone walks past — how?",
+      "question_text_en": "What can a smart security camera recognise?",
+      "explanation_en": "A smart camera uses AI to detect movement or people, then alerts the homeowner."
     },
     {
       "id": "ASTRO_AI_LV02_Q020",
@@ -586,25 +757,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Chụp ảnh"
+          "text": "Chụp ảnh",
+          "text_en": "Taking a photo"
         },
         {
           "id": "B",
-          "text": "Gợi ý tự động (autocomplete)"
+          "text": "Gợi ý tự động (autocomplete)",
+          "text_en": "Autocomplete"
         },
         {
           "id": "C",
-          "text": "Tắt nguồn"
+          "text": "Tắt nguồn",
+          "text_en": "Switching off the power"
         },
         {
           "id": "D",
-          "text": "Phóng to màn hình"
+          "text": "Phóng to màn hình",
+          "text_en": "Zooming in on the screen"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Gợi ý tự động dự đoán từ bạn sắp gõ dựa trên các từ thường đi cùng nhau, giúp gõ nhanh hơn.",
       "source_reference": "Stanford CS – Language models (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A few letters in, and the machine already guesses my next word!",
+      "question_text_en": "When you are typing and AI suggests the next word, what is that called?",
+      "explanation_en": "Autocomplete predicts the word you are about to type from words that often go together, helping you type faster."
     },
     {
       "id": "ASTRO_AI_LV02_Q021",
@@ -616,25 +796,34 @@
       "options": [
         {
           "id": "A",
-          "text": "AI trong trò chơi"
+          "text": "AI trong trò chơi",
+          "text_en": "AI inside the game"
         },
         {
           "id": "B",
-          "text": "Một bạn học ngồi trong máy"
+          "text": "Một bạn học ngồi trong máy",
+          "text_en": "A classmate sitting inside the machine"
         },
         {
           "id": "C",
-          "text": "Phép thuật"
+          "text": "Phép thuật",
+          "text_en": "Magic"
         },
         {
           "id": "D",
-          "text": "Cục pin"
+          "text": "Cục pin",
+          "text_en": "The battery"
         }
       ],
       "correct_option_id": "A",
       "explanation": "Nhân vật máy trong game được điều khiển bằng AI để phản ứng lại hành động của người chơi.",
       "source_reference": "Stanford CS – Game AI (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "In a game, who controls the 'computer' opponent playing against you?",
+      "question_text_en": "In a video game, the character controlled by the machine that plays against you works thanks to what?",
+      "explanation_en": "Machine-controlled characters in games are driven by AI so they can react to what the player does."
     },
     {
       "id": "ASTRO_AI_LV02_Q022",
@@ -646,25 +835,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Chiếc mũi thật"
+          "text": "Chiếc mũi thật",
+          "text_en": "A real nose"
         },
         {
           "id": "B",
-          "text": "Trái tim thật"
+          "text": "Trái tim thật",
+          "text_en": "A real heart"
         },
         {
           "id": "C",
-          "text": "Bộ lông thật"
+          "text": "Bộ lông thật",
+          "text_en": "Real fur"
         },
         {
           "id": "D",
-          "text": "Cảm biến chạm"
+          "text": "Cảm biến chạm",
+          "text_en": "A touch sensor"
         }
       ],
       "correct_option_id": "D",
       "explanation": "Cảm biến chạm nhận biết khi có tay chạm vào, giúp robot thú cưng phản ứng như kêu hay cử động.",
       "source_reference": "MIT OpenCourseWare – Touch sensors (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A robot pet squeaks when you stroke it, Comet!",
+      "question_text_en": "A robot pet reacts when you stroke it thanks to what?",
+      "explanation_en": "A touch sensor detects when a hand touches it, letting the robot pet react by squeaking or moving."
     },
     {
       "id": "ASTRO_AI_LV02_Q023",
@@ -676,25 +874,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Biến rác thành vàng"
+          "text": "Biến rác thành vàng",
+          "text_en": "Turning rubbish into gold"
         },
         {
           "id": "B",
-          "text": "Ăn hết rác"
+          "text": "Ăn hết rác",
+          "text_en": "Eating all the rubbish"
         },
         {
           "id": "C",
-          "text": "Nhận ra loại rác để phân loại đúng thùng"
+          "text": "Nhận ra loại rác để phân loại đúng thùng",
+          "text_en": "Recognising the type of rubbish so it goes in the right bin"
         },
         {
           "id": "D",
-          "text": "Đốt cháy nhà"
+          "text": "Đốt cháy nhà",
+          "text_en": "Burning the house down"
         }
       ],
       "correct_option_id": "C",
       "explanation": "AI nhìn hình ảnh rác qua camera và học cách phân biệt để bỏ đúng thùng (giấy, nhựa, hữu cơ...).",
       "source_reference": "IEEE – Waste sorting with vision (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "A smart bin knows which rubbish is which — amazing!",
+      "question_text_en": "What does a smart waste-sorting machine use cameras and AI for?",
+      "explanation_en": "AI looks at images of the rubbish through a camera and learns to tell the types apart so each goes in the right bin (paper, plastic, food waste and so on)."
     },
     {
       "id": "ASTRO_AI_LV02_Q024",
@@ -706,25 +913,34 @@
       "options": [
         {
           "id": "A",
-          "text": "Chụp ảnh màn hình"
+          "text": "Chụp ảnh màn hình",
+          "text_en": "Taking a screenshot"
         },
         {
           "id": "B",
-          "text": "Chuyển văn bản thành giọng nói (text-to-speech)"
+          "text": "Chuyển văn bản thành giọng nói (text-to-speech)",
+          "text_en": "Text-to-speech"
         },
         {
           "id": "C",
-          "text": "Vẽ tranh"
+          "text": "Vẽ tranh",
+          "text_en": "Painting"
         },
         {
           "id": "D",
-          "text": "Tắt tiếng"
+          "text": "Tắt tiếng",
+          "text_en": "Muting the sound"
         }
       ],
       "correct_option_id": "B",
       "explanation": "Text-to-speech đọc chữ viết thành giọng nói, rất hữu ích cho người khiếm thị hoặc khi nghe truyện.",
       "source_reference": "IEEE – Text-to-Speech (concept)",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "Byte can read a story out loud to you!",
+      "question_text_en": "What is the technology that reads text on a screen out loud called?",
+      "explanation_en": "Text-to-speech reads written words aloud, which is very helpful for people with a visual impairment or when you want to listen to a story."
     },
     {
       "id": "ASTRO_AI_LV02_Q025",
@@ -736,25 +952,36 @@
       "options": [
         {
           "id": "A",
-          "text": "Vì AI cần đi ngủ"
+          "text": "Vì AI cần đi ngủ",
+          "text_en": "Because the AI needs to sleep"
         },
         {
           "id": "B",
-          "text": "Vì AI thích được khen"
+          "text": "Vì AI thích được khen",
+          "text_en": "Because the AI likes being praised"
         },
         {
           "id": "C",
-          "text": "Vì AI có thể sai, cần con người bảo đảm đúng và an toàn"
+          "text": "Vì AI có thể sai, cần con người bảo đảm đúng và an toàn",
+          "text_en": "Because AI can be wrong, and people must make sure the result is correct and safe"
         },
         {
           "id": "D",
-          "text": "Vì AI sợ bóng tối"
+          "text": "Vì AI sợ bóng tối",
+          "text_en": "Because the AI is afraid of the dark"
         }
       ],
       "correct_option_id": "C",
       "explanation": "AI là công cụ hỗ trợ và có thể mắc lỗi, nên con người luôn cần kiểm tra để bảo đảm kết quả đúng và an toàn.",
       "source_reference": "Khan Academy – Responsible AI",
-      "reward_purple_meteors": 14
+      "reward_purple_meteors": 14,
+      "topic_en": "Artificial Intelligence (AI)",
+      "grade_target_en": "Grade 2 · Primary",
+      "mascot_dialog_en": "What matters most when we use AI?",
+      "question_text_en": "Why do people still need to check what an AI produces?",
+      "explanation_en": "AI is a tool that can make mistakes, so people always need to check its results to make sure they are correct and safe."
     }
-  ]
+  ],
+  "topic_en": "Artificial Intelligence (AI)",
+  "grade_target_en": "Grade 2 · Primary"
 }

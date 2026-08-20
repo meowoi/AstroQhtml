@@ -2,47 +2,161 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AstroQ Quiz Level File",
   "type": "object",
-  "required": ["topic", "topic_id", "level", "grade_target", "count", "questions"],
+  "required": [
+    "topic",
+    "topic_id",
+    "level",
+    "grade_target",
+    "count",
+    "questions"
+  ],
   "properties": {
-    "topic": { "type": "string" },
-    "topic_id": { "type": "string", "enum": ["ai", "astronomy", "quantum_physics", "programming", "it"] },
-    "level": { "type": "integer", "minimum": 1, "maximum": 12 },
-    "grade_target": { "type": "string" },
-    "reward_purple_meteors": { "type": "integer", "minimum": 10, "maximum": 50 },
-    "count": { "type": "integer" },
+    "topic": {
+      "type": "string"
+    },
+    "topic_en": {
+      "type": "string",
+      "description": "Ban tieng Anh cua `topic`. Tuy chon."
+    },
+    "topic_id": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "astronomy",
+        "quantum_physics",
+        "programming",
+        "it"
+      ]
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "grade_target": {
+      "type": "string"
+    },
+    "grade_target_en": {
+      "type": "string",
+      "description": "Ban tieng Anh cua `grade_target`. Tuy chon."
+    },
+    "reward_purple_meteors": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 50
+    },
+    "count": {
+      "type": "integer"
+    },
     "questions": {
       "type": "array",
       "items": {
         "type": "object",
         "required": [
-          "id", "topic", "level", "grade_target", "mascot_dialog",
-          "question_text", "options", "correct_option_id",
-          "explanation", "source_reference", "reward_purple_meteors"
+          "id",
+          "topic",
+          "level",
+          "grade_target",
+          "mascot_dialog",
+          "question_text",
+          "options",
+          "correct_option_id",
+          "explanation",
+          "source_reference",
+          "reward_purple_meteors"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^ASTRO_[A-Z]+_LV[0-9]{2}_Q[0-9]{3}$" },
-          "topic": { "type": "string" },
-          "level": { "type": "integer", "minimum": 1, "maximum": 12 },
-          "grade_target": { "type": "string" },
-          "mascot_dialog": { "type": "string" },
-          "question_text": { "type": "string" },
+          "id": {
+            "type": "string",
+            "pattern": "^ASTRO_[A-Z]+_LV[0-9]{2}_Q[0-9]{3}$"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "topic_en": {
+            "type": "string",
+            "description": "Ban tieng Anh cua `topic`. Tuy chon."
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "grade_target": {
+            "type": "string"
+          },
+          "grade_target_en": {
+            "type": "string",
+            "description": "Ban tieng Anh cua `grade_target`. Tuy chon."
+          },
+          "mascot_dialog": {
+            "type": "string"
+          },
+          "mascot_dialog_en": {
+            "type": "string",
+            "description": "Ban tieng Anh cua `mascot_dialog`. Tuy chon."
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "question_text_en": {
+            "type": "string",
+            "description": "Ban tieng Anh cua `question_text`. Tuy chon."
+          },
           "options": {
             "type": "array",
             "minItems": 4,
             "maxItems": 4,
             "items": {
               "type": "object",
-              "required": ["id", "text"],
+              "required": [
+                "id",
+                "text"
+              ],
               "properties": {
-                "id": { "type": "string", "enum": ["A", "B", "C", "D"] },
-                "text": { "type": "string" }
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "A",
+                    "B",
+                    "C",
+                    "D"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "text_en": {
+                  "type": "string",
+                  "description": "Ban tieng Anh cua `text`. Tuy chon. PHAI di kem `text` cua CUNG mot lua chon — `_tools/rebalance_answers.py` doi cho ca hai cung luc."
+                }
               }
             }
           },
-          "correct_option_id": { "type": "string", "enum": ["A", "B", "C", "D"] },
-          "explanation": { "type": "string" },
-          "source_reference": { "type": "string" },
-          "reward_purple_meteors": { "type": "integer", "minimum": 10, "maximum": 50 }
+          "correct_option_id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "explanation_en": {
+            "type": "string",
+            "description": "Ban tieng Anh cua `explanation`. Tuy chon."
+          },
+          "source_reference": {
+            "type": "string"
+          },
+          "reward_purple_meteors": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 50
+          }
         }
       }
     }

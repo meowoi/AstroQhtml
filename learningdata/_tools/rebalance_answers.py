@@ -6,7 +6,7 @@ AstroQ — Rebalance correct-answer positions across A/B/C/D.
 Vì sao: nếu đáp án đúng luôn rơi vào cùng một vị trí (vd toàn "A"),
 người học sẽ đoán mẹo. Script này phân bố lại vị trí đáp án đúng một cách
 *tất định* (theo mã md5 của id câu hỏi) — chạy lại cho kết quả giống nhau,
-giữ nguyên nội dung tiếng Việt và định dạng JSON dễ đọc.
+giữ nguyên nội dung MỌI NGÔN NGỮ (`text`, `text_en`, …) và định dạng JSON dễ đọc.
 
 Dùng:
     python rebalance_answers.py <file_or_glob> [<more> ...]
@@ -27,13 +27,18 @@ def rebalance_file(path: str) -> str:
     questions = data.get("questions", [])
     for i, q in enumerate(questions):
         opts = q["options"]
-        texts = [o["text"] for o in opts]
+        # ⚠️ Đổi chỗ TOÀN BỘ nội dung lựa chọn, không riêng `text`. Từ khi có
+        # `text_en`, một lựa chọn mang NHIỀU trường; đổi mỗi `text` thì bản EN
+        # đứng yên còn bản VI dịch đi — đáp án đúng ở hai ngôn ngữ trỏ vào hai ô
+        # khác nhau, và không có gì báo lỗi. Giữ `id` cố định A/B/C/D theo vị trí.
+        bodies = [{k: v for k, v in o.items() if k != "id"} for o in opts]
         cur = LETTERS.index(q["correct_option_id"])
         tgt = target_slot(q["id"])
-        texts[cur], texts[tgt] = texts[tgt], texts[cur]      # đổi chỗ text đáp án đúng
+        bodies[cur], bodies[tgt] = bodies[tgt], bodies[cur]  # đổi chỗ đáp án đúng
         for k in range(4):
+            opts[k].clear()
             opts[k]["id"] = LETTERS[k]
-            opts[k]["text"] = texts[k]
+            opts[k].update(bodies[k])
         q["correct_option_id"] = LETTERS[tgt]
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
