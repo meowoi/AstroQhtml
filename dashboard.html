@@ -1482,11 +1482,23 @@
 
   var logoutBtn=$("logout");
   if(logoutBtn) logoutBtn.addEventListener("click", function(){
+    // Chặn bấm hai lần: lượt đầu đã xoá hồ sơ, lượt hai không thêm gì mà chỉ
+    // làm trẻ tưởng nút không ăn.
+    logoutBtn.disabled = true;
     var done = function(){ window.location.href = "landing-app.html"; };
-    // AstroQAuth.logout() xoá cả phiên Firebase lẫn hồ sơ trong máy.
-    // Dự phòng: module chưa nạp xong thì vẫn xoá được hồ sơ local.
+    /* ⚠️ `AstroQAuth.logout()` NAY xoá hồ sơ + cache của trẻ ĐỒNG BỘ rồi mới cố
+       ký xuất khỏi Firebase với hạn chờ 2,5 giây, nên nó LUÔN settle nhanh. Bản
+       cũ treo trên một lần `import()` qua mạng và nút này thành nút chết, im
+       lặng (đo được trên bản thật 20/08/2026).
+       ⚠️ ĐỪNG thêm một hạn chờ thứ hai ở đây — hạn chờ đã nằm trong `logout()`
+          để mọi người gọi cùng một bảo đảm; hai chỗ giữ một hạn chờ thì lệch.
+       Dự phòng: module chưa nạp xong thì vẫn dọn được bằng tay. */
     if(window.AstroQAuth) AstroQAuth.logout().then(done, done);
-    else { AstroQ.clearUser(); done(); }
+    else {
+      if(AstroQ.clearAccountData) AstroQ.clearAccountData();
+      AstroQ.clearUser();
+      done();
+    }
   });
 })();
 </script>

@@ -32,6 +32,44 @@
   function setUser(u){ try{ localStorage.setItem(LS_USER, JSON.stringify(u)); }catch(e){} }
   function clearUser(){ try{ localStorage.removeItem(LS_USER); }catch(e){} }
 
+  /* ---------------- Dọn MỌI dấu vết của tài khoản trong máy ----------------
+     Dùng khi ĐĂNG XUẤT. Đo được 20/08/2026: sau khi đăng xuất vẫn còn 7 khoá
+     `astroq-*` của trẻ vừa dùng — ví, tiến độ, bước nhiệm vụ, cấp quiz, cổng lộ
+     trình, hai cờ onboarding. Trên một máy dùng chung (trong nhà, phòng máy
+     trường học — đúng nhóm người dùng của trang này) thì đó là dữ liệu của đứa
+     trẻ TRƯỚC hiện ra cho đứa SAU.
+
+     ⚠️ DỌN THEO TIỀN TỐ, GIỮ LẠI MỘT DANH SÁCH NGẮN — không liệt kê tay 20+
+        khoá cần xoá. Liệt kê tay thì khoá per-trẻ thêm sau này sẽ KHÔNG được dọn
+        và không ai nhận ra (đúng anti-pattern `_GAME_FILE` gán cứng đã trả giá:
+        một danh sách gán cứng không báo hỏng khi thiếu, nó chỉ lặng lẽ thu hẹp
+        phạm vi). Hướng lệch của cách này cũng là hướng AN TOÀN: quên khai một
+        khoá vào danh sách giữ lại thì nó bị dọn — mất một tuỳ chọn thiết bị, còn
+        hơn để lộ dữ liệu của một đứa trẻ.
+     ⚠️ DANH SÁCH GIỮ LẠI CHỈ CHỨA TUỲ CHỌN CỦA THIẾT BỊ, không phải của trẻ:
+        ngôn ngữ · tắt tiếng · giảm cấu hình · chế độ API · hai dải nhắc đã đóng ·
+        nhãn nguồn quy chiếu (`astroq-utm` là lượt chạm ĐẦU TIÊN của máy, xoá nó
+        là mất công của bài đăng đã mang người này tới) · cờ xem trước bảng giá.
+        Xoá `astroq-lang` khi đăng xuất là đổi ngôn ngữ của trang một cách vô cớ.
+     ⚠️ KHÔNG dùng `localStorage.clear()` — nó xoá cả khoá của thứ khác chạy trên
+        cùng tên miền, và xoá luôn danh sách giữ lại ở trên.                    */
+  var KEEP = ["astroq-lang", "astroq-sfx", "astroq-perf", "astroq-api",
+              "astroq-mob-note", "astroq-lang-note", "astroq-utm",
+              "astroq-sale-preview"];
+  function clearAccountData(){
+    try{
+      var kill = [], i, k;
+      for(i = 0; i < localStorage.length; i++){
+        k = localStorage.key(i);
+        if(k && k.indexOf("astroq-") === 0 && KEEP.indexOf(k) < 0) kill.push(k);
+      }
+      /* Gom trước rồi mới xoá: xoá ngay trong vòng lặp làm chỉ số trượt đi và bỏ
+         sót đúng một nửa số khoá. */
+      for(i = 0; i < kill.length; i++) localStorage.removeItem(kill[i]);
+      return kill.length;
+    }catch(e){ return 0; }
+  }
+
   /* ---------------- Ngôn ngữ (VI/EN) ----------------
      Thứ tự quyết định ngôn ngữ cho lượt vào trang ĐẦU TIÊN:
        ① Lựa chọn đã lưu (`astroq-lang`)      → LUÔN THẮNG
@@ -167,7 +205,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.20.1";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.08.20.2";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 
@@ -291,6 +329,7 @@
   }
 
   var API = { $:$, esc:esc, getUser:getUser, setUser:setUser, clearUser:clearUser,
+    clearAccountData: clearAccountData,
               getLang:getLang, guessLang:guessLang, setLang:setLang, markLangButtons:markLangButtons,
               initLang:initLang, setDocLang:setDocLang, onLang:onLang,
               applyTexts:applyTexts, makeToast:makeToast, ttImg:ttImg,

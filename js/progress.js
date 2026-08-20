@@ -749,21 +749,15 @@ absorbQuizLv(r.data);
       }).catch(function () { return { ok: false, reason: "error" }; });
     },
 
-    flush: flush,
+    flush: flush
 
-    /** Xoá bản sao + hàng chờ trong máy (dùng khi đăng xuất / khi thử nghiệm).
-     *  ⚠️ PHẢI xoá cả cache bước nhiệm vụ: giữ lại là người đăng nhập sau ở cùng máy
-     *     được đưa vào chơi tiếp từ tiến độ của người trước. */
-    clearLocal: function () {
-      try {
-        localStorage.removeItem(LS_LOCAL);
-        localStorage.removeItem(LS_QUEUE);
-        localStorage.removeItem(LS_MSTEPS);
-        localStorage.removeItem(LS_TRAIN);
-        localStorage.removeItem(LS_QUIZLV);
-        localStorage.removeItem(LS_QUIZLEFT);
-      } catch (e) {}
-    }
+    /* ⚠️ `clearLocal()` ĐÃ BỎ 20/08/2026 — nó có ĐÚNG 0 người gọi kể từ lúc được
+       viết, kể cả lúc Đăng xuất (CLAUDE.md đã ghi đúng điều đó). Nên đo được trên
+       bản thật: sau khi đăng xuất còn 7 khoá `astroq-*` của trẻ vừa dùng. Việc này
+       nay là `AstroQ.clearAccountData()` ở js/ui-common.js — dọn theo TIỀN TỐ với
+       một danh sách giữ lại ngắn, nên khoá per-trẻ thêm sau này TỰ được dọn. Bản ở
+       đây còn thiếu hẳn `astroq-route-gate`, `astroq-asteroids`, kỷ lục game và hai
+       cờ onboarding. Tra lại: `git log -S clearLocal`. */
   };
 
   global.AstroQProgress = AstroQProgress;

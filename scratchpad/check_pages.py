@@ -1246,9 +1246,15 @@ check("dashboard.html: dung 1 card 'soon' (Phong Nghien Cuu)",
       _soon_cards == 1, "co %d card khoa" % _soon_cards)
 # Neu ngay nao co card khoa tro lai thi ba luat cu song lai NGUYEN VEN:
 if _soon_cards:
+    # ⚠️ SOI MARKUP, KHONG QUET CA FILE. Ban cu doi chuoi "disabled" khong xuat
+    #    hien o BAT KY dau trong dashboard.html — nen mot dong JS hoan toan hop le
+    #    (`logoutBtn.disabled = true` chan bam Dang xuat hai lan, them 20/08/2026)
+    #    cung lam no bao hong. Dieu can bao ve la THUOC TINH `disabled` tren nut
+    #    cua the khoa, khong phai chu "disabled" noi chung.
+    _dash_markup = strip_js(dash_nc)
+    _bad_attr = re.findall(r"<button[^>]*\sdisabled", _dash_markup)
     check("dashboard.html: nut card 'soon' BAM DUOC (khong disabled)",
-          "disabled" not in dash_nc,
-          "con `disabled`" if "disabled" in dash_nc else "ok")
+          not _bad_attr, str(_bad_attr[:2]))
     check("dashboard.html: card 'soon' noi vao AstroQLocks",
           "AstroQLocks.wire(" in dash_nc)
     check("dashboard.html: huy hieu khoa suy tu state, khong go cung",
@@ -4527,8 +4533,49 @@ check("quiz.html: doc cap do qua AstroQProgress.quizLv()",
       "AstroQProgress.quizLv" in strip_comments(_quiz31))
 check("js/progress.js: cache cap do co DONG DAU uid",
       re.search(r"write\(LS_QUIZLV,\s*\{\s*uid:\s*uidNow\(\)", _prog) is not None)
-check("js/progress.js: dang xuat co don cache cap do",
-      "removeItem(LS_QUIZLV)" in _prog)
+# ⚠️⚠️ DOI PHAT BIEU 20/08/2026. Ban cu doi `removeItem(LS_QUIZLV)` co trong
+#    js/progress.js — tuc ghim vao `AstroQProgress.clearLocal()`, mot ham co DUNG 0
+#    NGUOI GOI ke tu luc duoc viet. Nghia la phep kiem nay xanh trong khi dang xuat
+#    KHONG he don cache nao: do duoc tren ban that 20/08/2026, sau khi dang xuat con
+#    7 khoa `astroq-*` cua tre vua dung. Mot phep kiem canh mot ham khong ai goi thi
+#    no canh mot y dinh, khong canh mot hanh vi.
+#    Nay viec do la `AstroQ.clearAccountData()` (don theo TIEN TO + danh sach giu
+#    lai), va phep kiem doi DUNG ba chan: ham ton tai · danh sach giu lai khong chua
+#    khoa per-tre nao · `logout()` co goi no.
+_uicnc = strip_comments(rd("js/ui-common.js"))
+_fba = strip_comments(rd("js/firebase-auth.js"))
+check("js/ui-common.js: co AstroQ.clearAccountData()",
+      "function clearAccountData(" in _uicnc and "clearAccountData: clearAccountData" in _uicnc)
+check("clearAccountData don theo TIEN TO astroq- (khoa moi tu duoc don)",
+      'indexOf("astroq-") === 0' in _uicnc)
+_keep_m = re.search(r"var KEEP = \[(.*?)\];", _uicnc, re.S)
+_keep = set(re.findall(r'"([^"]+)"', _keep_m.group(1))) if _keep_m else set()
+_per_child = ["astroq-user", "astroq-quiz-lv", "astroq-progress", "astroq-asteroids",
+              "astroq-route-gate", "astroq-mission-steps", "astroq-training",
+              "astroq-tour-seen", "astroq-map01-seen", "astroq-read",
+              "astroq-quiz-left", "astroq-progress-queue"]
+_leak = [k for k in _per_child if k in _keep]
+check("danh sach giu lai KHONG chua khoa nao cua tre (%d khoa)" % len(_keep),
+      not _leak, "lot: " + str(_leak))
+check("firebase-auth.logout() goi clearAccountData",
+      "clearAccountData" in _fba)
+# ⚠️ THU TU LA CA BAN SUA: xoa cuc bo TRUOC khi cho mang. Ban cu `await boot()`
+#    truoc, nen SDK tai cham la `logout()` khong bao gio resolve va nut Dang xuat
+#    thanh nut chet, im lang (tai hien duoc tren ban that 20/08/2026).
+_lg = _fba[_fba.index("async logout()"):]
+_lg = _lg[:_lg.index("return {")]
+check("logout(): xoa cuc bo TRUOC khi cho mang",
+      _lg.index("clearAccountData") < _lg.index("await"),
+      "clear o %d, await o %d" % (_lg.index("clearAccountData"), _lg.index("await")))
+check("logout(): co HAN CHO cho signOut (khong treo vo han)",
+      "SIGNOUT_MS" in _fba and "Promise.race" in _lg)
+# ⚠️ `verifyAdmin` KHONG duoc hoi sinh ho so: `js/admin-link.js` goi no o NEN tren
+#    dashboard/profile, nen phien Firebase con song sau khi dang xuat la no AM THAM
+#    dang nhap lai cho tre.
+_va = _fba[_fba.index("async verifyAdmin("):]
+_va = _va[:_va.index("return admin;")]
+check("verifyAdmin() chi CAP NHAT ho so dang co, khong dung ho so moi",
+      "AstroQ.getUser()" in _va and "syncProfile" in _va)
 
 # --- (4) Server phai THUC SU tra `quizLv` ra ngoai ---
 check("server: Snapshot() tra `quizLv`",

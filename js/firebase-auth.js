@@ -123,6 +123,13 @@ function errMsg(code){
   // Thử cả hai để một bảng lo được cả hai nguồn lỗi.
   return d[code] || d["auth/" + code] || d._default;
 }
+/* Hạn chờ ký xuất khỏi Firebase. 2,5 giây — cùng mốc `waitAuth` của js/progress.js;
+   quá mốc thì vẫn cho trẻ đi, phần ký xuất để lượt mở trang sau lo. */
+const SIGNOUT_MS = 2500;
+/* Dấu "còn nợ một lần ký xuất". Đặt ở localStorage chứ không sessionStorage: trẻ
+   đóng hẳn trình duyệt rồi mở lại thì món nợ đó vẫn phải trả. */
+const LS_SIGNOUT = "astroq-signout-pending";
+
 const fail = (e) => ({ ok: false, code: e && e.code, message: errMsg(e && e.code) });
 const NOT_CONFIGURED = { ok: false, notConfigured: true, message: "" };
 
@@ -246,10 +253,43 @@ const AstroQAuth = {
     catch(e){ return fail(e); }
   },
 
-  /** Đăng xuất: xoá cả phiên Firebase lẫn hồ sơ trong máy. */
+  /** Đăng xuất: xoá dấu vết trong máy TRƯỚC, rồi mới cố ký xuất khỏi Firebase.
+   *
+   * ⚠️⚠️ THỨ TỰ NÀY LÀ CẢ BẢN SỬA. Bản cũ là `await boot()` rồi `await signOut()`,
+   *    tức cả đường đăng xuất treo trên MỘT lần `import()` qua mạng. Đo được
+   *    20/08/2026 trên bản thật: SDK bị chặn hẳn thì `import()` lỗi ngay → bắt
+   *    được → vẫn điều hướng; nhưng SDK tải CHẬM thì `await boot()` TREO, hàm này
+   *    không bao giờ resolve, `.then(done, done)` ở dashboard không bao giờ chạy →
+   *    **bấm Đăng xuất mà không có gì xảy ra, không một lời nào**. Đúng triệu
+   *    chứng chủ dự án báo. Nay hồ sơ được xoá ĐỒNG BỘ nên trẻ luôn đăng xuất
+   *    được khỏi app, kể cả khi Firebase không với tới.
+   * ⚠️ HẠN CHỜ nằm TRONG hàm này, không ở phía gọi: mọi người gọi đều cần cùng
+   *    một bảo đảm, và hai chỗ giữ một hạn chờ thì sớm muộn lệch nhau.
+   * ⚠️ Ký xuất chưa xong thì ĐÓNG DẤU `astroq-signout-pending` và thử lại ở lượt
+   *    mở trang sau (xem khối cuối file). Bỏ qua nó là phiên Firebase còn sống:
+   *    `idToken()` vẫn trả token của trẻ CŨ, nên một trang như `profile.html` sẽ
+   *    hỏi server rồi hiện dữ liệu của đứa trẻ TRƯỚC cho đứa SAU.
+   * → { ok:true, signedOut:boolean, cleared:number }
+   */
   async logout(){
-    try{ if(await boot()) await fb.signOut(auth); }catch(e){}
-    if(window.AstroQ) AstroQ.clearUser();
+    var cleared = 0;
+    if(window.AstroQ){
+      cleared = AstroQ.clearAccountData ? AstroQ.clearAccountData() : 0;
+      AstroQ.clearUser();   /* lưới an toàn: bản ui-common cũ chưa có hàm trên */
+    }
+    let signedOut = false;
+    try{
+      signedOut = await Promise.race([
+        (async () => { if(await boot()){ await fb.signOut(auth); return true; }
+                       return false; })(),
+        new Promise(r => setTimeout(() => r(false), SIGNOUT_MS))
+      ]);
+    }catch(e){}
+    try{
+      if(signedOut) localStorage.removeItem(LS_SIGNOUT);
+      else          localStorage.setItem(LS_SIGNOUT, "1");
+    }catch(e){}
+    return { ok:true, signedOut: signedOut === true, cleared: cleared };
   },
 
   /** Người dùng đang đăng nhập (null nếu chưa). Chờ Firebase khôi phục phiên xong. */
@@ -557,7 +597,13 @@ const AstroQAuth = {
       if(!u) return false;
       if(force) await u.getIdToken(true);
       const admin = await readAdminClaim(u);
-      syncProfile(u, { admin });
+      /* ⚠️ CHỈ CẬP NHẬT hồ sơ ĐANG CÓ, TUYỆT ĐỐI KHÔNG dựng hồ sơ mới. Việc của
+         hàm này là trả lời "tôi có phải admin không", mà `syncProfile` thì GHI
+         `astroq-user`. `js/admin-link.js` gọi nó ở NỀN trên dashboard/profile,
+         nên nếu phiên Firebase còn sống sau khi đã đăng xuất thì đúng lời gọi này
+         ÂM THẦM ĐĂNG NHẬP LẠI cho trẻ — đo được 20/08/2026. Một tác dụng phụ
+         không ai đọc tên hàm mà đoán ra được. */
+      if(window.AstroQ && AstroQ.getUser()) syncProfile(u, { admin });
       return admin;
     }catch(e){ return false; }
   },
@@ -599,6 +645,27 @@ const AstroQAuth = {
     return { ok:true, data:r.data };
   }
 };
+
+/* ---------------- Trả nốt món nợ ký xuất ----------------
+   Lượt đăng xuất trước có thể đã hết hạn chờ 2,5 giây trước khi Firebase ký xuất
+   xong. Phiên còn sống nghĩa là `idToken()` vẫn trả token của trẻ CŨ, nên phải
+   dọn nốt — và dọn ở NỀN, không ai chờ nó.
+   ⚠️ Chỉ chạy khi KHÔNG có hồ sơ trong máy. Có hồ sơ nghĩa là đã có người đăng
+      nhập lại rồi, ký xuất lúc đó là đá chính người đang dùng ra ngoài. */
+(function(){
+  try{
+    if(localStorage.getItem(LS_SIGNOUT) !== "1") return;
+    if(window.AstroQ && AstroQ.getUser()) return;
+    (async () => {
+      try{
+        if(await boot()){
+          await fb.signOut(auth);
+          localStorage.removeItem(LS_SIGNOUT);
+        }
+      }catch(e){}
+    })();
+  }catch(e){}
+})();
 
 window.AstroQAuth = AstroQAuth;
 if(!isConfigured){
