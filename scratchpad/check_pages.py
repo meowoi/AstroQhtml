@@ -1697,6 +1697,30 @@ PENDING = set()
 check("khong thuat ngu nao con thieu cau hoi trong bank", set(_noq) == PENDING,
       f"thieu cau hoi: {sorted(set(_noq))}" if _noq else "")
 
+# --- (2a2) MOI `SRC.<khoa>` DUOC THE DUNG PHAI CO THAT TRONG BANG SRC ---
+# ⚠️ LO HONG THAT, do duoc 20/08/2026: `js/codex-terms.js` co BANG `SRC` RIENG, khong
+#    dung chung voi `js/quiz-sources.js`. Them mot nguon o file kia roi viet
+#    `src: [SRC.nasaAiEthics]` o day thi gia tri ra `undefined` — KHONG loi, KHONG
+#    canh bao, the chi lang le mat dong nguon. Va bo kiem VAN BAO 1517/0 voi trang
+#    thai do, vi phep kiem "bo nguon so tay trung khop bo nguon bank" doi chieu URL
+#    chu khong doi chieu TEN KHOA. Mot the noi dung khoa hoc ma khong dan duoc nguon
+#    la dung thu du an cam.
+_cx_nc = strip_comments(_cx)
+_src_block = re.search(r"var SRC = \{(.*?)\n  \};", _cx_nc, re.S)
+_src_keys = set(re.findall(r"(\w+):\s*\{\s*label:", _src_block.group(1))) if _src_block else set()
+_src_used = set(re.findall(r"SRC\.(\w+)", _cx_nc))
+check("doc duoc bang SRC cua codex-terms.js", len(_src_keys) > 0, f"{len(_src_keys)} khoa")
+_src_undef = sorted(_src_used - _src_keys)
+check("moi `SRC.<khoa>` the dung deu co khai trong bang SRC",
+      not _src_undef, f"khong co: {_src_undef}")
+# Chieu nguoc: nguon khai ma khong the nao dung la nguon chet.
+_src_unused = sorted(_src_keys - _src_used)
+check("khong nguon nao trong bang SRC bi bo khong",
+      not _src_unused, f"bo khong: {_src_unused}")
+# Va moi the phai co it nhat mot nguon — the khong nguon thi khong dan duoc gi.
+_terms_nosrc = re.findall(r'id:\s*"(term_\w+)"[^}]*?src:\s*\[\s*\]', _cx_nc)
+check("khong the nao co `src` rong", not _terms_nosrc, f"{_terms_nosrc}")
+
 # --- (2b) NHAN PHAN LOAI: `cat` phai co NGUOI DOC ---
 # Truoc 07/08/2026 `cat` duoc khai o moi the ma KHONG file nao doc — mot truong khai
 # ma khong ai doc la mot loi khai sai. Nay codex.html hien nhan phan loai tren the.

@@ -13,6 +13,7 @@ cách duy nhất chứng minh nó đúng cấu trúc là để trình duyệt n�
    ném giữa lúc chạy và bỏ dở mọi phép kiểm phía sau). Chữ có dấu chỉ nằm trong
    ĐIỀU KIỆN.
 """
+import math
 import os
 import sys
 import urllib.request
@@ -244,9 +245,36 @@ def main():
         #    trong chu thich cu ("mot luot 5 cau co the hoi Sao choi hai lan") chi
         #    thanh that khi loc theo THE. Sau Dot 2 no moi that su quan trong: 15 the
         #    len ~20 cau/the, khong loc thi mot luot co the toan cau ve nhat thuc.
-        res = pg.evaluate("""() => {
+        # ⚠️⚠️ SO LUOT SUY TU CHINH BANK, KHONG GAN CUNG 400 (sua 20/08/2026).
+        #    Phep kiem "moi cau deu tung duoc rut" la mot phep LAY MAU NGAU NHIEN, nen
+        #    xac suat mot cau khong ra trong R luot la (1-p)^R voi
+        #        p = (5 / so_the) x (1 / so_cau_cua_the_do).
+        #    Voi 21 the / the lon nhat 20 cau (trang thai truoc hom nay) thi p = 0,0119
+        #    va **~15% so luot chay bao hong oan**; them 4 the hom nay day p xuong 0,01
+        #    va ty le do len **~30%** — do duoc: chay 3 luot lien tiep ra 1 dat / 2 hong,
+        #    va moi khoa thieu deu thuoc nhom `atmo-*` (20 cau), dung nhu cong thuc.
+        #    Tuc no da chap chon TU TRUOC, chi la moi dot them the lai lam no te hon.
+        #    Mot phep kiem hay bao oan thi som muon nguoi ta bo qua no — do moi la cai
+        #    gia that (luat da ghi o CLAUDE.md 31/07 va 02/08).
+        #    ⇒ Tinh R sao cho xac suat bao oan <= 1e-9, va tinh LAI moi lan chay nen
+        #      Dot 2 (870 cau / 30 the) khong lam no muc ruong lan nua.
+        _sizes = pg.evaluate("""() => {
+          const n = {};
+          AstroQQuestions.terms().forEach(k => {
+            const g = AstroQQuestions.groupOf(k);
+            const id = g ? (g.c || k) : k;
+            n[id] = (n[id] || 0) + 1;
+          });
+          const v = Object.values(n);
+          return {cards: v.length, maxPerCard: Math.max.apply(null, v)};
+        }""")
+        _p = (5.0 / _sizes["cards"]) / _sizes["maxPerCard"]
+        ROUNDS = int(math.ceil(math.log(1e-9) / math.log(1 - _p)))
+        print(f"  ... {_sizes['cards']} the, the lon nhat {_sizes['maxPerCard']} cau"
+              f" -> p={_p:.5f}, chay {ROUNDS} luot (bao oan <= 1e-9)")
+        res = pg.evaluate("""(R) => {
           const out = {rounds: 0, badLen: 0, dupCard: 0, dupKey: 0, seen: {}};
-          for (let i = 0; i < 400; i++) {
+          for (let i = 0; i < R; i++) {
             const ks = AstroQQuestions.pickKeys(5);
             out.rounds++;
             if (ks.length !== 5) out.badLen++;
@@ -257,13 +285,14 @@ def main():
             ks.forEach(t => out.seen[t] = (out.seen[t] || 0) + 1);
           }
           return out;
-        }""")
-        check("400 luot deu ra dung 5 cau", res["badLen"] == 0, f"lech: {res['badLen']}")
+        }""", ROUNDS)
+        check("moi luot deu ra dung 5 cau", res["badLen"] == 0, f"lech: {res['badLen']}")
         check("khong luot nao trung KHOA cau", res["dupKey"] == 0, f"trung: {res['dupKey']}")
         check("khong luot nao trung THE So Tay", res["dupCard"] == 0,
               f"trung: {res['dupCard']}")
         never = sorted(t for t in terms if t not in res["seen"])
-        check("sau 400 luot moi cau trong bank deu tung duoc rut", not never, f"chua ra: {never}")
+        check(f"sau {ROUNDS} luot moi cau trong bank deu tung duoc rut",
+              not never, f"chua ra: {never}")
         # Tron tai cho mang G/LV la loi im lang -> kiem thu tu khai bao con nguyen
         after = pg.evaluate("() => AstroQQuestions.terms()")
         check("pickKeys KHONG tron tai cho muc luc", after == terms,
