@@ -161,3 +161,76 @@ canvas{display:block;}
 @media (max-width:560px){ .ver-badge{font-size:9px;right:8px;bottom:6px;} }
 /* In ra giấy thì bỏ — nó là thứ để đọc trên màn hình. */
 @media print{ .ver-badge{display:none;} }
+
+/* ============================================================
+   NÚT ẨN/HIỆN MẬT KHẨU — dùng chung cho mọi ô `type="password"`.
+   Markup mẫu + lý do từng quyết định: `js/pw-toggle.js`.
+
+   Đặt ở common.css chứ không ở landing-app.css: hôm nay chỉ có 2 ô mật khẩu
+   (đăng nhập + đăng ký ở `landing-app.html`), nhưng đây là một thành phần biểu
+   mẫu và bản sao thứ hai của nó sẽ lệch khỏi bản đầu. Chỉ dùng biến màu CÓ mặt
+   trong file này (`--ink`, `--ink-faint`) + fallback cho `--accent`, nên nó chạy
+   được cả ở trang không nạp landing-app.css.
+
+   ⚠️ `padding-right` đặt trên chính ô nhập qua `.pw-wrap input`, KHÔNG ghi cả
+      cụm `padding`: mỗi trang có padding riêng cho ô nhập (`.auth-field input`
+      là `12px 13px`), ghi đè cả cụm là xoá luôn padding dọc của trang đó.
+   ⚠️ Icon VÀ nhãn trợ năng đều nằm SẴN trong DOM, đổi bằng CSS theo
+      `aria-pressed`. Vẽ lại bằng JS mỗi lần bấm là dựng markup trong mã hành vi;
+      còn với nhãn thì tệ hơn — nó sẽ là BẢN SAO THỨ HAI của một chuỗi đã có
+      trong từ điển của trang, và bản sao sẽ không đổi theo ngôn ngữ.
+   ============================================================ */
+.pw-wrap{position:relative;}
+/* 44px = chỗ cho nút 30px + hai bên thoáng, để chữ không chạy xuống dưới nút. */
+/* [type] KHONG PHAI de loc loai o — no de NANG DO UU TIEN. `.pw-wrap input` va
+   `.auth-field input` cung do uu tien (0,1,1), ma `css/landing-app.css` nap SAU
+   `css/common.css` nen cum `padding:12px 13px` cua trang GHI DE `padding-right`
+   o day — do duoc 13px, tuc chu mat khau chay XUONG DUOI nut. Chu thich cu chi
+   luong chieu nguoc lai. Them [type] dua len (0,2,1) nen no thang bat ke thu tu
+   nap file, ma van khong dung !important. Moi o mat khau deu co type nen khong
+   o nao bi bo sot. */
+.pw-wrap input[type]{padding-right:44px;}
+.pw-eye{
+  position:absolute;top:0;bottom:0;right:6px;margin:auto 0;
+  width:30px;height:30px;padding:0;
+  display:grid;place-items:center;
+  border:none;background:none;cursor:pointer;border-radius:8px;
+  color:var(--ink-faint);
+  transition:color .18s,background .18s;
+}
+.pw-eye:hover{color:var(--ink);background:rgba(255,255,255,.07);}
+/* Viền focus rõ ràng — nút này đi tới được bằng Tab nên phải thấy nó đang ở đâu. */
+.pw-eye:focus-visible{outline:2px solid var(--accent,#5fd3ff);outline-offset:1px;color:var(--ink);}
+.pw-eye svg{width:18px;height:18px;display:block;}
+
+/* VUNG CHAM tren may cam ung: noi bang pseudo-element TRONG SUOT len 48x48px
+   thay vi phong to chinh cai nut — cung khuon `.body::after` cua ban do nhiem vu.
+   Phong to nut thi no cao hon ca o nhap va pha bo cuc.
+   Do duoc 30x30px tren 390x844 — duoi han moc toi thieu 44px cua WCAG 2.5.5, ma
+   day la nut sinh ra DE giup nguoi dang go sai mat khau.
+   48 chu khong phai 44: dat dung moc toi thieu la khong con bien an toan nao,
+   va du an da co mot ca chap chon that vi ly do do (quy tac 10 muc 6).
+   Phai do bang elementFromPoint, KHONG bang boundingBox cua nut — pseudo-element
+   khong nam trong khung bao cua phan tu. */
+@media (pointer: coarse){
+  .pw-eye::after{content:"";position:absolute;inset:-9px;}
+}
+
+/* Tên trợ năng của nút = chữ bên trong nó, nên hai nhãn phải ẨN KHỎI MẮT mà
+   KHÔNG ẩn khỏi trình đọc màn hình. `display:none` là sai ở đây — nó xoá luôn
+   khỏi cây trợ năng và nút thành một ô vuông không tên.
+   (Không dùng `.sr-only`: lớp đó đang nằm ở `index.css` và `page-shell.css`,
+   hai file mà `landing-app.html` không nạp. Thêm bản thứ ba vào đây là dựng
+   thêm một chỗ nữa để lệch nhau.) */
+.pw-eye .pw-lbl{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;}
+
+/* Đang ẩn (aria-pressed="false") → icon "con mắt" + nhãn "Hiện mật khẩu".
+   Đang hiện (aria-pressed="true") → icon "mắt gạch" + nhãn "Ẩn mật khẩu". */
+.pw-eye .pw-ic-off,
+.pw-eye .pw-lbl-hide{display:none;}
+.pw-eye[aria-pressed="true"]{color:var(--accent,#5fd3ff);}
+.pw-eye[aria-pressed="true"] .pw-ic-on,
+.pw-eye[aria-pressed="true"] .pw-lbl-show{display:none;}
+.pw-eye[aria-pressed="true"] .pw-ic-off{display:block;}
+.pw-eye[aria-pressed="true"] .pw-lbl-hide{display:inline;}

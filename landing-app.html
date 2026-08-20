@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/landing-app.css" />
 <script src="js/ui-common.js"></script>
+<script src="js/pw-toggle.js"></script>
 <script src="js/utm.js"></script>
 </head>
 <body>
@@ -118,7 +119,20 @@
       </div>
       <div class="auth-field">
         <label for="login-pass" data-i18n="auth_password">Mật khẩu</label>
-        <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        <div class="pw-wrap">
+          <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required />
+          <!-- Nút ẩn/hiện. Hành vi: js/pw-toggle.js · kiểu dáng: css/common.css.
+               `type="button"` bắt buộc — thiếu nó thì đây là nút submit của <form>. -->
+          <button type="button" class="pw-eye" data-pw-toggle="login-pass" aria-pressed="false">
+            <svg class="pw-ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 12S5.4 5.4 12 5.4 22.2 12 22.2 12 18.6 18.6 12 18.6 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 5.6A7.9 7.9 0 0 1 12 5.4c6.6 0 10.2 6.6 10.2 6.6a18 18 0 0 1-2.4 3.4M6.3 7.3A18 18 0 0 0 1.8 12S5.4 18.6 12 18.6c1.5 0 2.8-.3 4-.8"/><path d="M10 10a2.8 2.8 0 0 0 4 4"/><path d="M2.4 2.4l19.2 19.2"/></svg>
+            <!-- Tên trợ năng của nút = chữ trong nút. Hai nhãn nằm sẵn, CSS chọn
+                 nhãn đang có hiệu lực theo `aria-pressed`, từ điển của trang dịch
+                 qua `data-i18n` — xem chú thích đầu js/pw-toggle.js. -->
+            <span class="pw-lbl pw-lbl-show" data-i18n="auth_pw_show">Hiện mật khẩu</span>
+            <span class="pw-lbl pw-lbl-hide" data-i18n="auth_pw_hide">Ẩn mật khẩu</span>
+          </button>
+        </div>
       </div>
       <button type="button" class="auth-forgot" id="auth-forgot" data-i18n="auth_forgot">Quên mật khẩu?</button>
       <button class="auth-submit" type="submit" data-i18n="auth_login_btn">Đăng nhập</button>
@@ -142,7 +156,20 @@
       </div>
       <div class="auth-field">
         <label for="reg-pass" data-i18n="auth_password">Mật khẩu</label>
-        <input id="reg-pass" type="password" autocomplete="new-password" placeholder="••••••••" required />
+        <div class="pw-wrap">
+          <input id="reg-pass" type="password" autocomplete="new-password" placeholder="••••••••" required />
+          <!-- Nút ẩn/hiện. Hành vi: js/pw-toggle.js · kiểu dáng: css/common.css.
+               `type="button"` bắt buộc — thiếu nó thì đây là nút submit của <form>. -->
+          <button type="button" class="pw-eye" data-pw-toggle="reg-pass" aria-pressed="false">
+            <svg class="pw-ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 12S5.4 5.4 12 5.4 22.2 12 22.2 12 18.6 18.6 12 18.6 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 5.6A7.9 7.9 0 0 1 12 5.4c6.6 0 10.2 6.6 10.2 6.6a18 18 0 0 1-2.4 3.4M6.3 7.3A18 18 0 0 0 1.8 12S5.4 18.6 12 18.6c1.5 0 2.8-.3 4-.8"/><path d="M10 10a2.8 2.8 0 0 0 4 4"/><path d="M2.4 2.4l19.2 19.2"/></svg>
+            <!-- Tên trợ năng của nút = chữ trong nút. Hai nhãn nằm sẵn, CSS chọn
+                 nhãn đang có hiệu lực theo `aria-pressed`, từ điển của trang dịch
+                 qua `data-i18n` — xem chú thích đầu js/pw-toggle.js. -->
+            <span class="pw-lbl pw-lbl-show" data-i18n="auth_pw_show">Hiện mật khẩu</span>
+            <span class="pw-lbl pw-lbl-hide" data-i18n="auth_pw_hide">Ẩn mật khẩu</span>
+          </button>
+        </div>
       </div>
       <button class="auth-submit" type="submit" data-i18n="auth_register_btn">Tạo tài khoản</button>
       <div class="auth-alt">
@@ -208,6 +235,10 @@ const I18N = {
     auth_login_sub: "Đăng nhập để mở khoá mọi tính năng của AstroQ.",
     auth_email: "Email",
     auth_password: "Mật khẩu",
+    /* Nhãn trợ năng của nút con mắt trong ô mật khẩu (js/pw-toggle.js).
+       Là CHỮ trong nút, không phải aria-label — nên nó nằm ở đây, một bản duy nhất. */
+    auth_pw_show: "Hiện mật khẩu",
+    auth_pw_hide: "Ẩn mật khẩu",
     auth_login_btn: "Đăng nhập",
     auth_no_account: "Chưa là thành viên?",
     auth_register_link: "Đăng ký",
@@ -252,6 +283,8 @@ const I18N = {
     auth_login_sub: "Sign in to unlock all of AstroQ's features.",
     auth_email: "Email",
     auth_password: "Password",
+    auth_pw_show: "Show password",
+    auth_pw_hide: "Hide password",
     auth_login_btn: "Log in",
     auth_no_account: "Not a member yet?",
     auth_register_link: "Sign up",
@@ -407,7 +440,13 @@ AstroQ.initLang(applyLang);
     var f = (register ? regPane : loginPane).querySelector("input");
     if(f) setTimeout(function(){ f.focus(); }, 60);
   }
-  function close(){ overlay.classList.remove("show"); overlay.setAttribute("aria-hidden","true"); }
+  function close(){
+    overlay.classList.remove("show"); overlay.setAttribute("aria-hidden","true");
+    /* Đóng lớp phủ thì che mật khẩu lại. Mở lại mà nó vẫn hiện nguyên là để mật
+       khẩu người trước nằm trên màn hình cho người sau đọc — máy chung trong nhà
+       và phòng máy trường học đúng là nhóm người dùng của trang này. */
+    if(window.AstroQPwToggle) window.AstroQPwToggle.reset(overlay);
+  }
 
   var showToast = AstroQ.makeToast(toast, 2800);
 
