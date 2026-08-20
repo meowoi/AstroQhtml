@@ -7,7 +7,8 @@ Chay:  python -m http.server 8123   (trong AstroQhtml/)   roi   python scratchpa
 ⚠️ VI SAO CAN BO NAY DU DA CO test_utm.py: bo kia do PHIA SERVER (chuoi gui len duoc
    loc va luu dung cho). No khong tra loi duoc ba cau thuoc ve phia trinh duyet:
      - nhan co duoc GIU khi tre quay lai bang mot link khac khong (luot cham dau tien)
-     - nhan co THAT SU di kem luot gui form khong
+     - nhan co SONG QUA cu dieu huong `/` -> `landing-app.html` va THAT SU di kem
+       luot dang ky tai khoan khong
      - localStorage bi chan (che do rieng tu) thi trang co vo khong
    Ca ba chi do duoc bang cach mo trang that roi bat request that.
 
@@ -173,11 +174,53 @@ with sync_playwright() as p:
     check("0 loi trang", not e2, e2[:2])
     c.close()
 
-    # ------------------------------------------------- [6] gui kem luot dang ky cho
-    # ⚠️ Day la phep kiem chung minh day noi CHAY THAT: no bat than request that
+    # -------------------------------------- [6] nhan di kem luot DANG KY TAI KHOAN
+    # ⚠️ MUC NAY DA DOI PHAT BIEU (20/08/2026), KHONG phai noi long.
+    #    Truoc day no dien `#wl-email` roi bam `#wl-form` de do duong `/waitlist`.
+    #    Form waitlist DA BI GO HAN cung ngay (thay bang mot CTA `<a>` sang
+    #    landing-app.html), nen bo do khang dinh mot thu khong con ton tai va
+    #    treo o `Page.fill` — doc ra y het mot loi san pham.
+    #
+    #    Duong THAT bay gio dai hon va vi the phep kiem MANH HON ban cu:
+    #      `/?utm_*`  ->  bam CTA  ->  landing-app.html (URL KHONG con tham so)
+    #      ->  popup Dang ky  ->  POST /auth/register  { ..., src }
+    #    Tuc no do luon mot dieu ban cu khong hoi toi: nhan phai SONG QUA mot cu
+    #    DIEU HUONG. Ban cu gui form ngay tren chinh trang vua bat nhan, nen no
+    #    xanh ca khi localStorage khong he duoc dung toi.
+    #
+    #    Van la phep kiem chung minh day noi CHAY THAT: no bat than request that
     #    chu khong doc ma nguon.
     print("")
-    print("[6] Nhan di kem luot vao hang cho")
+    print("[6] Nhan di kem luot DANG KY TAI KHOAN (qua mot cu dieu huong)")
+
+    def dang_ky(ctx, page, mail):
+        """Mo popup Dang ky roi gui form.
+
+        ⚠️ TU KHAI TRANG THAI KHI HET HAN CHO (quy tac 6 muc 6). Mot
+           `wait_for_selector` tran chi noi "co cai gi do treo" roi giet ca bo do
+           giua chung — doc ra y het mot loi san pham. Phep thu pha hoai
+           'CTA tro sai dich' da roi vao dung ca do."""
+        try:
+            # `js/firebase-auth-ui.js` la module ES nen no chay SAU script co dien;
+            # bam truoc khi no gan handler thi form khong gui di dau ca.
+            page.wait_for_function("() => !!window.AstroQAuth", timeout=15000)
+            page.click("#btn-try")
+            page.wait_for_selector("#auth-register:not([hidden])", timeout=15000)
+            page.fill("#reg-name", "Bin")
+            page.fill("#reg-email", mail)
+            page.fill("#reg-pass", "matkhau123")
+            page.click("#auth-register button[type=submit]")
+            page.wait_for_selector("#auth-verify:not([hidden])", timeout=25000)
+        except Exception as ex:
+            check("gui duoc form dang ky", False,
+                  "url=%s | co #btn-try=%s | co #auth-register=%s | %s"
+                  % (page.url,
+                     page.locator("#btn-try").count(),
+                     page.locator("#auth-register").count(),
+                     str(ex).splitlines()[0][:90]))
+            return False
+        return True
+
     c = new_ctx(br)
     seen = []
     stub_api(c, seen)
@@ -186,15 +229,22 @@ with sync_playwright() as p:
     q.on("pageerror", lambda e: e3.append(str(e)))
     q.goto(BASE + "/index.html?utm_source=fb&utm_medium=post&utm_campaign=bai-a",
            wait_until="domcontentloaded")
-    q.fill("#wl-email", "success+smoke@simulator.amazonses.com")
-    q.click("#wl-form button[type=submit]")
-    q.wait_for_selector("#wl-done:not([hidden])", timeout=25000)
-    wl = [x for x in seen if "/waitlist" in x["url"]]
-    check("da goi POST /waitlist", len(wl) == 1, len(wl))
-    if wl:
-        check("than request mang truong src", "src" in wl[0]["body"], list(wl[0]["body"]))
-        check("src dung nhan da bat", wl[0]["body"].get("src") == "fb/post/bai-a",
-              wl[0]["body"].get("src"))
+    # Bam dung CTA that o khoi waitlist cua trang chu.
+    with q.expect_navigation(wait_until="domcontentloaded", timeout=20000):
+        q.click(".wl-cta a")
+    check("CTA dua sang landing-app.html", q.url.endswith("/landing-app.html"), q.url)
+    # ⚠️ Phep kiem nay la CHOT CHAN cua ca muc: URL dich KHONG mang tham so utm,
+    #    nen nhan doc duoc o day chi co the den tu localStorage. Thieu no thi
+    #    phep kiem `src` phia duoi van xanh ke ca khi nhan duoc bat lai tu URL.
+    check("URL dich KHONG con tham so utm", "utm_" not in q.url, q.url)
+    check("nhan song qua cu dieu huong", utm_of(q) == "fb/post/bai-a", utm_of(q))
+    dang_ky(c, q, "success+smoke@simulator.amazonses.com")
+    rg = [x for x in seen if "/auth/register" in x["url"]]
+    check("da goi POST /auth/register", len(rg) == 1, len(rg))
+    if rg:
+        check("than request mang truong src", "src" in rg[0]["body"], list(rg[0]["body"]))
+        check("src dung nhan da bat", rg[0]["body"].get("src") == "fb/post/bai-a",
+              rg[0]["body"].get("src"))
     check("0 loi trang", not e3, e3[:2])
     c.close()
 
@@ -203,19 +253,20 @@ with sync_playwright() as p:
     seen = []
     stub_api(c, seen)
     q = c.new_page()
-    q.goto(BASE + "/index.html", wait_until="domcontentloaded")
-    q.fill("#wl-email", "success+smoke2@simulator.amazonses.com")
-    q.click("#wl-form button[type=submit]")
-    q.wait_for_selector("#wl-done:not([hidden])", timeout=25000)
-    wl = [x for x in seen if "/waitlist" in x["url"]]
+    q.goto(BASE + "/landing-app.html", wait_until="domcontentloaded")
+    dang_ky(c, q, "success+smoke2@simulator.amazonses.com")
+    rg = [x for x in seen if "/auth/register" in x["url"]]
     check("khong co nhan -> van gui, src rong",
-          len(wl) == 1 and wl[0]["body"].get("src") == "",
-          wl and wl[0]["body"].get("src"))
+          len(rg) == 1 and rg[0]["body"].get("src") == "",
+          rg and rg[0]["body"].get("src"))
     c.close()
 
-    # ------------------------------------------------- [7] gui kem luot dang ky that
+    # ------------------------------------- [7] link fanpage tro THANG landing-app
+    # ⚠️ Khac muc [6]: o day nhan den tu CHINH URL cua landing-app, khong qua trang
+    #    chu. Do la duong that khi bai dang tro thang vao cua dang ky, nen `js/utm.js`
+    #    phai duoc nap o CA HAI trang chu khong rieng `/`.
     print("")
-    print("[7] Nhan di kem luot dang ky tai khoan")
+    print("[7] Link tro THANG landing-app cung bat duoc nhan")
     c = new_ctx(br)
     seen = []
     stub_api(c, seen)
