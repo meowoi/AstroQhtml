@@ -78,7 +78,17 @@ def bal(pg):
     return pg.evaluate("() => Number(localStorage.getItem('astroq-asteroids')||0)")
 
 
-def walk(pg, dirs, cap=400):
+# CANH BAO: `cap` la BIEN AN TOAN, khong phai mot con so cho vui. Do ngay
+#   21/08/2026 bang scratchpad/probe_maze_tour.py tren 100 me cung 27x15
+#   (cap 4, co to nhat): `tour()` dai TB 396 buoc, MAX 584. Ban cu ghim
+#   cap=600 -> bien chi ~3%. Muc [4] choi 30 luot, nen mot luot tour dai hon
+#   600 la bot khong toi cong -> `#ov-over.show` het han cho, va no doc ra Y
+#   NHU SAN PHAM HONG. Voi p~1%/luot thi ~26% moi lan chay bo bi hong — khop
+#   dung ti le chap chon quan sat duoc (2/3 luot), va la chap chon CO SAN tu
+#   14/08/2026 luc me cung len 4 cap, khong phai loi cua ban co duong ve cong.
+#   Nay cap = 1600 (~2,7x max do duoc). ⚠️ Doi CONFIG.tiers cho me cung to hon
+#   thi DO LAI bang probe_maze_tour.py TRUOC, dung doan.
+def walk(pg, dirs, cap=1600):
     """Di theo mot day huong, bo hoat canh truot cho nhanh. Tra so buoc DI DUOC."""
     return pg.evaluate("""(dirs) => {
         let n = 0;
@@ -134,7 +144,7 @@ with sync_playwright() as pw:
         #    `path()`: tu 15/08/2026 cong CHI mo khi da thu het tinh the, nen
         #    di thang ra cong la luot khong bao gio ket thuc va bo do treo o
         #    `#start-btn` cua vong sau.
-        walk(pg, pg.evaluate("() => window.__maze.tour()"), cap=600)
+        walk(pg, pg.evaluate("() => window.__maze.tour()"))
         # ⚠️ CHO TIN HIEU THAT, dung ngu mot khoang co dinh: `.ov` co
         #    `transition: visibility .3s`, nen 60ms sau khi thang thi `#ov-over`
         #    van co the dang `visibility:hidden` -> vong sau bam nham `#start-btn`
@@ -296,7 +306,7 @@ with sync_playwright() as pw:
     gems_n = st(pg, "gems")
     tier0 = int(pg.evaluate("() => localStorage.getItem('astroq-maze-tier') || 0"))
     b0 = bal(pg)
-    walk(pg, pg.evaluate("() => window.__maze.tour()"), cap=600)
+    walk(pg, pg.evaluate("() => window.__maze.tour()"))
     pg.wait_for_timeout(300)
     check("thu du tinh the truoc khi ra", st(pg, "got") == gems_n,
           "%d/%d" % (st(pg, "got"), gems_n))
@@ -325,7 +335,7 @@ with sync_playwright() as pw:
           "%d -> %d" % (gems_n, st(pg, "gems")))
     # Ket thuc luot vua mo de khoi [9] doc duoc bang ket qua (khoi do doi chu tren
     # chinh bang do — dang choi thi khong co gi de doc).
-    walk(pg, pg.evaluate("() => window.__maze.tour()"), cap=600)
+    walk(pg, pg.evaluate("() => window.__maze.tour()"))
     pg.wait_for_selector("#ov-over.show", timeout=6000)
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
 

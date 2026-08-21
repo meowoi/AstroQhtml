@@ -32,6 +32,11 @@ USER = {"name": "Bi", "pilotName": "Bi", "character": "raica",
 ok_n = bad_n = 0
 
 
+import io as _io, os as _os, re
+# goc repo, suy tu vi tri script — khong gan cung duong dan may
+_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+
+
 def check(cond, label, detail=""):
     global ok_n, bad_n
     if cond:
@@ -77,6 +82,35 @@ def tap_el(pg, sel):
         return False
 
 
+def dismiss_rotate(pg):
+    """Bo qua loi nhac "xoay ngang" — DUNG NHU MOT DUA TRE LAM.
+
+    ⚠️ VI SAO CAN: bo do nay chay o iPad DOC 768x1024 + has_touch, tuc khop dung
+       `(orientation: portrait) and (pointer: coarse)` — dieu kien lam
+       `js/game-shell.js` dung lop phu `.ov.rot`. Lop do duoc THEM SAU vao `.play`
+       nen no nam TREN nut "Bat dau", va `locator.tap()` cho mai vi phan tu khong
+       nhan duoc cu cham. Ket qua: bo do bao "cham nut Bat dau -> khong vao duoc
+       luot choi" va "canvas nhan 0 cu cham" — doc ra Y NHU MOT LOI SAN PHAM NANG
+       o dung thiet bi app nham toi. That ra do la HANH VI DUNG cua san pham (lop
+       phu that, va no CO duong ra), chi la bo do khong bam duong ra. Dung lop loi
+       da ghi o CLAUDE.md ngay 12/08/2026 cho `play_maze`. Bo do nay hong AM THAM
+       tu 16/08/2026 (luc them cua `data-rotate`).
+
+    Nhan do kiem luon: duong ra PHAI CO THAT. Mot loi nhac khong co duong ra la
+    tre dang bat khoa xoay se KET CUNG — dieu kien da chot 12/08/2026.
+    """
+    if pg.locator(".ov.rot.show").count() == 0:
+        return None                      # game khai data-rotate="off"
+    ok = pg.locator(".ov.rot.show .rot-ok")
+    check(ok.count() == 1, "loi nhac xoay ngang CO duong ra", str(ok.count()))
+    lbl = (ok.inner_text() or "").strip()
+    check(len(lbl) > 0, "duong ra co nhan chu", lbl)
+    ok.tap()
+    pg.wait_for_timeout(150)
+    check(pg.locator(".ov.rot.show").count() == 0,
+          "bam duong ra thi loi nhac tat han")
+    return lbl
+
 with sync_playwright() as p:
     br = p.chromium.launch()
 
@@ -111,6 +145,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(f"{BASE}/game-dodge.html", wait_until="load", timeout=30000)
     pg.wait_for_timeout(1200)
+    dismiss_rotate(pg)
     n_ov = pg.evaluate("()=>document.querySelectorAll('.ov.show').length")
     check(n_ov >= 1, "man gioi thieu dang mo", str(n_ov))
     # Nut bat dau nam trong overlay
@@ -155,6 +190,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(f"{BASE}/game-defender.html", wait_until="load", timeout=30000)
     pg.wait_for_timeout(1200)
+    dismiss_rotate(pg)
     for sel in (".ov.show .acts button", ".ov.show button"):
         if tap_el(pg, sel):
             break
@@ -185,19 +221,44 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(f"{BASE}/mission-earth.html?scene=2d", wait_until="load", timeout=45000)
     pg.wait_for_timeout(4000)
-    # bam het loi thoai mo dau
-    for _ in range(6):
+    dismiss_rotate(pg)
+    # CANH BAO: MOC CHO 3000ms O DAY LA QUA NGAN — loi Comet GO TUNG CHU (22ms/
+    #   ky tu), va Chrome HAM `setInterval` o tab khong co tieu diem: quy tac 9
+    #   muc 6 do duoc ~124ms/ky tu, cham 5,6 lan. Mot cau 170 ky tu vi the co the
+    #   mat hon 20 giay. Het han -> `break` -> KHONG bam nut nao -> marker khong
+    #   bao gio hien -> phep cho ben duoi het han va doc ra nhu san pham hong.
+    #   `smoke_mission_earth.py` da phai noi moc nay len 90 giay vi dung ly do do.
+    for _ in range(8):
         try:
             pg.wait_for_function(
                 "()=>{const b=document.getElementById('say-next');"
                 " return b && !b.classList.contains('hide') &&"
                 " document.getElementById('say').classList.contains('show');}",
-                timeout=3000)
+                timeout=90000)
         except Exception:
             break
         tap_el(pg, "#say-next")
-        pg.wait_for_timeout(200)
-    pg.wait_for_function("()=>window.__mission.world.markers.length===3", timeout=20000)
+        pg.wait_for_timeout(400)
+        if pg.evaluate("()=>((window.__mission.world.markers)||[]).length") > 0:
+            break
+    # CANH BAO: DUNG GAN CUNG SO DIEM. Ban cu doi dung 3 — do la ban buoc ① thang
+    #   01/08/2026 (ba dom air/sea/land). `docs/decisions/005` ngay 02/08/2026 doi
+    #   sang 7 CHAU LUC, nen phep kiem nay bao ve mot trang thai KHONG CON TON TAI
+    #   va hong am tham tu hom do. Nay suy so diem tu chinh `CONTINENTS` trong
+    #   mission-earth.html — them/bo mot chau luc khong phai sua day.
+    # ⚠️ PHAI CAT DUNG KHOI `CONTINENTS`. Quet ca file thi mau `{ id: '..', lat:`
+    #   bat luon mang `BIOMES` cua buoc ⑤ (cung hinh dang) -> dem ra 14 thay vi 7,
+    #   va phep cho ben duoi het han. Cung bai hoc "gioi han pham vi dung bang khoi
+    #   chua no" da ghi o CLAUDE.md.
+    _src = _io.open(_os.path.join(_ROOT, "mission-earth.html"), encoding="utf-8").read()
+    _blk = _src[_src.index("const CONTINENTS = ["):]
+    _blk = _blk[:_blk.index("];")]
+    want = len(re.findall(r"\{\s*id:\s*'[a-z]+'\s*,\s*lat:", _blk))
+    check(want >= 3, "doc duoc so diem quet tu mission-earth.html", str(want))
+    pg.wait_for_function("(n)=>window.__mission.world.markers.length===n",
+                         arg=want, timeout=30000)
+    check(pg.evaluate("()=>document.querySelectorAll('.e2-mk').length") == want,
+          "so marker VE RA khop so diem khai", str(want))
     ids = pg.evaluate("()=>window.__mission.world.markers.map(m=>m.id)")
     hit = 0
     for mid in ids:
@@ -210,7 +271,7 @@ with sync_playwright() as p:
         if hit:
             break
     check(hit >= 1, "CHAM THAT vao diem tin hieu -> duoc danh dau xong",
-          f"{hit}/3 diem")
+          f"{hit}/{want} diem")
     check(not errs, "0 loi trang", str(errs[:1])[:70])
     ctx.close()
     br.close()

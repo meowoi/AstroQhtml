@@ -24,7 +24,10 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
+import io as _io, os as _os
 BASE = "http://127.0.0.1:8123"
+# goc repo, suy tu vi tri script — khong gan cung duong dan may
+ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 ok_n, bad_n = 0, 0
 FAILS = []
 
@@ -337,13 +340,23 @@ def main():
         ctx.close()
 
         # ══════════════════════════════════════════════════════════════
-        head("[11] Bang ky luc CA DOI nay co du 6 game")
+        head("[11] Bang ky luc CA DOI: du o cho MOI game co that")
         ctx = br.new_context(viewport={"width": 1440, "height": 900})
         pg, errs = newpage(ctx)
         pg.goto(BASE + "/profile.html", wait_until="load")
         pg.wait_for_selector("#recs .rec", timeout=15000)
         n = pg.locator("#recs .rec").count()
-        chk(n == 6, "hien ky luc cua ca 6 mini-game", f"{n} o")
+        # CANH BAO: DUNG GAN CUNG SO GAME. Ban cu doi dung 6 va no hong AM THAM
+        #   tu 16/08/2026 — hom do khu Huan Luyen len 10 game (them 4 game lop
+        #   quyet dinh), profile.html ve 10 o, phep kiem van doi 6. Loi khong phai
+        #   o san pham ma o phep kiem BAO VE MOT TRANG THAI CU. Nay suy so game
+        #   tu games.html (cho khai `key:"..."`), nen them game khong phai sua day.
+        keys = sorted(set(re.findall(r'key:\s*"([a-z]+)"',
+                                     _io.open(_os.path.join(ROOT, "games.html"),
+                                             encoding="utf-8").read())))
+        chk(len(keys) >= 6, "doc duoc danh sach game tu games.html",
+            "%d game: %s" % (len(keys), ", ".join(keys)))
+        chk(n == len(keys), "co o ky luc cho MOI game", "%d o / %d game" % (n, len(keys)))
         rt = txt(pg, "#recs")
         for nm in ["Né Thiên Thạch", "Ghép Chòm Sao", "Bắt Sao Băng",
                    "Mê Cung Thiên Hà", "Đường Đua Sao Chổi"]:

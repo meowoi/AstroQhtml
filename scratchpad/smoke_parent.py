@@ -362,19 +362,44 @@ def main():
         """)
         pg = ctx.new_page()
         pg.goto(f"{BASE}/dashboard.html", wait_until="domcontentloaded")
-        pg.wait_for_selector(".ptiles", timeout=8000)
-        link = pg.locator(".pt-parent")
-        check("Dashboard co link sang trang phu huynh", link.count() == 1)
+        # CANH BAO: BANG PHI HANH GIA (.ptiles / .pt-parent) DA BO 15/08/2026 —
+        #   ca cum chuyen vao MENU THA sau avatar. Ban cu cho `.ptiles` nen no
+        #   het han cho va bo do CHET GIUA DUONG tu hom do, am tham 6 ngay (loi
+        #   lo ra o cua push 21/08). Do la phep kiem BAO VE MOT TRANG THAI CU:
+        #   trang cang dung theo thiet ke moi thi no cang bao hong.
+        #   Dieu can bao ve KHONG doi — nay phat bieu lai cho dung cho:
+        #     · duong vao trang phu huynh co that va tro dung parent.html
+        #     · no NAM TRONG menu tha (khong tron vao giay to cua tre)
+        #     · no co NET DUT phan biet khu nguoi lon (css/user-menu.css)
+        #     · vung cham >= 44px va BAM DUOC THAT
+        pg.wait_for_selector("[data-menu-btn]", timeout=8000)
+        # CANH BAO: dashboard co HAI nut [data-menu-btn] (avatar VA ngon ngu).
+        #   Lay .first la bam nham cai ngon ngu roi bao "muc parent khong nhin
+        #   thay duoc" — dung bay da ghi o CLAUDE.md ngay 16/08/2026. Phai tim
+        #   khoi [data-menu] CO CHUA muc do roi bam nut cua chinh no.
+        pg.locator('[data-menu]:has(.um-item.um-parent) [data-menu-btn]').click()
+        pg.wait_for_timeout(250)
+        link = pg.locator(".um-item.um-parent")
+        check("Dashboard co link sang trang phu huynh", link.count() == 1,
+              str(link.count()))
         check("Link tro dung parent.html",
-              (link.get_attribute("href") or "") == "parent.html", link.get_attribute("href"))
-        check("Link NAM NGOAI luoi 3 o cua tre",
-              pg.eval_on_selector(".pt-parent", "e=>!e.closest('.ptiles')"))
+              (link.get_attribute("href") or "") == "parent.html",
+              link.get_attribute("href"))
+        check("Link nam TRONG menu tha, khong nam roi tren dashboard",
+              pg.eval_on_selector(".um-item.um-parent", "e=>!!e.closest('[data-menu-pop]')"))
+        # net dut la thu phan biet khu NGUOI LON voi ba khu cua tre — do bang
+        # getComputedStyle, khong doc file CSS
+        bs = pg.eval_on_selector(".um-item.um-parent",
+                                 "e=>getComputedStyle(e).borderStyle")
+        check("Khu nguoi lon giu NET DUT", "dashed" in (bs or ""), str(bs))
         bb = link.bounding_box()
         check("Vung cham link >= 44px", bb and bb["height"] >= 44,
               f'{bb["height"]:.0f}px' if bb else "?")
-        check("Luoi 3 o cua tre VAN dung 3 o",
-              pg.locator(".ptiles .ptile").count() == 3,
-              str(pg.locator(".ptiles .ptile").count()))
+        # bam duoc THAT: co CSS va co focus deu KHONG chung minh nguoi dung bam duoc
+        with pg.expect_navigation():
+            link.click()
+        check("Bam vao thi toi dung trang phu huynh",
+              "parent.html" in pg.url, pg.url)
         ctx.close()
 
         br.close()
