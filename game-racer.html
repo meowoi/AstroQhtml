@@ -30,6 +30,11 @@
 <link rel="stylesheet" href="css/game-shell.css" />
 <link rel="stylesheet" href="css/game-racer.css" />
 <script src="js/ui-common.js"></script>
+<!-- Tên phi thuyền do trẻ đặt ở Kho Trang Trí. `js/cosmetics.js` đọc nó từ
+     cache `astroq-user` — trang game CỐ Ý không nạp SDK Firebase nên không có
+     token để tự hỏi server; trang CÓ token (dashboard/profile/shop) ghi cache,
+     trang này đọc. Cùng khuôn `astroq-training` và `astroq-route-gate`. -->
+<script src="js/cosmetics.js"></script>
 <script src="js/game-shell.js"></script>
 </head>
 <body>
@@ -57,12 +62,27 @@
       <span class="bar" aria-hidden="true"><i id="fuel-bar"></i></span>
     </div>
     <div class="chip dist" id="chip-dist"><span class="k" data-i18n="dist_lbl">Còn lại</span><span class="v" id="hb-dist">0 m</span></div>
+    <!-- Hạng: thứ duy nhất trả lời "mình đang thứ mấy" bằng một con số. Dải đua
+         ở đầu sân nói cùng điều đó bằng hình — hai cách cho hai kiểu đọc. -->
+    <div class="chip place" id="chip-place">
+      <span class="k" data-i18n="place_lbl">Hạng</span><span class="v" id="hb-place">—</span>
+    </div>
     <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
       <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
     </div>
     <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">—</span></div>
 
     <div class="hud-btns">
+      <!-- ⚡ Tăng tốc. Nút THẬT (không chỉ phím tắt) vì máy tính bảng không có bàn
+           phím, mà đây là kỹ năng quyết định thắng thua. `disabled` khi chưa nạp
+           đầy — một cái nút bấm mà không có gì xảy ra thì trẻ tưởng game lỗi.
+           Khuôn nút + thanh nạp dùng CHUNG với nút EMP của ARCADE-02
+           (`.chargebtn` ở css/game-shell.css), không chép lần thứ hai. -->
+      <button class="iconbtn chargebtn is-hidden" id="btn-boost" type="button" disabled
+              data-i18n-aria="boost_aria" data-i18n-title="boost_aria" aria-label="Tăng tốc">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z"/></svg>
+        <span class="chargebar"><i id="boost-fill"></i></span>
+      </button>
       <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
         <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
         <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
@@ -88,8 +108,9 @@
           <span data-i18n-html="how1">🛸 <b>Đổi làn</b> bằng ▲ ▼ / W S, hoặc quệt lên xuống trên máy cảm ứng.</span>
           <span data-i18n-html="how2">⛽ <b>Nhiên liệu tụt dần</b>. Hứng thùng nhiên liệu 🛢️ để nạp thêm, hứng tinh thể tím 💎 để lấy Thiên thạch tím.</span>
           <span data-i18n-html="how3">🪨 <b>Đâm vào thiên thạch</b> là mất một mảng nhiên liệu — về đích trước khi cạn!</span>
+          <span data-i18n-html="how4">⚡ <b>Tăng tốc</b>: hứng 2 tinh thể là nạp đầy → bấm nút ⚡ (hoặc <kbd>Space</kbd>) để vọt lên. Tốn một chút nhiên liệu, và <b>3 đối thủ cũng có skill này</b> — ai về đích trước là thắng!</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -106,6 +127,7 @@
           <div class="cell"><div class="rv" id="r-dist">0 m</div><div class="rl" data-i18n="run_lbl">Đã đi</div></div>
           <div class="cell time"><div class="rv" id="r-time">0:00</div><div class="rl" data-i18n="time_lbl">Thời gian</div></div>
           <div class="cell time"><div class="rv" id="r-best">—</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell"><div class="rv" id="r-place">—</div><div class="rl" data-i18n="place_lbl">Hạng</div></div>
           <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="reward_lbl">Thưởng Thiên thạch tím</div></div>
         </div>
         <div class="reward-why" id="why"></div>
@@ -182,6 +204,34 @@
        phải quay). Cùng một ảnh với ARCADE-01: một nhân vật thì một hình.
        ⚠️ Ảnh trống hoặc lỗi → tự lùi về bản vẽ vector còn nguyên ở nhánh `else`. */
     spritePath: "img/luna-side.png",
+    gemSprite:  "img/tt.png",   // Thiên thạch tím — ảnh THẬT của hệ thống
+
+    /* ===== ART VẼ TAY (21/08/2026) =====
+       Chủ dự án đặt `img/asset.png` (5 vật trong một ảnh, có alpha thật); tách +
+       hạ cỡ + nén bằng `scratchpad/make_racer_assets.py` (2,0 MB → 57 KB).
+       ⚠️ ẢNH LỖI HOẶC THIẾU → TỰ LÙI VỀ BẢN VẼ CODE. Cả ba nhánh vẽ vector
+          (`rivalBody`/`rivalWings`, đá đa giác 9 đỉnh, thùng bo góc) GIỮ NGUYÊN;
+          đừng xoá chúng, đó là đường lùi duy nhất khi mạng hỏng.
+       ⚠️ CHIỀU DÀI BA TÀU = CHIỀU DÀI LUNA (`shipW`), chủ dự án chốt 21/08. Art
+          mới dài 2,37–2,98 : 1 còn Luna 1,88 : 1, nên chuẩn theo chiều dài thì
+          đối thủ MỎNG hơn Luna (cao 18,8–23,6 thay vì 30). Đường kia — chuẩn
+          theo chiều cao — cho tàu cam dài 95 đơn vị ảo, tức to gần gấp đôi tàu
+          của trẻ và bắt đầu che vật thể trên làn. */
+    rivalSprites: {
+      blaze: "img/racer/rival-blaze.png",
+      ember: "img/racer/rival-ember.png",
+      dust:  "img/racer/rival-dust.png"
+    },
+    rockSprite: "img/racer/rock.png",
+    canSprite:  "img/racer/fuel-can.png",
+    /* ⚠️⚠️ ĐÁ VÀ THÙNG PHẢI NẰM TRONG VÒNG VA CHẠM. Vùng chết của chúng là một
+       HÌNH TRÒN bán kính `o.r`; phần hình chìa ra ngoài vòng đó cho ra cảm giác
+       "trông như chưa chạm mà đã mất nhiên liệu" (đá) hoặc "thấy chạm mà không
+       ăn được" (thùng) — lỗi đã trả giá ở hitbox ARCADE-01 và ở rác vũ trụ của
+       ARCADE-02. Đo trên chính hai file art: điểm xa tâm nhất bằng 0,504 và
+       0,510 cạnh DÀI, nên ôm cạnh dài vào hộp `2r` là đã xấp xỉ đúng vòng tròn;
+       hệ số 0,96 là biên an toàn. ⚠️ Đổi art thì ĐO LẠI bằng bộ tách. */
+    hitFit: 0.96,
     hopMs: 130,                 // thời gian trượt sang làn kế
 
     /* ⚠️⚠️ ĐỘ DÀI ĐƯỜNG ĐUA PHẢI ĐO BẰNG GIÂY, KHÔNG BẰNG CẢM GIÁC — LỖI CÂN BẰNG
@@ -211,7 +261,49 @@
     gemChance: 0.42,            // còn lại là thùng nhiên liệu
 
     rewardFinish: 6,            // thưởng về đích, cộng thêm phần "còn nhiều nhiên liệu"
-    bgStars: 80
+    bgStars: 80,
+
+    /* ============================================================
+       ĐỐI THỦ CÙNG ĐUA + SKILL TĂNG TỐC (21/08/2026)
+
+       ⚠️⚠️ VÌ SAO SKILL LÀ ĐIỀU KIỆN, KHÔNG PHẢI MÓN THÊM. Trước lượt này
+       `dist += speed*dt` với `speed` chỉ phụ thuộc THỜI GIAN — nghĩa là quãng
+       đường đi được **hoàn toàn không phụ thuộc trẻ chơi hay hay dở** (đâm đá chỉ
+       mất nhiên liệu, không mất tốc độ). Thả đối thủ có tốc độ cố định vào một
+       đường đua như thế thì kết quả là TẤT ĐỊNH: hoặc luôn thắng, hoặc luôn thua,
+       và cuộc đua thành một đoạn phim. Skill tăng tốc chính là cái cần để trẻ
+       QUYẾT ĐỊNH được kết quả.
+
+       ⚠️⚠️ NẠP BẰNG TINH THỂ TÍM, TIÊU BẰNG NHIÊN LIỆU. Hai đầu đều nối vào thứ
+       game này vốn đã dạy: muốn tăng tốc thì phải đi hứng tinh thể (lách làn), mà
+       tăng tốc lại đốt nhiên liệu — tức nó KHÔNG cho không, và nó làm bài học
+       "cân nhiên liệu" nặng thêm chứ không thay thế. ⛔ Đừng đổi sang "nạp theo
+       thời gian": lúc đó nó thành một cái nút cứ đợi là có, và tinh thể tím mất
+       nửa lý do tồn tại.
+
+       ⚠️ ĐỐI THỦ NHANH HƠN TỐC ĐỘ GỐC CỦA TRẺ — có chủ đích. `f` của hai đối thủ
+       đầu > 1, nên **không tăng tốc lần nào là chắc chắn không thắng**. Đó là chỗ
+       skill có nghĩa. Số liệu cân bằng phải ĐO, không phải hứa: xem
+       `scratchpad/sim_racer.py` (đọc thẳng mấy con số dưới đây rồi tích phân cả
+       đường đua). Đổi bất kỳ số nào ở đây thì CHẠY LẠI bộ đó TRƯỚC.
+
+       ⚠️ ĐỐI THỦ KHÔNG PHẢI CHƯỚNG NGẠI: chúng không có va chạm. Sân đã có đá để
+       né; thêm va chạm với đối thủ là một bài toán cân bằng khác hẳn, và nó biến
+       cuộc đua thành trò chen lấn. Chúng là NGƯỜI DẪN NHỊP nhìn thấy được.
+       ============================================================ */
+    rivals: [
+      /* `f` = hệ số tốc độ so với trẻ (dùng CHUNG đường cong tăng tốc nên đoạn
+         đầu đường đua ai cũng cảm giác như nhau) · `bEvery` = mỗi bấy nhiêu mét
+         thì nó tăng tốc một lần · `bMs`/`bMul` = dài và mạnh bao nhiêu. */
+      { id:"blaze", f:1.060, bEvery:3400, bMs:1500, bMul:1.35, c:"#ff8a5c" },
+      { id:"ember", f:1.030, bEvery:3000, bMs:1400, bMul:1.32, c:"#ffd166" },
+      { id:"dust",  f:0.990, bEvery:2600, bMs:1400, bMul:1.30, c:"#7dd3fc" }
+    ],
+    boostNeed: 100,             // nạp đầy mới bấm được
+    boostPerGem: 50,            // mỗi tinh thể tím nạp bấy nhiêu → 2 viên = 1 lần
+    boostMs: 2000,              // tăng tốc kéo dài bao lâu
+    boostMul: 1.55,             // nhân tốc độ trong lúc tăng tốc
+    boostFuel: 8                // % nhiên liệu MỖI LẦN bấm — cái giá của skill
   };
   var VW=CONFIG.VW, VH=CONFIG.VH, TAU=Math.PI*2;
   var BEST_KEY="astroq-racer-best";
@@ -226,11 +318,11 @@
       how1:"🛸 <b>Đổi làn</b> bằng ▲ ▼ / W S, hoặc quệt lên xuống trên máy cảm ứng.",
       how2:"⛽ <b>Nhiên liệu tụt dần</b>. Hứng thùng nhiên liệu 🛢️ để nạp thêm, hứng tinh thể tím 💎 để lấy Thiên thạch tím.",
       how3:"🪨 <b>Đâm vào thiên thạch</b> là mất một mảng nhiên liệu — về đích trước khi cạn!",
-      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
       start_btn:"Bắt đầu",
       win_title:"Về đích!", win_sub:"Bạn đã đi hết {n} m đường đua.",
       lose_title:"Cạn nhiên liệu!", lose_sub:"Còn {n} m nữa là tới đích. Thùng nhiên liệu 🛢️ nằm rải trên đường — bám theo chúng nhé!",
-      again_btn:"Đua lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
+      again_btn:"<span class='btn-fee'>Đua lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>", to_hub:"Về Khu Huấn Luyện", home_btn:"Trung Tâm Điều Hướng",
       need_title:"Chưa đủ Thiên thạch tím!",
       need_body:"Mỗi lượt cần {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz đạt là có thêm ngay!",
       need_go:"Làm Quiz ngay",
@@ -246,6 +338,19 @@
       paid_line:"Đã cộng {n} {tt} vào ví của bạn.",
       why_win:"{g} tinh thể + {b} thưởng về đích",
       why_lose:"{g} tinh thể (chưa về đích nên không có thưởng đích)",
+      place_lbl:"Hạng", place_v:"{n}/{t}",
+      boost_aria:"Tăng tốc (Space)",
+      how4:"⚡ <b>Tăng tốc</b>: hứng "+Math.ceil(CONFIG.boostNeed/CONFIG.boostPerGem)+" tinh thể là nạp đầy → bấm nút ⚡ (hoặc <kbd>Space</kbd>) để vọt lên. Tốn một chút nhiên liệu, và <b>3 đối thủ cũng có skill này</b> — ai về đích trước là thắng!",
+      boost_go:"⚡ Tăng tốc!",
+      boost_wait:"Chưa nạp đủ — hứng tinh thể tím để nạp",
+      lead_toast:"Bạn đang dẫn đầu!",
+      lost_title:"Đối thủ về đích trước!",
+      lost_sub:"{r} cán đích trước bạn. Bạn còn {n} m nữa — hứng tinh thể để tăng tốc nhiều hơn nhé!",
+      rv_blaze:"Sao Băng", rv_ember:"Vệt Lửa", rv_dust:"Bụi Sao",
+      /* Tên tàu mặc định khi trẻ chưa đặt tên ở Kho Trang Trí. Để trong từ
+         điển (không gõ cứng trong phần vẽ) vì nó là CHỮ hiện ra cho trẻ đọc,
+         đúng chỗ mọi chuỗi khác của trang đang nằm. */
+      ship_name:"Luna",
       lv_dist:"đã đi {n}/{t} m", lv_done:"về đích rồi!",
       title:"AstroQ — Đường Đua Sao Chổi"
     },
@@ -257,11 +362,11 @@
       how1:"🛸 <b>Change lane</b> with ▲ ▼ / W S, or swipe up and down on touch screens.",
       how2:"⛽ <b>Fuel keeps draining.</b> Grab fuel cans 🛢️ to top up, purple crystals 💎 for Purple Meteors.",
       how3:"🪨 <b>Hitting an asteroid</b> costs a chunk of fuel — finish before you run dry!",
-      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
       start_btn:"Start",
       win_title:"Finished!", win_sub:"You covered the whole {n} m track.",
       lose_title:"Out of fuel!", lose_sub:"Only {n} m from the finish. Fuel cans 🛢️ are spread along the track — follow them!",
-      again_btn:"Race again · <b>4</b>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
+      again_btn:"<span class='btn-fee'>Race again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>", to_hub:"Back to Training Simulator", home_btn:"Navigation Hub",
       need_title:"Not enough Purple Meteors!",
       need_body:"Each run costs {cost} Purple Meteors and you have {bal}. Pass a quiz to earn more!",
       need_go:"Take a quiz",
@@ -277,6 +382,16 @@
       paid_line:"{n} {tt} added to your wallet.",
       why_win:"{g} crystals + {b} finish bonus",
       why_lose:"{g} crystals (no finish bonus — you didn't reach the end)",
+      place_lbl:"Place", place_v:"{n}/{t}",
+      boost_aria:"Boost (Space)",
+      how4:"⚡ <b>Boost</b>: grab "+Math.ceil(CONFIG.boostNeed/CONFIG.boostPerGem)+" crystals to charge it → hit the ⚡ button (or <kbd>Space</kbd>) to surge ahead. It burns a little fuel, and <b>all 3 rivals have it too</b> — first across the line wins!",
+      boost_go:"⚡ Boost!",
+      boost_wait:"Not charged yet — grab purple crystals",
+      lead_toast:"You're in the lead!",
+      lost_title:"A rival finished first!",
+      lost_sub:"{r} crossed the line before you, with {n} m still to go for you — grab more crystals to boost more often!",
+      rv_blaze:"Blaze", rv_ember:"Ember", rv_dust:"Stardust",
+      ship_name:"Luna",
       lv_dist:"{n}/{t} m covered", lv_done:"finished!",
       title:"AstroQ — Comet Racer"
     }
@@ -302,7 +417,16 @@
     hit:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.nope(); },
     win:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.fanfare(); },
     dry:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble(); },
-    start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); }
+    start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); },
+    /* Tiếng vút lên: một cú quét tần số + một nốt sáng. KHÔNG dùng `arp()` trơn
+       — hàm đó ĐÒI một mảng nốt (`arp(freqs, o)`), gọi thiếu tham số là
+       `TypeError` giết ngay lượt bấm đầu tiên. Bài học đã ghi: đừng đoán API
+       của file dùng chung, mở `js/sfx.js` ra đọc. */
+    boost:function(){
+      if(!(window.AstroQSfx && AstroQSfx.on())) return;
+      AstroQSfx.tone({ f:420, to:1180, dur:0.26, type:"sawtooth", gain:0.05 });
+      AstroQSfx.tone({ f:1568, dur:0.12, type:"sine", gain:0.03, delay:0.12 });
+    }
   };
 
   /* Phi thuyền Luna. `SPR` là cỡ VẼ; vùng chết vẫn là `shipW`/`shipH` —
@@ -320,6 +444,54 @@
     };
     sprite.onerror=function(){ spriteReady=false; };
     sprite.src=CONFIG.spritePath;
+  }
+
+  /* Bộ nạp art dùng chung: trả về một hộp `{img, ok, ar}` mà phần vẽ hỏi ngay
+     trong vòng vẽ. `ok` chỉ bật khi ảnh đã decode xong — nên khung hình đầu tiên
+     (ảnh chưa về) vẫn vẽ bằng code chứ không để một ô trống. */
+  function loadArt(path){
+    var box={ img:null, ok:false, ar:1 };
+    if(!path) return box;
+    var im=new Image();
+    im.onload=function(){
+      box.ar=(im.naturalWidth||1)/(im.naturalHeight||1);
+      box.ok=true;
+    };
+    im.onerror=function(){ box.ok=false; };
+    im.src=path;
+    box.img=im;
+    return box;
+  }
+  var ART={ rock:loadArt(CONFIG.rockSprite), can:loadArt(CONFIG.canSprite),
+            rivals:{} };
+  (function(){
+    var m=CONFIG.rivalSprites||{}, k;
+    for(k in m){ if(m.hasOwnProperty(k)) ART.rivals[k]=loadArt(m[k]); }
+  })();
+
+  /* Vẽ art ôm TRỌN trong một hộp (contain) rồi canh giữa. Dùng cho đá và thùng;
+     ba tàu thì ép theo chiều DÀI nên có nhánh riêng. */
+  function drawArt(box, cx, cy, boxW, boxH){
+    var h=Math.min(boxH, boxW/box.ar), w=h*box.ar;
+    ctx.drawImage(box.img, cx-w/2, cy-h/2, w, h);
+  }
+
+  /* Thiên thạch tím — dùng ĐÚNG ảnh của hệ thống (`img/tt.png`), không vẽ lại.
+     ⚠️ Trước 21/08/2026 chỗ này vẽ một HÌNH THOI tím 4 điểm. Nó không phải Thiên
+        thạch tím: cả app hiện đồng tiền đó bằng ảnh `img/tt.png` (luật 25/07/2026
+        — không emoji, không hình tự vẽ, không chữ "tt"), và ngay trên thanh HUD
+        của chính trang này cũng là ảnh đó. Hai hình cho một thứ thì trẻ không nối
+        được viên nó vừa hứng với con số trên HUD. `game-maze.html` đã đổi sang ảnh
+        thật ngày 19/08; đây là chỗ còn sót.
+     ⚠️ Cỡ VẼ không ràng buộc luật chơi (va chạm dùng `o.r`), nên phóng ảnh to hơn
+        bán kính một chút cho đọc được hình mà KHÔNG đổi độ khó — cùng lý do đã
+        ghi ở mê cung. Ảnh lỗi thì lùi về bản vẽ vector, không để ô trống. */
+  var gemImg=null, gemReady=false;
+  if(CONFIG.gemSprite){
+    gemImg=new Image();
+    gemImg.onload=function(){ gemReady=true; };
+    gemImg.onerror=function(){ gemReady=false; };
+    gemImg.src=CONFIG.gemSprite;
   }
 
   /* ===== Canvas ===== */
@@ -347,6 +519,10 @@
   var dist=0, speed=CONFIG.speed0, fuel=CONFIG.fuel0, mined=0, elapsed=0;
   var nextCluster=CONFIG.clusterEvery, nextPick=CONFIG.pickEvery;
   var won=false, lowWarned=false, hurtT=0, shakeT=0, winBonus=0;
+  /* Đối thủ + skill tăng tốc. `boost` = thanh nạp (0..boostNeed) · `boostT` = số
+     giây tăng tốc còn lại · `place` = hạng hiện tại · `lostTo` = đối thủ đã cán
+     đích trước (chỉ có ở nhánh thua vì đối thủ). */
+  var rivals=[], boost=0, boostT=0, place=1, lostRace=false, lostTo=null, ledOnce=false;
   var best=readBest(), newBest=false, lastPaid=0, last=0;
 
   function readBest(){
@@ -367,6 +543,63 @@
                 a:0.14+Math.random()*0.45, sp:0.35+Math.random()*1.1 });
   }
   initSky();
+
+  /* ===== Đối thủ + tăng tốc ===== */
+  function initRivals(){
+    rivals=[];
+    for(var i=0;i<CONFIG.rivals.length;i++){
+      var r=CONFIG.rivals[i], L=(i+2)%CONFIG.lanes;
+      rivals.push({ id:r.id, f:r.f, c:r.c, bEvery:r.bEvery, bMs:r.bMs, bMul:r.bMul,
+                    dist:0, lane:L, ly:laneY(L), bT:0, nextB:r.bEvery,
+                    lt:0.8+i*0.5 });
+    }
+  }
+  function rivalName(r){ return r ? t("rv_"+r.id) : ""; }
+
+  /* Tốc độ THẬT của trẻ lúc này = tốc độ gốc × hệ số tăng tốc. Dùng cho quãng
+     đường VÀ cho việc cuộn cả sân — không cuộn nhanh theo thì bấm tăng tốc không
+     thấy gì xảy ra, mà một skill không nhìn thấy thì trẻ không tin là nó có. */
+  function vNow(){ return speed*(boostT>0?CONFIG.boostMul:1); }
+
+  /* ⚠️ TRẺ TỰ BẤM, hàm này KHÔNG tự chạy. Ba lớp chặn, mỗi lớp một lý do:
+     đang tăng tốc rồi thì bấm nữa là mất phí nhiên liệu mà không được gì · chưa
+     nạp đủ thì NÓI RA (nút vô hiệu mà im lặng là trẻ tưởng game lỗi) · và chỉ
+     trong lúc chơi. */
+  function fireBoost(){
+    if(state!=="play" || boostT>0) return false;
+    if(boost<CONFIG.boostNeed){ toast(t("boost_wait"),"bad"); return false; }
+    boost=0; boostT=CONFIG.boostMs/1000;
+    fuel=Math.max(0, fuel-CONFIG.boostFuel);
+    SFX.boost(); toast(t("boost_go"),"ok");
+    if(window.AstroQGameShell) AstroQGameShell.mate("cheer");
+    paintHud();
+    return true;
+  }
+
+  /* Đối thủ đổi làn thưa thớt. Hai thứ phải tránh, và cái thứ hai chỉ soi ảnh chụp
+     mới thấy:
+       ① làn có đá ngay trước mặt — một con tàu bay xuyên qua thiên thạch thì trẻ
+          đọc ra là "game không có luật";
+       ② làn đang có ĐỐI THỦ KHÁC ở sát bên. Bản đầu bỏ qua điều này và render ra
+          **cả ba đối thủ chồng lên nhau trong một làn**, ba cái tên nhoè thành một
+          cục chữ không đọc được — nhìn ra một vật thể lạ chứ không ra ba tay đua. */
+  function pickRivalLane(r){
+    var sx=CONFIG.shipX+(r.dist-dist), free=[], i, L, bad;
+    for(L=0;L<CONFIG.lanes;L++){
+      bad=false;
+      for(i=0;i<items.length && !bad;i++){
+        var o=items[i];
+        if(o.kind==="rock" && o.lane===L && Math.abs(o.x-sx)<90) bad=true;
+      }
+      for(i=0;i<rivals.length && !bad;i++){
+        var q=rivals[i];
+        if(q!==r && q.lane===L && Math.abs((q.dist-r.dist))<70) bad=true;
+      }
+      if(!bad) free.push(L);
+    }
+    if(!free.length) return r.lane;
+    return free[Math.floor(Math.random()*free.length)];
+  }
 
   /* ===== Ví ===== */
   function paintBalance(){ $("bal").textContent = Economy.getAsteroids(); }
@@ -442,6 +675,17 @@
     chip.classList.toggle("warn", f<=CONFIG.warnAt && f>CONFIG.lowAt);
     chip.classList.toggle("low", f<=CONFIG.lowAt);
     $("chip-dist").classList.toggle("half", dist>=CONFIG.raceLen/2);
+
+    // Hạng + thanh nạp tăng tốc
+    setTxt("hb-place", state==="play"
+      ? t("place_v").replace("{n}", place).replace("{t}", rivals.length+1)
+      : "—");
+    $("chip-place").classList.toggle("lead", state==="play" && place===1);
+    var bp=Math.round(Math.min(100, boost/CONFIG.boostNeed*100));
+    if(hudCache["bfill"]!==bp){ hudCache["bfill"]=bp; $("boost-fill").style.width=bp+"%"; }
+    var bb=$("btn-boost"), rdy=(boost>=CONFIG.boostNeed && boostT<=0);
+    bb.disabled = !(state==="play" && rdy);
+    bb.classList.toggle("ready", state==="play" && rdy);
     paintLevel();
   }
   function paintLevel(){
@@ -460,6 +704,7 @@
   function hideOv(id){ $(id).classList.remove("show"); }
   function hideAllOv(){ ["ov-start","ov-over","ov-need","ov-pause"].forEach(hideOv); }
   function syncBtns(){
+    $("btn-boost").classList.toggle("is-hidden", !(state==="play"||state==="paused"));
     $("btn-pause").classList.toggle("is-hidden", !(state==="play"||state==="paused"));
     $("btn-pause").classList.toggle("off", state==="paused");
     $("btn-sfx").classList.toggle("off", !sfxOn());
@@ -482,6 +727,8 @@
     dist=0; speed=CONFIG.speed0; fuel=CONFIG.fuel0; mined=0; elapsed=0;
     nextCluster=CONFIG.clusterEvery; nextPick=CONFIG.pickEvery;
     won=false; lowWarned=false; hurtT=0; shakeT=0; winBonus=0; newBest=false;
+    boost=0; boostT=0; place=1; lostRace=false; lostTo=null; ledOnce=false;
+    initRivals();
     hudCache={};
     hideAllOv();
     state="play"; last=0; syncBtns(); paintHud();
@@ -491,15 +738,21 @@
   /* ⚠️ CẠN NHIÊN LIỆU VẪN ĐƯỢC THƯỞNG TINH THỂ ĐÃ THU. Trẻ bỏ 5 tt vào cửa; cho về
      tay không là biến một lượt học thành một lượt mất tiền. Chỉ **thưởng về đích**
      là thứ phải đổi bằng việc về đích — và bảng kết quả nói rõ điều đó. */
-  function endRound(win){
-    state="over"; won=!!win;
+  /* `res` = "win" | "lost" | "dry". Ba kết cục nói ba điều khác nhau, và trước
+     21/08/2026 chỉ có hai — thêm đối thủ là thêm một cách thua mà bảng kết quả
+     phải gọi đúng tên, không thì trẻ về nhì mà đọc ra "cạn nhiên liệu". */
+  function endRound(res){
+    state="over"; won=(res==="win"); lostRace=(res==="lost");
+    if(won) place=1;               // cán đích trước thì hạng 1, khỏi phụ thuộc khung
     winBonus = won ? CONFIG.rewardFinish + Math.floor(Math.max(0,fuel)/25) : 0;
     var total=mined+winBonus;
     newBest=saveBest(Math.round(Math.min(dist,CONFIG.raceLen)));
     lastPaid=onFinishGame(total, Math.min(dist,CONFIG.raceLen), elapsed);
 
-    $("over-tag").textContent = won ? "[ RACE_WON ]" : "[ OUT_OF_FUEL ]";
-    $("over-ic").textContent  = won ? "🏁" : "⛽";
+    $("over-tag").textContent = won ? "[ RACE_WON ]" : (lostRace ? "[ RACE_LOST ]" : "[ OUT_OF_FUEL ]");
+    $("over-ic").textContent  = won ? "🏁" : (lostRace ? "🥈" : "⛽");
+    $("r-place").textContent  = t("place_v").replace("{n}", place)
+                                            .replace("{t}", rivals.length+1);
     $("r-dist").textContent   = fmtM(Math.min(dist,CONFIG.raceLen));
     $("r-time").textContent   = fmtTime(elapsed);
     $("r-best").textContent   = best>0 ? fmtM(best) : "—";
@@ -508,15 +761,20 @@
     syncBtns(); paintLevel();
     showOv("ov-over");
     if(won) SFX.win(); else SFX.dry();
+    if(!won && window.AstroQGameShell) AstroQGameShell.mate("oops");
     if(newBest) toast(t("best_toast"), "ok");
   }
   /* Ba dòng dưới do JS sinh → `applyTexts` không với tới, phải vẽ lại khi đổi ngôn
      ngữ (bài học dòng thưởng của ARCADE-01 từng không đổi tiếng). */
   function paintOver(){
-    $("over-title").textContent = won ? t("win_title") : t("lose_title");
+    $("over-title").textContent = won ? t("win_title")
+      : (lostRace ? t("lost_title") : t("lose_title"));
+    var togo = fmtM(Math.max(0,CONFIG.raceLen-dist)).replace(" m","");
     $("over-sub").textContent = won
       ? t("win_sub").replace("{n}", fmtM(CONFIG.raceLen).replace(" m",""))
-      : t("lose_sub").replace("{n}", fmtM(CONFIG.raceLen-dist).replace(" m",""));
+      : (lostRace
+          ? t("lost_sub").replace("{r}", rivalName(lostTo)).replace("{n}", togo)
+          : t("lose_sub").replace("{n}", togo));
   }
   function paintWhy(){
     $("why").textContent = won
@@ -559,7 +817,12 @@
     elapsed+=dt;
     // Tốc độ BÒ DẦN lên trần — đặt thẳng thì cả màn hình giật một nhịp (ARCADE-01)
     speed += (CONFIG.speedMax-speed)*Math.min(1, CONFIG.speedRamp*dt);
-    dist  += speed*dt;
+    if(boostT>0) boostT=Math.max(0, boostT-dt);
+    /* ⚠️ `speed` GIỮ NGUYÊN LÀ TỐC ĐỘ GỐC, tăng tốc chỉ là một hệ số nhân đọc ra
+       ở `vNow()`. Nhân thẳng vào `speed` thì đối thủ (dùng `speed` làm nền) cũng
+       nhanh lên theo, tức bấm tăng tốc không thu hẹp được khoảng cách nào. */
+    var v=vNow();
+    dist  += v*dt;
     fuel  -= CONFIG.fuelDrain*dt;
 
     if(hop){ hop.t += dt*1000; if(hop.t>=CONFIG.hopMs) hop=null; }
@@ -572,7 +835,7 @@
     var sy=shipY(), sx=CONFIG.shipX, halfW=CONFIG.shipW/2, halfH=CONFIG.shipH/2;
     for(var i=items.length-1;i>=0;i--){
       var o=items[i];
-      o.x -= speed*dt;
+      o.x -= v*dt;
       if(o.x < -60){ items.splice(i,1); continue; }
       if(o.hit) continue;
 
@@ -600,6 +863,9 @@
         lowWarned=false;        // nạp rồi thì cho phép nhắc lại nếu cạn lần nữa
       } else {
         mined++; burst(o.x, laneY(o.lane), "#c084fc", 16);
+        /* Tinh thể nay làm HAI việc: vào ví tạm, và nạp thanh tăng tốc. Đó là chỗ
+           nối skill mới vào thứ game đã có, thay vì thêm một loại vật phẩm nữa. */
+        boost=Math.min(CONFIG.boostNeed, boost+CONFIG.boostPerGem);
         SFX.gem(); toast(t("gem_toast").replace("{tt}","{tt}"), "ok");
         items.splice(i,1);
       }
@@ -616,19 +882,52 @@
 
     if(!lowWarned && fuel<=CONFIG.lowAt && fuel>0){ lowWarned=true; toast(t("low_toast"), "bad"); }
 
+    /* ===== Đối thủ =====
+       Mỗi đối thủ có quãng đường RIÊNG; vị trí trên màn hình là hiệu số với trẻ
+       (`shipX + (r.dist - dist)`), nên vượt lên là thấy nó trôi sang phải và bị
+       vượt là thấy nó tụt sang trái — không cần một cơ chế thứ hai nào để diễn tả.
+       ⛔ ĐỪNG cho tốc độ đối thủ phụ thuộc khoảng cách với trẻ ("rubber-banding").
+          Nó làm cuộc đua lúc nào cũng sát nút, nhưng đổi lại mọi cố gắng của trẻ
+          đều bị hệ thống bù trừ — tức skill mất tác dụng, đúng thứ vừa dựng ra để
+          có. Cho `f` cố định thì đường đua ĐO ĐƯỢC (xem sim_racer.py). */
+    for(var k=0;k<rivals.length;k++){
+      var r=rivals[k];
+      if(r.bT>0) r.bT=Math.max(0, r.bT-dt);
+      else if(r.dist>=r.nextB){ r.nextB+=r.bEvery; r.bT=r.bMs/1000; }
+      r.dist += speed*r.f*(r.bT>0?r.bMul:1)*dt;
+      r.lt-=dt;
+      if(r.lt<=0){ r.lt=1.3+Math.random()*1.4; r.lane=pickRivalLane(r); }
+      r.ly += (laneY(r.lane)-r.ly)*Math.min(1, dt*7);
+    }
+    var ahead=0;
+    for(k=0;k<rivals.length;k++) if(rivals[k].dist>dist) ahead++;
+    place=ahead+1;
+    /* Nói MỘT LẦN khi trẻ vượt lên dẫn đầu — đó là khoảnh khắc đáng thưởng. Mốc
+       2.000 m để nó không nổ ngay vạch xuất phát, lúc ai cũng đang ở 0. */
+    if(place===1 && !ledOnce && dist>2000){
+      ledOnce=true; toast(t("lead_toast"), "ok");
+      if(window.AstroQGameShell) AstroQGameShell.mate("cheer");
+    }
+
     paintHud();
-    if(dist>=CONFIG.raceLen){ dist=CONFIG.raceLen; endRound(true); return; }
-    if(fuel<=0){ fuel=0; paintHud(); endRound(false); return; }
+    /* ⚠️ KIỂM TRẺ TRƯỚC ĐỐI THỦ: cùng một khung hình mà cả hai qua vạch thì phần
+       thắng về trẻ. Một trận sát nút xử theo hướng có lợi cho người chơi. */
+    if(dist>=CONFIG.raceLen){ dist=CONFIG.raceLen; endRound("win"); return; }
+    for(k=0;k<rivals.length;k++){
+      if(rivals[k].dist>=CONFIG.raceLen){ lostTo=rivals[k]; endRound("lost"); return; }
+    }
+    if(fuel<=0){ fuel=0; paintHud(); endRound("dry"); return; }
   }
 
   /* ===== Vẽ ===== */
   function drawBg(){
     ctx.fillStyle=bgGrad||"#0b0f19"; ctx.fillRect(0,0,VW,VH);
     // Sao nền trôi ngược để thấy mình đang bay (parallax một lớp, rẻ)
+    var vb=(state==="play")?vNow():speed;
     for(var i=0;i<bg.length;i++){
       var s=bg[i];
       if(state==="play"){
-        s.x -= speed*s.sp*0.02;
+        s.x -= vb*s.sp*0.02;
         if(s.x < -2){ s.x=VW+2; s.y=Math.random()*VH; }
       }
       ctx.globalAlpha=s.a; ctx.fillStyle="#eaf1ff";
@@ -679,6 +978,11 @@
       if(o.kind==="rock"){
         glow(o.x,y,o.r*1.5,"rgba(180,190,220,.22)","rgba(180,190,220,0)");
         ctx.save(); ctx.translate(o.x,y); ctx.rotate(o.spin + (REDUCE?0:elapsed*0.6));
+        if(ART.rock.ok){
+          drawArt(ART.rock, 0, 0, o.r*2*CONFIG.hitFit, o.r*2*CONFIG.hitFit);
+          ctx.restore();
+          continue;
+        }
         ctx.beginPath();
         for(var k=0;k<9;k++){
           var a=k/9*TAU, rr=o.r*(0.84+((k*37)%13)/13*0.24);
@@ -693,6 +997,10 @@
         ctx.restore();
       } else if(o.kind==="can"){
         glow(o.x,y,o.r*1.8,"rgba(99,230,168,.5)","rgba(99,230,168,0)");
+        if(ART.can.ok){
+          drawArt(ART.can, o.x, y, o.r*2*CONFIG.hitFit, o.r*2*CONFIG.hitFit);
+          continue;
+        }
         ctx.fillStyle="#63e6a8";
         if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(o.x-o.r*0.62,y-o.r,o.r*1.24,o.r*2,5); ctx.fill(); }
         else ctx.fillRect(o.x-o.r*0.62,y-o.r,o.r*1.24,o.r*2);
@@ -701,19 +1009,296 @@
       } else {
         var k2 = REDUCE ? 1 : 0.9+0.1*Math.sin(elapsed*3.6+o.ph);
         glow(o.x,y,o.r*2,"rgba(192,132,252,.55)","rgba(192,132,252,0)");
-        ctx.fillStyle="#c084fc";
-        ctx.beginPath();
-        ctx.moveTo(o.x,y-o.r*k2); ctx.lineTo(o.x+o.r*0.74*k2,y);
-        ctx.lineTo(o.x,y+o.r*k2); ctx.lineTo(o.x-o.r*0.74*k2,y);
-        ctx.closePath(); ctx.fill();
+        if(gemReady){
+          /* 2,6× bán kính: viên vẽ ra ~36px ở hệ ảo, đủ đọc ra hình. Nhịp nhấp
+             nháy giữ nguyên nên `prefers-reduced-motion` vẫn đứng yên. */
+          var gs=o.r*2.6*k2;
+          ctx.drawImage(gemImg, o.x-gs/2, y-gs/2, gs, gs);
+        } else {
+          ctx.fillStyle="#c084fc";
+          ctx.beginPath();
+          ctx.moveTo(o.x,y-o.r*k2); ctx.lineTo(o.x+o.r*0.74*k2,y);
+          ctx.lineTo(o.x,y+o.r*k2); ctx.lineTo(o.x-o.r*0.74*k2,y);
+          ctx.closePath(); ctx.fill();
+        }
       }
     }
+  }
+
+  /* ===== Đối thủ =====
+     BA DÁNG TÀU KHÁC NHAU, vẽ bằng code (0 byte tải thêm) — cùng lối đã dùng cho
+     Trái Đất của `js/warp-screen.js` và 21 bức SVG mẫu vật.
+     ⚠️ HÌNH Ở ĐÂY, LUẬT Ở `CONFIG.rivals`. `RIVAL_ART` chỉ giữ DÁNG và hai tông
+        màu; `f`/`bEvery`/`bMs`/`bMul` vẫn nằm nguyên trong CONFIG vì
+        `scratchpad/sim_racer.py` đọc thẳng bộ số đó để đo cân bằng — trộn màu vào
+        đấy là một lần chỉnh màu cũng đòi chạy lại bộ đo cân bằng.
+     ⚠️ BA DÁNG, KHÔNG PHẢI MỘT HÌNH NÊM ĐỔI MÀU. Trẻ phân biệt được cả khi không
+        đọc được màu, và ba cái tên mới đọc ra là ba tay đua chứ không ra ba bản
+        sao. Dáng khác nhau ở SILHOUETTE (mũi kim / thân kép / cánh delta) vì đó
+        là thứ đọc được ở cỡ nhỏ; chi tiết bên trong thì không.
+     ⚠️ KHÔNG `shadowBlur` — vẽ 60 lần/giây (bài học ARCADE-01/04). Hào quang và
+        miệng ống đẩy dùng `glow()` gradient sẵn có.
+     ⚠️ BUỒNG LÁI LÀ KÍNH SÁNG NHỎ, ĐẶT LỆCH VỀ MŨI. Một khối TỐI to ở giữa thân
+        làm hình đọc ra thành CÁI NƠ — lỗi đã trả giá ở bản nêm đầu tiên (21/08).
+     ⚠️ ĐỐI THỦ KHÔNG CÓ VA CHẠM nên cỡ vẽ không ràng buộc luật chơi; nhưng vẫn
+        giữ trong khoảng một làn (VH/4 = 125px) để không lấn sang làn bên. */
+  var RIVAL_ART = {
+    blaze: { hi:"#ffd9c2", lo:"#b8461a", kind:"dart"  },
+    ember: { hi:"#fff3cf", lo:"#b8790a", kind:"twin"  },
+    dust:  { hi:"#e2f5ff", lo:"#2a72a8", kind:"delta" }
+  };
+
+  /* Thân tàu. Mũi LUÔN chỉ sang PHẢI (hướng đua) — đó là thứ nói cho trẻ biết
+     vật thể này đang chạy cùng chiều với mình, không phải chướng ngại. */
+  function rivalBody(x,y,w,h,kind){
+    ctx.beginPath();
+    if(kind==="dart"){                       // mũi kim dài, thân mảnh
+      ctx.moveTo(x+w*0.52, y);
+      ctx.lineTo(x+w*0.06, y-h*0.28);
+      ctx.lineTo(x-w*0.34, y-h*0.24);
+      ctx.lineTo(x-w*0.48, y-h*0.10);
+      ctx.lineTo(x-w*0.48, y+h*0.10);
+      ctx.lineTo(x-w*0.34, y+h*0.24);
+      ctx.lineTo(x+w*0.06, y+h*0.28);
+    } else if(kind==="twin"){                // thân bầu, đuôi chẻ đôi
+      ctx.moveTo(x+w*0.50, y);
+      ctx.lineTo(x+w*0.04, y-h*0.32);
+      ctx.lineTo(x-w*0.28, y-h*0.32);
+      ctx.lineTo(x-w*0.44, y-h*0.14);
+      ctx.lineTo(x-w*0.30, y);
+      ctx.lineTo(x-w*0.44, y+h*0.14);
+      ctx.lineTo(x-w*0.28, y+h*0.32);
+      ctx.lineTo(x+w*0.04, y+h*0.32);
+    } else {                                 // delta: mũi tù, thân dẹt rộng
+      ctx.moveTo(x+w*0.50, y-h*0.07);
+      ctx.lineTo(x+w*0.50, y+h*0.07);
+      ctx.lineTo(x-w*0.06, y+h*0.24);
+      ctx.lineTo(x-w*0.48, y+h*0.18);
+      ctx.lineTo(x-w*0.40, y);
+      ctx.lineTo(x-w*0.48, y-h*0.18);
+      ctx.lineTo(x-w*0.06, y-h*0.24);
+    }
+    ctx.closePath();
+  }
+
+  /* Cánh — vẽ TRƯỚC thân và tông thâm hơn, nên thân đè lên và tàu có chiều sâu.
+     Giữ trong ±0.62h để còn chỗ cho cái tên phía trên. */
+  function rivalWings(x,y,w,h,kind){
+    ctx.beginPath();
+    if(kind==="dart"){                       // hai cánh delta xuôi hẳn ra sau
+      ctx.moveTo(x-w*0.04, y-h*0.14); ctx.lineTo(x-w*0.40, y-h*0.62);
+      ctx.lineTo(x-w*0.54, y-h*0.56); ctx.lineTo(x-w*0.26, y-h*0.04);
+      ctx.closePath();
+      ctx.moveTo(x-w*0.04, y+h*0.14); ctx.lineTo(x-w*0.40, y+h*0.62);
+      ctx.lineTo(x-w*0.54, y+h*0.56); ctx.lineTo(x-w*0.26, y+h*0.04);
+      ctx.closePath();
+    } else if(kind==="twin"){                // hai bầu động cơ trên–dưới
+      ctx.moveTo(x-w*0.02, y-h*0.28); ctx.lineTo(x-w*0.34, y-h*0.60);
+      ctx.lineTo(x-w*0.50, y-h*0.50); ctx.lineTo(x-w*0.50, y-h*0.24);
+      ctx.closePath();
+      ctx.moveTo(x-w*0.02, y+h*0.28); ctx.lineTo(x-w*0.34, y+h*0.60);
+      ctx.lineTo(x-w*0.50, y+h*0.50); ctx.lineTo(x-w*0.50, y+h*0.24);
+      ctx.closePath();
+    } else {                                 // delta: một cặp cánh rộng bè ra
+      ctx.moveTo(x+w*0.10, y-h*0.10); ctx.lineTo(x-w*0.18, y-h*0.58);
+      ctx.lineTo(x-w*0.46, y-h*0.52); ctx.lineTo(x-w*0.34, y-h*0.08);
+      ctx.closePath();
+      ctx.moveTo(x+w*0.10, y+h*0.10); ctx.lineTo(x-w*0.18, y+h*0.58);
+      ctx.lineTo(x-w*0.46, y+h*0.52); ctx.lineTo(x-w*0.34, y+h*0.08);
+      ctx.closePath();
+    }
+  }
+
+  function drawRivalShip(x, y, r, on){
+    var art=RIVAL_ART[r.id] || RIVAL_ART.dust, k=art.kind;
+    var w=CONFIG.shipW*0.94, h=CONFIG.shipH*0.94;
+
+    /* ⚠️ ĐO CỠ HÌNH TRƯỚC KHI VẼ VỆT ĐUÔI. Art vẽ tay cao 18,8–23,6 đơn vị ảo,
+       còn bản vẽ code cao 28,2 — dùng `h` cho cả hai thì vệt đuôi xuất phát
+       LỆCH khỏi ống đẩy của art, và ở tàu dẹt nhất nó bắt đầu ngay giữa thân
+       (soi ảnh chụp mới thấy). `bw`/`bh` là cỡ THẬT của hình đang vẽ. */
+    var sp=ART.rivals[r.id], useArt=!!(sp && sp.ok);
+    var bw=useArt?CONFIG.shipW:w, bh=useArt?(CONFIG.shipW/sp.ar):h;
+
+    /* Vệt đuôi — dài hẳn ra khi nó đang tăng tốc, để trẻ THẤY đối thủ cũng có skill */
+    var tl=bw*(on?1.55:0.62), tx=x-bw*0.46;
+    var g=ctx.createLinearGradient(tx-tl,y,tx,y);
+    g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(1,r.c);
+    ctx.globalAlpha=on?0.85:0.5;
+    ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(tx, y-bh*0.22); ctx.lineTo(tx-tl, y);
+    ctx.lineTo(tx, y+bh*0.22);
+    ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
+
+    /* Quầng khi tăng tốc. Hạ 0.8w → 0.66w sau khi soi ảnh: từ lúc tàu có chi
+       tiết thì một quầng đường kính 84px (làn chỉ cao 125px) phủ mờ hết phần
+       chi tiết vừa vẽ — mà ba đối thủ có thể cùng tăng tốc một lúc. */
+    if(on) glow(x, y, bw*0.66, "rgba(255,255,255,.38)", "rgba(255,255,255,0)");
+
+    /* Art vẽ tay: ép theo chiều DÀI = `shipW` (bằng Luna), chiều cao suy từ tỉ lệ
+       ảnh nên không bao giờ bóp méo. Tên vẽ theo chiều cao THẬT của hình, không
+       theo `h` của bản vẽ code — không thì nó đè lên mũi tàu. */
+    if(useArt){
+      ctx.drawImage(sp.img, x-bw/2, y-bh/2, bw, bh);
+      /* Miệng ống đẩy rực lên khi tăng tốc. Art đã vẽ sẵn ống đẩy, nhưng ở trạng
+         thái boost thì cần một đốm sáng THÊM — không có nó thì thứ duy nhất nói
+         "đối thủ đang tăng tốc" là cái vệt dài, mà vệt thì luôn có. */
+      if(on) glow(x-bw*0.46, y, bh*0.34, "rgba(255,255,255,.85)",
+                  "rgba(255,255,255,0)");
+      ctx.fillStyle="rgba(234,241,255,.88)";
+      ctx.fillText(rivalName(r), x, y-bh/2-7);
+      return;
+    }
+
+    ctx.fillStyle=art.lo;
+    rivalWings(x,y,w,h,k); ctx.fill();
+    ctx.strokeStyle="rgba(10,16,34,.7)"; ctx.lineWidth=1; ctx.stroke();
+
+    /* Thân: gradient DỌC (đỉnh sáng → đáy thâm) cho ra khối tròn, không phẳng như
+       một miếng giấy dán — đó là chỗ khác nhau giữa "một hình nêm" và "một cái tàu". */
+    var bg=ctx.createLinearGradient(0, y-h*0.34, 0, y+h*0.34);
+    bg.addColorStop(0, art.hi); bg.addColorStop(0.46, r.c); bg.addColorStop(1, art.lo);
+    ctx.fillStyle=bg;
+    rivalBody(x,y,w,h,k); ctx.fill();
+    ctx.strokeStyle="rgba(10,16,34,.82)"; ctx.lineWidth=1.25; ctx.stroke();
+
+    /* Hai vạch sơn — một sáng ở mép trên, một thâm chạy giữa thân. Vạch thứ hai
+       là thứ cho tàu nhiều LỚP: chỉ một vạch thì thân vẫn đọc ra một mảng phẳng. */
+    ctx.globalAlpha=0.55; ctx.strokeStyle=art.hi; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x+w*0.28, y-h*0.12); ctx.lineTo(x-w*0.26, y-h*0.19);
+    ctx.stroke();
+    ctx.globalAlpha=0.4; ctx.strokeStyle="rgba(10,16,34,.9)";
+    ctx.beginPath();
+    ctx.moveTo(x+w*0.34, y+h*0.03); ctx.lineTo(x-w*0.30, y+h*0.07);
+    ctx.stroke(); ctx.globalAlpha=1;
+
+    /* Kính buồng lái — GIỌT DÀI THEO TRỤC THÂN, lệch hẳn về mũi.
+       ⚠️ Bản đầu để `rx=0.085w, ry=0.15h` (gần tròn) và soi ảnh chụp thì nó đọc
+          ra thành MỘT ĐẦU ĐINH TÁN — hoặc một con mắt — nằm giữa thân. Canopy
+          thật dài theo hướng bay, nên `rx` phải lớn hơn `ry`; cộng một chấm sáng
+          lệch góc trên để ra chất kính chứ không ra khối đặc. */
+    var cg=ctx.createLinearGradient(0, y-h*0.20, 0, y+h*0.08);
+    cg.addColorStop(0,"rgba(240,251,255,.97)"); cg.addColorStop(1,"rgba(72,158,220,.8)");
+    ctx.fillStyle=cg;
+    ctx.beginPath();
+    ctx.ellipse(x+w*0.19, y-h*0.05, w*0.15, h*0.115, 0, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle="rgba(10,16,34,.72)"; ctx.lineWidth=0.9; ctx.stroke();
+    ctx.fillStyle="rgba(255,255,255,.9)";
+    ctx.beginPath();
+    ctx.ellipse(x+w*0.23, y-h*0.09, w*0.045, h*0.035, 0, 0, TAU);
+    ctx.fill();
+
+    /* Miệng ống đẩy — đốm sáng NGAY SAU đuôi, rực lên khi tăng tốc.
+       ⚠️ Bản đầu đặt nó ở `x-0.45w`, tức NẰM TRONG thân (thân kéo tới −0.48w), nên
+          soi ảnh chụp thấy một khối trắng nhoè giữa thân — đọc ra như tàu bị một
+          vệt sáng đâm xuyên. Đặt ra ngoài mép đuôi thì nó là ống đẩy.
+       `twin` có HAI cái, đúng với cái đuôi chẻ đôi của nó. */
+    var noz = (k==="twin")
+      ? [[x-w*0.52, y-h*0.15], [x-w*0.52, y+h*0.15]]
+      : [[x-w*0.54, y]];
+    for(var n=0;n<noz.length;n++){
+      glow(noz[n][0], noz[n][1], on?h*0.40:h*0.22,
+           on?"rgba(255,255,255,.9)":r.c, "rgba(255,255,255,0)");
+    }
+
+    /* Tên — trên đỉnh cánh, không đè vào tàu */
+    ctx.fillStyle="rgba(234,241,255,.88)";
+    ctx.fillText(rivalName(r), x, y-h*0.82);
+  }
+
+  function drawRivals(){
+    if(!rivals.length) return;
+    ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+    ctx.font="600 10px 'Space Grotesk', system-ui, sans-serif";
+    for(var i=0;i<rivals.length;i++){
+      var r=rivals[i], x=CONFIG.shipX+(r.dist-dist);
+      if(x < -90 || x > VW+90) continue;                 // ngoài khung thì khỏi vẽ
+      drawRivalShip(x, r.ly, r, r.bT>0);
+    }
+  }
+
+  /* ===== Dải đua ở đầu sân =====
+     Trả lời "ai đang dẫn" bằng HÌNH. Chip Hạng nói bằng số, nhưng một con số không
+     cho biết còn cách nhau bao xa — mà đó chính là thứ quyết định trẻ có nên tiêu
+     nhiên liệu để tăng tốc ngay bây giờ hay không.
+     ⚠️ KHÔNG dùng emoji (🏁) trên canvas: mỗi hệ điều hành vẽ emoji bằng phông của
+        riêng nó nên cùng một dòng mã ra ba bức tranh khác nhau — bài học của 21
+        bức SVG mẫu vật. Vạch đích vẽ bằng ô vuông đen-trắng như trên đường đua. */
+  function drawStrip(){
+    if(state==="start" || !rivals.length) return;
+    var x0=72, x1=VW-72, y=52, w=x1-x0, i;
+    ctx.strokeStyle="rgba(140,190,255,.26)"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+    for(i=0;i<4;i++){                                    // vạch đích ở mút phải
+      ctx.fillStyle=(i%2===0)?"#eaf1ff":"#1b2440";
+      ctx.fillRect(x1, y-8+i*4, 5, 4);
+    }
+    function at(d){ return x0 + Math.max(0,Math.min(1,d/CONFIG.raceLen))*w; }
+    for(i=0;i<rivals.length;i++){
+      ctx.fillStyle=rivals[i].c;
+      ctx.beginPath(); ctx.arc(at(rivals[i].dist), y, 4.2, 0, TAU); ctx.fill();
+    }
+    /* Dấu của TRẺ là một TAM GIÁC nằm TRÊN vạch, chỉ xuống chỗ của mình.
+       ⚠️ Bản đầu vẽ nó thành một đĩa tròn to hơn đặt ngay trên vạch — soi ảnh chụp
+          thì đoạn đầu đường đua (lúc cả bốn còn sát nhau) nó **che kín ba dấu đối
+          thủ**, tức đúng lúc trẻ cần biết mình đang thứ mấy thì dải đua chỉ hiện
+          một cái dấu. Đặt lệch lên trên thì bốn dấu không bao giờ chồng nhau mà vị
+          trí ngang — thứ mang thông tin — vẫn y nguyên. */
+    var px=at(dist);
+    ctx.fillStyle="#bfefff";
+    ctx.beginPath();
+    ctx.moveTo(px, y-4.5); ctx.lineTo(px-5.4, y-12.5); ctx.lineTo(px+5.4, y-12.5);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#ffffff"; ctx.lineWidth=1.4; ctx.stroke();
+  }
+
+  /* ===== Tên tàu của trẻ =====
+     Mặc định `t("ship_name")` = "Luna"; trẻ đặt tên ở Kho Trang Trí thì lấy tên đó.
+     ⚠️ KHÔNG dựng cơ chế tên thứ hai: tên phi thuyền đã tồn tại từ 13/08/2026, lưu
+        ở `PROGRESS.ship` trên server và đọc bằng `AstroQCos.ship()`. Trần LƯU là
+        **24 ký tự**, khai ở `MeEndpoints.cs` và `maxlength` của `shop.html` — đừng
+        khai một con số thứ ba ở đây. */
+  function myShipName(){
+    var s="";
+    try{
+      if(window.AstroQCos && AstroQCos.ship) s=String(AstroQCos.ship()||"").trim();
+    }catch(e){}
+    return s || t("ship_name");
+  }
+
+  /* ⚠️⚠️ CẮT THEO CHIỀU RỘNG ĐO ĐƯỢC, KHÔNG CẮT THEO SỐ KÝ TỰ. Số ký tự không nói
+     lên chiều rộng: đo trên chính canvas này ở `600 10px`, 24 chữ M rộng **210,7**
+     đơn vị ảo (3,8 lần chiều dài tàu) trong khi 15 ký tự "Tàu Của Bin Nhỏ" chỉ
+     **76,7**. Cắt theo số ký tự thì hoặc chặn oan tên hẹp, hoặc để tên rộng trải
+     kín vùng vật phẩm.
+     Trần = 1,4 × chiều dài tàu (78,4) — vừa trên tên đối thủ dài nhất ("Sao Băng"
+     = 44,8) cộng biên, nên bốn cái tên trên sân đọc ra cùng một cỡ.
+     ⚠️ Phải gọi SAU khi đã đặt `ctx.font`, không thì `measureText` đo bằng phông
+        mặc định của canvas và trần thành vô nghĩa. */
+  function fitLabel(str, max){
+    if(ctx.measureText(str).width <= max) return str;
+    var out=str;
+    while(out.length > 1 && ctx.measureText(out+"…").width > max){
+      out=out.slice(0,-1);
+    }
+    return out+"…";
+  }
+
+  function shipLabel(){
+    ctx.font="600 10px 'Space Grotesk', system-ui, sans-serif";
+    return fitLabel(myShipName(), CONFIG.shipW*1.4);
   }
 
   function drawShip(){
     var x=CONFIG.shipX, y=shipY(), w=CONFIG.shipW, h=CONFIG.shipH;
     // Vệt đuôi: dài theo tốc độ, tông tím như phi thuyền Luna của ARCADE-01
     var tl=w*(0.7+0.5*(speed-CONFIG.speed0)/Math.max(1,CONFIG.speedMax-CONFIG.speed0));
+    if(boostT>0) tl*=1.9;          // đang tăng tốc: vệt dài hẳn ra, thấy được ngay
     var g=ctx.createLinearGradient(x-w/2-tl,y,x-w/2,y);
     g.addColorStop(0,"rgba(168,85,247,0)"); g.addColorStop(1,"rgba(200,140,255,.75)");
     ctx.globalCompositeOperation="lighter";
@@ -724,6 +1309,7 @@
     ctx.globalCompositeOperation="source-over";
 
     glow(x,y,w*0.7,"rgba(56,189,248,.4)","rgba(56,189,248,0)");
+    if(boostT>0) glow(x,y,w*1.05,"rgba(196,181,253,.55)","rgba(196,181,253,0)");
 
     if(spriteReady){
       /* ⚠️ VỪA BỊ ĐÂM THÌ BÁO BẰNG QUẦNG SÁNG ĐỎ, KHÔNG TÔ ĐỎ THÂN TÀU. Ảnh PNG
@@ -746,6 +1332,15 @@
       ctx.fillStyle="#0e1a2f";
       ctx.beginPath(); ctx.ellipse(x+w*0.1,y,w*0.12,h*0.24,0,0,TAU); ctx.fill();
     }
+
+    /* Tên tàu — cùng chỗ, cùng cỡ chữ với tên ba đối thủ, nhưng tông CYAN của
+       chính trẻ (`#bfefff`, đúng màu cái dấu tam giác của nó trên dải đua) thay vì
+       trắng ngà. Bốn cái tên cùng kiểu thì đọc ra "bốn tay đua"; màu khác nói
+       "cái này là mình". */
+    var lb=shipLabel(), lh=spriteReady?SPR.h:h;
+    ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+    ctx.fillStyle="#bfefff";
+    ctx.fillText(lb, x, y-lh/2-7);
   }
 
   function drawParts(){
@@ -763,7 +1358,7 @@
       var s=shakeT*9;
       ctx.translate((Math.random()-0.5)*s,(Math.random()-0.5)*s);
     }
-    drawBg(); drawLanes(); drawItems(); drawShip(); drawParts();
+    drawBg(); drawLanes(); drawItems(); drawRivals(); drawShip(); drawParts(); drawStrip();
     if(hurtT>0){
       ctx.globalCompositeOperation="lighter";
       ctx.fillStyle="rgba(255,90,90,"+(0.2*hurtT/0.4).toFixed(3)+")";
@@ -786,6 +1381,9 @@
     var k=e.key;
     if(k==="ArrowUp"||k==="w"||k==="W"){ e.preventDefault(); hopTo(-1); return; }
     if(k==="ArrowDown"||k==="s"||k==="S"){ e.preventDefault(); hopTo(1); return; }
+    /* ⚠️ PHẢI ĐỨNG TRƯỚC nhánh Space-bắt-đầu-lượt ở dưới: cùng một phím, hai việc,
+       phân biệt bằng trạng thái. Đang chơi thì Space là TĂNG TỐC. */
+    if((k===" "||k==="Spacebar") && state==="play"){ e.preventDefault(); fireBoost(); return; }
     if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
     if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
     if((k===" "||k==="Enter") && (state==="start"||state==="over")){
@@ -811,6 +1409,7 @@
   $("start-btn").addEventListener("click", startRound);
   $("again-btn").addEventListener("click", startRound);
   $("resume-btn").addEventListener("click", togglePause);
+  $("btn-boost").addEventListener("click", function(){ this.blur(); SFX.unlock(); fireBoost(); });
   $("btn-pause").addEventListener("click", function(){ this.blur(); togglePause(); });
   $("btn-sfx").addEventListener("click", function(){ this.blur(); SFX.unlock(); sfxToggle(); syncBtns(); });
   $("back").addEventListener("click", function(){ location.href="games.html"; });
@@ -853,9 +1452,28 @@
     get dist(){ return dist; },
     get mined(){ return mined; },
     get won(){ return won; },
+    get lostRace(){ return lostRace; },
+    get place(){ return place; },
+    get boost(){ return boost; },
+    get boosting(){ return boostT>0; },
+    get rivals(){
+      return rivals.map(function(r){
+        return { id:r.id, dist:r.dist, lane:r.lane, boosting:r.bT>0 };
+      });
+    },
     get items(){ return items.length; },
     get speed(){ return speed; },
+    /** Nhãn tên tàu ĐÃ CẮT — bộ đo không đọc được chữ vẽ trên canvas. */
+    get shipLabel(){ return shipLabel(); },
     cfg: CONFIG,
+    /** Bật tăng tốc cho CẢ BA đối thủ ngay — chỉ để soi hình (miệng ống đẩy rực
+        lên + vệt đuôi dài ra). Chờ chúng tự bấm thì mất `bEvery` = 2.600 m. */
+    boostRivals: function(){
+      for(var i=0;i<rivals.length;i++){
+        rivals[i].bT = CONFIG.rivals[i].bMs/1000;
+      }
+      return rivals.length;
+    },
     hop: function(d){ return hopTo(d); },
     /** Gieo MỘT vật thể ở làn đang đứng, ngay trước mũi tàu. */
     put: function(kind, aheadPx){
@@ -872,7 +1490,15 @@
       return n;
     },
     /** Đưa đường đua về gần đích để bộ đo kiểm nhánh THẮNG mà không phải chờ. */
-    nearFinish: function(){ dist = CONFIG.raceLen - 30; items=[]; }
+    nearFinish: function(){ dist = CONFIG.raceLen - 30; items=[]; },
+    /** Nạp đầy thanh tăng tốc. KHÔNG bấm hộ — phép kiểm phải tự bấm nút như trẻ
+        (bài học `chargeEmp` của ARCADE-02). */
+    fillBoost: function(){ boost=CONFIG.boostNeed; paintHud(); return boost; },
+    /** Đưa MỘT đối thủ tới sát đích để đo nhánh "đối thủ về trước". */
+    rivalNearFinish: function(i){
+      var r=rivals[i|0]; if(!r) return null;
+      r.dist=CONFIG.raceLen-20; return r.id;
+    }
   };
 })();
 </script>

@@ -26,3 +26,12 @@
 
 /* Chip đích: sáng lên khi đã đi hơn nửa đường — một phần thưởng nhìn thấy được. */
 .chip.dist.half{border-color:rgba(56,189,248,.75);box-shadow:0 0 18px -6px rgba(56,189,248,.85);}
+
+/* Chip Hạng: sáng lên khi trẻ đang DẪN ĐẦU. Cùng lối chip đích `.dist.half` ở
+   trên — một phần thưởng nhìn thấy được mà không tốn một dòng chữ nào, và đọc
+   được từ đuôi mắt trong lúc đang lái.
+   ⚠️ Tông vàng, KHÔNG tô đỏ khi đang ở hạng cuối: đây là màn học, và một cái chip
+      đỏ nói "em đang bét" là lời phán xét chứ không phải thông tin. */
+.chip.place{transition:border-color .25s,box-shadow .25s;}
+.chip.place.lead{border-color:rgba(255,207,107,.8);
+  box-shadow:0 0 18px -6px rgba(255,207,107,.85);}
