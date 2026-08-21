@@ -121,7 +121,7 @@
       cert_none:"Chưa đọc được hồ sơ. Ghé Trung Tâm Điều Hướng một lượt để đồng bộ nhé!",
       skill_lb:"Kỹ năng", 
       lv:"Cấp {a}/{b}", lv0:"Chưa có cấp",
-      lv_next:"Còn {a} nữa lên Cấp {b}", lv_max:"Cấp cao nhất — giờ là lúc phá kỷ lục của chính mình!",
+      lv_next:"Mốc Cấp {b}: {a}", lv_max:"Cấp cao nhất — giờ là lúc phá kỷ lục của chính mình!",
       per_run:"/ lượt", play:"Chơi ngay", soon:"Sắp ra mắt",
       diff_easy:"Dễ", diff_medium:"Vừa", diff_hard:"Khó",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay", need_later:"Để sau",
@@ -138,7 +138,7 @@
       cert_none:"Can't read your record yet. Drop by the Navigation Hub once to sync it!",
       skill_lb:"Skill", 
       lv:"Level {a}/{b}", lv0:"No level yet",
-      lv_next:"{a} more to reach Level {b}", lv_max:"Top level — now go beat your own record!",
+      lv_next:"Level {b}: {a}", lv_max:"Top level — now go beat your own record!",
       per_run:"/ play", play:"Play now", soon:"Coming soon",
       diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now", need_later:"Later",
@@ -338,9 +338,20 @@
           cs.sort(function(a,b){ return a.level - b.level; });
           var c0 = cs[0];
           var pct = c0.next > 0 ? Math.max(0, Math.min(100, Math.round(c0.current*100/c0.next))) : 0;
-          cert += '<div class="lvbar"><i style="width:'+pct+'%"></i></div>'+
+          /* ⚠️ NÓI RA MỐC LÀ GÌ, đừng in hiệu số trần. Trước 21/08/2026 chỗ này
+             in `next - current` nên thẻ đọc thành *"Còn 1 nữa lên Cấp 2"*, và chủ
+             dự án bác đúng: *"ko biết là 1 trận, 4 trận hay điểm?"*. Con số của
+             server không mang đơn vị; đơn vị là TÊN nên nó ở client
+             (`AstroQTraining.goalText`) — đúng phân công server-giữ-mốc /
+             client-giữ-tên. Phần "còn bao nhiêu nữa" thì thanh tiến độ nói bằng
+             hình, và `title` nói bằng số cho ai rê chuột. */
+          var goal = window.AstroQTraining
+                   ? AstroQTraining.goalText(c0.game, c0.next, LANG)
+                   : String(c0.next);
+          cert += '<div class="lvbar" title="'+AstroQ.esc(c0.current+" / "+c0.next)+'">'+
+                    '<i style="width:'+pct+'%"></i></div>'+
                   '<p class="nextgoal">'+
-                    AstroQ.esc(fill(t("lv_next"), Math.max(0, c0.next - c0.current), c0.level + 1))+
+                    AstroQ.esc(fill(t("lv_next"), goal, c0.level + 1))+
                   '</p>';
         }
       }

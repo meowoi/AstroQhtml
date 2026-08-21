@@ -1405,20 +1405,59 @@
         tức trẻ bị đẩy lại bản đồ mỗi lần mở dashboard. Đọc cache xong thì ĐẨY CỜ THẬT
         lên server (fire-and-forget) để máy khác cũng không phải xem lại.
         Cùng khuôn `astroq-tour-seen` của `js/onboard-tour.js`. */
+  /* ⚠️⚠️ CHỜ SDK NẠP XONG MỚI HỎI `AstroQAuth` — SỬA 21/08/2026.
+     `js/firebase-auth.js` là `type="module"` nên nó CHẠY SAU khối script cổ điển
+     này (module bị hoãn tới sau khi parse xong tài liệu). Đo được: lúc `mapFirst()`
+     chạy thì `typeof window.AstroQAuth === "undefined"`, và số lời gọi
+     `/me/onboarding` trong cả lượt tải trang là **0**.
+
+     ⇒ Hai nhánh dưới đây đều CHẾT: nhánh có cache thì không đẩy được cờ lên
+     server, nhánh không cache thì thoát ngay mà không hỏi server. Nghĩa là cờ
+     `map01Seen` **chưa bao giờ được ghi và chưa bao giờ được đọc**.
+
+     ⚠️ HẬU QUẢ CHỦ DỰ ÁN GẶP THẬT: *"đã log in out ra vào mấy lần rồi vẫn bị yêu
+     cầu chạy lại luồng nhiệm vụ hành tinh xanh ban đầu"*. Từ 20/08/2026 đăng xuất
+     gọi `AstroQ.clearAccountData()` — đúng và cần, vì `astroq-map01-seen` là dữ
+     liệu CỦA MỘT ĐỨA TRẺ (hai đứa dùng chung máy thì không được thừa hưởng của
+     nhau). Nhưng khi bản sao trong máy bị dọn mà server thì chưa bao giờ được
+     ghi, app **không còn chỗ nào nhớ** → mỗi lần đăng nhập lại là mất trí nhớ.
+     Đây đúng lớp lỗi đã trả giá ở `shop.html` (13/08: cửa hàng hiện 0 món) và
+     `profile.html` đã giải bằng cùng khuôn `waitAuth`.
+
+     ⚠️ NHÁNH CÓ CACHE KHÔNG ĐƯỢC CHẶN GIAO DIỆN. Nó là đường của gần như mọi lượt
+     mở dashboard; bắt nó đợi mạng là màn Comet dẫn tham quan tới muộn 2,5 giây mỗi
+     lần. Đẩy cờ ở NỀN, trả lời ngay. */
+  function whenAuth(ms){
+    return new Promise(function(res){
+      if(window.AstroQAuth && AstroQAuth.getOnboarding) return res(true);
+      var t0 = Date.now(), iv = setInterval(function(){
+        if(window.AstroQAuth && AstroQAuth.getOnboarding){ clearInterval(iv); res(true); }
+        else if(Date.now() - t0 > ms){ clearInterval(iv); res(false); }
+      }, 60);
+    });
+  }
+
   function mapFirst(){
     var cached = null;
     try{ cached = localStorage.getItem("astroq-map01-seen"); }catch(e){}
 
     if(cached === "1"){
-      // Đã đi qua ở máy này → không đẩy, và đồng bộ cờ lên server một lần.
-      if(window.AstroQAuth && AstroQAuth.setOnboarding){
-        AstroQAuth.setOnboarding({ map01Seen: true }).catch(function(){});
-      }
+      /* Đã đi qua ở máy này → trả lời NGAY, còn việc đồng bộ cờ lên server thì
+         làm ở nền. Đây là chỗ duy nhất ghi được cờ đó, nên đừng bỏ. */
+      whenAuth(4000).then(function(ok){
+        if(ok && AstroQAuth.setOnboarding){
+          AstroQAuth.setOnboarding({ map01Seen: true }).catch(function(){});
+        }
+      });
       return Promise.resolve(false);
     }
 
-    if(!window.AstroQAuth || !AstroQAuth.getOnboarding) return Promise.resolve(false);
-    return AstroQAuth.getOnboarding().then(function(o){
+    /* Không có cache thì BUỘC phải hỏi server mới quyết được — và phải chờ SDK.
+       Chờ hỏng thì trả `false`: thà bỏ một lần dẫn đường hơn ném một đứa trẻ đã
+       học xong trở lại màn giới thiệu. */
+    return whenAuth(2500).then(function(ok){
+      if(!ok) return false;
+      return AstroQAuth.getOnboarding().then(function(o){
       /* ⚠️ KHÔNG ĐỌC ĐƯỢC CỜ → KHÔNG ĐẨY. Đẩy sai là ném một trẻ đã học xong trở
          lại màn giới thiệu; còn không đẩy thì nó vẫn dùng dashboard bình thường và
          lần sau có mạng sẽ được đẩy. Cùng nguyên tắc với màn chúc mừng. */
@@ -1430,7 +1469,8 @@
       }
       window.location.replace("explorer.html?onboard=1");
       return true;
-    }).catch(function(){ return false; });
+      }).catch(function(){ return false; });
+    });
   }
 
   mapFirst().then(function(went){

@@ -207,6 +207,30 @@ window.Economy = {
     ok("[12] giu du meteors", q[0] && q[0].meteors===40);
   });
 
+  /* == [13] Ghep Chom Sao: `id` PHAI di kem, khong thi KHONG BAO GIO len cap ==
+     Chuoi that: game gui `id: consKey` -> `AstroQProgress.game` -> server nhanh
+     `case "game"` doc `req.Id` khi game == "constellation" -> `PROGRESS.consts`
+     -> `Training.cs` chia cap chuong trinh Quan Sat Thien Van bang `consts`.
+     Ham nay la mat noi DUY NHAT cua ca chuoi do, va truoc 21/08/2026 no lang le
+     vot `id` di — tre ghep xong 4 chom van o Cap 0, khong loi, khong canh bao. */
+  tests.push(function(){
+    localStorage.clear();
+    delete window.AstroQAuth;
+    AstroQProgress.game({game:"constellation", score:1, id:"orion",
+                         seconds:42, meteors:14});
+    var q=Q();
+    ok("[13] luot game nam trong localStorage NGAY",
+       q.length===1 && q[0].type==="game", JSON.stringify(q));
+    ok("[13] GIU id chom sao (thieu no thi `consts` khong bao gio tang)",
+       !!(q[0] && q[0].id==="orion"), JSON.stringify(q[0]));
+    /* Doi chung: game KHONG co id thi khong dinh mot truong rong vao payload. */
+    localStorage.clear();
+    AstroQProgress.game({game:"dodge", score:900, seconds:60, meteors:3});
+    var q2=Q();
+    ok("[13] game khong co id thi khong dinh truong rong",
+       q2.length===1 && !("id" in q2[0]), JSON.stringify(q2[0]));
+  });
+
   var i=0;
   (function run(){
     if(i>=tests.length){

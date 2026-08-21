@@ -22,6 +22,23 @@ except Exception: pass
 ROOT = Path(os.path.dirname(os.path.abspath(__file__))).parent
 BASE = "http://127.0.0.1:8123"
 ok = bad = 0
+def goal_patterns():
+    """Doc bang GOAL o js/training.js roi dung regex cho tung cau moc tieng Viet.
+       Doc tu NGUON SU THAT chu khong chep chu sang day: chep la hai noi giu mot
+       bang, va ban o test se noi cau CU vao dung ngay ai do sua san pham."""
+    src = open(os.path.join(str(ROOT), "js", "training.js"),
+               encoding="utf-8").read()
+    i = src.find("var GOAL = {")
+    if i < 0:
+        return []
+    blk = src[i:src.find("};", i)]
+    out = []
+    for vi in re.findall(r'vi:\s*"([^"]+)"', blk):
+        out.append(re.compile(re.escape(vi).replace(r"\{n\}",
+                                                    r"\d[\d.,]*")))
+    return out
+
+
 def ck(n, c, d=""):
     global ok, bad
     if c: ok += 1; print(f"  [OK]   {n}" + (f"  ({d})" if d else ""))
@@ -169,8 +186,20 @@ with sync_playwright() as p:
     # ── Thu quan trong nhat: LUON CO MOT MOC KE TIEP ──
     goals = pg.eval_on_selector_all(".gcard .nextgoal", "e=>e.map(x=>x.textContent.trim())")
     ck("moi the deu noi ra viec tiep theo", len(goals) == 6, str(len(goals)))
-    ck("the chua toi da noi 'Con ... nua len Cap ...'",
-       any("Còn" in g and "lên Cấp" in g for g in goals), str(goals[:2]))
+    # ⚠ TRUOC 21/08/2026 cho nay doi nguyen van "Còn … nữa lên Cấp …" — tuc no
+    #   KHANG DINH DUNG cai loi chu du an vua bao (*"Còn 1 nữa lên Cấp 2 … ko biet
+    #   la 1 tran, 4 tran hay diem?"*), nen the cang lam DUNG thi phep kiem cang do.
+    #   Nay doi PHAT BIEU va SIET THEM: cau moc phai la mot CAU CO DANH TU, va cau
+    #   do phai khop dung mot mau da khai o `js/training.js` — khong gan cung chu
+    #   nao o day, nen them game moi ma quen khai cau moc la bao ngay.
+    goal_pat = goal_patterns()
+    ck("co bang cau moc o js/training.js", len(goal_pat) >= 6, "%d mau" % len(goal_pat))
+    said = [g for g in goals if "phá kỷ lục" not in g]
+    bare = [g for g in said if not any(rx.search(g) for rx in goal_pat)]
+    ck("cau moc noi RA VIEC PHAI LAM, khong phai mot con so tro",
+       said and not bare, "khong khop mau: %s" % bare[:2])
+    ck("cau moc van goi ra CAP ke tiep",
+       all(re.search(r"Cấp\s*\d+", g) for g in said), str(said[:2]))
     ck("the da toi da MOI PHA KY LUC, khong noi 'xong'",
        any("phá kỷ lục" in g for g in goals), str(goals))
     ck("KHONG the nao noi mot cau doc ra thanh 'het viec'",

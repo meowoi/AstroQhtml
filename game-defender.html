@@ -73,10 +73,10 @@
            Có nút thật vì trên máy tính bảng không có bàn phím, mà đây là kỹ năng
            chính của game. `disabled` khi chưa nạp đầy — một cái nút bấm mà không có
            gì xảy ra thì trẻ tưởng game lỗi. Thanh nạp là ::after theo --emp. -->
-      <button class="iconbtn empbtn is-hidden" id="btn-emp" type="button" disabled
+      <button class="iconbtn chargebtn is-hidden" id="btn-emp" type="button" disabled
               data-i18n-aria="emp_aria" data-i18n-title="emp_aria" aria-label="Xung kích EMP">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z"/></svg>
-        <span class="empbar" id="emp-bar"><i id="emp-fill"></i></span>
+        <span class="chargebar" id="emp-bar"><i id="emp-fill"></i></span>
       </button>
       <!-- Pause: icon "⏸" khi đang chơi, "▶" khi đã tạm dừng (class .off) -->
       <button class="iconbtn is-hidden" id="btn-pause" type="button" data-i18n-aria="pause_aria" data-i18n-title="pause_aria" aria-label="Tạm dừng">
@@ -107,14 +107,14 @@
         <div class="how">
           <span data-i18n-html="how1">🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ.</span>
           <span data-i18n-html="how2">🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.</span>
-          <span data-i18n-html="how3">☄️ <b>Thiên thạch xám</b> 2 phát · <b>rác đỏ</b> bay nhanh, 1 phát.</span>
+          <span data-i18n-html="how3">☄️ <b>Thiên thạch xám</b> 2 phát · <b>rác vũ trụ</b> (mảnh vỡ có đèn nháy) bay nhanh, 1 phát.</span>
           <span data-i18n-html="how4">💜 <b>Thiên thạch tím</b>: +10 điểm & +1 vào ví tạm.</span>
           <span data-i18n-html="how5">⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì hồi giáp & thưởng!</span>
           <span data-i18n-html="how6">🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.</span>
           <span data-i18n-html="how7">⚡ <b>Xung kích EMP</b>: hạ 14 vật thể là nạp đầy → bấm nút ⚡ (hoặc phím <kbd>E</kbd>) để <b>nổ sạch cả sân</b>.</span>
           <span data-i18n-html="how8">🔧 <b>Pháo tự nâng cấp</b> theo điểm: 150 điểm → 2 tia, 400 điểm → 3 tia và bắn nhanh hơn.</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts"><button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button></div>
       </div>
     </div>
@@ -288,13 +288,47 @@
      khi đâm vào Trạm (yêu cầu: 10–20%) · tt: Thiên thạch tím nhận được */
   var TYPES = {
     gray  : { hp:2, r:20, speed:72,  score:5,  dmg:12, tt:0 },
-    junk  : { hp:1, r:15, speed:118, score:8,  dmg:18, tt:0 },   // rác vũ trụ đỏ, bay nhanh
+    junk  : { hp:1, r:15, speed:118, score:8,  dmg:18, tt:0 },   // rác vũ trụ, bay nhanh (4 biến thể hình/màu — xem JUNK)
     purple: { hp:1, r:16, speed:82,  score:10, dmg:10, tt:1 },
     gold  : { hp:1, r:22, speed:52,  score:15, dmg:10, tt:0 }    // bay chậm, mở câu đố
   };
 
+  /* ============================================================
+     RÁC VŨ TRỤ — BỐN HÌNH THÙ, BỐN TÔNG MÀU (thêm 21/08/2026).
+     Chủ dự án chơi thật rồi báo: *"rác vũ trụ thay đổi bằng nhiều hình thù và
+     màu sắc khác nhau, ko chỉ có 1 loại màu đỏ"*.
+
+     ⚠️⚠️ ĐÂY LÀ THAY ĐỔI THUẦN PHẦN VẼ. `junk` vẫn là MỘT loại trong `TYPES`
+     (cùng hp · speed · score · dmg), nên **không đụng một con số cân bằng nào**,
+     không đụng `Wallet`/`Training`, và bộ đo cũ không phải sửa luật chơi.
+     ⛔ ĐỪNG biến bốn biến thể thành bốn LOẠI có chỉ số riêng: lúc đó trẻ phải
+        học bốn thứ mới, mà thứ nó cần đọc trong một phần tư giây chỉ là "rác →
+        bay nhanh → một phát là vỡ".
+
+     ⚠️⚠️ MÀU THÂN ĐỔI, NHƯNG TÍN HIỆU NHẬN DẠNG THÌ KHÔNG. Cả sân có bốn thứ
+     phải phân biệt được tức thì: xám (2 phát) · rác (nhanh, 1 phát) · tím (tiền)
+     · vàng (câu đố). Trước đây màu ĐỎ chính là tín hiệu "đây là rác"; đổi màu
+     thân mà không giữ lại gì là lấy đi khả năng đọc sân. Nên MỌI biến thể vẫn
+     mang đủ ba thứ: **quầng đỏ bên ngoài** · **đèn báo nhấp nháy ở giữa** ·
+     **hình khối NHÂN TẠO, góc cạnh** (thiên thạch thì tròn và gồ ghề). Ba thứ đó
+     là hợp đồng — thêm biến thể thứ năm thì cũng phải mang đủ cả ba.
+     ⚠️ Dấu nhắc ở mép sân (`drawWarnings`) CỐ Ý giữ màu đỏ cho mọi biến thể: lúc
+        vật thể còn ngoài khung thì thứ trẻ cần biết là "loại nào đang tới", không
+        phải "mảnh đó sơn màu gì".
+     ============================================================ */
+  var JUNK = [
+    /* mảnh vỏ tàu — bản đỏ nguyên gốc, giữ lại để sân vẫn có thứ trẻ đã quen */
+    { s:"plate", c0:"#ff8f8f", c1:"#e03b3b", c2:"#7d1616" },
+    /* tấm pin mặt trời vỡ — tông lam, nhận ra bằng LƯỚI Ô chứ không bằng màu */
+    { s:"panel", c0:"#7d9bff", c1:"#3550c8", c2:"#141f52" },
+    /* thùng nhiên liệu — tông cam gạch, có hai vành đai kim loại */
+    { s:"tank",  c0:"#ffc08a", c1:"#e07a2c", c2:"#7a3410" },
+    /* thanh giàn / ăng-ten gãy — tông be sáng, dài và mảnh */
+    { s:"arm",   c0:"#f2e6cf", c1:"#c2ab86", c2:"#6b5a3e" }
+  ];
+
   /* ===== i18n (thêm khoá phải thêm ở CẢ vi và en) ===== */
-  var TT = "<img class='tt-inline' src='img/tt.png' alt='tt'/>";
+  var TT = "<img class='tt-inline' src='img/tt.png' alt='Thiên thạch tím'/>";
   var I18N = {
     vi:{
       tt_name:"Thiên thạch tím",
@@ -303,7 +337,7 @@
       start_title:"Phòng Thủ Không Gian",
       how1:"🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ (bàn phím: <kbd>◀</kbd> <kbd>▶</kbd>).",
       how2:"🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.",
-      how3:"☄️ <b>Thiên thạch xám</b> chịu 2 phát · <b>rác đỏ</b> bay nhanh, 1 phát.",
+      how3:"☄️ <b>Thiên thạch xám</b> chịu 2 phát · <b>rác vũ trụ</b> (mảnh vỡ có đèn nháy) bay nhanh, 1 phát.",
       how4:"💜 <b>Thiên thạch tím</b>: +"+TYPES.purple.score+" điểm & +1 "+TT+" vào ví tạm.",
       how5:"⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.",
@@ -316,7 +350,7 @@
       emp_go:"⚡ XUNG KÍCH EMP — nổ sạch cả sân!",
       cost_line:"Mỗi lượt: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Bắt đầu", over_title:"Trạm đã bị phá huỷ!",
-      again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
+      again_btn:"<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>",
       need_title:"Chưa đủ Thiên thạch tím!", need_go:"Làm Quiz ngay",
       start_toast:"−"+CONFIG.COST+" {tt} · Bảo vệ Trạm!",
       quiz_reward:"Đúng: +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" ",
@@ -336,7 +370,7 @@
       start_title:"Space Defender",
       how1:"🎯 <b>Aim</b>: move the mouse around — the cannon spins a full 360° to follow it (keyboard: <kbd>◀</kbd> <kbd>▶</kbd>).",
       how2:"🔫 <b>Fire</b>: hold left click or the <kbd>Space</kbd> key.",
-      how3:"☄️ <b>Grey asteroids</b> take 2 shots · <b>red junk</b> is fast, 1 shot.",
+      how3:"☄️ <b>Grey asteroids</b> take 2 shots · <b>space junk</b> (debris with a blinking light) is fast, 1 shot.",
       how4:"💜 <b>Purple Meteors</b>: +"+TYPES.purple.score+" points & +1 "+TT+" to your run pouch.",
       how5:"⭐ <b>Gold meteors</b>: open a quiz — get it right for +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Anything that rams the Station at the centre costs you hull. Hull gone = game over.",
@@ -349,7 +383,7 @@
       emp_go:"⚡ EMP BLAST — field wiped!",
       cost_line:"Per run: <b>"+CONFIG.COST+"</b> "+TT,
       start_btn:"Start", over_title:"Station destroyed!",
-      again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='tt'/></span>",
+      again_btn:"<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>",
       need_title:"Not enough Purple Meteors!", need_go:"Do Quiz now",
       start_toast:"−"+CONFIG.COST+" {tt} · Defend the Station!",
       quiz_reward:"Correct: +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" ",
@@ -483,6 +517,9 @@
   var bullets=[], foes=[], parts=[], stars=[];
   var hull=CONFIG.hullStart, score=0, meteors=0, elapsed=0, spawnT=0, goldT=0;
   var shake=0, flash=0, dieT=0, quizIdx=0, radar=0;
+  /* `quizBag` = tui cau con lai cua vong hien tai · `quizOrder` = thu tu
+     4 dap an dang HIEN RA (chi so trong `q.o` goc). Xem `nextQuiz`. */
+  var quizBag=[], quizOrder=[];
   var pointerX=CX, pointerY=CY-120, pointerIn=false;
   var hudCache={}, lastPaid=0;
   /* Nâng cấp pháo + Xung kích EMP (thêm 08/08/2026 — xem `guns`/`empNeed` ở CONFIG) */
@@ -698,8 +735,12 @@
     if((r-=wPurple)< 0) return "purple";
     return "gray";
   }
-  function spawnFoe(){
-    var key=pickType(), T=TYPES[key];
+  /* @param force  BUOC sinh dung mot loai. CHI bo do DUNG (window.__dbg.spawn):
+     cac loai co thoi gian cho rieng (goldT) nen bo do khong tai hien duoc ca
+     'EMP quet thach vang' neu phai doi Math.random(). Thieu tham so thi hanh vi
+     y nhu cu -> duong sinh cua game khong doi mot chut nao. */
+  function spawnFoe(force){
+    var key=(force && TYPES[force]) ? force : pickType(), T=TYPES[key];
     var a=Math.random()*TAU;
     var x=CX+Math.cos(a)*CONFIG.spawnR, y=CY+Math.sin(a)*CONFIG.spawnR;
     var sp=T.speed*(1+elapsed*CONFIG.speedRamp);
@@ -710,7 +751,10 @@
       key:key, hp:T.hp, r:T.r, x:x, y:y,
       vx:dx/d*sp, vy:dy/d*sp,
       rot:Math.random()*TAU, spin:(Math.random()-0.5)*2.2, ph:Math.random()*TAU,
-      seed:Math.floor(Math.random()*10)
+      seed:Math.floor(Math.random()*10),
+      /* biến thể hình/màu của rác vũ trụ (xem `JUNK`). Loại khác không đọc tới,
+         nhưng gán cho mọi vật thể thì `spawnFoe` chỉ có MỘT hình dạng dữ liệu. */
+      jv:Math.floor(Math.random()*JUNK.length)
     });
     if(key==="gold") goldT=CONFIG.quizCooldown;
   }
@@ -739,9 +783,41 @@
   }
 
   /* ===== Câu đố (bắn trúng thiên thạch vàng) ===== */
+  function shuffleIn(a){
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1)), tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+  /* Rut cau theo TUI DA XAO, va xao ca THU TU 4 DAP AN (sua 21/08/2026 — chu du
+     an choi that roi bao *"quiz cua thien thach vang dang khong dao cau khac nhau
+     va ko dao thu tu dap an"*). Hai loi rieng biet, cung mot cho:
+       (a) `Math.floor(Math.random()*QUIZ.length)` la bốc LAI TU DAU moi lan, nen
+           voi 8 cau thi gap lai dung cau vua tra loi la chuyen thuong. Tui bao dam
+           di HET 8 cau roi moi lap — cung loi `pickRound` cua `quiz.html`.
+       (b) `q.o` truoc day ve theo dung thu tu khai bao, tuc dap an dung cua mot cau
+           LUON o cung mot o. Tre nho vi tri chu khong nho kien thuc, va do la thu
+           bai kiem tra nay ton tai de tranh. `quiz.html` da xao dap an tu 31/07;
+           day la cho con sot lai.
+     ⚠ Thu tu phai LUU vao `quizOrder` chu khong sinh trong `renderQuiz`: doi VI/EN
+       giua luc dang mo cau do se ve lai (xem `applyLang`), sinh lai la 4 dap an
+       nhay cho ngay duoi tay tre. */
+  function nextQuiz(){
+    if(!quizBag.length){
+      for(var i=0;i<QUIZ.length;i++) quizBag.push(i);
+      shuffleIn(quizBag);
+      /* Het tui la luc DUY NHAT hai luot lien nhau co the trung — va dung la cho
+         tre nhan ra ngay. Day cau do xuong cuoi tui moi. */
+      if(quizBag.length>1 && quizBag[0]===quizIdx) quizBag.push(quizBag.shift());
+    }
+    quizIdx=quizBag.shift();
+    quizOrder=[];
+    for(var k=0;k<QUIZ[quizIdx].o.length;k++) quizOrder.push(k);
+    shuffleIn(quizOrder);
+  }
   function openQuiz(){
     state="quiz"; firing=false; syncBtns();
-    quizIdx=Math.floor(Math.random()*QUIZ.length);
+    nextQuiz();
     renderQuiz();
     showOv("ov-quiz");
   }
@@ -751,13 +827,18 @@
     $("q-text").textContent = L(q.q);
     var box=$("q-opts");
     box.innerHTML="";
-    for(var i=0;i<q.o.length;i++){
-      (function(idx){
+    /* Chua rut cau thi ve theo thu tu goc — luoi an toan, khong de box rong. */
+    if(quizOrder.length!==q.o.length){
+      quizOrder=[];
+      for(var z=0;z<q.o.length;z++) quizOrder.push(z);
+    }
+    for(var i=0;i<quizOrder.length;i++){
+      (function(orig){
         var b=document.createElement("button");
-        b.type="button"; b.className="q-opt"; b.textContent=L(q.o[idx]);
-        b.addEventListener("click", function(){ answerQuiz(idx, b); });
+        b.type="button"; b.className="q-opt"; b.textContent=L(q.o[orig]);
+        b.addEventListener("click", function(){ answerQuiz(orig, b); });
         box.appendChild(b);
-      })(i);
+      })(quizOrder[i]);
     }
   }
   function answerQuiz(idx, btn){
@@ -766,7 +847,11 @@
     var opts=$("q-opts").children, i;
     for(i=0;i<opts.length;i++) opts[i].disabled=true;
     btn.classList.add(ok?"correct":"wrong");
-    if(!ok && opts[q.a]) opts[q.a].classList.add("correct");   // chỉ luôn đáp án đúng để còn học được
+    /* ⚠ Vi tri cua dap an dung tren MAN HINH = cho cua `q.a` trong `quizOrder`,
+       khong phai `q.a`. Doc `opts[q.a]` sau khi xao la to sang MOT DAP AN SAI
+       roi day tre hoc dieu sai — im lang tuyet doi. */
+    var okPos=quizOrder.indexOf(q.a);
+    if(!ok && okPos>=0 && opts[okPos]) opts[okPos].classList.add("correct");
 
     if(ok){
       hull=Math.min(CONFIG.hullStart, hull+CONFIG.quizHeal);
@@ -914,7 +999,8 @@
       if(!byWave) openQuiz();
       return;
     } else if(f.key==="junk"){
-      SFX.boom(); burst(f.x,f.y,"#ff8a8a",REDUCE?6:15,200);
+      /* Hạt nổ lấy màu của chính biến thể — mảnh vỡ phải cùng màu thứ vừa vỡ. */
+      SFX.boom(); burst(f.x,f.y,(JUNK[(f.jv|0)%JUNK.length]||JUNK[0]).c1,REDUCE?6:15,200);
     } else {
       SFX.boom(); burst(f.x,f.y,"#a8b6d8",REDUCE?7:17,190);
     }
@@ -1160,13 +1246,72 @@
       ctx.fillText("?",0,1);
 
     } else if(f.key==="junk"){
+      /* Bốn hình thù + bốn tông màu, xem bảng `JUNK`. Hình khối NHÂN TẠO là tín
+         hiệu chính (thiên thạch thì tròn), còn quầng đỏ + đèn nháy là tín hiệu
+         giữ KHÔNG ĐỔI giữa mọi biến thể.
+         ⚠️ Mọi hình phải nằm TRONG đường tròn bán kính f.r — đó là vùng va chạm
+            thật (va chạm tính bằng hình tròn). Vẽ chìa ra ngoài là "trông như
+            chưa chạm mà đã mất giáp", đúng lỗi hitbox đã trả giá ở ARCADE-01. */
+      var jv=JUNK[(f.jv|0) % JUNK.length];
       ctx.rotate(f.rot);
       ctx.shadowColor="rgba(239,68,68,.8)"; ctx.shadowBlur=13;
       var jg=ctx.createLinearGradient(-f.r,-f.r,f.r,f.r);
-      jg.addColorStop(0,"#ff8f8f"); jg.addColorStop(0.55,"#e03b3b"); jg.addColorStop(1,"#7d1616");
-      ctx.fillStyle=jg; poly(f.r,6,0.7,f.seed); ctx.fill();
+      jg.addColorStop(0,jv.c0); jg.addColorStop(0.55,jv.c1); jg.addColorStop(1,jv.c2);
+      ctx.fillStyle=jg;
+      var pw, phh, rr;
+      if(jv.s==="panel"){
+        pw=f.r*1.86; phh=f.r*1.04;              // 0,93 x đường kính → vừa trong hitbox
+        ctx.fillRect(-pw/2,-phh/2,pw,phh);
+        ctx.shadowBlur=0;
+        ctx.strokeStyle="rgba(8,12,30,.62)"; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        ctx.moveTo(-pw/6,-phh/2); ctx.lineTo(-pw/6,phh/2);
+        ctx.moveTo( pw/6,-phh/2); ctx.lineTo( pw/6,phh/2);
+        ctx.moveTo(-pw/2,0);      ctx.lineTo( pw/2,0);
+        ctx.stroke();
+        ctx.strokeRect(-pw/2,-phh/2,pw,phh);
+      } else if(jv.s==="tank"){
+        pw=f.r*1.16; phh=f.r*1.84; rr=pw/2;
+        ctx.beginPath();
+        ctx.moveTo(-rr,-phh/2+rr);
+        ctx.arc(0,-phh/2+rr,rr,Math.PI,0);
+        ctx.lineTo(rr,phh/2-rr);
+        ctx.arc(0,phh/2-rr,rr,0,Math.PI);
+        ctx.closePath(); ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.strokeStyle="rgba(8,12,30,.55)"; ctx.lineWidth=1.5;
+        ctx.beginPath();
+        ctx.moveTo(-rr,-phh*0.18); ctx.lineTo(rr,-phh*0.18);
+        ctx.moveTo(-rr, phh*0.18); ctx.lineTo(rr, phh*0.18);
+        ctx.stroke();
+      } else if(jv.s==="arm"){
+        /* THANH GIÀN: thanh dài + hai mặt bích ở hai đầu + giằng chéo hình chữ X.
+           ⚠️ BẢN ĐẦU CÓ MỘT ĐĨA TRÒN Ở MỘT ĐẦU cho ra dáng "ăng-ten" — soi ảnh
+              chụp thì nó đọc thành **cái chìa khoá / cái thìa**: đĩa (r*0,40) rộng
+              gần bằng thanh và nằm sát đèn báo ở giữa, hai khối sáng dính lại
+              thành một cái đầu muôi. Đúng họ lỗi đã trả giá với sao chổi (đuôi
+              thót → cái thìa · ba vệt → chùm xúc xích). Giằng chữ X thì đọc ra
+              "kết cấu do người làm" ngay ở cỡ 30px, và không có khối nào để dính
+              vào đèn báo. */
+        pw=f.r*1.90; phh=f.r*0.46;
+        ctx.fillRect(-pw/2,-phh/2,pw,phh);
+        var fl=f.r*0.78;                       // mặt bích: cao hơn thanh, hẹp
+        ctx.fillRect(-pw/2,-fl/2,phh*0.55,fl);
+        ctx.fillRect( pw/2-phh*0.55,-fl/2,phh*0.55,fl);
+        ctx.shadowBlur=0;
+        ctx.strokeStyle="rgba(8,12,30,.58)"; ctx.lineWidth=1.1;
+        ctx.beginPath();
+        for(var gx=-pw/2+phh*0.6; gx<pw/2-phh*1.1; gx+=phh*1.35){
+          ctx.moveTo(gx,-phh/2);          ctx.lineTo(gx+phh*1.35, phh/2);
+          ctx.moveTo(gx, phh/2);          ctx.lineTo(gx+phh*1.35,-phh/2);
+        }
+        ctx.stroke();
+      } else {
+        poly(f.r,6,0.7,f.seed); ctx.fill();
+        ctx.shadowBlur=0;
+      }
       ctx.shadowBlur=0;
-      /* đèn báo nhấp nháy: rác đỏ = nguy hiểm, bay nhanh */
+      /* đèn báo nhấp nháy — TÍN HIỆU KHÔNG ĐỔI: rác vũ trụ = nguy hiểm, bay nhanh */
       ctx.fillStyle = Math.sin(f.ph*3)>0 ? "#fff0a8" : "#7a2222";
       ctx.beginPath(); ctx.arc(0,0,f.r*0.26,0,TAU); ctx.fill();
 
@@ -1400,6 +1545,10 @@
        sóng lan (0,5 giây) nên luôn có vật thể MỚI, và đếm số lượng thì phép kiểm
        báo hỏng trong khi cú nổ đã làm đúng việc của nó. */
     get serials() { return foes.map(function(f){ return f.n; }); },
+    /* Loai + vi tri tung vat the. Can cho phep kiem 'EMP quet thach vang thi
+       KHONG mo cau do': dem `foes` khong noi duoc trong san co thach vang hay
+       khong, ma mot phep do khong nhin thay dich thi no do mot thu khac. */
+    get list()  { return foes.map(function(f){ return {n:f.n, key:f.key, x:f.x, y:f.y, jv:f.jv}; }); },
     get gun()   { return gunIdx; },
     get emp()   { return empCharge; },
     get wave()  { return wave ? wave.r : -1; },
@@ -1407,7 +1556,7 @@
     /** Nạp đầy EMP để đo cú nổ. KHÔNG nổ hộ — phép kiểm phải tự bấm như trẻ. */
     chargeEmp: function(){ empCharge = CONFIG.empNeed; paintHud(); return empCharge; },
     /** Gieo thêm vật thể để có cái mà nổ (dùng đúng đường sinh của game). */
-    spawn: function(n){ for(var i=0;i<(n|0);i++) spawnFoe(); return foes.length; },
+    spawn: function(n, key){ for(var i=0;i<(n|0);i++) spawnFoe(key); return foes.length; },
     /** Đặt điểm để đo cú lên cấp pháo — không cộng vào ví, không đụng thưởng. */
     setScore: function(v){ score = Math.max(0, v|0); paintHud(); return score; }
   };

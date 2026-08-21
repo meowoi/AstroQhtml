@@ -1,0 +1,145 @@
+# -*- coding: utf-8 -*-
+r"""Do: cau do thach vang co DOI CAU va co DAO THU TU DAP AN.
+
+Chu du an choi that roi bao: *"quiz cua thien thach vang dang khong dao cau khac
+nhau va ko dao thu tu dap an"*. Hai loi rieng biet nen do rieng.
+
+⚠ CACH DO PHAI KHONG CHAP CHON — bai hoc `play_maze` (21/08): mot hien tuong
+  ~30% ma do bang 3 mau thi 34% lan chay se "sach" chi do may man.
+  · DOI CAU: tui da xao la mot tinh chat TAT DINH — 8 cau dau phai la 8 cau KHAC
+    NHAU, 8 cau sau cung vay. Khong phai phep thu xac suat.
+  · DAO DAP AN: doc THU TU 4 CHUOI dap an cua CUNG mot cau qua 3 lan gap. Khong
+    xao thi 3 lan giong het nhau tuyet doi; co xao thi xac suat 3 lan trung nhau
+    la (1/24)^2 ≈ 0,17%. Do bang THU TU CHU chu khong doc `q.a` (bien private) —
+    khong phai doan cai gi.
+
+⚠ Moi luot cau do deu di qua duong THAT: gieo thach vang -> ngam -> ban bang dan
+  thuong -> `killFoe(..., byWave falsy)` -> `openQuiz`. Khong goi ham noi bo.
+"""
+import sys
+from collections import Counter
+
+from playwright.sync_api import sync_playwright
+
+sys.stdout.reconfigure(encoding="utf-8")
+BASE = "http://127.0.0.1:8123"
+VW = 600.0
+ROUNDS = 24          # 3 tui day (QUIZ co 8 cau) -> moi cau gap dung 3 lan
+ok_n = bad_n = 0
+
+
+def check(cond, name, extra=""):
+    global ok_n, bad_n
+    if cond:
+        ok_n += 1
+        print("  [OK]   " + name + (("  (%s)" % extra) if extra else ""), flush=True)
+    else:
+        bad_n += 1
+        print("  [HONG] " + name + (("  (%s)" % extra) if extra else ""), flush=True)
+
+
+with sync_playwright() as p:
+    br = p.chromium.launch()
+    ctx = br.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN",
+                         timezone_id="Asia/Ho_Chi_Minh")
+    ctx.add_init_script("localStorage.setItem('astroq-lang','vi');"
+                        "localStorage.setItem('astroq-asteroids','300');")
+    pg = ctx.new_page()
+    errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(BASE + "/game-defender.html", wait_until="load", timeout=30000)
+    pg.wait_for_timeout(900)
+    if pg.locator(".ov.rot.show").count():
+        pg.locator(".ov.rot.show .rot-ok").click()
+    pg.click("#start-btn")
+    pg.wait_for_timeout(400)
+
+    n_quiz = int(pg.evaluate("() => window.__dbg ? 1 : 0"))
+    check(n_quiz == 1, "co be mat __dbg de gieo thach vang")
+
+    seq = []            # thu tu cau hoi qua tung luot
+    orders = {}         # cau hoi -> danh sach tuple thu tu dap an
+    for r in range(ROUNDS):
+        # Tram co the da vo trong luc ta ngam (vat the ngau nhien van dam vao).
+        # Choi lai mot luot moi — duong THAT, tru dung 4 tt, khong hoi phuc gian lan.
+        for _ in range(3):
+            st = pg.evaluate("() => window.__dbg.state")
+            if st == "play":
+                break
+            if st in ("over", "dying"):
+                pg.wait_for_timeout(900)
+                if pg.locator("#again-btn").is_visible():
+                    pg.click("#again-btn")
+                    pg.wait_for_timeout(500)
+            else:
+                pg.wait_for_timeout(400)
+        if pg.evaluate("() => window.__dbg.state") != "play":
+            break
+        pg.evaluate("() => window.__dbg.spawn(1, 'gold')")
+        pg.wait_for_timeout(60)
+        opened = False
+        for _ in range(60):
+            g = pg.evaluate("() => window.__dbg.list.filter(f => f.key === 'gold')")
+            if pg.evaluate("() => window.__dbg.state") == "quiz":
+                opened = True
+                break
+            if not g:
+                break
+            sc = pg.evaluate("""(q) => {
+                const cv = document.querySelector('canvas');
+                const b  = cv.getBoundingClientRect();
+                return {x: b.left + q.x / %f * b.width, y: b.top + q.y / %f * b.height};
+            }""" % (VW, VW), {"x": g[0]["x"], "y": g[0]["y"]})
+            pg.mouse.move(sc["x"], sc["y"])
+            pg.mouse.down(); pg.wait_for_timeout(70); pg.mouse.up()
+        if not opened:
+            continue
+        q = pg.evaluate("""() => ({
+            text: document.getElementById('q-text').textContent.trim(),
+            opts: [...document.getElementById('q-opts').children].map(b => b.textContent.trim())
+        })""")
+        seq.append(q["text"])
+        orders.setdefault(q["text"], []).append(tuple(q["opts"]))
+        # tra loi de ve lai man choi (bam o dau nhu bo do cu)
+        pg.evaluate("() => { const b = document.getElementById('q-opts').children[0];"
+                    "        if (b && !b.disabled) b.click(); }")
+        pg.wait_for_timeout(1500)
+
+    print("\n  do duoc %d luot cau do, %d cau hoi khac nhau" % (len(seq), len(orders)))
+    check(len(seq) >= 16, "mo duoc it nhat 16 luot cau do", "%d luot" % len(seq))
+
+    # --- (a) DOI CAU: tui da xao => moi 8 luot lien tiep la 8 cau KHAC NHAU
+    n_bank = len(orders) if len(orders) >= 2 else 0
+    bag = 8
+    bad_bags = []
+    for i in range(0, len(seq) - bag + 1, bag):
+        blk = seq[i:i + bag]
+        if len(set(blk)) != bag:
+            bad_bags.append(i // bag + 1)
+    check(len(seq) >= bag and not bad_bags,
+          "moi 8 luot lien tiep la 8 cau KHAC NHAU (tui da xao)",
+          "tui hong: %s" % bad_bags)
+    rep = [i for i in range(1, len(seq)) if seq[i] == seq[i - 1]]
+    check(not rep, "khong luot nao lap lai NGAY cau vua hoi",
+          "lap o luot %s" % rep)
+    check(len(orders) >= 8, "phu het bo cau hoi", "%d cau" % len(orders))
+
+    # --- (b) DAO DAP AN: cung mot cau, thu tu 4 dap an phai KHAC nhau giua cac lan
+    multi = {k: v for k, v in orders.items() if len(v) >= 3}
+    check(bool(multi), "co cau gap >=3 lan de so thu tu dap an",
+          "%d cau" % len(multi))
+    frozen = [k for k, v in multi.items() if len(set(v)) == 1]
+    check(bool(multi) and not frozen,
+          "thu tu dap an DOI giua cac lan gap cung mot cau",
+          "cau dung yen: %d/%d" % (len(frozen), len(multi)))
+    # doi chung: bo dap an phai GIU NGUYEN (xao chu khong doi noi dung)
+    same_set = all(len(set(frozenset(t) for t in v)) == 1 for v in orders.values())
+    check(same_set, "xao thu tu chu KHONG doi noi dung 4 dap an")
+
+    check(not errs, "0 loi trang", "; ".join(errs[:1])[:80])
+    ctx.close()
+    br.close()
+
+print("\n" + "=" * 56)
+print("KET QUA: %d dat / %d hong" % (ok_n, bad_n))
+sys.exit(1 if bad_n else 0)

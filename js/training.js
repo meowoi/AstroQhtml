@@ -107,6 +107,41 @@
     }
   };
 
+  /* ============================================================
+     MỐC KẾ TIẾP NÓI BẰNG LỜI, KHÔNG PHẢI MỘT CON SỐ TRƠ.
+
+     ⚠️⚠️ VÌ SAO CÓ BẢNG NÀY (21/08/2026): thẻ game trước đây in
+     *"Còn 1 nữa lên Cấp 2"* — và chủ dự án bác đúng: *"rất khó hiểu, ko biết là
+     1 trận, 4 trận hay điểm?"*. Con số `next` do server trả **không mang đơn vị
+     nào**, mà mỗi khoá học đo một thứ khác hẳn: dodge đo MÉT, defender đo ĐIỂM,
+     maze đo CẤP SÂN, constellation đo **số chòm sao KHÁC NHAU**, units đo SỐ
+     BẢNG. Một con số không có danh từ đi kèm thì trẻ đoán, và đoán sai thì nó
+     luyện sai chỗ.
+
+     ⚠️ BẢNG KHOÁ THEO **GAME**, không theo chương trình: một chương trình có thể
+     gồm hai khoá đo hai thứ khác nhau (Phản xạ = dodge mét + catch điểm).
+
+     ⚠️ KHÔNG ĐƯỢC CHỨA MỘT CON SỐ MỐC NÀO — token `{n}` do server điền
+     (`courses[].next`). Có phép kiểm canh (check_pages mục [27]).
+
+     ⚠️ Câu của `constellation` cố ý viết **KHÁC NHAU** in đậm nghĩa: mốc đó đếm
+     `consts` = số chòm sao khác nhau, nên ghép lại đúng chòm vừa ghép thì KHÔNG
+     lên cấp. Không nói ra thì trẻ chơi mãi một chòm và tưởng hệ thống hỏng —
+     chính hiện tượng đã được báo cùng ngày.
+     ============================================================ */
+  var GOAL = {
+    dodge:         { vi: "bay được {n} m",                   en: "fly {n} m" },
+    catch:         { vi: "đạt {n} điểm",                     en: "score {n} points" },
+    defender:      { vi: "đạt {n} điểm",                     en: "score {n} points" },
+    maze:          { vi: "giải xong mê cung cấp {n}",        en: "clear maze tier {n}" },
+    racer:         { vi: "đi được {n} m đường đua",          en: "cover {n} m of the race" },
+    constellation: { vi: "ghép đủ {n} chòm sao KHÁC NHAU",   en: "match {n} different constellations" },
+    survival:      { vi: "chọn đúng {n} lần trong một lượt", en: "make {n} correct choices in one run" },
+    comms:         { vi: "xếp đúng {n} lệnh",                en: "get {n} commands in the right order" },
+    recycle:       { vi: "đạt {n} điểm giữ hệ",              en: "reach {n} life-support points" },
+    units:         { vi: "duyệt đúng {n} bảng",              en: "clear {n} sheets correctly" }
+  };
+
   function pick(o, lang) {
     if (!o) return "";
     return lang === "en" ? (o.en != null ? o.en : o.vi) : o.vi;
@@ -126,7 +161,21 @@
 
     /** → {id, topic} hoặc null. `topic` đã dịch sẵn. */
 
+    /**
+     * Mốc kế tiếp của MỘT KHOÁ HỌC, nói bằng lời: `goalText("dodge", 500, "vi")`
+     * → "bay được 500 m". Chưa khai câu thì trả về chính con số — xấu, nhưng
+     * không vỡ, và cái xấu đó nói cho người sửa biết là còn thiếu gì (đúng lối
+     * `name()` ở trên).
+     */
+    goalText: function (game, n, lang) {
+      var g = GOAL[game], num = String(n == null ? "" : n);
+      return g ? pick(g, lang).replace("{n}", num) : num;
+    },
+
     /** Mọi khoá đã khai tên — dùng cho phép kiểm, không dùng để vẽ. */
-    keys: function () { return Object.keys(T); }
+    keys: function () { return Object.keys(T); },
+
+    /** Mọi game đã khai câu mốc — dùng cho phép kiểm, không dùng để vẽ. */
+    goalKeys: function () { return Object.keys(GOAL); }
   };
 })(window);

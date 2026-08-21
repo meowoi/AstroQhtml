@@ -646,8 +646,21 @@
     /** Xong một lượt game. `game` là khoá kỷ lục: "dodge" | "defender" | "constellation". */
     game: function (o) {
       o = o || {};
-      return report({ type: "game", game: String(o.game || ""), score: o.score | 0,
-                      seconds: o.seconds | 0, meteors: o.meteors | 0 });
+      var ev = { type: "game", game: String(o.game || ""), score: o.score | 0,
+                 seconds: o.seconds | 0, meteors: o.meteors | 0 };
+      /* ⚠⚠ `id` PHẢI ĐI KÈM, và việc bỏ nó đã làm Ghép Chòm Sao KHÔNG BAO GIỜ
+         LÊN CẤP (lỗi im lặng, sửa 21/08/2026). Chuỗi đầy đủ như sau:
+         `game-constellation.html` gửi `id: consKey` → server `MeEndpoints` nhánh
+         `case "game"` đọc `req.Id` khi `game == "constellation"` → ghi vào
+         `PROGRESS.consts` → `Training.cs` chia cấp chương trình Quan Sát Thiên Văn
+         bằng `consts` (**số chòm sao KHÁC NHAU**, không phải số lượt chơi).
+         Hàm này tức là mắt nối DUY NHẤT của cả chuỗi đó, mà nó lặng lẽ vớt
+         `id` đi nên trẻ ghép xong 4 chòm vẫn ở Cấp 0 — không lỗi, không cảnh báo.
+         ⚠ Chỉ gửi khi CÓ: server `Clean()` nó riêng cho constellation, nhưng mọi
+           game khác đính thêm một trường rỗng là làm payload nói một thứ vô nghĩa. */
+      var id = String(o.id || "").trim();
+      if (id) ev.id = id;
+      return report(ev);
     },
     /** Đọc xong một bài. Gọi bao nhiêu lần cũng chỉ tính một. */
     lesson: function (id) { return report({ type: "lesson", id: String(id || "") }); },
