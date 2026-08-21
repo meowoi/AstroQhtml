@@ -234,7 +234,7 @@
   <div class="info-scroll" id="star-scroll"></div>
   <div class="star-foot">
     <button id="star-prev" type="button">‹</button>
-    <button id="star-back" class="mid" type="button">Back to region</button>
+    <button id="star-back" class="mid" type="button">Back to the map</button>
     <button id="star-next" type="button">›</button>
   </div>
 </aside>
@@ -343,7 +343,7 @@ window.I18N = {
     sType:'Star type', sDist:'Distance', sConst:'Constellation', sRadius:'Radius', sTemp:'Surface temp',
     sLum:'Luminosity', sPlanets:'Known planets', sVisible:'Visible to the eye',
     secAbout:'About this star', secHab:'Could life exist nearby?', secSee:'How to spot it',
-    secExplore:'Exploration ideas', backRegion:'Back to region',
+    secExplore:'Exploration ideas', backMap:'Back to the map',
     tapStar:'Tap a star to explore it', scale10:'10 light-years',
     goThereTitle:'Do you want to go there?', yesBtn:'Yes', noBtn:'No',
     unlockTitle:'Unlock the mission to travel there', missionNow:'Start the mission now', later:'Later', missionSoon:'Missions are coming soon!',
@@ -389,7 +389,7 @@ window.I18N = {
     sType:'Loại sao', sDist:'Khoảng cách', sConst:'Chòm sao', sRadius:'Bán kính', sTemp:'Nhiệt độ bề mặt',
     sLum:'Độ sáng', sPlanets:'Hành tinh đã biết', sVisible:'Thấy bằng mắt thường',
     secAbout:'Về ngôi sao', secHab:'Sự sống có thể tồn tại gần đó?', secSee:'Cách quan sát',
-    secExplore:'Ý tưởng thám hiểm', backRegion:'Về vùng',
+    secExplore:'Ý tưởng thám hiểm', backMap:'Về bản đồ',
     tapStar:'Chạm vào một ngôi sao để khám phá', scale10:'10 năm ánh sáng',
     goThereTitle:'Bạn muốn đến đó chứ?', yesBtn:'Yes', noBtn:'No',
     unlockTitle:'Hãy mở khóa nhiệm vụ để đi tới', missionNow:'Làm nhiệm vụ ngay', later:'Để sau', missionSoon:'Nhiệm vụ sắp ra mắt!',
@@ -2729,7 +2729,13 @@ try{
     var dt=$('deck-title'); if(dt) dt.innerHTML=T('brand1')+'<br/>'+T('brand2');
     setLbl('nav-prev',T('prev')); setLbl('nav-next',T('next')); setLbl('nav-back',T('navSystem')); setLbl('nav-sun',T('flySun'));
     var ret=$('nm-place-return'); if(ret) ret.textContent='↩ '+T('returnHome');
-    var sb=$('star-back'); if(sb) sb.textContent=T('backRegion');
+    /* ⚠️ NÚT NÀY CHỈ ĐÓNG BẢNG — nhãn phải nói đúng việc đó (sửa 21/08/2026).
+       Trước đó nó ghi "Về vùng" / "Back to region", mà bấm vào thì `closeStar()`
+       không đi đâu cả: vùng vẫn là vùng đang ở, chỉ có bảng thông tin ngôi sao
+       đóng lại và lộ ra bản đồ 3D phía sau. Trẻ đọc "về vùng" rồi bấm sẽ chờ một
+       chuyến bay không bao giờ có. Muốn ĐỔI vùng thật thì đã có cây điều hướng
+       bên trái (`travelTo`). */
+    var sb=$('star-back'); if(sb) sb.textContent=T('backMap');
     // Solar Neighborhood 3D overlay chrome.
     var nbReg=null; for(var ri=0;ri<REGIONS.length;ri++){ if(REGIONS[ri].id==='solar-neighborhood'){ nbReg=REGIONS[ri]; break; } }
     var nt=$('nbh-title-txt'); if(nt) nt.textContent = nbReg?RT(nbReg):'Solar Neighborhood';

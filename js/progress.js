@@ -380,6 +380,34 @@
     write(LS_QUEUE, q);
   }
 
+  /** Khoá nhận dạng một việc trong hàng chờ. `opId` là khoá thật; `raw:` chỉ để
+      nhận ra việc CŨ do bản trước 21/08/2026 xếp vào mà chưa có `opId`. */
+  function keyOf(it) {
+    return (it && it.opId) ? "id:" + it.opId : "raw:" + JSON.stringify(it);
+  }
+
+  /**
+   * Bỏ khỏi hàng chờ những việc ĐÃ GỬI XONG — và CHỈ chúng.
+   *
+   * ⚠️ KHÔNG ĐƯỢC GHI `[]` HAY `q.slice(i)` (lỗi thật, sửa 21/08/2026): `flush()`
+   *    chụp danh sách `q` lúc bắt đầu rồi gửi lần lượt qua nhiều nhịp mạng. Việc
+   *    trẻ làm TRONG lúc đó (`report()` nay xếp hàng NGAY) nằm ở cuối hàng chờ mà
+   *    không có trong `q` — ghi đè cả hàng chờ bằng ảnh chụp cũ là xoá thẳng việc
+   *    vừa xếp. Đây là dữ liệu duy nhất của lượt chơi đó, mất là mất hẳn.
+   */
+  function dequeue(sent) {
+    var gone = {};
+    (sent || []).forEach(function (it) {
+      var k = keyOf(it);
+      gone[k] = (gone[k] || 0) + 1;
+    });
+    write(LS_QUEUE, queue().filter(function (it) {
+      var k = keyOf(it);
+      if (gone[k] > 0) { gone[k]--; return false; }
+      return true;
+    }));
+  }
+
   /** Có phiên đăng nhập + có API hay không. */
   function auth() {
     return global.AstroQAuth && global.AstroQAuth.postProgress ? global.AstroQAuth : null;
@@ -408,7 +436,13 @@
     });
   }
 
-  var flushing = false;
+  /* ⚠️ GIỮ CHÍNH LỜI HỨA ĐANG CHẠY, KHÔNG PHẢI MỘT CỜ BOOLEAN — sửa 21/08/2026.
+     Trước đó `flush()` gọi lần hai lúc đang chạy thì trả về `Promise.resolve(false)`
+     NGAY, tức nơi gọi tưởng "hàng chờ đã xong" trong khi việc vẫn đang bay. Mà
+     `flush()` LUÔN đang chạy sẵn ở mọi trang có hàng chờ (dòng cuối file gọi nó lúc
+     nạp), nên `readAuth()` bên dưới sẽ không bao giờ chờ được gì nếu chỉ có cờ.
+     Xem `readAuth()` để biết vì sao việc chờ đó là bắt buộc. */
+  var flushing = null;
 
   /* ⚠️ SỐ VIỆC VỪA GỬI XONG — để trang nói được "đã lưu xong n việc".
      Vì sao không để trang tự đếm: `flush()` chạy ngay khi file này nạp, và với một
@@ -424,32 +458,35 @@
   function flushed() { return lastFlush; }
   function ackFlush() { lastFlush = 0; }
 
-  /** Gửi lại những việc đang xếp hàng. Gọi được nhiều lần, tự bỏ qua nếu đang chạy. */
+  /**
+   * Gửi lại những việc đang xếp hàng.
+   * → Promise<boolean> — `true` = hàng chờ đã RỖNG khi lời hứa này xong.
+   *
+   * Gọi được nhiều lần: đang chạy thì trả về CHÍNH lời hứa đang chạy, nên nơi gọi
+   * thứ hai vẫn chờ đúng lúc việc gửi xong (xem khối chú thích ở `flushing`).
+   */
   function flush() {
-    if (flushing) return Promise.resolve(false);
+    if (flushing) return flushing;
     var q = queue();
     if (q.length === 0) return Promise.resolve(true);
     var n0 = q.length;
 
-    flushing = true;
-    return waitAuth(2500).then(function (a) {
-      if (!a) { flushing = false; return false; }
+    flushing = waitAuth(2500).then(function (a) {
+      if (!a) return false;
 
       // Gửi lần lượt: server chống trùng theo từng việc, nhưng thứ tự vẫn nên
       // giữ đúng để kỷ lục và bộ đếm ra cùng kết quả như lúc chơi.
       var i = 0;
       function step() {
         if (i >= q.length) {
-          write(LS_QUEUE, []);       // chỉ xoá hàng chờ khi đã gửi HẾT
+          dequeue(q);                // bỏ ĐÚNG những việc vừa gửi — xem `dequeue()`
           lastFlush += n0;           // gửi HẾT rồi mới ghi nhận — xem ghi chú ở `lastFlush`
-          flushing = false;
           return true;
         }
         return send(a, q[i]).then(function (r) {
           if (!r || !r.ok) {
-            // Vẫn hỏng → giữ lại phần chưa gửi, lần sau thử tiếp
-            write(LS_QUEUE, q.slice(i));
-            flushing = false;
+            // Vẫn hỏng → chỉ bỏ phần ĐÃ gửi, phần còn lại để lần sau thử tiếp
+            dequeue(q.slice(0, i));
             return false;
           }
           syncWallet(r.data);
@@ -471,28 +508,76 @@
         });
       }
       return step();
-    }).catch(function () { flushing = false; return false; });
+    }).catch(function () { return false; })
+      /* MỞ CHỐT Ở ĐÚNG MỘT CHỖ, chạy trên MỌI đường ra (xong hết · gửi hỏng · không
+         có token · ngoại lệ). Rải `flushing = null` vào từng nhánh là kiểu chốt sớm
+         muộn có một nhánh quên mở, mà quên mở thì hàng chờ đứng im vĩnh viễn. */
+      .then(function (ok) { flushing = null; return ok; });
+    return flushing;
   }
 
-  /** Gửi một việc. Luôn trả Promise, không bao giờ reject. */
+  /**
+   * CHỜ TOKEN, RỒI GỬI NỐT HÀNG CHỜ, RỒI MỚI CHO ĐỌC. Dùng cho mọi route CHỈ ĐỌC
+   * (`load` · `missions` · `achievements` · `daily` · `specimens` · `syncWallet`).
+   *
+   * ⚠️ VÌ SAO BẮT BUỘC (lỗi thật, sửa 21/08/2026): các trang chơi **cố ý không nạp**
+   *    `js/firebase-auth.js` (`mission-earth.html`, `quiz.html`, các trang game), nên
+   *    MỌI việc chúng làm đều rơi vào hàng chờ. Trẻ chơi xong rồi sang trang CÓ token
+   *    thì ở đó có HAI lời gọi cùng chạy: `flush()` (POST việc vừa chơi) và route đọc
+   *    (GET tiến độ). GET thường về TRƯỚC POST → trang vẽ đúng trạng thái **trước khi
+   *    chơi**, và vẽ xong thì không vẽ lại nữa. Đo được ở hai chỗ trẻ thấy ngay:
+   *      · cây chặng: xong chặng ① mà nút ① vẫn không có dấu ✓;
+   *      · số dư: xong Quiz, đầu trang đã +thưởng, sang dashboard tụt về số cũ.
+   *    Bịt ở ĐÂY (một chỗ) chứ không ở từng trang: mỗi trang tự nhớ là sớm muộn có
+   *    một trang quên, đúng cái giá `absorbMissions` đã trả khi chỉ vá `flush()`.
+   *
+   * ⚠️ KHÔNG chờ khi hàng chờ RỖNG hoặc chưa đăng nhập → đường đọc thường ngày
+   *    không dài thêm một nhịp mạng nào.
+   * ⚠️ Hàng chờ gửi hỏng cũng ĐỌC TIẾP (`catch`): mất mạng giữa đường không được
+   *    biến một trang chỉ-đọc thành trang trắng.
+   */
+  function readAuth() {
+    return waitAuth(2500).then(function (a) {
+      if (!a || queue().length === 0) return a;
+      return flush().catch(function () { return false; }).then(function () { return a; });
+    });
+  }
+
+  /**
+   * Gửi một việc. Luôn trả Promise, không bao giờ reject.
+   *
+   * ⚠️⚠️ XẾP HÀNG CHỜ **NGAY**, RỒI MỚI GỬI — không phải ngược lại (lỗi thật, sửa
+   *      21/08/2026). Bản trước chỉ `enqueue()` SAU khi `waitAuth(2500)` trả về
+   *      tay không, tức việc chỉ được ghi xuống localStorage ở giây thứ 2,5.
+   *      Nhưng `quiz.html`, `games.html` và các trang game **cố ý không nạp**
+   *      `js/firebase-auth.js`, nên ở đó `waitAuth` LUÔN chạy hết 2,5 giây. Trẻ
+   *      xem màn tổng kết rồi bấm "Chơi lại" / "Về" trong khoảng đó là trang unload
+   *      trước khi hẹn giờ nổ ⇒ **cả lượt chơi biến mất**: không thiên thạch, không
+   *      XP, không thuật ngữ được giải mã. Mà `Economy.addAsteroids()` đã cộng lạc
+   *      quan trên đầu trang rồi, nên trang sau `setFromServer()` sẽ kéo số dư tụt
+   *      lại — đúng cái trẻ thấy là "chơi xong không được cộng".
+   *      Ghi trước thì cùng lắm là gửi lại một việc server đã xử lý, mà điều đó vô
+   *      hại: server dedupe theo `opId` (điều 4 ở đầu file).
+   */
   function report(ev) {
     ev.opId = ev.opId || newOpId();
     bumpLocal(ev);
+    enqueue(ev);
     return waitAuth(2500).then(function (a) {
-      if (!a) { enqueue(ev); return { ok: false, reason: "auth", queued: true }; }
+      if (!a) return { ok: false, reason: "auth", queued: true };
       return send(a, ev).then(function (r) {
-        if (!r || !r.ok) { enqueue(ev); return { ok: false, reason: (r && r.reason) || "http", queued: true }; }
+        if (!r || !r.ok) return { ok: false, reason: (r && r.reason) || "http", queued: true };
+        dequeue([ev]);            // gửi được rồi thì không để hàng chờ gửi lần hai
         syncWallet(r.data);
         absorbMissions(r.data);   // chỉ có tác dụng với ev.type === "mission"
         /* Sau MỖI lượt quiz được ghi nhận, cấp độ được server tính lại ngay —
            đúng thứ cần cho một tính năng gọi là "tự điều chỉnh". Xem khối chú
            thích ở `flush()` để biết vì sao phải có ở CẢ HAI đường. */
-absorbQuizLv(r.data);
+        absorbQuizLv(r.data);
         absorbQuizLeft(r.data);
         return r;
       });
     }).catch(function () {
-      enqueue(ev);
       return { ok: false, reason: "error", queued: true };
     });
   }
@@ -503,28 +588,33 @@ absorbQuizLv(r.data);
    *
    * Chỉ gửi TÊN GAME; server tra bảng phí của nó. Mất mạng → xếp hàng chờ kèm
    * `opId` nên gửi lại không bị trừ hai lần.
+   *
+   * ⚠️ XẾP HÀNG CHỜ NGAY rồi mới gửi, cùng lý do với `report()` ở trên: các trang
+   *    game không có token nên `waitAuth` luôn chạy hết 2,5 giây, mà trẻ bấm vào
+   *    game rồi thoát ngay trong khoảng đó thì phí không bao giờ được ghi.
    */
   function spendReport(game) {
     var item = { kind: "spend", game: String(game || ""), opId: newOpId() };
+    enqueue(item);
     return waitAuth(2500).then(function (a) {
-      if (!a) { enqueue(item); return { ok: false, reason: "auth", queued: true }; }
+      if (!a) return { ok: false, reason: "auth", queued: true };
       return a.spendWallet({ reason: "game", game: item.game, opId: item.opId })
         .then(function (r) {
           if (!r || !r.ok) {
             // 409 "insufficient" KHÔNG xếp hàng chờ: server đã trả lời rõ là không
             // đủ tiền, gửi lại chỉ nhận đúng câu đó. Chỉ xếp lại khi lỗi mạng.
             if (r && r.reason === "http" && r.code === "insufficient") {
+              dequeue([item]);
               if (r.meteors != null && global.Economy) Economy.setFromServer(r.meteors);
               return r;
             }
-            enqueue(item);
             return { ok: false, reason: (r && r.reason) || "http", queued: true };
           }
+          dequeue([item]);
           syncWallet(r.data);
           return r;
         });
     }).catch(function () {
-      enqueue(item);
       return { ok: false, reason: "error", queued: true };
     });
   }
@@ -604,7 +694,7 @@ absorbQuizLv(r.data);
      * để trang tự hiện lời nhắc — hiện số cũ mà không nói gì là đánh lừa người dùng.
      */
     load: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getProfile) return { ok: false, source: "local", reason: "auth", data: localData() };
         return a.getProfile().then(function (r) {
           if (!r || !r.ok) {
@@ -621,7 +711,7 @@ absorbQuizLv(r.data);
 
     /** Lấy kho thành tích (server là nơi quyết huy hiệu nào đã mở). */
     achievements: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getAchievements) return { ok: false, reason: "auth" };
         return a.getAchievements().then(function (r) {
           if (r && r.ok) { syncWallet(r.data); absorbTraining(r.data); absorbQuizLv(r.data); }
@@ -641,7 +731,7 @@ absorbQuizLv(r.data);
      * hiện dấu `—` chứ **không đoán số bước đã xong**, y như achievements.html.
      */
     missions: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getMissions) return { ok: false, reason: "auth" };
         return a.getMissions().then(function (r) {
           /* Ghi cache "đã xong bước nào" cho trang nhiệm vụ đọc — nó không có token
@@ -666,7 +756,7 @@ absorbQuizLv(r.data);
      *    khác, không thì số dư trên đầu trang thấp hơn số thật.
      */
     daily: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getDaily) return { ok: false, reason: "auth" };
         return a.getDaily().then(function (r) {
           if (r && r.ok) { syncWallet(r.data); absorbQuizLeft(r.data); }
@@ -711,7 +801,7 @@ absorbQuizLv(r.data);
      * tiến độ, không có đường ghi riêng).
      */
     specimens: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getSpecimens) return { ok: false, reason: "auth" };
         return a.getSpecimens().then(function (r) {
           if (r && r.ok) syncWallet(r.data);
@@ -740,7 +830,7 @@ absorbQuizLv(r.data);
      * cần hồ sơ (games.html, các trang game) — nhẹ hơn gọi cả `/me/profile`.
      */
     syncWallet: function () {
-      return waitAuth(2500).then(function (a) {
+      return readAuth().then(function (a) {
         if (!a || !a.getWallet) return { ok: false, reason: "auth" };
         return a.getWallet().then(function (r) {
           if (r && r.ok) syncWallet(r.data);

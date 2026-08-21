@@ -252,7 +252,7 @@
       resume:"Chơi tiếp",
       start_toast:"Đi tìm cổng sáng, nhớ thu tinh thể nhé!",
       gem_toast:"+1 {tt}",
-      all_gems:"Đủ tinh thể! Cổng đã mở, ra thôi.",
+      all_gems:"Đủ tinh thể! Đường về cổng đang sáng lên — đi theo là về đích.",
       gate_locked:"Cổng còn khoá — thu nốt {n} tinh thể nữa nhé!",
       lv_up:"Giải xong! Mê cung sau sẽ to hơn.",
       hint_toast:"Bí rồi? Đường đi đang hé ra phía trước.",
@@ -281,7 +281,7 @@
       resume:"Keep playing",
       start_toast:"Find the glowing gate — and grab those crystals!",
       gem_toast:"+1 {tt}",
-      all_gems:"All crystals! The gate is open.",
+      all_gems:"All crystals! The glowing trail leads to the gate — follow it home.",
       gate_locked:"The gate is locked — {n} crystal(s) to go!",
       lv_up:"Solved! The next maze will be bigger.",
       hint_toast:"Stuck? The path ahead is showing.",
@@ -394,6 +394,10 @@
 
   /** Đường ngắn nhất từ (c,r) tới cổng, trả về mảng hướng. BFS trên đúng bộ tường
       đang vẽ — nên nó là bằng chứng "mê cung này giải được", không phải phỏng đoán. */
+  /** Vẽ lại đường về cổng từ chỗ đang đứng. Gọi mỗi lần đi một ô — KHÔNG gọi mỗi
+      khung hình: BFS cả sân là việc thừa 60 lần/giây cho một thứ chỉ đổi khi di chuyển. */
+  function syncGatePath(){ gatePath = gateGuide ? pathTo(pos.c,pos.r,exitC,exitR) : []; }
+
   function pathTo(c0,r0,c1,r1){
     var q=[[c0,r0]], prev={}, key=function(c,r){ return c+","+r; };
     var seen={}; seen[key(c0,r0)]=true;
@@ -437,6 +441,14 @@
   /* ===== Trạng thái ===== */
   var state="start";        // start | play | paused | over
   var steps=0, mined=0, elapsed=0, idleT=0, hintOn=false, hintPath=[];
+  /* ĐƯỜNG VỀ CỔNG — bật khi thu xong viên tinh thể CUỐI, tắt khi sang lượt mới.
+     ⚠️ KHÁC HẲN `hintPath` (đường "bí thì hé", cyan, chỉ 6 ô, chỉ hiện lúc trẻ đứng
+        im 15 giây): đây là đường ĐẦY ĐỦ tới cổng, màu hổ phách y như cổng, và hiện
+        LIÊN TỤC. Lý do có nó: chủ dự án chơi thật rồi bảo *"đang phải điều khiển
+        nhân vật ở trên vòng sáng mới được tính về đích"* — luật giữ nguyên (thu hết
+        rồi mới ra, chốt 15/08/2026), nhưng thu xong mà không ai nói phải làm gì
+        tiếp thì trẻ đứng giữa mê cung không biết đường nào ra. */
+  var gateGuide=false, gatePath=[];
   var parts=[], bg=[], bests=readBests(), newBest=false, lastPaid=0, winBonus=0;
   var shortest=0, last=0, winT=0, solvedTier=0;
 
@@ -579,6 +591,9 @@
     placeGems();
     shortest=pathTo(0,0,exitC,exitR).length;
     steps=0; mined=0; elapsed=0; idleT=0; hintOn=false; hintPath=[];
+    /* Sân không có tinh thể nào (cấu hình lạ) thì cổng mở sẵn — đường về cũng phải
+       sáng sẵn, không thì đúng cái bẫy "mở rồi mà không ai nói" ở cỡ nhỏ nhất. */
+    gateGuide = (gems.length === 0); syncGatePath();
     anim=null; parts=[]; winT=0; newBest=false; winBonus=0;
     hudCache={};
     hideAllOv();
@@ -685,10 +700,18 @@
         SFX.gem(); AstroQGameShell.mate("cheer");
         burst(cx(nc),cy(nr),"#c084fc",16);
         toast(t("gem_toast").replace("{tt}","{tt}"), "ok");
-        if(mined===gems.length) toast(t("all_gems"), "ok");
+        if(mined===gems.length){
+          /* THU XONG VIÊN CUỐI = MỞ ĐƯỜNG VỀ. Nói ra bằng CẢ BA cách một lúc, vì
+             mỗi cách bắt một kiểu chú ý khác nhau: chữ (toast), hình (đường hổ
+             phách chạy tới cổng) và linh vật. Chỉ đổi cách vẽ cái cổng như trước
+             thì trẻ đang nhìn vào chỗ mình vừa lượm, không nhìn vào góc sân. */
+          gateGuide=true;
+          toast(t("all_gems"), "ok");
+        }
       }
     }
     paintHud();
+    syncGatePath();
     /* ⚠️ CỔNG CHỈ MỞ KHI ĐÃ THU HẾT TINH THỂ (đổi 15/08/2026, chủ dự án chốt).
        Trước đó chạm cổng là kết thúc lượt ngay kể cả còn tinh thể, và đó từng là
        luật có chủ đích ("trẻ được quyền ra sớm và chịu giá"). Nay nhiệm vụ của mê
@@ -723,7 +746,7 @@
     }
     if(!anim){
       idleT+=dt;
-      if(!hintOn && idleT>=CONFIG.hintAfter){
+      if(!hintOn && !gateGuide && idleT>=CONFIG.hintAfter){
         /* Bí thì HÉ đường, không giải hộ: chỉ mấy ô phía trước. Cùng cách ARCADE-04
            hé đường mờ sau 9 giây. */
         hintOn=true;
@@ -779,19 +802,33 @@
     ctx.stroke();
   }
 
-  function drawHint(){
-    if(!hintOn || !hintPath.length) return;
+  /* MỘT hàm vẽ cho HAI đường, vì chúng chỉ khác MÀU và ĐỘ DÀI — hai hàm gần giống
+     nhau là hai chỗ phải sửa mỗi lần đổi nét vẽ. Màu là thứ mang nghĩa:
+       cyan  = "bí thì hé mấy ô phía trước" (`hintPath`)
+       hổ phách = "đường VỀ CỔNG, cổng đã mở" (`gatePath`, cùng màu với cổng mở) */
+  function drawPath(path, color){
+    if(!path.length) return;
     var c=pos.c, r=pos.r;
     ctx.save();
-    ctx.strokeStyle="rgba(120,230,255,.34)";
+    ctx.strokeStyle=color;
     ctx.lineWidth=Math.max(2, CELL*0.16);
     ctx.setLineDash([CELL*0.22, CELL*0.22]);
+    /* Nét chạy về phía cổng khi được phép động — mắt trẻ đi theo hướng chạy, nên
+       đây là chỗ nói "đi lối này" mà không cần thêm một chữ nào. */
+    if(!REDUCE) ctx.lineDashOffset = -elapsed*CELL*0.9;
     ctx.beginPath(); ctx.moveTo(cx(c),cy(r));
-    for(var i=0;i<hintPath.length;i++){
-      c+=DX[hintPath[i]]; r+=DY[hintPath[i]];
+    for(var i=0;i<path.length;i++){
+      c+=DX[path[i]]; r+=DY[path[i]];
       ctx.lineTo(cx(c),cy(r));
     }
     ctx.stroke(); ctx.restore();
+  }
+
+  function drawHint(){
+    /* Đường về cổng ĐÈ LÊN đường hé: khi đã thu hết thì việc duy nhất còn lại là
+       ra cổng, hé thêm mấy ô cyan chỉ là hai nét cắt nhau. */
+    if(gateGuide) return drawPath(gatePath, "rgba(255,207,107,.5)");
+    if(hintOn) drawPath(hintPath, "rgba(120,230,255,.34)");
   }
 
   /* ⚠️ HAI TRẠNG THÁI, NHÌN LÀ BIẾT NGAY — không chỉ khác một chút.
@@ -1001,6 +1038,9 @@
     get rows(){ return ROWS; },
     get tier(){ return tier; },
     get hint(){ return hintOn; },
+    /** Đường về cổng đang sáng hay chưa + dài mấy ô (bộ đo cần ĐO được, không đoán). */
+    get gateGuide(){ return gateGuide; },
+    get gatePath(){ return gatePath.slice(); },
     cfg: CONFIG,
     /** Đường ngắn nhất từ chỗ đang đứng tới cổng — BFS trên đúng bộ tường đang vẽ. */
     path: function(){ return pathTo(pos.c,pos.r,exitC,exitR); },
