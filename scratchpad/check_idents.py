@@ -83,7 +83,7 @@ NaN Infinity typeof new delete in instanceof void return if else for while do br
 default function var let const try catch finally throw arguments requestAnimationFrame setTimeout
 clearTimeout setInterval clearInterval AudioContext webkitAudioContext ResizeObserver navigator
 Economy AstroQ CustomEvent
-$ AstroQGameShell AstroQProgress AstroQSfx AstroQBrag AstroQSpecimens AstroQSpecimenArt Number String Boolean Array Object parseInt parseFloat isNaN encodeURIComponent
+$ AstroQGameShell AstroQProgress AstroQSfx AstroQCos AstroQBrag AstroQSpecimens AstroQSpecimenArt Number String Boolean Array Object parseInt parseFloat isNaN encodeURIComponent
 decodeURIComponent alert matchMedia performance Element HTMLElement location history screen""".split())
 
 # ten thuoc tinh sau dau '.' hoac truoc ':' trong object literal thi bo qua,

@@ -1548,11 +1548,25 @@ check("Danh sach moc client == server (ke ca THU TU)", sv_hook_ids == cl_hook_id
 # Dau ':' la ky tu ngan cua dang luu "<moc>:<id mau vat>" — moc chua ':' la
 # `ParseStored` cat sai va mau vat bien mat khoi ban ma khong bao gi.
 check("Khong id moc nao chua dau ':'", all(":" not in h for h in sv_hook_ids))
-# So moc phai NHIEU HON so cho trung, khong thi "tre tu chon moc" la mot lua chon
-# gia — moi mau vat chi con dung mot cho de vao.
+# ⚠️ PHAT BIEU DOI 21/08/2026, KHONG NOI LONG. Ban cu doi so moc phai NHIEU HON
+#    so cho trung ("tre tu chon moc" moi that su la mot lua chon). Chu du an chot
+#    lai: 3 mau MOI BEN, tong 6 cho — dung bang so moc. Nen phep kiem cu dang bao
+#    ve mot quyet dinh DA BI THAY, va no bao hong dung luc san pham lam dung.
+#    Hai dieu VAN dang bao ve, va manh hon:
+#      ① so moc khong duoc IT HON so cho — it hon thi `FreeHook` tra null va
+#         `CheckDesk` LOAI mau vat, tuc mau bien mat khoi ban ma khong bao gi;
+#      ② hai vach phai co SO MOC BANG NHAU — "3 moi ben" sai ngay khi lech.
+#    ⚠️ He qua da biet cua 6 moc / 6 cho: trung du 6 roi thi khong con moc trong
+#       nao de DOI CHO, tre phai lay bot mot mau xuong truoc. Do la he qua truc
+#       tiep cua quyet dinh, khong phai loi.
 sv_slots = int(re.search(r"DeskSlots\s*=\s*(\d+)", spc).group(1))
-check("So moc nhieu hon so cho trung", len(sv_hook_ids) > sv_slots,
+check("So moc du cho moi mau duoc trung", len(sv_hook_ids) >= sv_slots,
       f"{len(sv_hook_ids)} moc / {sv_slots} cho")
+_nL = len([h for h in sv_hook_ids if h[0] == "L"])
+_nR = len([h for h in sv_hook_ids if h[0] == "R"])
+check("Hai vach co so moc BANG NHAU", _nL == _nR, f"L={_nL} R={_nR}")
+check("So cho trung = tong so moc (3 moi ben)", sv_slots == _nL + _nR,
+      f"{sv_slots} cho / {_nL}+{_nR} moc")
 # Moi moc phai co o CA hai vach de bang do khong lech mot ben.
 check("Hai vach L/R deu co moc",
       len([h for h in sv_hook_ids if h[0] == "L"]) > 0

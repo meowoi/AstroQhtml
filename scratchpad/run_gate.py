@@ -20,6 +20,19 @@ ALT = re.compile(r"(?:KET QUA|ket qua|KẲT QUẢ|kết quả)[^0-9]*(\d+)[^0-9]
 #   oan — nguoi ta se bo qua no. Nay: chi doc dong TONG KET (dong CUOI khop mau),
 #   va coi "TAT CA ... DAT" la sach. Can cu duyet chinh la MA THOAT.
 def counts(out):
+    # ⚠⚠ DAU HIEU "TAT CA ... DAT" PHAI XET TRUOC MOI THU.
+    #   `shoot_dodge` va `shoot_defender` khong in dong "n dat / m hong":
+    #   chung in nhan PASS/FAIL tren TUNG dong roi ket bang
+    #   "=== TAT CA KIEM TRA DAT ===". Ban 20/08 da sua ham nay nhung de
+    #   nhanh do XUONG CUOI, nen no roi vao nhanh dem `findall("FAIL")` va
+    #   doc ra "214 dat / 174 hong" cho mot bo DAT (exit 0) — chu "FAIL"
+    #   nam trong chinh cac nhan in ra. Mot BO CHAY bao oan thi cung vo dung
+    #   y nhu mot phep kiem bao oan: nguoi ta se bo qua no.
+    if re.search(r"TAT CA[^0-9]*DAT", out):
+        n_fail = len(re.findall(r"^\s*FAIL\b", out, re.M))
+        if n_fail == 0:
+            n_ok = len(re.findall(r"^\s*PASS\b", out, re.M))
+            return (str(n_ok) if n_ok else "sach"), "0"
     lines = out.strip().splitlines()
     for ln in reversed(lines[-40:]):
         m = NUM.search(ln) or ALT.search(ln)

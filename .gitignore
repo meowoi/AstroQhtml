@@ -65,3 +65,15 @@ scratchpad/__pycache__/
 # ⚠️ Chỉ chặn ĐÚNG GỐC (`/*.png`) — mọi ảnh dùng thật đều nằm trong img/, 3d/,
 #    ava/, background/ nên không cái nào bị chặn nhầm.
 /*.png
+
+# Art gốc 5 asset của ARCADE-03 (2,0 MB, chủ dự án đặt vào 21/08/2026).
+# Bản DÙNG THẬT là img/racer/*.png (57 KB) — sinh bằng
+# `python scratchpad/make_racer_assets.py`. Repo này deploy công khai qua
+# Pages nên đừng commit bản gốc; cùng luật đã áp cho `img/luna ngang.png`.
+img/asset.png
+
+# Bản gộp một-file để chơi thử ARCADE-03 (818 KB: CSS/JS/ảnh/phông thành
+# data URI). Nó là ĐẦU RA của `scratchpad/bundle_racer.py`, không phải mã
+# nguồn — repo này deploy công khai qua Pages nên đừng để 818 KB byte chết
+# trong đó. Dựng lại: `python scratchpad/bundle_racer.py`.
+scratchpad/racer-test-build.html

@@ -74,6 +74,17 @@ def main():
             headers={"access-control-allow-origin": "*"},
             body='{"ok":true,"saleOpen":false,"provider":"none","currency":"VND",'
                  '"trialDays":14,"graceDays":7,"offers":[]}'))
+        # ⚠️ `crew.html` hoi `GET /crew` ngay khi mo trang — CUNG mot ly do.
+        #    Bo do nay tu tim danh sach trang, nen `crew.html` (them 16/08/2026)
+        #    di vao danh sach ma khong ai them route chan. Hong CHAP CHON vi no
+        #    la mot cuoc dua: trang chuyen di truoc khi loi kip ghi thi khong co
+        #    dong nao (do duoc: lan 1 sach 16/0, lan 2 hong 15/1).
+        # ⚠️ REGEX NEO CUOI CHUOI, KHONG dung glob `**/crew*` — glob do khop CA
+        #    `/crew.html`, tuc chan luon chinh TAI LIEU va tra JSON thay cho trang.
+        pg.route(re.compile(r".*/crew(\?.*)?$"), lambda r: r.fulfill(
+            status=200, content_type="application/json",
+            headers={"access-control-allow-origin": "*"},
+            body='{"cap":500,"taken":3,"seats":[{"no":1,"ch":"cho"},{"no":2,"ch":null},{"no":3,"ch":"m"}]}'))
         thieu, sai = [], []
         for t in trang:
             pg.goto(BASE + t, wait_until="domcontentloaded")
