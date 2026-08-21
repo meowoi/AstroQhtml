@@ -1,0 +1,219 @@
+<!doctype html><meta charset="utf-8"><body><pre id="out"></pre>
+<script src="../js/ui-common.js"></script>
+<script>
+var LOG=[];
+function ok(name,cond,extra){ LOG.push((cond?"PASS  ":"FAIL  ")+name+(extra?"  ["+extra+"]":"")); }
+function Q(){ try{ return JSON.parse(localStorage.getItem("astroq-progress-queue")||"[]"); }catch(e){ return "ERR"; } }
+var BAL = 0;
+window.Economy = {
+  setFromServer:function(n){ if(typeof n==="number" && n>=0) BAL = n; return BAL; },
+  addAsteroids:function(n){ BAL += n; return BAL; },
+  getAsteroids:function(){ return BAL; }
+};
+</script>
+<script src="../js/progress.js"></script>
+<script>
+(function(){
+  var tests=[];
+
+  /* ── [1] Không có token: việc phải nằm trong hàng chờ NGAY, không chờ 2,5 giây ── */
+  tests.push(function(){
+    localStorage.clear();
+    delete window.AstroQAuth;
+    var p = AstroQProgress.quiz({correct:4,total:5,meteors:40,terms:["sao"]});
+    ok("[1] khong token: xep hang NGAY (dong bo)", Q().length===1, "queue="+Q().length);
+    ok("[1] co opId", !!(Q()[0]&&Q()[0].opId));
+    return p.then(function(r){
+      ok("[1] tra ve queued", r && r.queued===true && r.ok===false);
+      ok("[1] van con trong hang cho sau khi het gio", Q().length===1, "queue="+Q().length);
+    });
+  });
+
+  /* ── [2] Có token: gửi xong thì phải RỜI hàng chờ ── */
+  tests.push(function(){
+    localStorage.clear();
+    window.AstroQAuth = { postProgress:function(){ return Promise.resolve({ok:true,data:{}}); } };
+    var p = AstroQProgress.lesson("bai-1");
+    ok("[2] xep hang truoc khi gui", Q().length===1);
+    return p.then(function(r){
+      ok("[2] gui thanh cong", r && r.ok===true);
+      ok("[2] hang cho rong lai", Q().length===0, "queue="+Q().length);
+    });
+  });
+
+  /* ── [3] flush() ĐANG chạy: gọi lần hai phải CHỜ, không trả false ngay ── */
+  tests.push(function(){
+    localStorage.clear();
+    localStorage.setItem("astroq-progress-queue", JSON.stringify(
+      [{type:"lesson",id:"a",opId:"o1"}]));
+    var sent=0;
+    window.AstroQAuth = { postProgress:function(){
+      return new Promise(function(r){ setTimeout(function(){ sent++; r({ok:true,data:{}}); },200); }); } };
+    var first = AstroQProgress.flush();
+    var second = AstroQProgress.flush();
+    ok("[3] goi lan hai tra ve CHINH loi hua dang chay", first===second);
+    return second.then(function(v){
+      ok("[3] cho den khi gui xong", v===true && sent===1, "v="+v+" sent="+sent);
+      ok("[3] hang cho rong", Q().length===0);
+    });
+  });
+
+  /* ── [4] Việc XẾP THÊM giữa lúc flush đang chạy KHÔNG được bị xoá ── */
+  tests.push(function(){
+    localStorage.clear();
+    localStorage.setItem("astroq-progress-queue", JSON.stringify(
+      [{type:"lesson",id:"cu",opId:"old1"}]));
+    var slow = true;
+    window.AstroQAuth = { postProgress:function(ev){
+      return new Promise(function(r){ setTimeout(function(){ r({ok:true,data:{}}); }, slow?250:0); }); } };
+    var f = AstroQProgress.flush();
+    /* Giữa đường, một trang KHÔNG token xếp thêm một việc mới. */
+    delete window.AstroQAuth;
+    AstroQProgress.planet("mars");
+    var mid = Q().length;
+    return f.then(function(){
+      ok("[4] viec moi xep giua duong con nguyen", Q().length===1 && Q()[0].id==="mars",
+         "mid="+mid+" cuoi="+JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [5] flush gửi hỏng giữa đường: chỉ bỏ phần ĐÃ gửi ── */
+  tests.push(function(){
+    localStorage.clear();
+    localStorage.setItem("astroq-progress-queue", JSON.stringify([
+      {type:"lesson",id:"a",opId:"a1"},
+      {type:"lesson",id:"b",opId:"b1"},
+      {type:"lesson",id:"c",opId:"c1"}]));
+    var n=0;
+    window.AstroQAuth = { postProgress:function(){
+      n++; return Promise.resolve(n<=1 ? {ok:true,data:{}} : {ok:false,reason:"http"}); } };
+    return AstroQProgress.flush().then(function(v){
+      ok("[5] bao gui chua xong", v===false);
+      ok("[5] giu lai dung 2 viec chua gui",
+         Q().length===2 && Q()[0].id==="b" && Q()[1].id==="c", JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [6] Việc CŨ không có opId vẫn bị bỏ đúng sau khi gửi ── */
+  tests.push(function(){
+    localStorage.clear();
+    localStorage.setItem("astroq-progress-queue", JSON.stringify(
+      [{type:"lesson",id:"legacy"}]));
+    window.AstroQAuth = { postProgress:function(){ return Promise.resolve({ok:true,data:{}}); } };
+    return AstroQProgress.flush().then(function(){
+      ok("[6] viec cu (khong opId) da roi hang cho", Q().length===0, JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [7] Route ĐỌC phải gửi nốt hàng chờ TRƯỚC khi hỏi server ── */
+  tests.push(function(){
+    localStorage.clear();
+    localStorage.setItem("astroq-user", JSON.stringify({uid:"u9"}));
+    localStorage.setItem("astroq-progress-queue", JSON.stringify(
+      [{type:"mission",mission:"earth",step:"scan",opId:"m1"}]));
+    var serverDone=[], order=[];
+    window.AstroQAuth = {
+      postProgress:function(){ return Promise.resolve({ok:true,data:{}}); },
+      missionStep:function(){
+        order.push("POST");
+        return new Promise(function(r){ setTimeout(function(){
+          serverDone=["scan"];
+          r({ok:true,data:{missions:{earth:{steps:["scan","t2"],doneSteps:serverDone,done:false}}}});
+        },300); }); },
+      getMissions:function(){
+        order.push("GET");
+        return new Promise(function(r){ setTimeout(function(){
+          r({ok:true,data:{missions:{earth:{steps:["scan","t2"],doneSteps:serverDone.slice(),done:false}}}});
+        },20); }); }
+    };
+    return AstroQProgress.missions().then(function(r){
+      var d = r.data.missions.earth.doneSteps;
+      ok("[7] POST truoc GET", order.join(">")==="POST>GET", order.join(">"));
+      ok("[7] doc ra dung chang vua xong", d.length===1 && d[0]==="scan", JSON.stringify(d));
+      var c = AstroQProgress.missionSteps("earth");
+      ok("[7] cache cung dung", c.known && c.done.length===1, JSON.stringify(c));
+    });
+  });
+
+  /* ── [8] Hàng chờ RỖNG: route đọc KHÔNG dài thêm nhịp mạng nào ── */
+  tests.push(function(){
+    localStorage.clear();
+    var order=[];
+    window.AstroQAuth = { postProgress:function(){return Promise.resolve({ok:true,data:{}});}, getMissions:function(){ order.push("GET"); return Promise.resolve({ok:true,data:{}}); } };
+    return AstroQProgress.missions().then(function(){
+      ok("[8] hang cho rong -> chi mot loi goi GET", order.join(">")==="GET", order.join(">"));
+    });
+  });
+
+  /* ── [9] spend: 409 "khong du" phai RA khoi hang cho (khong gui lai mai) ── */
+  tests.push(function(){
+    localStorage.clear();
+    window.AstroQAuth = { postProgress:function(){return Promise.resolve({ok:true,data:{}});},
+      spendWallet:function(){
+      return Promise.resolve({ok:false,reason:"http",code:"insufficient",meteors:2}); } };
+    return AstroQProgress.spend("dodge").then(function(){
+      ok("[9] 409 insufficient -> hang cho rong", Q().length===0, JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [10] spend: mat mang -> O LAI hang cho ── */
+  tests.push(function(){
+    localStorage.clear();
+    window.AstroQAuth = { postProgress:function(){return Promise.resolve({ok:true,data:{}});},
+      spendWallet:function(){ return Promise.reject(new Error("net")); } };
+    return AstroQProgress.spend("maze").then(function(){
+      ok("[10] mat mang -> con trong hang cho", Q().length===1, JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [11] SO DU KHONG DUOC TUT LAI: xong quiz o trang khong token, sang trang co
+         token thi phai thay so du DA CONG, khong phai so cu.
+         Do dung thu tu bug: GET /me/profile nhanh (20ms, vi=100) — POST quiz cham
+         (300ms, vi=140). Truoc khi sua, `load()` doc GET truoc nen so du ve 100. ── */
+  tests.push(function(){
+    localStorage.clear();
+    BAL = 140;                        // quiz.html da cong lac quan +40 tren dau trang
+    localStorage.setItem("astroq-progress-queue", JSON.stringify(
+      [{type:"quiz",correct:5,total:5,meteors:40,opId:"q1"}]));
+    var creditedOnServer = false;
+    window.AstroQAuth = {
+      postProgress:function(){
+        return new Promise(function(r){ setTimeout(function(){
+          creditedOnServer = true;
+          r({ok:true,data:{wallet:{meteors:140}}});
+        },300); }); },
+      getProfile:function(){
+        return new Promise(function(r){ setTimeout(function(){
+          r({ok:true,data:{wallet:{meteors: creditedOnServer ? 140 : 100}}});
+        },20); }); }
+    };
+    return AstroQProgress.load().then(function(r){
+      ok("[11] doc duoc ho so", r && r.ok===true);
+      ok("[11] so du KHONG tut lai", BAL===140, "BAL="+BAL);
+      ok("[11] hang cho da rong", Q().length===0, JSON.stringify(Q()));
+    });
+  });
+
+  /* ── [12] Luot quiz o trang KHONG token phai con nguyen sau khi trang unload
+         (do bang cach kiem localStorage NGAY sau loi goi, dong bo). ── */
+  tests.push(function(){
+    localStorage.clear();
+    delete window.AstroQAuth;
+    AstroQProgress.quiz({correct:5,total:5,meteors:40,terms:["quy-dao"]});
+    var q = Q();
+    ok("[12] luot quiz nam trong localStorage NGAY", q.length===1 && q[0].type==="quiz",
+       JSON.stringify(q));
+    ok("[12] giu du terms de mo So Tay", !!(q[0] && q[0].terms && q[0].terms.length===1));
+    ok("[12] giu du meteors", q[0] && q[0].meteors===40);
+  });
+
+  var i=0;
+  (function run(){
+    if(i>=tests.length){
+      document.getElementById("out").textContent = "BEGIN\n"+LOG.join("\n")+"\nEND";
+      return;
+    }
+    Promise.resolve(tests[i++]()).then(run, function(e){ LOG.push("FAIL  ngoai le: "+e.message); run(); });
+  })();
+})();
+</script>
