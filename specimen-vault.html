@@ -126,7 +126,7 @@
      vật" nào. Trang này chỉ vẽ: tên/lời linh vật/fun fact lấy ở js/specimens.js,
      `current`/`goal`/`unlocked` lấy nguyên từ API.
 
-     Thứ DUY NHẤT trang này ghi lên server là **bàn điều khiển** (tối đa 3 mẫu
+     Thứ DUY NHẤT trang này ghi lên server là **bàn điều khiển** (tối đa 6 mẫu — 3 mỗi vách
      trưng ở khoang lái) qua `PUT /me/specimens/desk`.
 
      Không gọi được server → KHÔNG tự đoán mẫu nào đã thu thập. Hiện dải nhắc và
@@ -146,7 +146,7 @@
       none_here:"Không có mẫu vật nào ở nhóm này.",
       pod_cta:"[ SOI CHI TIẾT ]", pod_unknown:"???",
       tag_desk:"Bàn điều khiển", desk_title:"Mẫu vật trưng ở khoang lái",
-      desk_intro:"Chọn tối đa {n} mẫu vật, và tự chọn móc treo trên hai vách khoang lái. Mở một khoang rồi bấm “Treo lên vách”.",
+      desk_intro:"Chọn tối đa {n} mẫu vật — {m} móc mỗi vách, và tự chọn treo ở móc nào. Mở một khoang rồi bấm “Treo lên vách”.",
       slot_empty:"Móc trống",
       scope_tag:"[ MICROSCOPE SCANNER {x} ]",
       zoom_in:"[ 🔍 Soi Phóng To (Zoom Mode) ]", zoom_out:"[ 🔍 Thu Nhỏ Lại ]",
@@ -183,7 +183,7 @@
       none_here:"No specimens in this group.",
       pod_cta:"[ INSPECT ]", pod_unknown:"???",
       tag_desk:"Cockpit desk", desk_title:"Specimens on display in the cockpit",
-      desk_intro:"Pick up to {n} specimens, and choose which hook on the cockpit walls each one hangs from. Open a pod, then press “Hang on a wall”.",
+      desk_intro:"Pick up to {n} specimens — {m} hooks per wall, and you choose which hook. Open a pod, then press “Hang on a wall”.",
       slot_empty:"Empty hook",
       scope_tag:"[ MICROSCOPE SCANNER {x} ]",
       zoom_in:"[ 🔍 Zoom Mode ]", zoom_out:"[ 🔍 Zoom Out ]",
@@ -215,7 +215,7 @@
   var toast = AstroQ.makeToast("toast", 3000);
   var esc = AstroQ.esc;
 
-  var SLOTS_FALLBACK = 3;   // chỉ dùng khi chưa gọi được server; server là nguồn thật
+  var SLOTS_FALLBACK = 6;   // chỉ dùng khi chưa gọi được server; server là nguồn thật
 
   /* `desk` là mảng `{hook,id}` — móc do TRẺ chọn. Trước 16/08/2026 nó là mảng id
      trần và chỗ treo do mã định sẵn; xem `Specimens.Hooks` ở server. */
@@ -328,7 +328,11 @@
 
     $("rare-v").textContent = VIEW.ok ? (s.rare || 0) + "/" + (s.rareTotal || 0) : dash;
     $("desk-v").textContent = (VIEW.ok ? VIEW.desk.length : dash) + "/" + slots();
-    $("desk-intro").textContent = t("desk_intro").replace("{n}", slots());
+    /* {m} suy tu danh sach moc (da doi chieu voi server o check_pages muc [11]),
+       khong gan cung — doi so moc thi cau moi tu dung. */
+    $("desk-intro").textContent = t("desk_intro")
+      .replace("{n}", slots())
+      .replace("{m}", AstroQSpecimens.hooksOf("L").length);
   }
 
   /* ---------------- Vẽ: bộ lọc nhóm ---------------- */

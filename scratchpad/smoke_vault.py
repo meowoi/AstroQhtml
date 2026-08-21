@@ -17,6 +17,7 @@ Tự bật `python -m http.server` trong AstroQhtml/ rồi mở trang.
 import io
 import re
 import subprocess
+import os as _os
 import sys
 import time
 from pathlib import Path
@@ -62,6 +63,21 @@ CAT = server_catalog()
 N = len(CAT)
 UNLOCK_N = 8            # số mẫu cho "đã thu thập" trong bản giả
 
+# ⚠️ SO CHO TRUNG va DANH SACH MOC suy tu NGUON SU THAT, khong gan cung: ngay
+#    21/08/2026 so cho doi 3 -> 6 va moi vach 5 -> 3 moc, va sau phep kiem o day
+#    ghim "—/3" / "10 moc" / moc "L5" da bao hong dung luc san pham lam dung.
+_R = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+SLOTS = int(re.search(r"DeskSlots\s*=\s*(\d+)",
+                      io.open(_os.path.join(_R, "..", "AstroqSV", "src",
+                                            "AstroqSV.Api", "Services",
+                                            "Specimens.cs"),
+                              encoding="utf-8").read()).group(1))
+HOOKS = re.findall(r'"([LR]\d+)"',
+                   re.search(r"var HOOKS = \[(.*?)\]",
+                             io.open(_os.path.join(_R, "js", "specimens.js"),
+                                     encoding="utf-8").read(), re.S).group(1))
+assert SLOTS >= 2 and len(HOOKS) >= SLOTS, (SLOTS, HOOKS)
+
 
 def fake_payload(unlocked_ids, desk):
     items = []
@@ -74,7 +90,11 @@ def fake_payload(unlocked_ids, desk):
     return {
         "specimens": {
             "summary": {"collected": len(unlocked_ids), "total": len(CAT),
-                        "rare": rare_got, "rareTotal": rare_total, "deskSlots": 3},
+                        "rare": rare_got, "rareTotal": rare_total,
+                        # suy tu Specimens.cs — ban gia gieo so cung thi trang
+                        # hien "1/3" trong khi server that noi 6, va phep kiem
+                        # bao hong dung luc san pham lam dung.
+                        "deskSlots": SLOTS},
             # `desk` = dang CU (id tran) van tra ve cho client con trong cache;
             # `deskHooks` la dang THAT tu 16/08/2026. Ban gia phai tra CA HAI de
             # no giong het server that — tra thieu la do mot thu khong ton tai.
@@ -159,7 +179,9 @@ def main():
                   pg.inner_text("#prog-v").startswith(f"—/{N}"), pg.inner_text("#prog-v"))
             check("Mau hiem hien dau '—' chu KHONG bia 0/0",
                   pg.inner_text("#rare-v") == "—", pg.inner_text("#rare-v"))
-            check("Ban dieu khien '—/3'", pg.inner_text("#desk-v") == "—/3", pg.inner_text("#desk-v"))
+            check("Ban dieu khien '—/%d'" % SLOTS,
+                  pg.inner_text("#desk-v") == "—/%d" % SLOTS,
+                  pg.inner_text("#desk-v"))
             n_pods = pg.locator(".pod").count()
             check("Van du khoang (khong de trang)", n_pods == N, f"{n_pods}/{N} khoang")
             check("Moi khoang deu KHOA", pg.locator(".pod.off").count() == N,
@@ -288,8 +310,8 @@ def main():
                   pg.locator(".hk-grid").count() == 1
                   and pg.evaluate("() => window.__deskCalls.length") == 0,
                   str(pg.evaluate("() => window.__deskCalls")))
-            check("Bang chon du 10 moc, chia hai vach",
-                  pg.locator(".hk").count() == 10 and pg.locator(".hk-wall").count() == 2,
+            check("Bang chon du %d moc, chia hai vach" % len(HOOKS),
+                  pg.locator(".hk").count() == len(HOOKS) and pg.locator(".hk-wall").count() == 2,
                   "%d moc / %d vach" % (pg.locator(".hk").count(),
                                         pg.locator(".hk-wall").count()))
             check("Moi moc >=48px (WCAG 2.5.5 + bien an toan)",
@@ -300,13 +322,14 @@ def main():
             calls = pg.evaluate("() => window.__deskCalls")
             check("Goi PUT dung 1 lan, KEM moc tre da chon",
                   calls == [[{"hook": "R3", "id": id0}]], str(calls))
-            check("Ban dieu khien len 1/3", pg.inner_text("#desk-v") == "1/3",
+            check("Ban dieu khien len 1/%d" % SLOTS,
+                  pg.inner_text("#desk-v") == "1/%d" % SLOTS,
                   pg.inner_text("#desk-v"))
             check("Ban do vach: dung 1 moc co mau vat", pg.locator(".slot.full").count() == 1)
             # Ban do phai ve DU 10 o. Chi ve cho da treo thi no khong tra loi duoc cau
             # "con treo duoc o dau", ma do la ca ly do bang nay ton tai.
-            check("Ban do vach ve du 10 moc / 2 vach",
-                  pg.locator("#shelf .slot").count() == 10
+            check("Ban do vach ve du %d moc / 2 vach" % len(HOOKS),
+                  pg.locator("#shelf .slot").count() == len(HOOKS)
                   and pg.locator("#shelf .wm-wall").count() == 2,
                   "%d o / %d vach" % (pg.locator("#shelf .slot").count(),
                                       pg.locator("#shelf .wm-wall").count()))
@@ -332,8 +355,8 @@ def main():
             calls = pg.evaluate("() => window.__deskCalls")
             check("Doi moc -> PUT lan 2 voi moc MOI",
                   len(calls) == 2 and calls[1] == [{"hook": "L2", "id": id0}], str(calls[-1:]))
-            check("Van la 1/3 (doi cho chu khong phai them mau)",
-                  pg.inner_text("#desk-v") == "1/3", pg.inner_text("#desk-v"))
+            check("Van la 1/%d (doi cho chu khong phai them mau)" % SLOTS,
+                  pg.inner_text("#desk-v") == "1/%d" % SLOTS, pg.inner_text("#desk-v"))
             check("Ban do: nay o VACH TRAI, o thu 2",
                   pg.eval_on_selector("#shelf .wm-wall:nth-child(1)", full_at) == 1,
                   str(pg.eval_on_selector("#shelf .wm-wall:nth-child(1)", full_at)))
@@ -344,8 +367,9 @@ def main():
             check("Tieu diem tra ve dung khoang vua xem",
                   pg.evaluate("() => document.activeElement.classList.contains('pod')"))
 
-            # đầy 3 chỗ
-            for i, hk in ((1, "L5"), (2, "R1")):
+            # đầy %d chỗ — dùng móc CÒN TRỐNG (L2 đã có mẫu ở bước trên)
+            _free = [h for h in HOOKS if h != "L2"][:SLOTS - 1]
+            for i, hk in enumerate(_free, start=1):
                 pg.locator(".pod.on").nth(i).click()
                 pg.wait_for_selector("#insp.show")
                 pg.click("#desk-btn")
@@ -361,16 +385,20 @@ def main():
                 pg.wait_for_timeout(600)
                 pg.keyboard.press("Escape")
                 pg.wait_for_timeout(300)
-            check("Day 3 cho", pg.inner_text("#desk-v") == "3/3", pg.inner_text("#desk-v"))
-            pg.locator(".pod.on").nth(3).click()
+            check("Day %d cho" % SLOTS,
+                  pg.inner_text("#desk-v") == "%d/%d" % (SLOTS, SLOTS),
+                  pg.inner_text("#desk-v"))
+            pg.locator(".pod.on").nth(SLOTS).click()
             pg.wait_for_selector("#insp.show")
             check("Ban day -> nut bi vo hieu", pg.get_attribute("#desk-btn", "disabled") is not None)
             check("Ban day -> co cau giai thich", pg.is_visible(".insp-note"))
             note = pg.inner_text(".insp-note").lower()
             check("KHONG im lang: cau noi ro het cho VA phai lam gi",
                   ("đầy" in note or "đủ" in note) and "lấy" in note, note)
+            # ⚠️ Ghim so "3" o day chinh la gan cung — dung thu phep kiem nay
+            #    sinh ra de chan. Suy tu SLOTS (doc tu Specimens.cs).
             check("Cau do neu dung so cho lay tu server (khong gan cung)",
-                  "3" in note, note)
+                  str(SLOTS) in note, note)
             pg.keyboard.press("Escape")
             pg.wait_for_timeout(300)
 

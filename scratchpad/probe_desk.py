@@ -25,6 +25,7 @@ bo sot; co phep kiem [5] canh dung dieu do.
       "tha noi giua buong lai" hoa ra tha noi trong cai bang thong ke. Bay nay da
       tra gia that voi tam tha cua menu avatar (15/08/2026).
 """
+import io
 import sys
 from playwright.sync_api import sync_playwright
 
@@ -32,8 +33,23 @@ BASE = "http://127.0.0.1:8123"
 # Tu 16/08/2026 tre TU CHON moc treo, nen ban thu phai dung moc RAI RAC — de day
 # du ba mau vao L1/L2/L3 thi khong phan biet duoc "ve dung moc da chon" voi "ve
 # theo thu tu trong mang", tuc phep kiem dat mot cach rong.
+# ⚠️ 21/08/2026: so moc moi vach thu tu 5 xuong 3 (tong 6 cho, 3 moi ben), nen
+#    moc "R4" cu KHONG CON TON TAI. Doi sang "R3" va VAN giu tinh rai rac:
+#    L1/R3/L3 khac han thu tu 0-1-2 cua mang, nen phep kiem van phan biet duoc.
+#    Day la mot phep kiem BAO VE TRANG THAI CU — no bao hong dung luc san pham
+#    lam dung; sua bang cach doi PHAT BIEU, khong noi long.
+# So moc MOI VACH suy tu js/specimens.js — gan cung con so la phep kiem se bao
+# hong dung luc san pham lam dung (21/08/2026 no da bao hong vi ghim "du 5 o").
+import os as _os, re as _re
+_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+_hk = _re.search(r"var HOOKS = \[(.*?)\]",
+                 io.open(_os.path.join(_ROOT, "js/specimens.js"),
+                         encoding="utf-8").read(), _re.S).group(1)
+PER_WALL = len([x for x in _re.findall(r"\"L\d+\"", _hk)])
+assert PER_WALL >= 2, PER_WALL
+
 DESK = [{"hook": "L1", "id": "ancient-seawater"},
-        {"hook": "R4", "id": "mars-red-ice"},
+        {"hook": "R3", "id": "mars-red-ice"},
         {"hook": "L3", "id": "amazon-leaf"}]
 
 ok = bad = 0
@@ -249,16 +265,16 @@ def main():
         chk("0 loi trang", not d["errs"], str(d["errs"][:1])[:90])
 
         # ⚠️ PHEP KIEM QUAN TRONG NHAT CUA LUOT 16/08: mau vat treo o DUNG MOC tre
-        #    chon, khong phai "ve theo thu tu trong mang". DESK dat o L1/L3/R4 nen
+        #    chon, khong phai "ve theo thu tu trong mang". DESK dat o L1/L3/R3 nen
         #    ba con so nay khac han thu tu 0,1,2 — dat mot cach rong la khong duoc.
         wl = {w["side"]: w for w in d["walls"]}
         chk("dung HAI vach", sorted(wl.keys()) == ["L", "R"], str(sorted(wl.keys())))
         chk("vach trai: mau vat o dung moc 1 va 3",
             wl["L"]["full"] == [0, 2], str(wl["L"]["full"]))
-        chk("vach phai: mau vat o dung moc 4",
-            wl["R"]["full"] == [3], str(wl["R"]["full"]))
-        chk("moi vach du 5 o (o trong van GIU CHO)",
-            wl["L"]["n"] == 5 and wl["R"]["n"] == 5,
+        chk("vach phai: mau vat o dung moc 3",
+            wl["R"]["full"] == [2], str(wl["R"]["full"]))
+        chk("moi vach du %d o (o trong van GIU CHO)" % PER_WALL,
+            wl["L"]["n"] == PER_WALL and wl["R"]["n"] == PER_WALL,
             "L=%d R=%d" % (wl["L"]["n"], wl["R"]["n"]))
         chk("vach trai nam ben trai, vach phai nam ben phai",
             wl["L"]["cells"][0]["left"] == 0
@@ -345,14 +361,14 @@ def main():
         #      va kho THAP nhat con hien tinh nang nay.
         #      Do TREN O THAT ke ca o vo hinh giu cho — o vo hinh van chiem cho, nen
         #      chi dem `.dfp` la bo sot dung cai co the de len nhau.
-        print("\n=== [8] 5 moc moi vach: khong de nhau, khong tran khung ===")
+        print("\n=== [8] 3 moc moi vach: khong de nhau, khong tran khung ===")
         for w, h, ten in ((1920, 1080, "Full HD"), (1600, 720, "rong ma THAP"),
                           (1440, 900, "laptop 1440"), (1366, 768, "iPad Pro ngang"),
                           (1280, 720, "laptop 1280"), (1180, 820, "iPad Air ngang")):
             dg = run(br, DESK, w=w, h=h)
             ws = dg["walls"]
-            chk("%s (%dx%d): moi vach du 5 o" % (ten, w, h),
-                len(ws) == 2 and all(x["n"] == 5 for x in ws),
+            chk("%s (%dx%d): moi vach du %d o" % (ten, w, h, PER_WALL),
+                len(ws) == 2 and all(x["n"] == PER_WALL for x in ws),
                 str([x["n"] for x in ws]))
             chk("%s: 0 cap moc DE LEN NHAU" % ten,
                 all(x["cross"] == 0 for x in ws),

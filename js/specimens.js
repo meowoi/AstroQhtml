@@ -368,7 +368,7 @@
      ⚠️ THỨ TỰ TRONG MẢNG LÀ THỨ TỰ TỪ TRÊN XUỐNG của mỗi vách — `css/dashboard.css`
         xếp chúng bằng flex theo đúng thứ tự này, không gán toạ độ cho từng móc.
         Đảo thứ tự ở đây là đảo chỗ treo của mọi mẫu vật đã lưu. */
-  var HOOKS = ["L1", "L2", "L3", "L4", "L5", "R1", "R2", "R3", "R4", "R5"];
+  var HOOKS = ["L1", "L2", "L3", "R1", "R2", "R3"];
   var WALL_NAME = {
     L: { vi: "Vách trái", en: "Left wall" },
     R: { vi: "Vách phải", en: "Right wall" }

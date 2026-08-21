@@ -210,13 +210,13 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
       ngang thì giữ được 6%..94%, cột còn nguyên. */
 .desk-float{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;
   /* ⚠️ CỠ MÓC BỊ KẸP THEO CẢ BỀ RỘNG LẪN CHIỀU CAO, và vế chiều cao mới là vế giữ
-     cho 5 móc không đè lên nhau. Chỉ theo bề rộng thì một màn 1600×720 cho móc
+     cho 3 móc không đè lên nhau. Chỉ theo bề rộng thì một màn 1600×720 cho móc
      148px → 5×148 + 4 khe = 796px trên một khung cao 720px, tức hai móc cuối tràn
-     khỏi màn. `(100vh - 120px)/5 - 14px` = phần mỗi móc được chia sau khi chừa
+     khỏi màn. `(100vh - 120px)/3 - 14px` = phần mỗi móc được chia sau khi chừa
      60px trên/dưới (tránh thanh trạng thái và hai huy hiệu neo góc dưới) và 14px
      khe. Sàn 64px vẫn thắng ở màn rất thấp — ở đó cột ngắn lại chứ không tràn. */
   --dfw:clamp(64px, min(calc((100vw - 1120px) * .30 + 34px),
-                        calc((100vh - 120px) / 5 - 14px)), 148px);}
+                        calc((100vh - 120px) / 3 - 14px)), 148px);}
 .desk-float[hidden]{display:none;}
 
 /* Một VÁCH = một cột móc, canh giữa theo chiều dọc. Xếp bằng flex chứ không gán
