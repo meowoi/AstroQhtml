@@ -97,7 +97,7 @@
           <span data-i18n-html="how2">💡 Chọn xong bấm <b>Chốt lựa chọn</b>, rồi đọc vì sao đúng hoặc chưa đúng.</span>
           <span data-i18n-html="how3">📖 Không có ai thua ở đây — mọi lựa chọn đều được giải thích.</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -206,13 +206,13 @@
       how1:"🧭 <b>Bốn tình huống</b> — mỗi lần chọn đúng những thứ giữ được mạng sống.",
       how2:"💡 Chọn xong bấm <b>Chốt lựa chọn</b>, rồi đọc vì sao đúng hoặc chưa đúng.",
       how3:"📖 Không có ai thua ở đây — mọi lựa chọn đều được giải thích.",
-      cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
       start_btn:"Bắt đầu",
       confirm:"Chốt lựa chọn", next:"Tình huống tiếp →", finish:"Xem kết quả →",
       pick_n:"Chọn <b>{n}</b> thứ · đã chọn <b>{k}</b>",
       pick_one:"Chọn <b>1</b> thứ",
       over_title:"Xong ca trực!",
-      again_btn:"Chơi lại · <b>3</b>", to_hub:"Về Khu Huấn Luyện",
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; }, to_hub:"Về Khu Huấn Luyện",
       home_btn:"Trung Tâm Điều Hướng",
       read_more:"📖 Đọc bài: Sự sống cần gì?",
       need_title:"Chưa đủ Thiên thạch tím!",
@@ -234,13 +234,13 @@
       how1:"🧭 <b>Four scenarios</b> — each time, pick the things that keep people alive.",
       how2:"💡 Pick, then press <b>Lock in</b> and read why each choice works or doesn't.",
       how3:"📖 Nobody loses here — every choice gets an explanation.",
-      cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
       start_btn:"Start",
       confirm:"Lock in", next:"Next scenario →", finish:"See results →",
       pick_n:"Pick <b>{n}</b> things · picked <b>{k}</b>",
       pick_one:"Pick <b>1</b>",
       over_title:"Shift complete!",
-      again_btn:"Play again · <b>3</b>", to_hub:"Back to Training Simulator",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; }, to_hub:"Back to Training Simulator",
       home_btn:"Navigation Hub",
       read_more:"📖 Read: What does life need?",
       need_title:"Not enough Purple Meteors!",

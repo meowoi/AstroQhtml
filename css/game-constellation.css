@@ -55,5 +55,3 @@ canvas.hot{cursor:pointer;}
 .res .cell.miss .rv{color:#ffd9a8;}
 /* Nút "Chòm sao khác · 3 🪐" dài hơn nút của các game khác nên cho nó chiếm hẳn
    một hàng; chia 3 nút một hàng như mặc định thì chữ bị gãy giữa nhãn và số phí. */
-.acts .primary{flex:1 1 100%;}
-.acts .btn-fee{white-space:nowrap;}

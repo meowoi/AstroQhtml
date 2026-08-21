@@ -97,7 +97,7 @@
           <span data-i18n-html="how2">⚑ Đánh dấu hàng nào <b>hai bên không nói cùng một lượng</b>, rồi bấm Duyệt bảng.</span>
           <span data-i18n-html="how3">⚠️ Khác đơn vị <b>chưa chắc đã sai</b> — 1 km và 1000 m là cùng một lượng.</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -224,7 +224,7 @@
       how1:"📋 Mỗi bảng có <b>hai cột</b>: số của nhóm dưới mặt đất và số của nhóm trên tàu.",
       how2:"⚑ Đánh dấu hàng nào <b>hai bên không nói cùng một lượng</b>, rồi bấm Duyệt bảng.",
       how3:"⚠️ Khác đơn vị <b>chưa chắc đã sai</b> — 1 km và 1000 m là cùng một lượng.",
-      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
       start_btn:"Bắt đầu",
       approve:"✔ Duyệt bảng", next:"Bảng tiếp →", finish:"Xem kết quả →",
       st_hit:"Bắt đúng.", st_miss:"Bỏ sót chỗ này.", st_wrong:"Báo nhầm.",
@@ -235,7 +235,7 @@
       v_both:"<b>Chưa duyệt được.</b> Bỏ sót {a} hàng lệch và báo nhầm {b} hàng không lệch.",
       over_title:"Hết ca trực!",
       over_p:"Bạn duyệt đúng {n} trên {t} bảng số liệu.",
-      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; }, to_hub:"Về Khu Huấn Luyện",
       home_btn:"Trung Tâm Điều Hướng",
       read_more:"📖 Đọc bài: Một con tàu mất vì hai đơn vị",
       need_title:"Chưa đủ Thiên thạch tím!",
@@ -256,7 +256,7 @@
       how1:"📋 Every sheet has <b>two columns</b>: the ground team's figure and the onboard figure.",
       how2:"⚑ Flag any row where <b>the two sides do not mean the same amount</b>, then approve the sheet.",
       how3:"⚠️ Different units are <b>not automatically wrong</b> — 1 km and 1000 m are the same amount.",
-      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
       start_btn:"Start",
       approve:"✔ Approve sheet", next:"Next sheet →", finish:"See results →",
       st_hit:"Caught it.", st_miss:"You missed this one.", st_wrong:"False alarm.",
@@ -267,7 +267,7 @@
       v_both:"<b>Not approved.</b> You missed {a} mismatch(es) and raised {b} false alarm(s).",
       over_title:"Shift complete!",
       over_p:"You cleared {n} of {t} data sheets correctly.",
-      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; }, to_hub:"Back to Training Simulator",
       home_btn:"Navigation Hub",
       read_more:"📖 Read: A spacecraft lost to two units",
       need_title:"Not enough Purple Meteors!",

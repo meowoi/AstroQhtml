@@ -129,6 +129,34 @@ canvas{width:100%;height:100%;}
 .iconbtn.is-hidden{display:none;}
 #btn-sfx.off{color:var(--ink-faint);}
 
+/* ===== NÚT CÓ THANH NẠP (dùng chung) =====
+   Một nút icon thường + thanh nạp 3px ở mép dưới + sáng hẳn khi đầy.
+   Dùng bởi: ⚡ Xung kích EMP (ARCADE-02) · ⚡ Tăng tốc (ARCADE-03).
+   ⚠️ Chuyển vào đây 21/08/2026, trước đó nó nằm ở `css/game-defender.css`
+      dưới tên `.empbtn`. Game thứ hai cần đúng khuôn này, mà chép sang là
+      hai bản sẽ trôi khỏi nhau (quy tắc 2 mục 6). Tên cũng phải đổi: gọi là
+      `.empbtn` trong một file dùng chung là một cái tên nói SAI, vì ở
+      ARCADE-03 nó không phải EMP.
+   ⚠️ `disabled` khi chưa nạp đầy là CỐ Ý — một cái nút bấm mà không có gì
+      xảy ra thì trẻ tưởng game lỗi. Nhưng phải có tín hiệu ĐẦY (`.ready`)
+      chứ không để trẻ tự nhìn thanh 3px, vì lúc đó nó đang phải lái. */
+.chargebtn{position:relative;overflow:hidden;}
+.chargebtn svg{fill:currentColor;stroke:none;}
+.chargebtn:disabled{cursor:default;color:var(--ink-faint);opacity:.72;}
+.chargebtn:disabled:hover{background:rgba(9,14,28,.66);}
+.chargebar{position:absolute;left:4px;right:4px;bottom:3px;height:3px;border-radius:3px;
+  background:rgba(255,255,255,.14);overflow:hidden;}
+.chargebar i{display:block;height:100%;width:0;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent,#5fd3ff),#bfe9ff);transition:width .2s var(--ease);}
+/* Nạp đầy: nút sáng hẳn lên + nhấp nháy nhẹ. Không có tín hiệu này thì trẻ phải
+   nhìn thanh 3px mới biết dùng được — mà lúc đó nó đang phải ngắm. */
+.chargebtn.ready{color:#0b1020;background:linear-gradient(135deg,#7dd3fc,#c4b5fd);
+  border-color:rgba(191,233,255,.9);animation:chargeReady 1.1s ease-in-out infinite;}
+.chargebtn.ready .chargebar i{background:#0b1020;}
+@keyframes chargeReady{0%,100%{box-shadow:0 0 0 rgba(125,211,252,0);}
+  50%{box-shadow:0 0 14px rgba(125,211,252,.85);}}
+
+
 /* ===== Overlay (brief / kết quả / thiếu tt / tạm dừng / quiz) =====
    Đặt trong .play nên không che thanh HUD; margin:auto trên .ov-card = vừa căn
    giữa vừa cuộn được khi thẻ cao hơn khung (điện thoại màn thấp). */
@@ -173,7 +201,22 @@ canvas{width:100%;height:100%;}
 .acts button:active{transform:scale(.94);}
 .acts .primary{border:none;color:#04060f;background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);}
 .acts .primary:hover{filter:brightness(1.08);}
+/* NUT CHINH CHIEM HAN MOT HANG. ⚠️ Day la SO DO, khong phai so thich:
+   `.acts button{flex:1}` chia 3 nut mot hang thi nut chinh chi rong 118px (man
+   1440) / 136px (man 390) — khong the chua "Me cung khac · 3 [anh tt]" mot dong.
+   Do ngay 21/08/2026 bang scratchpad/probe_again_btn.py: **9/10 game nut xuong 2
+   dong o CA HAI kho man**, ke ca dodge/defender von da co anh tt. Chi
+   game-constellation mot dong, vi RIENG no co rule nay tu 28/07/2026 (rong
+   378px / 283px). Tuc day la loi cua KHUNG DUNG CHUNG, khong phai cua mot trang
+   — nen rule dat o day va ban rieng o css/game-constellation.css da xoa (quy tac
+   2 muc 6: thu dung chung thi tach ra, dung de hai ban).
+   Nut chinh la HANH DONG CHINH cua bang ket qua, cho no mot hang la nhan dung cho.
+   ⚠️ Doi nhan nut hay doi so nut thi DO LAI bang probe_again_btn.py TRUOC. */
+.acts .primary{flex:1 1 100%;}
 .acts .btn-fee{display:inline-flex;align-items:center;justify-content:center;gap:5px;}
+/* Nhan phi la mot cum "chu + so + anh" — de no gay chu thi con so va anh roi
+   xuong hai dong khac nhau, doc ra nhu hai thu roi rac. */
+.acts .btn-fee{white-space:nowrap;}
 .acts .btn-fee img{width:15px;height:15px;object-fit:contain;}
 
 /* top phải nằm DƯỚI thanh HUD, không thì toast rơi đúng hàng chip và trông như một chip */

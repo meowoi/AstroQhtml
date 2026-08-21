@@ -102,7 +102,7 @@
           <span data-i18n-html="how2">⏳ Tín hiệu tới Sao Hoả mất <b>bảy phút</b>. Không có ai cầm lái ở đó.</span>
           <span data-i18n-html="how3">✅ Tính điểm theo số lệnh đúng <b>tính từ đầu dãy</b> — lệnh sai đầu tiên là dừng.</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -214,7 +214,7 @@
       how1:"📡 <b>Xếp lệnh đúng thứ tự</b> rồi mới phát đi — không sửa được nữa.",
       how2:"⏳ Tín hiệu tới Sao Hoả mất <b>bảy phút</b>. Không có ai cầm lái ở đó.",
       how3:"✅ Tính điểm theo số lệnh đúng <b>tính từ đầu dãy</b> — lệnh sai đầu tiên là dừng.",
-      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
       start_btn:"Bắt đầu",
       send:"📡 Phát lệnh đi", next:"Nhiệm vụ tiếp →", finish:"Xem kết quả →",
       strip_empty:"Chưa có lệnh nào. Bấm vào kho lệnh bên dưới để xếp dãy.",
@@ -230,7 +230,7 @@
       why_stop:"Lệnh <b>{n}</b> đáng lẽ phải là: <b>{c}</b>",
       why_skip:"Những lệnh sau đó không bao giờ chạy tới — tàu đã dừng rồi.",
       over_title:"Hết ca liên lạc!",
-      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; }, to_hub:"Về Khu Huấn Luyện",
       home_btn:"Trung Tâm Điều Hướng",
       read_more:"📖 Đọc bài: Không ai cầm tay lái khi tàu hạ cánh",
       need_title:"Chưa đủ Thiên thạch tím!",
@@ -250,7 +250,7 @@
       how1:"📡 <b>Put the commands in order</b>, then send — no edits after that.",
       how2:"⏳ A signal takes <b>seven minutes</b> to reach Mars. Nobody is steering out there.",
       how3:"✅ You score the commands that are right <b>from the start of the line</b> — the first wrong one stops it.",
-      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
       start_btn:"Start",
       send:"📡 Transmit", next:"Next task →", finish:"See results →",
       strip_empty:"No commands yet. Tap the command pool below to build the sequence.",
@@ -266,7 +266,7 @@
       why_stop:"Command <b>{n}</b> should have been: <b>{c}</b>",
       why_skip:"Everything after that never ran — the spacecraft had already stopped.",
       over_title:"Comms shift over!",
-      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; }, to_hub:"Back to Training Simulator",
       home_btn:"Navigation Hub",
       read_more:"📖 Read: Nobody is at the wheel when a spacecraft lands",
       need_title:"Not enough Purple Meteors!",

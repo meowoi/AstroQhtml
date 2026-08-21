@@ -99,7 +99,7 @@
           <span data-i18n-html="how2">♻️ Oxy được làm ra bằng cách <b>tách nước</b> — nên chạy máy oxy là tốn nước.</span>
           <span data-i18n-html="how3">⚠️ Một vạch chạm 0 là phi hành đoàn phải rời trạm. Giữ cả ba sống!</span>
         </div>
-        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="tt" /></div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>4</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
         <div class="acts">
           <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
         </div>
@@ -205,7 +205,7 @@
       how1:"🔋 Mỗi ngày bạn chỉ có <b>5 phần điện</b> để chia cho ba hệ thống.",
       how2:"♻️ Oxy được làm ra bằng cách <b>tách nước</b> — nên chạy máy oxy là tốn nước.",
       how3:"⚠️ Một vạch chạm 0 là phi hành đoàn phải rời trạm. Giữ cả ba sống!",
-      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Mỗi lượt: <b>4</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
       start_btn:"Bắt đầu",
       run_day:"▶ Chạy một ngày", next:"Ngày tiếp →", finish:"Xem kết quả →",
       g_water:"Nước", g_air:"Khí sạch", g_oxy:"Oxy",
@@ -225,7 +225,7 @@
       over_p_ok:"Bạn giữ được cả ba hệ thống suốt {d} ngày.",
       over_p_dead:"{g} đã cạn ở ngày {d} — phi hành đoàn phải rời trạm.",
       why_loop:"<b>Cái vòng:</b> nước được lọc lại từ chính hơi ẩm và nước thải; rồi nước ấy bị <b>tách ra</b> để lấy oxy để thở. Cùng một mớ vật chất đi vòng mãi — nên chạy máy oxy mà bỏ đói máy nước là cả vòng đứt.",
-      again_btn:"Chơi lại · <b>4</b>", to_hub:"Về Khu Huấn Luyện",
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; }, to_hub:"Về Khu Huấn Luyện",
       home_btn:"Trung Tâm Điều Hướng",
       read_more:"📖 Đọc bài: Cỗ máy giữ mạng sống",
       need_title:"Chưa đủ Thiên thạch tím!",
@@ -245,7 +245,7 @@
       how1:"🔋 Each day you get only <b>5 units of power</b> to split between three systems.",
       how2:"♻️ Oxygen is made by <b>splitting water</b> — so running the oxygen plant costs water.",
       how3:"⚠️ If any gauge hits 0 the crew must leave. Keep all three alive!",
-      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"tt\" />",
+      cost_line:"Per run: <b>4</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
       start_btn:"Start",
       run_day:"▶ Run one day", next:"Next day →", finish:"See results →",
       g_water:"Water", g_air:"Clean air", g_oxy:"Oxygen",
@@ -265,7 +265,7 @@
       over_p_ok:"You kept all three systems alive for {d} days.",
       over_p_dead:"{g} ran out on day {d} — the crew had to leave.",
       why_loop:"<b>The loop:</b> water is reclaimed from the crew's own humidity and wastewater; that water is then <b>split apart</b> to give the oxygen they breathe. The same handful of matter, going round and round — so starving the water system while running the oxygen plant breaks the whole loop.",
-      again_btn:"Play again · <b>4</b>", to_hub:"Back to Training Simulator",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; }, to_hub:"Back to Training Simulator",
       home_btn:"Navigation Hub",
       read_more:"📖 Read: The machine that keeps you alive",
       need_title:"Not enough Purple Meteors!",
