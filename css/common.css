@@ -58,6 +58,14 @@ canvas{display:block;}
 .modal.show{opacity:1;visibility:visible;}
 .modal-actions{display:flex;gap:10px;justify-content:center;}
 .tt-inline{width:1em;height:1em;object-fit:contain;vertical-align:-0.16em;margin:0 .05em;}
+/* Tranh mẫu vật (js/specimen-art.js) — CỠ THEO `font-size` CỦA Ô CHỨA, không gán px.
+   ⚠️ Nhờ vậy năm chỗ đang đặt cỡ bằng `font-size` không phải sửa một dòng nào:
+      `.slot .sp` 19px · `.hk-sp` 20px · `.pod .sp` 46px · `.scope .sp` 96px ·
+      `.scope.zoom .sp` 170px — kể cả hiệu ứng phóng to ở màn soi, vì nó là
+      `transition:font-size` sẵn có và `1em` đi theo.
+   ⚠️ `inline-block` chứ không `block`: `specimen-vault.html` còn đặt tranh NGAY
+      TRONG `<h2>` cạnh tên mẫu vật, `block` là tên rơi xuống dòng dưới. */
+.spart{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex:none;}
 .toast{position:fixed;left:50%;border-radius:999px;color:var(--ink);font-weight:600;opacity:0;pointer-events:none;}
 .toast .toast-msg{display:inline-flex;align-items:center;gap:2px;}
 .toast .toast-ic{width:20px;height:20px;flex:none;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}

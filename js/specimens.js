@@ -396,7 +396,27 @@
       return this.wallName(h, lang) + " · " +
              (lang === "en" ? "Hook " : "Móc ") + String(h).slice(1);
     },
-    icon: function (id) { return (S[id] && S[id].ic) || "🧪"; },
+    /**
+     * HÌNH của một mẫu vật, **trả về MARKUP** — nơi gọi đừng `esc()` nó.
+     *
+     * ⚠️⚠️ TRẢ VỀ SVG, KHÔNG TRẢ VỀ EMOJI (đổi 21/08/2026). Chủ dự án chơi trên Mac
+     *    rồi chơi trên PC Windows và gửi hai ảnh chụp cùng một trang: emoji không
+     *    phải một hình mà là một KÝ TỰ, nên **mỗi hệ điều hành vẽ nó bằng phông
+     *    của riêng mình** (Apple Color Emoji · Segoe UI Emoji · Noto Color Emoji) —
+     *    không tuỳ chọn CSS nào chữa được. Và emoji còn nói SAI nội dung: 💎 (kim
+     *    cương XANH) cho "Tinh Thể Băng Đỏ", 🐛 (sâu bướm) cho Tardigrada tám chân.
+     *    Lý do đầy đủ + danh sách 10 chỗ nói sai: đầu `js/specimen-art.js`.
+     *
+     * ⚠️ `ic` VẪN GIỮ và vẫn là đường lùi: chưa nạp `js/specimen-art.js` (hoặc mẫu
+     *    vật mới chưa vẽ xong) thì trang hiện emoji như cũ — xấu, nhưng không vỡ,
+     *    đúng khuôn "thiếu tên thì hiện chính id" của file này.
+     */
+    icon: function (id) {
+      var art = global.AstroQSpecimenArt ? global.AstroQSpecimenArt.svg(id) : "";
+      return art || (S[id] && S[id].ic) || "🧪";
+    },
+    /** Emoji thô — chỉ dùng khi cần một KÝ TỰ (chuỗi thuần, `title`, `esc()`…). */
+    iconChar: function (id) { return (S[id] && S[id].ic) || "🧪"; },
     classification: function (id) { return (S[id] && S[id].cls) || ""; },
     fact: function (id, lang) { return S[id] ? bi(S[id].f, lang) : ""; },
     source: function (id) { return (S[id] && S[id].src) || null; },

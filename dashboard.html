@@ -42,6 +42,10 @@
 <!-- Ten + emoji mau vat cho hang "trung o ban dieu khien" (10,7 KB gzip). Cho DUY
      NHAT giu ten mau vat; server giu dieu kien mo khoa. -->
 <script src="js/specimens.js"></script>
+<!-- Tranh 21 mẫu vật (SVG, mọi hệ điều hành hiện y hệt nhau). Nạp SAU
+     js/specimens.js: `icon()` ở đó hỏi `AstroQSpecimenArt`, thiếu file này thì nó
+     lùi về emoji như cũ — xem ghi chú ở `icon()`. -->
+<script src="js/specimen-art.js"></script>
 <script src="js/depth.js"></script>
 <script src="js/cosmetics.js"></script>
 <script src="js/progress.js"></script>
@@ -890,7 +894,11 @@
       var lb = AstroQ.esc(nm + " — " + hn);
       return '<a class="dfp" href="specimen-vault.html"' +
              ' title="' + lb + '" aria-label="' + lb + '">' +
-             '<span class="dp-sp" aria-hidden="true">' + AstroQ.esc(ic) + '</span></a>';
+             /* ⚠️ KHÔNG `esc()` — `sp.icon()` trả về MARKUP (SVG do chính
+                `js/specimen-art.js` viết ra, 0 mẩu dữ liệu người dùng), escape nó là
+                in ra nguyên chuỗi `<svg …>` cho trẻ đọc. Phần CHỮ (tên mẫu vật, do
+                trẻ không nhập nên vẫn là chuỗi của mình) thì vẫn `esc()` ở `lb`. */
+             '<span class="dp-sp" aria-hidden="true">' + ic + '</span></a>';
     }
     function emptyPod(){
       var lb = AstroQ.esc(t("desk_add"));
@@ -983,9 +991,10 @@
      Trang tự đếm thì luôn thấy hàng chờ đã rỗng, và lời báo "đã lưu xong" **không
      bao giờ hiện ra** — tức đúng cái khoảnh khắc cần nó nhất (trẻ vừa đăng nhập lại)
      lại là khoảnh khắc nó im lặng. `AstroQProgress.flushed()` giữ con số thật.
-     ⚠️ Vẫn phải theo dõi tiếp bằng đồng hồ: mạng chậm thì lượt gửi kéo dài, và
-        `flush()` có chốt `flushing` nên gọi chồng lên chỉ trả về false — đọc ra như
-        "gửi hỏng" trong khi nó đang chạy tốt. Nên hỏi lại `flushed()`, đừng gọi lại. */
+     ⚠️ Vẫn phải theo dõi tiếp bằng đồng hồ: mạng chậm thì lượt gửi kéo dài. Từ
+        21/08/2026 `flush()` gọi chồng lên trả về CHÍNH lời hứa đang chạy (trước đó
+        trả `false` ngay, đọc ra như "gửi hỏng" trong khi nó đang chạy tốt) — nhưng ở
+        đây vẫn hỏi lại `flushed()` chứ không gọi lại: con số phải do một chỗ giữ. */
   function announceFlush(){
     var P = prog();
     if(!P || typeof P.flushed !== "function") return false;
