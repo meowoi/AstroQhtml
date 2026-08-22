@@ -288,7 +288,9 @@
     star: function(n){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.beep(760 + Math.min(6,n)*90); },
     gem:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.pickup(); },
     hit:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.nope(); },
-    over: function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble(); },
+    /* ⚠️ PHẢI TRUYỀN `ms`: `rumble()` không tham số từng chạy VÔ HẠN nên
+       tiếng hết lượt ù mãi qua cả lượt sau (xem js/sfx.js). */
+    over: function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble({ms:900}); },
     start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); }
   };
 
@@ -712,6 +714,11 @@
     /* Space/Enter bắt đầu lượt — nhưng KHÔNG khi tiêu điểm đang ở một <button>,
        không thì một cú bấm bị tính hai lần (bài học ARCADE-01). */
     if((k===" "||k==="Enter") && (state==="start"||state==="over")){
+      /* ⚠️ Đòi một cú bấm MỚI, không nhận cú lặp của bàn phím khi đang giữ phím
+         (`e.repeat`): giữ Space suốt lượt chơi thì đúng khung hình lượt kết thúc,
+         cú lặp kế tiếp sẽ mở lượt mới NGAY và trừ phí trước khi trẻ kịp đọc bảng
+         kết quả. Lỗi này đã xảy ra thật ở ARCADE-03. */
+      if(e.repeat) return;
       var ae=document.activeElement;
       if(!(ae && ae.tagName==="BUTTON")){ e.preventDefault(); startRound(); }
     }

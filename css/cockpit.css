@@ -108,14 +108,32 @@
 
    Một khai báo phục vụ CẢ HAI chỗ: hình dán thật trên dashboard (`.decal`) và ô xem
    trước ở cửa hàng (`.cos-sw--decal-*`). Tách hai bản là sớm muộn ô xem trước khác
-   thứ trẻ nhận được — đúng lỗi "hai nguồn sự thật cho một bố cục" của thẻ khoe. */
+   thứ trẻ nhận được — đúng lỗi "hai nguồn sự thật cho một bố cục" của thẻ khoe.
+
+   ⚠️⚠️ KHAI CHUNG MỘT BỘ RULE VẪN KHÔNG ĐỦ — ĐỘ ƯU TIÊN PHẢI BẰNG NHAU. Trước
+      22/08/2026 rule nền dùng `.cos-sw[class*="cos-sw--decal-"]::after` (0,2,1)
+      trong khi rule riêng của từng hình dán là `.cos-sw--decal-comet::after`
+      (0,1,1) → **rule nền THẮNG và `transform` riêng của từng hình bị bỏ**, nên
+      ba trong bốn hình dán (comet −16° · orbit −18° · ringed −16°) xem trước
+      KHÔNG nghiêng trong khi trên tàu thì nghiêng. Im lặng tuyệt đối: cả hai rule
+      đọc ra đều hợp lệ, chỉ RENDER rồi so `getComputedStyle` mới thấy. Vì thế mọi
+      rule riêng phải viết `.cos-sw.cos-sw--decal-*` — **thêm hình dán mới thì
+      viết đúng khuôn đó**, `scratchpad/probe_decal_match.py` canh chuyện này.
+   ⚠️ Và mọi độ dài phải tính theo `--d`. `--d` là 32px trên tàu, 44px ở ô xem
+      trước, nên một giá trị `px` tuyệt đối là hai kích cỡ khác nhau về tỉ lệ. */
 .decal{
   /* 32px = đúng chiều cao logo astroQ (`--logo-h`) đứng cạnh, nên hàng không cao
      thêm một pixel nào — đã đo ở cả 7 khổ màn. Bản 28px thì hình đọc ra hơi nhỏ. */
   --d:32px;
   display:none;position:relative;flex:none;
   width:var(--d);height:var(--d);
-  pointer-events:none;transform:rotate(-8deg);
+  pointer-events:none;
+  /* ⚠️ KHÔNG xoay hộp ở đây. Bản trước để `transform:rotate(-8deg)` cho sticker
+     nghiêng "dán hơi lệch" cho có chất — nhưng ô xem trước ở cửa hàng KHÔNG có
+     góc đó (không thể thêm: `.cos-sw` có viền và nền riêng, xoay cả hộp là xoay
+     luôn viền), nên hai chỗ vẽ ra hai hình. Chủ dự án chơi thật và báo đúng
+     chuyện đó (22/08/2026). Một món trang trí nghiêng 8° không đáng bằng việc
+     ô xem trước nói thật về thứ trẻ sắp mua. */
 }
 /* Có khai `data-decal` VÀ không phải "chưa dán gì" thì mới hiện. Đòi cả hai vế: trang
    nào không nạp `js/cosmetics.js` thì không có thuộc tính đó, và ở đó `:not(...)`
@@ -144,11 +162,11 @@
    Đuôi là dải mờ dần về phía sau, KHÔNG phải một thanh đặc: bài học vệt lửa ở
    ARCADE-01 và vệt sao ở màn warp — dải đặc đọc ra thành vệt bẩn, không ra luồng. */
 :root[data-decal="decal-comet"] .decal::before,
-.cos-sw--decal-comet::before{
+.cos-sw.cos-sw--decal-comet::before{
   width:calc(var(--d)*.3);height:calc(var(--d)*.3);border-radius:50%;
   margin-left:calc(var(--d)*.23);
   background:radial-gradient(circle at 38% 34%,#fff,#8fd8ff 44%,#38bdf8 78%);
-  box-shadow:0 0 calc(var(--d)*.24) -1px rgba(56,189,248,.95);
+  box-shadow:0 0 calc(var(--d)*.24) calc(var(--d)*-.03) rgba(56,189,248,.95);
 }
 /* ⚠️ ĐUÔI LÀ TAM GIÁC THÓT DẦN, KHÔNG PHẢI THANH BO TRÒN — soi ảnh chụp thì bản
    thanh `border-radius:999px` cao đều đọc ra thành **một cái thanh có đầu tròn**
@@ -156,7 +174,7 @@
    rồi tan, nên phải là hình thót. Cùng bài học "đọc sai nghĩa" của bộ icon sticker:
    vẽ đúng ý mà sai hình thì người xem hiểu ra một đồ vật khác. */
 :root[data-decal="decal-comet"] .decal::after,
-.cos-sw--decal-comet::after{
+.cos-sw.cos-sw--decal-comet::after{
   width:calc(var(--d)*.66);height:calc(var(--d)*.34);
   margin-left:calc(var(--d)*-.13);
   background:linear-gradient(90deg,rgba(56,189,248,0),rgba(143,216,255,.95));
@@ -166,15 +184,15 @@
 
 /* ── Vòng Quỹ Đạo: hành tinh nhỏ + đường quỹ đạo nét đứt ── */
 :root[data-decal="decal-orbit"] .decal::before,
-.cos-sw--decal-orbit::before{
+.cos-sw.cos-sw--decal-orbit::before{
   width:calc(var(--d)*.29);height:calc(var(--d)*.29);border-radius:50%;
   background:radial-gradient(circle at 36% 32%,#ffe6ad,#ffcf6b 52%,#e0a63c);
-  box-shadow:0 0 calc(var(--d)*.2) -2px rgba(255,207,107,.9);
+  box-shadow:0 0 calc(var(--d)*.2) calc(var(--d)*-.06) rgba(255,207,107,.9);
 }
 :root[data-decal="decal-orbit"] .decal::after,
-.cos-sw--decal-orbit::after{
+.cos-sw.cos-sw--decal-orbit::after{
   width:calc(var(--d)*.84);height:calc(var(--d)*.4);border-radius:50%;
-  border:1.5px dashed rgba(190,232,255,.8);
+  border:max(1px, calc(var(--d)*.047)) dashed rgba(190,232,255,.8);
   transform:translate(-50%,-50%) rotate(-18deg);
 }
 
@@ -183,15 +201,15 @@
    phải cắt hình — quá tốn cho một món trang trí). Ở cỡ này mắt vẫn đọc ra "hành
    tinh có vành", nên giữ đơn giản. */
 :root[data-decal="decal-ringed"] .decal::before,
-.cos-sw--decal-ringed::before{
+.cos-sw.cos-sw--decal-ringed::before{
   width:calc(var(--d)*.46);height:calc(var(--d)*.46);border-radius:50%;
   background:radial-gradient(circle at 34% 30%,#e9d5ff,#c084fc 50%,#7c5cff);
-  box-shadow:0 0 calc(var(--d)*.23) -3px rgba(192,132,252,.95);
+  box-shadow:0 0 calc(var(--d)*.23) calc(var(--d)*-.09) rgba(192,132,252,.95);
 }
 :root[data-decal="decal-ringed"] .decal::after,
-.cos-sw--decal-ringed::after{
+.cos-sw.cos-sw--decal-ringed::after{
   width:calc(var(--d)*.86);height:calc(var(--d)*.29);border-radius:50%;
-  border:2px solid rgba(255,207,107,.92);
+  border:max(1px, calc(var(--d)*.062)) solid rgba(255,207,107,.92);
   transform:translate(-50%,-50%) rotate(-16deg);
 }
 
@@ -200,20 +218,20 @@
    của hai thanh cho ra một ô vuông sáng ở giữa, và mắt đọc nó thành DẤU CỘNG chứ
    không ra ngôi sao — cùng họ với bảy lỗi "đọc sai nghĩa" của bộ icon sticker. */
 :root[data-decal="decal-stars"] .decal::before,
-.cos-sw--decal-stars::before{
+.cos-sw.cos-sw--decal-stars::before{
   width:calc(var(--d)*.54);height:calc(var(--d)*.54);
   margin:calc(var(--d)*-.09) 0 0 calc(var(--d)*-.13);
   background:linear-gradient(140deg,#fff,#bee8ff);
   clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);
-  filter:drop-shadow(0 0 5px rgba(190,232,255,.95));
+  filter:drop-shadow(0 0 calc(var(--d)*.16) rgba(190,232,255,.95));
 }
 :root[data-decal="decal-stars"] .decal::after,
-.cos-sw--decal-stars::after{
+.cos-sw.cos-sw--decal-stars::after{
   width:calc(var(--d)*.3);height:calc(var(--d)*.3);
   margin:calc(var(--d)*.16) 0 0 calc(var(--d)*.23);
   background:linear-gradient(140deg,#fff,#ffcf6b);
   clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);
-  filter:drop-shadow(0 0 4px rgba(255,207,107,.9));
+  filter:drop-shadow(0 0 calc(var(--d)*.13) rgba(255,207,107,.9));
 }
 
 /* ───────── TÊN PHI THUYỀN (dashboard) ─────────

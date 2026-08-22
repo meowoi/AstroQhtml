@@ -942,6 +942,11 @@
     if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
     if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
     if((k===" "||k==="Enter") && (state==="start"||state==="over")){
+      /* ⚠️ Đòi một cú bấm MỚI, không nhận cú lặp của bàn phím khi đang giữ phím
+         (`e.repeat`): giữ Space suốt lượt chơi thì đúng khung hình lượt kết thúc,
+         cú lặp kế tiếp sẽ mở lượt mới NGAY và trừ phí trước khi trẻ kịp đọc bảng
+         kết quả. Lỗi này đã xảy ra thật ở ARCADE-03. */
+      if(e.repeat) return;
       /* KHÔNG bắt đầu khi tiêu điểm đang ở một <button>: một cú bấm bị tính hai lần
          và trẻ mất phí hai lượt (bài học ARCADE-01). */
       var ae=document.activeElement;

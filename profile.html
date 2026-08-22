@@ -22,6 +22,8 @@
 <script src="js/characters.js"></script>
 <script src="js/planets.js"></script>
 <script src="js/ranks.js"></script>
+<!-- Kỷ lục chòm sao trong máy (đóng dấu uid) — xem js/constellations.js -->
+<script src="js/constellations.js"></script>
 <script src="js/depth.js"></script>
 <script src="js/cosmetics.js"></script>
 <!-- Đường vào trang báo cáo hệ thống cho tài khoản admin. Tự thoát êm khi không
@@ -471,9 +473,10 @@
       var raw = localStorage.getItem(storeKey);
       if(raw === null) return 0;
       if(key === "constellation"){
-        // Kỷ lục chòm sao là JSON `{ <id chòm>: giây }` → số chòm ĐÃ ghép
-        var o = JSON.parse(raw);
-        return o && typeof o === "object" ? Object.keys(o).length : 0;
+        /* Kỷ lục chòm sao là JSON có đóng dấu `uid` → đọc qua
+           js/constellations.js, đừng `JSON.parse` ở đây (hai chỗ hiểu một hình
+           dạng dữ liệu thì sớm muộn lệch nhau). Trả về SỐ CHÒM đã ghép. */
+        return Object.keys(AstroQConsts.localBests()).length;
       }
       var n = parseInt(raw, 10);
       return isNaN(n) ? 0 : n;

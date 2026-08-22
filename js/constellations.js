@@ -13,6 +13,18 @@
 
      <script src="js/constellations.js"></script>
      AstroQConsts.all()  ·  AstroQConsts.name("orion", "vi")   → "Lạp Hộ"
+     AstroQConsts.localBests()          → { <key>: giây } của CHÍNH trẻ đang chơi
+     AstroQConsts.saveLocalBest(k, s)   → true nếu là kỷ lục mới
+
+   ⚠️⚠️ KỶ LỤC TRONG MÁY ĐÓNG DẤU `uid`, VÀ ĐÓ LÀ BẮT BUỘC KỂ TỪ 22/08/2026.
+      `achievements.html` nay GỘP kỷ lục trong máy với `PROGRESS.consts` của server
+      (để chòm vừa ghép không biến mất cho tới khi tải lại trang — chủ dự án báo
+      đúng lỗi đó). Gộp mà không đóng dấu uid thì trên máy dùng chung, bộ sưu tập
+      của đứa trước sẽ hiện ra cho đứa sau. Đóng dấu thì có CẢ HAI.
+   ⚠️ Bản ghi CŨ là một object phẳng `{ <key>: giây }` (không có `uid`). Vẫn đọc
+      được — trước lượt này mỗi máy chỉ có một trẻ, nên coi nó là của trẻ đang
+      dùng; ghi lần sau sẽ tự đóng dấu. Không có đường lùi này thì mọi người chơi
+      cũ mất bộ sưu tập trong máy trong im lặng.
    ============================================================ */
 (function (global) {
   "use strict";
@@ -24,8 +36,50 @@
     { key: "scorpius",   vi: "Bọ Cạp",    en: "Scorpius" }
   ];
 
+  var LS_BEST = "astroq-constellation-best";
+
+  function uidNow() {
+    try {
+      var u = global.AstroQ && AstroQ.getUser ? AstroQ.getUser() : null;
+      return u && u.uid ? String(u.uid) : "";
+    } catch (e) { return ""; }
+  }
+
+  /** Kỷ lục trong máy CỦA TRẺ ĐANG CHƠI. Của uid khác → trả về rỗng. */
+  function localBests() {
+    var raw;
+    try { raw = JSON.parse(localStorage.getItem(LS_BEST) || "null"); }
+    catch (e) { return {}; }
+    if (!raw || typeof raw !== "object") return {};
+    /* Bản ghi cũ: object phẳng, không có `uid`. Coi là của trẻ đang dùng. */
+    if (!raw.best) {
+      if (raw.uid != null) return {};          // có `uid` mà không có `best` = rác
+      return raw;
+    }
+    if (raw.uid !== uidNow()) return {};
+    return (raw.best && typeof raw.best === "object") ? raw.best : {};
+  }
+
+  /**
+   * Ghi kỷ lục mới nếu nhanh hơn.
+   * ⚠️ CẮT bớt chứ không làm tròn: làm tròn lên thì lượt 4,95s lưu thành 5,0 và
+   *    bảng kết quả hiện "Thời gian 0:04 · Kỷ lục 0:05" — kỷ lục tệ hơn cả lượt
+   *    vừa chơi, trông như lỗi tính điểm.
+   */
+  function saveLocalBest(key, secs) {
+    var b = localBests(), cur = b[key];
+    if (cur != null && Number(cur) <= secs) return false;
+    b[key] = Math.floor(secs * 10) / 10;
+    try { localStorage.setItem(LS_BEST, JSON.stringify({ uid: uidNow(), best: b })); }
+    catch (e) {}
+    return true;
+  }
+
   global.AstroQConsts = {
     all: function () { return CONSTS.slice(); },
+    LS_BEST: LS_BEST,
+    localBests: localBests,
+    saveLocalBest: saveLocalBest,
     count: CONSTS.length,
     /** Chòm sao lạ (dữ liệu cũ) → trả chính key, không vỡ trang. */
     name: function (key, lang) {

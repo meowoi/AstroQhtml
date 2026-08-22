@@ -202,10 +202,16 @@ def main():
 
         # ---- Đổi trang phục ----
         print("\n[2] profile.html — doi trang phuc + doi ten")
+        # ⚠️ MOC TRUOC CU BAM: cau noi nhan vat (`AstroQChars.sync`, goi tu
+        #    js/progress.js) co the da day mot PUT hop le ngay luc mo trang.
+        #    Do CHENH LECH thay vi tong, khong thi phep kiem bao hong dung luc
+        #    san pham lam dung.
+        _base = len([c for c in (page.evaluate("() => window.__calls") or [])
+                     if c.startswith("updateProfile:")])
         page.click('.suit[data-id="chim"]')
         page.wait_for_timeout(500)
         calls = page.evaluate("() => window.__calls")
-        put = [c for c in calls if c.startswith("updateProfile:")]
+        put = [c for c in calls if c.startswith("updateProfile:")][_base:]
         check("Bam trang phuc -> goi PUT /me/profile", len(put) == 1, str(put))
         check("Patch chi gui character + avatar",
               put and json.loads(put[0].split(":", 1)[1]) == {"character": "chim",
@@ -220,12 +226,14 @@ def main():
               page.evaluate("() => JSON.parse(localStorage.getItem('astroq-user')).character") == "chim")
         check("Bam lai chinh o dang chon -> KHONG goi API lan nua",
               (page.click('.suit[data-id="chim"]'), page.wait_for_timeout(300),
-               len([c for c in page.evaluate("() => window.__calls") if c.startswith("updateProfile")]))[2] == 1)
+               len([c for c in page.evaluate("() => window.__calls")
+                    if c.startswith("updateProfile")]) - _base)[2] == 1)
 
         page.fill("#new-name", "Bi Bo Bo")
         page.click("#save-name")
         page.wait_for_timeout(400)
-        put2 = [c for c in page.evaluate("() => window.__calls") if c.startswith("updateProfile:")]
+        put2 = [c for c in page.evaluate("() => window.__calls")
+                if c.startswith("updateProfile:")][_base:]
         check("Doi ten -> goi PUT voi dung mot truong name",
               len(put2) == 2 and json.loads(put2[1].split(":", 1)[1]) == {"name": "Bi Bo Bo"},
               str(put2[-1:]))
@@ -234,7 +242,8 @@ def main():
         page.click("#save-name")
         page.wait_for_timeout(300)
         check("Ten rong -> khong goi API, hien toast",
-              len([c for c in page.evaluate("() => window.__calls") if c.startswith("updateProfile")]) == 2
+              len([c for c in page.evaluate("() => window.__calls")
+                   if c.startswith("updateProfile")]) - _base == 2
               and page.is_visible("#toast.show"))
         ctx.close()
 
@@ -351,35 +360,88 @@ def main():
         check("Khong hien o rong nua", not page.is_visible("#consts-empty"))
         ctx.close()
 
-        print("\n[6b] Chom sao — du lieu SERVER uu tien hon ky luc trong may")
+        # ══════════════ 6b. Chòm sao: GỘP server + máy, chỉ của CHÍNH trẻ ══════
+        # ⚠️⚠️ PHÁT BIỂU ĐỔI 22/08/2026. Bản cũ đòi "server ưu tiên hơn kỷ lục trong
+        #    máy" — và chính điều đó là lỗi: trẻ vừa ghép xong một chòm MỚI (máy đã
+        #    ghi ngay, việc còn nằm trong hàng chờ) mà server thì trả danh sách CŨ,
+        #    non rỗng, nên nhánh lùi không chạy và chòm vừa ghép KHÔNG hiện ra cho
+        #    tới khi tải lại trang. Chủ dự án chơi thật và báo đúng câu đó.
+        #    Nay hai nguồn được GỘP, và kỷ lục trong máy đóng dấu `uid` nên điều mục
+        #    này vốn bảo vệ (máy dùng chung không lẫn bộ sưu tập) vẫn còn — thậm chí
+        #    chặt hơn: bản cũ chỉ đúng KHI server trả về danh sách non rỗng.
+        SRV3 = "{ 'orion':21, 'scorpius':45, 'cassiopeia':60 }"
+
+        def ach_stub(consts_js):
+            return """
+              const d = %s;
+              d.progress.consts = %s;
+              d.progress.constsDone = Object.keys(d.progress.consts).length;
+              const s = { idToken: async()=>"t",
+                getOnboarding: async()=>({ok:true,tourSeen:true,map01Seen:true,earth1Greeted:true}),
+                setOnboarding: async()=>({ok:true}),
+                getAchievements: async()=>({ok:true,data:d}),
+                getProfile: async()=>({ok:true,data:d}),
+                getWallet: async()=>({ok:true,data:{meteors:41}}),
+                updateProfile: async()=>({ok:true}), postProgress: async()=>({ok:true}),
+                spendWallet: async()=>({ok:true,data:{meteors:36,spent:5}}) };
+              Object.defineProperty(window,"AstroQAuth",{get:()=>s,set:()=>{},configurable:true});
+            """ % (json.dumps(ACH), consts_js)
+
+        def dai_hung_off(page):
+            return page.evaluate("""() => { const c=[...document.querySelectorAll('#consts .chip')]
+                .find(x=>x.textContent.includes('Đại Hùng'));
+                return !!c && !c.classList.contains('on'); }""")
+
+        print("\n[6b] Chom sao — ky luc cua UID KHAC khong duoc lan vao")
         ctx, page = new_page(browser, extra=(
-            # Máy chỉ có 1 chòm, server có 3 → phải lấy của server
+            # Máy có 1 chòm nhưng của MỘT ĐỨA TRẺ KHÁC → không được tính
             "localStorage.setItem('astroq-constellation-best',"
-            " JSON.stringify({'ursa-major':99}));"))
-        page.add_init_script("""
-          const d = %s;
-          d.progress.consts = { 'orion':21, 'scorpius':45, 'cassiopeia':60 };
-          d.progress.constsDone = 3;
-          const s = { idToken: async()=>"t",
-            getOnboarding: async()=>({ok:true,tourSeen:true,map01Seen:true,earth1Greeted:true}),
-            setOnboarding: async()=>({ok:true}),
-            getAchievements: async()=>({ok:true,data:d}),
-            getProfile: async()=>({ok:true,data:d}),
-            getWallet: async()=>({ok:true,data:{meteors:41}}),
-            updateProfile: async()=>({ok:true}), postProgress: async()=>({ok:true}),
-            spendWallet: async()=>({ok:true,data:{meteors:36,spent:5}}) };
-          Object.defineProperty(window,"AstroQAuth",{get:()=>s,set:()=>{},configurable:true});
-        """ % json.dumps(ACH))
+            " JSON.stringify({uid:'UID-DUA-KHAC', best:{'ursa-major':99}}));"))
+        page.add_init_script(ach_stub(SRV3))
         page.goto(BASE + "achievements.html", wait_until="load")
         page.wait_for_timeout(2000)
-        check("Lay 3 chom cua SERVER, khong phai 1 chom trong may",
+        check("Chi 3 chom cua SERVER, khong tinh ky luc cua uid khac",
               txt(page, "#cs-count") == "3/4", txt(page, "#cs-count"))
-        check("Chom chi co trong may (Dai Hung) KHONG sang",
-              page.evaluate("""() => { const c=[...document.querySelectorAll('#consts .chip')]
-                  .find(x=>x.textContent.includes('Đại Hùng'));
-                  return !!c && !c.classList.contains('on'); }"""))
+        check("Chom cua uid KHAC (Dai Hung) KHONG sang", dai_hung_off(page))
+        ctx.close()
+
+        print("\n[6b2] Chom sao — chom vua ghep hien NGAY, khong doi tai lai trang")
+        ctx, page = new_page(browser, extra=(
+            # Máy có 4 chòm CỦA CHÍNH trẻ; server còn danh sách cũ 3 chòm
+            "localStorage.setItem('astroq-constellation-best',"
+            " JSON.stringify({uid:'UID1234ABCD5678',"
+            "  best:{'orion':21,'scorpius':45,'cassiopeia':60,'ursa-major':11}}));"))
+        page.add_init_script(ach_stub(SRV3))
+        page.goto(BASE + "achievements.html", wait_until="load")
+        page.wait_for_timeout(2000)
+        check("Hien 4/4 — chom vua ghep khong bi bo roi",
+              txt(page, "#cs-count") == "4/4", txt(page, "#cs-count"))
+        check("4 chip chom sao sang",
+              page.eval_on_selector_all("#consts .chip.on", "e => e.length") == 4)
+        check("Ky luc lay so NHANH HON cua hai ben (0:11)",
+              "0:11" in txt(page, "#consts"), txt(page, "#consts").replace("\n", " "))
+        ctx.close()
+
+        print("\n[6b3] Ban ghi CU (object phang, khong co uid) van doc duoc")
+        ctx, page = new_page(browser, mode="net", extra=(
+            "localStorage.setItem('astroq-constellation-best',"
+            " JSON.stringify({'ursa-major':34,'orion':52}));"))
+        page.goto(BASE + "achievements.html", wait_until="load")
+        page.wait_for_timeout(2000)
+        check("Ban ghi cu -> van hien 2/4 (khong mat bo suu tap trong im lang)",
+              txt(page, "#cs-count") == "2/4", txt(page, "#cs-count"))
+        ctx.close()
+
+        print("\n[6b4] Trang Ho so dem so chom")
+        ctx, page = new_page(browser, extra=(
+            "localStorage.setItem('astroq-constellation-best',"
+            " JSON.stringify({uid:'UID1234ABCD5678', best:{'orion':21}}));"))
+        page.add_init_script(ach_stub(SRV3))
         page.goto(BASE + "profile.html", wait_until="load")
-        page.wait_for_timeout(1800)
+        page.wait_for_timeout(2000)
+        # ⚠ PHAI doc lai `#recs` o day. Bien `recs` con duoc dung o muc [3] tren
+        #   mot TRANG KHAC; quen dong nay thi phep kiem doc noi dung cu va bao hong
+        #   oan — da tu vap dung the mot lan.
         recs = txt(page, "#recs").replace("\n", " ")
         check("profile: ky luc Ghep Chom Sao = 3 chom (tu constsDone)",
               "Ghép Chòm Sao" in recs and " 3 " in recs.split("Ghép Chòm Sao")[-1] + " ",

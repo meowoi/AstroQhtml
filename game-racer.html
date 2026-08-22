@@ -222,7 +222,11 @@
       ember: "img/racer/rival-ember.png",
       dust:  "img/racer/rival-dust.png"
     },
-    rockSprite: "img/racer/rock.png",
+    /* ⚠️ Ảnh này DÙNG CHUNG cho ba game (racer · dodge · defender) từ
+       22/08/2026 nên nó nằm ở `img/`, KHÔNG ở `img/racer/`. Để trong
+       thư mục chỉ-của-racer là một cái tên nói SAI: người sửa sau sẽ
+       tưởng đổi hay xoá nó chỉ ảnh hưởng game này. */
+    rockSprite: "img/rock-gray.png",
     canSprite:  "img/racer/fuel-can.png",
     /* ⚠️⚠️ ĐÁ VÀ THÙNG PHẢI NẰM TRONG VÒNG VA CHẠM. Vùng chết của chúng là một
        HÌNH TRÒN bán kính `o.r`; phần hình chìa ra ngoài vòng đó cho ra cảm giác
@@ -416,7 +420,20 @@
     gem:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.pickup(); },
     hit:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.nope(); },
     win:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.fanfare(); },
-    dry:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble(); },
+    /* ⚠️ PHẢI TRUYỀN `ms`. `rumble()` không tham số từng chạy VÔ HẠN (xem
+       js/sfx.js) nên tiếng cạn nhiên liệu ù mãi qua cả lượt sau. */
+    dry:  function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.rumble({ms:900}); },
+    /* ⚠️ VỀ NHÌ ≠ CẠN NHIÊN LIỆU. Bảng kết quả đã gọi đúng tên ba kết cục
+       (`docs/decisions/002` đòi thế), nhưng TAI thì trước 22/08/2026 nghe y hệt
+       nhau — cùng một tiếng ù động cơ hỏng cho cả hai. Hai nốt đi xuống nói
+       "về sau một nhịp", không nói "máy chết". */
+    lost: function(){
+      if(!(window.AstroQSfx && AstroQSfx.on())) return;
+      AstroQSfx.tone({ f:660, to:494, dur:0.20, type:"triangle", gain:0.05 });
+      AstroQSfx.tone({ f:494, to:392, dur:0.26, type:"triangle", gain:0.045, delay:0.19 });
+    },
+    /* Tắt mọi tiếng ù còn sót của lượt trước. */
+    hush: function(){ if(window.AstroQSfx && AstroQSfx.hush) AstroQSfx.hush(); },
     start:function(){ if(window.AstroQSfx && AstroQSfx.on()) AstroQSfx.ready(); },
     /* Tiếng vút lên: một cú quét tần số + một nốt sáng. KHÔNG dùng `arp()` trơn
        — hàm đó ĐÒI một mảng nốt (`arp(freqs, o)`), gọi thiếu tham số là
@@ -446,22 +463,11 @@
     sprite.src=CONFIG.spritePath;
   }
 
-  /* Bộ nạp art dùng chung: trả về một hộp `{img, ok, ar}` mà phần vẽ hỏi ngay
-     trong vòng vẽ. `ok` chỉ bật khi ảnh đã decode xong — nên khung hình đầu tiên
-     (ảnh chưa về) vẫn vẽ bằng code chứ không để một ô trống. */
-  function loadArt(path){
-    var box={ img:null, ok:false, ar:1 };
-    if(!path) return box;
-    var im=new Image();
-    im.onload=function(){
-      box.ar=(im.naturalWidth||1)/(im.naturalHeight||1);
-      box.ok=true;
-    };
-    im.onerror=function(){ box.ok=false; };
-    im.src=path;
-    box.img=im;
-    return box;
-  }
+  /* ⚠️ BỘ NẠP ART ĐÃ CHUYỂN SANG `js/game-shell.js` (22/08/2026) — từ khi ảnh đá
+     dùng chung cho ba game thì ba bản sao của cùng 12 dòng là đúng thứ quy tắc 2
+     mục 6 cấm. Ở đây chỉ còn hai bí danh mỏng, giữ nguyên tên cũ nên ~10 chỗ gọi
+     bên dưới không phải sửa một chữ. */
+  function loadArt(path){ return AstroQGameShell.loadArt(path); }
   var ART={ rock:loadArt(CONFIG.rockSprite), can:loadArt(CONFIG.canSprite),
             rivals:{} };
   (function(){
@@ -472,8 +478,7 @@
   /* Vẽ art ôm TRỌN trong một hộp (contain) rồi canh giữa. Dùng cho đá và thùng;
      ba tàu thì ép theo chiều DÀI nên có nhánh riêng. */
   function drawArt(box, cx, cy, boxW, boxH){
-    var h=Math.min(boxH, boxW/box.ar), w=h*box.ar;
-    ctx.drawImage(box.img, cx-w/2, cy-h/2, w, h);
+    AstroQGameShell.drawArt(ctx, box, cx, cy, boxW, boxH);
   }
 
   /* Thiên thạch tím — dùng ĐÚNG ảnh của hệ thống (`img/tt.png`), không vẽ lại.
@@ -732,7 +737,9 @@
     hudCache={};
     hideAllOv();
     state="play"; last=0; syncBtns(); paintHud();
-    SFX.unlock(); SFX.start(); toast(t("start_toast"));
+    /* ⚠️ TẮT tiếng của lượt TRƯỚC trước khi mở lượt mới: trẻ bấm "Đua lại" ngay
+       khi vừa thua thì tiếng thua còn đang ù, và nó sẽ ù xuyên vào lượt mới. */
+    SFX.hush(); SFX.unlock(); SFX.start(); toast(t("start_toast"));
   }
 
   /* ⚠️ CẠN NHIÊN LIỆU VẪN ĐƯỢC THƯỞNG TINH THỂ ĐÃ THU. Trẻ bỏ 5 tt vào cửa; cho về
@@ -760,7 +767,7 @@
     paintOver(); paintWhy(); paintPaid();
     syncBtns(); paintLevel();
     showOv("ov-over");
-    if(won) SFX.win(); else SFX.dry();
+    if(won) SFX.win(); else if(lostRace) SFX.lost(); else SFX.dry();
     if(!won && window.AstroQGameShell) AstroQGameShell.mate("oops");
     if(newBest) toast(t("best_toast"), "ok");
   }
@@ -1387,6 +1394,14 @@
     if(k==="Escape"||k==="p"||k==="P"){ if(state==="play"||state==="paused") togglePause(); }
     if(k==="m"||k==="M"){ sfxToggle(); syncBtns(); }
     if((k===" "||k==="Enter") && (state==="start"||state==="over")){
+      /* ⚠️⚠️ `e.repeat` LÀ CHỐT BẮT BUỘC, không phải đề phòng suông. Space vừa là
+         TĂNG TỐC (lúc đang chơi) vừa là BẮT ĐẦU LƯỢT (lúc ở màn brief/kết quả).
+         Giữ Space để vọt về đích thì bàn phím tự lặp keydown; đúng khung hình lượt
+         kết thúc, cú lặp KẾ TIẾP rơi vào nhánh này và mở lượt mới NGAY — trẻ chưa
+         kịp đọc bảng kết quả đã bị trừ phí lượt sau. Đòi một cú bấm MỚI (nhả rồi
+         bấm lại) thì không còn cửa đó. Cùng chốt `e.repeat` mà ARCADE-01 và
+         ARCADE-02 đã phải thêm. */
+      if(e.repeat) return;
       /* Không bắt đầu khi tiêu điểm ở một <button>: một cú bấm bị tính hai lần và
          trẻ mất phí hai lượt (bài học ARCADE-01). */
       var ae=document.activeElement;
@@ -1491,6 +1506,15 @@
     },
     /** Đưa đường đua về gần đích để bộ đo kiểm nhánh THẮNG mà không phải chờ. */
     nearFinish: function(){ dist = CONFIG.raceLen - 30; items=[]; },
+    /** Đưa MỘT ĐỐI THỦ về sát đích — để đo nhánh VỀ NHÌ (`endRound("lost")`).
+        ⚠️ Cần vì nhánh đó là nhánh chủ dự án báo lỗi ở, mà chờ đối thủ tự chạy hết
+           14.000 m thì mất gần một phút và bộ đo thành chập chờn. Không cấp thưởng,
+           không đụng `dist` của trẻ — chỉ đẩy đồng hồ của một đối thủ. */
+    rivalNearFinish: function(){
+      if(!rivals.length) return null;
+      rivals[0].dist = CONFIG.raceLen - 20;
+      return rivals[0].id;
+    },
     /** Nạp đầy thanh tăng tốc. KHÔNG bấm hộ — phép kiểm phải tự bấm nút như trẻ
         (bài học `chargeEmp` của ARCADE-02). */
     fillBoost: function(){ boost=CONFIG.boostNeed; paintHud(); return boost; },

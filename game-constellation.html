@@ -35,6 +35,9 @@
 <link rel="stylesheet" href="css/game-constellation.css" />
 <script src="js/ui-common.js"></script>
 <script src="js/game-shell.js"></script>
+<!-- Tên 4 chòm sao + kỷ lục trong máy (có đóng dấu uid) — xem
+     js/constellations.js. Ba trang đọc CÙNG một hàm, không ba bản JSON.parse. -->
+<script src="js/constellations.js"></script>
 </head>
 <body>
 
@@ -216,7 +219,6 @@
     bgStars: 240              // số sao nền nhấp nháy (REDUCE sẽ giảm còn nửa)
   };
   var VW = CONFIG.VW, VH = CONFIG.VH;
-  var BEST_KEY = "astroq-constellation-best";   // { <key chòm sao>: giây nhanh nhất }
   var SFX_KEY  = "astroq-sfx";                  // tuỳ chọn thiết bị, dùng chung với các game khác
   var TAU = Math.PI*2;
 
@@ -458,20 +460,25 @@
   var burstT=0, sketchT=0, factT=0;
   var bg=[], parts=[], glowT=0;
   var lastKey=null;         // không cho ra lại đúng chòm sao vừa ghép
+  /* ⚠️⚠️ CHÒM SAO ĐANG HIỆN Ở MÀN BRIEF — lượt chơi đầu PHẢI là chính nó.
+     Trước 22/08/2026 màn brief bốc một chòm làm hình nền VÀ đặt tên nó lên chip
+     HUD, rồi `startRound()` bốc một chòm KHÁC: chủ dự án chơi thật và gửi ảnh
+     chụp — chip nói "Chòm sao Lạp Hộ", bấm Bắt đầu thì ra "Chòm sao Bọ Cạp".
+     Đo được 3/4 lượt lệch (bốc lại ngẫu nhiên nên 1/4 trùng do may). Màn brief
+     là một LỜI HỨA; nói một chòm rồi cho chơi chòm khác là nói sai.
+     Xong lượt thì `briefKey` về null → "Chơi lại" vẫn ra chòm KHÁC lượt vừa rồi,
+     đúng như thiết kế cũ. */
+  var briefKey=null;
   var bests=readBests();
 
-  function readBests(){
-    try{ return JSON.parse(localStorage.getItem(BEST_KEY)||"{}")||{}; }catch(e){ return {}; }
-  }
+  /* ⚠️ Đọc/ghi kỷ lục ĐI QUA `js/constellations.js` — ở đó nó được đóng dấu `uid`
+     (máy dùng chung thì bộ sưu tập của đứa trước không lẫn sang đứa sau), và ba
+     trang cùng đọc một hàm thay vì ba bản `JSON.parse` riêng. */
+  function readBests(){ return AstroQConsts.localBests(); }
   function saveBest(key, secs){
-    var cur=bests[key];
-    if(cur!=null && cur<=secs) return false;
-    /* CẮT bớt chứ không làm tròn: làm tròn lên thì lượt 4,95s được lưu thành 5,0
-       và bảng kết quả hiện "Thời gian 0:04 · Kỷ lục 0:05" — kỷ lục tệ hơn cả
-       lượt vừa chơi, trông như lỗi tính điểm. */
-    bests[key]=Math.floor(secs*10)/10;
-    try{ localStorage.setItem(BEST_KEY, JSON.stringify(bests)); }catch(e){}
-    return true;
+    var ok = AstroQConsts.saveLocalBest(key, secs);
+    bests = AstroQConsts.localBests();   // đọc lại để bảng kết quả hiện số vừa ghi
+    return ok;
   }
 
   /* Sao nền: vị trí cố định, chỉ độ sáng nhấp nháy → không "trôi" gây rối mắt
@@ -538,7 +545,10 @@
        chặn lượt chơi không đổi. Xem economy.js. */
     Economy.spend("constellation"); paintBalance(); bumpGem();
 
-    cons=pickConstellation(); lastKey=cons.key;
+    /* Lượt đầu: chơi ĐÚNG chòm sao màn brief đang hiện (xem `briefKey`).
+       Các lượt sau: bốc chòm khác lượt vừa rồi. */
+    if(!(briefKey && cons && cons.key===briefKey)) cons=pickConstellation();
+    briefKey=null; lastKey=cons.key;
     sts=cons.stars.map(function(s){ return {id:s.id, x:s.x, y:s.y, pop:0}; });
     links=[]; parts=[]; wrong=null;
     progress=0; sel=-1; drag=false; hoverIdx=-1;
@@ -1089,7 +1099,7 @@
   paintBalance();
   Economy.onAsteroidsChange(paintBalance);
   fit(); initSky(); syncBtns();
-  cons=pickConstellation();
+  cons=pickConstellation(); briefKey=cons.key;
   sts=cons.stars.map(function(s){ return {id:s.id, x:s.x, y:s.y, pop:0}; });
   $("btn-sfx").classList.toggle("off", SFX.isMuted());
   applyLang(LANG);
