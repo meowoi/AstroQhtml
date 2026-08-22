@@ -122,7 +122,7 @@
     <!-- Quiz (thiên thạch vàng) -->
     <div class="ov ov-quiz" id="ov-quiz" role="dialog" aria-modal="true">
       <div class="ov-card">
-        <span class="ov-tag">[ ASTRO_QUIZ ]</span>
+        <span class="ov-tag" id="q-tag">[ ASTRO_QUIZ ]</span>
         <div class="ov-ic">⭐</div>
         <div class="q-reward" id="q-reward"></div>
         <div class="q-text" id="q-text">…</div>
@@ -185,6 +185,11 @@
      CỐ Ý KHÔNG nạp js/firebase-auth.js ở đây: SDK Firebase nặng 233 KB và
      trang này cần mượt. Không có phiên đăng nhập thì js/progress.js xếp việc
      vào hàng chờ trong localStorage, dashboard/profile sẽ tự gửi nốt. -->
+<!-- Kho cau hoi dung chung (muc luc ~6 KB gzip; than cau tai theo tung file
+     khi can — xem js/quiz-index.js). Nho no ma cau do o day di tu 8 cau
+     thien van len CA KHO (do 22/08/2026: 130 cau / 25 the — con so o
+     js/quiz-index.js, DUNG chep lai vao day, no se lac hau). -->
+<script src="js/quiz-index.js"></script>
 <script src="js/progress.js"></script>
 <script src="economy.js"></script>
 <script>
@@ -286,6 +291,17 @@
   /* ===== TYPES — 4 loại vật thể tấn công =====
      hp: số phát bắn · r: bán kính · speed: px/giây · score: điểm · dmg: % giáp mất
      khi đâm vào Trạm (yêu cầu: 10–20%) · tt: Thiên thạch tím nhận được */
+  /* ⚠️⚠️ `rockBox` = cạnh hộp vẽ ÷ bán kính va chạm (`f.r`), là SỐ ĐO trên
+     `img/rock-gray.png`: bán kính silhouette ÷ cạnh dài = 0,406 · 0,457 · 0,512
+     (min · trung vị · max). Hộp 2,19·r cho hình trải **0,889–1,121 · r**, cùng
+     trung bình với bản vector đang chạy (`poly(f.r,9,0.82,…)` cho 0,82–1,18 · r)
+     — tức đổi ART mà KHÔNG đổi độ khó. Con số khác dodge (2,41) vì hai game đo
+     hộp theo hai mốc khác nhau: ở đây va chạm là ĐÚNG `f.r`, ở dodge là `r*0.86`.
+     ⚠️ Ảnh dùng CHUNG ba game — xem `js/game-shell.js`, và nó nằm ở `img/` chứ
+        không phải `img/racer/`. */
+  var ROCK_BOX = 2.19;
+  var ART_ROCK = AstroQGameShell.loadArt("img/rock-gray.png");
+
   var TYPES = {
     gray  : { hp:2, r:20, speed:72,  score:5,  dmg:12, tt:0 },
     junk  : { hp:1, r:15, speed:118, score:8,  dmg:18, tt:0 },   // rác vũ trụ, bay nhanh (4 biến thể hình/màu — xem JUNK)
@@ -338,6 +354,7 @@
       how1:"🎯 <b>Ngắm</b>: rê chuột quanh sân — pháo tự xoay 360° theo con trỏ (bàn phím: <kbd>◀</kbd> <kbd>▶</kbd>).",
       how2:"🔫 <b>Bắn</b>: giữ chuột trái hoặc phím <kbd>Space</kbd>.",
       how3:"☄️ <b>Thiên thạch xám</b> chịu 2 phát · <b>rác vũ trụ</b> (mảnh vỡ có đèn nháy) bay nhanh, 1 phát.",
+      quiz_tag:"CÂU ĐỐ",
       how4:"💜 <b>Thiên thạch tím</b>: +"+TYPES.purple.score+" điểm & +1 "+TT+" vào ví tạm.",
       how5:"⭐ <b>Thiên thạch vàng</b>: mở câu đố — đúng thì +"+CONFIG.quizHeal+"% giáp & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Vật thể đâm vào Trạm ở tâm là mất giáp. Giáp hết = thua.",
@@ -371,6 +388,7 @@
       how1:"🎯 <b>Aim</b>: move the mouse around — the cannon spins a full 360° to follow it (keyboard: <kbd>◀</kbd> <kbd>▶</kbd>).",
       how2:"🔫 <b>Fire</b>: hold left click or the <kbd>Space</kbd> key.",
       how3:"☄️ <b>Grey asteroids</b> take 2 shots · <b>space junk</b> (debris with a blinking light) is fast, 1 shot.",
+      quiz_tag:"QUIZ",
       how4:"💜 <b>Purple Meteors</b>: +"+TYPES.purple.score+" points & +1 "+TT+" to your run pouch.",
       how5:"⭐ <b>Gold meteors</b>: open a quiz — get it right for +"+CONFIG.quizHeal+"% hull & +"+CONFIG.quizReward+" "+TT+"!",
       how6:"🛡️ Anything that rams the Station at the centre costs you hull. Hull gone = game over.",
@@ -401,9 +419,21 @@
   function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
   function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
 
-  /* ===== Câu đố Thiên văn (bắn trúng thiên thạch vàng) =====
-     Thêm câu mới: chỉ cần đẩy thêm phần tử vào mảng này (a = chỉ số đáp án đúng). */
-  var QUIZ=[
+  /* ===== Câu đố khi bắn trúng thiên thạch vàng =====
+     ⚠️⚠️ NGUỒN CÂU HỎI LÀ KHO CHUNG `js/quiz-index.js` (cả kho), KHÔNG
+        phải mảng dưới đây. Chủ dự án chơi thật rồi báo (22/08/2026): *"mở rộng các
+        câu hỏi quiz sang các lĩnh vực khác đang có trong kho đi, user chơi nhiều
+        lần vẫn thấy các câu đã trả lời trước đó rồi"* — và đúng: túi xáo thêm
+        21/08 chỉ bảo đảm không lặp TRONG một lượt, mà cả kho riêng của trang này
+        có **8** câu nên đi hết 8 là gặp lại. Xem `nextQuiz`.
+     ⚠️ MẢNG DƯỚI LÀ ĐƯỜNG LÙI, KHÔNG PHẢI NGUỒN THỨ HAI. Kho chung tải thân câu
+        bằng `import()`, nên nó KHÔNG chạy khi mở trang bằng `file://` (CORS chặn
+        — xem mục nhật ký 09/08/2026) và cũng không chạy khi mất mạng. Không có
+        đường lùi thì thiên thạch vàng mất hẳn công dụng (hồi giáp + Thiên thạch
+        tím), tức mất một cơ chế của game vì một lý do ngoài game.
+     ⚠️ ĐỪNG thêm câu mới vào đây. Thêm câu = thêm file trong `js/quiz/` rồi chạy
+        `python scratchpad/split_quiz_bank.py` — chỗ duy nhất khai câu hỏi. */
+  var QUIZ_FALLBACK=[
     { q:{vi:"Hành tinh nào gần Mặt Trời nhất?",en:"Which planet is closest to the Sun?"},
       o:[{vi:"Sao Kim",en:"Venus"},{vi:"Sao Thuỷ",en:"Mercury"},{vi:"Trái Đất",en:"Earth"},{vi:"Sao Hoả",en:"Mars"}], a:1 },
     { q:{vi:"Ngôi sao ở trung tâm Hệ Mặt Trời là?",en:"The star at the centre of the Solar System is?"},
@@ -516,10 +546,79 @@
   var firing=false, fireCd=0, aimKeyL=false, aimKeyR=false, muzzle=0;
   var bullets=[], foes=[], parts=[], stars=[];
   var hull=CONFIG.hullStart, score=0, meteors=0, elapsed=0, spawnT=0, goldT=0;
-  var shake=0, flash=0, dieT=0, quizIdx=0, radar=0;
-  /* `quizBag` = tui cau con lai cua vong hien tai · `quizOrder` = thu tu
-     4 dap an dang HIEN RA (chi so trong `q.o` goc). Xem `nextQuiz`. */
-  var quizBag=[], quizOrder=[];
+  var shake=0, flash=0, dieT=0, radar=0;
+  /* `quizQ` = cau dang mo · `quizOrder` = thu tu 4 dap an dang HIEN RA (chi so
+     trong `q.o` goc) · `quizPool` = cac cau DA TAI SAN, cho san · `quizKeys` =
+     tui khoa con lai. Xem `nextQuiz`. */
+  var quizQ=null, quizOrder=[], quizPool=[], quizKeys=null, quizLoading=false;
+
+  /* ══════════════════════════════════════════════════════════════════
+     KHO CAU HOI DUNG CHUNG — va cach KHONG hoi lai cau da hoi
+     ══════════════════════════════════════════════════════════════════
+     ⚠️⚠️ NHO KHOA DA HOI VAO `localStorage`, khong chi trong mot luot. Do la
+        dung thu chu du an bao: tui xao chi lo trong-mot-luot, con "choi nhieu lan
+        van thay cau cu" thi phai nho QUA CAC LUOT. Het ca kho thi xoa danh sach
+        roi bat dau vong moi — luc do tre da tra loi CA KHO, gap lai la hop ly.
+     ⚠️ ĐONG DAU `uid`: hai dua tre dung chung mot may thi danh sach cua dua truoc
+        khong duoc lam dua sau bo qua cau. Cung ly do `astroq-char-synced`.
+     ⚠️ CO Y KHONG loc theo cap do (`lv`). Loc theo cap thu hep bo cau xuong mot
+        tap con co dinh, tuc lam TANG ty le gap lai — nguoc han viec dang sua.
+     ⚠️ KHONG dung `AstroQQuestions.round()`: ham do rut ngau nhien va khong biet
+        cau nao da hoi. Ta tu giu tui khoa de tru duoc phan da hoi. */
+  var LS_ASKED = "astroq-defender-asked";
+
+  function uidNow(){
+    try{ var u=AstroQ.getUser(); return (u && u.uid) ? String(u.uid) : ""; }
+    catch(e){ return ""; }
+  }
+  function askedRead(){
+    try{
+      var b=JSON.parse(localStorage.getItem(LS_ASKED)||"null");
+      if(!b || b.uid!==uidNow() || !(b.k instanceof Array)) return [];
+      return b.k;
+    }catch(e){ return []; }
+  }
+  function askedAdd(k){
+    try{
+      var a=askedRead();
+      if(a.indexOf(k)<0) a.push(k);
+      localStorage.setItem(LS_ASKED, JSON.stringify({uid:uidNow(), k:a}));
+    }catch(e){}
+  }
+  function askedClear(){ try{ localStorage.removeItem(LS_ASKED); }catch(e){} }
+
+  function bankReady(){
+    return !!(window.AstroQQuestions && AstroQQuestions.terms
+              && AstroQQuestions.load && AstroQQuestions.shuffled);
+  }
+
+  /* Dung tui khoa: ca kho, xao, tru phan da hoi. Het thi mo vong moi. */
+  function buildKeys(){
+    if(!bankReady()) return [];
+    var all=AstroQQuestions.terms(), asked=askedRead(), i, out=[];
+    for(i=0;i<all.length;i++) if(asked.indexOf(all[i])<0) out.push(all[i]);
+    if(!out.length){ askedClear(); out=all.slice(); }
+    return AstroQQuestions.shuffled(out);
+  }
+
+  /* Tai truoc vai cau. Cau do mo GIUA luc dang choi, nen khong the dung cho mang
+     — phai co san trong `quizPool`. */
+  function refillQuiz(){
+    if(!bankReady() || quizLoading || quizPool.length>=3) return;
+    if(quizKeys===null) quizKeys=buildKeys();
+    if(!quizKeys.length) quizKeys=buildKeys();
+    var take=quizKeys.splice(0,3);
+    if(!take.length) return;
+    quizLoading=true;
+    AstroQQuestions.load(take).then(function(qs){
+      for(var i=0;i<qs.length;i++){
+        /* Doi ve hinh dang cua trang: kho dung `opts`, trang nay dung `o`. */
+        quizPool.push({ q:qs[i].q, o:qs[i].opts, a:qs[i].a,
+                        topic:qs[i].topic, term:qs[i].term });
+      }
+      quizLoading=false;
+    })["catch"](function(){ quizLoading=false; });
+  }
   var pointerX=CX, pointerY=CY-120, pointerIn=false;
   var hudCache={}, lastPaid=0;
   /* Nâng cấp pháo + Xung kích EMP (thêm 08/08/2026 — xem `guns`/`empNeed` ở CONFIG) */
@@ -625,6 +724,7 @@
     gunIdx=0; empCharge=0; wave=null;
     spawnT=0.6; goldT=CONFIG.quizCooldown*0.5; fireCd=0; firing=false;
     shake=0; flash=0; dieT=0; aim=-Math.PI/2;
+    refillQuiz();   // tai truoc: cau do co the mo ngay sau 6 giay (goldT)
     hideOv("ov-start"); hideOv("ov-over"); hideOv("ov-need"); hideOv("ov-pause"); hideOv("ov-quiz");
     state="play"; last=0; syncBtns();
     SFX.unlock(); SFX.start(); toast(t("start_toast"));
@@ -739,7 +839,11 @@
      cac loai co thoi gian cho rieng (goldT) nen bo do khong tai hien duoc ca
      'EMP quet thach vang' neu phai doi Math.random(). Thieu tham so thi hanh vi
      y nhu cu -> duong sinh cua game khong doi mot chut nao. */
-  function spawnFoe(force){
+  /* `jvForce` CHI dung cho bo kiem (xem window.__dbg.spawn) — no buoc BIEN THE
+     hinh cua rac vu tru. An toan vi `JUNK` la thuan phan ve: `junk` van la MOT
+     loai trong `TYPES` voi cung hp/speed/score/dmg, nen khong the lam luot choi
+     de hay kho hon. Bo qua tham so thi hanh vi y nhu cu. */
+  function spawnFoe(force, jvForce){
     var key=(force && TYPES[force]) ? force : pickType(), T=TYPES[key];
     var a=Math.random()*TAU;
     var x=CX+Math.cos(a)*CONFIG.spawnR, y=CY+Math.sin(a)*CONFIG.spawnR;
@@ -754,7 +858,8 @@
       seed:Math.floor(Math.random()*10),
       /* biến thể hình/màu của rác vũ trụ (xem `JUNK`). Loại khác không đọc tới,
          nhưng gán cho mọi vật thể thì `spawnFoe` chỉ có MỘT hình dạng dữ liệu. */
-      jv:Math.floor(Math.random()*JUNK.length)
+      jv:(jvForce==null ? Math.floor(Math.random()*JUNK.length)
+                        : ((jvForce|0)%JUNK.length))
     });
     if(key==="gold") goldT=CONFIG.quizCooldown;
   }
@@ -802,17 +907,26 @@
      ⚠ Thu tu phai LUU vao `quizOrder` chu khong sinh trong `renderQuiz`: doi VI/EN
        giua luc dang mo cau do se ve lai (xem `applyLang`), sinh lai la 4 dap an
        nhay cho ngay duoi tay tre. */
+  var fbBag=[];      // tui cho DUONG LUI (mang 8 cau), giu nguyen luat cu
   function nextQuiz(){
-    if(!quizBag.length){
-      for(var i=0;i<QUIZ.length;i++) quizBag.push(i);
-      shuffleIn(quizBag);
-      /* Het tui la luc DUY NHAT hai luot lien nhau co the trung — va dung la cho
-         tre nhan ra ngay. Day cau do xuong cuoi tui moi. */
-      if(quizBag.length>1 && quizBag[0]===quizIdx) quizBag.push(quizBag.shift());
+    quizQ=null;
+    if(quizPool.length){
+      quizQ=quizPool.shift();
+      askedAdd(quizQ.term);        // dong dau khi HIEN RA, khong khi tai
+      refillQuiz();                // bu lai o hau truong cho luot sau
+    } else {
+      /* ⚠️ Duong lui: kho chua tai kip (mang cham), khong tai duoc (`file://`,
+         mat mang), hoac vua het be chua. Van phai co mot cau — thien thach vang
+         da bi ban trung roi, khong the mo mot hop rong. */
+      if(!fbBag.length){
+        for(var i=0;i<QUIZ_FALLBACK.length;i++) fbBag.push(i);
+        shuffleIn(fbBag);
+      }
+      quizQ=QUIZ_FALLBACK[fbBag.shift()];
+      refillQuiz();
     }
-    quizIdx=quizBag.shift();
     quizOrder=[];
-    for(var k=0;k<QUIZ[quizIdx].o.length;k++) quizOrder.push(k);
+    for(var k=0;k<quizQ.o.length;k++) quizOrder.push(k);
     shuffleIn(quizOrder);
   }
   function openQuiz(){
@@ -822,7 +936,12 @@
     showOv("ov-quiz");
   }
   function renderQuiz(){
-    var q=QUIZ[quizIdx];
+    var q=quizQ; if(!q) return;
+    /* ⚠️ HIEN TEN LINH VUC cua cau hoi thay cho nhan co dinh `[ ASTRO_QUIZ ]`.
+       Day la thu DUY NHAT tren man hinh cho biet bo cau da rong ra ngoai thien
+       van — khong hien thi tre chi thay "cau do khac" ma khong biet vi sao. */
+    var tag=$("q-tag");
+    if(tag) tag.textContent = "[ " + (q.topic ? L(q.topic) : t("quiz_tag")) + " ]";
     $("q-reward").innerHTML = t("quiz_reward")+AstroQ.ttImg();
     $("q-text").textContent = L(q.q);
     var box=$("q-opts");
@@ -843,7 +962,8 @@
   }
   function answerQuiz(idx, btn){
     if(state!=="quiz") return;
-    var q=QUIZ[quizIdx], ok=(idx===q.a);
+    var q=quizQ; if(!q) return;
+    var ok=(idx===q.a);
     var opts=$("q-opts").children, i;
     for(i=0;i<opts.length;i++) opts[i].disabled=true;
     btn.classList.add(ok?"correct":"wrong");
@@ -1318,12 +1438,23 @@
     } else {
       /* thiên thạch xám — 2 phát mới vỡ; nứt dần khi còn 1 máu */
       ctx.rotate(f.rot);
-      var rg=ctx.createRadialGradient(-f.r*0.32,-f.r*0.32,f.r*0.18,0,0,f.r);
-      rg.addColorStop(0,"#8291b0"); rg.addColorStop(0.6,"#44516f"); rg.addColorStop(1,"#212b45");
-      ctx.fillStyle=rg; poly(f.r,9,0.82,f.seed); ctx.fill();
-      ctx.strokeStyle="rgba(14,19,36,.5)"; ctx.lineWidth=1.3; ctx.stroke();
-      ctx.fillStyle="rgba(0,0,0,.26)";
-      ctx.beginPath(); ctx.arc(f.r*0.26,f.r*0.2,f.r*0.2,0,TAU); ctx.fill();
+      if(ART_ROCK.ok){
+        var rs=f.r*ROCK_BOX;
+        AstroQGameShell.drawArt(ctx, ART_ROCK, 0, 0, rs, rs);
+      } else {
+        /* ⚠️ ĐƯỜNG LÙI, ĐỪNG XOÁ: ảnh chưa decode xong hoặc 404 thì vẫn phải có
+           thiên thạch trên sân — thiếu nó là trẻ bắn vào chỗ trống rồi mất giáp
+           vì một vật thể vô hình. */
+        var rg=ctx.createRadialGradient(-f.r*0.32,-f.r*0.32,f.r*0.18,0,0,f.r);
+        rg.addColorStop(0,"#8291b0"); rg.addColorStop(0.6,"#44516f"); rg.addColorStop(1,"#212b45");
+        ctx.fillStyle=rg; poly(f.r,9,0.82,f.seed); ctx.fill();
+        ctx.strokeStyle="rgba(14,19,36,.5)"; ctx.lineWidth=1.3; ctx.stroke();
+        ctx.fillStyle="rgba(0,0,0,.26)";
+        ctx.beginPath(); ctx.arc(f.r*0.26,f.r*0.2,f.r*0.2,0,TAU); ctx.fill();
+      }
+      /* ⚠️ VẾT NỨT VẼ SAU, TRÊN CẢ HAI NHÁNH: nó là tín hiệu "còn 1 máu, sắp vỡ",
+         thứ duy nhất cho biết bắn thêm một phát là xong. Nhét vào nhánh vector là
+         mất nó ở đường art — một lỗi im lặng. */
       if(f.hp===1){   /* vết nứt = sắp vỡ */
         ctx.strokeStyle="rgba(255,220,220,.75)"; ctx.lineWidth=1.6;
         ctx.beginPath(); ctx.moveTo(-f.r*0.6,-f.r*0.1); ctx.lineTo(-f.r*0.1,f.r*0.15);
@@ -1556,9 +1687,46 @@
     /** Nạp đầy EMP để đo cú nổ. KHÔNG nổ hộ — phép kiểm phải tự bấm như trẻ. */
     chargeEmp: function(){ empCharge = CONFIG.empNeed; paintHud(); return empCharge; },
     /** Gieo thêm vật thể để có cái mà nổ (dùng đúng đường sinh của game). */
-    spawn: function(n, key){ for(var i=0;i<(n|0);i++) spawnFoe(key); return foes.length; },
+    /* ⚠️ `jv` (tuy chon) BUOC bien the hinh cua rac vu tru. Khong co no thi
+          `probe_junk_variants.py` phai CHO `Math.random()` gieo du 4 bien the —
+          do duoc 22/08/2026 la no chap chon 1/4 luot chay. Chi doi HINH, khong
+          doi mot chi so nao (xem ghi chu o `spawnFoe`). */
+    spawn: function(n, key, jv){ for(var i=0;i<(n|0);i++) spawnFoe(key, jv); return foes.length; },
+    /* Don san: bo moi vat the, dan va HAT NO. Bo kiem can no de do mot manh rac
+       DUY NHAT tren nen sach — hat no mang dung mau `c1` cua bien the (xem
+       `burst(...JUNK[f.jv].c1...)`) nen chung lot vao bo mau va lam phep do hinh
+       hoc nhay 14,6 → 26,9 px tuy luot. Cung ly do `play_racer.py` muc [4] phai
+       don vat pham truoc khi do nhien lieu.
+       ⚠️ Khong mo them loi the nao: `chargeEmp()` + bam E da lam dung viec nay. */
+    clear: function(){ bullets=[]; foes=[]; parts=[]; return foes.length; },
+    /** So bien the hinh cua rac vu tru — bo kiem khoi phai dem lai o file khac. */
+    get junkVariants(){ return JUNK.length; },
     /** Đặt điểm để đo cú lên cấp pháo — không cộng vào ví, không đụng thưởng. */
-    setScore: function(v){ score = Math.max(0, v|0); paintHud(); return score; }
+    setScore: function(v){ score = Math.max(0, v|0); paintHud(); return score; },
+
+    /* ══ Bề mặt cho phép kiểm CÂU ĐỐ (`scratchpad/probe_defender_bank.py`) ══
+       ⚠️ Mở câu đố hộ, nhưng KHÔNG trả lời hộ và KHÔNG cấp thưởng — thưởng
+          vẫn phải đi qua cú bấm thật vào một đáp án. Cùng bản chất với
+          `spawn`: nó bỏ qua đồng hồ chờ (`goldT` 12 giây) để phép kiểm không
+          phải ngồi đợi `Math.random()` mới gặp thạch vàng.
+       ⚠️ `quiz` trả `from` = "bank" hay "fallback". Không có nó thì phép kiểm
+          không phân biệt được "kho chung đã chạy" với "đường lùi đang gánh" —
+          mà đó CHÍNH LÀ điều cần đo ở lượt việc này. */
+    openQuiz: function(){ if(state==="play") openQuiz(); return state; },
+    get quiz(){
+      if(!quizQ) return null;
+      return { term: quizQ.term || null,
+               from: quizQ.term ? "bank" : "fallback",
+               topic: quizQ.topic ? (quizQ.topic.vi||"") : "",
+               q: quizQ.q ? (quizQ.q.vi||"") : "",
+               opts: quizQ.o.length, a: quizQ.a,
+               /* Thu tu 4 dap an NHU KHAI TRONG FILE (chua xao). Phep kiem
+                  "dap an co doi cho khong" so no voi thu tu tren MAN HINH —
+                  khong xao thi hai ben giong het nhau moi luot. */
+               optsRaw: quizQ.o.map(function(o){ return o.vi||""; }) };
+    },
+    get quizPool(){ return quizPool.length; },
+    get quizAsked(){ return askedRead().slice(); }
   };
 
   requestAnimationFrame(frame);
