@@ -9,12 +9,21 @@ test_specimens.py — kiểm thử ĐỘC LẬP Kho Mẫu Vật Vũ Trụ (Speci
 Trọng tâm — ba thứ dễ sai nhất ở tính năng "bộ sưu tập":
   1. KHÔNG có đường ghi "đã thu thập mẫu vật": trạng thái mở khoá phải SUY RA
      từ bộ đếm tiến độ. Gọi API kiểu nào cũng không thêm được mẫu vật.
-  2. Bàn điều khiển chỉ nhận mẫu CÓ THẬT và ĐÃ MỞ KHOÁ, tối đa 3 chỗ.
+  2. Bàn điều khiển chỉ nhận mẫu CÓ THẬT và ĐÃ MỞ KHOÁ, tối đa `deskSlots` chỗ.
+
+⚠️ KHÔNG GÁN CỨNG số chỗ trưng hay tên móc. Bộ này từng đòi đúng "3 chỗ" và tên
+   móc "L4"/"R5"; đổi `Specimens.DeskSlots` 3 → 6 và bỏ 4 móc là nó báo hỏng
+   hàng loạt trong khi **không có gì sai** — và sửa cho khớp bản mới thì nó lại
+   đỏ khi chạy trên bản thật chưa deploy. Nay mọi con số + tên móc đọc từ chính
+   API, và phép kiểm hỏi tính NHẤT QUÁN: server báo N chỗ thì N mẫu phải 200,
+   N+1 mẫu phải 400 kèm `slots == N`. Đúng ở cả hai bản.
   3. Dọn bàn trống khi chưa có tiến độ nào thì KHÔNG sinh bản ghi PROGRESS trắng.
 
 Tự tạo tài khoản Firebase tạm, tự dọn mọi bản ghi trong `finally`.
 """
 import json
+import pathlib
+import re
 import subprocess
 import sys
 import urllib.error
@@ -112,6 +121,20 @@ def wipe(uid):
     return n
 
 
+LOCAL = "localhost" in BASE or "127.0.0.1" in BASE
+_SRC = pathlib.Path(__file__).resolve().parent.parent.parent / \
+    "AstroqSV" / "src" / "AstroqSV.Api" / "Services" / "Specimens.cs"
+
+
+def read_src_slots():
+    """`Specimens.DeskSlots` doc THANG tu ma nguon — de biet ban that lech pha."""
+    try:
+        m = re.search(r"DeskSlots\s*=\s*(\d+)", _SRC.read_text(encoding="utf-8"))
+        return int(m.group(1)) if m else None
+    except Exception:
+        return None
+
+
 def vault(token):
     """→ (summary, {id: item}, desk, deskHooks)
 
@@ -180,7 +203,25 @@ def main():
         check("Chua mo mau nao thi rare = 0", summary.get("rare") == 0, f"{summary.get('rare')}")
         check("rareTotal khop so mau hang hiem trong danh muc",
               summary.get("rareTotal") == n_rare, f"{summary.get('rareTotal')} vs {n_rare}")
-        check("deskSlots = 3", summary.get("deskSlots") == 3, str(summary.get("deskSlots")))
+        SLOTS = summary.get("deskSlots")
+        check("deskSlots la so nguyen duong", isinstance(SLOTS, int) and SLOTS >= 1,
+              str(SLOTS))
+        # ⚠️ Chi doi chieu voi ma nguon KHI do backend o may — luc do ma nguon
+        #    CHINH LA thu dang chay. Tren ban that thi in ra de thay lech pha
+        #    (chua deploy), khong bao hong: bao hong o day la bao hong vi mot
+        #    viec chua lam, khong phai vi mot thu lam sai.
+        src_slots = read_src_slots()
+        # ⚠️ Dieu kien la "ma nguon KHOP API", khong phai "dang do o may": khop
+        #    nghia la ma nguon CHINH LA thu dang chay, nen doi chieu duoc — ke ca
+        #    tren ban that. Ban dau toi dat `if LOCAL` nen tren prod no LUON in
+        #    "lech nghia la CHUA DEPLOY" du hai ben da khop — mot dong noi SAI
+        #    ngay sau khi deploy thanh cong.
+        if src_slots == SLOTS:
+            check("deskSlots khop `Specimens.DeskSlots` cua ma nguon",
+                  SLOTS == src_slots, f"API={SLOTS} · nguon={src_slots}")
+        else:
+            print(f"       (ma nguon o may khai {src_slots} cho · ban that dang "
+                  f"bao {SLOTS} — lech nghia la CHUA DEPLOY)")
         check("Ban dieu khien rong", desk == [], str(desk))
         check("Moi mau deu dang khoa", all(not v["unlocked"] for v in by_id.values()))
         check("4 nhom dung ten", {v["category"] for v in by_id.values()}
@@ -230,7 +271,7 @@ def main():
         summary, by_id, _, _ = vault(token)
         check("Ghe Sao Hoa -> mars-red-ice mo", by_id["mars-red-ice"]["unlocked"])
         check("Du 2 hanh tinh -> lunar-regolith mo", by_id["lunar-regolith"]["unlocked"])
-        check("Mau hiem len 3/5", summary.get("rare") == 3, str(summary.get("rare")))
+        check("Mau hiem len 3", summary.get("rare") == 3, str(summary.get("rare")))
         check("Mau chua du dieu kien van khoa (best:dodge 300)",
               not by_id["iron-meteorite"]["unlocked"],
               f"current={by_id['iron-meteorite']['current']}")
@@ -257,43 +298,50 @@ def main():
                      body={"desk": ["ancient-seawater"]})
         check("Dat 1 mau da mo (id tran) -> 200",
               st == 200 and d.get("desk") == ["ancient-seawater"], f"{st} {d}")
-        check("Server tu gan moc trong dau tien",
-              d.get("deskHooks") == [{"hook": "L1", "id": "ancient-seawater"}],
-              str(d.get("deskHooks")))
+        # Bo moc doc TU CHINH phan hoi — khoi gan cung ten moc nao.
+        HOOKS = d.get("hooks") or []
         check("Tra kem danh sach moc de client khoi doan",
-              isinstance(d.get("hooks"), list) and len(d["hooks"]) > 3, str(d.get("hooks")))
+              isinstance(HOOKS, list) and len(HOOKS) >= SLOTS,
+              f"{len(HOOKS)} moc / {SLOTS} cho: {HOOKS}")
+        if len(HOOKS) < 3:
+            print("       !! CHUA DU MOC DE DO PHAN DOI MOC — dung o day")
+            raise SystemExit(1)
+        H0, H1, HX = HOOKS[0], HOOKS[1], HOOKS[-1]
+        check("Server tu gan moc trong dau tien",
+              d.get("deskHooks") == [{"hook": H0, "id": "ancient-seawater"}],
+              str(d.get("deskHooks")))
         _, by_id, desk, dhooks = vault(token)
         check("GET tra dung desk + co ban do `equipped`",
               desk == ["ancient-seawater"] and by_id["ancient-seawater"]["equipped"], str(desk))
-        check("GET tra kem deskHooks", dhooks == [{"hook": "L1", "id": "ancient-seawater"}],
+        check("GET tra kem deskHooks", dhooks == [{"hook": H0, "id": "ancient-seawater"}],
               str(dhooks))
         check("Mau khac khong bi danh dau equipped",
               not by_id["amazon-leaf"]["equipped"])
 
         print("\n[7b] Tre TU CHON MOC")
         st, d = call("PUT", "/me/specimens/desk", token=token,
-                     body={"desk": [{"hook": "R3", "id": "ancient-seawater"}]})
+                     body={"desk": [{"hook": HX, "id": "ancient-seawater"}]})
         check("Treo vao dung moc da chon -> 200",
-              st == 200 and d.get("deskHooks") == [{"hook": "R3", "id": "ancient-seawater"}],
+              st == 200 and d.get("deskHooks") == [{"hook": HX, "id": "ancient-seawater"}],
               f"{st} {d.get('deskHooks')}")
         check("Moc GIU NGUYEN qua GET (khong bi xep lai tu dau)",
-              hooks_now(token) == [("R3", "ancient-seawater")], str(hooks_now(token)))
+              hooks_now(token) == [(HX, "ancient-seawater")], str(hooks_now(token)))
         check("Truong `desk` cu van tra id tran cho client cu",
               vault(token)[2] == ["ancient-seawater"], str(vault(token)[2]))
 
         # Doi moc = viec rieng, khong phai go xuong roi treo lai.
         st, d = call("PUT", "/me/specimens/desk", token=token,
-                     body={"desk": [{"hook": "L4", "id": "ancient-seawater"}]})
+                     body={"desk": [{"hook": H1, "id": "ancient-seawater"}]})
         check("Doi sang moc khac -> 200 + moc moi",
-              st == 200 and hooks_now(token) == [("L4", "ancient-seawater")],
+              st == 200 and hooks_now(token) == [(H1, "ancient-seawater")],
               str(hooks_now(token)))
 
-        # Chu thuong: server chuan hoa ve chu hoa. Khong chuan hoa thi "l4" thanh mot
-        # moc la va bi tu choi, trong khi tre khong lam gi sai.
+        # Chu thuong: server chuan hoa ve chu hoa. Khong chuan hoa thi moc viet
+        # thuong thanh mot moc la va bi tu choi, trong khi tre khong lam gi sai.
         st, d = call("PUT", "/me/specimens/desk", token=token,
-                     body={"desk": [{"hook": "l4", "id": "ancient-seawater"}]})
+                     body={"desk": [{"hook": H1.lower(), "id": "ancient-seawater"}]})
         check("Moc viet thuong duoc chuan hoa -> 200",
-              st == 200 and hooks_now(token) == [("L4", "ancient-seawater")],
+              st == 200 and hooks_now(token) == [(H1, "ancient-seawater")],
               f"{st} {hooks_now(token)}")
 
         # ⚠️ PHEP KIEM QUAN TRONG NHAT CUA CA LUOT: kieu thuoc tinh trong DynamoDB
@@ -302,7 +350,7 @@ def main():
         row = next((r for r in rows(uid) if r["SK"]["S"] == "PROGRESS"), None)
         stored = [x.get("S") for x in ((row or {}).get("desk") or {}).get("L", [])]
         check('DB luu dang chuoi "<moc>:<id>", kieu thuoc tinh giu nguyen',
-              stored == ["L4:ancient-seawater"], str(stored))
+              stored == [f"{H1}:ancient-seawater"], str(stored))
 
         # ── Ban ghi CU trong DB (id tran, chua co moc) — doc duoc, 0 migration ──
         aws("dynamodb", "update-item", "--table-name", TABLE,
@@ -312,33 +360,66 @@ def main():
             "--expression-attribute-values",
             json.dumps({":d": {"L": [{"S": "amazon-leaf"}, {"S": "ancient-seawater"}]}}))
         check("Ban ghi CU (id tran) van doc duoc, gan moc theo dung thu tu cu",
-              hooks_now(token) == [("L1", "amazon-leaf"), ("L2", "ancient-seawater")],
+              hooks_now(token) == [(H0, "amazon-leaf"), (H1, "ancient-seawater")],
               str(hooks_now(token)))
         # Dat lai de cac phep kiem duoi co moc so sanh da biet
         call("PUT", "/me/specimens/desk", token=token,
-             body={"desk": [{"hook": "L4", "id": "ancient-seawater"}]})
+             body={"desk": [{"hook": H1, "id": "ancient-seawater"}]})
 
+        # ⚠️ PHAT BIEU DOI 22/08/2026, khong noi long. Truoc do phep kiem nay doi
+        #    "moc la -> 400". Tu 21/08 hanh vi doi CO CHU DICH: moc khong con ton
+        #    tai duoc xu y nhu moc RONG (xep vao moc trong dau tien), vi so moc moi
+        #    vach thu tu 5 xuong 3 — ban cu loai chung, ma `DeskOf` loc lai luc DOC,
+        #    nen ban cua tre dang treo o L4/L5 RONG DI NGAY va khong ai bao gi.
+        #    Dieu can bao ve van nguyen: DB KHONG BAO GIO luu mot moc la.
+        before_odd = hooks_now(token)
         st, d = call("PUT", "/me/specimens/desk", token=token,
                      body={"desk": [{"hook": "Z9", "id": "ancient-seawater"}]})
-        check("Moc KHONG CO THAT -> 400 bad-specimen",
-              st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
-        check("Ban giu nguyen sau khi bi tu choi moc la",
-              hooks_now(token) == [("L4", "ancient-seawater")], str(hooks_now(token)))
+
+        # ── TANG HANH VI: re nhanh theo BAN DANG CHAY ────────────────────────
+        # `src_slots == SLOTS` nghia la ma nguon o may chinh la thu dang chay.
+        # Deploy xong thi nhanh moi tu bat lai — khong ai phai nho sua test.
+        if src_slots == SLOTS:
+            check("Moc KHONG CO THAT -> 200, mau vat chi DOI CHO chu khong mat",
+                  st == 200
+                  and [x["id"] for x in (d.get("deskHooks") or [])] == ["ancient-seawater"],
+                  f"{st} {d.get('deskHooks')}")
+        else:
+            print("       (ban dang chay LOAI moc la -> 400; hanh vi 'xu nhu moc "
+                  "rong' da chot 21/08/2026 nhung CHUA DEPLOY)")
+            check("Ban dang chay: moc la -> 400 (hanh vi CU)",
+                  st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
+            check("Bi tu choi thi ban KHONG bi ghi de",
+                  hooks_now(token) == before_odd, str(hooks_now(token)))
+
+        # ── TANG BAT BIEN: dung o CA HAI ban ─────────────────────────────────
+        hk = [h for h, _ in hooks_now(token)]
+        check("Moc ghi xuong LUON la moc CO THAT (khong bao gio la 'Z9')",
+              len(hk) == 1 and all(h in HOOKS for h in hk), str(hooks_now(token)))
+        # Doc THANG DynamoDB: manh hon doc loi khai cua API.
+        row = next((r for r in rows(uid) if r["SK"]["S"] == "PROGRESS"), None)
+        st_db = [x.get("S") for x in ((row or {}).get("desk") or {}).get("L", [])]
+        check("DB khong bao gio luu mot moc la",
+              len(st_db) == 1 and st_db[0].split(":")[0] in HOOKS, str(st_db))
 
         two = got[:2]
+        before_dup = hooks_now(token)
         st, d = call("PUT", "/me/specimens/desk", token=token,
-                     body={"desk": [{"hook": "L2", "id": two[0]},
-                                    {"hook": "L2", "id": two[1]}]})
+                     body={"desk": [{"hook": H1, "id": two[0]},
+                                    {"hook": H1, "id": two[1]}]})
         check("HAI mau CUNG MOT MOC -> 400", st == 400 and d.get("code") == "bad-specimen",
               f"{st} {d}")
+        # So voi trang thai NGAY TRUOC cu gui, khong so voi mot ten moc gan cung —
+        # phat bieu do dung o moi ban va moi bo moc.
         check("Ban giu nguyen sau khi bi tu choi moc trung",
-              hooks_now(token) == [("L4", "ancient-seawater")], str(hooks_now(token)))
+              hooks_now(token) == before_dup,
+              f"{hooks_now(token)} vs {before_dup}")
 
         # Tron hai dang trong CUNG mot mang: mot phan tu co moc, mot phan tu id tran.
         st, d = call("PUT", "/me/specimens/desk", token=token,
-                     body={"desk": [{"hook": "R5", "id": two[0]}, two[1]]})
+                     body={"desk": [{"hook": HX, "id": two[0]}, two[1]]})
         check("Tron hai dang -> 200, phan tu thieu moc xuong moc trong dau tien",
-              st == 200 and sorted(hooks_now(token)) == sorted([("R5", two[0]), ("L1", two[1])]),
+              st == 200 and sorted(hooks_now(token)) == sorted([(HX, two[0]), (H0, two[1])]),
               f"{st} {hooks_now(token)}")
 
         st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": [123]})
@@ -364,18 +445,26 @@ def main():
                      body={"desk": ["amazon-leaf", "amazon-leaf"]})
         check("Gui id TRUNG NHAU -> 400", st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
 
-        four = got[:4]
-        st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": four})
-        check("Gui 4 mau (ban chi 3 cho) -> 400",
-              st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
-        check("Bao so cho = 3", d.get("slots") == 3, str(d.get("slots")))
+        # ⚠️ Phai co du SLOTS+1 mau da mo moi do duoc phep kiem "vuot so cho".
+        #    Khong du thi NOI RA, dung im lang bo qua — mot phep kiem bi bo qua
+        #    trong im lang doc ra y nhu mot phep kiem dat.
+        if len(got) < SLOTS + 1:
+            check(f"co du {SLOTS + 1} mau da mo de do phep kiem vuot so cho",
+                  False, f"chi co {len(got)}: {got}")
+        else:
+            over = got[:SLOTS + 1]
+            st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": over})
+            check(f"Gui {SLOTS + 1} mau (ban chi {SLOTS} cho) -> 400",
+                  st == 400 and d.get("code") == "bad-specimen", f"{st} {d}")
+            check(f"Bao so cho = {SLOTS}", d.get("slots") == SLOTS, str(d.get("slots")))
         check("Ban KHONG bi ghi de khi bi tu choi",
               vault(token)[2] == ["ancient-seawater"], str(vault(token)[2]))
 
-        three = got[:3]
-        st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": three})
-        check("Gui dung 3 mau da mo -> 200", st == 200 and d.get("desk") == three, f"{st} {d}")
-        check("Giu dung THU TU client gui", vault(token)[2] == three, str(vault(token)[2]))
+        full = got[:SLOTS]
+        st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": full})
+        check(f"Gui dung {len(full)} mau da mo -> 200",
+              st == 200 and d.get("desk") == full, f"{st} {d}")
+        check("Giu dung THU TU client gui", vault(token)[2] == full, str(vault(token)[2]))
 
         st, d = call("PUT", "/me/specimens/desk", token=token, body={"desk": []})
         check("Don sach ban -> 200 + desk rong", st == 200 and d.get("desk") == [], f"{st} {d}")

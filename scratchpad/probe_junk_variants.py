@@ -147,19 +147,42 @@ with sync_playwright() as p:
 
     seen = {}          # jv -> {mean, blink, out}
     RAD = 34.0         # cua so do: rong hon f.r (15) de bat ca phan chia ra ngoai
-    for _ in range(70):
-        if len(seen) >= len(VAR):
+
+    # ⚠️⚠️ BUOC TUNG BIEN THE, KHONG CHO `Math.random()` GIEO DU.
+    #    Ban dau bo do thu toi 70 lan roi cho gap du 4 bien the — do duoc no
+    #    chap chon 1/4 luot chay, va mot phep kiem chap chon thi som muon bi bo
+    #    qua. `__dbg.spawn(1,'junk',jv)` buoc bien the; no chi doi HINH, khong
+    #    doi mot chi so nao (xem ghi chu trong game-defender.html).
+    n_var = pg.evaluate("() => window.__dbg.junkVariants")
+    check(n_var == len(VAR), "so bien the o be mat test khop bang JUNK doc tu file",
+          "dbg=%s · file=%d" % (n_var, len(VAR)))
+
+    for want in range(len(VAR)):
+      # ⚠️ Thu lai NHIEU LAN cho MOT bien the. Ban dau moi bien the chi gieo mot
+      #    luot, nen gap nhieu (vat the khac chen vao cua so do, manh rac chua
+      #    vao han trong san, tram vo giua luc do) la MAT luon bien the do — do
+      #    duoc 3/4. Thu lai giu duoc tinh tat dinh ve "bien the nao" ma khong
+      #    con phu thuoc may man.
+      why = []
+      for _try in range(25):
+        if want in seen:
             break
         if pg.evaluate("() => window.__dbg.state") != "play":
             pg.wait_for_timeout(900)
             if pg.locator("#again-btn").is_visible():
                 pg.click("#again-btn"); pg.wait_for_timeout(400)
-            continue
-        pg.evaluate("() => window.__dbg.spawn(1, 'junk')")
+        # ⚠️ DON SAN TRUOC KHI GIEO. Hat no mang dung mau `c1` cua bien the
+        #    (`burst(...JUNK[f.jv].c1...)`) nen chung lot vao bo mau va lam phep
+        #    do hinh hoc nhay 14,6 → 26,9 px tuy luot — chap chon 1/6 luot chay.
+        #    Hat KHONG nam trong `__dbg.list` nen khong loc duoc bang danh sach
+        #    vat the; phai don. Cung cach `play_racer.py` muc [4] da phai lam.
+        pg.evaluate("() => window.__dbg.clear()")
+        pg.evaluate("(v) => window.__dbg.spawn(1, 'junk', v)", want)
         pg.wait_for_timeout(40)
         lst = pg.evaluate("() => window.__dbg.list")
-        junk = [f for f in lst if f["key"] == "junk"]
+        junk = [f for f in lst if f["key"] == "junk" and f.get("jv") == want]
         if not junk:
+            why.append("khong thay manh rac vua gieo")
             continue
         tgt = max(junk, key=lambda f: f["n"])
         jv = tgt.get("jv")
@@ -190,16 +213,26 @@ with sync_playwright() as p:
         others = [f for f in lst if f["n"] != tgt["n"]]
         if any(abs(f["x"] - tgt["x"]) < RAD * 2 and abs(f["y"] - tgt["y"]) < RAD * 2
                for f in others):
+            why.append("vat the khac chen vao cua so do")
             continue
         px = pg.evaluate(READ, {"n": tgt["n"], "rad": RAD})
         if not px:
+            why.append("doc pixel that bai")
             continue
         body = near(px, [rgb(c) for c in VAR[jv]["cols"][:2]])
         if len(body) < 40:
+            why.append("chi thay %d pixel thuoc bo mau (can >=40)" % len(body))
             continue
         mean = tuple(round(sum(q[i] for q in body) / len(body)) for i in range(3))
-        far = max((abs(q[3]) for q in body), default=0)
-        fary = max((abs(q[4]) for q in body), default=0)
+        # ⚠️⚠️ HINH HOC DO TREN TONG GIUA (`c1`), KHONG do tren ca `body`.
+        #    `body` gom ca `c0` — tong SANG NHAT — va voi `arm` (be sang
+        #    #f2e6cf) thi tong do trung NGOI SAO NEN trang: no lam `chia-ra`
+        #    nhay 14,6 / 21,0 / 25,6 tuy luot va lam bo do chap chon 2/6 luot.
+        #    `c1` la tong dac trung nhat va xa nen nhat. Cung ho loi da ghi:
+        #    "quang do lot vao bo mau" — o day la NEN SAO lot vao bo mau.
+        core = near(px, [rgb(VAR[jv]["cols"][1])], tol=40) or body
+        far = max((abs(q[3]) for q in core), default=0)
+        fary = max((abs(q[4]) for q in core), default=0)
         # den bao nhap nhay: doc tam qua vai khung cach nhau
         lums = []
         for _ in range(7):
@@ -207,36 +240,85 @@ with sync_playwright() as p:
             if l >= 0: lums.append(l)
             pg.wait_for_timeout(70)
         if len(lums) < 4:
-            continue        # manh rac vo giua luc do -> bo, gieo lai
+            why.append("manh rac vo giua luc do den (%d mau)" % len(lums))
+            continue
         seen[jv] = {"s": VAR[jv]["s"], "mean": mean, "n": len(body),
                     "far": max(far, fary), "lum": (min(lums), max(lums))}
         print("   do duoc %-6s mean=%s px=%d chia-ra=%.1f den=%s"
               % (VAR[jv]["s"], mean, len(body), max(far, fary), seen[jv]["lum"]))
         pg.screenshot(path=os.path.join(OUT, "junk-%s.png" % VAR[jv]["s"]))
 
+      if want not in seen:
+          # ⚠️ Bo mot bien the trong IM LANG doc ra y nhu mot phep kiem dat.
+          from collections import Counter
+          print("   !! bien the %s: 25 lan thu deu khong do duoc — %s"
+                % (VAR[want]["s"], dict(Counter(why))))
+
     print()
     check(len(seen) == len(VAR), "gieo ra du MOI bien the",
           "do duoc %d/%d" % (len(seen), len(VAR)))
 
-    # (1) Bon bien the phai KHAC NHAU tren man hinh
-    keys = sorted(seen)
+    # ── (1a) Bon BANG MAU KHAI phai khac nhau — tat dinh, doc tu `JUNK` ──
+    # ⚠️ Do o BANG MAU chu khong o `mean` tren man hinh. Ban cu do `mean` va bao
+    #    "plate vs tank lech 53 < 60" — nhung hai bang mau KHAI lech 78, con tren
+    #    man thi ca hai deu mang quang do dung chung nen bi keo lai gan nhau. Va
+    #    thiet ke CO Y khong phan biet bang mau (xem ghi chu trong `JUNK`:
+    #    "nhan ra bang LUOI O chu khong bang mau"), nen phep kiem cu dang khang
+    #    dinh mot tieu chi thiet ke KHONG CO.
+    ks = list(range(len(VAR)))
     worst = None
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
-            a, b = seen[keys[i]]["mean"], seen[keys[j]]["mean"]
+    for i in ks:
+        for j in ks[i + 1:]:
+            a, b = rgb(VAR[i]["cols"][1]), rgb(VAR[j]["cols"][1])
             d = sum(abs(a[k] - b[k]) for k in range(3))
             if worst is None or d < worst[0]:
-                worst = (d, seen[keys[i]]["s"], seen[keys[j]]["s"])
+                worst = (d, VAR[i]["s"], VAR[j]["s"])
     check(worst is not None and worst[0] >= 60,
-          "bon bien the cho ra bon MAU KHAC NHAU tren man hinh",
+          "bon BANG MAU khai khac nhau (khong co hai bien the trung mau)",
           "cap gan nhat: %s vs %s lech %d" % (worst[1], worst[2], worst[0])
-          if worst else "khong do duoc")
+          if worst else "khong doc duoc")
 
-    # (2) Moi bien the VAN co den bao nhap nhay -> van doc ra la rac
-    dim = [v["s"] for v in seen.values() if v["lum"][1] - v["lum"][0] < 60]
-    check(bool(seen) and not dim,
-          "moi bien the VAN co den bao nhap nhay (tin hieu 'day la rac')",
-          "khong nhay: %s" % dim)
+    # ── (1b) Mau tren man cua tung bien the GAN bang mau CUA CHINH NO nhat ──
+    # Manh hon "bon mau khac nhau": no bat duoc ca loi VE NHAM BIEN THE — mot
+    # loi im lang (hinh van la rac, van bay, van tru diem) ma phep kiem cu mu.
+    wrong = []
+    for jv, v in seen.items():
+        dists = [(sum(abs(v["mean"][k] - rgb(VAR[i]["cols"][1])[k]) for k in range(3)), i)
+                 for i in ks]
+        dists.sort()
+        if dists[0][1] != jv:
+            wrong.append("%s -> giong %s hon" % (v["s"], VAR[dists[0][1]]["s"]))
+    check(bool(seen) and not wrong,
+          "moi bien the ve dung bang mau CUA CHINH NO (khong ve nham ban)",
+          "; ".join(wrong) or "%d/%d bien the" % (len(seen), len(VAR)))
+
+    # ── (2a) Den bao la MA DUNG CHUNG, nam NGOAI moi nhanh bien the ──
+    # ⚠️ Do bang cach DOC MA, khong do pixel: `arm` mang bo mau be sang trung nen
+    #    sao trang nen do do sang o tam cho bien do 5 trong khi plate/tank la
+    #    473/435 — cach do sai cho, khong phai san pham sai. Va dieu THAT SU can
+    #    bao dam la den o NGOAI cac nhanh: de trong mot nhanh thi doi hinh mot
+    #    bien the la mat han tin hieu "day la rac", dung lop loi im lang ma vet
+    #    nut cua thien thach xam da tra gia.
+    # ⚠️ `ROOT` o file nay la CHUOI (os.path), khong phai pathlib.Path.
+    src = io.open(os.path.join(ROOT, "game-defender.html"), encoding="utf-8").read()
+    m = re.search(r"var jv=JUNK\[.*?(?=\n\s*\} else \{\n\s*/\* thiên thạch)",
+                  src, re.S)
+    blk = m.group(0) if m else ""
+    led = re.search(r"fillStyle\s*=\s*Math\.sin\(f\.ph[^;]*;\s*"
+                    r"ctx\.beginPath\(\);\s*ctx\.arc\(0,0,f\.r\*[\d.]+", blk)
+    check(bool(led), "co dong ve den bao nhap nhay trong khoi ve rac", "")
+    if led:
+        after_last_branch = blk.rfind("} else {")
+        check(after_last_branch < led.start(),
+              "den bao nam NGOAI moi nhanh bien the (ma dung chung)",
+              "den o %d, nhanh cuoi ket o %d" % (led.start(), after_last_branch))
+
+    # ── (2b) …va den PHAI nhay that ──
+    best = max(seen.values(), key=lambda v: v["lum"][1] - v["lum"][0], default=None)
+    check(best is not None and (best["lum"][1] - best["lum"][0]) >= 60,
+          "den bao THAT SU nhay (do tren bien the co tuong phan tot nhat)",
+          ("%s bien do %d" % (best["s"], best["lum"][1] - best["lum"][0]))
+          if best else "khong do duoc")
 
     # (3) Ba hinh MOI khong ve chia ra ngoai vung va cham (f.r = 15)
     NEW = {v["s"]: v for v in seen.values() if v["s"] != "plate"}

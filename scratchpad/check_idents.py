@@ -78,12 +78,18 @@ declared |= set(re.findall(r"\bcatch\s*\(\s*([\w$]+)", clean))
 #   AstroQProgress (js/progress.js)
 # Ba file do ra doi SAU lan cap nhat danh sach cuoi, nen no lac hau am tham.
 # Them mot file dung chung mo global moi thi THEM TEN VAO DAY.
+# ⚠️ DANH SACH NAY LAC HAU MOI LAN DU AN THEM MOT FILE DUNG CHUNG, va no lac hau
+#    trong IM LANG: bo do bao mot global hop le la "ten tu do". Da tra gia 3 lan
+#    ($ / AstroQGameShell / AstroQProgress ngay 20/08 · AstroQCos ngay 21/08 ·
+#    AstroQQuestions + AstroQConsts ngay 22/08). Them mot `js/<x>.js` dung
+#    chung thi them ten global cua no vao day, va chay `check_idents.py` cho MOI
+#    game dung no chu khong chi mot game.
 GLOBALS = set("""window document localStorage Math JSON Image Date console this true false null undefined
 NaN Infinity typeof new delete in instanceof void return if else for while do break continue switch case
 default function var let const try catch finally throw arguments requestAnimationFrame setTimeout
 clearTimeout setInterval clearInterval AudioContext webkitAudioContext ResizeObserver navigator
 Economy AstroQ CustomEvent
-$ AstroQGameShell AstroQProgress AstroQSfx AstroQCos AstroQBrag AstroQSpecimens AstroQSpecimenArt Number String Boolean Array Object parseInt parseFloat isNaN encodeURIComponent
+$ AstroQGameShell AstroQProgress AstroQSfx AstroQCos AstroQBrag AstroQSpecimens AstroQSpecimenArt AstroQQuestions AstroQConsts AstroQGameRun AstroQPickPlace AstroQMission Number String Boolean Array Object parseInt parseFloat isNaN encodeURIComponent
 decodeURIComponent alert matchMedia performance Element HTMLElement location history screen""".split())
 
 # ten thuoc tinh sau dau '.' hoac truoc ':' trong object literal thi bo qua,
