@@ -11,6 +11,11 @@ import subprocess, sys, time, re, os, io
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
 NUM = re.compile(r"(\d+)\s*(?:dat|đạt|PASS|pass)\D+?(\d+)\s*(?:hong|hỏng|FAIL|fail)")
+# Bo LIET KE khong in "n dat / m hong" ma in mot con so PHAT HIEN. Hai mau
+# duoi day cho con so do hien ra thay vi "?" — `probe_chip_label` in "TONG SO
+# NHAN BI CAT/TRAN: n", `audit_taps` in "n nhom CAN SUA".
+FOUND = [re.compile(r"TONG SO[^:]*:\s*(\d+)"),
+         re.compile(r"===\s*(\d+)\s+nhom CAN SUA")]
 ALT = re.compile(r"(?:KET QUA|ket qua|KẲT QUẢ|kết quả)[^0-9]*(\d+)[^0-9]+?(\d+)")
 
 # CANH BAO: moi bo do in ket qua mot kieu. Ban dau cua ham nay do "n dat / m hong"
@@ -45,6 +50,11 @@ def counts(out):
     bad = len(re.findall(r"\[HONG\]|FAIL", out))
     if ok or bad:
         return str(ok), str(bad)
+    # Bo LIET KE: in mot con so PHAT HIEN thay vi "n dat / m hong".
+    for rx in FOUND:
+        m = rx.search(out)
+        if m:
+            return "-", m.group(1)
     return "?", "?"
 
 rows = []
@@ -60,6 +70,15 @@ for name in sys.argv[1:]:
     dt = time.time() - t0
     out = (r.stdout or "") + (r.stderr or "")
     a, b = counts(out)
+    # ⚠️⚠️ KHONG DOC RA SO MA MA THOAT = 0 THI COI LA SACH. `check_idents` va
+    #   `e2e_tree_stamp` bieu dat ket qua bang MA THOAT chu khong bang mot dong
+    #   dem — va chinh ghi chu tren dau ham `counts` da ghi 'Can cu duyet chinh
+    #   la MA THOAT'. Truoc day chung bi gan co `<<< XEM LAI` o MOI luot chay,
+    #   tuc cai cong tu day nguoi doc den cho bo qua no.
+    #   ⚠️ Van in 'sach(exit)' chu khong in mot con so, de khong ai doc thanh
+    #      mot con so THAT.
+    if (a, b) == ("?", "?") and r.returncode == 0:
+        a, b = "sach(exit)", "0"
     rows.append((name, a, b, r.returncode, dt))
     flag = "" if (r.returncode == 0 and b in ("0",)) else "   <<< XEM LAI"
     print("%-26s | %5s dat / %-4s hong | exit %-3s | %5.1fs%s"

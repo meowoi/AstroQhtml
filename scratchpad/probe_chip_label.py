@@ -129,6 +129,12 @@ def main():
             json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
         print("(da ghi JSON)")
 
+    # ⚠️ THOAT 1 KHI CO PHAT HIEN. Truoc day ham nay khong goi `sys.exit` nen no
+    #    LUON thoat 0 — tim ra 9 nhan bi cat thi cua push VAN XANH. Mot bo do
+    #    khong bao gio do duoc la mot bo do da chet.
+    # ⚠️ DAT O CUOI: dat truoc khoi `--json` thi co do vo tac dung.
+    sys.exit(1 if cut_total else 0)
+
 
 if __name__ == "__main__":
     main()

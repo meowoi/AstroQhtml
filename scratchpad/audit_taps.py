@@ -20,6 +20,7 @@ kẹt trong trang.
    · phần tử BỊ CHE / cố tình ẩn: honeypot chống bot `.hp` ở form waitlist phải
      nhỏ và vô hình, đó là mục đích của nó.
 """
+import sys
 import json
 from collections import defaultdict
 
@@ -120,3 +121,10 @@ print(f"\n=== {len(skip)} nhom BO QUA (inline trong cau / co y an) ===")
 for sel, (w, h, pages, txt, i, hd) in sorted(skip.items(), key=lambda kv: kv[1][1]):
     why = "inline" if i else "an"
     print(f"  {w:>4}x{h:<4} {sel:<42} [{why}]  {txt!r}")
+
+# ⚠️ THOAT 1 KHI CO NHOM CAN SUA. Truoc day bo nay khong goi `sys.exit` nen no
+#    LUON thoat 0 — mot vung cham tut xuong duoi 44px se khong bao gio lam do
+#    cua push. Chi tinh `real`: `skip` la ngoai le WCAG (link nam giua mot cau)
+#    va co y an, dem chung vao la bo do bao oan moi luot.
+# ⚠️ DAT O CUOI: dat truoc vong in duoi day thi muc 'nhom BO QUA' rong.
+sys.exit(1 if real else 0)
