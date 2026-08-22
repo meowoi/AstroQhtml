@@ -212,7 +212,9 @@
        ⚠️ ẢNH LỖI HOẶC THIẾU → TỰ LÙI VỀ BẢN VẼ CODE. Cả ba nhánh vẽ vector
           (`rivalBody`/`rivalWings`, đá đa giác 9 đỉnh, thùng bo góc) GIỮ NGUYÊN;
           đừng xoá chúng, đó là đường lùi duy nhất khi mạng hỏng.
-       ⚠️ CHIỀU DÀI BA TÀU = CHIỀU DÀI LUNA (`shipW`), chủ dự án chốt 21/08. Art
+       ⚠️ DIỆN TÍCH BA TÀU = DIỆN TÍCH TÀU LUNA (đổi 22/08/2026; trước đó là
+          *chiều dài* bằng Luna, chủ dự án chốt 21/08 — nhưng cái giá của cách
+          ghim đó là ba đối thủ nhìn ra mảnh hơn tàu của trẻ, xem `drawRivalShip`). Art
           mới dài 2,37–2,98 : 1 còn Luna 1,88 : 1, nên chuẩn theo chiều dài thì
           đối thủ MỎNG hơn Luna (cao 18,8–23,6 thay vì 30). Đường kia — chuẩn
           theo chiều cao — cho tàu cam dài 95 đơn vị ảo, tức to gần gấp đôi tàu
@@ -1125,7 +1127,21 @@
        LỆCH khỏi ống đẩy của art, và ở tàu dẹt nhất nó bắt đầu ngay giữa thân
        (soi ảnh chụp mới thấy). `bw`/`bh` là cỡ THẬT của hình đang vẽ. */
     var sp=ART.rivals[r.id], useArt=!!(sp && sp.ok);
-    var bw=useArt?CONFIG.shipW:w, bh=useArt?(CONFIG.shipW/sp.ar):h;
+    /* ⚠️⚠️ GHIM THEO DIEN TICH, KHONG THEO CHIEU DAI (doi 22/08/2026).
+       Ghim theo chieu dai (`bw = CONFIG.shipW`) lam ba doi thu chi cao
+       18,8-23,6 so voi Luna 29,8 — dien tich chi con 63-79%, nen chung nhin
+       ra MANH HON tau cua tre; do la cai gia da ghi luc chot 21/08. Ghim theo
+       chieu CAO thi nguoc lai: tau dai nhat thanh 88,7 (Luna 56), dai hon 58%
+       va bat dau che vat pham tren lan. Ghim theo DIEN TICH cho trong luong
+       thi giac BANG tau cua tre ma khong tau nao dai gap ruoi:
+         70,7x23,8 · 69,1x24,3 · 63,1x26,6  (lan cao 84 nen thoai mai)
+       ⚠️ Moc la HANG SO `shipW*shipH`, KHONG phai `SPR.w*SPR.h`: `SPR` phu
+          thuoc anh Luna da tai xong chua, lay no lam moc la co doi thu doi
+          theo luot tai — mot loi im lang.
+       ⚠️ Doi lai cach ghim thi CHAY LAI `scratchpad/play_racer.py` (muc [16]
+          do be rong nhan ten theo chieu dai tau) va soi lai anh chup. */
+    var A0=CONFIG.shipW*CONFIG.shipH;
+    var bw=useArt?Math.sqrt(A0*sp.ar):w, bh=useArt?Math.sqrt(A0/sp.ar):h;
 
     /* Vệt đuôi — dài hẳn ra khi nó đang tăng tốc, để trẻ THẤY đối thủ cũng có skill */
     var tl=bw*(on?1.55:0.62), tx=x-bw*0.46;
