@@ -233,6 +233,20 @@
     /* Biên dạng đá: bán kính đỉnh chạy trong dải hẹp quanh 1 nên VÒNG VA CHẠM
        (`rc = r*rockHit`) gần đúng bằng hình vẽ — lệch lớn nhất ~0,5px. */
     rockHit: 0.86,
+    /* ẢNH ĐÁ DÙNG CHUNG ba game — xem `js/game-shell.js`.
+       ⚠️⚠️ `rockBox` = cạnh hộp vẽ ÷ bán kính VA CHẠM (`rc`), và con số 2,41 là
+          SỐ ĐO chứ không phải ước lượng. Đo trên `img/rock-gray.png`: bán kính
+          silhouette ÷ cạnh dài = **0,406 (min) · 0,457 (trung vị) · 0,512 (max)**.
+          Với hộp 2,41·rc thì hình vẽ trải **0,979–1,234 · rc** — gần như trùng
+          khít dải của bản vector đang chạy (`rockPts` cho 0,84–1,08 · r = 0,977–1,256 · rc),
+          và diện tích lệch dưới 3%. Nên đây là **đổi ART, KHÔNG đổi độ khó**.
+       ⚠️⚠️ ĐỪNG "sửa" thành khớp hình vào TRONG vòng va chạm (hộp ~1,96·rc). Va chạm
+          ở đây là một VÒNG TRÒN, còn ảnh là một khối lồi lõm: khớp bán kính LỚN
+          NHẤT vào vòng tròn thì phần lớn viên đá nằm sâu bên trong, tức trẻ thấy
+          một khe hở rõ ràng mà vẫn chết. Hướng đúng là hình PHỦ vòng va chạm.
+       ⚠️ Đá lớn (`bigR`) dùng CÙNG một ảnh, chỉ khác cỡ — nó là đá to hơn, không
+          phải một loại vật thể khác. */
+    rockBox: 2.41,
 
     /* ══ CẤP ĐỘ: khó tăng theo BẬC, và trẻ NHÌN THẤY mình đang ở bậc nào ═══════
        `at` = giây bắt đầu cấp. Mỗi cấp thêm đúng MỘT thứ mới để trẻ nhận ra
@@ -653,6 +667,9 @@
      ⚠️ ĐỪNG NỚI DẢI NÀY RA. Va chạm đo bằng MỘT vòng tròn `r*rockHit`; dải rộng
         (bản cũ 0,66–1,12) thì chỗ lõm hụt so với vòng va chạm tới 4px, tức "chết
         khi mắt còn thấy hở" — đúng lỗi mà hitbox của tàu đã phải đi sửa một lần. */
+  /* Ảnh đá — nạp một lần, dùng cho cả đá thường và đá lớn. */
+  var ART_ROCK = AstroQGameShell.loadArt("img/rock-gray.png");
+
   function rockPts(){
     var n=7+Math.floor(Math.random()*4), a=[];
     for(var i=0;i<n;i++) a.push(0.84+Math.random()*0.24);
@@ -950,6 +967,13 @@
      chạm `rc` (xem `rockPts` và `CONFIG.rockHit`). */
   function drawRock(a){
     ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
+    if(ART_ROCK.ok){
+      var s=a.rc*CONFIG.rockBox;
+      AstroQGameShell.drawArt(ctx, ART_ROCK, 0, 0, s, s);
+      ctx.restore(); return;
+    }
+    /* ⚠️ ĐƯỜNG LÙI, ĐỪNG XOÁ: ảnh chưa decode xong (khung hình đầu) hoặc 404 thì
+       vẫn phải có đá trên sân — thiếu nó là trẻ bay vào một vật cản VÔ HÌNH. */
     var grd=ctx.createRadialGradient(-a.r*0.32,-a.r*0.32,a.r*0.18,0,0,a.r);
     grd.addColorStop(0,"#8291b0"); grd.addColorStop(0.6,"#44516f"); grd.addColorStop(1,"#212b45");
     ctx.fillStyle=grd;

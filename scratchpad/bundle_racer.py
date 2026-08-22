@@ -37,7 +37,7 @@ MIME = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp",
 
 ASSETS = ["img/tt.png", "img/luna-side.png",
           "img/racer/rival-blaze.png", "img/racer/rival-ember.png",
-          "img/racer/rival-dust.png", "img/racer/rock.png",
+          "img/racer/rival-dust.png", "img/rock-gray.png",
           "img/racer/fuel-can.png",
           "img/mate/comet-idle.png", "img/mate/comet-cheer.png",
           "img/mate/comet-oops.png"]
@@ -46,7 +46,7 @@ ASSETS = ["img/tt.png", "img/luna-side.png",
 #    hàng rào `stray` ở mục 7 bắt được, đừng bỏ hàng rào đó.
 INLINE = ["img/tt.png", "img/luna-side.png",
           "img/racer/rival-blaze.png", "img/racer/rival-ember.png",
-          "img/racer/rival-dust.png", "img/racer/rock.png",
+          "img/racer/rival-dust.png", "img/rock-gray.png",
           "img/racer/fuel-can.png"]
 
 

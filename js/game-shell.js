@@ -279,6 +279,40 @@
     return Math.max(1, Math.min(d, Math.sqrt(PX_CAP / px)));
   }
 
+  /* ── ①b BỘ NẠP ART DÙNG CHUNG ────────────────────────────────────────
+     `loadArt(path)` → hộp `{img, ok, ar}` mà phần vẽ hỏi NGAY trong vòng vẽ;
+     `drawArt(ctx, box, cx, cy, boxW, boxH)` vẽ ôm trọn trong hộp (contain) rồi
+     canh giữa.
+
+     ⚠️ `ok` chỉ bật khi ảnh đã **decode xong** — nên khung hình đầu tiên (ảnh
+        chưa về) vẫn vẽ bằng code chứ không để một ô trống, và ảnh 404 thì game
+        lùi về bản vẽ vector **không lỗi không cảnh báo**. Đó là lỗi IM LẶNG, nên
+        đường lùi phải có phép kiểm riêng (xem `probe_rock_art.py`).
+     ⚠️ ĐẶT Ở ĐÂY, KHÔNG CHÉP VÀO TỪNG GAME: từ 22/08/2026 có **ba** game cần
+        (racer · dodge · defender) vì cả ba dùng chung ảnh `img/rock-gray.png`.
+        Ba bản sao của cùng 12 dòng là đúng thứ quy tắc 2 mục 6 cấm — `game-racer.html`
+        vốn giữ một bản riêng và đã chuyển sang dùng bản này.
+     ⚠️ `drawArt` NHẬN `ctx` LÀM THAM SỐ, không bắt qua closure như bản cũ ở racer:
+        đây là file dùng chung, không có canvas nào của riêng nó. */
+  function loadArt(path) {
+    var box = { img: null, ok: false, ar: 1 };
+    if (!path) return box;
+    var im = new Image();
+    im.onload = function () {
+      box.ar = (im.naturalWidth || 1) / (im.naturalHeight || 1);
+      box.ok = true;
+    };
+    im.onerror = function () { box.ok = false; };
+    im.src = path;
+    box.img = im;
+    return box;
+  }
+
+  function drawArt(ctx, box, cx, cy, boxW, boxH) {
+    var h = Math.min(boxH, boxW / box.ar), w = h * box.ar;
+    ctx.drawImage(box.img, cx - w / 2, cy - h / 2, w, h);
+  }
+
   /* ── ② Nhắc xoay ngang ──────────────────────────────────────────────── */
 
   var TXT = {
@@ -391,5 +425,6 @@
   else boot();
 
   global.AstroQGameShell = { sizeField: sizeField, refreshRotate: refresh,
-                             dpr: dprFor, setLevel: setLevel, mate: mate };
+                             dpr: dprFor, setLevel: setLevel, mate: mate,
+                             loadArt: loadArt, drawArt: drawArt };
 })(window);
