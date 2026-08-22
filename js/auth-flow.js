@@ -17,6 +17,7 @@
          name_label:"TÊN PHI HÀNH GIA", name_ph:"Nhập tên của bạn…", start:"BẮT ĐẦU HÀNH TRÌNH",
          choose:"CHỌN NHÂN VẬT", role:"CHỨC VỤ", trait:"TÍNH CÁCH", s_pow:"NĂNG LƯỢNG", s_spd:"TỐC ĐỘ", s_iq:"TRÍ TUỆ",
          err_name:"Hãy nhập tên phi hành gia!", clearance:"QUYỀN: TÂN BINH", tap:"Chạm vào một nhân vật để xem thông tin",
+         title_back:"CHỌN LẠI NHÂN VẬT", subtitle_back:"Tên và tuổi của bạn vẫn còn — chỉ cần chọn nhân vật thôi", start_back:"TIẾP TỤC HÀNH TRÌNH",
          mystery_toast:"Nhân vật bí ẩn — sắp mở khoá!",
          err_age:"Bạn bao nhiêu tuổi? Chọn một ô nhé!" },
     en:{
@@ -24,6 +25,7 @@
          name_label:"PILOT NAME", name_ph:"Enter your name…", start:"START THE JOURNEY",
          choose:"CHOOSE YOUR CHARACTER", role:"ROLE", trait:"PERSONALITY", s_pow:"POWER", s_spd:"SPEED", s_iq:"INTELLECT",
          err_name:"Please enter a pilot name!", clearance:"CLEARANCE: ROOKIE", tap:"Tap a character to view its stats",
+         title_back:"PICK YOUR CHARACTER AGAIN", subtitle_back:"Your name and age are still here — just pick a character", start_back:"CONTINUE THE JOURNEY",
          mystery_toast:"Mystery character — unlocking soon!",
          err_age:"How old are you? Pick one!" }
   };
@@ -32,6 +34,21 @@
 
   var getUser = AstroQ.getUser;
   var selected = null;
+
+  /* ⚠️⚠️ TRẺ CŨ HAY TRẺ MỚI — QUYẾT ĐỊNH BẰNG CỜ `astroq-map01-seen`, KHÔNG
+     BẰNG "vừa bấm chọn nhân vật xong".
+     Trước 22/08/2026 `startJourney()` gửi MỌI trẻ (không phải admin) sang
+     `explorer.html?onboard=1` với lý do *"vừa chọn nhân vật xong thì đây định
+     nghĩa là phi hành gia MỚI"*. Định nghĩa đó SAI với một trẻ CŨ bị buộc qua
+     màn này vì hồ sơ trên server thiếu `character` (mọi trẻ đăng ký trước
+     22/08/2026 mà chưa vào `profile.html` lần nào): nó bị chạy lại cả màn Comet
+     dẫn đường dù đã xong nhiệm vụ từ lâu — đúng thứ vô lý nhất của cả ca này.
+     Cờ do `hydrateProfile()` kéo về lúc đăng nhập (`js/firebase-auth.js`).
+     ⚠️ Trang này KHÔNG có token nên không tự hỏi server được — cùng khuôn
+        `astroq-route-gate` / `astroq-mission-steps` đã dựng. */
+  function returning(){
+    try{ return localStorage.getItem("astroq-map01-seen") === "1"; }catch(e){ return false; }
+  }
 
   /* Độ sâu lời giải thích — `null` = trẻ chưa chọn ô nào ở lượt này.
      ⚠️ CỐ Ý KHÔNG đặt sẵn `junior`: một ô đã sáng sẵn thì trẻ đi qua mà không
@@ -44,6 +61,16 @@
     document.documentElement.lang = LANG;
     document.title = "AstroQ — " + t("title");
     AstroQ.applyTexts(t);
+    /* Trẻ CŨ thì nói đúng việc đang diễn ra: nó KHÔNG được cấp một thẻ ID mới,
+       nó chỉ đang chọn lại nhân vật (tên và bậc tuổi đã điền sẵn từ hồ sơ trên
+       server). Gọi đó là "CẤP THẺ ID" là nói với một đứa trẻ đã chơi cả tháng
+       rằng nó đang bắt đầu lại từ đầu. Đổi SAU `applyTexts` vì hàm đó vừa ghi
+       chữ mặc định vào đúng ba phần tử này. */
+    if(returning()){
+      var eb=document.querySelector('[data-i18n="title"]'); if(eb) eb.textContent = t("title_back");
+      var sb=document.querySelector('[data-i18n="subtitle"]'); if(sb) sb.textContent = t("subtitle_back");
+      var sj=$("start-journey"); if(sj) sj.textContent = t("start_back");
+    }
     var np=$("pilot-name"); if(np) np.placeholder = t("name_ph");
     document.querySelectorAll(".lang-switch button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===LANG); });
     if(selected) fillHud(selected);
@@ -135,9 +162,20 @@
     });
     if(depth) profile.depth = depth;
     try{ localStorage.setItem(LS_USER, JSON.stringify(profile)); }catch(e){}
-    /* ⚠️ KHÔNG gửi bậc lên server ở đây được: `select.html` CỐ Ý không nạp SDK
-       Firebase nên trang này không có token. `dashboard.html` (có token) đẩy lên
-       một lần qua `AstroQDepth.syncUp()` — đúng khuôn `astroq-map01-seen`. */
+    /* ⚠️ ĐÁNH DẤU "lựa chọn này CHƯA gửi lên server". Trang này không có token nên
+       không gửi được (lý do ngay dưới); trang có token đọc dấu này để biết cái trong
+       máy mới hơn cái trên hồ sơ, rồi đẩy lên — xem `AstroQChars.sync` nhánh ②.
+       Thiếu một dòng này thì trẻ đổi nhân vật ở đây sẽ bị giá trị CŨ trên server kéo
+       ngược về ở lượt mở dashboard kế tiếp, mà không có gì báo. */
+    if(window.AstroQChars && AstroQChars.touch) AstroQChars.touch();
+    /* ⚠️ KHÔNG gửi được GÌ lên server ở đây: `select.html` CỐ Ý không nạp SDK
+       Firebase nên trang này không có token. Trang CÓ token đẩy lên hộ, một lần/uid:
+         · bậc      → `AstroQDepth.syncUp()`  (dashboard.html)
+         · nhân vật → `AstroQChars.sync()`    (js/progress.js, mọi trang có token)
+       Đúng khuôn `astroq-map01-seen`.
+       ⚠️ THIẾU CẦU NỐI NHÂN VẬT LÀ MỘT LỖI THẬT ĐÃ TRẢ GIÁ (sửa 22/08/2026): nhân
+          vật chỉ sống trong localStorage, mà `logout()` xoá sạch khoá `astroq-*`
+          ⇒ đăng nhập lại là phải chọn lại nhân vật, mọi lần. */
     // Chỉ khởi tạo số dư cho pilot MỚI. Người cũ đổi nhân vật không bị mất Thiên thạch tím.
     try{ if(localStorage.getItem(LS_AST)===null) localStorage.setItem(LS_AST, "0"); }catch(e){}
 
@@ -159,8 +197,12 @@
           giao diện, không phải quyền: sửa localStorage thì bỏ được màn giới thiệu của
           chính mình, và đó không phải thứ cần bảo vệ. */
     var admin = !!(existing && existing.admin === true);
+    /* ⚠️ TRẺ CŨ ĐI THẲNG VỀ KHOANG LÁI, không qua màn dẫn đường — xem `returning()`.
+       Nhờ vậy đường của phi hành gia MỚI không đổi một chút nào (vẫn đi thẳng
+       sang bản đồ, khỏi phải chờ `getOnboarding()` ở dashboard). */
+    var skipIntro = admin || returning();
     setTimeout(function(){
-      window.location.href = admin ? "dashboard.html" : "explorer.html?onboard=1";
+      window.location.href = skipIntro ? "dashboard.html" : "explorer.html?onboard=1";
     }, 1150);
   }
 

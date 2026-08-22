@@ -1,0 +1,281 @@
+<!doctype html><meta charset="utf-8"><body><pre id="out"></pre>
+<script src="../js/ui-common.js"></script>
+<script src="../js/characters.js"></script>
+<script>
+/* ============================================================
+   Giàn kiểm cầu nối nhân vật cache ↔ server.
+   Chạy trên CHÍNH `js/characters.js` và `js/progress.js` thật, không bản sao.
+   ============================================================ */
+var LOG = [];
+function ok(name, cond, extra){ LOG.push((cond?"PASS  ":"FAIL  ")+name+(extra?"  ["+extra+"]":"")); }
+function U(){ try{ return JSON.parse(localStorage.getItem("astroq-user")||"null"); }catch(e){ return "ERR"; } }
+function STAMP(){ try{ return localStorage.getItem("astroq-char-synced"); }catch(e){ return "ERR"; } }
+
+/* Bản giả `auth` — ghi lại MỌI patch để phép kiểm soi được server nhận gì. */
+function mkAuth(res){
+  var calls = [];
+  return {
+    calls: calls,
+    updateProfile: function(patch){ calls.push(patch); return Promise.resolve(res || {ok:true}); }
+  };
+}
+function seed(u, stamp){
+  localStorage.clear();
+  if(u) localStorage.setItem("astroq-user", JSON.stringify(u));
+  if(stamp !== undefined && stamp !== null) localStorage.setItem("astroq-char-synced", stamp);
+}
+
+var BAL = 0;
+window.Economy = {
+  setFromServer:function(n){ if(typeof n==="number" && n>=0) BAL = n; return BAL; },
+  addAsteroids:function(n){ BAL += n; return BAL; },
+  getAsteroids:function(){ return BAL; }
+};
+</script>
+<script src="../js/progress.js"></script>
+<script>
+(function(){
+  var C = window.AstroQChars;
+  var tests = [];
+
+  /* ── [1] API có đủ mặt (thiếu một hàm là mọi phép kiểm sau đạt một cách RỖNG) ── */
+  tests.push(function(){
+    var need = ["get","chosen","absorb","syncUp","sync","touch","byId","all"];
+    for(var i=0;i<need.length;i++)
+      ok("[1] AstroQChars."+need[i]+" ton tai", typeof C[need[i]] === "function");
+    return Promise.resolve();
+  });
+
+  /* ── [2] `chosen()` phân biệt "chưa chọn bao giờ" với "id lạ" ── */
+  tests.push(function(){
+    seed(null);
+    ok("[2] ho so rong  -> chosen()=false", C.chosen()===false);
+    ok("[2] ho so rong  -> get()=''", C.get()==="");
+    seed({uid:"u1", character:"khong-co-that"});
+    ok("[2] id la      -> chosen()=false", C.chosen()===false);
+    seed({uid:"u1", selectedCharacter:"b"});
+    ok("[2] alias selectedCharacter cung tinh", C.chosen()===true && C.get()==="b");
+    return Promise.resolve();
+  });
+
+  /* ── [3] NHÁNH ①: hai bên đã khớp -> KHÔNG gửi PUT nào, chỉ đóng dấu ──
+     Đây là cảnh sau khi `hydrateProfile()` vừa kéo hồ sơ về lúc đăng nhập. */
+  tests.push(function(){
+    seed({uid:"u1", character:"m", avatar:"ava/avam.png"});   // dấu ĐÃ bị logout() xoá
+    var a = mkAuth();
+    return C.sync(a, "u1", "m", "ava/avam.png").then(function(){
+      ok("[3] khop nhau -> 0 loi goi PUT", a.calls.length===0, "calls="+a.calls.length);
+      ok("[3] khop nhau -> da dong dau", STAMP()==="u1", "stamp="+STAMP());
+    });
+  });
+
+  /* ── [4] NHÁNH ②: máy có lựa chọn CHƯA GỬI -> ĐẨY lên, kèm tên ──
+     Đây là cảnh ngay sau `select.html` (nó gọi `touch()` nên dấu trống). */
+  tests.push(function(){
+    seed({uid:"u1", character:"cua", pilotName:"Bin", avatar:"ava/avacua.png"});
+    var a = mkAuth();
+    return C.sync(a, "u1", "", "").then(function(){
+      ok("[4] server rong -> DAY len", a.calls.length===1, "calls="+a.calls.length);
+      var p = a.calls[0] || {};
+      ok("[4] gui dung id nhan vat", p.character==="cua", "character="+p.character);
+      ok("[4] gui kem avatar tu characters.js", p.avatar==="ava/avacua.png", "avatar="+p.avatar);
+      ok("[4] gui kem ten", p.name==="Bin", "name="+p.name);
+      ok("[4] gui xong thi dong dau", STAMP()==="u1", "stamp="+STAMP());
+    });
+  });
+
+  /* ── [5] Đẩy rồi thì KHÔNG đẩy lại (một lần / uid) ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"cua"}, "u1");
+    var a = mkAuth();
+    return C.sync(a, "u1", "", "").then(function(){
+      ok("[5] da dong dau -> khong day lai", a.calls.length===0, "calls="+a.calls.length);
+    });
+  });
+
+  /* ── [6] HAI ĐỨA TRẺ DÙNG CHUNG MÁY: dấu của uid khác không tính ── */
+  tests.push(function(){
+    seed({uid:"u2", character:"cua"}, "u1");   // dấu là của đứa TRƯỚC
+    var a = mkAuth();
+    return C.sync(a, "u2", "", "").then(function(){
+      ok("[6] dau cua uid khac -> VAN day len", a.calls.length===1, "calls="+a.calls.length);
+      ok("[6] dong dau lai theo uid moi", STAMP()==="u2", "stamp="+STAMP());
+    });
+  });
+
+  /* ── [7] NHÁNH ② THẮNG NHÁNH ③: trẻ vừa đổi nhân vật ở select.html ──
+     Server còn con CŨ, máy có con MỚI chưa gửi. Server KHÔNG được thắng. */
+  tests.push(function(){
+    seed({uid:"u1", character:"b", avatar:"ava/avab.png"});   // vừa chọn Byte, dấu trống
+    var a = mkAuth();
+    return C.sync(a, "u1", "m", "ava/avam.png").then(function(){
+      ok("[7] lua chon moi THANG gia tri cu tren server", a.calls.length===1, "calls="+a.calls.length);
+      ok("[7] day len dung con MOI", (a.calls[0]||{}).character==="b");
+      ok("[7] cache KHONG bi keo nguoc ve con cu", C.get()==="b", "get="+C.get());
+    });
+  });
+
+  /* ── [8] NHÁNH ③: máy đã đồng bộ rồi, server đổi (đổi trang phục ở máy khác) ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"b", avatar:"ava/avab.png"}, "u1");
+    var a = mkAuth();
+    return C.sync(a, "u1", "raica", "ava/avaraica.png").then(function(){
+      ok("[8] da dong bo -> KEO ve, khong day", a.calls.length===0, "calls="+a.calls.length);
+      ok("[8] cache theo server", C.get()==="raica", "get="+C.get());
+      ok("[8] avatar theo server", (U()||{}).avatar==="ava/avaraica.png");
+      ok("[8] zoom lay tu characters.js (server khong luu zoom)",
+         (U()||{}).avatarZoom===1.6, "zoom="+(U()||{}).avatarZoom);
+    });
+  });
+
+  /* ── [9] Server rỗng + máy rỗng -> không làm gì, không dựng hồ sơ ── */
+  tests.push(function(){
+    seed(null);
+    var a = mkAuth();
+    return C.sync(a, "u1", "", "").then(function(){
+      ok("[9] hai ben rong -> 0 PUT", a.calls.length===0);
+      ok("[9] khong dung ho so rong", U()===null, "user="+JSON.stringify(U()));
+    });
+  });
+
+  /* ── [10] `absorb()` bỏ qua id lạ, KHÔNG ghi rác vào hồ sơ ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"m", avatar:"ava/avam.png"}, "u1");
+    var got = C.absorb("khong-co-that", "https://ke-khac.example/x.png");
+    ok("[10] id la -> tra ve ''", got==="", "got="+got);
+    ok("[10] id la -> cache GIU NGUYEN", C.get()==="m" && (U()||{}).avatar==="ava/avam.png");
+    return Promise.resolve();
+  });
+
+  /* ── [11] `absorb()` thiếu avatar thì lấy ảnh từ characters.js, không ghi rỗng ── */
+  tests.push(function(){
+    seed({uid:"u1"}, "u1");
+    C.absorb("cho", "");
+    ok("[11] thieu avatar -> lay tu danh sach", (U()||{}).avatar==="ava/avacho.png",
+       "avatar="+(U()||{}).avatar);
+    return Promise.resolve();
+  });
+
+  /* ── [12] Tên quá 24 ký tự thì KHÔNG gửi kèm (server tra 400 la mat luon nhan vat) ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"m", pilotName:"BinBinBinBinBinBinBinBinBinBin"});
+    var a = mkAuth();
+    return C.sync(a, "u1", "", "").then(function(){
+      var p = a.calls[0] || {};
+      ok("[12] ten qua dai -> KHONG gui name", !("name" in p), "keys="+Object.keys(p).join(","));
+      ok("[12] van gui nhan vat", p.character==="m");
+    });
+  });
+
+  /* ── [13] Server từ chối -> KHÔNG đóng dấu, lượt sau còn thử lại ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"m"});
+    var a = mkAuth({ok:false, reason:"net"});
+    return C.sync(a, "u1", "", "").then(function(){
+      ok("[13] PUT hong -> khong dong dau", !STAMP(), "stamp="+STAMP());
+    });
+  });
+
+  /* ── [14] `touch()` xoá dấu -> lượt sau đẩy lại (đường của select.html) ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"m"}, "u1");
+    C.touch();
+    ok("[14] touch() xoa dau", !STAMP(), "stamp="+STAMP());
+    var a = mkAuth();
+    return C.sync(a, "u1", "b", "ava/avab.png").then(function(){
+      ok("[14] sau touch() -> DAY len chu khong keo ve", a.calls.length===1);
+      ok("[14] cache giu con may vua chon", C.get()==="m", "get="+C.get());
+    });
+  });
+
+  /* ── [15] Thiếu `auth` (trang không có token) -> không ném lỗi ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"m"});
+    return C.sync(null, "u1", "", "").then(function(v){
+      ok("[15] auth null -> tra ve false, khong nem loi", v===false);
+    });
+  });
+
+  /* ── [16] `js/progress.js` nối dây: HAI hình dạng response đều đọc được ──
+     `/me/achievements` dat phang o goc; `/me/profile` boc trong `profile`. */
+  tests.push(function(){
+    seed({uid:"u1"}, "u1");
+    window.AstroQAuth = {
+      postProgress: function(){ return Promise.resolve({ok:true, data:{}}); },
+      getAchievements: function(){
+        return Promise.resolve({ok:true, data:{ character:"cu", avatar:"ava/avacu.png",
+                                               level:{level:1}, progress:{} }});
+      }
+    };
+    return AstroQProgress.achievements().then(function(){
+      ok("[16] achievements() -> hut nhan vat tu goc", C.get()==="cu", "get="+C.get());
+    });
+  });
+
+  tests.push(function(){
+    seed({uid:"u1"}, "u1");
+    window.AstroQAuth = {
+      postProgress: function(){ return Promise.resolve({ok:true, data:{}}); },
+      getProfile: function(){
+        return Promise.resolve({ok:true, data:{ profile:{ character:"chuot",
+                                                          avatar:"ava/avachuot.png" } }});
+      }
+    };
+    return AstroQProgress.load().then(function(){
+      ok("[16] load() -> hut nhan vat tu profile{}", C.get()==="chuot", "get="+C.get());
+    });
+  });
+
+  /* ── [17] progress.js phải ĐẨY LÊN khi server rỗng (đường của trẻ mới) ── */
+  tests.push(function(){
+    seed({uid:"u1", character:"bao", pilotName:"An"});
+    var sent = [];
+    window.AstroQAuth = {
+      postProgress: function(){ return Promise.resolve({ok:true, data:{}}); },
+      updateProfile: function(p){ sent.push(p); return Promise.resolve({ok:true}); },
+      getAchievements: function(){
+        return Promise.resolve({ok:true, data:{ character:"", avatar:"", level:{level:1}, progress:{} }});
+      }
+    };
+    return AstroQProgress.achievements().then(function(){
+      /* syncIdentity CO Y khong await — cho mot nhip cho loi goi nen chay xong. */
+      return new Promise(function(r){ setTimeout(r, 60); });
+    }).then(function(){
+      ok("[17] server rong -> progress.js DAY len", sent.length===1, "sent="+sent.length);
+      ok("[17] day dung nhan vat", (sent[0]||{}).character==="bao");
+    });
+  });
+
+  /* ── [18] Không có AstroQChars thì progress.js không được ném lỗi ── */
+  tests.push(function(){
+    seed({uid:"u1"}, "u1");
+    var keep = window.AstroQChars;
+    try { delete window.AstroQChars; } catch(e) { window.AstroQChars = undefined; }
+    window.AstroQAuth = {
+      postProgress: function(){ return Promise.resolve({ok:true, data:{}}); },
+      getAchievements: function(){
+        return Promise.resolve({ok:true, data:{ character:"m", level:{level:1}, progress:{} }});
+      }
+    };
+    return AstroQProgress.achievements().then(function(r){
+      ok("[18] thieu AstroQChars -> van tra ve ok", !!(r && r.ok));
+      window.AstroQChars = keep;
+    });
+  });
+
+  /* ---- chạy tuần tự ---- */
+  var i = 0;
+  (function step(){
+    if(i >= tests.length){
+      document.getElementById("out").textContent = LOG.join("\n");
+      window.__done = true;
+      return;
+    }
+    var t = tests[i++];
+    var p;
+    try { p = t(); } catch(e){ ok("[!] test nem loi: "+e.message, false); p = Promise.resolve(); }
+    Promise.resolve(p)["catch"](function(e){ ok("[!] promise hong: "+e.message, false); })
+      .then(step);
+  })();
+})();
+</script>

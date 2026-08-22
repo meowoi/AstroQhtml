@@ -23,6 +23,11 @@
 <script src="js/planets.js"></script>
 <script src="js/constellations.js"></script>
 <script src="js/brag.js"></script>
+<!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
+     nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về
+     (xem `AstroQChars.sync` và `syncIdentity` trong js/progress.js). Cùng lý do
+     `js/depth.js` được nạp ở đây. -->
+<script src="js/characters.js"></script>
 <script src="js/progress.js"></script>
 </head>
 <body>
@@ -453,7 +458,15 @@
   }
 
   function renderCollections(){
-    var visited = VIEW.planets || [];
+    /* Cùng lý do như chòm sao ngay dưới: GỘP server với bản sao trong máy, không
+       "server rồi mới đến máy". Trẻ vừa ghé một hành tinh mới thì việc đó còn
+       nằm trong hàng chờ, mà server thì đã có danh sách cũ non rỗng. */
+    var visited = (VIEW.planets || []).slice();
+    try{
+      (AstroQProgress.local().planets || []).forEach(function(id){
+        if(visited.indexOf(id) === -1) visited.push(id);
+      });
+    }catch(e){}
     $("pl-count").textContent = visited.length + "/" + AstroQPlanets.count;
     $("planets").innerHTML = AstroQPlanets.all().map(function(pl){
       var on = visited.indexOf(pl.id) !== -1;
@@ -466,10 +479,24 @@
        vẫn còn). Không có server thì lùi về kỷ lục trong máy do game ghi
        (`astroq-constellation-best`) — người chơi lâu rồi mới đăng nhập vẫn thấy
        bộ sưu tập của mình. Hai nguồn dùng CÙNG bộ khoá (`cons.key`). */
-    var done = VIEW.consts;
-    if(!done || !Object.keys(done).length){
-      try{ done = JSON.parse(localStorage.getItem("astroq-constellation-best") || "{}") || {}; }
-      catch(e){ done = {}; }
+    /* ⚠️⚠️ GỘP HAI NGUỒN, KHÔNG "server rồi mới đến máy". Bản cũ chỉ đọc bản sao
+       trong máy khi server trả về RỖNG, nên đúng ca hay xảy ra nhất lại sai: trẻ
+       vừa ghép xong một chòm MỚI (máy đã ghi ngay), nhưng server còn giữ danh
+       sách CŨ — non rỗng — nên nhánh lùi không chạy và chòm vừa ghép **không hiện
+       ra cho tới khi tải lại trang**. Chủ dự án chơi thật và báo đúng câu đó:
+       *"phải load lại mới lưu việc"*.
+       ⚠️ Gộp là an toàn: hai bên dùng CÙNG bộ khoá (`cons.key`), và bản sao trong
+          máy do chính game ghi. `logout()` xoá mọi khoá `astroq-*` nên máy dùng
+          chung không mang bộ sưu tập của đứa trước sang đứa sau. */
+    var done = {};
+    /* `localBests()` chỉ trả kỷ lục CỦA TRẺ ĐANG ĐĂNG NHẬP (đóng dấu uid), nên
+       gộp vào là an toàn trên máy dùng chung. Xem js/constellations.js. */
+    var loc = AstroQConsts.localBests();
+    for(var lk in loc) if(loc.hasOwnProperty(lk)) done[lk] = loc[lk];
+    var srv = VIEW.consts || {};
+    for(var sk in srv) if(srv.hasOwnProperty(sk)){
+      /* Kỷ lục là "nhanh nhất" nên lấy số NHỎ HƠN — cùng luật `saveBest` của game. */
+      done[sk] = (done[sk] != null) ? Math.min(Number(done[sk]), Number(srv[sk])) : srv[sk];
     }
     var got = CONSTS.filter(function(c){ return done[c.key] != null; });
     $("cs-count").textContent = got.length + "/" + CONSTS.length;

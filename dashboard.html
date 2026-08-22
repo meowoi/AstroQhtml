@@ -48,6 +48,11 @@
 <script src="js/specimen-art.js"></script>
 <script src="js/depth.js"></script>
 <script src="js/cosmetics.js"></script>
+<!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
+     nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về
+     (xem `AstroQChars.sync` và `syncIdentity` trong js/progress.js). Cùng lý do
+     `js/depth.js` được nạp ở đây. -->
+<script src="js/characters.js"></script>
 <script src="js/progress.js"></script>
 <!-- Cổng lộ trình: trang này CÓ token nên nó là chỗ làm mới cache cho
      explorer.html (trang đó cố ý không nạp SDK Firebase). Xem js/route-gate.js. -->

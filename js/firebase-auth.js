@@ -126,6 +126,11 @@ function errMsg(code){
 /* Hạn chờ ký xuất khỏi Firebase. 2,5 giây — cùng mốc `waitAuth` của js/progress.js;
    quá mốc thì vẫn cho trẻ đi, phần ký xuất để lượt mở trang sau lo. */
 const SIGNOUT_MS = 2500;
+/* Hạn chờ KÉO HỒ SƠ về ngay sau khi đăng nhập. Rộng hơn `SIGNOUT_MS` vì đây là một
+   vòng HTTP thật ra tận API Gateway, không phải một lời gọi trong SDK; và nút đăng
+   nhập đang hiện "Đang xử lý…" nên chờ ở đây là chờ CÓ NÓI RA. Quá mốc thì vẫn cho
+   vào — xem `hydrateProfile`. */
+const HYDRATE_MS = 5000;
 /* Dấu "còn nợ một lần ký xuất". Đặt ở localStorage chứ không sessionStorage: trẻ
    đóng hẳn trình duyệt rồi mở lại thì món nợ đó vẫn phải trả. */
 const LS_SIGNOUT = "astroq-signout-pending";
@@ -165,6 +170,63 @@ function syncProfile(user, extra){
     name:  (extra && extra.name) || user.displayName || old.name ||
            (user.email || "").split("@")[0]
   }, extra || {}));
+}
+
+/* ---------------- KÉO HỒ SƠ TỪ SERVER VỀ CACHE, NGAY LÚC ĐĂNG NHẬP ----------------
+
+   ⚠️⚠️ LỖI THẬT, SỬA 22/08/2026 — *"đã đăng nhập nhiều lần rồi mà đăng nhập lại vẫn
+      phải chọn nhân vật"*. Chuỗi vỡ gồm hai mắt, mỗi mắt một mình đã đủ gây lỗi:
+        ① `logout()` xoá SẠCH mọi khoá `astroq-*` (cố ý — máy dùng chung trong nhà /
+           phòng máy trường học, xem `clearAccountData` ở js/ui-common.js), mà
+           `syncProfile()` ngay trên chỉ ghi lại uid · email · name · admin. Nên
+           `astroq-user.character` LUÔN rỗng sau khi đăng nhập.
+        ② `go()` ở js/firebase-auth-ui.js và biến `authed` ở landing-app.html đọc
+           ĐÚNG trường đó để chọn `dashboard.html` hay `select.html`.
+      ⇒ mọi lượt đăng nhập đều bị đưa về màn cấp thẻ ID.
+
+   ⚠️ PHẢI `await` BÊN TRONG `login()`, KHÔNG bỏ chạy nền: người gọi chuyển trang ngay
+      sau khi `login()` trả về, nên một lời gọi nền sẽ bị `unload` cắt giữa đường và
+      lỗi trên quay lại y nguyên.
+   ⚠️ CÓ HẠN CHỜ, VÀ HẾT HẠN THÌ VẪN CHO VÀO. Mạng chậm thì cùng lắm trẻ đi qua màn
+      chọn nhân vật một lượt (chọn lại đúng con cũ là xong) — chứ không đứng ngoài cửa
+      vì một lời gọi chỉ dùng để CHỌN TRANG. Cùng khuôn fail-open của `SIGNOUT_MS`.
+   ⚠️ KHÁC hẳn ca `readAdminClaim` mà chú thích trên cảnh báo: ở đây
+      `signInWithEmailAndPassword` VỪA trả về nên đã có phiên thật, `idToken()` không
+      có ca chờ mãi không resolve.
+   ⚠️ KHÔNG ghi `avatarZoom`: mức zoom là luật của js/characters.js (`zoomOf` tự tra
+      theo `character`), server không lưu nó. Ghi một giá trị đoán ở đây là để hai chỗ
+      cùng giữ một luật.
+   ⚠️ CHỈ GHI TRƯỜNG SERVER CÓ. Hồ sơ server rỗng (trẻ chọn nhân vật trước khi có cầu
+      nối này) thì đừng ghi "" đè lên — cứ để `go()` đưa về `select.html`, rồi
+      `AstroQChars.sync()` ở dashboard đẩy lên cho lượt sau. */
+async function hydrateProfile(auth){
+  try{
+    const r = await Promise.race([
+      auth.getProfile(),
+      new Promise(res => setTimeout(() => res({ ok:false, reason:"timeout" }), HYDRATE_MS))
+    ]);
+    if(!r || !r.ok) return false;
+    const p = (r.data && r.data.profile) || {};
+    const old = (window.AstroQ && AstroQ.getUser()) || {};
+    const next = Object.assign({}, old);
+    if(p.name)      { next.name = p.name; next.pilotName = p.name; }
+    if(p.character) { next.character = p.character; next.selectedCharacter = p.character; }
+    if(p.avatar)      next.avatar = p.avatar;
+    if(p.depth)       next.depth  = p.depth;     // js/depth.js đọc đúng trường này
+    if(window.AstroQ && AstroQ.setUser) AstroQ.setUser(next);
+    /* ⚠️ CỜ ONBOARDING PHẢI VỀ CACHE, và đây KHÔNG phải tối ưu.
+       `logout()` xoá cả `astroq-map01-seen`, mà `select.html` CỐ Ý không nạp SDK
+       nên nó không hỏi được cờ đó. Thiếu dòng này thì một trẻ CŨ bị buộc qua màn
+       chọn lại nhân vật sẽ bị `startJourney()` ném vào `explorer.html?onboard=1`
+       — chạy lại cả màn Comet dẫn đường dù đã xong nhiệm vụ từ lâu.
+       Cũng đỡ cho `mapFirst()` ở dashboard: nó đọc cache TRƯỚC nên khỏi phải chờ
+       `getOnboarding()` ở mọi lượt đăng nhập.
+       ⚠️ CHỈ ghi khi server nói `true` — ghi "chưa xem" đè lên là xoá dấu của một
+          trẻ đã xem, tức bắt nó xem lại. Server cũ không trả trường này thì
+          `undefined !== true` nên không đụng gì. */
+    try{ if(p.map01Seen === true) localStorage.setItem("astroq-map01-seen", "1"); }catch(e){}
+    return !!p.character;
+  }catch(e){ return false; }
 }
 
 /* ============================ API công khai ============================ */
@@ -222,6 +284,9 @@ const AstroQAuth = {
          ⚠️ Ghi cả khi FALSE, không phải chỉ khi true: tài khoản bị rút quyền admin mà
             hồ sơ cũ trong máy còn `admin:true` thì cái link vẫn hiện mãi. */
       syncProfile(cred.user, { admin: await readAdminClaim(cred.user) });
+      /* Rồi kéo hồ sơ (nhân vật · tên · bậc) về cache TRƯỚC khi trả lời, vì người
+         gọi dùng cache đó để chọn trang đích. Lý do đầy đủ ở `hydrateProfile`. */
+      await hydrateProfile(this);
       return { ok: true, user: cred.user };
     }catch(e){ return fail(e); }
   },

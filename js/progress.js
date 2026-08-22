@@ -307,6 +307,27 @@
     global.Economy.setFromServer(data.wallet.meteors);
   }
 
+  /* ---------------- NHÂN VẬT: cầu nối hai chiều ----------------
+     Luật nằm HẾT ở `js/characters.js` (`AstroQChars.sync`) — ở đây chỉ nối dây,
+     đúng phân công đã dùng cho ví (`Economy`), bậc (`AstroQDepth`) và tông đèn
+     (`AstroQCos`): file này biết "khi nào", file kia biết "như thế nào".
+
+     ⚠️ ĐẶT Ở ĐÂY chứ không nhét vào từng trang: `dashboard.html`, `codex.html`,
+        `achievements.html`, `profile.html`, `certificate.html` đều gọi vào hai
+        hàm dưới, nên một chỗ nối là cả năm trang có. Chép điều kiện sang từng
+        trang là đúng anti-pattern `js/badges.js` / `js/route-gate.js` đã trả giá.
+     ⚠️ KHÔNG await: đây là việc nền, chậm mạng thì lượt mở trang sau thử lại.
+        Chặn giao diện vì một lời gọi chỉ để đồng bộ là đi ngược hợp đồng đầu file. */
+  function syncIdentity(auth, data) {
+    try {
+      if (!global.AstroQChars || !global.AstroQChars.sync || !data) return;
+      /* Hai route trả hai hình dạng: `/me/achievements` đặt phẳng ở gốc,
+         `/me/profile` bọc trong `profile`. Nhận cả hai để nối được ở cả hai chỗ. */
+      var p = data.profile || data;
+      global.AstroQChars.sync(auth, uidNow(), p.character || "", p.avatar || "");
+    } catch (e) {}
+  }
+
   function read(key, fallback) {
     try {
       var v = localStorage.getItem(key);
@@ -715,6 +736,7 @@
           }
           syncWallet(r.data);        // số dư thật → ghi đè cache của economy.js
           absorbQuizLv(r.data);      // cấp độ Quiz → cache cho quiz.html (xem LS_QUIZLV)
+          syncIdentity(a, r.data);   // nhân vật: kéo về, hoặc đẩy lên nếu server rỗng
           return { ok: true, source: "server", data: r.data };
         });
       }).catch(function () {
@@ -727,7 +749,10 @@
       return readAuth().then(function (a) {
         if (!a || !a.getAchievements) return { ok: false, reason: "auth" };
         return a.getAchievements().then(function (r) {
-          if (r && r.ok) { syncWallet(r.data); absorbTraining(r.data); absorbQuizLv(r.data); }
+          if (r && r.ok) {
+            syncWallet(r.data); absorbTraining(r.data); absorbQuizLv(r.data);
+            syncIdentity(a, r.data);
+          }
           return r;
         });
       }).catch(function () { return { ok: false, reason: "error" }; });

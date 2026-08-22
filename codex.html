@@ -17,6 +17,11 @@
 <script src="js/icons.js"></script>
 <script src="js/codex-terms.js"></script>
 <script src="economy.js"></script>
+<!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
+     nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về
+     (xem `AstroQChars.sync` và `syncIdentity` trong js/progress.js). Cùng lý do
+     `js/depth.js` được nạp ở đây. -->
+<script src="js/characters.js"></script>
 <script src="js/progress.js"></script>
 <!-- ⚠️ CÓ nạp js/firebase-auth.js: trang này cần ID token để gọi
      GET /me/achievements (lấy `progress.terms` — thuật ngữ đã trả lời đúng).

@@ -16,6 +16,11 @@
 <link rel="stylesheet" href="css/certificate.css" />
 <script src="js/ui-common.js"></script>
 <script src="js/ranks.js"></script>
+<!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
+     nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về
+     (xem `AstroQChars.sync` và `syncIdentity` trong js/progress.js). Cùng lý do
+     `js/depth.js` được nạp ở đây. -->
+<script src="js/characters.js"></script>
 <script src="js/progress.js"></script>
 <!-- ⚠️ CÓ nạp js/firebase-auth.js: tờ chứng nhận THẬT phải lấy tên và cấp độ từ
      SERVER, không lấy từ URL. Xem khối cảnh báo ở `readReal()` bên dưới. -->

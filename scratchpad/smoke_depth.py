@@ -300,7 +300,13 @@ with sync_playwright() as pw:
     pg.wait_for_timeout(1200)
     check("chua khai o may nay: KEO bac server ve cache",
           pg.evaluate("() => (JSON.parse(localStorage.getItem('astroq-user')||'{}')).depth") == "senior")
-    check("chua khai o may nay: KHONG day gi len", len(puts(pg)) == 0, str(puts(pg)))
+    # ⚠️ DOI PHAT BIEU 22/08/2026, KHONG NOI LONG: truoc day phep kiem nay doi
+    #    "0 loi goi PUT" de do "khong day BAC len". Tu khi co cau noi NHAN VAT
+    #    (`AstroQChars.sync`) thi dashboard con mot PUT hop le nua cho
+    #    `character`/`avatar`/`name` — nen dem so loi goi la bao hong dung luc
+    #    san pham lam dung. Dieu can bao ve khong doi: KHONG duoc gui `depth`.
+    check("chua khai o may nay: KHONG day BAC len",
+          all("depth" not in x for x in puts(pg)), str(puts(pg)))
     check("0 loi trang", not pg.perr, str(pg.perr[:1]))
     ctx.close()
 
