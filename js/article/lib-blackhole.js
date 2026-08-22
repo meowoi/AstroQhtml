@@ -22,5 +22,7 @@ export default {
            word: { vi: "Hấp dẫn",
                    en: "Gravity" },
            text: { vi: "lực kéo mọi vật lại gần nhau — hố đen kéo mạnh đến mức giữ luôn cả ánh sáng! 🐱",
-                   en: "the pull that draws things together — a black hole pulls so hard it even traps light! 🐱" } }
+                   en: "the pull that draws things together — a black hole pulls so hard it even traps light! 🐱" } },
+  /* Noi voi kho cau hoi: bai day dung dieu cau hoi kiem: hap dan manh den muc ANH SANG cung khong thoat ra duoc. (Khong noi `black-hole`/`bh-not-hole`: bai khong dat ten "chan troi su kien" va khong noi ve cai ten "lo".) */
+  terms: ["black-hole-light"]
 };

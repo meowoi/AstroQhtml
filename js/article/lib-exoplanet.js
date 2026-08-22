@@ -22,5 +22,7 @@ export default {
            word: { vi: "Trí tuệ nhân tạo",
                    en: "Artificial Intelligence" },
            text: { vi: "<b>AI</b> giúp máy tính học từ ví dụ để tự nhận ra quy luật — như cách tớ học vậy! 🤖",
-                   en: "<b>AI</b> lets computers learn from examples to spot patterns by themselves — just like me! 🤖" } }
+                   en: "<b>AI</b> lets computers learn from examples to spot patterns by themselves — just like me! 🤖" } },
+  /* Noi voi kho cau hoi: bai day CA hai: ngoai hanh tinh la hanh tinh quay quanh mot ngoi sao KHAC, va cach tim la thay anh sang ngoi sao mo di khi hanh tinh di ngang truoc mat. */
+  terms: ["exoplanet", "exoplanet-transit"]
 };

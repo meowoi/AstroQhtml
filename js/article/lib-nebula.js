@@ -22,5 +22,7 @@ export default {
            word: { vi: "Tinh vân",
                    en: "Nebula" },
            text: { vi: "'đám mây' khổng lồ bằng khí và bụi trong vũ trụ — chính là nơi các ngôi sao ra đời đó! 🐱",
-                   en: "A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱" } }
+                   en: "A <b>nebula</b> is a giant 'cloud' of gas and dust in space — it's where stars are born! 🐱" } },
+  /* Noi voi kho cau hoi: bai day dung cau tra loi: sao sinh ra trong nhung dam may khi va bui khong lo. (Khong noi `nebula-gas`: cau do hoi NGUYEN NHAN co lai — luc hap dan — ma bai khong he noi.) */
+  terms: ["nebula"]
 };

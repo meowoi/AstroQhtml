@@ -56,5 +56,7 @@ export default {
           word: { vi: "Tự chủ",
                   en: "Autonomous" },
           text: { vi: "máy tự quyết định theo chương trình đã nạp, không chờ người ra lệnh. Không phải vì nó thông minh hơn người — mà vì người ở quá xa để kịp trả lời. 🤖",
-                  en: "The machine decides for itself from the program already loaded, without waiting for a human. Not because it is smarter than us — but because we are too far away to answer in time. 🤖" } }
+                  en: "The machine decides for itself from the program already loaded, without waiting for a human. Not because it is smarter than us — but because we are too far away to answer in time. 🤖" } },
+  /* Noi voi kho cau hoi: bai day rang tau tu chay theo hang tram nghin dong lenh NAP SAN, mo ta tung buoc theo thu tu — vi bay phut tre tin hieu la qua muon de dieu khien. */
+  terms: ["sequence"]
 };

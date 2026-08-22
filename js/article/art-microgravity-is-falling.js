@@ -52,5 +52,7 @@ export default {
           word: { vi: "Rơi tự do",
                   en: "Free fall" },
           text: { vi: "trạng thái khi thứ duy nhất tác dụng lên bạn là lực hấp dẫn, không có gì chặn cú rơi lại. Rơi tự do không có nghĩa là đang lao xuống — bạn có thể rơi vòng quanh cả hành tinh. ☄️",
-                  en: "The state where gravity is the only thing acting on you and nothing stops the fall. Free fall does not mean plunging downward — you can fall all the way around a planet. ☄️" } }
+                  en: "The state where gravity is the only thing acting on you and nothing stops the fall. Free fall does not mean plunging downward — you can fall all the way around a planet. ☄️" } },
+  /* Noi voi kho cau hoi: bai day rang o do cao ISS luc hap dan van con ~90% — tuc yeu di theo khoang cach chu khong mat. (Khong noi `gravity`: bai khong noi hap dan keo ve TAM.) */
+  terms: ["gravity-distance"]
 };
