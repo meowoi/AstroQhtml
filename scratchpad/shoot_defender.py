@@ -170,6 +170,7 @@ with sync_playwright() as pw:
     print("== 4. Bat autopilot: ngam & ban 360 ==")
     page.evaluate(AUTOPILOT)
     t0 = time.time(); quiz_seen = False; quiz_info = None; shots = set()
+    gold_seeded = False
     while time.time() - t0 < 60:
         page.wait_for_timeout(220)
         s = state(page)
@@ -196,8 +197,15 @@ with sync_playwright() as pw:
             # (bien private). Bam dap an dau roi doc ket qua thuc te.
             hull_before = int(q["hull"].rstrip("%")); mined_before = q["mined"]
             page.evaluate("()=>document.getElementById('q-opts').children[0].click()")
-            page.wait_for_timeout(1600)
+            # ⚠️⚠️ DOC NGAY, DUNG CHO 1,6 GIAY. Tra loi xong la quiz dong va game
+            #   CHAY TIEP, nen cho lau thi thien thach bao mon dung phan giap vua
+            #   hoi: do duoc mot luot `60 -> 62` (hoi 20 roi bi an 18) va phep
+            #   kiem bao hong mot hanh vi DUNG. Phan thuong ap ngay trong cung
+            #   mot nhip nen 150ms la du.
+            page.wait_for_timeout(150)
             s3 = state(page)
+            # Phan cho con lai danh cho hai phep kiem "quiz dong" / "game chay tiep"
+            page.wait_for_timeout(1450)
             hull_after = int(s3["hull"].rstrip("%"))
             correct = s3["mined"] == mined_before + 5
             quiz_info = {"correct": correct, "hull_before": hull_before, "hull_after": hull_after,
@@ -212,6 +220,16 @@ with sync_playwright() as pw:
             check("ov-quiz" not in state(page)["ovs"], "quiz dong lai sau khi tra loi")
             check(state(page)["ovs"] == [], "game chay tiep sau quiz")
             page.evaluate("()=>{window.__hold=true}")
+        # ⚠️⚠️ GIEO THACH VANG NGAY TRONG LUOT, DUNG CHO TAN CUOI.
+        #   Thach vang bi `goldT` chan 6 giay dau + con phu thuoc xac suat sinh,
+        #   nen ~1/4 luot chay tram bi pha TRUOC khi gap. Duong lui o cuoi ham
+        #   gieo vao mot luot DA KET THUC (`ovs: ['ov-over']`, giap 0%) nen no
+        #   khong mo duoc quiz — vo tac dung o dung ca no sinh ra de chua.
+        #   Gieo o day thi tram con song va bot dang ban, tuc co nguoi ban trung.
+        #   ⚠️ Chi gieo MOT lan: gieo moi vong lap la rai day san thach vang.
+        if el > 2 and not gold_seeded and not quiz_seen and not s["ovs"]:
+            gold_seeded = True
+            page.evaluate("() => window.__dbg.spawn(1,'gold')")
         if el > 6 and 6 not in shots and not s["ovs"]:
             shots.add(6); print("   t=%.0fs %s" % (el, s)); shot(page, "d04-play.png")
         if quiz_seen and "ov-quiz" in s["ovs"]:

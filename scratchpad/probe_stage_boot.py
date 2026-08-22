@@ -74,6 +74,16 @@ with sync_playwright() as pw:
     pg.wait_for_timeout(250)
 
     # Man tong ket mo duoc va dem gio chay
+    # ⚠️⚠️ TAI LAI TRANG TRUOC KHI DO — xem `fix_stage_boot.py`. `.me-win` la
+    #   `position:fixed; inset:0` nen no phu KIN khung nhin, va vo huy dem khi co
+    #   `mouseenter` tren `#win`. Hai cu bam nut VI/EN o tren dung CHUOT THAT nen
+    #   con tro ao dang nam trong vung modal; Chromium co the tinh lai hover luc
+    #   `#win` hien ra va huy dem o ~0ms -> `autoLeft = None`, phep kiem hong mot
+    #   hanh vi DUNG. Trang moi tai lai thi chua nhan cu chuot nao.
+    #   ⚠️ Khong mat do phu: nhanh "tuong tac TAT dem han" ngay duoi van do that.
+    pg.reload(wait_until="load")
+    pg.wait_for_function("window.__mission !== undefined", timeout=25000)
+    pg.wait_for_timeout(250)
     pg.evaluate("window.__mission.win()")
     pg.wait_for_timeout(400)
     check("man tong ket mo duoc",

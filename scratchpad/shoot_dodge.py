@@ -115,6 +115,18 @@ AUTOPILOT = r"""
   function tick(){
     st.frames++;
     const now=performance.now();
+    /* ⚠️⚠️ KHONG BAM PHIM KHI DANG CO OVERLAY — xem `fix_shoot_dodge_bot.py`.
+       Bot ban KeyboardEvent tong hop nen `repeat` = false, tuc hang rao
+       `if(e.repeat) return` cua game (chan tre GIU phim) khong ap cho no; bot
+       chet som thi `pressStart` thay `#ov-over` va `startRound()` -> mo LUOT
+       THU HAI, tru them 5 tt va lam phep do o muc 4 doc sai luot. Day la
+       artifact CUA BOT: tre that giu Space sinh `repeat: true` va bi chan dung.
+       ⚠️ Giu vong rAF de bot tu chay lai khi test mo luot moi. */
+    if (document.querySelector('.ov.show')) {
+      key('keyup');
+      if (window.__autoOn) requestAnimationFrame(tick);
+      return;
+    }
     // DOT DA GAN NHAT truoc mat moi la thu phai ne: tim hon da dau tien roi do
     // khoang trong tren CA DAI rong 120px cua dot do (mot dot rai ~110px theo x).
     let gap=null, gapX=null;

@@ -390,8 +390,55 @@ def main():
         check("badge chu de khop du lieu", not wrong_topic, f"lech: {set(wrong_topic)}")
         check("4 lua chon tren man khop du lieu (mot phep hoan vi)", not wrong_opts,
               f"lech: {set(wrong_opts)}")
-        check("da gap CA cau co nguon VA cau khong co nguon",
-              seen_src > 0 and seen_nosrc > 0, f"co nguon={seen_src} khong={seen_nosrc}")
+        # ⚠️⚠️ CAU KHONG CO NGUON PHAI DUOC DO TAT DINH, DUNG HY VONG RUT RA DUOC.
+        #   Bank co 5/130 cau khong `src` (5 cau lap trinh, CO Y khong dan nguon)
+        #   va chung chi nam o 2 the So Tay, nen vong ngau nhien o tren gap chung
+        #   voi ti le thap: do duoc 3/4 luot bao hong (`co nguon=30 khong=0`), 1
+        #   luot dat nho may. Mot phep kiem hay bao oan thi som muon bi bo qua.
+        #   Nay di THANG bang `quiz.html?terms=` (co tu 06/08/2026) — vua tat dinh
+        #   vua manh hon: kiem CA 5 cau chu khong phai "gap duoc mot cai thi thoi".
+        nosrc_keys = [it["term"] for it in bank if not it.get("src")]
+        nosrc_bad, nosrc_seen = [], 0
+        if not nosrc_keys:
+            nosrc_bad.append("bank khong con cau nao thieu `src` — doc lai phep kiem nay")
+        else:
+            pg.goto(BASE + "/quiz.html?terms=" + ",".join(nosrc_keys), wait_until="load")
+            pg.wait_for_selector("#q-text", timeout=8000)
+            pg.wait_for_timeout(250)
+            for _ in range(len(nosrc_keys)):
+                it = find_cur()
+                if not it:
+                    nosrc_bad.append("khong nhan ra cau hoi dang hien")
+                    break
+                if it.get("src"):
+                    # `?terms=` sai het thi quiz.html lui ve de ngau nhien (luat o
+                    # dong 343 cua quiz.html) — gap cau CO nguon o day nghia la
+                    # duong `?terms=` khong con dan dung, tuc mot loi THAT.
+                    nosrc_bad.append(f"{it['term']}: `?terms=` ra cau CO nguon")
+                    break
+                nosrc_seen += 1
+                click_correct(pg, it)
+                pg.click("#engage")
+                pg.wait_for_selector(".sheet.show", timeout=4000)
+                pg.wait_for_timeout(120)
+                if pg.eval_on_selector("#sheet-src", "e => !e.classList.contains('hide')"):
+                    nosrc_bad.append(f"{it['term']}: khong co nguon ma VAN hien dong nguon")
+                pg.click("#next-btn")
+                pg.wait_for_timeout(420)
+                if pg.eval_on_selector("#summary", "e => e.classList.contains('show')"):
+                    break
+            # ⚠️⚠️ TRA LAI TRANG SACH — khong duoc de `?terms=` va man tong ket lai
+            #    cho cac muc sau. Bo qua dong nay thi muc [7] do mot thu khac y
+            #    dinh (de bi ghim con 5 cau nen "Lam lai" it doi de: 8/8 -> 6/8)
+            #    va muc [8] CHET HAN o `Locator.click` vi o dap an dang `disabled`.
+            pg.goto(BASE + "/quiz.html", wait_until="load")
+            pg.wait_for_selector("#q-text", timeout=8000)
+            pg.wait_for_timeout(250)
+
+        check("gap duoc cau CO nguon o de ngau nhien", seen_src > 0, f"co nguon={seen_src}")
+        check("cau KHONG co nguon thi AN dong nguon (do tat dinh qua ?terms=)",
+              nosrc_seen == len(nosrc_keys) and not nosrc_bad,
+              f"do {nosrc_seen}/{len(nosrc_keys)} cau" + ("; " + "; ".join(nosrc_bad[:3]) if nosrc_bad else ""))
         # ⚠️ Vong lap tren THOAT SOM ngay khi gap du ca hai loai cau, nen so thuat
         # ngu no thay duoc khong noi len dieu gi ve do da dang cua de. Do rieng:
         # tai lai trang nhieu lan roi xem cau DAU TIEN co doi khong.
