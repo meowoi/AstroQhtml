@@ -164,16 +164,26 @@ try:
         b.close()
 finally:
     srv.shutdown()
-    # ⚠️ Don MOI nhan bo nay tao ra, ke ca `facebook/fbclid` — no KHONG mang tien to
-    #    zz* vi phai la nhan THAT ma luoi do sinh ra, nen de sot nhat.
-    _rac = ["SRC#" + LABEL, "SRC#facebook/fbclid",
-            "SRC#zzdeep/paid/probe", "SRC#zzretry/paid/probe"]
-    for _sk in _rac:
+    # ⚠️⚠️ HAI CACH DON KHAC NHAU, VA TRON CHUNG LA XOA DU LIEU THAT.
+    #    · Nhan `zz*` do bo nay bia ra: XOA ca ban ghi, khong ai khac dung chung.
+    #    · Nhan `facebook/fbclid` la NHAN THAT — luoi do sinh ra dung chuoi nay cho
+    #      MOI khach den bang link Meta quen gan nhan. Ban dau bo nay `delete_item`
+    #      luon ca no, tuc **xoa mat luot cua khach that** moi lan chay do. Nay TRU
+    #      DUNG 1 bang `ADD n :neg` — bo dem ve lai con so truoc khi do, khong dung
+    #      toi phan cua nguoi khac.
+    for _sk in ["SRC#" + LABEL, "SRC#zzdeep/paid/probe", "SRC#zzretry/paid/probe"]:
         ddb.delete_item(TableName=TABLE, Key={"PK":{"S":"VISIT#"+DAY},"SK":{"S":_sk}})
+    ddb.update_item(TableName=TABLE,
+                    Key={"PK":{"S":"VISIT#"+DAY},"SK":{"S":"SRC#facebook/fbclid"}},
+                    UpdateExpression="ADD n :neg",
+                    ExpressionAttributeValues={":neg":{"N":"-1"}})
+    # ⚠️ CHI doi cac nhan `zz*` sach. TUYET DOI khong doi "bang khong con ban ghi
+    #    VISIT# nao": tu 23/08/2026 bang nay CO du lieu that cua quang cao dang chay,
+    #    va mot phep kiem doi bang trong se day nguoi doc di xoa dung so lieu that.
     _left=[i["SK"]["S"] for i in ddb.query(TableName=TABLE,
         KeyConditionExpression="PK = :pk",
         ExpressionAttributeValues={":pk":{"S":"VISIT#"+DAY}}).get("Items",[])
-        if i["SK"]["S"] in _rac]
-    check("da don sach moi ban ghi test", not _left, str(_left))
+        if i["SK"]["S"].startswith("SRC#zz")]
+    check("da don sach moi nhan test zz*", not _left, str(_left))
     print("\n=== KET QUA: %d dat / %d hong ==="%(ok,bad))
     sys.exit(1 if bad else 0)
