@@ -4376,17 +4376,24 @@ for _bad in ("fetch(", "XMLHttpRequest", "sendBeacon", "new Image(", "document.c
              "googletagmanager", "google-analytics"):
     check("[29] js/utm.js khong dung `%s`" % _bad, _bad not in _utm_code)
 
-# --- da nap o dung ba trang, va KHONG nap o trang khac ---
-# ⚠️ Nap thua o 15 trang khac la ~1 KB chet moi trang cho mot thu khong ai doc:
-#    nhan chi duoc BAT o cua vao (trang chu / landing) va DOC o hai cho gui form.
-_utm_want = {"index.html", "en/index.html", "landing-app.html"}
+# --- nap o MOI trang (doi 23/08/2026, truoc do la "dung ba cua vao") ---
+# ⚠️⚠️ BAT BIEN CU GHIM MOT GIA DINH DA SAI: "nhan chi duoc BAT o cua vao (trang chu
+#    / landing)". Gia dinh do dung khi quang cao chi tro ve trang chu. Chu du an chay
+#    quang cao Meta tu 22/08, va mot quang cao tro vao `pricing.html` hay mot trang
+#    game se mat SACH so ma KHONG co dau hieu gi — bang bao cao chi hien 0, doc y het
+#    "khong ai bam". Mot phep do im lang khi sai la phep do te nhat.
+# ⚠️ CAI GIA DA DO, khong doan: utm.js 3,5 KB gzip + utm-beacon.js 1,5 KB + api.js
+#    2,7 KB (11 trang truoc day khong nap api.js). Trinh duyet CACHE ca ba sau trang
+#    dau, nen mot nguoi tra nhieu nhat ~7,7 KB MOT LAN cho ca phien, khong phai moi
+#    trang. Doi lai: khong con cua nao lam mat nhan ma khong ai biet.
+_utm_want = set(_UTM_PAGES)
 _utm_has = set()
 for _pg in _UTM_PAGES:
     _p = os.path.join(ROOT, _pg)
     if os.path.exists(_p) and re.search(r'src="[^"]*js/utm\.js"',
                                         io.open(_p, encoding="utf-8").read()):
         _utm_has.add(_pg)
-check("[29] nap js/utm.js o dung ba cua vao", _utm_has == _utm_want,
+check("[29] nap js/utm.js o MOI trang", _utm_has == _utm_want,
       "thua: %s  thieu: %s" % (sorted(_utm_has - _utm_want), sorted(_utm_want - _utm_has)))
 
 # --- hai cho gui phai mang nhan di ---
@@ -4448,12 +4455,27 @@ check("[29] client co the `sources`", 'sources: {' in _adm and '"p-src"' in _adm
 # ⚠️ LUOT DEN phai HIEN RA, khong chi ve toi DB. Cung lop loi im lang ma khoi [29]
 #    nay sinh ra de chan: nhan co that, luu that, ma khong hien o dau.
 check("[29] client HIEN cot luot den", 'x.visits' in _adm and 'Lượt đến' in _adm)
-# ⚠️ Beacon phai duoc NAP o dung hai trang co `js/utm.js`. Nap utm.js ma quen beacon
-#    thi nhan van ghi duoc luc dang ky, nhung luot den im lang bang 0 mai mai.
-for _pg in ("index.html", "landing-app.html"):
-    _h = rd(_pg)
-    check("[29] %s nap ca utm.js lan utm-beacon.js" % _pg,
-          "js/utm.js" in _h and "js/utm-beacon.js" in _h)
+# ⚠️⚠️ MOI TRANG deu phai nap CA HAI (siet lai 23/08/2026, truoc do chi doi o
+#    index.html + landing-app.html). Ly do: quang cao tro vao trang nao thi trang do
+#    phai bat duoc nhan. Hoi chi hai trang thi mot quang cao tro vao `pricing.html`
+#    mat sach so ma KHONG co dau hieu gi — bang bao cao chi hien 0, doc y het "khong
+#    ai bam". Danh sach dong tu glob nen them trang moi la tu duoc hoi.
+# ⚠️ Phu ca `en/index.html` (duong dan `../js/`), nen doi chieu bang chuoi "js/utm-beacon.js"
+#    chu khong phai tien to tuyet doi.
+_thieu_bea = [x for x in _UTM_PAGES if "js/utm-beacon.js" not in rd(x)]
+check("[29] MOI trang nap js/utm-beacon.js", not _thieu_bea,
+      "thieu: %s" % _thieu_bea)
+# ⚠️ Luoi do `fbclid`: quang cao quen gan nhan thi van biet la den tu Meta. Medium
+#    PHAI la `fbclid`, KHONG duoc la `paid` — fbclid co ca o bai dang thuong va link
+#    chia se tay, ghi `paid` la tron rac vao dung con so tinh hieu qua dong tien.
+_utm = rd("js/utm.js")
+check("[29] utm.js co luoi do fbclid", 'q.get("fbclid")' in _utm)
+check("[29] luoi do fbclid KHONG tu nhan la `paid`",
+      'medium: "fbclid"' in _utm and 'medium: "paid"' not in _utm)
+# ⚠️ Co "chua bao" phai BEN (nam trong ban ghi localStorage), khong phai bien cua
+#    mot luot nap: POST hong ma co chi song trong luot nap thi mat luot vinh vien.
+check("[29] co chua-bao la co BEN, va chi danh dau khi server nhan",
+      "markSent" in _utm and "pending" in _utm and "r.ok" in rd("js/utm-beacon.js"))
 # ⚠️ Beacon KHONG duoc chep lai dia chi API: mot ban chep se troi khoi js/api.js dung
 #    vao ngay doi stack AWS. No phai `import` tu api.js.
 _bea = rd("js/utm-beacon.js")

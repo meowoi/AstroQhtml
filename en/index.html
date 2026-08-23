@@ -124,6 +124,9 @@
 <script src="../js/icons.js"></script>
 <script src="../js/ui-common.js"></script>
 <script src="../js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="../js/utm-beacon.js"></script>
 <!-- Đẩy NGƯỜI ĐÃ ĐĂNG NHẬP sang cửa vào app; khách lạ và crawler ở lại đây.
      ⚠️ Thứ tự bắt buộc: SAU `ui-common.js` (cần `AstroQ.getUser`) và SAU
         `utm.js` (phải kịp ghi nguồn chiến dịch trước khi rời trang), nhưng vẫn

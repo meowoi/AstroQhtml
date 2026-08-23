@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/specimen-vault.css" />
 <script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
 <script src="js/specimens.js"></script>
 <!-- Tranh 21 mẫu vật (SVG, mọi hệ điều hành hiện y hệt nhau). Nạp SAU
      js/specimens.js: `icon()` ở đó hỏi `AstroQSpecimenArt`, thiếu file này thì nó

@@ -10,6 +10,39 @@
 <meta name="robots" content="noindex,follow" />
 <title>AstroQ — Trung Tâm Điều Hướng</title>
 
+<!-- ============ BẮT TAY TRƯỚC VỚI HAI TÊN MIỀN CỦA ĐƯỜNG ĐĂNG NHẬP ============
+     Trang này có token, nên nó BUỘC phải đi qua 2 tên miền ngoài trước khi biết
+     một con số nào của trẻ: Firebase xác thực phiên (identitytoolkit / securetoken)
+     rồi API mới trả tiến độ. Mỗi tên miền là một lần DNS + TCP + TLS, mà chúng chỉ
+     được PHÁT HIỆN rất muộn — `accounts:lookup` bắt đầu ở 664ms và API ở 929ms
+     (đo trên 4G, scratchpad/perf_dash_slow.py). `preconnect` cho hai lần bắt tay đó
+     chạy SONG SONG với lúc parse, tức khi tới lượt gọi thì đường đã mở sẵn.
+     Đo được: 258ms cho `accounts:lookup` và 534ms cho `/me/achievements` phần lớn
+     là bắt tay, không phải chờ server tính.
+
+  ⚠️ PHẢI CÓ `crossorigin`. Hai lời gọi này đều là CORS (mang header
+     `Authorization`), mà kết nối preconnect KHÔNG mang cờ crossorigin thì trình
+     duyệt coi là một pool khác và **mở lại từ đầu** — tức 3 dòng này thành 3 lần
+     bắt tay bỏ đi, chậm hơn là không có.
+  ⚠️ `securetoken` không xuất hiện trong bản đo (token còn tươi) nhưng nó là đường
+     của trẻ QUAY LẠI HÔM SAU: token sống ~1 giờ, hết hạn thì SDK phải làm mới ở đó
+     trước khi gọi được API. Đúng ca thường gặp nhất, nên không bỏ.
+  ⚠️ Địa chỉ API khớp `PROD_API` ở js/api.js. Đổi stack thì sửa CẢ HAI — sai ở đây
+     không làm vỡ gì (chỉ là một kết nối mở thừa), nên nó là loại lệch im lặng.
+     `?api=local` cũng vậy: thừa một kết nối, không hỏng. -->
+<link rel="preconnect" href="https://ueqp4gjr0l.execute-api.ap-southeast-1.amazonaws.com" crossorigin />
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin />
+
+<!-- SDK Firebase (tự host, xem js/firebase-auth.js). `js/firebase-auth.js` nạp hai
+     file này bằng `import()` ĐỘNG, nên trình duyệt chỉ biết chúng tồn tại khi module
+     đó CHẠY — tức sau khi parse xong toàn bộ trang. `modulepreload` cho 250 KB đó
+     tải song song với đám script cổ điển thay vì nối đuôi sau chúng.
+  ⚠️ Đường dẫn tính TỪ TRANG (`vendor/…`), khác lệnh `import()` trong module kia
+     (`../vendor/…`, tính từ file module). Viết giống nhau là một trong hai sai. -->
+<link rel="modulepreload" href="vendor/firebase/12.16.0/firebase-app.js" />
+<link rel="modulepreload" href="vendor/firebase/12.16.0/firebase-auth.js" />
+
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
@@ -24,10 +57,24 @@
 <link rel="stylesheet" href="css/mascot.css" />
 <link rel="stylesheet" href="css/onboard-tour.css" />
 <link rel="stylesheet" href="css/warp-screen.css" />
+<!-- ⚠️ NẰM Ở HEAD, KHÔNG Ở CUỐI BODY — chuyển 23/08/2026, và chuyển này KHÔNG đổi
+     thứ tự chạy của bất cứ thứ gì. `type="module"` luôn bị hoãn tới sau khi parse
+     xong tài liệu, nên nó vẫn chạy SAU mọi script cổ điển và SAU khối script của
+     trang, đúng như khi nó nằm ở dòng cuối body (lời hứa ở đầu js/firebase-auth.js
+     và cách `whenAuth()` chờ nó vẫn nguyên giá trị).
+     Cái ĐỔI là lúc trình duyệt bắt đầu TẢI nó: ở cuối body thì file chỉ được phát
+     hiện sau khi parse hết ~370 KB script cổ điển; ở head thì nó tải song song. Đây
+     là chặng đầu của chuỗi đăng nhập, nên mọi thứ sau nó (SDK → xác thực phiên →
+     `/me/achievements`) đều dịch lên sớm theo. -->
+<script type="module" src="js/firebase-auth.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/sticker-icons.js"></script>
 <script src="js/locks.js"></script>
 <script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
 <!-- Menu thả dùng chung. ⚠️ `AstroQUserMenu.init()` phải chạy TRƯỚC
      `AstroQ.initLang()` — lý do ghi ở đầu js/user-menu.js. -->
 <script src="js/user-menu.js"></script>
@@ -786,6 +833,44 @@
     else if(serverDepth) AstroQDepth.absorb(serverDepth);
   }
 
+  /* ---- VẼ TRƯỚC BẰNG CÂU TRẢ LỜI CŨ CỦA SERVER, RỒI MỚI ĐỢI CÂU MỚI ----
+
+     ⚠️ VÌ SAO CÓ KHỐI NÀY (số đo, không phải cảm giác): `#xp-bar` và `#desk-float`
+        chỉ có số thật ở giây thứ **1,48** trên 4G · **2,58** khi vừa chơi game xong
+        (hàng chờ 5 việc, `readAuth` gửi nốt trước khi đọc) · **2,60** trên 3G —
+        `scratchpad/perf_dash_slow.py`. Không chặng nào trong 5 chặng nối tiếp đó bỏ
+        được: parse xong 20 script (350ms/4G) → module `firebase-auth.js` chạy → tải
+        SDK → `accounts:lookup` xác thực phiên (258ms) → `GET /me/achievements`
+        (534ms). Suốt khoảng đó thanh XP đứng 0% và vách khoang lái trống, rồi nhảy
+        một cái sang 71% — đúng thứ chủ dự án báo *"luôn bị hiện chậm hơn 3s-4s"*.
+
+     ⚠️ KHÔNG PHẢI SỐ BỊA, và ranh giới đó là toàn bộ lý do khối này được phép nằm
+        cạnh chú thích "KHÔNG đoán, không bịa" ở đầu `STATS`. Đây là CHÍNH câu trả
+        lời của server ở lượt vào trước, của CHÍNH đứa trẻ này (`js/progress.js`
+        đóng dấu `uid`). Chưa từng đọc được server → `known:false` → không vẽ gì,
+        trang giữ nguyên 0% + vách ẩn như trước. Cùng khuôn `AstroQCos.absorb` đã
+        dùng cho tông đèn: *"áp tông từ cache LÚC NẠP nên buồng lái không nhấp một
+        cái từ tông mặc định sang tông của trẻ"*.
+
+     ⚠️ CHỈ VẼ CẤP/XP + BÀN ĐIỀU KHIỂN. **Không** chạm huy hiệu, radar, nhật ký hay
+        `.sess` — cache không giữ chúng, và `STATS.total`/`STATS.earned` vẫn là 0 nên
+        ba ô đó vẫn hiện `—` đúng như luật cũ. Đoán "12/22 huy hiệu" từ một cache
+        không chứa huy hiệu thì đúng là bịa.
+     ⚠️ KHÔNG BẬT `SESS.known`. Dải nhắc phiên phải nói về LƯỢT NÀY (mất mạng hay
+        mất phiên), mà cache thì không biết gì về lượt này. Bật ở đây là nói với trẻ
+        "mọi thứ ổn" trong khi chưa hỏi được server câu nào. */
+  function paintCachedHud(){
+    var P = prog();
+    if(!P || !P.hud) return;
+    var c = P.hud();
+    if(!c.known) return;
+    STATS.level = { level:c.level, xp:c.xp, pct:c.pct };
+    renderStats();
+    /* `desk` rỗng cũng là câu trả lời thật ("chưa trưng gì") → vẫn vẽ, để hiện
+       đúng một móc nét đứt mời đặt thay vì vách trống rồi mới hiện móc. */
+    paintDesk(c.desk);
+  }
+
   function loadStats(){
     AstroQProgress.achievements().then(function(r){
       /* Nguồn DUY NHẤT phân biệt "mất phiên" với "mất mạng" cho dải nhắc `.sess`.
@@ -1247,6 +1332,10 @@
   });
 
   applyLang(LANG);
+  /* ⚠️ THỨ TỰ BẮT BUỘC: SAU `applyLang` (nó gọi `paintDesk(null)` — chưa có cache
+     thì ẩn vách, gọi sau là xoá luôn thứ vừa vẽ) và TRƯỚC `loadStats` (câu trả lời
+     mới của server ghi đè, đó là ý muốn). Xem khối chú thích ở `paintCachedHud`. */
+  paintCachedHud();
   loadStats();                 // số thật từ GET /me/achievements (bất đồng bộ)
   watchSess();                 // hàng chờ tiến độ: theo dõi tới lúc gửi xong
   var sessOk = $("sess-ok");
@@ -1556,6 +1645,8 @@
   });
 })();
 </script>
-<script type="module" src="js/firebase-auth.js"></script>
+<!-- `js/firebase-auth.js` đã chuyển lên <head> (23/08/2026) để nó được TẢI sớm.
+     Thứ tự CHẠY không đổi — module luôn hoãn tới sau khi parse xong. Xem chú thích
+     ở thẻ script đó trong <head>. -->
 </body>
 </html>

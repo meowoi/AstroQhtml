@@ -13,6 +13,10 @@
 <link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/parent.css" />
 <script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
 <!-- ⚠️ Trang này BẮT BUỘC nạp SDK Firebase: báo cáo đọc `GET /me/report` nên phải
      có token. Cùng đánh đổi có ý thức như specimen-vault.html và codex.html —
      `check_pages.py` mục [4] có danh sách trang được phép nạp, đã thêm trang này. -->

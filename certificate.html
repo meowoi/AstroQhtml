@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="css/page-shell.css" />
 <link rel="stylesheet" href="css/certificate.css" />
 <script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
 <script src="js/ranks.js"></script>
 <!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
      nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về

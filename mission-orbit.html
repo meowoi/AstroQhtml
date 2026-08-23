@@ -35,6 +35,10 @@
 <link rel="stylesheet" href="css/earth2d.css" />
 <link rel="stylesheet" href="css/mission-orbit.css" />
 <script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
 <!-- Báo tiến độ + ví. CỐ Ý KHÔNG nạp js/firebase-auth.js — cùng lý do với Nhiệm vụ
      01: trang chơi phải nhẹ, và `js/progress.js` đã xếp việc vào hàng chờ khi chưa
      đăng nhập. `check_pages` mục [4] canh không trang nào nạp lẫn. -->
