@@ -61,6 +61,13 @@
           `term_ai` · `term_machine_learning` · `term_algorithm` · `term_sensor`
           cùng có mặt trong `js/codex-terms.js`. */
     'cx-ai':'<rect x="4.6" y="4.6" width="14.8" height="14.8" rx="3.2"/><circle cx="12" cy="12" r="3.1"/><path d="M12 4.6V2.4M12 21.6v-2.2M4.6 12H2.4M21.6 12h-2.2M7.2 7.2 5.6 5.6M18.4 18.4l-1.6-1.6M16.8 7.2l1.6-1.6M5.6 18.4l1.6-1.6"/>',
+    /* `cx-chatbot` = BONG BONG THOAI co duoi + 3 cham "dang go". Ba cham de
+       r=1 va cach nhau 4.3 don vi => khe MEP-TOI-MEP 2.3 don vi. ⚠️ Ban dau de
+       r=1.15 cach nhau 3.7 (khe 1.4) va render ra thi ba cham HAN LAI THANH MOT
+       VET LIEN — doc ra mot dai bau duc, khong ra ba cham. Moc >=2.2 la moc chinh
+       de bai ve 20 icon (22/08) da dat; day la lan thu 8 cua bai hoc "ve dung y
+       ma sai hinh", va chi RENDER ROI NHIN moi thay. */
+    'cx-chatbot':'<path d="M4.6 5.6h14.8a2.1 2.1 0 0 1 2.1 2.1v6.9a2.1 2.1 0 0 1-2.1 2.1h-8.6l-4.4 3.3v-3.3H4.6a2.1 2.1 0 0 1-2.1-2.1V7.7a2.1 2.1 0 0 1 2.1-2.1z"/><circle cx="7.7" cy="11.2" r="1"/><circle cx="12" cy="11.2" r="1"/><circle cx="16.3" cy="11.2" r="1"/>',
     'cx-machine-learning':'<circle cx="5.4" cy="7" r="1.7"/><circle cx="5.4" cy="17" r="1.7"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.6" cy="7.6" r="1.7"/><circle cx="18.6" cy="16.4" r="1.7"/><path d="M7 7.7l3.3 3.1M7 16.3l3.3-3.1M13.8 11.2l3.1-2.7M13.8 12.9l3.1 2.6"/>',
     'cx-algorithm':'<rect x="8.6" y="2.8" width="6.8" height="4" rx="1.1"/><path d="M12 6.8v3.1"/><path d="M12 9.9 8.4 13.4h7.2z"/><path d="M12 13.4v3.2"/><rect x="8.6" y="16.6" width="6.8" height="4.2" rx="1.1"/><path d="M15.4 18.7h3.4v-9.1"/>',
     'cx-sensor':'<circle cx="12" cy="17.6" r="2.4"/><path d="M12 15.2V9.4"/><path d="M8.1 9.1a5.6 5.6 0 0 1 7.8 0M5.5 6.3a9.4 9.4 0 0 1 13 0"/>',

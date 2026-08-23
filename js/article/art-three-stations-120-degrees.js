@@ -23,5 +23,5 @@ export default {
                    en: "Longitude" },
            text: { vi: "đo bạn ở đông hay tây bao nhiêu. Cả vòng Trái Đất là 360 độ, nên ba trạm cách nhau 120 độ là chia đều vòng ấy. ☄️",
                    en: "measures how far east or west you are. A full turn of Earth is 360 degrees, so three stations 120 degrees apart divide it evenly. ☄️" } },
-  terms: []
+  terms: ["dsn-three-stations"]
 };

@@ -27,5 +27,5 @@ export default {
                    en: "Pattern recognition" },
            text: { vi: "việc máy học cách nhận ra một hình dạng lặp đi lặp lại — như vệt cong của tiểu hành tinh. Nó nhìn rất nhanh, nhưng người vẫn phải kiểm lại. 🤖",
                    en: "a machine learning to spot a shape that keeps repeating — like an asteroid's curved streak. It looks fast, but people still check its work. 🤖" } },
-  terms: []
+  terms: ["ai-why-fast", "ml-humans-still-check"]
 };

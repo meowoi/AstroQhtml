@@ -27,5 +27,5 @@ export default {
                    en: "Metadata" },
            text: { vi: "thông tin nói về dữ liệu — ai đo, đo ở đâu, đo cái gì. Không có nó thì tập dữ liệu vẫn tồn tại mà không ai tìm thấy. 🤖",
                    en: "information about data — who measured it, where, and what. Without it a dataset still exists, but nobody can find it. 🤖" } },
-  terms: []
+  terms: ["ai-metadata-eases-load"]
 };

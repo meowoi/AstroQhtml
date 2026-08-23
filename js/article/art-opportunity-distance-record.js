@@ -27,5 +27,5 @@ export default {
                    en: "Twin rovers" },
            text: { vi: "Spirit và Opportunity là <b>hai rover giống hệt nhau</b> gửi tới hai vùng khác nhau. Cùng thiết kế, hai chỗ đáp — gấp đôi cơ hội tìm ra thứ đáng xem. 🤖",
                    en: "Spirit and Opportunity were <b>two identical rovers</b> sent to different regions. One design, two landing sites — double the chance of finding something worth seeing. 🤖" } },
-  terms: []
+  terms: ["opportunity-distance"]
 };

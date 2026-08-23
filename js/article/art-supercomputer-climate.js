@@ -23,5 +23,5 @@ export default {
                    en: "Simulation" },
            text: { vi: "cho máy tính diễn lại một chuyện theo các quy luật đã biết, để xem nó diễn ra thế nào mà không phải làm thật. 🤖",
                    en: "A <b>simulation</b> has a computer replay something using known rules, so you can watch how it unfolds without doing it for real. 🤖" } },
-  terms: []
+  terms: ["supercomputer-year-long-run"]
 };

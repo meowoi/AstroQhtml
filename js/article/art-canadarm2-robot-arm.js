@@ -27,5 +27,5 @@ export default {
                    en: "Latching End Effector" },
            text: { vi: "bàn tay ở hai đầu Canadarm2. Vì hai đầu giống hệt nhau nên cánh tay tự bò được — đầu nào cũng làm vai được cả. 🤖",
                    en: "A <b>Latching End Effector</b> is the hand at each end of Canadarm2. Because both ends match, the arm can walk itself along — either end can play shoulder. 🤖" } },
-  terms: []
+  terms: ["canadarm2-two-hands"]
 };

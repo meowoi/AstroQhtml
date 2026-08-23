@@ -23,5 +23,5 @@ export default {
                    en: "3D map" },
            text: { vi: "không chỉ nói cái gì ở đâu, mà còn nói nó cao hay sâu bao nhiêu. Với một cái hố tối thì đó là toàn bộ thông tin quan trọng. 🤖",
                    en: "A <b>3D map</b> says not just what is where, but how high or deep it is. For a dark crater, that is the whole point. 🤖" } },
-  terms: []
+  terms: ["ai-maps-dark-craters"]
 };

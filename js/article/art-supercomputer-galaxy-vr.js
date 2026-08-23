@@ -23,5 +23,5 @@ export default {
                    en: "Visualization" },
            text: { vi: "biến những con số thành hình để mắt người hiểu được. Cùng dữ liệu, nhưng nhìn ra được thay vì đọc bảng. 🤖",
                    en: "turns numbers into pictures a human eye can grasp. Same data — seen, instead of read off a table. 🤖" } },
-  terms: []
+  terms: ["supercomputer-galaxy-vr"]
 };

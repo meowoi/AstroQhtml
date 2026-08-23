@@ -27,5 +27,5 @@ export default {
                    en: "Machine learning" },
            text: { vi: "khi máy tự tìm ra luật từ rất nhiều ví dụ, thay vì được người viết sẵn từng luật. Cho xem nhiều ảnh mèo, nó tự học ra mèo trông thế nào. 🤖",
                    en: "a machine working out the rules from lots of examples, instead of being given every rule. Show it many cat photos and it learns what a cat looks like. 🤖" } },
-  terms: []
+  terms: ["ai-what-is", "ai-can-do-what"]
 };

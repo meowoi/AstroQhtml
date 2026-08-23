@@ -27,5 +27,5 @@ export default {
                    en: "Space weather" },
            text: { vi: "những gì Mặt Trời gửi tới Trái Đất — bùng sáng, hạt tích điện, từ trường. Nó không làm mưa, nhưng làm hỏng vệ tinh và lưới điện. 🤖",
                    en: "what the Sun sends our way — flares, charged particles, magnetic fields. It brings no rain, but it can knock out satellites and power grids. 🤖" } },
-  terms: []
+  terms: ["ai-surya-two-hours"]
 };

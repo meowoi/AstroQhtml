@@ -27,5 +27,5 @@ export default {
                    en: "Habitable environment" },
            text: { vi: "nơi có đủ điều kiện cho sự sống tồn tại — không có nghĩa là đã từng có sinh vật ở đó. Hai chuyện khác nhau! 🤖",
                    en: "A <b>habitable environment</b> is a place with the right conditions for life — which is not the same as saying life was there. Two different claims! 🤖" } },
-  terms: []
+  terms: ["curiosity-mission-goal"]
 };

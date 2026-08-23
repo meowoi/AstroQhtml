@@ -23,5 +23,5 @@ export default {
                    en: "Autonomous" },
            text: { vi: "không có nghĩa là robot muốn gì làm nấy — nó vẫn nhận việc từ người, chỉ tự quyết <i>cách</i> làm. 🤖",
                    en: "does not mean a robot does as it pleases — it still gets its job from people, and only decides <i>how</i> to do it. 🤖" } },
-  terms: []
+  terms: ["sensor-why-autonomous"]
 };

@@ -27,5 +27,5 @@ export default {
                    en: "Air density" },
            text: { vi: "cho biết trong một khoảng không có bao nhiêu phân tử khí. Càng loãng thì cánh quạt càng khó bám — đó là lý do bay trên Sao Hoả khó thế. 🤖",
                    en: "how many gas molecules fill a space. The thinner it is, the less a rotor has to grip — that's why flying on Mars is so hard. 🤖" } },
-  terms: []
+  terms: ["ingenuity-first-flight"]
 };

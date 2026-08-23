@@ -27,5 +27,5 @@ export default {
                    en: "Rover" },
            text: { vi: "robot có bánh xe, chạy trên bề mặt một thiên thể khác. Khác với tàu đứng yên: rover chọn được nơi mình muốn tới. 🤖",
                    en: "A <b>rover</b> is a wheeled robot that drives on the surface of another world. Unlike a lander, a rover gets to choose where it goes. 🤖" } },
-  terms: []
+  terms: ["sojourner-first-rover"]
 };

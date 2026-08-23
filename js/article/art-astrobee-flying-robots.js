@@ -27,5 +27,5 @@ export default {
                    en: "Microgravity" },
            text: { vi: "trạng thái mọi thứ trong trạm gần như không có trọng lượng. Không có sàn để lăn bánh xe, nên robot ở đó phải BAY. 🤖",
                    en: "the state where everything in the station is nearly weightless. There is no floor to roll on — so a robot there has to fly. 🤖" } },
-  terms: []
+  terms: ["sensor-robot-sees", "sensor-fans-move"]
 };

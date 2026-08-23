@@ -23,5 +23,5 @@ export default {
                    en: "Radio signal" },
            text: { vi: "cách gửi thông tin đi mà không cần dây. Cùng một họ với sóng đài phát thanh và wifi ở nhà bạn. 🤖",
                    en: "A <b>radio signal</b> carries information with no wire. Same family as radio broadcasts and the wifi in your home. 🤖" } },
-  terms: []
+  terms: ["dsn-why-big-antennas"]
 };

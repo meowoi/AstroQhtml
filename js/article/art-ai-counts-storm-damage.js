@@ -23,5 +23,5 @@ export default {
                    en: "Proxy" },
            text: { vi: "Khi thứ bạn cần đo quá khó, hãy đo một <b>chỉ dấu thay thế</b> — thứ dễ thấy hơn nhưng đi cùng với nó. Bạt trên mái thay cho mái bị vỡ. 🤖",
                    en: "When the thing you need is too hard to measure, measure a <b>proxy</b> — something easier to see that travels with it. Tarps stand in for broken roofs. 🤖" } },
-  terms: []
+  terms: ["ai-counts-tarps"]
 };

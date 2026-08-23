@@ -27,5 +27,5 @@ export default {
                    en: "Qubit" },
            text: { vi: "bit của máy tính lượng tử. Theo NASA nó biểu diễn được một số 0, một số 1, <i>hoặc một chồng chập</i> của cả hai — chứ không phải \"vừa 0 vừa 1\". 🤖",
                    en: "A <b>qubit</b> is a quantum computer's bit. Per NASA it can represent a zero, a one, <i>or a superposition</i> of both — not \"both 0 and 1\". 🤖" } },
-  terms: []
+  terms: ["qubit-superposition"]
 };

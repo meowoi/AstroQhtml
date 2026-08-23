@@ -51,6 +51,9 @@
   var SRC = {
     nasaWhatIsAi:  { label: "NASA — What is AI? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/what-is-ai-grades-5-8/" },
     aiHubble:      { label: "NASA Science — AI and Hubble Science", url: "https://science.nasa.gov/mission/hubble/science/ai-hubble-science/" },
+    mitLlmMemory:   { label: "MIT News — Teaching large language models to absorb new knowledge", url: "https://news.mit.edu/2025/teaching-large-language-models-to-absorb-new-knowledge-1112" },
+    mitLlmConfident: { label: "MIT News — A better method for identifying overconfident LLMs", url: "https://news.mit.edu/2026/better-method-identifying-overconfident-large-language-models-0319" },
+    mitLlmMechanism: { label: "MIT News — LLMs use a surprisingly simple mechanism to retrieve knowledge", url: "https://news.mit.edu/2024/large-language-models-use-surprisingly-simple-mechanism-retrieve-stored-knowledge-0325" },
     mitAlgorithms: { label: "MIT Media Lab — AI + Ethics for Middle School", url: "https://www.media.mit.edu/projects/ai-ethics-for-middle-school/overview/" },
     /* ⚠️ BANG `SRC` NAY LA BAN THU HAI, KHONG DUNG CHUNG voi `js/quiz-sources.js` —
           nen them mot nguon la phai them o CA HAI CHO. Bo qua cho nay thi `src` cua
@@ -425,7 +428,7 @@
           `check_quiz_bank` đã miễn trừ đúng 5 khoá này. Thẻ thì vẫn có `src` tử tế. */
     {
       id: "term_ai", cat: "ai", ic: "cx-ai",
-      q: ["ai-what-is", "ai-can-do-what", "ai-why-fast"],
+      q: ["ai-what-is", "ai-can-do-what", "ai-why-fast", "ai-see-hear-achievement", "ai-does-not-think-like-human", "ai-language-limited"],
       src: [SRC.nasaWhatIsAi],
       vi: { t: "Trí Tuệ Nhân Tạo", an: "Cái máy học được cách nhận ra mọi thứ",
             sum: "Một loại công nghệ giúp máy có được những khả năng “suy nghĩ” giống con người.",
@@ -441,7 +444,7 @@
 
     {
       id: "term_machine_learning", cat: "ai", ic: "cx-machine-learning",
-      q: ["ml-learns-from-data", "ml-humans-still-check", "ml-trained-by-hubble"],
+      q: ["ml-learns-from-data", "ml-humans-still-check", "ml-trained-by-hubble", "ai-training-data-from-people"],
       src: [SRC.nasaWhatIsAi, SRC.aiHubble],
       vi: { t: "Học Máy", an: "Không dạy luật — cho xem ví dụ",
             sum: "Máy xem rất nhiều dữ liệu rồi tự tìm ra luật để đưa ra dự đoán.",
@@ -488,6 +491,21 @@
             lop loi da mac 4 lan (CHNOPS · "170 km" · Nam Cuc "chau luc cao nhat" · ba
             tieu chi IAU): mot ban tom tat tu dong liet ke du sau ten, ma trang thi khong. */
     {
+      id: "term_chatbot", cat: "ai", ic: "cx-chatbot",
+      q: ["chatbot-does-not-remember", "chatbot-confidently-wrong", "llm-not-fully-understood"],
+      src: [SRC.mitLlmMemory, SRC.mitLlmConfident, SRC.mitLlmMechanism],
+      vi: { t: "Chatbot", an: "Nói mượt không phải bằng chứng",
+            sum: "Máy ghép chữ rất trôi chảy — nhưng nó không nhớ bạn, và có thể sai một cách rất tự tin.",
+            def: "Chatbot chạy trên một MÔ HÌNH NGÔN NGỮ LỚN: nó được huấn luyện trước, rồi mới đưa vào dùng. MIT nói rõ hai điều mà người dùng hay hiểu ngược. Thứ nhất, huấn luyện xong thì “bộ não” của nó ĐỨNG YÊN — nên điều bạn kể hôm nay, sang một cuộc trò chuyện mới nó không nhớ. Thứ hai, nó có thể tạo ra câu trả lời NGHE ĐÁNG TIN NHƯNG KHÔNG CHÍNH XÁC, và ngay cả mô hình giỏi nhất cũng có thể sai một cách rất tự tin.",
+            gr: "Hỏi lại cùng một câu nhiều lần để xem nó có trả lời giống nhau không là cách nhiều người dùng để kiểm — nhưng cách đó chỉ đo ĐỘ TỰ TIN CỦA CHÍNH NÓ, không đo đúng-sai. Và một điều đáng nhớ nữa: dù các mô hình này đã được dùng làm công cụ ở nhiều lĩnh vực, chính các nhà khoa học vẫn chưa hiểu hết cách chúng hoạt động.",
+            dg: ["Huấn luyện trước, dùng sau", "Không nhớ cuộc trò chuyện cũ", "Tự tin ≠ đúng"] },
+      en: { t: "Chatbot", an: "Fluent is not evidence",
+            sum: "It strings words together smoothly — but it does not remember you, and it can be confidently wrong.",
+            def: "A chatbot runs on a LARGE LANGUAGE MODEL: it is trained first, then deployed. MIT is explicit about two things users often get backwards. First, once training ends its “brain” is STATIC — so what you tell it today is gone in a new conversation. Second, it can produce answers that are CREDIBLE BUT INACCURATE, and even the most impressive model might be confidently wrong.",
+            gr: "Asking the same question repeatedly to see whether the answer holds is a common check — but it only measures ITS OWN SELF-CONFIDENCE, not correctness. And one more thing worth remembering: although these models are already used as tools in many areas, scientists themselves still do not fully grasp how they work.",
+            dg: ["Trained first, used after", "No memory of old chats", "Confident ≠ correct"] }
+    },
+    {
       id: "term_ai_ethics", cat: "ai", ic: "cx-ai-ethics",
       q: ["ai-ethics-trustworthy", "ai-ethics-governance"],
       src: [SRC.nasaAiEthics],
@@ -519,7 +537,7 @@
     },
     {
       id: "term_sensor", cat: "robot", ic: "cx-sensor",
-      q: ["sensor", "sensor-robot-sees", "sensor-why-autonomous", "sensor-fans-move"],
+      q: ["sensor", "sensor-robot-sees", "sensor-why-autonomous", "sensor-fans-move", "ai-perceives-with-sensors"],
       src: [SRC.astrobee],
       vi: { t: "Cảm Biến", an: "Giác quan của một cỗ máy",
             sum: "Bộ phận cho robot biết chuyện gì đang xảy ra quanh nó.",

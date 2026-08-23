@@ -23,5 +23,5 @@ export default {
                    en: "Power" },
            text: { vi: "lượng năng lượng mỗi giây. Tín hiệu yếu không có nghĩa là sai — chỉ có nghĩa là phải nghe rất kỹ mới ra. ☄️",
                    en: "energy per second. A weak signal is not a wrong signal — it just has to be listened for very carefully. ☄️" } },
-  terms: []
+  terms: ["voyager-weak-signal"]
 };

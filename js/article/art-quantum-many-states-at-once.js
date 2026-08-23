@@ -27,5 +27,5 @@ export default {
                    en: "Superposition" },
            text: { vi: "khi một hạt được mô tả là ở nhiều trạng thái cùng lúc — chứ không phải là ta chưa biết nó ở trạng thái nào. ☄️",
                    en: "when a particle is described as being in many states at once — not merely that we don't yet know which one. ☄️" } },
-  terms: []
+  terms: ["quantum-superposition"]
 };

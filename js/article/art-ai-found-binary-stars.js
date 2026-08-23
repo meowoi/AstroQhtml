@@ -23,5 +23,5 @@ export default {
                    en: "Citizen scientist" },
            text: { vi: "người thường góp sức vào một nghiên cứu thật — không cần bằng cấp, chỉ cần chịu xem kỹ. 🤖",
                    en: "A <b>citizen scientist</b> is an ordinary person helping with real research — no degree needed, just careful looking. 🤖" } },
-  terms: []
+  terms: ["ai-binary-stars"]
 };

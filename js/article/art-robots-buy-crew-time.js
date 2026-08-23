@@ -27,5 +27,5 @@ export default {
                    en: "Crew time" },
            text: { vi: "số giờ làm việc của người trên trạm — thứ đắt nhất ở đó. Mỗi việc robot nhận là một giờ trả lại cho khoa học. 🤖",
                    en: "the working hours of the people on board — the most expensive thing up there. Every job a robot takes is an hour handed back to science. 🤖" } },
-  terms: []
+  terms: ["robots-free-crew-time"]
 };

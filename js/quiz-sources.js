@@ -96,5 +96,57 @@ window.AstroQQuizSources = {
   star:           { name: "NASA Science — Stars", url: "https://science.nasa.gov/universe/stars/" },
   ucarOzoneLayer:     { name: "UCAR — The Ozone Layer", url: "https://scied.ucar.edu/learning-zone/atmosphere/ozone-layer" },
   ucarStratosphere:     { name: "UCAR — The Stratosphere", url: "https://scied.ucar.edu/learning-zone/atmosphere/stratosphere" },
-  ucarTroposphere:    { name: "UCAR — The Troposphere", url: "https://scied.ucar.edu/learning-zone/atmosphere/troposphere" }
+  ucarTroposphere:    { name: "UCAR — The Troposphere", url: "https://scied.ucar.edu/learning-zone/atmosphere/troposphere" },
+  /* ⚠️ 15 nguon them 23/08/2026 cho 20 cau moi cua nhanh AI · robot · CNTT ·
+     luong tu (24 bai doc con `terms: []` tu 11/08). Ca 15 URL da tai va doc
+     TRONG NGAY qua urllib (200), va cau trich cua tung cau da doi chieu tren
+     chinh van ban do — `check_srcquote.py` doi chieu lai lan nua.
+     ⚠️ `mitAiMiddleSchool` la ten mien `news.mit.edu`, MOI: xem ly do noi
+        OK_HOSTS o check_quiz_bank.py. Khong mo cua cho URL bat ky.
+     ⚠️ `dsnAntennas` (Space Place, cho tre) va `deepSpaceNetwork` (trang ky
+        thuat) la HAI trang khac nhau ve cung Mang Khong Gian Sau — moi trang
+        noi mot dieu bai can, nen giu hai khoa. */
+  mitAiMiddleSchool:    { name: "MIT News - Bringing artificial intelligence into middle school classrooms", url: "https://news.mit.edu/2019/bringing-artificial-intelligence-and-mit-middle-school-classrooms-1230" },
+  aiHelio:              { name: "NASA Science - AI Foundation Model for Heliophysics (Surya)", url: "https://science.nasa.gov/science-research/artificial-intelligence-model-heliophysics/" },
+  aiMetadata:           { name: "NASA Science - AI for Metadata Tagging", url: "https://science.nasa.gov/science-research/artificial-intelligence-metadata-tagging/" },
+  canadarm2:            { name: "NASA - Mobile Servicing System (Canadarm2 and Dextre)", url: "https://www.nasa.gov/international-space-station/mobile-servicing-system/" },
+  curiosity:            { name: "NASA Science - Mars Science Laboratory Curiosity Rover", url: "https://science.nasa.gov/mission/msl-curiosity/" },
+  dsnAntennas:          { name: "NASA Space Place - What Are the Deep Space Network Antennas?", url: "https://spaceplace.nasa.gov/dsn-antennas/en/" },
+  deepSpaceNetwork:     { name: "NASA - What Is the Deep Space Network?", url: "https://www.nasa.gov/directorates/somd/space-communications-navigation-program/what-is-the-deep-space-network/" },
+  ingenuity:            { name: "NASA Science - Ingenuity Mars Helicopter", url: "https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/" },
+  merRovers:            { name: "NASA Science - Mars Exploration Rovers Spirit and Opportunity", url: "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/" },
+  pathfinder:           { name: "NASA Science - Mars Pathfinder and the Sojourner Rover", url: "https://science.nasa.gov/mission/mars-pathfinder/" },
+  quantumComputing:     { name: "NASA - What Is Quantum Computing?", url: "https://www.nasa.gov/technology/computing/what-is-quantum-computing/" },
+  quail:                { name: "NASA - Quantum Artificial Intelligence Laboratory (QuAIL)", url: "https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/nasa-quail/" },
+  robonaut2:            { name: "NASA - Robonaut 2", url: "https://www.nasa.gov/robonaut2/" },
+  roboticHelpers:       { name: "NASA - Science in Space: Robotic Helpers", url: "https://www.nasa.gov/missions/station/iss-research/science-in-space-robotic-helpers/" },
+  superComputing:       { name: "NASA - 6 Things to Know About Supercomputing at NASA", url: "https://www.nasa.gov/news-release/6-things-to-know-about-supercomputing-at-nasa/" },
+  /* ⚠️ 4 nguon them 23/08/2026 cho 5 cau KHAI NIEM AI. Chu du an chot
+     *"NASA khong chuyen ve AI"* — dung voi khai niem nen (7/11 bai AI cua kho
+     la AI TRONG KHONG GIAN, cho do NASA moi la dung nguon).
+     AI4K12 la khung day AI o K-12 cua My, *"jointly sponsored by AAAI and
+     CSTA"*, tai tro boi NSF (grant DRL-1846073) — to chuc hoc thuat, KHONG
+     phai ben ban san pham. ⚠️ CO Y KHONG lay OpenAI/Google/IBM: du an da mot
+     lan phai go `ibm.com/quantum` khoi kho bai doc vi dung ly do do.
+     ⚠️ Ca 4 URL tai va doc TOAN VAN trong ngay (200). ⚠️ `ai4k12.org` tra 403
+        voi bo tai trang tu dong nhung 200 voi User-Agent Chrome day du — bo
+        loc bot, KHONG phai trang chet (bai hoc `jpl.nasa.gov` 09/08).
+     ⚠️ Big Idea 5 (tac dong xa hoi) CO Y khong lay: y do trung `term_algorithmic_bias`
+        da co (2 cau, dan MIT). Them nua la hai cho day cung mot dieu. */
+  ai4k12Perception:     { name: "AI4K12 (AAAI + CSTA) - Big Idea 1: Perception", url: "https://ai4k12.org/big-idea-1-overview/" },
+  ai4k12Reasoning:      { name: "AI4K12 (AAAI + CSTA) - Big Idea 2: Representation & Reasoning", url: "https://ai4k12.org/big-idea-2-overview/" },
+  ai4k12Learning:       { name: "AI4K12 (AAAI + CSTA) - Big Idea 3: Learning", url: "https://ai4k12.org/big-idea-3-overview/" },
+  ai4k12Interaction:    { name: "AI4K12 (AAAI + CSTA) - Big Idea 4: Natural Interaction", url: "https://ai4k12.org/big-idea-4-natural-interaction/" },
+  /* ⚠️ 3 nguon them 23/08/2026 cho nhanh AI TAO SINH / CHATBOT. De bai Dot A
+     (09/08) tung CAM viet ve chu de nay vi khong co nguon ngoai NASA, ma NASA
+     khong noi gi ve chatbot; ba doan duoi day la doan DA MO TRANG RA DOC.
+     ⚠️ Ca ba deu `news.mit.edu` — CO Y, ten mien nay DA nam trong OK_HOSTS tu
+        23/08 nen KHONG phai noi them tem mien nao.
+     ⚠️ Ban tom tat cua bo tra cuu NOI SAI ba lan trong lung tra nay (gan cau
+        "predictive and generative" cho mot trang khong he co chu do; gan chu
+        "tokens" cho mot trang co 0 lan; gop noi dung arXiv chua binh duyet).
+        Lan thu NAM cua lop loi CHNOPS — chi doan da doc tan trang moi duoc dung. */
+  mitLlmMemory:         { name: "MIT News - Teaching large language models to absorb new knowledge", url: "https://news.mit.edu/2025/teaching-large-language-models-to-absorb-new-knowledge-1112" },
+  mitLlmConfident:      { name: "MIT News - A better method for identifying overconfident LLMs", url: "https://news.mit.edu/2026/better-method-identifying-overconfident-large-language-models-0319" },
+  mitLlmMechanism:      { name: "MIT News - LLMs use a surprisingly simple mechanism to retrieve knowledge", url: "https://news.mit.edu/2024/large-language-models-use-surprisingly-simple-mechanism-retrieve-stored-knowledge-0325" },
 };

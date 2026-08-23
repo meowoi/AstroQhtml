@@ -27,5 +27,5 @@ export default {
                    en: "Recommendation algorithm" },
            text: { vi: "phần chọn thứ hiện ra tiếp theo cho bạn. Nó không đọc được ý bạn — nó đoán, từ những gì bạn và người khác đã làm trước đó. 🤖",
                    en: "A <b>recommendation algorithm</b> is the part that picks what you see next. It cannot read your mind — it guesses, from what you and others did before. 🤖" } },
-  terms: []
+  terms: ["ai-already-around-you"]
 };

@@ -27,5 +27,5 @@ export default {
                    en: "Humanoid robot" },
            text: { vi: "robot có hình dạng giống người — thường vì nó phải dùng những dụng cụ vốn làm cho tay người. 🤖",
                    en: "A <b>humanoid robot</b> is shaped like a person — usually because it has to use tools that were made for human hands. 🤖" } },
-  terms: []
+  terms: ["robonaut-first-humanoid"]
 };
