@@ -84,9 +84,18 @@ for name in sys.argv[1:]:
     print("%-26s | %5s dat / %-4s hong | exit %-3s | %5.1fs%s"
           % (name, a, b, r.returncode, dt, flag), flush=True)
     if flag:
-        tail = out.strip().splitlines()[-12:]
-        for ln in tail:
-            print("      " + ln[:170], flush=True)
+        # ⚠️ IN DONG `[HONG]` TRUOC. Truoc day cho nay chi in 12 dong CUOI, ma voi
+        #    cac bo dung `http.server` thi 12 dong cuoi hay la traceback
+        #    `ConnectionAbortedError` (tieng on vo hai) — no de het dong hong that,
+        #    nen cong bao dong ma khong chan doan duoc gi.
+        hong = [l for l in out.splitlines() if "[HONG]" in l]
+        for ln in hong[:14]:
+            print("      " + ln.strip()[:170], flush=True)
+        if not hong:
+            for ln in out.strip().splitlines()[-12:]:
+                print("      " + ln[:170], flush=True)
+        elif len(hong) > 14:
+            print("      … con %d dong [HONG] nua" % (len(hong) - 14), flush=True)
 
 bad = [r for r in rows if r[3] != 0 or r[2] not in ("0",)]
 print()

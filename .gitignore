@@ -77,3 +77,11 @@ img/asset.png
 # nguồn — repo này deploy công khai qua Pages nên đừng để 818 KB byte chết
 # trong đó. Dựng lại: `python scratchpad/bundle_racer.py`.
 scratchpad/racer-test-build.html
+
+# Cache ket qua "URL tra 200" cua `check_quiz_bank.py --urls`, MOT FILE MOI NGAY.
+# La du lieu tam theo may, khong phai ket qua kiem thu — commit vao thi bo do o
+# may khac se doc mot cache cua ngay khac roi BO QUA phan goi mang that.
+scratchpad/_urlcache/
+# Van ban nguon da chuan hoa do `fetch_srcs.py`/`fetch_ai_srcs.py` tai ve de
+# CHON cau trich. Ban sao cua trang web, sinh lai duoc, khong phai nguon su that.
+scratchpad/_src/

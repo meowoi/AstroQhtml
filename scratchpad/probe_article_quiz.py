@@ -55,36 +55,32 @@ CO_TERMS = [
     # ⚠️ Nam bai Dot 1 noi 22/08/2026. ⚠️⚠️ CAU "day la nam bai CUOI cung con
     #    thieu `terms`, tu day 67/67 bai doc deu co duong sang dung bo cau" TRUOC
     #    DAY GHI O DAY LA SAI — do lai 23/08/2026 thi con 24 bai `terms: []`
-    #    (nhanh AI / robot / sieu may tinh / luong tu, them tu 11/08). Xem
-    #    `MIEN_TERMS` duoi day.
+    #    (nhanh AI / robot / sieu may tinh / luong tu, them tu 11/08).
+    #    ⚠️ 24 bai do NAY DA NOI HET (23/08/2026) — xem khoi ⚠️⚠️ ngay duoi.
+    #    Giu doan nay lam LICH SU: no ghi lai mot cau khang dinh SAI da tung
+    #    song trong file nay, va cach no song duoc (phep kiem cung sai).
     ("jwst", ["webb-sees-infrared", "webb-looks-back-13-billion"]),
     ("lib-saturn", ["saturn-rings-ice-and-rock", "cassini-13-years-at-saturn"]),
     ("lib-andromeda", ["earth-in-milky-way", "andromeda-nearest-large-galaxy"]),
     ("lib-gaia", ["gaia-3d-map-of-galaxy", "gaia-measures-position-and-motion"]),
     ("lib-mars", ["perseverance-seeks-ancient-life", "moxie-oxygen-from-mars-air"]),
+    # ⚠️ Hai bai noi 23/08/2026, moi bai mot nhanh (AI · robot) — hai nhanh
+    #    vua viet 20 cau moi, nen bo do dau-cuoi phai cham vao chung.
+    ("art-ai-counts-storm-damage", ["ai-counts-tarps"]),               # AI
+    ("art-canadarm2-robot-arm", ["canadarm2-two-hands"]),              # robot
 ]
-# ⚠️⚠️ 24 BAI CON KHAI `terms: []` — do 23/08/2026, TAT CA them tu 11/08/2026.
-#    Chung mo DE NGAU NHIEN khi tre bam "LAM QUIZ BAI NAY" (library.html:442).
-#    Ly do khong noi duoc ngay: bank KHONG CO cau nao cho nhanh AI / robot /
-#    sieu may tinh / luong tu, nen day la viec VIET NOI DUNG CO NGUON, khong phai
-#    viec sua ma. Ghi ra day de con so khong bi mat lan nua.
-# ⚠️ DANH SACH NAY CHI DUOC TEO LAI. Noi `terms` cho bai nao thi PHAI xoa slug do
-#    khoi day — phep kiem "danh sach mien tru con DUNG" o muc [2] bao hong neu
-#    khong, chinh la de danh sach khong muc ra thanh mot cho de rac.
+# ⚠️⚠️ TU 23/08/2026: 67/67 BAI DOC DEU CO `terms` KHONG RONG — `MIEN_TERMS` RONG.
+#    Truoc do 24 bai (nhanh AI · robot · sieu may tinh · luong tu, them tu
+#    11/08) khai `terms: []` va mo DE NGAU NHIEN khi tre bam "LAM QUIZ BAI
+#    NAY" (library.html:442). Cho ra la mot LO HONG NOI DUNG chu khong phai
+#    loi ma: bank khong co cau nao cho bon nhanh do, nen phai VIET 20 cau co
+#    nguon (+ 4 bai noi vao cau da co). Da lam, nen danh sach mien tru rong.
+# ⚠️ GIU CAI KHUNG RONG NAY, dung xoa: no la cho mien tru mot bai MOI them ma
+#    chua kip viet cau. Phep kiem "chi duoc TEO LAI" o muc [2] van con rang —
+#    them slug vao day thi phai ghi ly do va phai co ke hoach xoa.
 MIEN_TERMS = {
-    "art-ai-already-around-you", "art-ai-counts-storm-damage",
-    "art-ai-finds-asteroids-hubble", "art-ai-found-binary-stars",
-    "art-ai-maps-dark-craters", "art-ai-predicts-solar-flares",
-    "art-ai-tags-nasa-data", "art-astrobee-flying-robots",
-    "art-autonomous-vs-remote", "art-canadarm2-robot-arm",
-    "art-curiosity-lab-on-wheels", "art-how-data-gets-home",
-    "art-ingenuity-first-flight-mars", "art-opportunity-distance-record",
-    "art-quantum-many-states-at-once", "art-robonaut-first-humanoid",
-    "art-robots-buy-crew-time", "art-sojourner-first-rover",
-    "art-supercomputer-climate", "art-supercomputer-galaxy-vr",
-    "art-three-stations-120-degrees", "art-voyager-signal-20-billion",
-    "art-what-is-ai-nasa", "lib-qubit",
 }
+
 
 
 def check(nhan, dk, ct=""):
