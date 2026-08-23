@@ -8,7 +8,7 @@ chặng game"*.
 ⚠️⚠️ ĐIỀU BỘ NÀY BẢO VỆ MẠNH NHẤT: **trang không được biến thành máy in chứng nhận
    mang tên bất kỳ.** Một tờ giấy trông như thật mà không chứng nhận điều gì là dạng
    nặng nhất của lỗi "hứa thứ hệ thống không giữ". Nên:
-     · chế độ `?preview=1` nhận tên từ URL thì PHẢI in kèm dấu "MẪU",
+     · chế độ `?preview=1` nhận tên từ URL thì PHẢI in kèm dấu chìm "Approved",
      · và dấu đó phải nằm TRONG tờ giấy để nó đi cả vào bản in (overlay của màn hình
        thì in ra tờ sạch — tức mất hẳn hàng rào).
 
@@ -50,7 +50,7 @@ def txt(pg, sel):
 with sync_playwright() as p:
     b = p.chromium.launch()
 
-    # ═══════════ [1] Xem thử: vẽ đúng, và CÓ dấu MẪU ═══════════
+    # ═══════════ [1] Xem thử: vẽ đúng, và CÓ dấu chìm ═══════════
     print("\n=== [1] Chế độ xem thử (?preview=1) ===")
     for lang, rank, name, want_rank, want_range in (
             ("vi", "cadet", "Nguyễn Trần Khánh Linh", "Học Viên", ("6", "10")),
@@ -80,7 +80,7 @@ with sync_playwright() as p:
             return [String(lo),String(hi)];}""", rank)
         check("[%s] khoảng cấp khớp js/ranks.js" % lang, list(rg) == list(want_range),
               str(rg))
-        check("[%s] CÓ dấu MẪU" % lang,
+        check("[%s] CÓ dấu chìm" % lang,
               pg.locator("#c-sample").count() == 1 and
               not pg.eval_on_selector("#c-sample", "e=>e.hidden"))
         check("[%s] dải nhắc nói rõ đây là bản xem thử" % lang,
@@ -137,18 +137,22 @@ with sync_playwright() as p:
     pg.click('.lang-switch button[data-lang="en"]')
     pg.wait_for_timeout(900)
     en = snap()
+    # ⚠️ `sample` CỐ Ý giống nhau ở hai bản: dấu chìm là một từ tiếng Anh
+    #    ("Approved") dùng chung, không dịch. Mọi chuỗi CÒN LẠI phải đổi.
+    KHONG_DICH = {"sample"}
     khac = [k for k in vi if vi[k] and vi[k] != en[k]]
-    giong = [k for k in vi if vi[k] and vi[k] == en[k]]
+    giong = [k for k in vi if vi[k] and vi[k] == en[k] and k not in KHONG_DICH]
     check("bấm EN thì MỌI chuỗi trên tờ giấy đổi theo (không sót chuỗi gõ cứng)",
           not giong, "chưa đổi: %s" % giong)
     print("      đổi được %d/%d chuỗi: %s" % (len(khac), len([k for k in vi if vi[k]]),
                                               ", ".join(khac)))
     check("tiêu đề bản EN đúng", "CERTIFICATE" in en["h"].upper(), en["h"][:50])
-    check("dấu MẪU cũng dịch (MẪU → SAMPLE)", en["sample"].upper() == "SAMPLE",
-          en["sample"])
+    check("dấu chìm đọc là 'Approved' ở CẢ HAI bản (không dịch)",
+          vi["sample"] == "Approved" and en["sample"] == "Approved",
+          "vi=%s / en=%s" % (vi["sample"], en["sample"]))
     ctx.close()
 
-    # ═══════════ [2] Dấu MẪU phải ĐI VÀO BẢN IN ═══════════
+    # ═══════════ [2] Dấu chìm phải ĐI VÀO BẢN IN ═══════════
     print("\n=== [2] Bản in (emulate_media print) ===")
     ctx = b.new_context(viewport={"width": 1280, "height": 900})
     pg = ctx.new_page()
@@ -169,8 +173,8 @@ with sync_playwright() as p:
     check("bản in ẨN dãy nút", d["acts"] is False, str(d["acts"]))
     check("bản in ẨN dải nhắc", d["note"] is False, str(d["note"]))
     check("bản in VẪN có tờ giấy", d["cert"] is True, str(d["cert"]))
-    check("dấu MẪU nằm TRONG tờ giấy (đi cả vào bản in)", d["sampleInsideCert"])
-    check("dấu MẪU HIỆN ở bản in", d["sampleVisible"])
+    check("dấu chìm nằm TRONG tờ giấy (đi cả vào bản in)", d["sampleInsideCert"])
+    check("dấu chìm HIỆN ở bản in", d["sampleVisible"])
     # ⚠️ Khổ giấy phải khai trong CSS, không để người dùng tự chọn "ngang".
     css = pg.evaluate("""async ()=>{
         const r = await fetch("css/certificate.css"); return await r.text(); }""")
@@ -192,7 +196,7 @@ with sync_playwright() as p:
     check("0 lỗi trang", not errs, str(errs[:1]))
     check("KHÔNG vẽ tên nào (không bịa)", txt(pg, "#c-name") in ("—", ""),
           txt(pg, "#c-name"))
-    check("KHÔNG có dấu MẪU (đây không phải bản xem thử)",
+    check("KHÔNG có dấu chìm (đây không phải bản xem thử)",
           pg.eval_on_selector("#c-sample", "e=>e.hidden"))
     check("nút Xuất PDF bị TẮT khi chưa có dữ liệu",
           pg.eval_on_selector("#btn-print", "e=>e.disabled"))

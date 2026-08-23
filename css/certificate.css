@@ -164,11 +164,14 @@
   font-size:1.08cqw;letter-spacing:.12em;text-transform:uppercase;
   color:var(--cert-soft);}
 
-/* ── DẤU "MẪU" ──
+/* ── DẤU CHÌM "Approved" ──
    ⚠️⚠️ BẮT BUỘC Ở CHẾ ĐỘ XEM TRƯỚC. Trang này nhận tên từ `?name=` để chủ dự án xem
-      thử được ngay. Không có dấu này thì nó thành một cái máy in chứng nhận mang tên
-      bất kỳ — tức một tờ giấy trông như thật nhưng không chứng nhận điều gì. Dấu in
-      ra CÙNG với tờ giấy (nằm trong `.cert`, không phải overlay của màn hình). */
+      thử được ngay. Dấu in ra CÙNG với tờ giấy (nằm trong `.cert`, không phải overlay
+      của màn hình) — overlay thì in ra tờ sạch.
+   ⚠️ "Approved" dài 8 ký tự chứ không phải 3 như bản "MẪU" cũ, nhưng ĐÃ ĐO ngày
+      23/08/2026 (Playwright, cả `screen` lẫn `print`): 13cqw cho hộp chữ **70% bề
+      ngang tờ giấy**, còn lề 173px (màn hình) / 193px (bản in) — vừa khít, giữ
+      nguyên cỡ. Đổi sang từ dài hơn thì ĐO LẠI, đừng chỉnh mò. */
 .cert-sample{position:absolute;inset:0;z-index:4;display:flex;align-items:center;
   justify-content:center;pointer-events:none;}
 .cert-sample span{font-family:var(--font-display,inherit);font-weight:800;

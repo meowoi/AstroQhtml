@@ -208,8 +208,8 @@
       </div>
     </div>
 
-    <!-- Dấu MẪU — chỉ hiện ở chế độ xem trước. Xem cảnh báo ở css/certificate.css. -->
-    <div class="cert-sample" id="c-sample" hidden><span data-i18n="sample">MẪU</span></div>
+    <!-- Dấu chìm bản xem thử — chỉ hiện ở chế độ xem trước. Xem cảnh báo ở css/certificate.css. -->
+    <div class="cert-sample" id="c-sample" hidden><span data-i18n="sample">Approved</span></div>
   </article>
 </div>
 
@@ -231,10 +231,10 @@
       body:"đã hoàn thành chặng huấn luyện <b>{rank}</b> (cấp {from}–{to}) trong lộ trình huấn luyện phi hành gia của astroQ, qua các nhiệm vụ khám phá, bài đọc và Đấu Trường Kiến Thức.",
       k_date:"Ngày hoàn thành", k_code:"Mã chứng nhận", k_sign:"Ký tên",
       sign:"Mèo Comet & Robot Byte", sign_who:"Đồng sáng lập astroQ",
-      sample:"MẪU",
+      sample:"Approved",
       note_real:"Bấm “Xuất PDF” rồi chọn <b>Lưu thành PDF</b> trong hộp in của trình duyệt.",
       /* ⚠️ Câu này PHẢI nói rõ đây là bản xem thử — xem cảnh báo ở `paintSample`. */
-      note_preview:"Đây là <b>bản xem thử</b> để duyệt mẫu, nên có dấu “MẪU” in kèm. Tờ chứng nhận thật lấy tên và cấp độ từ tài khoản của trẻ.",
+      note_preview:"Đây là <b>bản xem thử</b> để duyệt mẫu, nên có dấu chìm “Approved” in kèm. Tờ chứng nhận thật lấy tên và cấp độ từ tài khoản của trẻ.",
       note_none:"Chưa đọc được cấp độ của trẻ. Hãy <b>đăng nhập</b> rồi mở lại trang này — chứng nhận luôn lấy dữ liệu từ tài khoản, không tự điền.",
       note_early:"Con chưa hoàn thành chặng huấn luyện nào, nên chưa có chứng nhận. Cứ khám phá tiếp — xong chặng đầu là tờ giấy này có tên con.",
       note_notyet:"Chặng con yêu cầu <b>chưa hoàn thành</b>, nên trang hiển thị chặng gần nhất con đã xong."
@@ -250,9 +250,9 @@
       body:"has completed the <b>{rank}</b> training stage (levels {from}–{to}) of astroQ's astronaut training path, through exploration missions, reading and the Knowledge Arena.",
       k_date:"Date completed", k_code:"Certificate code", k_sign:"Signed",
       sign:"Comet the Cat & Byte the Robot", sign_who:"astroQ co-founders",
-      sample:"SAMPLE",
+      sample:"Approved",
       note_real:"Press “Export PDF”, then choose <b>Save as PDF</b> in your browser's print dialog.",
-      note_preview:"This is a <b>preview</b> for reviewing the template, so it carries a “SAMPLE” watermark. A real certificate takes the name and level from the child's account.",
+      note_preview:"This is a <b>preview</b> for reviewing the template, so it carries an “Approved” watermark. A real certificate takes the name and level from the child's account.",
       note_none:"We couldn't read your child's level. Please <b>log in</b> and reopen this page — a certificate always takes its data from the account, it never fills itself in.",
       note_early:"Your child hasn't finished a training stage yet, so there's no certificate. Keep exploring — the first finished stage puts their name on this page.",
       note_notyet:"The stage you asked for is <b>not finished yet</b>, so this shows the most recent stage your child has completed."
@@ -270,13 +270,13 @@
      · THẬT   — tên và cấp độ đọc từ SERVER (`AstroQProgress.load()` → hồ sơ + cấp).
                 Không đọc được thì trang NÓI RA và không vẽ tên nào.
      · XEM THỬ (`?preview=1`) — cho phép truyền `name`/`rank` qua URL để duyệt mẫu,
-                nhưng BẮT BUỘC in kèm dấu "MẪU".
+                nhưng BẮT BUỘC in kèm dấu chìm "Approved".
 
      Vì sao phải tách: nếu tên lấy từ URL mà không có dấu, trang này thành một cái máy
      in chứng nhận mang tên bất kỳ — một tờ giấy trông như thật nhưng không chứng nhận
      điều gì. Dự án đã có luật "đừng hứa thứ hệ thống không giữ"; một chứng nhận giả
      là dạng nặng nhất của lỗi đó.
-     ⚠️ Dấu "MẪU" nằm TRONG `.cert` nên nó đi cả vào bản in. Đặt nó thành overlay của
+     ⚠️ Dấu chìm nằm TRONG `.cert` nên nó đi cả vào bản in. Đặt nó thành overlay của
         màn hình là in ra tờ giấy sạch — tức mất hẳn hàng rào.
      ════════════════════════════════════════════════════════════════════ */
   var preview = Q.get("preview") === "1";
