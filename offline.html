@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Trang này CHỈ hiện khi service worker không lấy được trang thật VÀ trong
+     cache cũng không có bản nào. Nó không phải một trang để trẻ đi tới, nên
+     noindex,nofollow (khác 37 trang app kia dùng noindex,follow). -->
+<meta name="robots" content="noindex,nofollow" />
+<title>AstroQ — Mất kết nối</title>
+
+<!-- ⚠️⚠️ ĐƯỜNG DẪN PHẢI TUYỆT ĐỐI. Service worker trả trang này MÀ KHÔNG đổi URL, nên trẻ đang ở
+     `/wiki/x.html` thì `css/offline.css` phân giải thành `/wiki/css/offline.css` → 404
+     → trang lỗi hiện ra không có kiểu dáng, đúng lúc cần nó nhất. `file://` không phải
+     ngoại lệ ở đây: service worker không chạy trên `file://` bao giờ. -->
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/offline.css" />
+<!-- ⚠️ CHỈ ĐƯỢC NẠP THỨ ĐÃ NẰM TRONG PRECACHE (xem SHELL ở scratchpad/gen_sw.py).
+     Nạp một file ngoài danh sách đó thì đúng lúc cần nó nhất — lúc host hỏng —
+     trang này hiện ra không có kiểu chữ hoặc không có kiểu dáng. -->
+</head>
+<body>
+
+<div class="off-wrap">
+  <img class="off-logo" src="/img/astroq-logo.png" alt="astroQ" width="392" height="114" />
+
+  <div class="off-card">
+    <span class="off-tag" data-i18n="tag">[ MẤT KẾT NỐI ]</span>
+
+    <h1 data-i18n="h">Trạm mặt đất chưa gọi được</h1>
+
+    <!-- ⚠️ NÓI ĐÚNG NGUYÊN NHÂN, đừng gộp thành "mất mạng". Ca hay xảy ra nhất
+         không phải máy trẻ mất mạng mà là máy chủ đang dựng lại bản mới. Bảo
+         trẻ đi kiểm wifi trong khi wifi không hỏng là bảo nó sửa một thứ không
+         hỏng — cùng bài học với ba lý do `sent:false` của email phụ huynh. -->
+    <p data-i18n-html="p">Máy chủ đang bận một lát, hoặc máy của bạn vừa mất mạng.
+      Tiến độ của bạn <b>vẫn nguyên</b> — nó được lưu trên máy chủ, không nằm ở
+      trang này.</p>
+
+    <div class="off-acts">
+      <button type="button" class="off-btn" id="retry" data-i18n="retry">Thử lại</button>
+      <a class="off-link" href="/dashboard.html" data-i18n="hub">Về Trung Tâm Điều Hướng</a>
+    </div>
+
+    <p class="off-note" data-i18n="note">Nếu vẫn chưa được, chờ một hai phút rồi
+      thử lại nhé — thường là máy chủ đang cập nhật.</p>
+  </div>
+
+  <div class="lang-switch off-lang" aria-label="Ngôn ngữ">
+    <button type="button" data-lang="vi" class="active">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</div>
+
+<script src="/js/ui-common.js"></script>
+<script>
+(function () {
+  var $ = AstroQ.$;
+
+  var I18N = {
+    vi: {
+      tag: "[ MẤT KẾT NỐI ]",
+      h: "Trạm mặt đất chưa gọi được",
+      p: "Máy chủ đang bận một lát, hoặc máy của bạn vừa mất mạng. Tiến độ của bạn <b>vẫn nguyên</b> — nó được lưu trên máy chủ, không nằm ở trang này.",
+      retry: "Thử lại",
+      hub: "Về Trung Tâm Điều Hướng",
+      note: "Nếu vẫn chưa được, chờ một hai phút rồi thử lại nhé — thường là máy chủ đang cập nhật.",
+      title: "AstroQ — Mất kết nối"
+    },
+    en: {
+      tag: "[ NO SIGNAL ]",
+      h: "Can't reach ground control",
+      p: "The server is busy for a moment, or your device just lost its connection. Your progress is <b>safe</b> — it lives on the server, not on this page.",
+      retry: "Try again",
+      hub: "Back to Navigation Hub",
+      note: "If it still doesn't work, wait a minute or two and try again — the server is usually just updating.",
+      title: "AstroQ — No signal"
+    }
+  };
+
+  var LANG = AstroQ.getLang();
+
+  function applyLang(l) {
+    LANG = l;
+    var d = I18N[l] || I18N.vi;
+    /* `p` chứa thẻ <b> nên phải qua data-i18n-html; applyTexts lo cả hai. */
+    AstroQ.applyTexts(function (k) { return d[k]; });
+    document.title = d.title;
+  }
+
+  applyLang(LANG);
+  AstroQ.initLang(applyLang);
+
+  $("retry").addEventListener("click", function () {
+    /* ⚠️ `location.reload()` có thể lấy lại chính trang offline này từ cache.
+       Điều trẻ muốn là trang NÓ ĐANG ĐỊNH XEM, nên đi lại đúng địa chỉ đó. */
+    location.replace(location.href);
+  });
+})();
+</script>
+
+</body>
+</html>

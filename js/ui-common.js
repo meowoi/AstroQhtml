@@ -205,7 +205,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.23.6";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.08.23.7";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 
@@ -348,4 +348,39 @@
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", mountVersion);
   } else { mountVersion(); }
+
+  /* ══════════════ ĐĂNG KÝ SERVICE WORKER ══════════════
+     ⚠️⚠️ VÌ SAO CÓ: 23/08/2026 chủ dự án bấm vào thẻ "Bản đồ Hệ Mặt Trời" và
+        nhận **trang lỗi 5xx của chính GitHub** (con kỳ lân) ở
+        `astroq.org/mission-map.html`. File có thật, trả 200; nó rơi đúng cửa
+        sổ GitHub Pages tráo bản dựng sau một cú push. Không sửa được từ mã của
+        mình; thứ chặn được là một lớp đệm nằm TRONG trình duyệt.
+        Luật + 4 quyết định thiết kế: xem đầu `scratchpad/gen_sw.py`.
+
+     ⚠️⚠️ ĐĂNG KÝ Ở `load`, TUYỆT ĐỐI KHÔNG sớm hơn. File này nạp trong <head>
+        của cả 37 trang, mà vừa có một đợt cắt đường tải của dashboard (23/08:
+        lượt quay lại 1.372 → 29 ms). Đặt việc cài service worker vào đường tải
+        đó là tự tay trả lại phần vừa cắt được.
+
+     ⚠️ `/sw.js` đường TUYỆT ĐỐI: phạm vi của service worker là thư mục chứa
+       chính nó, nên nạp bằng đường tương đối từ `/wiki/` sẽ cho ra phạm vi
+       `/wiki/` và không che được phần còn lại của app.
+
+     ⚠️ `?nosw=1` để bỏ qua đăng ký — cần cho lúc đo và cho lúc đi tìm xem một
+       lỗi có phải do lớp đệm gây ra hay không. Công tắc tắt HẲN thì khác: xoá
+       `sw.js` khỏi repo, trình duyệt gặp 404 ở script service worker lúc kiểm
+       cập nhật thì TỰ GỠ ĐĂNG KÝ. */
+  function regSW(){
+    try{
+      if(!("serviceWorker" in navigator)) return;
+      /* Service worker chỉ chạy ở ngữ cảnh an toàn. `file://` và http trên một
+         tên miền thật thì không — gọi register ở đó chỉ để nhận một lỗi đỏ
+         trong console, mà phép kiểm "0 lỗi trang" của dự án sẽ báo oan. */
+      if(!global.isSecureContext) return;
+      if(location.search.indexOf("nosw=1") >= 0) return;
+      navigator.serviceWorker.register("/sw.js").catch(function(){});
+    }catch(e){}
+  }
+  if(document.readyState === "complete"){ regSW(); }
+  else { global.addEventListener("load", regSW); }
 })(window);

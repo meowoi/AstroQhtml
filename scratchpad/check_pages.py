@@ -4387,6 +4387,15 @@ for _bad in ("fetch(", "XMLHttpRequest", "sendBeacon", "new Image(", "document.c
 #    dau, nen mot nguoi tra nhieu nhat ~7,7 KB MOT LAN cho ca phien, khong phai moi
 #    trang. Doi lai: khong con cua nao lam mat nhan ma khong ai biet.
 _utm_want = set(_UTM_PAGES)
+# ⚠⚠ `offline.html` DUOC MIEN, va day la mot quyet dinh chu khong phai bo sot.
+#    Service worker CHI tra trang do cho khach QUAY LAI (luot dau chua co
+#    service worker nao nen tre van nhan con ky lan cua GitHub), ma khach quay
+#    lai thi nhan cham-dau-tien DA duoc ghi tu luot truoc — beacon giu nhan dau,
+#    bo qua nhan sau. Doi lai, keo utm.js + utm-beacon.js + api.js vao day la
+#    phai them ca ba vao PRECACHE (khong thi chung 404 dung luc host hong), tuc
+#    tra byte cho MOI tre o MOI lan doi ban dung, cho mot luot den gan nhu chac
+#    chan da duoc dem. Xem quyet dinh ③ o dau scratchpad/gen_sw.py.
+_utm_want.discard("offline.html")
 _utm_has = set()
 for _pg in _UTM_PAGES:
     _p = os.path.join(ROOT, _pg)
@@ -4462,7 +4471,9 @@ check("[29] client HIEN cot luot den", 'x.visits' in _adm and 'Lượt đến' i
 #    ai bam". Danh sach dong tu glob nen them trang moi la tu duoc hoi.
 # ⚠️ Phu ca `en/index.html` (duong dan `../js/`), nen doi chieu bang chuoi "js/utm-beacon.js"
 #    chu khong phai tien to tuyet doi.
-_thieu_bea = [x for x in _UTM_PAGES if "js/utm-beacon.js" not in rd(x)]
+# ⚠ Dung `_utm_want` (da bo `offline.html`) chu khong phai `_UTM_PAGES` tho —
+#    ly do mien trang do ghi o phep kiem utm.js ngay tren.
+_thieu_bea = [x for x in sorted(_utm_want) if "js/utm-beacon.js" not in rd(x)]
 check("[29] MOI trang nap js/utm-beacon.js", not _thieu_bea,
       "thieu: %s" % _thieu_bea)
 # ⚠️ Luoi do `fbclid`: quang cao quen gan nhan thi van biet la den tu Meta. Medium
@@ -4830,6 +4841,131 @@ for _f, _pre in (("index.html", "js/"), ("en/index.html", "../js/")):
           _t.index("index-gate.js") > _t.index("ui-common.js"))
     check("%s: gate nap SAU utm.js" % _f,
           _t.index("index-gate.js") > _t.index("utm.js"))
+
+# ═════════ [37] SERVICE WORKER: lop dem khi GitHub Pages tra 5xx ═════════
+# ⚠️⚠️ VI SAO CO MUC NAY: 23/08/2026 chu du an bam vao the "Ban do He Mat Troi"
+#    va nhan **trang loi 5xx cua chinh GitHub** (con ky lan) o
+#    `astroq.org/mission-map.html`. File co that, tra 200; no roi dung cua so
+#    GitHub Pages trao ban dung sau mot cu push. Khong sua duoc tu ma cua minh;
+#    thu chan duoc la mot lop dem nam TRONG trinh duyet.
+#    ⚠️ Trang loi rieng (404.html) KHONG chua duoc ca nay: Pages chi dung
+#    `404.html` cho 404; loi 5xx do BIEN cua GitHub tra TRUOC khi toi noi dung
+#    cua minh. Service worker thi dung truoc ca bien do.
+#    Luat + 4 quyet dinh thiet ke: xem dau `scratchpad/gen_sw.py`.
+#    Phep do hanh vi that: `scratchpad/smoke_sw.py` (22 phep kiem, co
+#    `pha_sw.py` chung minh no co rang).
+print("\n=== [37] Service worker: lop dem khi host tra 5xx ===")
+
+_sw = rd("sw.js")
+_uic37 = rd("js/ui-common.js")
+_off = rd("offline.html")
+
+check("[37] co sw.js o GOC (pham vi phai phu ca app)", bool(_sw.strip()))
+
+# ── Ten cache = so hieu ban dung ──────────────────────────────────────────
+import re as _re37
+_mv = _re37.search(r'var\s+VERSION\s*=\s*"([0-9.]+)"', _uic37)
+_sv = _re37.search(r'var\s+VERSION\s*=\s*"([0-9.]+)"', _sw)
+check("[37] sw.js khai VERSION", bool(_sv))
+check("[37] VERSION cua sw.js KHOP js/ui-common.js (sinh lai bang gen_sw.py)",
+      bool(_mv and _sv) and _mv.group(1) == _sv.group(1),
+      "ui-common=%s sw=%s" % (_mv.group(1) if _mv else "?", _sv.group(1) if _sv else "?"))
+check("[37] ten cache mang so hieu ban dung",
+      'var CACHE = "astroq-" + VERSION' in _sw)
+
+_sw_nc = _no_comments(_sw)
+
+# ── MANG-TRUOC, khong bao gio cache-first ─────────────────────────────────
+# ⚠️ Cache-first nhanh hon nhung no CHINH LA cach ghim mot ban cu, va du an da
+#    tra gia cho chuyen phien ban dung yen (06/08/2026 ban that dung o ban cu
+#    gan mot ngay). Nang hon: HTML moi + JS cu trong cung mot luot la lech
+#    phien ban, dung lop loi vua mat mot gio ngay 23/08.
+_rw = _sw_nc[_sw_nc.index("respondWith(") + len("respondWith("):]
+check("[37] MANG-TRUOC: thu DAU TIEN trong respondWith la `fetch(req)`",
+      _rw.lstrip().startswith("fetch(req)"), _rw.strip()[:40])
+check("[37] KHONG co nhanh cache-first (`caches.match` trong `respondWith` truoc fetch)",
+      "respondWith(\n      caches.match" not in _sw_nc
+      and "respondWith(caches.match" not in _sw_nc)
+
+# ── 5xx phai bi coi la hong; 404 thi KHONG ────────────────────────────────
+# ⚠️ GitHub tra 503 KEM HTML con ky lan — mot phan hoi THANH CONG o tang mang.
+#    Chi boc try/catch la tra nguyen con ky lan cho tre.
+check("[37] xet `status >= 500` (5xx la phan hoi thanh cong o tang mang)",
+      "status >= 500" in _sw_nc)
+# ⚠️ 404 phai 404 that: mot trang da xoa khong duoc song mai trong cache cua tre.
+check("[37] KHONG lui ve cache o 4xx (trang da xoa phai 404 that)",
+      "status >= 400" not in _sw_nc)
+
+# ── Khong cham origin khac va khong cham duong dong ───────────────────────
+check("[37] chi xu ly same-origin (API + Firebase de nguyen)",
+      "url.origin !== self.location.origin" in _sw_nc)
+check("[37] chi xu ly GET (POST/PUT de nguyen)",
+      'req.method !== "GET"' in _sw_nc)
+# ⚠️ `NEVER` khai bang REGEX (`/^\\/me\\//`) nen chuoi "/me/" KHONG ton tai
+#    nguyen van trong file — phep kiem dau cua toi tim chuoi tho va bao hong
+#    trong khi sw.js dung. Doc dung khoi khai roi tim theo TU.
+_never = _re37.search(r"var NEVER = \[(.*?)\];", _sw)
+check("[37] doc duoc danh sach duong KHONG duoc cache", bool(_never))
+_nv = _never.group(1) if _never else ""
+for _p in ("me", "auth", "admin", "visit"):
+    check("[37] khai duong KHONG duoc cache: /%s" % _p, _p in _nv, _nv[:70])
+
+# ── Xoa cache ban dung cu ─────────────────────────────────────────────────
+check("[37] `activate` xoa cache cua ban dung khac (chong phinh + chong ghim)",
+      "caches.delete(k)" in _sw_nc and "k !== CACHE" in _sw_nc)
+check("[37] skipWaiting + clients.claim (ban moi nam quyen NGAY)",
+      "skipWaiting()" in _sw_nc and "clients.claim()" in _sw_nc)
+
+# ── install khong duoc do vao mot cu addAll ───────────────────────────────
+# ⚠️ cache.addAll tu choi ca cum khi MOT url hong -> service worker khong bao gio
+#    activate, tuc mat sach lop dem vi mot file le.
+check("[37] install KHONG dung cache.addAll", "addAll" not in _sw_nc)
+
+# ── Dang ky: o `load`, duong tuyet doi, co cua thoat ──────────────────────
+# ⚠️ Dot cat duong tai dashboard 23/08 ha luot quay lai 1.372 -> 29 ms. Dat viec
+#    cai service worker vao duong tai do la tu tay tra lai phan vua cat duoc.
+_uic_nc = _no_comments(_uic37)
+check("[37] dang ky o su kien `load`, khong som hon",
+      'addEventListener("load", regSW)' in _uic_nc)
+check("[37] KHONG dang ky o DOMContentLoaded",
+      'DOMContentLoaded", regSW' not in _uic_nc)
+check("[37] nap /sw.js bang duong TUYET DOI (pham vi phai phu ca app)",
+      'register("/sw.js")' in _uic_nc)
+check("[37] xet isSecureContext (file:// va http khong chay duoc)",
+      "isSecureContext" in _uic_nc)
+check("[37] co cua thoat ?nosw=1", "nosw=1" in _uic_nc)
+
+# ── offline.html: duong dan TUYET DOI + chi nap thu da precache ───────────
+# ⚠️ Service worker tra trang nay MA KHONG doi URL, nen tre dang o `/wiki/x.html`
+#    thi duong tuong doi phan giai thanh `/wiki/css/...` -> 404 -> trang loi hien
+#    ra khong co kieu dang, dung luc can no nhat.
+_off_assets = _re37.findall(r'(?:href|src)="([^"]+)"', _off)
+_off_local = [u for u in _off_assets
+              if not u.startswith(("http", "#", "mailto:", "data:"))]
+_off_rel = [u for u in _off_local if not u.startswith("/")]
+check("[37] offline.html: moi duong dan noi bo la TUYET DOI",
+      not _off_rel, "con tuong doi: %s" % _off_rel)
+
+# Cai vo khai o gen_sw.py phai chua DU thu offline.html nap.
+_gs = rd("scratchpad/gen_sw.py")
+_shell = _re37.search(r"SHELL\s*=\s*\[(.*?)\]", _gs, _re37.S)
+check("[37] doc duoc danh sach vo o gen_sw.py", bool(_shell))
+_shell_set = set(_re37.findall(r'"([^"]+)"', _shell.group(1))) if _shell else set()
+_need = set(u.lstrip("/") for u in _off_local if u.endswith((".css", ".js", ".png")))
+check("[37] moi asset offline.html nap DEU nam trong precache",
+      _need <= _shell_set, "thieu: %s" % sorted(_need - _shell_set))
+check("[37] offline.html nam trong precache", "offline.html" in _shell_set)
+
+# ⚠️ Han che precache: 37 trang HTML = 1.586 KB, cong css/ 670 KB + js/ 1.002 KB
+#    la 3,26 MB — ma stamp_version.py chay truoc MOI lan push nen ten cache doi
+#    theo, tuc tai lai toan bo moi lan push. Di nguoc moi dot cat byte cua du an.
+check("[37] precache la CAI VO, khong phai ca app (<= 12 muc)",
+      len(_shell_set) <= 12, "%d muc" % len(_shell_set))
+check("[37] gen_sw.py co hang rao tran dung luong cai vo",
+      "cap = " in _gs and "tran" in _gs)
+
+# offline.html phai la noindex,nofollow: no khong phai trang de tre di toi.
+check("[37] offline.html: noindex,nofollow", 'content="noindex,nofollow"' in _off)
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)
