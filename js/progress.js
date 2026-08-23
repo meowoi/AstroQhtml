@@ -110,6 +110,35 @@
         server — nó không tính, không thưởng, không ghi nhật ký. */
   var LS_QUIZLEFT = "astroq-quiz-left";
 
+  /* Cấp độ + XP + bàn điều khiển của LƯỢT ĐỌC GẦN NHẤT (thêm 23/08/2026).
+     ⚠️ ĐÂY LÀ CACHE ĐỂ VẼ SỚM, KHÔNG PHẢI CẦU NỐI GIỮA HAI TRANG như LS_MSTEPS /
+        LS_TRAIN / LS_QUIZLV ở trên. Nó tồn tại vì một con số ĐO ĐƯỢC, không phải
+        vì gọn code: trên đường 4G, `#xp-bar` và `#desk-float` của dashboard chỉ
+        có số thật ở giây thứ **1,48**; vừa chơi game xong (hàng chờ 5 việc) thì
+        **2,58**; 3G thì **2,60** (scratchpad/perf_dash_slow.py). Suốt khoảng đó
+        thanh XP đứng ở 0% và vách khoang lái trống trơn — rồi nhảy một cái sang
+        71%. Chuỗi gây ra nó là 5 chặng NỐI TIẾP nhau, không chặng nào bỏ được:
+        parse xong 20 script → module `firebase-auth.js` chạy → tải SDK →
+        `accounts:lookup` (Firebase xác thực phiên, 258ms) → `GET /me/achievements`
+        (534ms). Không cache thì trẻ luôn phải xem hết cả 5 chặng đó.
+     ⚠️ ĐÂY KHÔNG PHẢI SỐ BỊA — và đó là toàn bộ lý do nó được phép tồn tại cạnh
+        khối chú thích "KHÔNG đoán, không bịa" ở dashboard.html. Nó là CHÍNH câu
+        trả lời của server ở lượt vào trước, của CHÍNH đứa trẻ này (`uid` đóng dấu).
+        Cùng khuôn `AstroQCos.absorb` đã dùng cho tông đèn buồng lái: *"áp tông từ
+        cache LÚC NẠP nên buồng lái không nhấp một cái từ tông mặc định sang tông
+        của trẻ"*. Chưa từng đọc được server → `known:false` → trang vẽ y như cũ
+        (0% + vách trống), KHÔNG đoán một cấp nào.
+     ⚠️ CÂU TRẢ LỜI CỦA SERVER LUÔN THẮNG. `renderStats()` chạy lại khi
+        `achievements()` về, nên cache sai lệch (trẻ chơi ở máy khác) sống đúng
+        một nhịp mạng rồi bị ghi đè — không có nhánh nào tin cache lâu hơn thế.
+     ⚠️ ĐÓNG DẤU `uid`: hai đứa trẻ dùng chung máy thì cấp độ và mẫu vật của đứa
+        trước không được hiện lên cho đứa sau, kể cả trong một nhịp mạng.
+     ⚠️ KHÔNG PHẢI HÀNG RÀO: sửa localStorage chỉ đổi con số trẻ tự nhìn thấy
+        trong ~1 giây; không mở khoá gì, không sinh thưởng, và nhịp mạng kế tiếp
+        xoá sạch. Mẫu vật cũng vậy — `paintDesk` chỉ VẼ, điều kiện mở khoá do
+        server giữ (Services/Specimens.cs). */
+  var LS_HUD = "astroq-hud";
+
   /** Mã lượt duy nhất, sinh MỘT LẦN lúc tạo việc (xem điều 4 ở đầu file). */
   function newOpId() {
     try {
@@ -299,6 +328,64 @@
       return { known: false, left: 0, per: 0 };
     }
     return { known: true, left: box.left | 0, per: box.per | 0 };
+  }
+
+  /**
+   * Rót cấp/XP + bàn điều khiển của một câu trả lời server vào cache. Trả true nếu ghi.
+   *
+   * ⚠️ ĐÒI `level.level` LÀ SỐ HỢP LỆ, không `| 0` cho xong: server cũ / câu trả lời
+   *    thiếu khối `level` thì `undefined | 0` = 0, mà cấp 0 không tồn tại — ghi nó
+   *    xuống là lần vào trang sau thanh XP hiện một con số vô nghĩa. Thà không ghi.
+   * ⚠️ NHẬN CẢ HAI HÌNH DẠNG bàn điều khiển (`deskHooks` mới, `desk` mảng id trần
+   *    cũ) — đúng lý do server còn trả cả hai, xem Services/Specimens.cs.
+   * ⚠️ `desk` RỖNG LÀ MỘT CÂU TRẢ LỜI THẬT ("trẻ chưa trưng gì"), không phải thiếu
+   *    dữ liệu — nên vẫn ghi, và `paintDesk` sẽ vẽ đúng một móc nét đứt mời đặt.
+   */
+  function absorbHud(data) {
+    var lv = data && data.level;
+    if (!lv || typeof lv.level !== "number" || !isFinite(lv.level) || lv.level < 1) return false;
+    var p = (data && data.progress) || {};
+    var desk = [];
+    if (Object.prototype.toString.call(p.deskHooks) === "[object Array]") {
+      desk = p.deskHooks
+        .filter(function (x) { return x && typeof x.id === "string" && x.id; })
+        .map(function (x) { return { hook: String(x.hook || ""), id: x.id }; });
+    } else if (Object.prototype.toString.call(p.desk) === "[object Array]") {
+      desk = p.desk
+        .filter(function (x) { return typeof x === "string" && x; })
+        .map(function (id) { return { hook: "", id: id }; });
+    }
+    write(LS_HUD, {
+      uid: uidNow(),
+      level: Math.round(lv.level),
+      xp: (typeof lv.xp === "number" && isFinite(lv.xp)) ? Math.round(lv.xp) : 0,
+      pct: (typeof lv.pct === "number" && isFinite(lv.pct)) ? Math.round(lv.pct) : 0,
+      desk: desk
+    });
+    return true;
+  }
+
+  /**
+   * Cấp/XP + bàn điều khiển đã đọc được lần gần nhất, để vẽ NGAY khi mở trang.
+   *
+   * `known:false` = **chưa biết** (chưa đăng nhập · chưa lần nào đọc được server ·
+   * cache của một đứa trẻ khác). Nơi gọi phải vẽ y như khi chưa có dữ liệu — thanh
+   * XP 0%, vách khoang lái ẩn hẳn — **KHÔNG đoán cấp 1**: "Cấp 1" cạnh một trang
+   * Hồ sơ đang hiện cấp 6 là hai câu trả lời khác nhau cho cùng một đứa trẻ.
+   */
+  function hudCache() {
+    var box = read(LS_HUD, null);
+    if (!box || typeof box !== "object" || box.uid !== uidNow() ||
+        typeof box.level !== "number" || box.level < 1) {
+      return { known: false, level: 0, xp: 0, pct: 0, desk: [] };
+    }
+    return {
+      known: true,
+      level: box.level | 0,
+      xp: box.xp | 0,
+      pct: Math.max(0, Math.min(100, box.pct | 0)),
+      desk: Object.prototype.toString.call(box.desk) === "[object Array]" ? box.desk.slice() : []
+    };
   }
 
   /** Số dư ví thật từ server → ghi đè cache của economy.js. */
@@ -751,6 +838,9 @@
         return a.getAchievements().then(function (r) {
           if (r && r.ok) {
             syncWallet(r.data); absorbTraining(r.data); absorbQuizLv(r.data);
+            /* Cấp/XP + bàn điều khiển → cache để lượt vào trang SAU vẽ được ngay,
+               khỏi phải xem hết 5 chặng nối tiếp mới thấy số của mình (xem LS_HUD). */
+            absorbHud(r.data);
             syncIdentity(a, r.data);
           }
           return r;
@@ -820,6 +910,15 @@
     quizLv: function () { return quizLvCache(); },
     /** Còn mấy lượt Quiz hôm nay → `{known, left, per}`. Xem LS_QUIZLEFT. */
     quizLeft: function () { return quizLeftCache(); },
+
+    /**
+     * Cấp/XP + bàn điều khiển của lượt đọc gần nhất → `{known, level, xp, pct, desk}`.
+     * Để vẽ NGAY khi mở trang, thay vì để thanh XP đứng 0% và vách khoang lái trống
+     * suốt 1,5–2,6 giây (số đo ở LS_HUD).
+     * ⚠️ `known:false` = CHƯA BIẾT → vẽ y như khi không có dữ liệu, đừng đoán cấp 1.
+     * ⚠️ Câu trả lời của server LUÔN thắng: vẽ lại khi `achievements()` về.
+     */
+    hud: function () { return hudCache(); },
 
     missionSteps: function (mission) {
       var box = read(LS_MSTEPS, null);
