@@ -8,11 +8,15 @@ bam nut thi co gap dung cau khong": duong di con qua `library.html` (doc
 `curArt.terms`), qua `quiz.html?terms=` (co the LUI VE de ngau nhien khi khoa sai
 het — luat o `quiz.html` dong ~345), roi qua `byTerms`. Bo nay di het duong do.
 
-⚠️⚠️ TU 22/08/2026 KHONG CON BAI NAO THIEU `terms` (67/67 da noi). Nhom "chua
-   co terms" vi the RONG, va muc [2] doi sang hai phat bieu MANH HON: mot bat bien
-   "moi bai doc phai co `terms`" (ghim lai de them bai moi ma quen noi la bao ngay),
-   cong chieu do cu "quiz mo BINH THUONG khi khong co tham so `terms`" — nay do bang
-   cach mo thang `quiz.html`, khong con phu thuoc viec phai co mot bai trong.
+⚠️⚠️ SUA 23/08/2026 — DONG NAY TRUOC DAY GHI SAI: "TU 22/08/2026 KHONG CON BAI
+   NAO THIEU `terms` (67/67 da noi)". SO DO THAT: **24/67 bai khai `terms: []`**,
+   tuc RONG. Muc [2] bao xanh oan vi no tim `terms\\s*:\\s*\\[` — mau do KHOP CA
+   `terms: []`, nen no do "CO KHAI `terms`" chu khong do "co tu nao trong do".
+   Hau qua that o library.html:442 (`curArt.terms.length` = 0 -> `t = null`):
+   nut "LAM QUIZ BAI NAY" mo DE NGAU NHIEN — dung cai loi ma cac muc nhat ky cu
+   tuong da sua xong. Nay muc [2] doi `terms` KHONG RONG, va 24 bai kia nam trong
+   `MIEN_TERMS` — mot danh sach CHI DUOC TEO LAI (cung ky luat voi `LEGACY_SRC`
+   cua smoke_library_featured.py va "khong the nao co `src` rong" cua check_pages).
 
 ⚠️ Doi chieu bang CHU CUA CAU HOI doc THANG tu `js/quiz/<khoa>.js` (bang Python),
    khong doc bien trong trang: `quiz.html` giu `QUESTIONS` trong IIFE nen ngoai
@@ -48,16 +52,39 @@ CO_TERMS = [
     ("art-newtons-three-laws", ["newton-first-law-inertia"]),         # physics
     ("art-life-support-recycles-water",
      ["eclss-three-systems", "oxygen-from-electrolysis"]),            # engineering
-    # ⚠️ Nam bai Dot 1 noi 22/08/2026 — day la nam bai CUOI cung con thieu
-    #    `terms`, nen tu day 67/67 bai doc deu co duong sang dung bo cau cua no.
+    # ⚠️ Nam bai Dot 1 noi 22/08/2026. ⚠️⚠️ CAU "day la nam bai CUOI cung con
+    #    thieu `terms`, tu day 67/67 bai doc deu co duong sang dung bo cau" TRUOC
+    #    DAY GHI O DAY LA SAI — do lai 23/08/2026 thi con 24 bai `terms: []`
+    #    (nhanh AI / robot / sieu may tinh / luong tu, them tu 11/08). Xem
+    #    `MIEN_TERMS` duoi day.
     ("jwst", ["webb-sees-infrared", "webb-looks-back-13-billion"]),
     ("lib-saturn", ["saturn-rings-ice-and-rock", "cassini-13-years-at-saturn"]),
     ("lib-andromeda", ["earth-in-milky-way", "andromeda-nearest-large-galaxy"]),
     ("lib-gaia", ["gaia-3d-map-of-galaxy", "gaia-measures-position-and-motion"]),
     ("lib-mars", ["perseverance-seeks-ancient-life", "moxie-oxygen-from-mars-air"]),
 ]
-# ⚠️ `KHONG_TERMS` DA BO 22/08/2026: 67/67 bai deu co `terms` nen danh sach do
-#    tat yeu rong. Chieu do thu hai chuyen sang muc [2] duoi day.
+# ⚠️⚠️ 24 BAI CON KHAI `terms: []` — do 23/08/2026, TAT CA them tu 11/08/2026.
+#    Chung mo DE NGAU NHIEN khi tre bam "LAM QUIZ BAI NAY" (library.html:442).
+#    Ly do khong noi duoc ngay: bank KHONG CO cau nao cho nhanh AI / robot /
+#    sieu may tinh / luong tu, nen day la viec VIET NOI DUNG CO NGUON, khong phai
+#    viec sua ma. Ghi ra day de con so khong bi mat lan nua.
+# ⚠️ DANH SACH NAY CHI DUOC TEO LAI. Noi `terms` cho bai nao thi PHAI xoa slug do
+#    khoi day — phep kiem "danh sach mien tru con DUNG" o muc [2] bao hong neu
+#    khong, chinh la de danh sach khong muc ra thanh mot cho de rac.
+MIEN_TERMS = {
+    "art-ai-already-around-you", "art-ai-counts-storm-damage",
+    "art-ai-finds-asteroids-hubble", "art-ai-found-binary-stars",
+    "art-ai-maps-dark-craters", "art-ai-predicts-solar-flares",
+    "art-ai-tags-nasa-data", "art-astrobee-flying-robots",
+    "art-autonomous-vs-remote", "art-canadarm2-robot-arm",
+    "art-curiosity-lab-on-wheels", "art-how-data-gets-home",
+    "art-ingenuity-first-flight-mars", "art-opportunity-distance-record",
+    "art-quantum-many-states-at-once", "art-robonaut-first-humanoid",
+    "art-robots-buy-crew-time", "art-sojourner-first-rover",
+    "art-supercomputer-climate", "art-supercomputer-galaxy-vr",
+    "art-three-stations-120-degrees", "art-voyager-signal-20-billion",
+    "art-what-is-ai-nasa", "lib-qubit",
+}
 
 
 def check(nhan, dk, ct=""):
@@ -124,14 +151,40 @@ with sync_playwright() as pw:
         check("%s: cau dang hien thuoc dung bo `terms`" % slug, hien in mong,
               "hien=%r" % hien[:66])
 
-    print("\n=== [2] Bat bien: MOI bai doc deu co `terms` ===")
+    print("\n=== [2] Bat bien: MOI bai doc co `terms` KHONG RONG ===")
     # ⚠️ Doc THANG tu dia, khong doc qua trang: day la mot bat bien ve DU LIEU,
     #    va doc qua trinh duyet thi mot bai loi cu phap se doc ra "khong co terms".
+    # ⚠️⚠️ PHAI DOI KHONG RONG, khong chi "co khai". Ban cu tim `terms\s*:\s*\[`
+    #    nen `terms: []` cung khop -> bao xanh cho 24 bai dang mo de ngau nhien.
     arts = sorted((ROOT / "js" / "article").glob("*.js"))
-    thieu = [p.stem for p in arts
-             if not re.search(r"terms\s*:\s*\[", io.open(p, encoding="utf-8").read())]
-    check("moi bai doc deu khai `terms` (%d bai)" % len(arts),
-          not thieu and len(arts) > 0, "thieu: %s" % thieu[:6])
+
+    def _terms_cua(p):
+        """Khoa trong `terms` cua mot bai. None = khong khai; [] = khai ma rong."""
+        s = io.open(p, encoding="utf-8").read()
+        m = re.search(r"terms\s*:\s*\[(.*?)\]", s, re.S)
+        if not m:
+            return None
+        return re.findall(r'"([^"]+)"', m.group(1))
+
+    _map = dict((p.stem, _terms_cua(p)) for p in arts)
+    khong_khai = sorted(k for k, v in _map.items() if v is None)
+    rong = sorted(k for k, v in _map.items() if v == [])
+    day_du = len(arts) - len(khong_khai) - len(rong)
+    check("moi bai doc deu KHAI `terms` (%d bai)" % len(arts),
+          not khong_khai and len(arts) > 0, "khong khai: %s" % khong_khai[:6])
+    # Bat bien THAT: bai nao khong nam trong danh sach mien tru thi `terms` phai
+    # co it nhat mot khoa. Day la cho bat mot bai MOI them ma quen noi.
+    ngoai_ds = [k for k in rong if k not in MIEN_TERMS]
+    check("moi bai NGOAI `MIEN_TERMS` co `terms` khong rong",
+          not ngoai_ds, "rong ma khong duoc mien: %s" % ngoai_ds[:6])
+    # Ky luat teo lai: noi `terms` roi thi phai xoa slug khoi `MIEN_TERMS`.
+    da_noi = sorted(k for k in MIEN_TERMS if _map.get(k))
+    check("`MIEN_TERMS` con DUNG (noi roi thi phai xoa khoi ds)",
+          not da_noi, "da co terms, xoa khoi MIEN_TERMS: %s" % da_noi[:6])
+    thua = sorted(k for k in MIEN_TERMS if k not in _map)
+    check("`MIEN_TERMS` khong chua slug khong ton tai", not thua, str(thua[:6]))
+    print("  ... %d/%d bai co `terms` khong rong · %d bai con mo DE NGAU NHIEN"
+          % (day_du, len(arts), len(rong)))
 
     print("\n=== [2b] Khong co tham so `terms`: quiz mo BINH THUONG ===")
     # ⚠️ Chieu do thu hai. Truoc 22/08/2026 no do bang mot bai chua noi `terms`;
