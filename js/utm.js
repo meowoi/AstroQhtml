@@ -5,9 +5,15 @@
    API:   AstroQUtm.get()    → "fb/post/ra-mat-20-08" | ""   (chuỗi gửi lên server)
           AstroQUtm.raw()    → { source, medium, campaign, at } | null
           AstroQUtm.clear()  → xoá (dùng khi test)
+          AstroQUtm.takeFresh() → nhãn NẾU lượt nạp này là chạm-đầu-tiên MỚI, rồi
+                                  tự xoá cờ. `js/utm-beacon.js` dùng để đếm lượt đến.
 
    Gắn link ở fanpage:
-       https://astroq.org/?utm_source=fb&utm_medium=post&utm_campaign=ra-mat-20-08
+       https://astroq.org/?utm_source=facebook&utm_medium=post&utm_campaign=ra-mat-20-08
+   ⚠️ Nguồn Facebook viết `facebook`, KHÔNG viết `fb` — chiến dịch trả tiền đang chạy
+      từ 22/08/2026 dùng `facebook`, và hai cách viết sẽ thành HAI nguồn khác nhau
+      trong bảng báo cáo. Tên nguồn không được chuẩn hoá ở đâu cả (cố ý: `Campaign.Clean`
+      chỉ lọc ký tự, không đổi chữ), nên nhất quán là việc của người đặt link.
 
    ══════════════ VÌ SAO TỰ LÀM THAY VÌ GẮN GOOGLE ANALYTICS ══════════════
    Câu hỏi cần trả lời rất hẹp: *"bài đăng nào mang người tới, và trong số đó
@@ -19,9 +25,19 @@
      · ~50 KB script và một vòng mạng cho mọi lượt ghé;
      · gửi hành vi duyệt web của TỪNG ĐỨA TRẺ cho một công ty khác — đúng lý do
        `js/firebase-config.js` cố ý không bật `measurementId`.
-   Cách này: **0 byte tải thêm, 0 request, 0 cookie, 0 bên thứ ba**, và thứ duy
-   nhất rời khỏi máy là NHÃN CHIẾN DỊCH do chính mình đặt trong link của mình —
-   đi kèm một lượt đăng ký mà người dùng đang chủ động thực hiện.
+   Cách này: **0 byte tải thêm, 0 cookie, 0 bên thứ ba**, và thứ duy nhất rời khỏi
+   máy là NHÃN CHIẾN DỊCH do chính mình đặt trong link của mình.
+
+   ⚠️⚠️ TỪ 23/08/2026 CÓ ĐÚNG MỘT REQUEST, VÀ CHỈ CHO KHÁCH MANG NHÃN.
+   `js/utm-beacon.js` gọi `POST /visit` một lần khi lượt nạp này là chạm-đầu-tiên MỚI.
+   Vì sao phải có: bảng báo cáo trước đây chỉ đếm được lượt ĐĂNG KÝ, mà nhãn chỉ ghi
+   vào DB lúc đăng ký thành công — nên một chiến dịch mang về 200 người mà 0 người
+   đăng ký đọc ra Y HỆT một chiến dịch không ai bấm. Hai chuyện đó phải xử lý khác hẳn.
+   ⚠️ Người vào thẳng `astroq.org` (không có `utm_source`) thì **vẫn 0 request** như
+      trước — `takeFresh()` trả "" nên beacon không gửi gì. Đó là điều kiện để thêm
+      phép đo này mà không đổi cái giá người dùng thường phải trả.
+   ⚠️ Bản ghi phía server là BỘ ĐẾM: cộng 1 vào (ngày × nhãn), không IP, không
+      user-agent, không thời điểm từng lượt. Xem `DynamoContext.Visits.cs`.
 
    ⚠️⚠️ GIỮ LƯỢT CHẠM ĐẦU TIÊN, KHÔNG GHI ĐÈ BẰNG LƯỢT SAU.
    Câu hỏi là *"cái gì mang người này tới"* — đó là lần đầu. Trẻ vào từ bài
@@ -87,10 +103,27 @@
   /* ⚠️ CHẠY NGAY LÚC NẠP FILE, không đợi DOM: người dùng có thể bấm nút đăng ký
      trước khi trang vẽ xong, và lúc đó nhãn phải đã nằm sẵn trong máy. */
   var incoming = fromUrl();
-  if (incoming && !read()) save(incoming);
+  /* ⚠️ `fresh` CHỈ BẬT KHI THẬT SỰ GHI MỚI, tức đúng những lượt là chạm-đầu-tiên.
+     Người bấm quảng cáo hôm nay rồi mai bấm lại: lượt thứ hai KHÔNG ghi (giữ chạm
+     đầu) nên cũng KHÔNG đếm lại. Nghĩa là con số đếm được là **số khách MỚI mang
+     nhãn**, không phải số lượt bấm — Meta đếm lượt bấm nên số của Meta luôn ≥ số này.
+     Đừng đem hai con số đó ra trừ nhau rồi kết luận ai sai. */
+  var fresh = false;
+  if (incoming && !read()) { save(incoming); fresh = true; }
 
   var API = {
     raw: function () { return read(); },
+
+    /**
+     * Nhãn NẾU lượt nạp này vừa ghi một chạm-đầu-tiên mới; "" nếu không. Gọi xong là
+     * cờ tắt, nên gọi lần hai trong cùng lượt nạp trả "" — để hai script cùng gọi
+     * cũng không đếm đôi.
+     */
+    takeFresh: function () {
+      if (!fresh) return "";
+      fresh = false;
+      return API.get();
+    },
 
     /** Chuỗi gọn gửi lên server: "nguồn/kênh/chiến-dịch", bỏ phần rỗng. */
     get: function () {

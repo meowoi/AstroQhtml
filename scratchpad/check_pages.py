@@ -4434,10 +4434,31 @@ check("[29] ho so luu `src`", '["src"]       = S(src)' in _dyn)
 _ins = rd_sv("Services/Insights.cs")
 _adm = rd("js/admin-report.js")
 check("[29] server tra bang nguon", "SrcRow(" in _ins and "Sources: sources" in _ins)
-check("[29] bang nguon co ca hang cho lan tai khoan",
-      re.search(r"SrcRow\(string Src, long Waitlist, long Signups, long Active7, long EarthDone\)",
-                _ins) is not None)
+# ⚠️ 23/08/2026: them cot LUOT DEN (`Visits`). Phep kiem cu ghim nguyen chu ky
+#    `SrcRow(...EarthDone)` nen no bao hong dung luc san pham lam DUNG. Doi phat bieu
+#    va SIET THEM thay vi noi long: doi du CA NAM cot theo ten, khong con phu thuoc
+#    thu tu tham so hay dau ngoac dong.
+_srcrow = re.search(r"record SrcRow\(([^)]*)\)", _ins, re.S)
+check("[29] bang nguon co du nam cot",
+      _srcrow is not None and all(c in _srcrow.group(1)
+          for c in ("string Src", "long Waitlist", "long Signups",
+                    "long Active7", "long EarthDone", "long Visits")),
+      " ".join(_srcrow.group(1).split()) if _srcrow else "khong thay SrcRow")
 check("[29] client co the `sources`", 'sources: {' in _adm and '"p-src"' in _adm)
+# ⚠️ LUOT DEN phai HIEN RA, khong chi ve toi DB. Cung lop loi im lang ma khoi [29]
+#    nay sinh ra de chan: nhan co that, luu that, ma khong hien o dau.
+check("[29] client HIEN cot luot den", 'x.visits' in _adm and 'Lượt đến' in _adm)
+# ⚠️ Beacon phai duoc NAP o dung hai trang co `js/utm.js`. Nap utm.js ma quen beacon
+#    thi nhan van ghi duoc luc dang ky, nhung luot den im lang bang 0 mai mai.
+for _pg in ("index.html", "landing-app.html"):
+    _h = rd(_pg)
+    check("[29] %s nap ca utm.js lan utm-beacon.js" % _pg,
+          "js/utm.js" in _h and "js/utm-beacon.js" in _h)
+# ⚠️ Beacon KHONG duoc chep lai dia chi API: mot ban chep se troi khoi js/api.js dung
+#    vao ngay doi stack AWS. No phai `import` tu api.js.
+_bea = rd("js/utm-beacon.js")
+check("[29] utm-beacon.js lay dia chi API tu api.js, khong go cung",
+      'from "./api.js"' in _bea and "execute-api" not in _bea)
 check("[29] trang bao cao co o ve `p-src`", 'id="p-src"' in rd("admin-report.html"))
 # ⚠️ MOI KY TU TRONG NHAN DO CLIENT SINH PHAI NAM TRONG SUBSET FONT TU HOST.
 #    Font cua du an chi co latin + vietnamese (cat 621->101 KB ngay 26/07/2026), nen

@@ -328,7 +328,8 @@
             wait: x.waitlist  || 0,
             n:    x.signups   || 0,
             a7:   x.active7   || 0,
-            done: x.earthDone || 0
+            done: x.earthDone || 0,
+            vis:  x.visits    || 0
           };
         });
       },
@@ -339,6 +340,15 @@
             label: r.name, value: r.n, cls: r.src ? "s1" : "s2",
             note: r.wait + " địa chỉ trong hàng chờ · " + r.done + " người xong Trái Đất"
           });
+          /* ⚠️ HANG "luot den" CHI VE KHI NGUON DO CO DO DUOC LUOT DEN.
+             Nguon cu (truoc 23/08/2026, luc chua co `POST /visit`) co visits = 0 THAT,
+             va mot thanh 0 canh mot nguon tung mang ve tai khoan doc ra nhu "quang cao
+             nay khong ai bam" - tuc mot loi noi sai ve qua khu. Khong ve thi khong noi. */
+          if (r.vis > 0)
+            out.push({ label: "· lượt đến", value: r.vis, cls: "s4",
+                       note: r.n > 0
+                         ? "cứ " + Math.round(r.vis / r.n) + " người đến thì 1 người đăng ký"
+                         : "chưa ai trong số này đăng ký" });
           /* Nguon chua ra tai khoan nao thi KHONG ve hang thu hai: mot thanh 0 kem
              chu "con hoat dong" doc ra thanh mot loi phan xet, trong khi that ra
              chua co gi de do. */
@@ -358,10 +368,16 @@
       },
       table: function(el){
         V.table(el, {
-          caption:"Nhãn chiến dịch lấy từ chính link mình đăng. Mỗi người được tính theo LƯỢT CHẠM ĐẦU TIÊN — đăng ký lại không đổi nguồn.",
-          head:["Nguồn","Hàng chờ","Tài khoản","Còn hoạt động (7 ngày)","Xong Trái Đất"],
+          caption:"Nhãn chiến dịch lấy từ chính link mình đăng. Mỗi người được tính theo LƯỢT CHẠM ĐẦU TIÊN — đăng ký lại không đổi nguồn. " +
+                  "“Lượt đến” đếm KHÁCH MỚI mở được trang từ link có nhãn, không đếm lượt bấm: cùng một người bấm hai lần chỉ tính một. " +
+                  "Số “link clicks” của Meta vì thế luôn lớn hơn — nó tính cả lượt bấm lặp, bot, và người thoát trước khi trang tải xong.",
+          head:["Nguồn","Lượt đến","Hàng chờ","Tài khoản","Còn hoạt động (7 ngày)","Xong Trái Đất"],
           rows: CARDS.sources.rows().map(function(r){
-            return [r.name, num(r.wait), num(r.n), num(r.a7), num(r.done)];
+            /* ⚠️ "—" CHU KHONG PHAI "0" cho nguon khong do duoc luot den. Số 0 khẳng
+               định "khong ai den", con dau gach noi "khong do duoc" - hai chuyen khac
+               han nhau, va moi nguon co truoc 23/08/2026 deu thuoc ve thu hai. */
+            return [r.name, r.vis > 0 ? num(r.vis) : "—",
+                    num(r.wait), num(r.n), num(r.a7), num(r.done)];
           })
         });
       }
