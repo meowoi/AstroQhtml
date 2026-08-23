@@ -54,5 +54,7 @@ export default {
           word: { vi: "Thị sai",
                   en: "Parallax" },
           text: { vi: "hiện tượng một vật như dịch đi khi bạn nhìn nó từ hai chỗ khác nhau. Vật càng xa thì dịch càng ít — nên chính độ dịch ấy cho biết nó xa bao nhiêu. 🤖",
-                  en: "The way an object seems to shift when you look at it from two different places. The further it is, the less it shifts — so that very shift tells you how far away it is. 🤖" } }
+                  en: "The way an object seems to shift when you look at it from two different places. The further it is, the less it shifts — so that very shift tells you how far away it is. 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung dieu cau hoi kiem: phai quan sat hai lan, luc Trai Dat o hai phia doi dien Mat Troi. */
+  terms: ["parallax-two-viewings"]
 };

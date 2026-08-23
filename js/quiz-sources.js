@@ -17,6 +17,40 @@
       suy nguoc khoa tu URL o che do --from-old nen se dung lai).
 */
 window.AstroQQuizSources = {
+  /* ⚠️ 8 nguon them 22/08/2026 cho nam bai astronomy/robot con lai cua Dot 1.
+     Ca 8 URL da mo va doc trong ngay (200 qua urllib). ⚠️ Ba URL DOAN theo mau
+     da 404 va bi loai: `mission/webb/about/`, `saturn/saturn-rings/`,
+     `mars/rovers/` — duong dan NASA khong suy duoc theo mau.
+     ⚠️ `gaia` la ten mien ESA — xem ly do noi OK_HOSTS o check_quiz_bank.py. */
+  webb:                  { name: "NASA Science — James Webb Space Telescope", url: "https://science.nasa.gov/mission/webb/" },
+  webbSci:               { name: "NASA Science — Webb Science Overview and Goals", url: "https://science.nasa.gov/mission/webb/science-overview/" },
+  saturnFacts:           { name: "NASA Science — Facts About Saturn", url: "https://science.nasa.gov/saturn/facts/" },
+  cassini:               { name: "NASA Science — Cassini Mission", url: "https://science.nasa.gov/mission/cassini/" },
+  galaxies:              { name: "NASA Science — Galaxies", url: "https://science.nasa.gov/universe/galaxies/" },
+  andromeda:             { name: "NASA Science — The Andromeda Galaxy", url: "https://science.nasa.gov/universe/galaxies/andromeda-galaxy/" },
+  gaia:                  { name: "ESA — Gaia Mission Overview", url: "https://www.esa.int/Science_Exploration/Space_Science/Gaia/Gaia_overview" },
+  perseverance:          { name: "NASA Science — Mars 2020 Perseverance Rover", url: "https://science.nasa.gov/mission/mars-2020-perseverance/" },
+  /* ⚠️ 15 nguon them 22/08/2026 cho bon nhanh physics/engineering/life/math.
+     Ca 15 URL da curl kiem tra 200 ngay them. Bon URL `www1.grc.nasa.gov`
+     phuc vu THIEU CHUNG CHI TRUNG GIAN — WebFetch tu choi, nhung `curl` VA
+     `urllib` cua Python deu vao duoc (da do), nen `check_srcquote.py` doi
+     chieu duoc binh thuong. Dung WebFetch cho ten mien do se bao "nguon
+     chet" OAN. */
+  bodyInSpace:           { name: "NASA HRP - The Human Body in Space", url: "https://www.nasa.gov/hrp/bodyinspace/" },
+  lifeNeeds:             { name: "NASA Astrobiology - What Does Life Need for Survival?", url: "https://science.nasa.gov/astrobiology/learning-resources/alp/what-does-life-need-for-survival/" },
+  plantsInSpace:         { name: "NASA - Growing Plants in Space", url: "https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/" },
+  spaceBiology:          { name: "NASA Science - Space Biology Program", url: "https://science.nasa.gov/biological-physical/programs/space-biology/" },
+  marsClimateOrbiter:    { name: "NASA Science - Mars Climate Orbiter", url: "https://science.nasa.gov/mission/mars-climate-orbiter/" },
+  lightYear:             { name: "NASA Science - What Is a Light-Year?", url: "https://science.nasa.gov/exoplanets/what-is-a-light-year/" },
+  stellarParallax:       { name: "NASA/Hubble - Stellar Parallax", url: "https://science.nasa.gov/asset/hubble/stellar-parallax/" },
+  whatIsAnOrbit:         { name: "NASA - What Is an Orbit? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/for-kids-and-students/what-is-an-orbit-grades-5-8/" },
+  fourRocketForces:      { name: "NASA Glenn - Four Forces on a Rocket", url: "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-rocket-forces/" },
+  newtonsLaws:           { name: "NASA Glenn - Newton's Laws of Motion", url: "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/" },
+  rocketThrust:          { name: "NASA Glenn - Rocket Thrust", url: "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/rocket-thrust/" },
+  solarToElectric:       { name: "NASA Science - From Sunlight to Electricity", url: "https://science.nasa.gov/big-idea-3-2-intermediate-level-guiding-question/" },
+  issAssembly:           { name: "NASA - ISS Assembly Elements", url: "https://www.nasa.gov/international-space-station/international-space-station-assembly-elements/" },
+  modelSolidEngine:      { name: "NASA Glenn - Model Solid Rocket Engine", url: "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/model-solid-rocket-engine/" },
+  eclss:                 { name: "NASA - Environmental Control and Life Support Systems (ECLSS)", url: "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/" },
   nasaWhatIsAi:           { name: "NASA — What is AI? (Grades 5-8)", url: "https://www.nasa.gov/learning-resources/what-is-ai-grades-5-8/" },
   aiHubble:               { name: "NASA Science — AI and Hubble Science", url: "https://science.nasa.gov/mission/hubble/science/ai-hubble-science/" },
   mitAlgorithms:          { name: "MIT Media Lab — AI + Ethics for Middle School", url: "https://www.media.mit.edu/projects/ai-ethics-for-middle-school/overview/" },

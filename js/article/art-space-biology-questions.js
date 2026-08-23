@@ -50,5 +50,7 @@ export default {
           word: { vi: "Sinh vật mẫu",
                   en: "Model organism" },
           text: { vi: "một loài được chọn để nghiên cứu vì nó dễ nuôi, lớn nhanh và ta đã hiểu rõ nó — nên thứ học được từ nó giúp hiểu cả những loài khó nghiên cứu hơn, kể cả chúng ta. 🤖",
-                  en: "A species picked for study because it is easy to keep, grows fast and is already well understood — so what we learn from it helps explain harder species too, including us. 🤖" } }
+                  en: "A species picked for study because it is easy to keep, grows fast and is already well understood — so what we learn from it helps explain harder species too, including us. 🤖" } },
+  /* Noi voi kho cau hoi: bai day ca hai: NASA cong bo cau chua tra loi xong (vinh vien hay giam dan), va sinh vat thuong dung la chuot cung giun tron va con trung. */
+  terms: ["space-biology-open-question", "model-organisms-space"]
 };

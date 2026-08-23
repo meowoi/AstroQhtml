@@ -67,5 +67,7 @@ export default {
           word: { vi: "Quán tính",
                   en: "Inertia" },
           text: { vi: "xu hướng của một vật chống lại việc bị đổi trạng thái chuyển động. Vật càng nặng thì càng khó đẩy cho đi — và cũng càng khó bắt cho dừng. ☄️",
-                  en: "An object's tendency to resist any change to its state of motion. The heavier it is, the harder it is to get moving — and just as hard to stop. ☄️" } }
+                  en: "An object's tendency to resist any change to its state of motion. The heavier it is, the harder it is to get moving — and just as hard to stop. ☄️" } },
+  /* Noi voi kho cau hoi: bai day dung dinh luat thu nhat va dat ten quan tinh. (Khong noi cau nao ve dinh luat 2/3: bai phat bieu chung nhung phan giai thich chi di sau vao cau thu nhat.) */
+  terms: ["newton-first-law-inertia"]
 };

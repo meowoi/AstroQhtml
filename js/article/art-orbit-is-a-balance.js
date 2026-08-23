@@ -58,5 +58,7 @@ export default {
           word: { vi: "Elip",
                   en: "Ellipse" },
           text: { vi: "hình bầu dục khép kín. Vòng tròn là một elip đặc biệt, khi nó \"tròn đều\" ở mọi phía — nên nói mọi quỹ đạo là elip thì vẫn đúng cả với những quỹ đạo trông như tròn. ☄️",
-                  en: "A closed oval. A circle is a special ellipse, the one that is equally round all the way around — so saying every orbit is an ellipse stays true even for the ones that look circular. ☄️" } }
+                  en: "A closed oval. A circle is a special ellipse, the one that is equally round all the way around — so saying every orbit is an ellipse stays true even for the ones that look circular. ☄️" } },
+  /* Noi voi kho cau hoi: bai day ca hai y cua tieu de: moi quy dao la hinh elip, va quy dao la the can bang giua da va luc hap dan. */
+  terms: ["orbits-are-ellipses", "orbit-needs-balance"]
 };

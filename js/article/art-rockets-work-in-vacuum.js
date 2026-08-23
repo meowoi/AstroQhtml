@@ -60,5 +60,7 @@ export default {
           word: { vi: "Chất oxy hoá",
                   en: "Oxidizer" },
           text: { vi: "thứ cung cấp oxy cho đám cháy. Tên lửa mang nó theo trong bình riêng — đó chính là lý do nó cháy được ở nơi không có một phân tử không khí nào. 🤖",
-                  en: "The stuff that supplies oxygen to a fire. A rocket carries it in its own tank — which is precisely why it can burn where there is not a single molecule of air. 🤖" } }
+                  en: "The stuff that supplies oxygen to a fire. A rocket carries it in its own tank — which is precisely why it can burn where there is not a single molecule of air. 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung ly do: chat oxy hoa duoc mang san tren tau nen ten lua sinh luc day duoc trong chan khong. */
+  terms: ["rocket-thrust-in-vacuum"]
 };

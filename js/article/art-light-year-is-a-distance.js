@@ -56,5 +56,7 @@ export default {
           word: { vi: "Tỉ lệ",
                   en: "Ratio" },
           text: { vi: "phép so hai đại lượng với nhau thay vì đọc từng con số riêng lẻ. Nó là cách duy nhất làm cho những con số quá lớn hoặc quá nhỏ trở lại có nghĩa với đầu người. ☄️",
-                  en: "Comparing two quantities against each other instead of reading each number alone. It is the only way to make numbers that are far too big or too small mean something to a human brain again. ☄️" } }
+                  en: "Comparing two quantities against each other instead of reading each number alone. It is the only way to make numbers that are far too big or too small mean something to a human brain again. ☄️" } },
+  /* Noi voi kho cau hoi: bai day ca hai: nam anh sang la QUANG DUONG chu khong phai thoi gian, va Trai Dat cach Mat Troi khoang tam phut anh sang. */
+  terms: ["light-year-is-distance", "earth-eight-light-minutes"]
 };

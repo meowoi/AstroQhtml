@@ -64,5 +64,7 @@ export default {
           word: { vi: "Vectơ",
                   en: "Vector" },
           text: { vi: "một đại lượng có cả độ lớn lẫn hướng. Vận tốc, lực, gia tốc đều là vectơ — nên nói \"lực 100\" mà không nói hướng thì mới nói được một nửa. 🤖",
-                  en: "A quantity with both a size and a direction. Velocity, force and acceleration are all vectors — so saying \"a force of 100\" without a direction is only half the story. 🤖" } }
+                  en: "A quantity with both a size and a direction. Velocity, force and acceleration are all vectors — so saying \"a force of 100\" without a direction is only half the story. 🤖" } },
+  /* Noi voi kho cau hoi: bai day ca hai: bon luc (trong luong, luc day, luc nang, luc can), va luc la dai luong vecto co ca do lon lan huong. */
+  terms: ["four-forces-on-a-rocket", "force-is-a-vector"]
 };

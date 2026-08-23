@@ -9,7 +9,9 @@ export default {
   c: ["#ffcaa8", "#d1642f", "#5e2410"],
   img: "https://images-assets.nasa.gov/image/PIA21496/PIA21496~medium.jpg",
   credit: "NASA / JPL-Caltech",
-  url: "https://mars.nasa.gov/",
+  /* ⚠️ Truoc 22/08/2026 truong nay tro TRANG CHU `mars.nasa.gov/` — xem ly do
+     o `lib-andromeda`. Nay tro dung trang nhiem vu Perseverance. */
+  url: "https://science.nasa.gov/mission/mars-2020-perseverance/",
   title: { vi: "Robot Perseverance khám phá Sao Hỏa",
           en: "Perseverance rover exploring Mars" },
   body: {
@@ -22,5 +24,9 @@ export default {
            word: { vi: "Xe tự hành",
                    en: "Rover" },
            text: { vi: "<b>Rover</b> là robot biết tự lái trên hành tinh khác — giống anh em họ của tớ! 🤖",
-                   en: "A <b>rover</b> is a robot that drives itself on another planet — like my cousin! 🤖" } }
+                   en: "A <b>rover</b> is a robot that drives itself on another planet — like my cousin! 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung ca hai — Perseverance tim DAU VET SU SONG
+     CO DAI, va no tao OXY tu bau khi quyen Sao Hoa. (Khong dat cau ve "6 banh"
+     hay "tu lai": trang Perseverance khong noi hai dieu do.) */
+  terms: ["perseverance-seeks-ancient-life", "moxie-oxygen-from-mars-air"]
 };

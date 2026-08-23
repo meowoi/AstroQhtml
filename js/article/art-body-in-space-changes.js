@@ -44,5 +44,7 @@ export default {
           word: { vi: "Xương chịu lực",
                   en: "Weight-bearing bone" },
           text: { vi: "những xương phải đỡ sức nặng cơ thể khi bạn đứng và đi — xương chân, xương hông. Chúng mất khoáng nhanh nhất trong không gian, vì chúng là những xương mất việc nhiều nhất. 🦴",
-                  en: "The bones that carry your body weight when you stand and walk — legs and hips. They lose mineral fastest in space, because they are the ones that lose the most work to do. 🦴" } }
+                  en: "The bones that carry your body weight when you stand and walk — legs and hips. They lose mineral fastest in space, because they are the ones that lose the most work to do. 🦴" } },
+  /* Noi voi kho cau hoi: bai day dung ca hai: xuong chiu luc mat 1-1,5% moi thang, va chat long don len dau roi de len mat. (Khong noi cau nao ve co bap: bai chi noi co teo nhanh hon, khong co con so nao de hoi.) */
+  terms: ["bone-loss-in-space", "fluid-shift-to-head"]
 };

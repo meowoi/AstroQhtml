@@ -72,5 +72,7 @@ export default {
           word: { vi: "Điện phân",
                   en: "Electrolysis" },
           text: { vi: "dùng dòng điện để tách một chất ra thành các phần của nó. Trên trạm, người ta điện phân nước — và một trong hai mảnh tách ra là oxy để thở. ☄️",
-                  en: "Using an electric current to break a substance apart into its pieces. On the station they electrolyze water — and one of the two pieces that comes out is breathable oxygen. ☄️" } }
+                  en: "Using an electric current to break a substance apart into its pieces. On the station they electrolyze water — and one of the two pieces that comes out is breathable oxygen. ☄️" } },
+  /* Noi voi kho cau hoi: bai day ca hai: ECLSS gom ba he, va oxy den tu viec dien phan nuoc. */
+  terms: ["eclss-three-systems", "oxygen-from-electrolysis"]
 };

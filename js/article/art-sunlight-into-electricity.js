@@ -60,5 +60,7 @@ export default {
           word: { vi: "Photon",
                   en: "Photon" },
           text: { vi: "hạt của ánh sáng. Ánh sáng vừa cư xử như sóng vừa như một dòng hạt — và đúng cái nửa \"hạt\" ấy mới là thứ làm cho tấm pin mặt trời chạy được. ☄️",
-                  en: "A particle of light. Light behaves both as a wave and as a stream of particles — and it is exactly that \"particle\" half that makes a solar panel work. ☄️" } }
+                  en: "A particle of light. Light behaves both as a wave and as a stream of particles — and it is exactly that \"particle\" half that makes a solar panel work. ☄️" } },
+  /* Noi voi kho cau hoi: bai day dung cho hap thu: lop silic sam mau hut cac photon roi o quang dien bien chung thanh dien. */
+  terms: ["solar-cell-absorbs-photons"]
 };

@@ -17,5 +17,10 @@ export default {
            "Nhờ tấm gương vàng khổng lồ rộng 6,5 m, Webb thu được ánh sáng cực mờ đã du hành hơn 13 tỉ năm tới Trái Đất — như một cỗ máy thời gian nhìn về quá khứ của vũ trụ."],
     en: ["The James Webb Space Telescope (JWST) observes in infrared, seeing through cosmic dust to capture light from galaxies that formed just a few hundred million years after the Big Bang.",
            "With its giant 6.5 m gold mirror, Webb collects extremely faint light that has travelled over 13 billion years to reach us — a time machine peering into the early universe."]
-  }
+  },
+  /* Noi voi kho cau hoi: bai day dung hai dieu hai cau hoi kiem — Webb quan
+     sat bang TIA HONG NGOAI de nhin xuyen dam bui, va nhin nguoc HON 13 TI NAM
+     toi nhung thien ha dau tien. (Khong dat cau nao ve duong kinh 6,5 m: trang
+     `mission/webb/` KHONG co con so do — bai co ghi, nguon thi khong.) */
+  terms: ["webb-sees-infrared", "webb-looks-back-13-billion"]
 };

@@ -72,5 +72,7 @@ export default {
           word: { vi: "Kilowatt",
                   en: "Kilowatt" },
           text: { vi: "đơn vị đo công suất điện — tức là *bao nhiêu điện mỗi giây*, chứ không phải tổng cộng bao nhiêu. Hơn 20 kilowatt nghĩa là dòng điện đó chảy liên tục chừng nào còn nắng. 🤖",
-                  en: "A unit of electrical power — *how much electricity per second*, not how much in total. More than 20 kilowatts means that flow keeps going for as long as the sunlight lasts. 🤖" } }
+                  en: "A unit of electrical power — *how much electricity per second*, not how much in total. More than 20 kilowatts means that flow keeps going for as long as the sunlight lasts. 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung diem quan trong nhat cua no: tam pin cuon THEM VAO tam tam chinh chu khong thay the chung. */
+  terms: ["rollout-arrays-augment"]
 };

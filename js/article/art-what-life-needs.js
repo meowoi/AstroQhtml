@@ -52,5 +52,7 @@ export default {
           word: { vi: "Điều kiện sống được",
                   en: "Habitable conditions" },
           text: { vi: "không có nghĩa là \"đã có sự sống ở đó\". Nó chỉ có nghĩa là nơi đó có đủ thứ mà sự sống CẦN. Hai câu đó khác nhau, và các nhà khoa học rất cẩn thận không lẫn chúng. ☄️",
-                  en: "does not mean \"life is there\". It only means the place has what life NEEDS. Those are two different statements, and scientists are careful never to mix them up. ☄️" } }
+                  en: "does not mean \"life is there\". It only means the place has what life NEEDS. Those are two different statements, and scientists are careful never to mix them up. ☄️" } },
+  /* Noi voi kho cau hoi: bai neu dung ba dieu kien cua NASA va noi ro khi quyen de che tia cuc tim tu ngoi sao me. (Khong noi cau nao ve nuoc/nang luong: bai chi liet ke, khong day them gi de hoi.) */
+  terms: ["life-needs-atmosphere"]
 };

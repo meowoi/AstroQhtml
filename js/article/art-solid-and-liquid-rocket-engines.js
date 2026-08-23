@@ -86,5 +86,7 @@ export default {
           word: { vi: "Mặt lửa",
                   en: "Flame front" },
           text: { vi: "ranh giới đang cháy chạy dần vào trong khối thuốc phóng. Nó đi tới đâu thì phần đó cháy — nên vị trí của nó chính là \"kim đồng hồ\" của cả động cơ. 🤖",
-                  en: "The burning boundary that travels inward through the propellant. Whatever it reaches, burns — so its position is the \"clock hand\" of the whole engine. 🤖" } }
+                  en: "The burning boundary that travels inward through the propellant. Whatever it reaches, burns — so its position is the \"clock hand\" of the whole engine. 🤖" } },
+  /* Noi voi kho cau hoi: bai day ca hai: dong co ran tron san thuoc phong thanh mot khoi, va muon dung thi phai pha vo. (Cau hoi ve viec DUNG, khong phai ve viec dieu chinh luc day — trang nguon khong noi gi ve viec dieu chinh.) */
+  terms: ["solid-engine-propellant-mixed", "solid-engine-cannot-be-stopped"]
 };

@@ -49,5 +49,7 @@ export default {
           word: { vi: "Giá thể",
                   en: "Growth media" },
           text: { vi: "thứ thay cho đất để giữ rễ cây và giữ nước. Trong Veggie nó làm từ đất sét — đất thường sẽ bay lả tả khắp trạm ngay khi ai đó mở nắp. 🤖",
-                  en: "The stuff that replaces soil to hold roots and water. In Veggie it is clay-based — ordinary loose soil would drift all over the station the moment someone opened the lid. 🤖" } }
+                  en: "The stuff that replaces soil to hold roots and water. In Veggie it is clay-based — ordinary loose soil would drift all over the station the moment someone opened the lid. 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung co che: chat long tu thanh bong bong nen re co the chet duoi HOAC bi boc kin trong khong khi. (Khong noi cau nao ve anh sang: bai noi ro cho kho KHONG phai anh sang.) */
+  terms: ["plants-water-in-space"]
 };

@@ -22,5 +22,12 @@ export default {
            word: { vi: "Vành đai",
                    en: "Rings" },
            text: { vi: "không phải một khối liền — nó là hàng tỉ viên băng bay quanh Sao Thổ cùng nhau! 🐱",
-                   en: "Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱" } }
+                   en: "Saturn's <b>rings</b> aren't solid — they're billions of ice chunks orbiting together! 🐱" } },
+  /* Noi voi kho cau hoi: bai day dung ca hai — vanh dai lam tu HANG TI MANH
+     BANG VA DA (khong phai mot khoi lien, dung nhu loi linh vat), va Cassini o
+     lai he Sao Tho 13 NAM. (Khong dat cau ve "manh to nhat": trang noi vai manh
+     to nhu ca NGON NUI, ma bai chi noi to nhu ngoi nha — tre doc bai roi gap
+     cau do se tra loi sai. Cung khong dat cau "tau DAU TIEN bay vao quy dao Sao
+     Tho": trang co noi, bai thi khong.) */
+  terms: ["saturn-rings-ice-and-rock", "cassini-13-years-at-saturn"]
 };

@@ -8,8 +8,11 @@ bam nut thi co gap dung cau khong": duong di con qua `library.html` (doc
 `curArt.terms`), qua `quiz.html?terms=` (co the LUI VE de ngau nhien khi khoa sai
 het — luat o `quiz.html` dong ~345), roi qua `byTerms`. Bo nay di het duong do.
 
-⚠️ Bai KHONG khai `terms` thi phai mo quiz THUONG, khong duoc chan duong di — do
-   ca chieu do (20/67 bai hien nay vẫn chua co `terms`).
+⚠️⚠️ TU 22/08/2026 KHONG CON BAI NAO THIEU `terms` (67/67 da noi). Nhom "chua
+   co terms" vi the RONG, va muc [2] doi sang hai phat bieu MANH HON: mot bat bien
+   "moi bai doc phai co `terms`" (ghim lai de them bai moi ma quen noi la bao ngay),
+   cong chieu do cu "quiz mo BINH THUONG khi khong co tham so `terms`" — nay do bang
+   cach mo thang `quiz.html`, khong con phu thuoc viec phai co mot bai trong.
 
 ⚠️ Doi chieu bang CHU CUA CAU HOI doc THANG tu `js/quiz/<khoa>.js` (bang Python),
    khong doc bien trong trang: `quiz.html` giu `QUESTIONS` trong IIFE nen ngoai
@@ -38,9 +41,23 @@ CO_TERMS = [
     ("art-microgravity-is-falling", ["gravity-distance"]),
     ("art-code-written-before-launch", ["sequence"]),
     ("art-loop-you-can-see-on-mars", ["loop"]),          # doi chung: noi tu 14/08
+    # ⚠️ Bon bai duoi day noi 22/08/2026 — moi nhanh mot bai, de bo do phu ca bon
+    #    (life · math · physics · engineering) chu khong chi phu thien van.
+    ("art-what-life-needs", ["life-needs-atmosphere"]),               # life
+    ("art-units-lost-a-spacecraft", ["units-lost-an-orbiter"]),       # math
+    ("art-newtons-three-laws", ["newton-first-law-inertia"]),         # physics
+    ("art-life-support-recycles-water",
+     ["eclss-three-systems", "oxygen-from-electrolysis"]),            # engineering
+    # ⚠️ Nam bai Dot 1 noi 22/08/2026 — day la nam bai CUOI cung con thieu
+    #    `terms`, nen tu day 67/67 bai doc deu co duong sang dung bo cau cua no.
+    ("jwst", ["webb-sees-infrared", "webb-looks-back-13-billion"]),
+    ("lib-saturn", ["saturn-rings-ice-and-rock", "cassini-13-years-at-saturn"]),
+    ("lib-andromeda", ["earth-in-milky-way", "andromeda-nearest-large-galaxy"]),
+    ("lib-gaia", ["gaia-3d-map-of-galaxy", "gaia-measures-position-and-motion"]),
+    ("lib-mars", ["perseverance-seeks-ancient-life", "moxie-oxygen-from-mars-air"]),
 ]
-# Bai CHUA co `terms` — phai mo quiz THUONG chu khong chan duong.
-KHONG_TERMS = ["art-newtons-three-laws", "jwst"]
+# ⚠️ `KHONG_TERMS` DA BO 22/08/2026: 67/67 bai deu co `terms` nen danh sach do
+#    tat yeu rong. Chieu do thu hai chuyen sang muc [2] duoi day.
 
 
 def check(nhan, dk, ct=""):
@@ -107,20 +124,27 @@ with sync_playwright() as pw:
         check("%s: cau dang hien thuoc dung bo `terms`" % slug, hien in mong,
               "hien=%r" % hien[:66])
 
-    print("\n=== [2] Bai CHUA co `terms`: mo quiz THUONG, khong chan duong ===")
-    for slug in KHONG_TERMS:
-        pg.goto(BASE + "/library.html?a=" + slug, wait_until="load")
-        pg.wait_for_timeout(900)
-        pg.wait_for_selector("#r-quiz", state="visible", timeout=8000)
-        with pg.expect_navigation(timeout=15000):
-            pg.click("#r-quiz")
-        url = pg.url
-        check("%s: mo quiz thuong (khong co `terms`)" % slug,
-              "quiz.html" in url and "terms=" not in url, url.split("/")[-1][:60])
-        pg.wait_for_selector("#q-text", timeout=15000)
-        pg.wait_for_timeout(300)
-        n = pg.evaluate("() => document.querySelectorAll('#q-options .opt').length")
-        check("%s: van rut duoc de (4 lua chon)" % slug, n == 4, "%d lua chon" % n)
+    print("\n=== [2] Bat bien: MOI bai doc deu co `terms` ===")
+    # ⚠️ Doc THANG tu dia, khong doc qua trang: day la mot bat bien ve DU LIEU,
+    #    va doc qua trinh duyet thi mot bai loi cu phap se doc ra "khong co terms".
+    arts = sorted((ROOT / "js" / "article").glob("*.js"))
+    thieu = [p.stem for p in arts
+             if not re.search(r"terms\s*:\s*\[", io.open(p, encoding="utf-8").read())]
+    check("moi bai doc deu khai `terms` (%d bai)" % len(arts),
+          not thieu and len(arts) > 0, "thieu: %s" % thieu[:6])
+
+    print("\n=== [2b] Khong co tham so `terms`: quiz mo BINH THUONG ===")
+    # ⚠️ Chieu do thu hai. Truoc 22/08/2026 no do bang mot bai chua noi `terms`;
+    #    nay khong con bai nao nhu vay nen do thang tren `quiz.html`. Dieu can bao
+    #    ve KHONG doi: thieu `terms` thi quiz van rut duoc de, khong chan duong.
+    pg.goto(BASE + "/quiz.html", wait_until="load")
+    check("URL khong mang `terms`", "terms=" not in pg.url, pg.url.split("/")[-1])
+    pg.wait_for_selector("#q-text", timeout=15000)
+    pg.wait_for_timeout(400)
+    n = pg.evaluate("() => document.querySelectorAll('#q-options .opt').length")
+    check("van rut duoc de (4 lua chon)", n == 4, "%d lua chon" % n)
+    tong = pg.inner_text("#q-total").strip()
+    check("badge tong so cau = 5", tong == "5", tong)
 
     check("0 loi trang / console trong suot bai kiem", not errs, "; ".join(errs[:3]))
     ctx.close()

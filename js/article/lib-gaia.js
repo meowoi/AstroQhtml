@@ -22,5 +22,10 @@ export default {
            word: { vi: "Bản đồ sao",
                    en: "Star map" },
            text: { vi: "cho biết mỗi ngôi sao ở đâu và đi hướng nào — như bản đồ đường phố nhưng cho cả thiên hà! 🤖",
-                   en: "A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖" } }
+                   en: "A <b>star map</b> shows where each star is and where it's heading — like a street map for the whole galaxy! 🤖" } },
+  /* Noi voi kho cau hoi: bai day dung ca hai — Gaia dung BAN DO BA CHIEU cua
+     thien ha tu gan hai ti vat the, va no do VI TRI + CHUYEN DONG cua tung ngoi
+     sao. (Cau thu hai ke ra du bon thu ESA liet ke: vi tri, khoang cach, chuyen
+     dong, do sang — co du bon moi dung duoc ban do 3D.) */
+  terms: ["gaia-3d-map-of-galaxy", "gaia-measures-position-and-motion"]
 };

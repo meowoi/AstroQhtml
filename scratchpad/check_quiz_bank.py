@@ -210,10 +210,25 @@ def main():
         #    `media.mit.edu` · `scratch.mit.edu` · `appinventor.mit.edu`, muc 2 CLAUDE.md
         #    ghi nguon wiki la "NASA/ESA/MIT"). Can no vi NASA gan nhu khong co noi dung
         #    ve AI trong DOI SONG (thuat toan de xuat, thien lech) — thu tre gap moi ngay.
+        # ⚠️ `www1.grc.nasa.gov` them 22/08/2026 cho 4 cau nhanh physics/engineering.
+        #    Day la NASA Glenn Research Center (Beginner's Guide to Aeronautics) — cung
+        #    mot to chuc, khac ten mien con. Can no vi `science.nasa.gov` khong co trang
+        #    nao phat bieu ba dinh luat Newton hay bon luc tren mot ten lua.
+        # ⚠⚠ TEN MIEN NAY PHUC VU THIEU CHUNG CHI TRUNG GIAN. WebFetch tu choi voi
+        #    "unable to verify the first certificate", nhung curl VA urllib cua Python
+        #    deu vao duoc (da do 22/08/2026, ca 4 URL tra 200). Dung WebFetch o day se
+        #    bao mot URL SONG la CHET — bao oan, ma mot phep kiem hay bao oan thi som
+        #    muon bi bo qua, do moi la cai gia that.
         OK_HOSTS = ("https://science.nasa.gov/", "https://spaceplace.nasa.gov/",
+                    "https://www1.grc.nasa.gov/",
                     "https://www.nasa.gov/", "https://lco.global/",
                     "https://scied.ucar.edu/", "https://www.exploratorium.edu/",
-                    "https://www.media.mit.edu/")
+                    "https://www.media.mit.edu/",
+                    # ⚠️ NOI DUNG MOT TEN MIEN, 22/08/2026: Gaia la nhiem vu cua
+                    #    ESA, khong co trang NASA nao mo ta no. ESA von da la nguon
+                    #    tin cay cua du an (bai `lib-gaia` dan esa.int tu Dot 1,
+                    #    `wiki/` dan ESA). Khong mo cua cho URL bat ky.
+                    "https://www.esa.int/")
         bad_host = sorted(u for u in srcs if not u.startswith(OK_HOSTS))
         check("moi URL nguon thuoc danh sach ten mien da duyet, qua https",
               not bad_host, f"{bad_host}")
@@ -326,6 +341,14 @@ def main():
             return hit[0]
 
 
+        # ⚠⚠ NAP LAI TRANG TRUOC KHI CHOI. Muc [4] goi mang qua 52 URL nen mat
+        #    hon `TIME_PER` = 30 giay cua quiz.html; het gio thi trang TU tra loi cau
+        #    dang hien va moi o dap an thanh `disabled`, nen cu bam dau tien cua muc
+        #    nay het han roi NEM — bo do chet giua duong chu khong bao hong. Truoc
+        #    22/08/2026 no song nho mot CUOC DUA (Chrome ham setInterval o tab khong
+        #    co tieu diem, quy tac 9 muc 6); them 15 nguon la du de dong ho ve 0.
+        pg.goto(f"{BASE}/quiz.html", wait_until="load")
+        pg.wait_for_selector("#q-text", timeout=15000)
         check("badge tong so cau = 5", pg.inner_text("#q-total").strip() == "5")
 
         seen_src, seen_nosrc = 0, 0

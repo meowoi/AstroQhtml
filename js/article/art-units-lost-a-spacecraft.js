@@ -52,5 +52,7 @@ export default {
           word: { vi: "Đơn vị",
                   en: "Unit" },
           text: { vi: "thứ cho biết một con số đang đo cái gì và đo bằng thước nào. Hai người cùng viết \"5\" mà khác đơn vị thì họ đang nói về hai thứ khác nhau — dù trên giấy trông y hệt. ☄️",
-                  en: "The thing that tells you what a number measures and on whose ruler. Two people can both write \"5\" and mean two different things — even though on paper it looks identical. ☄️" } }
+                  en: "The thing that tells you what a number measures and on whose ruler. Two people can both write \"5\" and mean two different things — even though on paper it looks identical. ☄️" } },
+  /* Noi voi kho cau hoi: bai day dung nguyen nhan: phan mem duoi mat dat dung he Anh, phan mem tren tau dung he met. (Khong hoi con so \"170 km\" — trang nguon KHONG co con so do.) */
+  terms: ["units-lost-an-orbiter"]
 };
