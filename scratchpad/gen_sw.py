@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""gen_sw.py — SINH `sw.js`. ĐỪNG SỬA TAY `sw.js`, lần sinh sau mất.
+r"""gen_sw.py — SINH `sw.js`. ĐỪNG SỬA TAY `sw.js`, lần sinh sau mất.
 
     python scratchpad/gen_sw.py
 
@@ -18,7 +18,7 @@
    dung của mình, nên không chen được một trang của astroQ vào đó. Service
    worker thì nằm TRONG trình duyệt, tức đứng trước cả biên đó.
 
-══════════════ BỐN QUYẾT ĐỊNH, MỖI CÁI CHỐNG MỘT RỦI RO THẬT ══════════════
+═════════════ NĂM QUYẾT ĐỊNH, MỖI CÁI CHỐNG MỘT RỦI RO THẬT ═════════════
 
 ① MẠNG-TRƯỚC CHO MỌI THỨ, cache CHỈ là đường lùi.
    Cache-first nhanh hơn, nhưng nó chính là cách ghim một bản cũ — và dự án ĐÃ
@@ -51,6 +51,36 @@
    Đây là thứ giữ cho cache không phình và không ghim bản cũ. `skipWaiting` +
    `clients.claim()` để bản mới nắm quyền NGAY — an toàn vì đã mạng-trước.
 
+⑤ CACHE-TRƯỚC CHỈ CHO ĐƯỜNG **BẤT BIẾN** (`fonts/` · `vendor/<gói>/<phiên-bản>/`).
+   ⚠️⚠️ ĐÂY KHÔNG PHẢI NỚI QUYẾT ĐỊNH ①. ① cấm cache-first vì **lệch phiên bản**:
+   HTML mới + JS cũ trong cùng một lượt. Lập luận đó chỉ đúng với URL **không có
+   dấu vân tay** — `css/*.css`, `js/*.js`, `*.html`: tên đứng yên, nội dung đổi.
+   Hai đường dưới đây không thuộc loại đó, và lý do là CẤU TRÚC chứ không phải
+   "chắc là ổn":
+     · `vendor/three/0.160.0/…` · `vendor/firebase/12.16.0/…` — **phiên bản NẰM
+       TRONG đường dẫn**, nên bản mới là URL mới. Lệch phiên bản không dựng nổi.
+     · `fonts/*.woff2` — nằm trong `SHELL`, tức được `fetch(u,{cache:"reload"})`
+       lại ở MỖI lần `install`; mà `stamp_version.py` chạy trước MỖI lần push nên
+       tên cache đổi ⇒ `activate` xoá sạch cache của bản dựng cũ. Bản trong cache
+       LUÔN là bản của bản dựng đang chạy.
+
+   SỐ ĐO ĐỨNG SAU (24/08/2026 — `scratchpad/perf_audit_all.py`, `_font_chain.py`,
+   và header thật của astroq.org, không phải suy đoán):
+     · GitHub Pages trả `Cache-Control: max-age=600` cho MỌI file. Sau 10 phút là
+       tải lại từ đầu — kể cả 655 KB three.js và 100 KB font.
+     · Hai đường này cộng lại **326 KB gzip** (`vendor/` 226 KB + `fonts/` 100 KB).
+     · Trên 4G RTT 150ms + CPU ×4, `fonts/` ở `dashboard.html` bắt đầu tải ở
+       **3.475 ms** và xong ở **4.783 ms**, trong khi FCP là **3.728 ms** — tức
+       chữ Việt vẽ lại HƠN MỘT GIÂY sau lần vẽ đầu, mỗi lượt vào.
+
+   ⛔ ĐỪNG thêm `css/`, `js/` hay `*.html` vào `FAST`. Đó ĐÚNG là chỗ ① nói tới,
+      và nó đã tốn của dự án một giờ ngày 23/08 (`dashboard.html` gọi `P.hud()`
+      trong khi `js/progress.js` trên origin chưa có `hud`).
+   ⛔ ĐỪNG rút gọn mẫu `vendor` thành `/^\/vendor\//`. Hai segment `[^\/]+` ở giữa
+      là thứ ĐÒI phải có số phiên bản trong đường dẫn; bỏ chúng đi là cấp
+      cache-trước cho cả `vendor/foo.js` — một đường KHÔNG bất biến, tức tự tay
+      dựng lại đúng cái bẫy ① cấm.
+
 ⚠️ CÔNG TẮC TẮT: xoá `sw.js` khỏi repo. Trình duyệt gặp 404 ở script service
    worker lúc kiểm cập nhật thì **tự gỡ đăng ký**. Không cần deploy gì thêm.
 """
@@ -75,15 +105,29 @@ SHELL = [
 ]
 
 TPL = '''/* SINH RA bởi `python scratchpad/gen_sw.py` — ĐỪNG SỬA TAY, lần sinh sau mất.
-   Lý do tồn tại + 4 quyết định thiết kế: xem khối chú thích ở đầu gen_sw.py.
+   Lý do tồn tại + 5 quyết định thiết kế: xem khối chú thích ở đầu gen_sw.py.
 
-   ⚠️ MẠNG-TRƯỚC CHO MỌI THỨ. Cache chỉ là đường lùi khi host hỏng. File này
-      KHÔNG làm app nhanh hơn — nó làm app không vỡ khi GitHub trả 5xx.
+   ⚠️ MẠNG-TRƯỚC CHO MỌI THỨ, TRỪ `FAST` (quyết định ⑤). Với mọi đường còn lại
+      cache chỉ là đường lùi khi host hỏng, và ở đó file này KHÔNG làm app nhanh
+      hơn — nó làm app không vỡ khi GitHub trả 5xx. Riêng `fonts/` và
+      `vendor/<gói>/<phiên-bản>/` là cache-trước, vì đường dẫn của chúng BẤT BIẾN
+      nên không dựng nổi cảnh lệch phiên bản mà ① cấm. ⛔ Đừng nới `FAST`.
    ⚠️ Xoá file này khỏi repo = trình duyệt tự gỡ đăng ký (công tắc tắt). */
 var VERSION = "%(version)s";
 var CACHE = "astroq-" + VERSION;
 var OFFLINE = "offline.html";
 var SHELL = %(shell)s;
+
+/* ⚠️ CACHE-TRƯỚC — CHỈ hai đường BẤT BIẾN này, và lý do là CẤU TRÚC chứ không
+   phải "chắc là ổn". Vì sao nó KHÔNG phá quyết định ① (chống lệch phiên bản):
+   xem quyết định ⑤ ở đầu `scratchpad/gen_sw.py`.
+     · `fonts/` — nằm trong SHELL, `install` tải lại ở mỗi bản dựng.
+     · `vendor/<gói>/<phiên-bản>/…` — phiên bản NẰM TRONG đường dẫn.
+   ⛔ Đừng thêm `css/`, `js/`, `*.html`: tên đứng yên mà nội dung đổi — đó đúng
+      là chỗ ① cấm. ⛔ Đừng bỏ hai segment `[^\\/]+\\/[^\\/]+\\/` của mẫu `vendor`:
+      chúng ĐÒI có số phiên bản, không có thì rơi về mạng-trước, và như thế mới
+      đúng. */
+var FAST = [/^\\/fonts\\//, /^\\/vendor\\/[^\\/]+\\/[^\\/]+\\/.+/];
 
 /* ⚠️ Đường same-origin KHÔNG được cache. Hôm nay API nằm ở origin khác nên
    nhánh này chưa chạy, nhưng ngày ai đó đưa API về sau cùng một tên miền thì
@@ -120,6 +164,35 @@ function skip(url) {
   return false;
 }
 
+function fast(url) {
+  for (var i = 0; i < FAST.length; i++) if (FAST[i].test(url.pathname)) return true;
+  return false;
+}
+
+/* Cache-trước cho đường bất biến: có trong cache thì trả NGAY (0 vòng mạng),
+   hụt thì đi mạng rồi ghi lại.
+   ⚠️ KHÔNG dùng `ignoreSearch` ở đây, và đó là chỗ khác `fallback()` một cách
+      CỐ Ý. `fallback` bỏ qua query vì `?api=local`/`?onboard=1` là cờ của TRANG,
+      không đổi nội dung file. Ở đây thì ngược lại: ngày nào ai đó phá cache một
+      file vendor bằng `?v=2` thì query CHÍNH LÀ thứ phải làm hụt cache — bỏ qua
+      nó là vô hiệu hoá đúng cú phá cache đó.
+   ⚠️ KHÔNG làm mới ngầm phía sau (stale-while-revalidate): thêm một lượt mạng
+      cho một URL bất biến là trả lại đúng cái giá vừa đi cắt. Đường bất biến
+      không cần làm mới — bản dựng mới là URL mới, hoặc là cache mới. */
+function fastFirst(req) {
+  return caches.match(req).then(function (hit) {
+    if (hit) return hit;
+    return fetch(req).then(function (res) {
+      if (res && res.status >= 500) return fallback(req, res);
+      if (res && res.ok && res.type === "basic") {
+        var copy = res.clone();
+        caches.open(CACHE).then(function (c) { c.put(req, copy); }).catch(function () {});
+      }
+      return res;
+    }).catch(function () { return fallback(req, null); });
+  });
+}
+
 function fallback(req, res) {
   /* ignoreSearch: `?api=local`, `?cb=…`, `?onboard=1` không được làm hụt cache. */
   return caches.match(req, { ignoreSearch: true }).then(function (hit) {
@@ -140,6 +213,10 @@ self.addEventListener("fetch", function (e) {
   try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin) return;        /* API + Firebase: để nguyên */
   if (skip(url)) return;
+
+  /* ⚠️ SAU `skip()`: đường `/me/` `/auth/` `/admin/` `/visit` không bao giờ được
+     cache, và thứ tự này là thứ giữ điều đó đúng kể cả khi `FAST` được nới. */
+  if (fast(url)) return e.respondWith(fastFirst(req));      /* quyết định ⑤ */
 
   e.respondWith(
     fetch(req).then(function (res) {
