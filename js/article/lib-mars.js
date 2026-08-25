@@ -8,6 +8,11 @@ export default {
   em: "🔴",
   c: ["#ffcaa8", "#d1642f", "#5e2410"],
   img: "https://images-assets.nasa.gov/image/PIA21496/PIA21496~medium.jpg",
+  /* Anh cho THE LUOI (219x130 => can 438px o DPR2). Ban `~small` la 640px.
+     ⚠️ `img` o tren GIU nguyen ban lon: the HERO ve o 598x210 (can 1196px).
+     ⚠️ URL da mo va kiem 200 ngay 25/08/2026 — dung doan `~small`/`~medium`
+        theo mau, `~medium` tra 403 o 3/6 anh nay. */
+  thumb: "https://images-assets.nasa.gov/image/PIA21496/PIA21496~small.jpg",
   credit: "NASA / JPL-Caltech",
   /* ⚠️ Truoc 22/08/2026 truong nay tro TRANG CHU `mars.nasa.gov/` — xem ly do
      o `lib-andromeda`. Nay tro dung trang nhiem vu Perseverance. */

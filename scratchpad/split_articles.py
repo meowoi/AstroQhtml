@@ -50,8 +50,12 @@ INDEX = os.path.join(ROOT, "js", "articles-index.js")
 
 # ⚠️ `ord` PHAI o ca hai: no la THU TU CURATION, va `featured()` chon "bai chua doc
 #    dau tien theo THU TU MUC LUC" — nen muc luc sai thu tu la doi HAN the lon.
-LIGHT = ("ord", "id", "src", "cat", "em", "c", "img", "title")
-ORDER = ("ord", "id", "src", "cat", "em", "c", "img", "credit", "url",
+# ⚠️ `thumb` (anh ban `~small` cho THE LUOI) PHAI o ca hai danh sach: muc luc
+#    la thu `library.html` ve luoi the, thieu no o do thi the van dung `img`
+#    va ca luot toi uu thanh vo tac dung. Ly do + so do: xem
+#    scratchpad/_patch_thumb.py.
+LIGHT = ("ord", "id", "src", "cat", "em", "c", "img", "thumb", "title")
+ORDER = ("ord", "id", "src", "cat", "em", "c", "img", "thumb", "credit", "url",
          "title", "body", "term", "terms")
 
 

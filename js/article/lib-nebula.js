@@ -8,6 +8,11 @@ export default {
   em: "🌌",
   c: ["#8ee0ff", "#2f6fd0", "#0e2a5e"],
   img: "https://images-assets.nasa.gov/image/PIA25433/PIA25433~large.jpg",
+  /* Anh cho THE LUOI (219x130 => can 438px o DPR2). Ban `~small` la 640px.
+     ⚠️ `img` o tren GIU nguyen ban lon: the HERO ve o 598x210 (can 1196px).
+     ⚠️ URL da mo va kiem 200 ngay 25/08/2026 — dung doan `~small`/`~medium`
+        theo mau, `~medium` tra 403 o 3/6 anh nay. */
+  thumb: "https://images-assets.nasa.gov/image/PIA25433/PIA25433~small.jpg",
   credit: "NASA / JPL-Caltech",
   url: "https://science.nasa.gov/mission/webb/",
   title: { vi: "Tinh vân Đại Bàng — vườn ươm của các ngôi sao",

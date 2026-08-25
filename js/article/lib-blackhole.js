@@ -8,6 +8,11 @@ export default {
   em: "🕳️",
   c: ["#ffe1a8", "#f2a53c", "#3a2410"],
   img: "https://images-assets.nasa.gov/image/PIA23122/PIA23122~medium.jpg",
+  /* Anh cho THE LUOI (219x130 => can 438px o DPR2). Ban `~small` la 640px.
+     ⚠️ `img` o tren GIU nguyen ban lon: the HERO ve o 598x210 (can 1196px).
+     ⚠️ URL da mo va kiem 200 ngay 25/08/2026 — dung doan `~small`/`~medium`
+        theo mau, `~medium` tra 403 o 3/6 anh nay. */
+  thumb: "https://images-assets.nasa.gov/image/PIA23122/PIA23122~small.jpg",
   credit: "NASA / JPL-Caltech",
   url: "https://science.nasa.gov/universe/black-holes/",
   title: { vi: "Hố đen khổng lồ ở thiên hà M87",

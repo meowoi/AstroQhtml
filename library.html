@@ -11,6 +11,15 @@
 <meta name="robots" content="noindex,follow" />
 <title>AstroQ — Góc Khám Phá</title>
 
+<!-- FONT-PRELOAD:BEGIN -->
+<!-- ĐỪNG SỬA TAY khối này — sinh bởi `python scratchpad/sync_font_preload.py`.
+     Vì sao preload (kèm số đo) + vì sao BẮT BUỘC có `crossorigin`: xem đầu script đó. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/share-tech-mono-latin.woff2" />
+<!-- FONT-PRELOAD:END -->
 <link rel="stylesheet" href="css/fonts.css" />
 
 <link rel="stylesheet" href="css/common.css" />
@@ -189,9 +198,20 @@
   /* ===== Filter state ===== */
   var fSearch="", fSrc="all", fCat="all";
 
-  function imgboxHtml(a){
+  /* ⚠️⚠️ HAI CỠ ẢNH CHO HAI CHỖ VẼ — số đo, không phải tinh chỉnh cho vừa mắt.
+       · thẻ lưới `.card .imgbox` cao **130px**, rộng ~219px ⇒ cần **438px** ở DPR2
+       · thẻ lớn `.feat .imgbox` vẽ **598×210** ⇒ cần **1196px** ở DPR2
+     Trước 25/08/2026 cả hai dùng `a.img` (1280–3000px), nên `library.html` kéo
+     **1,3 MB** ảnh từ `images-assets.nasa.gov` để vẽ trong mấy ô 219px — tỉ lệ dư
+     2,9×–6,7×. Nay thẻ lưới dùng `a.thumb` (bản `~small`, 640px): tổng còn **229 KB**.
+     ⚠️ THẺ LỚN VẪN DÙNG `a.img`. Hạ nó xuống 640px là ảnh mờ ở đúng chỗ to nhất
+        trang — đó là lý do `thumb` là trường RIÊNG chứ không phải thay `img`.
+     ⚠️ `a.thumb || a.img` là đường lùi thật: bài chưa khai `thumb` (mọi bài `img:null`
+        và mọi bài thêm sau) vẫn vẽ được, chỉ là nặng như cũ. */
+  function imgboxHtml(a, big){
     var em='<span class="em">'+a.em+'</span>';
-    var img = a.img ? '<img src="'+a.img+'" alt="" loading="lazy" onerror="this.style.display=\'none\'" />' : '';
+    var src = big ? a.img : (a.thumb || a.img);
+    var img = src ? '<img src="'+src+'" alt="" loading="lazy" onerror="this.style.display=\'none\'" />' : '';
     return '<div class="imgbox" style="--c1:'+a.c[0]+';--c2:'+a.c[1]+';--c3:'+a.c[2]+'">'+em+img+'</div>';
   }
   function badgeHtml(a){
@@ -215,7 +235,7 @@
        ⚠️ Thẻ hiện NGAY, đoạn chữ điền sau; chưa về thì để trống chứ không hiện chữ
           giữ chỗ giả. */
     box.innerHTML =
-      '<article class="feat" data-id="'+a.id+'">'+imgboxHtml(a)+
+      '<article class="feat" data-id="'+a.id+'">'+imgboxHtml(a, true)+
         '<div class="feat-body">'+badgeHtml(a)+
           '<div class="feat-eyebrow">'+t("featured")+'</div>'+
           '<h1>'+L(a.title)+'</h1>'+

@@ -8,6 +8,11 @@ export default {
   em: "🌀",
   c: ["#c6d8ff", "#5a78c8", "#20305e"],
   img: "https://images-assets.nasa.gov/image/PIA04921/PIA04921~large.jpg",
+  /* Anh cho THE LUOI (219x130 => can 438px o DPR2). Ban `~small` la 640px.
+     ⚠️ `img` o tren GIU nguyen ban lon: the HERO ve o 598x210 (can 1196px).
+     ⚠️ URL da mo va kiem 200 ngay 25/08/2026 — dung doan `~small`/`~medium`
+        theo mau, `~medium` tra 403 o 3/6 anh nay. */
+  thumb: "https://images-assets.nasa.gov/image/PIA04921/PIA04921~small.jpg",
   credit: "NASA / JPL-Caltech",
   /* ⚠️ Truoc 22/08/2026 truong nay tro TRANG CHU `science.nasa.gov/` — mot trang
      chu khong do duoc mot cau trich nao (noi dung doi hang ngay). Nay tro dung

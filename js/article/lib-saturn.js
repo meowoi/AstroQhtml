@@ -8,6 +8,11 @@ export default {
   em: "🪐",
   c: ["#ffe6b0", "#d9a441", "#5e3f14"],
   img: "https://images-assets.nasa.gov/image/PIA22766/PIA22766~orig.jpg",
+  /* Anh cho THE LUOI (219x130 => can 438px o DPR2). Ban `~small` la 640px.
+     ⚠️ `img` o tren GIU nguyen ban lon: the HERO ve o 598x210 (can 1196px).
+     ⚠️ URL da mo va kiem 200 ngay 25/08/2026 — dung doan `~small`/`~medium`
+        theo mau, `~medium` tra 403 o 3/6 anh nay. */
+  thumb: "https://images-assets.nasa.gov/image/PIA22766/PIA22766~small.jpg",
   credit: "NASA / JPL-Caltech",
   url: "https://science.nasa.gov/saturn/",
   title: { vi: "Tàu Cassini và vành đai Sao Thổ",
