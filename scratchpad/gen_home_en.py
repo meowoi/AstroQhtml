@@ -306,7 +306,14 @@ def build_en(html, en, vi):
     #    của Comet & Byte trỏ sang `/en/img/…` và **404**. Trình duyệt lặng lẽ
     #    lùi về thẻ <img> nên trang trông vẫn ĐÚNG — chỉ console và tab Network
     #    mới nói ra. Có phép kiểm đếm ngay dưới `build_en`.
-    h = re.sub(r'(\b(?:href|src|srcset)=")(css/|js/|img/)', r"\g<1>../\g<2>", h)
+    # ⚠️⚠️ `fonts/` THÊM 25/08/2026 — LẶP LẠI ĐÚNG LỖI `srcset` Ở TRÊN. Khối
+    #    `rel="preload" as="font"` (xem scratchpad/sync_font_preload.py) mang
+    #    `href="fonts/…"`; thiếu `fonts/` ở đây thì bản EN trỏ `/en/fonts/*.woff2`
+    #    → **404 cả 5 phông**. Và nó hỏng IM LẶNG y như lần trước: preload 404 thì
+    #    trình duyệt vẫn tải phông theo đường CSS bình thường, nên **chữ vẫn đúng
+    #    phông** — chỉ mất toàn bộ tác dụng của preload, cộng 5 lượt 404. Phép kiểm
+    #    cũ ở `build_en` chỉ đếm `css/|js/|img/` nên nó MÙ với chuyện này.
+    h = re.sub(r'(\b(?:href|src|srcset)=")(css/|js/|img/|fonts/)', r"\g<1>../\g<2>", h)
     h = h.replace('href="wiki/"', 'href="../wiki/en/"')
 
     # ⚠️⚠️ TRANG .html Ở GỐC CŨNG PHẢI LÙI MỘT CẤP — lỗi thật, phát hiện
@@ -402,8 +409,9 @@ def main():
     nlink = lambda s: len(re.findall(r'<link rel="alternate" hreflang=', s))
     check(nlink(out) == 3, "ban EN co dung 3 the <link> hreflang", str(nlink(out)))
     check('href="%s"' % U_EN in out, "canonical tro ve /en/")
-    check("../css/" in out and "../js/" in out and "../img/" in out, "duong dan tai nguyen da lui mot cap")
-    leftover = re.findall(r'\b(?:href|src|srcset)="(?:css/|js/|img/)[^"]*"', out)
+    check("../css/" in out and "../js/" in out and "../img/" in out
+          and "../fonts/" in out, "duong dan tai nguyen da lui mot cap")
+    leftover = re.findall(r'\b(?:href|src|srcset)="(?:css/|js/|img/|fonts/)[^"]*"', out)
     check(not leftover, "0 duong dan tai nguyen con o goc (se 404 tu /en/)", str(leftover[:3]))
     # ⚠️ Phep kiem nay sinh ra tu mot loi THAT: `href="landing-app.html"` phan
     #    giai thanh /en/landing-app.html va 404. Phep kiem 'duong dan tai nguyen'
@@ -413,6 +421,13 @@ def main():
     check('href="../landing-app.html"' in out,
           "nut Play now tro dung ../landing-app.html")
     check("../wiki/en/" in out, "link wiki tro sang ban tieng Anh")
+    # ⚠️ Dem DUNG so dong preload, khong chi hoi "co fonts/ khong": mot dong lot
+    #    ra ngoai la mot phong 404 ma trang van trong nhu binh thuong.
+    pre = re.findall(r'<link rel="preload" as="font"[^>]*href="([^"]+)"', out)
+    check(len(pre) == 5, "ban EN co dung 5 dong preload phong", str(len(pre)))
+    check(all(u.startswith("../fonts/") for u in pre),
+          "moi dong preload deu tro ../fonts/",
+          str([u for u in pre if not u.startswith("../fonts/")]))
     check('<a href="/" data-lang="vi"' in out and '<a href="/en/" data-lang="en"' in out,
           "nut chuyen ngu la LINK that")
     # ⚠️ BO COMMENT HTML TRUOC KHI DEM. Markup cua du an co rat nhieu ghi chu
