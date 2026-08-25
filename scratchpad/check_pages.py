@@ -4880,12 +4880,61 @@ _sw_nc = _no_comments(_sw)
 #    tra gia cho chuyen phien ban dung yen (06/08/2026 ban that dung o ban cu
 #    gan mot ngay). Nang hon: HTML moi + JS cu trong cung mot luot la lech
 #    phien ban, dung lop loi vua mat mot gio ngay 23/08.
-_rw = _sw_nc[_sw_nc.index("respondWith(") + len("respondWith("):]
-check("[37] MANG-TRUOC: thu DAU TIEN trong respondWith la `fetch(req)`",
-      _rw.lstrip().startswith("fetch(req)"), _rw.strip()[:40])
+# ⚠️⚠️ PHEP KIEM NAY DA DOI PHAT BIEU 25/08/2026 — quyet dinh ⑤ mo mot NGOAI LE
+#    cache-first HEP cho `fonts/` va `vendor/<pkg>/<ver>/`. Ban cu doi *"thu DAU
+#    TIEN trong respondWith la fetch(req)"*, nen no bao hong DUNG LUC san pham lam
+#    dung. KHONG noi long: nay doi DU NAM chan, va ba trong so do la thu ban cu
+#    KHONG he hoi toi — nhat la PHAM VI cua `FAST`.
+_rws = _re37.findall(r"respondWith\(\s*([A-Za-z_$][\w$]*)\(", _sw_nc)
+check("[37] dung 2 nhanh respondWith (fast-first + mang-truoc)", len(_rws) == 2, str(_rws))
+check("[37] MANG-TRUOC: nhanh CHINH (moi thu ngoai FAST) bat dau bang `fetch(req)`",
+      _rws[-1:] == ["fetch"], str(_rws))
+check("[37] cache-first CHI di qua fastFirst, va CHI khi fast(url)",
+      "if (fast(url)) return e.respondWith(fastFirst(req))" in _sw_nc)
+# ⚠️ THU TU LA THU GIU `/me/` `/auth/` `/admin/` `/visit` KHONG BAO GIO VAO CACHE,
+#    ke ca khi ai do noi `FAST`. Dao hai dong nay la mot loi im lang.
+# ⚠️⚠️ PHAI CAT LAY THAN HANDLER TRUOC KHI SO THU TU. Ban dau cua toi so tren CA
+#    FILE, nen `index("fast(url)")` bat trung dong `function fast(url) {` o dau file
+#    (dong 73) chu khong phai loi goi trong handler (dong 125) — tuc no do THU TU
+#    DINH NGHIA HAM, khong do THU TU CHAY, va phep thu pha hoai "dao fast len truoc
+#    skip" LOT. Dung lop loi ma phep kiem "mang-truoc" cu da mac 23/08/2026.
+_hi = _sw_nc.find('addEventListener("fetch"')
+_hb = _sw_nc[_hi:] if _hi >= 0 else ""
+check("[37] doc duoc than handler fetch", bool(_hb))
+check("[37] `fast(url)` dung SAU `skip(url)` (trong THAN handler, khong phai cho khai ham)",
+      _hb.find("skip(url)") >= 0 and _hb.find("fast(url)") >= 0
+      and _hb.find("skip(url)") < _hb.find("fast(url)"),
+      "skip@%d fast@%d" % (_hb.find("skip(url)"), _hb.find("fast(url)")))
 check("[37] KHONG co nhanh cache-first (`caches.match` trong `respondWith` truoc fetch)",
       "respondWith(\n      caches.match" not in _sw_nc
       and "respondWith(caches.match" not in _sw_nc)
+
+# ── Pham vi FAST phai HEP: dich mau JS sang Python roi THU tren duong dan that ──
+# ⚠️ Doc `FAST` bang cach dem chu ("khong chua 'css'") thi mong. Hai mau nay dich
+#    1-1 sang Python (chi bo dau `\` truoc `/`), nen thu duoc HANH VI that.
+#    ⚠️ Day la cong RE khi SUA; phep do manh hon la `scratchpad/probe_sw_fast.py`
+#       (dem cu HOI MAY CHU that, 12 phep kiem) — dung bo cai nao.
+# ⚠️⚠️ DOC TU NGUON THO `_sw`, KHONG PHAI `_sw_nc` — `_no_comments()` thay `//`
+#    BEN TRONG regex literal `/^\/fonts\//` roi coi la chu thich va AN HET DONG,
+#    nen ban dau cua phep kiem nay doc ra FAST = [] va bao hong 5 lan trong khi
+#    sw.js hoan toan dung. Diem mu nay da ghi 23/08/2026; `NEVER` ngay duoi cung
+#    doc tu `_sw` dung vi ly do do.
+_fastm = _re37.search(r"var\s+FAST\s*=\s*\[(.*?)\];", _sw, _re37.S)
+check("[37] doc duoc khai bao FAST", bool(_fastm))
+_fpat = _re37.findall(r"/\^(.*?)/(?:[gimsuy]*)\s*(?:,|$)", _fastm.group(1)) if _fastm else []
+check("[37] FAST co dung 2 mau (fonts + vendor CO VERSION trong duong)",
+      len(_fpat) == 2, str(_fpat))
+_fre = [_re37.compile("^" + p.replace("\\/", "/")) for p in _fpat]
+_hit = lambda u: any(r.search(u) for r in _fre)
+for _u in ("/fonts/inter-vietnamese.woff2",
+           "/vendor/three/0.160.0/three.module.min.js",
+           "/vendor/firebase/12.16.0/firebase-app.js"):
+    check("[37] FAST PHU duong bat bien: %s" % _u, _hit(_u))
+# ⚠️ Neu mot trong nhung duong duoi day lot vao FAST thi quyet dinh ① VO HIEU:
+#    HTML moi + CSS/JS cu trong cung mot luot = lech phien ban.
+for _u in ("/css/common.css", "/js/ui-common.js", "/dashboard.html", "/",
+           "/vendor/_probe-noversion.js", "/me/profile", "/sw.js"):
+    check("[37] FAST KHONG phu (phai mang-truoc): %s" % _u, not _hit(_u))
 
 # ── 5xx phai bi coi la hong; 404 thi KHONG ────────────────────────────────
 # ⚠️ GitHub tra 503 KEM HTML con ky lan — mot phan hoi THANH CONG o tang mang.

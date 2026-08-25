@@ -6,6 +6,24 @@ diem, nen chay chong nhau lam nhieu bo bao hong mot cach chap chon (quy tac 9).
 
 Dung:  python scratchpad/run_gate.py <ten-bo> [<ten-bo> ...]
 In ra mot dong moi bo: TEN | dat/hong | ma thoat | giay.
+
+⚠️⚠️ BON NHOM TUYET DOI KHONG DUA VAO CONG PUSH — khong phai "cho nhanh", ma vi
+   chung KHONG PHAI phep kiem, hoac vi chung DUNG VAO DU LIEU THAT:
+     1. `test_*`, `e2e_certificate`, `e2e_char_login`, `probe_char_e2e`,
+        `probe_visit_beacon` — can backend (AWS hoac `dotnet run`) va/hoac TAO
+        TAI KHOAN FIREBASE + DONG DynamoDB THAT. Cong day du 25/08/2026 da de
+        `e2e_certificate` lot vao: no chet o `goto` vi thieu may chu tinh cong
+        8000, con luot chay lai (co may chu) thi tao roi tu don du lieu that.
+        ⚠️ Mot bo cong PHAI khong duoc dung vao du lieu nguoi dung.
+     2. `verify_*`, `perf_prod_return` — do tren BAN THAT, chay SAU khi push.
+     3. `perf_ab`, `sync_font_preload`, `gen_*`, `split_*`, `make_*`, `stamp_*`,
+        `bundle_*` — bo SINH: chung GHI FILE vao repo.
+     4. `perf_*` (con lai), `measure_shell`, `gap_lv`, `probe_globe_daynight`,
+        `probe_earth_flat`, `probe_flat_*`, `probe_field_*`, `probe_warp_*` — bo
+        DO, khong co pass/fail; chung in ra so lieu roi thoi, nen `exit 1` cua
+        chung khong noi len dieu gi ve san pham.
+   ⚠️ Cac bo `pha_*` thi chay RIENG (chung sua file nguon roi khoi phuc); dong
+      tong ket cua chung duoc doc theo mau "n/m loi co y bi bat" o duoi.
 """
 import subprocess, sys, time, re, os, io
 
@@ -70,6 +88,18 @@ for name in sys.argv[1:]:
     dt = time.time() - t0
     out = (r.stdout or "") + (r.stderr or "")
     a, b = counts(out)
+    # ⚠️⚠️ BO `pha_*` DO MOT THU KHAC HAN, VA DOC NHAM LA BAO OAN MOI LUOT.
+    #   Mot bo pha hoai gay tung loi co y roi chay lai bo do; dong "n dat / m hong"
+    #   CUOI cung la ket qua cua LUOT DOT BIEN, tuc `m > 0` la ket qua MONG MUON
+    #   (loi co y da bi bat). Doc no nhu mot bo thuong thi `pha_sw` 3/3 van bi gan
+    #   co `<<< XEM LAI`. Can cu dung: dong "n/m loi co y bi bat" + ma thoat.
+    if os.path.basename(p).startswith("pha_"):
+        m = re.search(r"(\d+)\s*/\s*(\d+)\s*loi co y bi bat", out)
+        if m:
+            a = "%s/%s bat" % (m.group(1), m.group(2))
+            b = "0" if m.group(1) == m.group(2) else str(int(m.group(2)) - int(m.group(1)))
+        elif r.returncode == 0:
+            a, b = "sach(exit)", "0"
     # ⚠️⚠️ KHONG DOC RA SO MA MA THOAT = 0 THI COI LA SACH. `check_idents` va
     #   `e2e_tree_stamp` bieu dat ket qua bang MA THOAT chu khong bang mot dong
     #   dem — va chinh ghi chu tren dau ham `counts` da ghi 'Can cu duyet chinh

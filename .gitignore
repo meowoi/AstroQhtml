@@ -13,6 +13,11 @@ scratchpad/*.log
 # 01/08/2026 (`python … | Out-File` chỉ ghi khi pipeline kết thúc, nên script
 # phải tự ghi thẳng ra file mới theo dõi được tiến độ). Dùng xong là bỏ.
 scratchpad/_*.txt
+# ĐẦU RA của một lượt ĐO (`_perf_audit.json` do `perf_audit_all.py` ghi): nó là
+# ẢNH CHỤP số liệu của MỘT máy ở MỘT thời điểm, không phải mã nguồn — commit vào
+# là người đọc sau tưởng đó là số liệu hiện hành. Số liệu đáng giữ thì ghi vào
+# nhật ký `CLAUDE.md` kèm điều kiện đo; sinh lại: `python scratchpad/perf_audit_all.py`.
+scratchpad/_*.json
 
 # ---- Ảnh GỐC chưa tối ưu ----
 # Dự án đã hạ kho ảnh từ 72 MB xuống 2,79 MB; đừng đưa bản gốc trở lại.

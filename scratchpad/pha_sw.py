@@ -33,17 +33,24 @@ def run_suite():
     return dat, hong, names
 
 
+# ⚠️⚠️ TRUONG THU TU LA SO LAN MOC XUAT HIEN, VA NO PHAI KHOP CHINH XAC.
+#    Tu 25/08/2026 (quyet dinh ⑤) phep xet 5xx nam o CA HAI nhanh — `fastFirst()`
+#    va nhanh mang-truoc — nen moc `status >= 500` xuat hien 2 lan. Ban cu doi moc
+#    DUY NHAT roi `[BO QUA]`, tuc 2/3 phep pha hoai LANG LE KHONG CHAY: mot phep
+#    thu pha hoai bi bo qua thi cung nhu da chet. Nay doi dung so lan va thay CA
+#    HAI — vi bo phep xet 5xx o BAT KY nhanh nao cung la mot duong ro con ky lan.
+#    ⚠️ Moc khong khop so lan la HONG, khong phai BO QUA.
 CASES = [
-    # (ten, chuoi cu, chuoi moi)
+    # (ten, chuoi cu, chuoi moi, so lan xuat hien)
     ("bo phep xet 5xx (chi bat loi mang)",
      "if (res && res.status >= 500) return fallback(req, res);",
-     "/* pha hoai: bo phep xet 5xx */"),
+     "/* pha hoai: bo phep xet 5xx */", 2),
     ("cho 404 lui ve cache (trang da xoa song lai)",
      "if (res && res.status >= 500) return fallback(req, res);",
-     "if (res && res.status >= 400) return fallback(req, res);"),
+     "if (res && res.status >= 400) return fallback(req, res);", 2),
     ("bo buoc xoa cache cua ban dung cu",
      'if (k !== CACHE && k.indexOf("astroq-") === 0) return caches.delete(k);',
-     "/* pha hoai: khong xoa cache cu */"),
+     "/* pha hoai: khong xoa cache cu */", 1),
 ]
 
 
@@ -58,11 +65,16 @@ def main():
         sys.exit("ban dung da hong san, dung pha them")
 
     caught = 0
-    for name, old, new in CASES:
-        if base.count(old) != 1:
-            print("  [BO QUA] %s — moc khong duy nhat (%d)" % (name, base.count(old)))
+    for name, old, new, n in CASES:
+        got_n = base.count(old)
+        if got_n != n:
+            # ⚠️ HONG, khong phai BO QUA: mot phep thu pha hoai khong chay duoc thi
+            #    khong chung minh duoc gi, ma no lai doc ra nhu "da kiem".
+            print("=== %s ===" % name)
+            print("  [HONG] moc xuat hien %d lan, doi %d — SUA LAI CASES" % (got_n, n))
+            print("")
             continue
-        io.open(SW, "w", encoding="utf-8", newline="\n").write(base.replace(old, new, 1))
+        io.open(SW, "w", encoding="utf-8", newline="\n").write(base.replace(old, new))
         d, h, names = run_suite()
         got = h > 0
         caught += 1 if got else 0

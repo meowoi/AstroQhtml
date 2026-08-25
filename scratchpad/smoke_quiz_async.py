@@ -131,7 +131,13 @@ def main():
             ctx, pg, errs = new_page(b)
             pg.route("**/js/quiz/*.js", lambda r: r.abort())
             pg.goto(URL, wait_until="load")
-            pg.wait_for_selector("#load-modal.show", timeout=15000)
+            # ⚠️ MOC 30 GIAY, KHONG PHAI 15. Cong day du 25/08/2026 do duoc bo nay
+            #    het han o dung day roi CHET GIUA DUONG (8 dat / exit 1) trong khi
+            #    chay MOT MINH thi 23/0 — tuc chap chon theo tai may, khong phai loi
+            #    san pham. Mot phep kiem hay bao oan thi som muon nguoi ta bo qua no,
+            #    ma o day cai gia cua viec cho lau hon chi la vai giay o mot nhanh
+            #    HONG (nhanh dat khong bao gio cho het moc).
+            pg.wait_for_selector("#load-modal.show", timeout=30000)
             check("hien hop thoai 'chua tai duoc cau hoi'", True)
             vis = pg.evaluate("""() => {
                 const m = document.querySelector('#load-modal.show');
