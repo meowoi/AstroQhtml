@@ -1,0 +1,178 @@
+/* ARCADE-11 Trạm Dẫn Tuyến — phần RIÊNG. Nạp sau css/decision-game.css.
+   Khuôn: XOAY TỪNG ĐOẠN DẪN CHO MỘT TUYẾN LIỀN MẠCH. Nó cần hai thứ mà bốn game
+   lớp quyết định trước không có: một LƯỚI vuông các ô bấm được, và một vệt sáng
+   chạy dọc theo đường đã nối.
+   ⚠️ Để ở đây chứ không nhét vào file dùng chung — hôm nay chỉ một game dùng, mà
+      nhét vào chung là mời game sau dùng lại khuôn này (`docs/decisions/002`).
+      Khuôn lưới-nối nay đã dùng 1/2 suất; suất còn lại đã có chủ (xem đầu
+      `game-route.html`). */
+
+/* ── Tỉ lệ sân: HẸP thì phải CAO HƠN `css/decision-game.css` ────────────────
+   ⚠️⚠️ ĐÂY LÀ SỐ ĐO, KHÔNG PHẢI SỞ THÍCH. `decision-game.css` để `--ar:.72` cho
+      màn hẹp vì nội dung của bốn game kia là CHỮ. Ở đây nội dung là một BÀN VUÔNG,
+      và bàn thì bị kẹp bởi chiều cao còn lại sau lời brief. Đo trên 390×844 với
+      `.72`: sân 390×542 ⇒ bàn chỉ còn **220px**, tức ô 6×6 chỉ **36px** — dưới hẳn
+      mốc 48px của quy tắc 10 mục 6. Với `.62`: sân hẹp lại một chút nhưng CAO hơn,
+      và bàn lên ~300px ⇒ ô 6×6 ≈ 48px. Bề rộng mất đi không dùng được vào việc gì
+      (một cột chữ 390px không cần rộng hơn), còn chiều cao thì là thứ đang thiếu.
+   ⚠️ PHẢI KHAI CẢ `--ar` LẪN `aspect-ratio` và hai số BẰNG NHAU — lý do đầy đủ ghi
+      ở đầu `css/decision-game.css` (bản chỉ khai `--ar` từng cho sân 1086×2px).
+   ⚠️ Màn rộng GIỮ NGUYÊN 2.05 của khung chung: ở đó sân chia hai cột, bàn lấy cột
+      phải và không bị chiều cao bóp. */
+@media (max-width:900px){
+  .field{--ar:.62;aspect-ratio:.62;}
+}
+
+/* ── Bố cục: CHỮ một bên, BÀN một bên ────────────────────────────────────────
+   ⚠️⚠️ VÌ SAO KHÔNG ĐỂ BÀN NẰM DƯỚI LỜI BRIEF NHƯ BỐN GAME KIA. Sân của lớp
+      quyết định rộng tới 1120px (`--ar:2.05`), mà một bàn VUÔNG cao nhất chỉ
+      ~460px ⇒ xếp dọc thì còn ~600px trống bên phải. Đó đúng lỗi *"trống hết bên
+      phải"* mà chủ dự án đã bác ở cây chặng đường (`docs/decisions/008` quyết
+      định 3, đo được lệch 675–734px). Hai cột thì chữ và bàn cùng lấp hết sân,
+      và câu kiến thức nằm NGANG bàn chứ không phải dưới đáy phải cuộn xuống.
+
+   ⚠️⚠️ VÀ BÀN PHẢI CHIẾM TRỌN CHIỀU CAO CỘT PHẢI — đây là số đo, không phải cách
+      xếp cho đẹp. Bản đầu để bàn nằm chung hộp với chữ, nên nó phải chia chiều cao
+      với brief + dòng trạng thái + hàng nút; `audit_viewports` đo được ô **41×41px**
+      ở **iPad-mini-ngang** và **iPad-Pro-dọc** — dưới mốc 44px của WCAG 2.5.5 trên
+      đúng hai thiết bị CHẠM. Nay `.dg` là lưới: cả cột chữ (bước · brief · giải
+      thích · trạng thái · nút) ở cột 1, bàn một mình chiếm cột 2 từ trên xuống dưới
+      ⇒ lấy lại ~80px chiều cao, ô lên ~48px ở cùng khổ màn đó.
+   ⚠️ Dưới 900px thì đảo về một cột — ở đó không có bề rộng nào để chia. */
+.rt-text{max-height:38%;flex:0 0 auto;overflow-y:auto;overscroll-behavior:contain;
+  min-height:0;display:flex;flex-direction:column;gap:8px;}
+/* ⚠️ `min-height:0` + `flex:1` là chỗ `fitBoard()` dựa vào: nó đo khung bao THẬT
+   của ô này rồi đặt bàn bằng cạnh ngắn hơn. Thiếu `min-height:0` thì ô này không
+   co lại được và số đo trả về lớn hơn chỗ thật sự còn — bàn tràn ra ngoài sân. */
+.rt-right{flex:1 1 auto;min-height:120px;display:flex;align-items:center;justify-content:center;}
+
+@media (min-width:901px){
+  /* Cột 1: bước · chữ · trạng thái · nút. Cột 2: bàn, trải hết các hàng.
+     ⚠️ Đặt chỗ TƯỜNG MINH bằng `grid-row`/`grid-column` chứ không dựa vào thứ tự
+        tự động — thêm một phần tử vào `.dg` mà quên đặt chỗ thì nó rơi vào cột 2 và
+        đè lên bàn, chứ không phải xuống dưới như trong flex. */
+  .dg{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(300px,46%);
+    grid-template-rows:auto minmax(0,1fr) auto auto;
+    column-gap:14px;row-gap:10px;align-items:stretch;}
+  .dg-steps{grid-column:1;grid-row:1;}
+  .rt-text {grid-column:1;grid-row:2;max-height:100%;}
+  .rt-foot {grid-column:1;grid-row:3;}
+  .dg-acts {grid-column:1;grid-row:4;}
+  .rt-right{grid-column:2;grid-row:1 / -1;}
+}
+
+/* ── Lời giải thích + nhãn ───────────────────────────────────────────────── */
+/* ⚠️ KHÔNG TÔ ĐỎ khi nối sai. Đây là màn học và cái sai là *điện tới sai chỗ* —
+   đỏ ở đó đọc ra thành "em sai rồi". Cùng nguyên tắc `.uc-verdict` của ARCADE-10
+   và `.sum-note` ở quiz. */
+.rt-why{flex:none;border-radius:12px;padding:9px 12px;font-size:12.3px;line-height:1.55;
+  border:1px solid rgba(120,160,255,.2);background:rgba(13,20,48,.7);color:var(--ink-soft);}
+.rt-why b{color:#e9d7ff;}
+.rt-why.pass{border-color:rgba(74,222,128,.45);}
+.rt-why.fail{border-color:rgba(251,191,36,.45);}
+
+/* Dòng trạng thái dưới sân: nói tuyến đã liền chưa và đang tới thiết bị nào.
+   ⚠️ Nó KHÔNG phải chú thích trang trí — với người dùng bàn phím thì đây là chỗ
+      duy nhất nói ra thứ mà vệt sáng đang nói bằng màu (`role="status"` trong
+      markup). Đừng ẩn nó ở khổ màn nào. */
+.rt-hint{flex:none;margin:0;text-align:center;font-size:11.8px;line-height:1.4;
+  color:var(--ink-faint);min-height:1.4em;}
+/* ⚠️ Nhãn MÔ PHỎNG nằm CÙNG HÀNG với dòng trạng thái, không chiếm một hàng riêng:
+   ở 390×844 một hàng riêng ăn ~20px, mà 20px đó là 4px mỗi ô của lưới 5×5. Nhãn
+   vẫn hiện thường trực — chỉ đổi chỗ đứng, không đổi việc nó có mặt. */
+.rt-foot{flex:none;display:flex;align-items:baseline;justify-content:center;gap:10px;
+  flex-wrap:wrap;}
+.rt-foot .rt-hint{flex:1 1 auto;min-width:0;}
+
+/* ⚠️ NHÃN "SƠ ĐỒ MỘT LỚP · MÔ PHỎNG" KHÔNG ĐƯỢC BỎ ĐI CHO GỌN. Dây trên tàu
+   thật CẮT NHAU liên tục, chỉ khác lớp; luật "không đi xuyên nhau" ở đây là luật
+   của một bảng mạch MỘT LỚP, không phải một định luật vật lý. Bỏ nhãn là để trẻ
+   tự suy ra một câu sai. Cùng bài học nhãn "MÔ PHỎNG" của ARCADE-09/ARCADE-10 và
+   nhãn "MINH HOẠ" của 5 mốc thời gian ở Nhiệm vụ 01. */
+.rt-sim{flex:none;text-align:center;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:0;}
+
+/* ── Bàn ─────────────────────────────────────────────────────────────────── */
+/* Bề rộng/chiều cao do `fitBoard()` đặt bằng pixel — xem ghi chú tại hàm đó về
+   việc vì sao `aspect-ratio` một mình không đủ. */
+.rt-board{display:grid;
+  /* ⚠️⚠️ PHẢI KHAI CẢ HÀNG LẪN CỘT. Khai một mình `grid-template-columns` thì các
+     HÀNG là `auto`: chiều cao mỗi hàng bằng chiều cao nội dung, mà nội dung là một
+     SVG `height:100%` của chính hàng đó ⇒ vòng tròn, và các hàng ra những chiều cao
+     khác nhau. Đo được ở bản đầu: ô **137,2 × 35,8px** ở 768×1024 và **48,5 × 13,6px**
+     ở 390×844 — tức lưới vẫn "trông có vẻ" là lưới mà ô thì không vuông. Đọc CSS
+     không thấy; chỉ đo khung bao từng ô mới thấy (`play_route.py` mục [6]). */
+  grid-template-columns:repeat(var(--n,5),1fr);
+  grid-template-rows:repeat(var(--n,5),1fr);
+  gap:4px;padding:6px;border-radius:14px;
+  border:1px solid rgba(120,160,255,.18);background:rgba(9,14,34,.55);}
+
+.rt-c{position:relative;padding:0;border-radius:9px;
+  border:1px solid rgba(120,160,255,.14);background:rgba(15,23,42,.5);
+  color:var(--ink);font:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .16s,background .16s,transform .14s var(--jelly);}
+.rt-c:hover:not(:disabled){border-color:rgba(56,189,248,.6);background:rgba(20,38,72,.7);}
+.rt-c:active:not(:disabled){transform:scale(.94);}
+.rt-c:disabled{cursor:default;}
+
+/* ⚠️ VÙNG CHẠM: cả Ô là nút, và ô nhỏ nhất đo được là bàn 6×6 trên 390px —
+   (330 − 12 − 5×4) ÷ 6 ≈ 49px. Trên mốc 48px của quy tắc 10 mục 6, nhưng biên
+   mỏng: HẠ `gap` hay thêm `padding` cho bàn là ăn thẳng vào con số đó, và bàn
+   7×7 thì rơi xuống dưới mốc. **Muốn lưới lớn hơn 6×6 thì phải đo lại trước.** */
+
+.rt-c .rt-rot{display:block;width:100%;height:100%;
+  transition:transform .18s var(--jelly);}
+.rt-c svg{display:block;width:100%;height:100%;overflow:visible;}
+/* Đoạn dẫn chưa có điện: xám xanh, nét dày để ngón tay trẻ nhìn ra hướng ngay. */
+.rt-p{fill:none;stroke:rgba(148,178,235,.62);stroke-width:6.5;stroke-linecap:round;}
+.rt-o{fill:rgba(148,178,235,.62);}
+
+/* ── Có điện ─────────────────────────────────────────────────────────────── */
+/* ⚠️ VỆT SÁNG LÀ PHẢN HỒI CHÍNH CỦA CẢ GAME: trẻ xoay một ô rồi thấy điện chạy
+   thêm được mấy ô nữa — đó là thứ dạy "tuyến phải LIỀN". Nên nó đổi cả MÀU lẫn
+   ĐỘ SÁNG (glow), không chỉ màu: đọc được với người phân biệt màu kém. */
+.rt-c.live{border-color:rgba(251,191,36,.5);background:rgba(48,36,10,.5);}
+.rt-c.live .rt-p{stroke:#ffd166;filter:drop-shadow(0 0 5px rgba(255,196,74,.75));}
+.rt-c.live .rt-o{fill:#ffe6a6;}
+
+/* ── Pa-nô · thiết bị · ô cháy · ô trống ─────────────────────────────────── */
+/* Đầu nối bắt chặt vào vỏ tàu nên KHÔNG xoay được (`disabled` trong markup).
+   Viền dày hơn để đọc ra ngay đâu là hai đầu của tuyến. */
+.rt-c.k-src,.rt-c.k-dst{border-width:2px;border-color:rgba(148,178,235,.4);
+  background:rgba(23,33,60,.8);}
+.rt-c.k-src.live,.rt-c.k-dst.live{border-color:rgba(251,191,36,.85);}
+/* ⚠️ EMOJI THIẾT BỊ PHẢI ĐỌC ĐƯỢC KHI Ô ĐANG SÁNG. Nó nằm đúng chỗ vệt sáng đi
+   qua, nên khi có điện thì quầng vàng ăn mất hình: soi ảnh chụp ở 1440×900 thấy ô
+   pa-nô chỉ còn một cục sáng, không nhận ra ☀️ nữa. Chữa bằng một đĩa nền tối sau
+   emoji — và bỏ luôn chấm giữa của ống ở hai loại ô này, vì chấm đó chồng đúng
+   vào emoji chứ không nói thêm gì. */
+.rt-ic{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(15px,4.4vmin,23px);line-height:1;pointer-events:none;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);
+  /* ⚠️ ĐĨA TỐI LÀ `background` CỦA CHÍNH Ô CHỮ, KHÔNG PHẢI MỘT `::before`. Bản đầu
+     dùng `::before` với `position:absolute` — nó thành phần tử CÓ ĐỊNH VỊ nên vẽ
+     **lên trên** phần chữ không định vị của cha, tức đĩa che kín luôn emoji: soi
+     ảnh chụp thấy hai ô đầu tuyến chỉ còn hai vòng tròn đen. Nền thì luôn nằm
+     dưới nội dung, không cần `z-index` và không có thứ tự vẽ nào để đoán. */
+  background:radial-gradient(circle closest-side,
+    rgba(6,10,26,.92) 46%, rgba(6,10,26,.55) 62%, rgba(6,10,26,0) 78%);}
+.rt-c.k-src .rt-o,.rt-c.k-dst .rt-o{display:none;}
+
+/* Ô cháy: không đi qua được. ⚠️ Nói bằng CẢ ký hiệu ☒ lẫn nền tối — chỉ đổi nền
+   thì nó đọc ra như "ô trống", mà trống và cháy là hai thứ khác nhau ở đây. */
+.rt-c.k-burnt{border-color:rgba(120,90,90,.35);background:rgba(26,14,14,.75);}
+.rt-x{font-size:clamp(11px,3vmin,15px);line-height:1;color:rgba(255,150,150,.6);}
+
+/* Ô trống: chỗ có thể dẫn vòng qua, nhưng hôm nay không có đoạn dẫn nào ở đó. */
+.rt-c.k-void{border-style:dashed;border-color:rgba(120,160,255,.1);
+  background:rgba(11,17,38,.35);}
+
+/* ── Giảm chuyển động ────────────────────────────────────────────────────── */
+/* ⚠️ TẮT ANIMATION XOAY THÌ VẪN PHẢI THẤY HÌNH Ở HƯỚNG MỚI — `transform` vẫn
+   được đặt, chỉ bỏ phần chuyển tiếp. Bài học `game-maze`: tắt chuyển động mà
+   chặn luôn thứ đang chuyển thì màn chơi treo vĩnh viễn. */
+@media (prefers-reduced-motion: reduce){
+  .rt-c,.rt-c .rt-rot{transition:none;}
+}

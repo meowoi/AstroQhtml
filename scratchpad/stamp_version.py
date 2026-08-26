@@ -24,6 +24,16 @@ import io
 import re
 import sys
 
+# BAT BUOC — console Windows mac dinh cp1252, ma dong in ket qua co ky tu "→".
+#    Thieu doan nay thi script GHI FILE XONG roi CHET o dong print: nguoi chay thay
+#    traceback va tuong con dau khong duoc dong, roi chay lai -> bump hai lan. Da bi
+#    26/08/2026. Cung cai bay `smoke_locks.py` da ghi tu truoc.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+
 FILE = "js/ui-common.js"
 # Bám ĐÚNG dòng khai báo, không bám chuỗi trần — chuỗi "2026.08.07.1" có thể xuất
 # hiện ở chỗ khác (ghi chú, ví dụ) và sửa nhầm thì lỗi rất khó thấy.

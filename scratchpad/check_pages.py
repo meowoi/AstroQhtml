@@ -23,6 +23,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
 SV = os.path.abspath(os.path.join(ROOT, "..", "AstroqSV"))
 
+# ⚠️⚠️ BAT BUOC — console Windows mac dinh cp1252. Nhan cua check() deu khong dau,
+#    NHUNG `detail` la chu lay tu chinh ma nguon (tieng Viet co dau), nen in ra la
+#    UnicodeEncodeError nem GIUA LUC CHAY: bo do o phep kiem thu ~500, in ra mot con
+#    so "dat" nho hon that ma KHONG in dong "KET QUA" nao — trong y het nhu bi chan
+#    boi thu khac. Da xay ra thât 26/08/2026 (mot chu `ặ` trong cau NOAA).
+#    ⚠️ Cung cai bay ma `smoke_locks.py` da ghi tu truoc; file nay thieu no. Sua o
+#       ĐÂY chu khong bat nguoi chay phai nho `PYTHONIOENCODING=utf-8` — mot bo do
+#       chi chay dung khi co bien moi truong dung la mot bo do sap bi chay sai.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ok_n, bad_n = 0, 0
 
 

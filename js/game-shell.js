@@ -116,7 +116,9 @@
                "game-survival":      "comet",   /* sinh tồn — chọn thứ cần để sống */
                "game-comms":         "byte",    /* dãy lệnh gửi lên tàu */
                "game-recycle":       "byte",    /* ba hệ thống của trạm */
-               "game-units":         "byte" };  /* soi bảng số liệu */
+               "game-units":         "byte",   /* soi bảng số liệu */
+               "game-route":         "byte" }; /* mạng điện của trạm — và `role`
+                  của Byte trong js/characters.js đúng là "Kỹ sư hệ thống" */
 
   var mateEl = null, mateImg = null, mateSrc = null, mateTimer = 0;
 

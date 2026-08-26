@@ -25,8 +25,10 @@
       Ở đây cũng vậy: `soon` thì KHÔNG có nút "Mở khoá ngay".
 
    ⚠️ `plan: null` nghĩa là "sắp ra mắt và sẽ MIỄN PHÍ" — modal của nó không có
-      lời mời mua gì cả. Ba mini-game chưa dựng nằm nhóm này: docs/decisions/009
-      không xếp mini-game vào phần trả phí.
+      lời mời mua gì cả. Mini-game luôn thuộc nhóm này: docs/decisions/009 không xếp
+      mini-game vào phần trả phí.
+      ⚠️⚠️ **Nhánh này có 0 NGƯỜI DÙNG từ 26/08/2026** (mở bốn game lớp quyết định).
+         Lý do giữ lại và điều kiện xoá: xem khối "Mini-game" trong bảng `ITEMS`.
 
    ⚠️ CÓ MỘT BIẾN THỂ THỨ TƯ ("pro nhưng CHƯA MỞ BÁN") đã dựng rồi BỎ HẲN trong
       cùng ngày 12/08/2026. Chủ dự án chốt: *"coi như nó đã mở bán rồi, làm lại thông
@@ -102,33 +104,40 @@
       state: "soon", plan: "astronaut", ic: "🌙",
       feats: ["f_moon_1", "f_moon_2", "f_moon_3"]
     },
-    /* ── Mini-game: sắp ra mắt và SẼ MIỄN PHÍ → không mời mua ──
-       ⚠️ `plan: null` là điều kiện, không phải chỗ để trống: bốn game này KHÔNG nằm
-          trong phần trả phí của `docs/decisions/009`, nên modal của chúng không có
-          nút dẫn sang bảng giá và không có dòng mời bố mẹ. Gắn một tên gói vào đây
-          là mời mua một thứ không bán.
-       ⚠️ BỐN GAME LỚP QUYẾT ĐỊNH KHOÁ LẠI 19/08/2026 (chủ dự án chốt) — mã game
-          VẪN CÒN NGUYÊN và bộ đo của chúng vẫn chạy (`play_survival` · `play_comms`
-          · `play_recycle` · `play_units`); chỉ thẻ ở Khu Huấn Luyện là `soon`. Mở
-          lại = đổi `status` về `"ready"` ở `games.html` **và** gỡ mục ở đây —
-          thiếu một chân thì hoặc trẻ bấm vào một trang không mở được, hoặc một
-          game đã chạy được vẫn bị nói là chưa mở.
-       ⚠️ `smoke_locks` mục [3] đối chiếu SỐ thẻ `soon` với SỐ mục `"game:` ở đây,
-          nên hai bên phải sửa cùng lúc. */
-    "game:survival": { state: "soon", plan: null, ic: "🛡️" },
-    "game:comms":    { state: "soon", plan: null, ic: "📡" },
-    "game:recycle":  { state: "soon", plan: null, ic: "♻️" },
-    "game:units":    { state: "soon", plan: null, ic: "📏" },
-    /* ⚠️ `game:racer` · `game:maze` · `game:catch` ĐÃ BỎ 12/08/2026 — ba game đó đã
-       dựng xong. Giữ mục khoá cho một game đã chơi được là nói với trẻ rằng nó chưa mở. */
+    /* ── Mini-game: HÔM NAY KHÔNG CÒN MỤC NÀO ──────────────────────────────
+       ⚠️⚠️ BỐN GAME LỚP QUYẾT ĐỊNH ĐÃ MỞ 26/08/2026 (chủ dự án chốt) — `game:survival`
+          · `game:comms` · `game:recycle` · `game:units` gỡ khỏi bảng này, và thẻ ở
+          `games.html` đổi `status` về `"ready"`. Trước đó chúng bị khoá từ 19/08/2026
+          trong khi **mã game đã chạy được và bộ đo đã xanh** (`play_survival` ·
+          `play_comms` · `play_recycle` · `play_units`) — tức dự án có 10 game mà trẻ
+          chỉ chơi được 6. Lý do mở ghi ở `docs/proposals/2026-08-26-khuon-luoi-noi-
+          tram-dan-tuyen.md` mục 7 (đợt 0).
+       ⚠️ KHOÁ MỘT GAME LUÔN LÀ HAI CHÂN: mục ở bảng này **và** `status:"soon"` ở
+          `games.html`. Thiếu một chân thì hoặc trẻ bấm vào một trang không mở được,
+          hoặc một game đã chạy được vẫn bị nói là chưa mở. `smoke_locks` mục [3] đối
+          chiếu SỐ thẻ `soon` với SỐ mục `game:*` — nay cả hai bên đều là **0**.
+          ⚠️⚠️ VIẾT `game:*` CHỨ KHÔNG VIẾT NGUYÊN VĂN KHOÁ CÓ DẤU NGOẶC KÉP: phép
+             kiểm đếm bằng `locks_src.count(...)` trên chính file này, nên một chuỗi
+             như thế **trong lời chú thích** cũng bị đếm là một mục — bảng rỗng mà
+             đếm ra 1 thì phép kiểm báo hỏng oan.
+       ⚠️ `game:racer` · `game:maze` · `game:catch` ĐÃ BỎ 12/08/2026 vì cùng lý do:
+          giữ mục khoá cho một game đã chơi được là nói với trẻ rằng nó chưa mở.
+       ⚠️⚠️ HỆ QUẢ PHẢI BIẾT: `plan: null` (*"sắp ra mắt và SẼ MIỄN PHÍ"*) nay có
+          **0 NGƯỜI DÙNG** — bốn mục vừa gỡ là toàn bộ khách hàng của nhánh đó
+          (`lab:*` và `mission:moon` đều `plan:"astronaut"`). Nhánh mã **giữ lại** vì
+          game khoá lần sau sẽ cần đúng nó, nhưng ghi ra ở đây để không ai đọc thành
+          *"đã dựng sẵn, chờ dùng"* — đúng bài học `orientation_align` của
+          `docs/decisions/002` (khuôn thứ 5 có 0 người dùng mà đề bài viết là "đang
+          trống", và ChatGPT tiêu nó 9 lần / 5 nhiệm vụ). */
   };
 
   var T = {
     vi: {
       badge_soon: "SẮP RA MẮT",
       badge_pro: "CHƯA MỞ KHOÁ",
-      /* Tên khu — chỉ khai cho mục CÓ lời văn riêng. Bốn game cố ý không có, xem
-         chú thích ở `nm` trong bảng ITEMS. */
+      /* Tên khu — chỉ khai cho mục CÓ lời văn riêng. Mục không khai thì mọi câu rơi
+         về bản chung, và đó là hành vi ĐÚNG (bốn thẻ game trước 26/08/2026 cố ý
+         không khai). Xem chú thích ở `nm` trong bảng ITEMS. */
       nm_lab: "Phòng Nghiên Cứu",
       /* ⚠️ Câu chữ ở đây phải đọc được cho CẢ một khu (Phòng Nghiên Cứu) và một
          NHIỆM VỤ (Mặt Trăng) — cùng một bảng chữ phục vụ hai loại. Vì thế không
@@ -283,7 +292,8 @@
     el.querySelector("#lk-badge").className = "lk-badge" + (isSoon ? " soon" : " pro");
 
     /* Tên khu: chỉ mục nào KHAI `nm` mới có. Không khai thì mọi câu rơi về bản
-       chung — đó là hành vi đúng cho 4 game, xem chú thích ở bảng ITEMS. */
+       chung — đó là hành vi ĐÚNG, không phải chỗ còn thiếu (bốn thẻ game trước
+       26/08/2026 cố ý không khai). Xem chú thích ở bảng ITEMS. */
     var areaName = it.nm ? t(it.nm, L) : "";
 
     var ttl = isSoon

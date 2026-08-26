@@ -99,6 +99,24 @@
                en: "Think the whole sequence through first — once sent, it cannot be called back" }
     },
 
+    /* KỸ THUẬT HỆ THỐNG — lớp quyết định, khuôn LƯỚI-NỐI (26/08/2026).
+       ⚠️⚠️ MỘT CHƯƠNG TRÌNH, CHỖ CHO HAI KHOÁ — và đó là lý do nó không tên là
+          "Dẫn tuyến". `docs/proposals/2026-08-26-khuon-luoi-noi-tram-dan-tuyen.md`
+          mục 6c: cơ chế "kéo đường nối hai đầu cùng loại" là CÙNG một khuôn với
+          Trạm Dẫn Tuyến, nên nếu làm thì nó vào đây làm **khoá thứ hai**, không
+          mở chương trình thứ mười một. Có tiền lệ: `reaction` = dodge + catch, và
+          luật *cấp chương trình = cấp THẤP NHẤT của các khoá* buộc trẻ phải giỏi
+          CẢ nhận quan hệ lẫn dựng tuyến.
+       ⚠️ KHÁC "Quản lý tài nguyên" (Đường Đua) và "Giữ mạng sống" (Trạm Tuần
+          Hoàn): hai bên kia là CHIA một lượng có hạn; bên này là làm cho một
+          tuyến LIỀN — thiếu một mắt là cả tuyến chết, không có "gần đủ". */
+    systems: {
+      ic: "🔌",
+      name: { vi: "Kỹ thuật hệ thống", en: "Systems engineering" },
+      skill: { vi: "Nhìn ra cả đường đi của một thứ, và biết thiếu một mắt thì cả tuyến chết",
+               en: "See the whole path something travels — and know that one missing link kills all of it" }
+    },
+
     survival: {
       ic: "🛟",
       name: { vi: "Sinh tồn", en: "Survival" },
@@ -139,7 +157,8 @@
     survival:      { vi: "chọn đúng {n} lần trong một lượt", en: "make {n} correct choices in one run" },
     comms:         { vi: "xếp đúng {n} lệnh",                en: "get {n} commands in the right order" },
     recycle:       { vi: "đạt {n} điểm giữ hệ",              en: "reach {n} life-support points" },
-    units:         { vi: "duyệt đúng {n} bảng",              en: "clear {n} sheets correctly" }
+    units:         { vi: "duyệt đúng {n} bảng",              en: "clear {n} sheets correctly" },
+    route:         { vi: "nối xong {n} tuyến trong một lượt", en: "complete {n} runs in one game" }
   };
 
   function pick(o, lang) {

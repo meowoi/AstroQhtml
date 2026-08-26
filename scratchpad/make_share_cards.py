@@ -47,6 +47,18 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+# BAT BUOC — console Windows mac dinh cp1252. Nhan cua phep kiem thi khong dau,
+#    nhung `detail` va ten trang lay tu chinh ma nguon (tieng Viet co dau), nen in ra
+#    la UnicodeEncodeError nem GIUA LUC CHAY: bo do, khong in dong tong ket nao, va
+#    trong y het nhu bi chan boi thu khac. Cung cai bay `smoke_locks.py` da ghi tu
+#    truoc; ba file nay thieu no va da bi 26/08/2026. Sua o DAY chu khong bat nguoi
+#    chay phai nho `PYTHONIOENCODING=utf-8`.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
 OUT_DIR = os.path.join(ROOT, "img", "og")

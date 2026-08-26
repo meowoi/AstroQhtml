@@ -50,7 +50,7 @@ qua API Gateway HTTP API, vùng `ap-southeast-1`. Mã nguồn nằm **ngoài rep
 | File CSS / file JS | 30 / 29 (+ **100 file câu hỏi** ở `js/quiz/`, một câu một file) |
 | Tổng dòng (JS + HTML chính) | **~23.500** |
 | **Nhiệm vụ (Mission)** | **1 chạy được** — Trái Đất, **7 bước**. Mặt Trăng: "sắp ra mắt" |
-| Mini-game | 6 khai báo, **3 chạy được** (né tiểu hành tinh · phòng thủ 360° · ghép chòm sao) |
+| Mini-game *(đếm lại 26/08/2026)* | **11 khai báo, 11 chạy được và ĐÃ MỞ HẾT** — 6 game lớp HÀNH ĐỘNG (né thiên thạch · phòng thủ 360° · ghép chòm sao · đường đua · mê cung · bắt sao băng) + **5** game lớp QUYẾT ĐỊNH (sinh tồn · liên lạc · tuần hoàn · đối chiếu · **dẫn tuyến**). ⚠️ Bốn game lớp quyết định bị khoá 19/08 → **mở 26/08/2026**, và ARCADE-11 thêm cùng ngày. ⚠️ **5 khuôn** lớp quyết định đã dùng: *chọn thẻ · xếp thứ tự · chia ngân sách · soi lỗi bảng · **lưới-nối*** — game thứ 12 **không được dùng lại** cái nào (`docs/decisions/002`). ⚠️⚠️ Khuôn **lưới-nối đã dùng 1/2 suất và suất còn lại ĐÃ CÓ CHỦ**: cơ chế "kéo đường nối hai đầu cùng loại" (kiểu Flow Free) là **cùng khuôn đó**, không phải khuôn mới — đừng đề xuất nó như một game thứ sáu của lớp này |
 | Câu hỏi quiz | **100** — phủ 19 thẻ codex; 65 câu có `srcQuote` |
 | Thuật ngữ codex | **19** (18 `space` + 1 `earth`) — và **19 icon SVG vẽ tay**, tỉ lệ 1:1 |
 | **Bài đọc** (`js/articles.js`) | **34** — 18 thiên văn · 8 robot · 5 AI · 3 lượng tử |

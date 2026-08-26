@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Dẫn Tuyến</title>
+<!-- OG:BEGIN — sinh bằng scratchpad/make_og_tags.py · ĐỪNG sửa tay phần dưới -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="astroQ.org" />
+<meta property="og:locale" content="vi_VN" />
+<meta property="og:url" content="https://astroq.org/game-route.html" />
+<meta property="og:title" content="Trạm Dẫn Tuyến · astroQ.org" />
+<meta property="og:description" content="Thiên thạch làm lệch hết đường dẫn điện của trạm! Xoay từng đoạn cho dòng điện đi liền một mạch từ pa-nô mặt trời tới đúng thiết bị đang cần nó." />
+<meta property="og:image" content="https://astroq.org/img/og/game-route.jpg" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Thẻ chia sẻ astroQ.org — Trạm Dẫn Tuyến" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Trạm Dẫn Tuyến · astroQ.org" />
+<meta name="twitter:description" content="Thiên thạch làm lệch hết đường dẫn điện của trạm! Xoay từng đoạn cho dòng điện đi liền một mạch từ pa-nô mặt trời tới đúng thiết bị đang cần nó." />
+<meta name="twitter:image" content="https://astroq.org/img/og/game-route.jpg" />
+<meta name="twitter:image:alt" content="Thẻ chia sẻ astroQ.org — Trạm Dẫn Tuyến" />
+<!-- OG:END -->
+
+<!-- FONT-PRELOAD:BEGIN -->
+<!-- ĐỪNG SỬA TAY khối này — sinh bởi `python scratchpad/sync_font_preload.py`.
+     Vì sao preload (kèm số đo) + vì sao BẮT BUỘC có `crossorigin`: xem đầu script đó. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/share-tech-mono-latin.woff2" />
+<!-- FONT-PRELOAD:END -->
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<link rel="stylesheet" href="css/game-route.css" />
+<script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
+     (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
+<script type="module" defer src="js/utm-beacon.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Bàn</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Xong</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+
+        <!-- ⚠️ BÀN LÀ CON TRỰC TIẾP CỦA `.dg`, KHÔNG nằm trong hộp chữ. Trên màn
+             rộng `.dg` thành lưới hai cột và bàn chiếm TRỌN chiều cao cột phải —
+             lồng nó vào hộp chữ thì nó không ra khỏi đó được, và chiều cao còn lại
+             sau brief/nút chỉ đủ cho ô 41px (đo được ở iPad, dưới mốc 44px). -->
+        <div class="dg-body rt-text" id="left">
+          <p class="dg-brief" id="brief"></p>
+          <div class="rt-why" id="why" hidden></div>
+        </div>
+        <div class="rt-right" id="right">
+          <div class="rt-board" id="board"></div>
+        </div>
+
+        <div class="rt-foot">
+          <p class="rt-hint" id="hint" role="status"></p>
+          <p class="rt-sim" id="sim">SƠ ĐỒ MỘT LỚP · MÔ PHỎNG</p>
+        </div>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="go" type="button" data-i18n="go">⚡ Cấp điện</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Bàn tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">⚡</div>
+        <h2 data-i18n="start_title">Trạm Dẫn Tuyến</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🔧 Bấm vào một <b>đoạn dẫn</b> để xoay nó một góc vuông.</span>
+          <span data-i18n-html="how2">⚡ Nối liền một mạch từ <b>pa-nô mặt trời</b> tới đúng thiết bị, rồi bấm Cấp điện.</span>
+          <span data-i18n-html="how3">☒ Ô cháy thì <b>không đi qua được</b> — phải dẫn vòng. Nhánh cụt là bẫy.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic" id="over-ic">⚡</div>
+        <h2 id="over-h" data-i18n="over_title">Hết ca trực!</h2>
+        <p id="over-p"></p>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Xong</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-sunlight-into-electricity" data-i18n="read_more">📖 Đọc bài: Ánh sáng biến thành điện ở đâu?</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>3</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM DẪN TUYẾN (ARCADE-11) — game LỚP QUYẾT ĐỊNH thứ NĂM.
+     Khuôn: **XOAY TỪNG ĐOẠN DẪN CHO MỘT TUYẾN LIỀN MẠCH TỪ NGUỒN TỚI ĐÍCH**.
+
+     ⚠️⚠️ KHUÔN THỨ NĂM, KHÁC CẢ BỐN CÁI TRƯỚC — ràng buộc `docs/decisions/002`.
+        ARCADE-07 *chọn thẻ* · ARCADE-08 *xếp thứ tự* · ARCADE-09 *chia ngân sách*
+        · ARCADE-10 *soi lỗi trong bảng*. Ở đây trẻ **dựng một ĐƯỜNG ĐI**: cái sai
+        không phải chọn nhầm món hay sai thứ tự, mà là **tuyến bị đứt ở đâu đó**.
+
+     ⚠️⚠️ KHUÔN NÀY NAY ĐÃ DÙNG 1/2 SUẤT, VÀ SUẤT CÒN LẠI ĐÃ CÓ CHỦ.
+        `docs/proposals/2026-08-26-khuon-luoi-noi-tram-dan-tuyen.md`: cơ chế "kéo
+        đường nối hai đầu cùng loại" (Flow Free) là **cùng một khuôn lưới-nối**,
+        không phải khuôn thứ sáu. Làm nó thì nó là **khoá thứ hai của chương trình
+        `systems`**, và sau đó **không còn game lưới-nối nào nữa**.
+
+     ⚠️⚠️ VÌ SAO PACK ĐẦU LÀ ĐIỆN, KHÔNG PHẢI OXY. Đề xuất gốc mở màn bằng đường
+        oxy; đo lại thì oxy/nước là **đất của ARCADE-09** (chương trình
+        `lifesupport`, cùng bài đọc `art-life-support-recycles-water`), và bản
+        "một nguồn chia cho nhiều module" chính là câu kỹ năng của game đó. Mạng
+        ĐIỆN là chỗ duy nhất có **hai bài đọc đã kiểm mà chưa game nào dùng**.
+        ⛔ Đừng thêm bàn "chia điện cho ba module" vào đây — đó là ARCADE-09.
+
+     ⚠️ SÂN KHÔNG PHẢI SƠ ĐỒ ĐIỆN THẬT, và nhãn **SƠ ĐỒ MỘT LỚP · MÔ PHỎNG** phải
+        ở lại. Dây trên tàu thật **cắt nhau liên tục**, chỉ khác lớp; luật "không
+        đi xuyên nhau" ở đây là luật của một bảng mạch MỘT LỚP — nói nó là vật lý
+        thì thành một câu sai. Cùng lối nhãn "MÔ PHỎNG" của ARCADE-09/ARCADE-10.
+
+     NGUỒN — hai bài đọc đã có trong kho, đã trích nguyên văn và kiểm URL 200:
+       `js/article/art-sunlight-into-electricity.js`
+         → https://science.nasa.gov/big-idea-3-2-intermediate-level-guiding-question/
+         · "Solar panels, most commonly made out of silicon"
+         · pin quang điện = "a device that converts light energy into electrical energy"
+         · "The dark silicon absorbs the photons, or particles from light, which the
+            PV cells convert into electricity"
+         · "Buildings with solar panels can store the energy in batteries for when
+            it is nighttime or when it is cloudy"
+       `js/article/art-rollout-solar-arrays.js`
+         → https://www.nasa.gov/international-space-station/international-space-station-assembly-elements/
+         · "The roll-out solar arrays augment the International Space Station's
+            eight main solar arrays. They produce more than 20 kilowatts of
+            electricity and enable a 30% increase in power production over the
+            station's current arrays."
+
+     ⚠️ BA CHỖ NGUỒN CÁM DỖ MÀ PHẢI TRÁNH (cả ba đã ghi ở đầu hai bài đọc):
+        ⛔ **"augment" là THÊM VÀO, không phải thay thế.** Bàn 5 dựng trên đúng chữ
+           này — viết thành "tấm mới thay tấm cũ" là nói sai cách hệ thống được
+           nâng cấp.
+        ⛔ **"hơn 20 kilowatt" và "tăng 30%" là HAI con số khác nhau** của cùng một
+           câu (20 kW là thứ tấm MỚI sinh ra; 30% là mức tăng so với bộ cũ). Đừng
+           gộp thành một ý — bàn 3 và bàn 5 vì thế mỗi bàn chỉ nói MỘT con số.
+        ⛔ **Trang KHÔNG nói tổng công suất của Trạm**, cũng không nói tấm cũ sinh
+           ra bao nhiêu. Đừng suy ngược từ 30%.
+        ⛔ Câu về ắc quy là câu NASA nói về **những toà nhà** có pin mặt trời. Ở đây
+           nó được dùng đúng phạm vi đó ở dòng kiến thức; phần "trạm vào vùng tối"
+           chỉ nằm ở lời brief — tức là bối cảnh của bàn chơi, không phải một câu
+           khoa học được gán cho NASA.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $ = AstroQ.$;
+  var esc = AstroQ.esc;
+
+  var I18N = {
+    vi:{
+      a_lang:"Ngôn ngữ", tt_name:"Thiên thạch tím", back:"Về Khu Huấn Luyện",
+      gname:"Trạm Dẫn Tuyến",
+      /* ⚠️ Nhãn chip HUD phải NGẮN — console dọc chỉ cho ~51px. Bài học của
+         ARCADE-07 ("Tình huống"→"Tiến độ") và ARCADE-09 ("Vạch an toàn"→"An toàn"). */
+      round_lbl:"Bàn", score_lbl:"Xong", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím", sfx_aria:"Âm thanh",
+      sim:"SƠ ĐỒ MỘT LỚP · MÔ PHỎNG",
+      start_title:"Trạm Dẫn Tuyến",
+      how1:"🔧 Bấm vào một <b>đoạn dẫn</b> để xoay nó một góc vuông.",
+      how2:"⚡ Nối liền một mạch từ <b>pa-nô mặt trời</b> tới đúng thiết bị, rồi bấm Cấp điện.",
+      how3:"☒ Ô cháy thì <b>không đi qua được</b> — phải dẫn vòng. Nhánh cụt là bẫy.",
+      cost_line:"Mỗi lượt: <b>3</b> <img src=\"img/tt.png\" alt=\"Thiên thạch tím\" />",
+      start_btn:"Bắt đầu",
+      go:"⚡ Cấp điện", next:"Bàn tiếp →", finish:"Xem kết quả →",
+      /* Dòng dưới sân — nói VÌ SAO nút chưa bấm được, và tuyến đang chạy tới đâu.
+         ⚠️ Nó là `role="status"`: người dùng bàn phím không thấy vệt sáng, nên chỗ
+            này là nơi duy nhất nói ra "đã liền hay chưa". */
+      hint_open:"Tuyến chưa liền — còn chỗ hở.",
+      hint_reach:"Điện đã tới: {n}. Bấm Cấp điện để chốt.",
+      cell_pipe:"Đoạn dẫn, bấm để xoay",
+      cell_burnt:"Ô cháy, không đi qua được",
+      cell_empty:"Ô trống",
+      mod_sun:"Pa-nô mặt trời", mod_bat:"Ắc quy", mod_heat:"Bộ sưởi", mod_ant:"Ăng-ten",
+      v_pass:"<b>Cấp điện xong.</b> {fact}",
+      v_wrong:"<b>Điện tới sai chỗ.</b> {why}",
+      why_heat:"Bộ sưởi tiêu thụ điện ngay lúc nó chạy — nó không giữ lại được gì cho lúc không có nắng.",
+      why_ant:"Ăng-ten dùng điện để phát tín hiệu đi. Nó cũng không giữ điện lại được.",
+      why_extra:"Điện chạy tới cả {n}. Bàn này chỉ còn đủ điện cho <b>một</b> thiết bị, nên nhánh không cần phải để hở.",
+      why_part:"Bàn này cần <b>cả hai</b> pa-nô nối về cùng một chỗ — tấm mới <b>thêm vào</b> tấm cũ chứ không thay nó.",
+      over_title:"Hết ca trực!",
+      over_p:"Bạn cấp điện xong {n} trên {t} tuyến.",
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; }, to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng",
+      read_more:"📖 Đọc bài: Ánh sáng biến thành điện ở đâu?",
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Một lượt tốn {cost} Thiên thạch tím, bạn đang có {bal}. Làm Quiz để kiếm thêm nhé!",
+      need_go:"Làm Quiz ngay",
+      paid_line:"Đã cộng {n} {tt} vào ví của bạn",
+      best_toast:"Kỷ lục mới!",
+      title:"AstroQ — Trạm Dẫn Tuyến"
+    },
+    en:{
+      a_lang:"Language", tt_name:"Purple Meteor", back:"Back to Training Simulator",
+      gname:"Route Station",
+      round_lbl:"Board", score_lbl:"Done", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors", sfx_aria:"Sound",
+      sim:"SINGLE-LAYER DIAGRAM · SIMULATED",
+      start_title:"Route Station",
+      how1:"🔧 Tap a <b>conduit piece</b> to turn it a quarter turn.",
+      how2:"⚡ Build one unbroken run from the <b>solar panel</b> to the right unit, then press Send power.",
+      how3:"☒ A burnt cell <b>cannot be crossed</b> — route around it. Dead ends are traps.",
+      cost_line:"Per run: <b>3</b> <img src=\"img/tt.png\" alt=\"Purple Meteor\" />",
+      start_btn:"Start",
+      go:"⚡ Send power", next:"Next board →", finish:"See results →",
+      hint_open:"The run is not closed yet — there is still a gap.",
+      hint_reach:"Power reaches: {n}. Press Send power to commit.",
+      cell_pipe:"Conduit piece, tap to turn",
+      cell_burnt:"Burnt cell, cannot be crossed",
+      cell_empty:"Empty cell",
+      mod_sun:"Solar panel", mod_bat:"Battery", mod_heat:"Heater", mod_ant:"Antenna",
+      v_pass:"<b>Power delivered.</b> {fact}",
+      v_wrong:"<b>Power went to the wrong place.</b> {why}",
+      why_heat:"A heater spends the electricity the moment it runs — it keeps nothing back for when there is no sunlight.",
+      why_ant:"An antenna spends electricity to send signals out. It cannot store any either.",
+      why_extra:"The current also reaches {n}. This board has only enough power for <b>one</b> unit, so the branch you do not need must be left open.",
+      why_part:"This board needs <b>both</b> panels wired to the same place — the new array <b>adds to</b> the old one instead of replacing it.",
+      over_title:"Shift complete!",
+      over_p:"You powered {n} of {t} runs.",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; }, to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub",
+      read_more:"📖 Read: Where does light turn into electricity?",
+      need_title:"Not enough Purple Meteors!",
+      need_body:"A run costs {cost} Purple Meteors and you have {bal}. Take a Quiz to earn more!",
+      need_go:"Take a Quiz",
+      paid_line:"Added {n} {tt} to your wallet",
+      best_toast:"New best!",
+      title:"AstroQ — Route Station"
+    }
+  };
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  function L(o){ return LANG==="en" ? (o.en!=null?o.en:o.vi) : o.vi; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  var CONFIG = {
+    COST: 3,        // khớp Wallet.Fees["route"] (easy) và `cost` ở GAMES
+    /* ⚠️ tt cho mỗi bàn nối xong. Điểm cho thang huấn luyện là SỐ BÀN (0–5), còn
+       thưởng là số bàn × ngần này. Hai tt một bàn ⇒ lượt hoàn hảo được 10 tt cho
+       phí vào cửa 3 tt; trả 1 tt một bàn thì chơi giỏi hết mức được 5 tt, tức gần
+       như không được gì (bài học TT_PER_SHEET của ARCADE-10). */
+    TT_PER_BOARD: 2
+  };
+
+  /* ── HƯỚNG: 0=Bắc 1=Đông 2=Nam 3=Tây ─────────────────────────────────────
+     Mặt nạ 4 bit, bit i = có miệng nối ở hướng i. Xoay một ô là dịch vòng các
+     bit — nên KHÔNG cần vẽ lại hình: hình vẽ theo mặt nạ LỜI GIẢI, còn `turns`
+     chỉ là một `transform:rotate`. Nhờ vậy cú xoay có animation thật mà logic
+     vẫn là số nguyên. */
+  var DIRS = [[-1,0],[0,1],[1,0],[0,-1]];
+  function opp(d){ return (d+2)%4; }
+  function rotMask(m,k){
+    var o=0; for(var d=0;d<4;d++) if(m & (1<<d)) o |= 1<<((d+k)%4);
+    return o;
+  }
+  function bits(m){ var n=0; for(var d=0;d<4;d++) if(m&(1<<d)) n++; return n; }
+  /* ⚠️ ĐOẠN THẲNG CÓ CHU KỲ 2, KHÔNG PHẢI 4. Xoay nó 2 nhịp là về đúng chỗ cũ —
+     nên nếu gieo lệch bằng một số chẵn thì ô đó **đã đúng ngay từ đầu** và trẻ
+     không nhìn ra vì sao nó "tự liền". Hàm này là chỗ duy nhất quyết chu kỳ. */
+  function period(m){ return (bits(m)===2 && (m===5 || m===10)) ? 2 : 4; }
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var x=a[i]; a[i]=a[j]; a[j]=x; }
+    return a;
+  }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  /* ── NĂM BÀN ─────────────────────────────────────────────────────────────
+     `n` cỡ lưới · `dead` số nhánh cụt · `burnt` số ô cháy · `mods` các thiết bị
+     ở cạnh phải (thiết bị ĐẦU danh sách là đích đúng) · `srcs` số pa-nô.
+
+     ⚠️⚠️ BÀN 4 LÀ BÀN DUY NHẤT CẦN BIẾT MỘT ĐIỀU MỚI GIẢI ĐƯỢC, và đó là chỗ
+        game này khác một trò xoay ống thường. Ba thiết bị đều nhận được điện về
+        mặt hình học; chỉ **một** cái trả lời được câu hỏi trong lời brief. Bỏ
+        bàn đó đi là bỏ luôn phần "huấn luyện" của trạm này.
+        ⛔ ĐỪNG tô màu gợi ý đích đúng, và đừng để đích đúng luôn ở giữa —
+           `mods` được xếp lại chỗ ngẫu nhiên khi vẽ.
+
+     ⚠️ KHÔNG BÀN NÀO CÓ ĐỒNG HỒ. Đề xuất gốc tự bác đếm ngược với trẻ nhỏ, và
+        ARCADE-09 đã có cách khác: sức nặng đến từ hậu quả, không từ nhịp tim. */
+  var BOARDS = [
+    { n:4, dead:0, burnt:0, srcs:1, mods:["bat"],
+      brief:{ vi:"Một tấm pa-nô mặt trời vừa được gắn lên trạm, nhưng đường dẫn tới ắc quy đang lệch hết. Xoay từng đoạn cho dòng điện đi liền một mạch.",
+              en:"A solar panel has just been fitted to the station, but every conduit piece to the battery is out of line. Turn them until the current has one unbroken run." },
+      fact:{ vi:"Tấm pa-nô làm từ silic, và lớp silic sẫm màu <b>hấp thụ các photon</b> — các hạt của ánh sáng — rồi những ô quang điện biến chúng thành điện.",
+             en:"A panel is made of silicon, and the dark silicon <b>absorbs photons</b> — the particles of light — which the PV cells then convert into electricity." } },
+
+    { n:5, dead:1, burnt:0, srcs:1, mods:["bat"],
+      brief:{ vi:"Tuyến này dài hơn, và có một nhánh dẫn đi vào chỗ không có gì. Nhánh cụt không làm hỏng tuyến — nhưng xoay sai thì điện đi vào đó và dừng lại.",
+              en:"This run is longer, and one branch leads nowhere. A dead end does not break the run — but turn a piece wrong and the current goes down it and stops." },
+      fact:{ vi:"Một tấm pa-nô mặt trời <b>không có bộ phận nào chuyển động</b>: không bánh răng, không tuabin, không tiếng động. Vậy mà nó tạo ra điện.",
+             en:"A solar panel has <b>no moving parts</b>: no gears, no turbine, no noise. And yet it makes electricity." } },
+
+    { n:5, dead:2, burnt:2, srcs:1, mods:["bat"],
+      brief:{ vi:"Một cơn mưa thiên thạch làm cháy vài ô trên bảng dẫn. Ô cháy thì không đi qua được — hãy dẫn vòng qua chúng.",
+              en:"A meteor shower burnt out a few cells on the conduit board. Burnt cells cannot be crossed — route around them." },
+      fact:{ vi:"Loại pa-nô cuộn mà phi hành gia mang ra gắn cho Trạm Vũ trụ Quốc tế sinh ra <b>hơn 20 kilowatt</b> điện.",
+             en:"The roll-out arrays that spacewalkers installed on the International Space Station produce <b>more than 20 kilowatts</b> of electricity." } },
+
+    /* ⚠️ `bat` ĐỨNG ĐẦU = đích đúng. Hai cái kia là thiết bị thật, và lời giải
+       thích khi nối sai phải nói ĐÚNG việc của chúng — nói sai để cho tiện là
+       dạy sai hai thứ thay vì dạy đúng một thứ. */
+    { n:6, dead:2, burnt:1, srcs:1, mods:["bat","heat","ant"],
+      brief:{ vi:"Trạm đang đi vào vùng tối, sắp không còn nắng cho pa-nô. Trên bảng có ba thiết bị, mà điện lúc này <b>chỉ đủ cho một cái</b> — dẫn tới thứ <b>giữ được điện</b> để dùng khi trời tối, và để hở hai nhánh kia.",
+              en:"The station is moving into darkness and the panel will soon have no sunlight. Three units sit on the board, and there is <b>only enough power for one</b> — route it to the one that <b>can store it</b> for the dark, and leave the other two branches open." },
+      fact:{ vi:"Theo NASA, những toà nhà có pin mặt trời <b>trữ điện trong ắc quy</b> để dùng lúc trời tối hoặc nhiều mây. Ắc quy đắt, nên trên mặt đất nhiều nhà chọn nối vào lưới điện — còn ngoài quỹ đạo thì không có lưới nào để nối.",
+             en:"NASA notes that buildings with solar panels <b>store the energy in batteries</b> for when it is night or cloudy. Batteries are expensive, so on the ground many homes connect to the electrical grid instead — out in orbit there is no grid to connect to." } },
+
+    { n:6, dead:3, burnt:2, srcs:2, mods:["bat"],
+      brief:{ vi:"Tấm pa-nô mới <b>không thay thế</b> tấm cũ — nó thêm vào. Nối <b>cả hai</b> pa-nô về cùng một ắc quy.",
+              en:"The new array <b>does not replace</b> the old one — it adds to it. Wire <b>both</b> panels to the same battery." },
+      fact:{ vi:"Những tấm pa-nô cuộn <b>thêm vào</b> tám tấm chính của Trạm Vũ trụ Quốc tế, và giúp <b>tăng 30%</b> lượng điện so với bộ tấm pin đang có.",
+             en:"The roll-out arrays <b>augment</b> the International Space Station's eight main arrays, enabling a <b>30% increase</b> in power production over the station's current arrays." } }
+  ];
+  var MAXP = BOARDS.length;
+
+  var MOD_IC = { sun:"☀️", bat:"🔋", heat:"🌡️", ant:"📡" };
+  /* ⚠️ BA KHOÁ VIẾT LITERAL, KHÔNG ghép `t("mod_"+k)` — phép kiểm i18n của
+     `check_pages` quét `t("khoá")` dạng CHỮ, nên khoá ghép động là khoá vô hình
+     với nó và bị báo "khai mà không dùng". Cùng bài học `st_hit/miss/wrong` của
+     ARCADE-10 và `tier1..5` của ARCADE-01. */
+  function modName(k){
+    if(k==="sun")  return t("mod_sun");
+    if(k==="bat")  return t("mod_bat");
+    if(k==="heat") return t("mod_heat");
+    if(k==="ant")  return t("mod_ant");
+    return k;
+  }
+  function wrongWhy(k){
+    if(k==="heat") return t("why_heat");
+    if(k==="ant")  return t("why_ant");
+    return t("why_part");
+  }
+
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){ try{ localStorage.setItem(LS_SFX, AstroQSfx.on()?"off":"on"); }catch(e){} },
+    turn:function(){ AstroQSfx.beep(560); },
+    good:function(){ AstroQSfx.ready(); },
+    bad:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var idx = 0;          // bàn đang chơi (0-based)
+  var G = null;          // lưới đang chơi
+  var locked = false;    // đã bấm Cấp điện chưa
+  var score = 0, mined = 0;
+
+  var RUN = AstroQGameRun.create({
+    game:"route", cost:CONFIG.COST, t:t,
+    onStart:function(){ idx = 0; score = 0; mined = 0; newBoard(); AstroQSfx.wake(); }
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     SINH BÀN — dựng CÂY nối các pa-nô tới đích rồi xoay lệch từng ô đi.
+
+     ⚠️⚠️ VÌ SAO LÀM THẾ NÀY CHỨ KHÔNG GIEO NGẪU NHIÊN RỒI ĐI KIỂM: **lời giải
+        chính là cái cây vừa dựng**, nên bàn nào cũng giải được — không cần một
+        bộ giải, không có ca "bàn không thể xong" lọt ra tay trẻ. Đây cũng là lý
+        do khuôn này rẻ hơn khuôn kéo-đường (`docs/proposals/2026-08-26-…` mục 5).
+
+     ⚠️ MỌI Ô ĐỀU BỊ XOAY LỆCH ÍT NHẤT MỘT NHỊP (theo chu kỳ của chính nó). Một ô
+        "đúng sẵn" là một ô trẻ không hiểu vì sao mình không phải làm gì với nó.
+        `play_route.py` mục [2] duyệt hết bàn sinh ra và đòi con số đó bằng 0.
+     ══════════════════════════════════════════════════════════════════════════ */
+  function makeGrid(spec){
+    /* ⚠️ Có hạn số lần thử: đường đi ngẫu nhiên trong lưới có ô cháy đôi khi
+       không tới được đích. Thử lại rẻ hơn nhiều so với việc viết một bộ tìm
+       đường bảo đảm — nhưng PHẢI có trần, không thì một cấu hình xấu treo trang. */
+    for(var a=0; a<200; a++){ var g = build(spec); if(g) return g; }
+    return null;
+  }
+
+  function build(spec){
+    var n = spec.n, N = n*n;
+    var c = [];
+    for(var i=0;i<N;i++) c.push({ k:null, sol:0, turns:0, mod:null });
+
+    var rc = function(r,k){ return r*n + k; };
+    var colOf = function(i){ return i%n; };
+
+    /* Pa-nô ở cạnh TRÁI, thiết bị ở cạnh PHẢI — dòng điện luôn đi từ trái sang
+       phải, nên trẻ đọc sân theo đúng một chiều thay vì phải tìm xem đâu là đầu. */
+    var rows = shuffle(range(n));
+    var srcRows = rows.slice(0, spec.srcs);
+    var dstRows = shuffle(range(n)).slice(0, spec.mods.length);
+    var srcs = srcRows.map(function(r){ return rc(r,0); });
+    var dsts = dstRows.map(function(r){ return rc(r,n-1); });
+
+    var i2;
+    for(i2=0;i2<srcs.length;i2++){ c[srcs[i2]].k="src"; c[srcs[i2]].mod="sun"; }
+    /* ⚠️ ĐÍCH ĐÚNG LÀ `mods[0]`, NHƯNG CHỖ CỦA NÓ TRÊN SÂN LÀ NGẪU NHIÊN. Xếp
+       cố định thì trẻ học được một quy luật ngoài bài học ("cứ nối xuống dưới
+       cùng"), đúng lỗi mà bảng thứ tư của ARCADE-10 phải tránh. */
+    var order = shuffle(range(spec.mods.length));
+    var goalCell = -1;
+    for(i2=0;i2<order.length;i2++){
+      var cell = dsts[i2], mod = spec.mods[order[i2]];
+      c[cell].k = "dst"; c[cell].mod = mod;
+      if(order[i2] === 0) goalCell = cell;
+    }
+
+    /* Ô cháy: chỉ ở các cột GIỮA, không bao giờ ở cạnh có pa-nô/thiết bị — cháy
+       ngay cạnh một đầu nối thì đầu đó có thể bị bịt kín và bàn thành vô nghiệm
+       (thử lại được, nhưng lãng phí) và trông như lỗi vẽ. */
+    var mid = [];
+    for(i2=0;i2<N;i2++) if(colOf(i2)>0 && colOf(i2)<n-1) mid.push(i2);
+    shuffle(mid);
+    for(i2=0;i2<spec.burnt && i2<mid.length;i2++) c[mid[i2]].k = "burnt";
+
+    /* ── Cây: pa-nô đầu tiên → đích đúng, rồi các pa-nô còn lại → bất kỳ ô đã
+       thuộc cây. Nhánh cụt mọc thêm sau cùng. ─────────────────────────────── */
+    var inTree = {};
+
+    var blocked = function(i){
+      if(c[i].k === "burnt") return true;
+      if(c[i].k === "src" || c[i].k === "dst") return true;   // đầu nối không đi xuyên
+      return false;
+    };
+
+    var p = path(n, srcs[0], goalCell, blocked);
+    if(!p) return null;
+    addPath(p);
+
+    for(i2=1;i2<srcs.length;i2++){
+      var q = pathToTree(n, srcs[i2], inTree, blocked,
+                         function(j){ return c[j].k; });
+      if(!q) return null;
+      addPath(q);
+    }
+
+    /* ══ NHÁNH BẪY: thiết bị SAI phải đi tới được, nhưng KHÔNG nối sẵn ═══════
+       ⚠️⚠️ HAI YÊU CẦU NGƯỢC NHAU, VÀ CHỖ NÀY LÀ CHỖ CHÚNG GẶP NHAU.
+         ① Nếu thiết bị sai **không có đường nào** tới nó thì cổng kiến thức của
+            bàn 4 là đồ trang trí: trẻ *không thể* dẫn điện sai, nên nó không phải
+            chọn gì cả. (Bản đầu đúng như vậy — ba thiết bị kia đứng đó không một
+            miệng nối.)
+         ② Nhưng nếu nối chúng thẳng vào cây thì **lời giải sinh ra lại tưới cả ba
+            thiết bị**, mà luật thắng đòi điện chỉ tới đúng một cái ⇒ bàn có thể
+            không còn lời giải nào. Đó là mất đúng thứ đắt nhất của bộ sinh này:
+            *lời giải chính là cái cây vừa dựng*, nên bàn nào cũng giải được.
+       ⇒ Nhánh bẫy là một dây RIÊNG, chạy từ thiết bị sai tới một ô nằm SÁT cây,
+         và ô đó có một miệng **hướng vào** cây trong khi ô của cây **không hướng
+         lại**. Ở lời giải hai miệng không gặp nhau nên điện không sang — nhưng chỉ
+         cần trẻ xoay ô của cây theo hướng đó (và mất một arm đang cần) là điện đổ
+         hết vào nhánh bẫy. Đúng cái sai mà bàn này muốn dạy, mà không phá lời giải. */
+    var freeCell = function(i){
+      return c[i].k === null && !inTree[i];
+    };
+    for(i2=0;i2<dsts.length;i2++){
+      if(dsts[i2] === goalCell) continue;
+      /* Điểm cuối của dây bẫy: một ô còn trống, có ÍT NHẤT MỘT ô cây bên cạnh.
+         ⚠️⚠️ "Ô cây" ở đây nhận ra bằng `inTree[j] && k === null`, KHÔNG bằng
+            `k === "pipe"`: loại ô chỉ được gán ở vòng cuối của `build`, nên tại
+            thời điểm này mọi ô đường đi vẫn còn `k === null` và chỉ pa-nô/thiết
+            bị/ô cháy mới có `k`. Bản đầu hỏi `k === "pipe"` ⇒ điều kiện **không
+            bao giờ đúng** ⇒ bàn 4 dựng thất bại 200/200 lần rồi rơi vào bản lùi.
+            Đo được bằng `__dbg.tryBuild(3, 60)` → `ok: 0`; đọc mã thì trông hợp lệ. */
+      var trap = walk(n, dsts[i2],
+        function(j){ return c[j].k !== null || inTree[j]; },
+        function(j){
+          if(!freeCell(j)) return false;
+          for(var d3=0;d3<4;d3++){
+            var nb3 = step(n, j, d3);
+            if(nb3 >= 0 && inTree[nb3] && c[nb3].k === null && bits(c[nb3].sol) < 3) return true;
+          }
+          return false;
+        });
+      if(!trap) return null;
+      addPath(trap);
+      /* Miệng hướng vào cây — CHỈ một chiều, cố ý không nối lại. */
+      var tip = trap[trap.length-1], hooked = false;
+      var ds3 = shuffle(range(4));
+      for(var x3=0;x3<4 && !hooked;x3++){
+        var nb4 = step(n, tip, ds3[x3]);
+        if(nb4 < 0 || !inTree[nb4] || c[nb4].k !== null) continue;
+        if(bits(c[tip].sol) >= 3) break;      /* đủ 3 miệng rồi — thêm nữa thành ngã tư */
+        c[tip].sol |= 1 << ds3[x3];
+        hooked = true;
+      }
+      if(!hooked) return null;
+    }
+
+    /* Nhánh cụt: mọc từ một ô ĐANG thuộc cây ra vùng còn trống.
+       ⚠️ Không mọc từ ô đã có 3 miệng nối — thêm nữa là thành ngã tư (4 miệng),
+          mà ngã tư đối xứng hoàn toàn nên xoay kiểu gì cũng "đúng": một ô không
+          có việc gì để làm, đứng chiếm chỗ. */
+    var grown = 0, guard = 0;
+    while(grown < spec.dead && guard++ < 120){
+      var anchors = Object.keys(inTree).map(Number).filter(function(i){
+        return c[i].k !== "src" && c[i].k !== "dst" && bits(c[i].sol) < 3;
+      });
+      if(!anchors.length) break;
+      var from = pick(anchors);
+      var len = 1 + Math.floor(Math.random()*3);
+      var cur = from, ok = false;
+      for(var s=0;s<len;s++){
+        var opts = shuffle(range(4)).filter(function(d){
+          var nb = step(n, cur, d);
+          return nb >= 0 && !inTree[nb] && c[nb].k === null;
+        });
+        if(!opts.length) break;
+        var d2 = opts[0], nb2 = step(n, cur, d2);
+        link(cur, nb2, d2);
+        cur = nb2; ok = true;
+      }
+      if(ok) grown++;
+    }
+
+    /* ── Mặt nạ → loại ô → xoay lệch ───────────────────────────────────────── */
+    var pipes = 0;
+    for(i2=0;i2<N;i2++){
+      var cell2 = c[i2];
+      if(cell2.k === "src" || cell2.k === "dst" || cell2.k === "burnt") continue;
+      if(cell2.sol === 0){ cell2.k = null; continue; }
+      cell2.k = "pipe"; pipes++;
+      var per = period(cell2.sol);
+      /* Lệch ít nhất 1 nhịp, tính theo chu kỳ của chính ô đó (đoạn thẳng: 1 nhịp). */
+      cell2.turns = 1 + Math.floor(Math.random()*(per-1));
+    }
+    if(pipes < 2) return null;
+
+    var g = { n:n, cells:c, srcs:srcs, dsts:dsts, goal:goalCell,
+              mods:spec.mods, needAll:srcs.length > 1 };
+    return g;
+
+    /* ── phụ trợ trong `build` ─────────────────────────────────────────────── */
+    function range(k){ var o=[]; for(var i=0;i<k;i++) o.push(i); return o; }
+    function link(i,j,d){
+      c[i].sol |= 1<<d;
+      c[j].sol |= 1<<opp(d);
+      inTree[i]=1; inTree[j]=1;
+    }
+    function addPath(list){
+      for(var i=0;i<list.length-1;i++){
+        var a=list[i], b=list[i+1];
+        link(a, b, dirOf(n, a, b));
+      }
+    }
+  }
+
+  function range(k){ var o=[]; for(var i=0;i<k;i++) o.push(i); return o; }
+  function step(n,i,d){
+    var r = Math.floor(i/n) + DIRS[d][0], k = (i%n) + DIRS[d][1];
+    if(r<0||k<0||r>=n||k>=n) return -1;
+    return r*n+k;
+  }
+  function dirOf(n,a,b){
+    for(var d=0;d<4;d++) if(step(n,a,d) === b) return d;
+    return -1;
+  }
+
+  /** Đường đi ngẫu nhiên (DFS) từ `from` tới `to`. `blocked(i)` = không đi qua. */
+  function path(n, from, to, blocked){
+    return walk(n, from, blocked, function(i){ return i === to; });
+  }
+  /** Từ `from` đi tới ô ĐẦU TIÊN đã thuộc cây. */
+  /** ⚠️ Điểm dừng phải là một ĐOẠN DẪN đã thuộc cây, không phải một pa-nô/thiết
+      bị: nối vào pa-nô thứ nhất thì tấm đó có hai miệng ra, mà đầu nối trên vỏ
+      tàu chỉ có một — và trẻ sẽ thấy một ô không xoay được mà có hai đường. */
+  function pathToTree(n, from, inTree, blocked, kindOf){
+    return walk(n, from, blocked, function(i){
+      return !!inTree[i] && kindOf(i) !== "src" && kindOf(i) !== "dst";
+    });
+  }
+  function walk(n, from, blocked, isGoal){
+    var seen = {}, came = {}, st = [from], hit = -1;
+    seen[from] = 1;
+    while(st.length){
+      var cur = st.pop();
+      if(cur !== from && isGoal(cur)){ hit = cur; break; }
+      var ds = shuffle(range(4));
+      for(var x=0;x<4;x++){
+        var nb = step(n, cur, ds[x]);
+        if(nb < 0 || seen[nb]) continue;
+        /* Ô đích/ô đã thuộc cây được phép là ĐIỂM DỪNG, nên `isGoal` xét trước
+           `blocked`. Thiếu thứ tự này thì đường đi không bao giờ tới được đích. */
+        if(!isGoal(nb) && blocked(nb)) continue;
+        seen[nb] = 1; came[nb] = cur; st.push(nb);
+      }
+    }
+    if(hit < 0) return null;
+    var out = [hit];
+    while(out[0] !== from) out.unshift(came[out[0]]);
+    return out;
+  }
+
+  /* ── Dòng điện chạy tới đâu ─────────────────────────────────────────────── */
+  function curMask(cell){ return rotMask(cell.sol, cell.turns % 4); }
+
+  /** BFS từ mọi pa-nô. Trả { live:{i:true}, reach:[ô đích tới được] }. */
+  function flow(){
+    var n = G.n, c = G.cells, live = {}, qq = G.srcs.slice(), i;
+    for(i=0;i<qq.length;i++) live[qq[i]] = true;
+    while(qq.length){
+      var cur = qq.shift(), m = curMask(c[cur]);
+      for(var d=0;d<4;d++){
+        if(!(m & (1<<d))) continue;
+        var nb = step(n, cur, d);
+        if(nb < 0 || live[nb]) continue;
+        if(c[nb].k === "burnt" || c[nb].k === null) continue;
+        if(!(curMask(c[nb]) & (1<<opp(d)))) continue;   // hai miệng phải gặp nhau
+        live[nb] = true; qq.push(nb);
+      }
+    }
+    var reach = G.dsts.filter(function(i2){ return live[i2]; });
+    return { live:live, reach:reach };
+  }
+
+  /** Đã thắng bàn này chưa. Ba điều kiện, và điều thứ hai là chỗ cổng kiến thức
+      của bàn 4 nằm:
+        ① điện tới ĐÚNG thiết bị;
+        ② KHÔNG tới thiết bị nào khác — lời brief của bàn nhiều thiết bị nói rõ
+           trạm chỉ còn đủ điện cho MỘT cái, nên nhánh không cần phải để hở.
+           ⚠️ Đây là ràng buộc của TÌNH HUỐNG (điện có hạn), không phải một định
+              luật — một thanh cái điện thật thì cấp cho nhiều thiết bị. Lời brief
+              phải nói ra cái hạn đó, không thì game đang dạy một câu sai.
+        ③ có hai pa-nô thì CẢ HAI phải nối về đó (bàn 5 — chữ "augment"). */
+  function won(f){
+    /* ⚠️ ĐỌC `f.reach` CHỨ KHÔNG ĐỌC `G.reach`. `G.reach` là bản đã VẼ; nếu một
+       ngày có đường nào gọi `won()` trước khi vẽ lại thì nó phán trên trạng thái
+       cũ — đúng lớp lỗi "hai nguồn sự thật" mà dự án đã trả giá nhiều lần. */
+    if(f.reach.indexOf(G.goal) < 0) return false;
+    if(f.reach.length > 1) return false;
+    if(!G.needAll) return true;
+    for(var i=0;i<G.srcs.length;i++) if(!f.live[G.srcs[i]]) return false;
+    return true;
+  }
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function pipeSvg(mask){
+    var d = "";
+    if(mask & 1) d += "M20 20V1 ";
+    if(mask & 2) d += "M20 20H39 ";
+    if(mask & 4) d += "M20 20V39 ";
+    if(mask & 8) d += "M20 20H1 ";
+    return '<svg viewBox="0 0 40 40" aria-hidden="true">'+
+             '<path class="rt-p" d="'+d+'"/><circle class="rt-o" cx="20" cy="20" r="3.2"/></svg>';
+  }
+
+  function paintBoard(){
+    var b = $("board"), c = G.cells, out = [], i;
+    b.style.setProperty("--n", G.n);
+    var f = flow();
+    G.reach = f.reach;
+
+    for(i=0;i<c.length;i++){
+      var cell = c[i], cls = "rt-c", inner = "", lab = "", dis = "";
+      if(cell.k === "burnt"){
+        cls += " k-burnt"; inner = '<span class="rt-x" aria-hidden="true">☒</span>';
+        lab = t("cell_burnt"); dis = " disabled";
+      } else if(cell.k === null){
+        cls += " k-void"; lab = t("cell_empty"); dis = " disabled";
+      } else {
+        var live = !!f.live[i];
+        if(live) cls += " live";
+        inner = '<span class="rt-rot" style="transform:rotate('+(cell.turns*90)+'deg)">'+
+                  pipeSvg(cell.sol)+'</span>';
+        if(cell.k === "src" || cell.k === "dst"){
+          cls += " k-" + cell.k;
+          inner += '<span class="rt-ic" aria-hidden="true">'+MOD_IC[cell.mod]+'</span>';
+          lab = modName(cell.mod);
+          dis = " disabled";   /* đầu nối bắt chặt vào vỏ tàu — không xoay được */
+        } else {
+          lab = t("cell_pipe");
+        }
+      }
+      /* ⚠️ `aria-label` mang TÊN thiết bị / "đoạn dẫn", còn emoji nằm trong
+         `aria-hidden` — trình đọc màn hình đọc một lần, không đọc hai lần bằng
+         hai giọng khác nhau. */
+      out.push('<button type="button" class="'+cls+'" data-i="'+i+'" aria-label="'+
+               esc(lab)+'"'+(locked?" disabled":dis)+'>'+inner+'</button>');
+    }
+    b.innerHTML = out.join("");
+
+    if(!locked){
+      Array.prototype.forEach.call(b.querySelectorAll(".rt-c:not([disabled])"), function(el){
+        el.addEventListener("click", function(){ turn(parseInt(el.getAttribute("data-i"),10)); });
+      });
+    }
+    paintHint(f);
+    fitBoard();
+  }
+
+  /** ← ↑ → ↓ đi giữa các ô; Enter/Space là hành vi mặc định của `<button>`. */
+  function gridKeys(e){
+    var map = { ArrowUp:0, ArrowRight:1, ArrowDown:2, ArrowLeft:3 };
+    if(!(e.key in map)) return;
+    var el = document.activeElement;
+    if(!el || !el.classList.contains("rt-c")) return;
+    var i = parseInt(el.getAttribute("data-i"),10);
+    var d = map[e.key], nb = step(G.n, i, d);
+    if(nb < 0) return;
+    e.preventDefault();
+    /* ⚠️⚠️ ĐI TIẾP CHO TỚI Ô BẤM ĐƯỢC, KHÔNG CHỈ NHẢY MỘT Ô. Ô cháy và ô trống là
+       `disabled` nên không nhận tiêu điểm, và chúng nằm CẠNH NHAU thành từng dải —
+       bản đầu chỉ nhảy thêm đúng một ô, nên gặp hai ô trống liền nhau là mũi tên
+       **đứng chết** và người dùng bàn phím tưởng bàn khoá. Bộ đo bắt được ở lượt
+       gieo thứ hai (`7 -> 7`), tức đây là loại lỗi CHẬP CHỜN theo bàn: chạy một
+       lần thấy đạt không có nghĩa là nó đúng. */
+    var target = null;
+    while(nb >= 0){
+      var el2 = $("board").querySelector('.rt-c[data-i="'+nb+'"]');
+      if(el2 && !el2.disabled){ target = el2; break; }
+      nb = step(G.n, nb, d);
+    }
+    if(target) target.focus();
+  }
+
+  function paintHint(f){
+    var reach = (f || flow()).reach;
+    if(locked){ $("hint").textContent = ""; $("go").disabled = true; return; }
+    if(!reach.length){
+      $("hint").textContent = t("hint_open");
+      $("go").disabled = true;
+      return;
+    }
+    var names = reach.map(function(i){ return modName(G.cells[i].mod); }).join(" · ");
+    $("hint").textContent = t("hint_reach").replace("{n}", names);
+    $("go").disabled = false;
+  }
+
+  /** Ô vuông, không cuộn: cỡ bàn = cạnh ngắn của khoảng còn lại.
+      ⚠️ ĐO BẰNG JS chứ không bằng `aspect-ratio` một mình: bàn phải vừa CẢ bề
+         rộng lẫn chiều cao còn lại, mà chiều cao thì phụ thuộc lời brief dài bao
+         nhiêu (mỗi bàn một độ dài) và khổ màn. Khai `aspect-ratio:1` rồi để bề
+         rộng thắng là đúng ca sân **1086×2px** mà `css/decision-game.css` đã ghi:
+         đọc CSS thì hợp lệ, chỉ RENDER mới thấy bàn bị cắt mất hàng cuối. */
+  function fitBoard(){
+    var box = $("right"), b = $("board");
+    if(!box || !b) return;
+    var r = box.getBoundingClientRect();
+    if(!(r.width > 0) || !(r.height > 0)) return;
+    var s = Math.max(132, Math.floor(Math.min(r.width, r.height)) - 2);
+    b.style.width = s + "px";
+    b.style.height = s + "px";
+  }
+
+  function paintHud(){
+    $("hb-round").textContent = Math.min(idx+1, MAXP) + "/" + MAXP;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<MAXP;i++){
+      out += '<span class="' + (i<idx ? "dg-dot done" : (i===idx ? "dg-dot now" : "dg-dot")) + '"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  function render(){
+    paintSteps();
+    $("brief").innerHTML = L(BOARDS[idx].brief);
+    $("sim").textContent = t("sim");
+    /* ⚠️⚠️ CHỐT RỒI THÌ ẨN LỜI BRIEF, ĐỂ CHỖ CHO CÂU KIẾN THỨC. Đây là cách chữa
+       một lỗi đo được: cột chữ trên iPad 1024×768 chỉ cao ~198px, mà lời brief +
+       hộp giải thích cộng lại ~200px ⇒ cột phải cuộn, và nó **cắt ngang dòng đầu
+       của brief** — soi ảnh chụp thì đọc ra như trang vẽ lỗi. Ẩn brief thì hết
+       tràn ở MỌI khổ màn, và câu kiến thức (thứ game này tồn tại để dạy) thành
+       thứ đầu tiên mắt gặp. Đề bài đã xong việc của nó ở thời điểm này, còn
+       `newBoard()` thì bật lại. */
+    $("brief").hidden = locked;
+    $("go").hidden = locked;
+    $("next").hidden = !locked;
+    $("next").textContent = (idx === MAXP-1) ? t("finish") : t("next");
+    paintBoard();
+    paintHud();
+  }
+
+  /* ── Chơi ───────────────────────────────────────────────────────────────── */
+  function turn(i){
+    if(locked) return;
+    var cell = G.cells[i];
+    if(cell.k !== "pipe") return;
+    cell.turns++;             /* tăng mãi, không lấy dư — để cú xoay luôn quay
+                                 THEO MỘT CHIỀU thay vì giật ngược từ 270° về 0° */
+    SFX.turn();
+    var el = $("board").querySelector('.rt-c[data-i="'+i+'"] .rt-rot');
+    if(el) el.style.transform = "rotate(" + (cell.turns*90) + "deg)";
+    var f = flow();
+    /* Chỉ đổi lớp `live`, không vẽ lại cả bàn — vẽ lại thì mọi ô mất animation
+       xoay và tiêu điểm bàn phím nhảy về đầu bảng. */
+    Array.prototype.forEach.call($("board").querySelectorAll(".rt-c"), function(el2){
+      var j = parseInt(el2.getAttribute("data-i"),10);
+      el2.classList.toggle("live", !!f.live[j]);
+    });
+    G.reach = f.reach;
+    paintHint(f);
+  }
+
+  function send(){
+    if(locked) return;
+    var f = flow();
+    if(!f.reach.length) return;
+    locked = true;
+
+    var pass = won(f), box = $("why"), msg;
+    if(pass){
+      score++; mined += CONFIG.TT_PER_BOARD;
+      msg = t("v_pass").replace("{fact}", L(BOARDS[idx].fact));
+    } else {
+      /* Sai kiểu nào cũng phải nói RÕ SAI GÌ: tới sai thiết bị là một lỗi, còn
+         mới nối được một trong hai pa-nô là một lỗi khác hẳn. */
+      /* BA loại sai khác hẳn nhau, và gộp chúng vào một câu là dạy trượt cả ba:
+           (a) điện tới một thiết bị KHÔNG phải đích — lỗi về kiến thức;
+           (b) tới đúng đích NHƯNG tưới luôn thiết bị khác — lỗi về việc khoá
+               nhánh không cần;
+           (c) tới đúng đích, một mình, nhưng mới một trong hai pa-nô — lỗi về
+               chữ "thêm vào" của bàn 5. */
+      var why;
+      if(f.reach.indexOf(G.goal) < 0){
+        why = wrongWhy(G.cells[f.reach[0]].mod);
+      } else if(f.reach.length > 1){
+        var extra = f.reach.filter(function(i2){ return i2 !== G.goal; })
+                           .map(function(i2){ return modName(G.cells[i2].mod); }).join(" · ");
+        why = t("why_extra").replace("{n}", extra);
+      } else {
+        why = t("why_part");
+      }
+      msg = t("v_wrong").replace("{why}", why);
+    }
+    box.className = "rt-why " + (pass ? "pass" : "fail");
+    box.innerHTML = msg;
+    box.hidden = false;
+
+    (pass ? SFX.good : SFX.bad)();
+    AstroQGameShell.mate(pass ? "cheer" : "oops");
+    render();
+    /* ⚠️⚠️ CHỈ CUỘN KHI HỘP GIẢI THÍCH THẬT SỰ NẰM NGOÀI TẦM MẮT, VÀ CUỘN ÍT NHẤT
+       CÓ THỂ. Câu kiến thức là thứ game này tồn tại để dạy nên nó phải hiện ra
+       (bài học của ARCADE-07) — nhưng bản đầu cuộn thẳng tới hộp đó ở MỌI khổ màn,
+       và trên iPad 1024×768 (chỗ mọi thứ vốn đã vừa) nó **đẩy dòng đầu của lời
+       brief lên khỏi mép**, cắt ngang giữa câu: soi ảnh chụp thì đọc ra như trang
+       vẽ lỗi. Nay đo trước, cuộn sau — và chỉ cuộn đúng phần thiếu. */
+    /* Hộp giải thích nay là thứ đầu tiên trong cột chữ (brief đã ẩn), nên chỉ cần
+       đưa cột về đầu — không còn phải đi tìm nó trong một cột dài. */
+    var left = $("left");
+    if(left) left.scrollTop = 0;
+  }
+
+  function next(){
+    if(!locked) return;
+    if(idx === MAXP-1){ endRun(); return; }
+    idx++; newBoard();
+  }
+
+  function newBoard(){
+    G = makeGrid(BOARDS[idx]);
+    /* ⚠️ Không bao giờ để trang trắng nếu bộ sinh bó tay: hạ ô cháy về 0 thì
+       bàn nào cũng dựng được (đường đi trong lưới trống luôn tồn tại). */
+    if(!G){
+      var soft = { n:BOARDS[idx].n, dead:0, burnt:0,
+                   srcs:BOARDS[idx].srcs, mods:BOARDS[idx].mods };
+      G = makeGrid(soft);
+    }
+    locked = false;
+    $("why").hidden = true;
+    $("brief").hidden = false;
+    var left = $("left"); if(left) left.scrollTop = 0;
+    render();
+  }
+
+  function endRun(){
+    var res = RUN.finish({ score:score, seconds:0, meteors:mined });
+    $("over-h").textContent = t("over_title");
+    $("over-p").textContent = t("over_p").replace("{n}", score).replace("{t}", MAXP);
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(G) render();
+  }
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_route.py`) ─────────────
+     ⚠️ Không hàm nào trả Promise — `page.evaluate` của Playwright tự chờ promise
+        được trả về, nên script test sẽ treo thay vì báo hỏng. */
+  window.__dbg = {
+    cfg: function(){ return { cost:CONFIG.COST, ttPerBoard:CONFIG.TT_PER_BOARD,
+                              boards:MAXP }; },
+    maxScore: function(){ return MAXP; },
+    board: function(){ return idx; },
+    locked: function(){ return locked; },
+    /* Ảnh chụp bàn hiện tại, đủ để một bộ đo tự kiểm luật chơi mà không cần biết
+       cách vẽ: loại ô · mặt nạ lời giải · số nhịp đang lệch · thiết bị. */
+    grid: function(){
+      return { n:G.n, goal:G.goal, srcs:G.srcs.slice(), dsts:G.dsts.slice(),
+               needAll:G.needAll,
+               cells:G.cells.map(function(c){
+                 return { k:c.k, sol:c.sol, turns:c.turns % 4, mod:c.mod }; }) };
+    },
+    reach: function(){ return flow().reach.slice(); },
+    /* Số ô ĐÃ ĐÚNG NGAY TỪ ĐẦU — phải là 0 ở mọi bàn (xem ghi chú `period`). */
+    prealigned: function(){
+      var n2 = 0;
+      G.cells.forEach(function(c){
+        if(c.k === "pipe" && (c.turns % period(c.sol)) === 0) n2++;
+      });
+      return n2;
+    },
+    solved: function(){ return won(flow()); },
+    /* Gieo thử bàn thứ `k` `tries` lần và đếm xem bao nhiêu lần DỰNG ĐƯỢC. Bộ đo
+       dùng nó để hỏi "bàn nào cũng dựng được" ở quy mô hàng trăm lượt mà không
+       phải bấm qua giao diện — `makeGrid` đã có trần 200 lần thử, nên tỉ lệ ở đây
+       thấp là tin xấu về bộ sinh chứ không phải về may mắn. */
+    tryBuild: function(k, tries){
+      var ok = 0, i;
+      for(i=0;i<(tries||50);i++) if(build(BOARDS[k])) ok++;
+      return { ok:ok, tries:(tries||50) };
+    },
+    /* Xoay mọi ô về lời giải — bộ đo dùng để chơi thắng một bàn mà không phải
+       mô phỏng chuột trên từng ô. */
+    solve: function(){
+      G.cells.forEach(function(c){ if(c.k === "pipe") c.turns = 0; });
+      render();
+      return won(flow());
+    },
+    /* Xoay đúng một ô đi một nhịp — dùng để đo rằng bàn KHÔNG tự thắng. */
+    nudge: function(){
+      for(var i=0;i<G.cells.length;i++){
+        if(G.cells[i].k === "pipe"){ turn(i); return i; }
+      }
+      return -1;
+    },
+    send: function(){ send(); },
+    next: function(){ next(); },
+    start: function(){ RUN.start(); }
+  };
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("go").addEventListener("click", send);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+  /* ⚠️ GẮN MỘT LẦN, KHÔNG GẮN TRONG `paintBoard`. Bàn được vẽ lại mỗi bàn mới và
+     mỗi lần đổi ngôn ngữ; gắn ở đó thì sau năm bàn có năm bản cùng một handler và
+     một cú mũi tên nhảy năm ô. Bắt ở chính `#board` nên vẫn thấy phím của mọi ô
+     con (sự kiện nổi bọt), kể cả ô vừa được vẽ lại. */
+  $("board").addEventListener("keydown", gridKeys);
+  /* Bàn phải đo lại khi khổ sân đổi — `js/game-shell.js` chỉ lo `--field-w`. */
+  window.addEventListener("resize", fitBoard);
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  newBoard();
+})();
+</script>
+</body>
+</html>

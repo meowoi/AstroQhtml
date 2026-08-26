@@ -210,29 +210,47 @@
        2026-08-14-…` mục 3 để biết vì sao lớp này đáng làm và vì sao nó rẻ hơn.
        ⚠️ Mô tả CỐ Ý không hứa một con số nào (số tình huống, số điểm) — bài học
           thẻ Đường Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
-    { key:"survival", prog:"survival", pal:"sic--teal", code:"ARCADE-07", cls:"card--survival", icon:"shield", cost:3, diff:"easy", status:"soon", file:"game-survival.html",
+    { key:"survival", prog:"survival", pal:"sic--teal", code:"ARCADE-07", cls:"card--survival", icon:"shield", cost:3, diff:"easy", status:"ready", file:"game-survival.html",
       name:{vi:"Trạm Sinh Tồn", en:"Survival Station"},
       desc:{vi:"Không bấm nhanh, chỉ chọn đúng: thứ gì thật sự giữ được mạng sống ngoài không gian? Chọn xong là biết ngay vì sao đúng hoặc chưa đúng.", en:"No fast fingers here — just good choices: what actually keeps people alive in space? Every pick comes with the reason it works, or doesn't."} },
     /* ⚠️ ARCADE-08 cùng LỚP QUYẾT ĐỊNH với ARCADE-07 nhưng KHUÔN KHÁC HẲN: ở đó
        trẻ chọn thẻ, ở đây trẻ xếp một DÃY rồi phát đi và không sửa được nữa.
        `docs/decisions/002` cấm dùng lại một khuôn quá 2 lần — bốn game lớp
        quyết định cố ý là bốn khuôn khác nhau, không phải một game chơi bốn lần. */
-    { key:"comms", prog:"communication", pal:"sic--cyan", code:"ARCADE-08", cls:"card--comms", icon:"sat", cost:4, diff:"medium", status:"soon", file:"game-comms.html",
+    { key:"comms", prog:"communication", pal:"sic--cyan", code:"ARCADE-08", cls:"card--comms", icon:"sat", cost:4, diff:"medium", status:"ready", file:"game-comms.html",
       name:{vi:"Trạm Liên Lạc", en:"Comms Station"},
       desc:{vi:"Tín hiệu tới Sao Hoả mất bảy phút, nên không ai lái được theo thời gian thực. Xếp trọn cả dãy lệnh rồi phát đi — và không gọi lại được nữa.", en:"A signal takes seven minutes to reach Mars, so nobody can steer in real time. Queue the whole command sequence, transmit — and you cannot call it back."} },
     /* ⚠️ ARCADE-09 — khuôn thứ BA của lớp quyết định: chia một ngân sách có hạn
        theo từng lượt, hậu quả dồn lại chứ không hiện ra ngay. Ba game lớp này
        cố ý là ba cách nghĩ khác nhau (chọn · xếp · chia), không phải một game
        chơi ba lần — `docs/decisions/002`. */
-    { key:"recycle", prog:"lifesupport", pal:"sic--lime", code:"ARCADE-09", cls:"card--recycle", icon:"leaf", cost:4, diff:"medium", status:"soon", file:"game-recycle.html",
+    { key:"recycle", prog:"lifesupport", pal:"sic--lime", code:"ARCADE-09", cls:"card--recycle", icon:"leaf", cost:4, diff:"medium", status:"ready", file:"game-recycle.html",
       name:{vi:"Trạm Tuần Hoàn", en:"Recycling Station"},
       desc:{vi:"Mỗi ngày chỉ có ngần ấy điện cho nước, không khí và oxy — mà oxy lại làm ra bằng cách tách nước. Giữ cả ba vạch sống qua năm ngày.", en:"Each day there is only so much power for water, air and oxygen — and oxygen is made by splitting water. Keep all three gauges alive for five days."} },
     /* ⚠️ ARCADE-10 — khuôn thứ TƯ của lớp quyết định: soi một bảng đã có sẵn rồi
        đánh dấu chỗ sai. Ba khuôn kia đều là trẻ DỰNG RA một thứ (chọn · xếp ·
        chia); đây là trẻ KIỂM một thứ người khác dựng — `docs/decisions/002`. */
-    { key:"units", prog:"datacheck", pal:"sic--gold", code:"ARCADE-10", cls:"card--units", icon:"ruler", cost:4, diff:"medium", status:"soon", file:"game-units.html",
+    { key:"units", prog:"datacheck", pal:"sic--gold", code:"ARCADE-10", cls:"card--units", icon:"ruler", cost:4, diff:"medium", status:"ready", file:"game-units.html",
       name:{vi:"Trạm Đối Chiếu", en:"Cross-Check Station"},
-      desc:{vi:"Năm bảng số liệu, hai cột mỗi bảng. Tìm hàng nào hai bên không nói cùng một lượng — năm 1999 đúng chỗ đó đã làm mất một con tàu.", en:"Five data sheets, two columns each. Find the rows where the two sides do not mean the same amount — in 1999 that very thing lost a spacecraft."} }
+      desc:{vi:"Năm bảng số liệu, hai cột mỗi bảng. Tìm hàng nào hai bên không nói cùng một lượng — năm 1999 đúng chỗ đó đã làm mất một con tàu.", en:"Five data sheets, two columns each. Find the rows where the two sides do not mean the same amount — in 1999 that very thing lost a spacecraft."} },
+    /* ⚠️ ARCADE-11 — khuôn thứ NĂM của lớp quyết định: XOAY TỪNG ĐOẠN DẪN CHO MỘT
+       TUYẾN LIỀN MẠCH. Bốn khuôn trước là *chọn thẻ · xếp thứ tự · chia ngân sách
+       · soi lỗi bảng*; ở đây trẻ dựng một ĐƯỜNG ĐI, và cái sai là *tuyến bị đứt*
+       — `docs/decisions/002`.
+       ⚠️⚠️ KHUÔN LƯỚI-NỐI NAY DÙNG 1/2 SUẤT, VÀ SUẤT CÒN LẠI ĐÃ CÓ CHỦ: cơ chế
+          "kéo đường nối hai đầu cùng loại" là CÙNG khuôn này, không phải khuôn
+          thứ sáu (`docs/proposals/2026-08-26-khuon-luoi-noi-tram-dan-tuyen.md`).
+          Làm nó thì nó vào làm khoá thứ hai của chương trình `systems`, và sau đó
+          hết suất lưới-nối.
+       ⚠️ `pal` DÙNG LẠI `sic--gold` (lần thứ ba, sau Ghép Chòm Sao và Trạm Đối
+          Chiếu) — theo đúng tiền lệ đã ghi ở `css/games.css`: bảng màu icon được
+          dùng lại, còn thứ phân biệt thẻ là `--neon` của `.card--route`. Bảng duy
+          nhất còn trống là `sic--slate`, mà xám cho một trò về ĐIỆN thì sai nghĩa.
+       ⚠️ Mô tả CỐ Ý không hứa một con số nào (số bàn, cỡ lưới) — bài học thẻ Đường
+          Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
+    { key:"route", prog:"systems", pal:"sic--gold", code:"ARCADE-11", cls:"card--route", icon:"bolt", cost:3, diff:"easy", status:"ready", file:"game-route.html",
+      name:{vi:"Trạm Dẫn Tuyến", en:"Route Station"},
+      desc:{vi:"Thiên thạch làm lệch hết đường dẫn điện của trạm! Xoay từng đoạn cho dòng điện đi liền một mạch từ pa-nô mặt trời tới đúng thiết bị đang cần nó.", en:"A meteor knocked every conduit on the station out of line! Turn the pieces until the current runs unbroken from the solar panel to the unit that actually needs it."} }
   ];
 
   /* ================= Số dư ================= */

@@ -86,6 +86,11 @@
    cùng tông với 📏 của bài đọc nguồn. Dùng chung `sic--gold` với Ghép Chòm Sao
    là chấp nhận được (xem ghi chú `.card--recycle` ngay trên). */
 .card--units  {--neon:rgba(255,207,107,.42);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.18);}
+/* ARCADE-11 Trạm Dẫn Tuyến — vàng CHANH, đậm hơn hẳn tông vàng nhạt của Trạm Đối
+   Chiếu ngay trên. ⚠️ Hai thẻ dùng CHUNG `sic--gold` cho icon (xem ghi chú
+   `.card--recycle`), nên `--neon` là thứ duy nhất phân biệt chúng trong lưới —
+   đổi nó về gần 255,207,107 là hai thẻ đọc ra như một. */
+.card--route  {--neon:rgba(250,204,21,.45);--neonS:rgba(250,204,21,.98);--ic-bg:rgba(250,204,21,.2);}
 
 /* ============ MODAL "chưa đủ" + TOAST ============ */
 .modal{z-index:60;padding:20px;background:rgba(4,6,20,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s;}

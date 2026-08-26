@@ -34,7 +34,14 @@ GAMES = [("game-dodge.html", 1.6), ("game-defender.html", 1.0),
          # cung cap ti le. Khuon choi thi khac han (xep thu tu).
          ("game-comms.html", (2.05, 0.72)),
          ("game-recycle.html", (2.05, 0.72)),
-         ("game-units.html", (2.05, 0.72))]
+         ("game-units.html", (2.05, 0.72)),
+         # ⚠️ ARCADE-11 LA GAME DUY NHAT CUA LOP NAY DOI TI LE MAN HEP: 0.62 chu
+         # khong phai 0.72. Bon game kia chua CHU, con day chua mot BAN VUONG, va
+         # ban bi kep boi chieu cao con lai sau loi brief — do duoc voi 0.72 thi o
+         # 6x6 chi con 36px (duoi moc 48px). San hep lai mot chut nhung CAO hon thi
+         # o len ~49px. Ti le man rong GIU nguyen 2.05 (o do san chia hai cot).
+         # Ly do day du + so do ghi o dau `css/game-route.css`.
+         ("game-route.html", (2.05, 0.62))]
 
 ok_n = bad_n = 0
 
