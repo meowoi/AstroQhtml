@@ -543,6 +543,7 @@
 > Ghi mới nhất lên trên.
 
 ### 2026-08-26
+- ✅ **ĐÃ PUSH — 1 commit, `63bc108` → `a91f2eb`, bản dựng `2026.08.26.4`.** **Đo trên BẢN THẬT: 2/2 tổ hợp đạt** (VI + EN) — bốn trụ đọc đúng *Thiên văn học · Trí tuệ nhân tạo · Tư duy khoa học · Robotics*, 4/4 icon vẫn vẽ, CTA "Tìm hiểu ngay", và **bấm "Tạo tài khoản" trên chính `astroq.org` mở thẳng ô `auth-register`, neo đã xoá khỏi URL, tiêu điểm ở ô Họ tên**. 0 lỗi console.
 - **TRỤ 3 THÀNH "TƯ DUY KHOA HỌC" · CTA "TÌM HIỂU NGAY" · "TẠO TÀI KHOẢN" ĐI THẲNG VÀO Ô ĐĂNG KÝ · ICON CĂN GIỮA.** Chủ dự án chốt bốn việc trong một lượt. **Chỉ đổi client, không cần deploy backend.**
   - **① Trụ 3: "Vật lý Lượng tử" → "Tư duy khoa học"** (chủ dự án: *"đổi thành tư duy khoa học"*). Lý do là số đo: `quantum` chỉ có **3/70 bài đọc (4%) + ~1 câu quiz** mà đứng hàng ba ngang thiên văn (17) và AI (14) — **đó** mới là chỗ trang chủ nói quá, không phải chỗ nói về AI. "Tư duy khoa học" thì đã có nội dung sẵn, chỉ đang nằm dưới `cat:"ai"`.
     - ⚠️⚠️ **ĐỔI MỘT TRỤ KHÔNG PHẢI ĐỔI MỘT CHỖ — phải sửa 4 mặt chữ dùng chung, ở CẢ hai ngôn ngữ:** trụ (`p3_t`/`p3_d`) · câu *"astroQ.org là gì?"* (`aeo_answer` = `a1` = `description` của JSON-LD, **4 chỗ trong `index.html`**) · `a3` *"Bốn nhóm chủ đề chính…"* · và `lede` + `a2` — hai chỗ **hiển thị** này ban đầu tôi định bỏ qua, nhưng `lede` nằm **ngay trên** bốn trụ nên để nguyên là trang tự nói ngược với chính nó cách đó 200px.
