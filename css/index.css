@@ -255,8 +255,16 @@ a{text-decoration:none;}
   font-size:clamp(22px,3.4vw,34px);letter-spacing:-.01em;}
 .answer{margin:0;font-size:clamp(14.5px,1.6vw,16.5px);line-height:1.78;color:var(--ink-soft);}
 
+/* ⚠️ `.pillars` KHÔNG CÒN NẰM TRONG `.aeo` từ 26/08/2026 — nó dời lên ngay dưới hero
+   (lý do đầy đủ ở chú thích khối đó trong `index.html`). Trước đây khoảng cách phía
+   TRÊN là do `.aeo{padding:clamp(24px,5vw,56px) 0 10px}` và `.aeo-head{margin-bottom}`
+   cho; nay không còn tổ tiên nào cho nữa, nên nó phải tự mang. Bỏ dòng `margin-top`
+   này thì 4 thẻ dính sát đáy hero.
+   ⚠️ Rule vẫn để nguyên ở khối "AEO / FAQ" của file này, KHÔNG dời đi: `.faq` ngay
+      dưới đây vẫn thuộc `.aeo`, tách `.pillars` ra một khối riêng chỉ để "cho đúng
+      chỗ" là làm hai chỗ phải nhớ thay vì một. Chú thích này nói rõ nó ở đâu. */
 .pillars{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;
-  margin:0 0 clamp(28px,5vw,48px);padding:0;}
+  margin:clamp(20px,4vw,40px) 0 clamp(28px,5vw,48px);padding:0;}
 .pillars li{display:flex;flex-direction:column;gap:7px;padding:18px 16px;border-radius:18px;
   background:var(--glass);border:1px solid var(--brd);
   -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
@@ -271,7 +279,18 @@ a{text-decoration:none;}
 .pillars b{font-family:var(--font-display);font-size:14.5px;}
 .pillars span{font-size:12.6px;line-height:1.55;color:var(--ink-soft);}
 @media (max-width:900px){ .pillars{grid-template-columns:repeat(2,minmax(0,1fr));} }
-@media (max-width:480px){ .pillars{grid-template-columns:1fr;} }
+/* ⚠️⚠️ 2 CỘT Ở ĐIỆN THOẠI, KHÔNG PHẢI 1 — ĐỔI 26/08/2026, VÀ ĐÂY LÀ ĐỂ TRẢ LẠI CÁI GIÁ
+   MÀ CHÍNH LƯỢT DỜI KHỐI NÀY GÂY RA. Dời 4 trụ lên trước khối waitlist thì thẻ mời tạo
+   tài khoản bị đẩy xuống; đo ở 390×844: waitlist từ **màn 1,01 → 1,72**. Xếp 4 trụ
+   thành 2×2 thì khối cao **552px → 347px** và waitlist về **màn 1,48** — tức lấy lại
+   hơn một phần ba quãng đã đẩy đi, mà 4 trụ vẫn ở màn 1,03 như cũ.
+   ⚠️ ĐÃ NHÌN BẰNG ẢNH RENDER THẬT TRƯỚC KHI ĐỔI, không suy từ con số: ở 390px mỗi thẻ
+      rộng ~165px, chữ 12,6px xuống 3–4 dòng, **không cắt chữ, không tràn ngang** (đo ở
+      360 · 390 · 430px). Đây là lý do duy nhất chấp nhận được để bỏ luật 1 cột — nếu
+      lần sau chữ trong trụ dài thêm thì phải render lại rồi mới giữ luật này.
+   ⚠️ `.pillars li:nth-child(2|3|4) .p-ic` gán màu **theo VỊ TRÍ**, không theo chủ đề.
+      Nó vẫn đúng ở 2×2 vì thứ tự DOM không đổi — nhưng đổi số trụ thì phải đọc lại. */
+@media (max-width:480px){ .pillars{grid-template-columns:repeat(2,minmax(0,1fr));} }
 
 .faq{max-width:820px;margin:0 auto;}
 .faq-h{text-align:center;font-size:clamp(19px,2.6vw,25px);margin-bottom:18px;}

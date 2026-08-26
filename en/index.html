@@ -253,6 +253,38 @@
     </div>
   </section>
 
+  <!-- ============================== 4 TRỤ KIẾN THỨC ==============================
+       ⚠️⚠️ DỜI LÊN ĐÂY 26/08/2026 — TRƯỚC ĐÓ NẰM TRONG `<section class="aeo">`, tức
+       MÀN THỨ BA khi cuộn, SAU cả khối waitlist. Số đo + lập luận đầy đủ:
+       `docs/proposals/2026-08-26-review-dinh-vi-lai-landing-ai.md` mục 5a và 10b.
+
+       Vấn đề: quảng cáo đang chạy hứa "AI cần tư duy phản biện", mà thứ khách thấy ở
+       màn đầu là hero + hai linh vật — bốn trụ (trong đó có **Trí tuệ nhân tạo**) thì
+       phải cuộn hai màn mới tới. Kho nội dung thật ra **đã** nghiêng về AI từ lâu
+       (32/70 bài đọc là ai+robot+it, nhiều hơn astronomy 17 bài), nên đây không phải
+       thiếu hàng — là hàng để khuất.
+
+       ⚠️ CỐ Ý CHỈ DỜI, KHÔNG ĐỔI MỘT CHỮ NÀO. Gộp 4 trụ thành 3 (đề xuất ban đầu) kéo
+          theo `<title>` + `og:*`/`twitter:*` + **hai khối JSON-LD** + FAQ `<details>`
+          (khớp 1-1 là bắt buộc) + `.pillars li:nth-child(n)` gán màu THEO VỊ TRÍ ở
+          `css/index.css` + sinh lại bản EN. Dời khối thì được gần hết cái lợi với giá
+          gần bằng 0 — và `/` là trang DUY NHẤT được lập chỉ mục ở gốc.
+
+       ⚠️ THỨ TỰ MỚI hero → 4 trụ → waitlist LÀ CÓ Ý, không phải hệ quả. Hero đã mang
+          CTA chính ("Vào chơi ngay"), nên 4 trụ nay đứng đúng chỗ **lý lẽ đứng trước
+          lời mời**: đọc xong "dạy những gì" rồi mới tới thẻ mời tạo tài khoản.
+
+       ⚠️ `<ul>` trần làm con trực tiếp của `<main>` là CÓ Ý — nó tự có tên trợ năng qua
+          nội dung, không cần bọc thêm `<section>` (một `<section>` không nhãn còn tệ
+          hơn). Khoảng cách trên do `.pillars` tự mang (`css/index.css`), vì nó không
+          còn thừa hưởng `padding` của `.aeo` nữa. -->
+  <ul class="pillars">
+    <li><span class="p-ic" id="ic-astro" aria-hidden="true"></span><b data-i18n="p1_t">Astronomy</b><span data-i18n="p1_d">The Solar System, the stars and a 3D galaxy map.</span></li>
+    <li><span class="p-ic" id="ic-ai" aria-hidden="true"></span><b data-i18n="p2_t">Artificial Intelligence</b><span data-i18n="p2_d">How machines learn to think, explained for kids.</span></li>
+    <li><span class="p-ic" id="ic-quantum" aria-hidden="true"></span><b data-i18n="p3_t">Quantum Physics</b><span data-i18n="p3_d">Particles, waves and the strangest rules of the universe.</span></li>
+    <li><span class="p-ic" id="ic-robot" aria-hidden="true"></span><b data-i18n="p4_t">Robotics</b><span data-i18n="p4_d">How robots sense, move and make decisions.</span></li>
+  </ul>
+
   <!-- ============================== WAITLIST ============================== -->
   <section class="waitlist" id="waitlist">
     <div class="wl-card">
@@ -299,13 +331,10 @@
       <p class="answer" data-i18n="aeo_answer">astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.</p>
     </div>
 
-    <!-- 4 trụ kiến thức -->
-    <ul class="pillars">
-      <li><span class="p-ic" id="ic-astro" aria-hidden="true"></span><b data-i18n="p1_t">Astronomy</b><span data-i18n="p1_d">The Solar System, the stars and a 3D galaxy map.</span></li>
-      <li><span class="p-ic" id="ic-ai" aria-hidden="true"></span><b data-i18n="p2_t">Artificial Intelligence</b><span data-i18n="p2_d">How machines learn to think, explained for kids.</span></li>
-      <li><span class="p-ic" id="ic-quantum" aria-hidden="true"></span><b data-i18n="p3_t">Quantum Physics</b><span data-i18n="p3_d">Particles, waves and the strangest rules of the universe.</span></li>
-      <li><span class="p-ic" id="ic-robot" aria-hidden="true"></span><b data-i18n="p4_t">Robotics</b><span data-i18n="p4_d">How robots sense, move and make decisions.</span></li>
-    </ul>
+    <!-- ⚠️ 4 TRỤ KIẾN THỨC ĐÃ DỜI LÊN NGAY DƯỚI HERO (26/08/2026) — xem khối
+         `<ul class="pillars">` ở trên và lý do đầy đủ ghi ở đó. Khối này CỐ Ý để
+         trống: `.aeo` giữ nguyên vai "câu trả lời trực tiếp + FAQ" cho AEO/JSON-LD,
+         còn 4 trụ nay là thứ khách nhìn thấy ở màn đầu. -->
 
     <!-- FAQ: khớp 1-1 với FAQPage schema ở <head> -->
     <div class="faq">
