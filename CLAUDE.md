@@ -543,6 +543,7 @@
 > Ghi mới nhất lên trên.
 
 ### 2026-08-26
+- ✅ **ĐÃ PUSH — 1 commit, `75e6412` → `b1f843b`, bản dựng `2026.08.26.3`.** Đóng dấu + sinh lại `sw.js`; lại **KHÔNG `git add -A`** (4 file của phiên song song vẫn nằm nguyên trong cây làm việc). **Đo trên BẢN THẬT sau khi Pages build: 4/4 tổ hợp đạt** (vi/en × 1440×950, 390×844) — trụ ở **màn 0,64 / 1,03** (VI) và **0,66 / 1,07** (EN), `.aeo .pillars` trả **rỗng** (khối đã ra khỏi `.aeo` thật), 4 icon vẫn vẽ đủ, 0 lỗi console, 0 tràn ngang. Pages mất ~3 phút.
 - **TRANG CHỦ `/`: DỜI 4 TRỤ KIẾN THỨC LÊN NGAY DƯỚI HERO — "Trí tuệ nhân tạo" từ màn 1,37 lên màn 0,64.** Chủ dự án: *"làm tiếp đi"* (việc 3 của mục 14 file review). **Chỉ đổi client, không cần deploy backend.**
   - **Vấn đề, đo được:** `<ul class="pillars">` nằm trong `<section class="aeo">`, tức **sau cả khối waitlist**. Đo trên bản thật `astroq.org` trước khi sửa: khối trụ ở **màn 1,37 (máy tính) / 1,81 (điện thoại)**. Nghĩa là người bấm quảng cáo "AI cần tư duy phản biện" phải cuộn qua hai màn mới thấy chữ **AI** ở đâu — trong khi kho nội dung **đã** nghiêng về AI từ lâu (32/70 bài đọc, nhiều hơn astronomy 17 bài).
   - **Sau khi dời: trụ ở màn 0,64 (máy tính) / 1,03 (điện thoại)** — trên máy tính là **nằm trọn trong màn đầu**, không cần cuộn.
