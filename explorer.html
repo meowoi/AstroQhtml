@@ -2014,6 +2014,81 @@ class App {
     this._onResize();
   }
 
+  /* ── Dàn nhãn: NHÃN KHÔNG ĐƯỢC ĐÈ NHÃN ────────────────────────────────────
+     ⚠️⚠️ ĐO ĐƯỢC, KHÔNG PHỎNG ĐOÁN. `scratchpad/probe_label_overlap.py` hỏi
+     `elementFromPoint` ở CHÍNH TÂM từng nhãn, 6 lượt nạp trang: **6/6 lượt** có
+     nhãn bị nhãn khác đè, và cặp thủ phạm luôn là Trái Đất ↔ Mặt Trăng — `earth`
+     bị che 3/6 lượt, `moon` 3/6, không lượt nào cả hai (chúng THAY NHAU đè, tuỳ
+     cái nào giành được `z-index`). Hậu quả không phải chuyện thẩm mỹ: trẻ bấm
+     vào giữa chữ "Mặt Trăng" thì `selectBody` mở ra **Trái Đất**.
+     (Việc treo từ 02/08/2026 — `docs/decisions/005` mục 1.)
+
+     ⚠️ ĐỪNG quy việc `probe_globe_daynight.py` phải đi đường lùi cho lỗi này —
+        tôi đã viết thế ở bản đầu và ĐO LẠI THÌ SAI. Playwright bỏ cú bấm vì
+        *"waiting for element to be visible, enabled and stable"*: nhãn bám hành
+        tinh nên không bao giờ đứng yên. Đó là ràng buộc của bộ đo, không phải của
+        sản phẩm — trẻ thật bấm nhãn đang di chuyển vẫn trúng.
+
+     ⚠️ ĐẨY CHỖ, KHÔNG ẨN NHÃN. Ẩn thì gọn hơn nhưng lấy mất một đường vào của
+        thiên thể; đẩy lên thì cả hai nhãn vẫn đọc được VÀ vẫn bấm được. Chỉ khi
+        đẩy hết `MAX` bước mà vẫn chồng mới ẩn — vì thà không thấy nhãn còn hơn
+        thấy một nhãn bấm vào ra thiên thể khác.
+
+     ⚠️ ĐẨY BẰNG `marginTop`, KHÔNG BẰNG `transform`. `CSS2DRenderer` GHI LẠI
+        `style.transform` mỗi khung hình (:133) nên mọi thứ viết vào đó sống đúng
+        một khung. Nó không chạm `margin`. Cũng vì thế `.body-lbl:hover{transform:
+        scale(1.06)}` ở `css/explorer.css` hiện KHÔNG có tác dụng — style inline
+        thắng class; ghi lại đây để lần sau đừng sửa nhầm chỗ.
+
+     ⚠️ THỨ TỰ ƯU TIÊN LÀ THỨ TỰ TẠO NHÃN, không phải khoảng cách tới ống kính.
+        Xếp theo khoảng cách thì mỗi khung hình một thứ tự khác, nhãn nhảy qua
+        nhảy lại. Thứ tự tạo là cố định, nên nhãn đứng yên; và nó tình cờ đúng ý:
+        Trái Đất tạo trước Mặt Trăng nên Trái Đất giữ chỗ. Thiên thể ĐANG CHỌN
+        được đưa lên đầu — cái trẻ đang đọc thì không bao giờ bị đẩy.
+
+     ⚠️ KHÔNG XÉT NHÃN BỊ BẢNG TRÁI CHE. Bộ đo thấy `saturn`/`uranus` nằm sau
+        `#deck` 5/6 lượt, nhưng đó là lỗi KHÁC: bảng che kín thì trẻ không thấy
+        nhãn nên không bị lừa, và bảng trái vẫn liệt kê đủ thiên thể. Đẩy nhãn ra
+        khỏi bảng sẽ dịch nhãn xa hành tinh của nó — chữa một cái, hỏng cái khác. */
+  _declutterLabels(){
+    const EVERY=8, STEP=15, MAX=3, PAD=2;   // EVERY: đo lại ~7 lần/giây là đủ
+    if((this._declTick=(this._declTick||0)+1) % EVERY) return;
+    const labs=this._labels;
+    if(!labs || labs.length<2) return;
+    const selId=(this.selected && this.selected.cfg) ? this.selected.cfg.id : null;
+    const order=labs.slice().sort((a,b)=>
+      (b.dataset.bodyId===selId?1:0)-(a.dataset.bodyId===selId?1:0));
+    const placed=[];
+    for(const el of order){
+      if(el.style.display==='none') continue;               // nhãn ngoài khung nhìn
+      /* Đo Ở TRẠNG THÁI ĐANG BỊ ĐẨY rồi trừ đi lượng đẩy cũ, thay vì gán margin=0
+         rồi đo lại: gán rồi đo là hai lượt dựng bố cục mỗi lần, và tệ hơn là nếu
+         quên trừ thì lượng đẩy tự cộng dồn, nhãn trôi dần lên khỏi màn hình. */
+      const old=parseFloat(el.dataset.decl||'0');
+      const r=el.getBoundingClientRect();
+      if(r.width<2 || r.height<2) continue;
+      const L=r.left-PAD, R=r.right+PAD, T=r.top-old-PAD, B=r.bottom-old+PAD;
+      /* ⚠️⚠️ THỬ CẢ HAI CHIỀU, ĐỪNG CHỈ ĐẨY LÊN. Bản đầu chỉ thử `dy = -k*STEP` cho
+         nhãn đi xa đĩa hành tinh, và đo ra `moon` bị ẩn **3/6 lượt** vì đẩy hết 45px
+         vẫn chồng — lý do đơn giản: nhãn Mặt Trăng thường nằm NGAY DƯỚI nhãn Trái
+         Đất, nên đẩy lên là đẩy VÀO nó, còn đẩy xuống thì rời ra ngay bước đầu.
+         Xen kẽ lên/xuống, cùng khoảng cách thì ưu tiên LÊN (xa đĩa hơn). */
+      let dy=0, fit=false;
+      for(let k=0;k<=MAX*2 && !fit;k++){
+        const step=Math.ceil(k/2)*STEP;
+        dy=(k%2)?-step:step;                       // k=0:0, 1:-1, 2:+1, 3:-2, 4:+2…
+        if(!placed.some(p=>p.L<R && p.R>L && p.T<B+dy && p.B>T+dy)) fit=true;
+      }
+      if(dy!==old){ el.style.marginTop=dy?dy+'px':''; el.dataset.decl=String(dy); }
+      const hide=!fit;
+      if(hide!==(el.style.visibility==='hidden')){
+        el.style.visibility=hide?'hidden':'';
+        el.style.pointerEvents=hide?'none':'';               // ẩn thì đừng ăn cú bấm
+      }
+      if(!hide) placed.push({L:L, R:R, T:T+dy, B:B+dy});
+    }
+  }
+
   _loop(){
     requestAnimationFrame(()=>this._loop());
     const dt=Math.min(0.05, this.clock.getDelta());
@@ -2026,6 +2101,7 @@ class App {
     if(this.lowQuality) this.renderer.render(this.scene, this.camera);
     else this.composer.render();
     this.labelRenderer.render(this.scene, this.camera);
+    this._declutterLabels();   // nhãn không được đè nhãn — xem chú thích ở trên
 
     // Scene is live — reveal it on the very first frame (no artificial wait).
     if(!this._loaderHidden){

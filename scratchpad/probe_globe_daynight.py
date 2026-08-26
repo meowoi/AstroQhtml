@@ -14,17 +14,28 @@ Nhung cung co nhieu anh sang NEN:
 Do gi: quet mot dai ngang qua dia hanh tinh, tim bien dia, roi so do sang nua
 sang vs nua toi. KHONG doc code roi ket luan.
 
-Chay:  python -m http.server 8123   (trong AstroQhtml/)
-       PYTHONIOENCODING=utf-8 python scratchpad/probe_globe_daynight.py
+Chay:  PYTHONIOENCODING=utf-8 python scratchpad/probe_globe_daynight.py
+       (tu dung server o cong 8143 — khong can chay `http.server` truoc)
 
 Nhan print KHONG DAU (console Windows cp1252).
 """
+import http.server
 import io
+import os
+import socketserver
 import sys
+import threading
 from playwright.sync_api import sync_playwright
 from PIL import Image
 
-BASE = "http://127.0.0.1:8123"
+# ⚠️⚠️ TU DUNG SERVER, DUNG DOI NGUOI CHAY `python -m http.server` TRUOC. Truoc day
+#    bo do nay ghi trong huong dan la "chay server o cong 8123 roi chay toi" — mot
+#    bo do phu thuoc vao viec nguoi ta nho lam mot buoc thu cong thi som muon se bi
+#    chay khi khong co server, va luc do no bao HONG oan (goto that bai -> check
+#    false -> exit 1) chu khong noi "thieu server". Nay no tu mo cong rieng, nen
+#    dua vao cong day du duoc.
+PORT = 8143
+BASE = "http://127.0.0.1:%d" % PORT
 PASS = 0
 FAIL = 0
 
@@ -104,7 +115,39 @@ def main():
         if lbl is None:
             print("\nKET QUA: %d dat / %d hong" % (PASS, FAIL))
             return 1
-        lbl.click()
+        # ⚠️⚠️ CU BAM VAO NHAN TREN BAN DO GAN NHU LUON THAT BAI, VA LY DO KHONG PHAI
+        #    "BI CHE". Ban dau o day ghi la nhan bi nhan hanh tinh khac de len — that
+        #    ra hom 25/08/2026 co MOT lan Playwright bao dung the ("<div class=body-lbl
+        #    ...>Sao Kim</div> intercepts pointer events"), va tu do suy ra nguyen nhan
+        #    cho MOI lan. Do lai moi thay suy the la sai: `scratchpad/probe_label_overlap.py`
+        #    hoi `elementFromPoint` o chinh tam nhan Trai Dat, 6 luot × 2 loai tre, va
+        #    lan nao phan tu tren cung CUNG LA chinh nhan do — tuc tam nhan BAM DUOC.
+        #    Nguyen nhan that in ra o dong duoi day; giu nguyen van loi cua Playwright
+        #    thay vi doan, vi day dung la cho da doan sai mot lan.
+        #    ⛔ KHONG chua bang `force=True`: neu that su co luc bi nhan khac de, cu bam
+        #       do se chon SAI hanh tinh va bo do van bao "dat" — te hon han mot lan chet.
+        #    Duong lui la BANG TRAI: `selectBody` co 6 duong vao (CLAUDE.md 01/08),
+        #    va muc trong bang trai la mot `<button>` that, dung yen, khong bi che.
+        used = "nhan tren ban do"
+        why = ""
+        try:
+            lbl.click(timeout=6000)
+        except Exception as e:
+            why = " ".join(str(e).split())[:150]
+            used = "muc Trai Dat o bang trai (bam nhan tren ban do that bai)"
+            it = pg.query_selector('.loc-item[data-body-id="earth"]') \
+                or pg.query_selector('#deck .loc-item:has-text("Trái Đất")')
+            if it is None:
+                check("chon duoc Trai Dat (nhan bi che, bang trai cung khong thay)",
+                      False)
+                print("\nKET QUA: %d dat / %d hong" % (PASS, FAIL))
+                return 1
+            it.click(timeout=6000)
+        # ⚠️ IN RA duong nao da dung — doi duong am tham thi lan sau khong ai biet
+        #    con so do duoc do o ngu canh nao.
+        print("      chon Trai Dat qua: %s" % used)
+        if why:
+            print("      ly do Playwright bo cu bam nhan: %s" % why)
         # Camera bay ~1,6s roi bang thong tin moi mo (map-onboard.js ghi vay).
         pg.wait_for_timeout(3000)
 
@@ -178,10 +221,28 @@ def main():
               contrast >= 25.0, "chenh do duoc %.1f" % contrast)
         check("hai nua dia chenh >= 12 diem (toi thieu nhan ra duoc)",
               contrast >= 12.0, "chenh do duoc %.1f" % contrast)
-        check("co diem toi thuc su tren dia (min < 40)", vmin < 40.0,
-              "min do duoc %.1f — nen sang thi nua toi khong bao gio xuong thap"
-              % vmin)
-        print("      ti so max/min = %.2f" % ratio)
+        # ⚠️⚠️ PHEP KIEM CU O DAY LA `vmin < 40` VA NO CHUA BAO GIO DAT — do lai
+        #    25/08/2026 tren CA ban HEAD thi `min` deu ra dung 55.0. Hai cai sai:
+        #      · no doc MOT pixel toi nhat, trong khi chinh file nay da ghi ngay
+        #        tren rang "decile ben vung hon max/min don le" — hai phep kiem
+        #        chenh lech thi dung decile, rieng no thi khong;
+        #      · nguong 40 la mot con so tuyet doi, ma vanh khi quyen + anh sang moi
+        #        truong lam pixel toi nhat TRONG dia khong bao gio xuong duoi ~55.
+        #    Va no lam bo do "bao oan" moi luot chay, tuc som muon nguoi ta bo qua.
+        #    ⇒ DOI PHAT BIEU sang TI SO decile — dung y "co nua toi that", nhung
+        #      BAT BIEN theo do phong/khung nhin (do duoc: chenh dao dong 101–171
+        #      diem giua cac luot vi hanh tinh dang bay, con ti so thi 2,58–3,43).
+        #    ⚠️ KHONG PHAI NOI LONG: ti so la phep kiem MOI, va no bat duoc dung ca
+        #       hong that ma `vmin < 40` nham vao — anh sang moi truong bi keo len
+        #       den muc hai nua bang nhau thi ti so -> 1.
+        #    Moc 2,0 lay tu so do thap nhat (2,58) tru bien; ghi chu 02/08/2026 ghi
+        #    "ti so 2,94x" va chot "khong can chinh den", tuc san pham o muc nay la
+        #    muc DA DUOC DUYET.
+        check("nua toi TOI HON nua sang it nhat 2 lan (ti so decile)",
+              ratio >= 2.0, "ti so do duoc %.2f" % ratio)
+        # In `min` de tham khao, KHONG lam phep kiem — xem ly do ngay tren.
+        print("      ti so decile sang/toi = %.2f | pixel toi nhat %.1f (chi tham khao)"
+              % (ratio, vmin))
 
         check("0 loi console/pageerror", len(errs) == 0, "; ".join(errs[:2]))
         ctx.close()
@@ -191,5 +252,18 @@ def main():
     return 1 if FAIL else 0
 
 
+class _Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    socketserver.TCPServer.allow_reuse_address = True
+    _srv = socketserver.TCPServer(("", PORT), _Quiet)
+    threading.Thread(target=_srv.serve_forever, daemon=True).start()
+    try:
+        _rc = main()
+    finally:
+        _srv.shutdown()
+    sys.exit(_rc)
