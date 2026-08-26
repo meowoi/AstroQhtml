@@ -162,6 +162,11 @@ footer a:hover{color:var(--accent);}
   width:clamp(82px, 9vw, 124px);        /* đồng bộ kích thước mọi nhân vật */
   will-change:transform;
 }
+/* ⚠️ `<picture>` là phần tử INLINE nên nó tự thêm một khoảng trắng dưới ảnh (đường
+   cơ sở chữ) và không nhận `width:100%` của ảnh bên trong một cách gọn gàng. Bọc
+   `<picture>` quanh 9 ảnh trang trí (25/08/2026, để phục vụ AVIF/WebP đã hạ cỡ —
+   xem `scratchpad/make_landing_assets.py`) nên phải khai nó thành block. */
+.floaty picture,.ic picture{display:block;}
 .floaty img{display:block;width:100%;height:auto;filter:drop-shadow(0 12px 26px rgba(0,0,0,.45));}
 
 /* b1 to hơn để trông bằng cho1 (tỉ lệ nhân vật trong ảnh khác nhau) */

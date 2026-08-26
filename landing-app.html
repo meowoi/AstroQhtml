@@ -51,19 +51,35 @@
 <div id="stars2"></div>
 <div class="sun-glow"></div>
 
-<!-- Nhân vật bay lơ lửng (ảnh trong /img) -->
-<div class="floaty f-raica1" aria-hidden="true"><img src="img/raica1.png" alt="" /></div>
-<div class="floaty f-b1" aria-hidden="true"><img src="img/b1.png" alt="" /></div>
-<div class="floaty f-luna1" aria-hidden="true"><img src="img/luna1.png" alt="" /></div>
-<div class="floaty f-cho1" aria-hidden="true"><img src="img/cho1.png" alt="" /></div>
-<div class="floaty f-m1" aria-hidden="true"><img src="img/m1.png" alt="" /></div>
+<!-- Nhân vật bay lơ lửng (ảnh trong /img)
+
+     ⚠️⚠️ `loading="lazy"` Ở ĐÂY LÀ ĐỂ ĐIỆN THOẠI KHỎI TẢI 9 ẢNH NÓ KHÔNG BAO GIỜ THẤY.
+     `css/landing-app.css` đặt `.floaty{display:none}` và `.iscene{display:none}` ở
+     `@media (max-width:880px)` — nhưng `display:none` KHÔNG chặn việc tải: đo
+     25/08/2026 thì máy 390px vẫn tải đủ **525,2 KB PNG** cho những ảnh bị ẩn hoàn
+     toàn. Thêm `loading="lazy"` thì ảnh không có hộp hiển thị nên không bao giờ giao
+     với khung nhìn, và trình duyệt hoãn vô hạn: đo lại **525,2 KB → 7,0 KB** (còn
+     đúng `astroq-logo.png`). Máy tính không đổi — vẫn 10 ảnh, 525,2 KB.
+     ⚠️ Đây là số ĐO ĐƯỢC, không phải đặc tả: hành vi "lazy + display:none thì không
+        tải" là của Chromium hiện tại, nên nếu ai nghi thì chạy lại phép đo chứ đừng
+        tin dòng này. Trường hợp xấu nhất mà trình duyệt tải tất: ta trở về đúng
+        trạng thái cũ, không hỏng gì.
+     ⚠️ CỐ Ý dùng lazy cho ảnh Ở TRÊN MÀN — thường thì đó là điều nên tránh (làm LCP
+        muộn). Ở đây chấp nhận vì cả 9 ảnh đều `aria-hidden`, tức thuần trang trí,
+        không phải nội dung. Đã kiểm màn kịch 5 giây vẫn chạy: cả 4 ảnh `.iscene`
+        báo `complete = true` với `naturalWidth` đúng (512/512/512/768). -->
+<div class="floaty f-raica1" aria-hidden="true"><picture><source srcset="img/raica1-480.avif" type="image/avif" /><source srcset="img/raica1-480.webp" type="image/webp" /><img loading="lazy" src="img/raica1.png" alt="" /></picture></div>
+<div class="floaty f-b1" aria-hidden="true"><picture><source srcset="img/b1-336.avif" type="image/avif" /><source srcset="img/b1-336.webp" type="image/webp" /><img loading="lazy" src="img/b1.png" alt="" /></picture></div>
+<div class="floaty f-luna1" aria-hidden="true"><picture><source srcset="img/luna1-248.avif" type="image/avif" /><source srcset="img/luna1-248.webp" type="image/webp" /><img loading="lazy" src="img/luna1.png" alt="" /></picture></div>
+<div class="floaty f-cho1" aria-hidden="true"><picture><source srcset="img/cho1-248.avif" type="image/avif" /><source srcset="img/cho1-248.webp" type="image/webp" /><img loading="lazy" src="img/cho1.png" alt="" /></picture></div>
+<div class="floaty f-m1" aria-hidden="true"><picture><source srcset="img/m1-248.avif" type="image/avif" /><source srcset="img/m1-248.webp" type="image/webp" /><img loading="lazy" src="img/m1.png" alt="" /></picture></div>
 
 <!-- Màn kịch qg1 + qb1 + q1 → 3qok -->
 <div class="iscene" aria-hidden="true">
-  <div class="ic ic-qg1" id="ic-qg1"><div class="mv"><div class="bob"><img src="img/qg1.png" alt="" /><span class="qmark">?</span></div></div></div>
-  <div class="ic ic-qb1" id="ic-qb1"><div class="mv"><div class="bob"><img src="img/qb1.png" alt="" /><span class="cheek cheek-l"></span><span class="cheek cheek-r"></span></div></div></div>
-  <div class="ic ic-q1"  id="ic-q1"><div class="mv"><div class="spin"><img src="img/q1.png" alt="" /></div></div></div>
-  <div class="ic ic-3qok" id="ic-3qok"><div class="mv3"><div class="ring"></div><div class="burst"></div><img src="img/3qok.png" alt="" /></div></div>
+  <div class="ic ic-qg1" id="ic-qg1"><div class="mv"><div class="bob"><picture><source srcset="img/qg1-248.avif" type="image/avif" /><source srcset="img/qg1-248.webp" type="image/webp" /><img loading="lazy" src="img/qg1.png" alt="" /></picture><span class="qmark">?</span></div></div></div>
+  <div class="ic ic-qb1" id="ic-qb1"><div class="mv"><div class="bob"><picture><source srcset="img/qb1-248.avif" type="image/avif" /><source srcset="img/qb1-248.webp" type="image/webp" /><img loading="lazy" src="img/qb1.png" alt="" /></picture><span class="cheek cheek-l"></span><span class="cheek cheek-r"></span></div></div></div>
+  <div class="ic ic-q1"  id="ic-q1"><div class="mv"><div class="spin"><picture><source srcset="img/q1-248.avif" type="image/avif" /><source srcset="img/q1-248.webp" type="image/webp" /><img loading="lazy" src="img/q1.png" alt="" /></picture></div></div></div>
+  <div class="ic ic-3qok" id="ic-3qok"><div class="mv3"><div class="ring"></div><div class="burst"></div><picture><source srcset="img/3qok-384.avif" type="image/avif" /><source srcset="img/3qok-384.webp" type="image/webp" /><img loading="lazy" src="img/3qok.png" alt="" /></picture></div></div>
 </div>
 
 <!-- Nút Contact Us (hiện sau khi 3qok đáp xuống góc dưới-trái) -->
