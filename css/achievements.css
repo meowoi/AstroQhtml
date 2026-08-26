@@ -19,7 +19,25 @@
 
 .ov-body .ov-h{font-family:var(--font-display);font-weight:700;font-size:19px;margin:0 0 6px;}
 .ov-body .ov-p{color:var(--ink-soft);font-size:13.5px;line-height:1.6;margin:0 0 14px;}
-.groups{display:flex;flex-wrap:wrap;gap:8px;}
+/* ⚠️ Khung xương thứ hai (xem khối dài ở `.ranks`): `#groups` cũng do JS điền, và
+   sau khi chặn được cú nhảy của `.ranks` thì đây là thứ còn lại — panel TỔNG QUAN
+   giãn 292→380px làm mọi thứ dưới nó tụt 60px (CLS 0,1318 ở 768px).
+   ⚠️ Ba mức là ĐO ĐƯỢC, không chọn theo cảm tính: quét chiều rộng 1600→360px theo
+      bước 40px (25/08/2026) thì chiều cao đổi đúng hai lần — 32px khi ≥960px,
+      72px trong khoảng 520–920px, 112px khi ≤480px. Năm chip mỗi chip 32px, gói
+      thành 1/2/3 dòng, gap 8px — nên các số dưới đây viết ra dạng phép tính chứ
+      không viết thẳng, để lần sau đổi cỡ chip là thấy ngay phải sửa gì.
+   ⚠️ Mốc media query đặt giữa hai điểm đo (940px, 500px) vì bước quét là 40px:
+      ranh giới thật nằm trong khoảng đó, chọn giữa thì lệch tối đa 20px. */
+.groups{display:flex;flex-wrap:wrap;gap:8px;
+  --gc-h:32px;--gc-gap:8px;
+  min-height:var(--gc-h);}
+@media (max-width:940px){
+  .groups{min-height:calc(2 * var(--gc-h) + 1 * var(--gc-gap));}   /* 72px */
+}
+@media (max-width:500px){
+  .groups{min-height:calc(3 * var(--gc-h) + 2 * var(--gc-gap));}   /* 112px */
+}
 .gchip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
   border:1px solid var(--brd);background:rgba(15,23,42,.5);font-size:12.5px;color:var(--ink-soft);}
 .gchip .ic{font-size:14px;line-height:1;}
@@ -37,8 +55,23 @@
       được (bài học đã ghi 3 lần trong CLAUDE.md: nút Mặt Trăng, card HUD "sắp ra
       mắt", bóng mẫu vật trong khoang khoá). Làm mờ bằng opacity + màu chữ. */
 .ladder{margin-top:26px;}
+/* ⚠️⚠️ `min-height` LÀ KHUNG XƯƠNG CHỐNG NHẢY BỐ CỤC, KHÔNG PHẢI TRANG TRÍ.
+   `#ranks` do JS điền sau khi trang nạp, nên trên **mạng chậm** khung sơn đầu tiên
+   là một ô cao 0 rồi mọi thứ bên dưới tụt xuống. Đo được 25/08/2026 bằng
+   `scratchpad/probe_cls.py` (4G 9 Mbps/RTT 150ms + CPU ×4): **CLS 0,8203 ở 768px
+   và 0,4947 ở 1440px** — mức Google xếp là "kém" (>0,25) gấp 2–3 lần.
+   ⚠️ Con số 10 KHÔNG phải số ma: lộ trình có đúng **mười bậc**, và chính trang này
+      viết ra câu đó (*"Mười bậc huấn luyện, mỗi bậc 5 cấp"*). Thêm bậc thứ 11 thì
+      phải sửa cả câu đó, nên hai chỗ hỏng cùng lúc chứ không âm thầm lệch.
+   ⚠️ Đo lại được: `#ranks` cao **672px** ở cả 768px và 1440px, 686px ở 390px — tức
+      chiều cao KHÔNG đổi theo khung nhìn (mỗi bậc một dòng), nên một `min-height`
+      là đủ, không cần media query. Phần dư 14px ở 390px là chấp nhận được.
+   ⚠️ Dùng `min-height` chứ KHÔNG `height`: nếu một bậc nào đó cao hơn dự kiến (chữ
+      dài, phông chưa về) thì hộp vẫn giãn ra được thay vì cắt mất chữ. */
 .ranks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;
-  counter-reset:rk;}
+  counter-reset:rk;
+  --rk-n:10;--rk-h:60px;--rk-gap:8px;
+  min-height:calc(var(--rk-n) * var(--rk-h) + (var(--rk-n) - 1) * var(--rk-gap));}
 .rk{position:relative;display:flex;align-items:center;gap:12px;padding:11px 13px;
   border-radius:14px;border:1px solid var(--brd);background:rgba(15,23,42,.42);
   transition:border-color .25s,background .25s,transform .3s var(--jelly);}

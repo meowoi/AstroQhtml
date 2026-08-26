@@ -182,8 +182,25 @@
       <p class="lede" data-i18n="lede">An interactive learning platform on Space, AI &amp; Quantum Physics for young explorers. We turn complex theory into thrilling cosmic missions.</p>
 
       <!-- Đồng hồ đếm ngược tới ngày mở cửa -->
-      <div class="countdown" id="countdown" aria-live="polite">
-        <div class="cd-label" id="cd-label" data-i18n="cd_label">SYSTEM GOES LIVE IN</div>
+      <!-- ⚠️⚠️ MẶC ĐỊNH LÀ TRẠNG THÁI **ĐÃ MỞ CỬA** (đổi 25/08/2026), không phải khối
+           đồng hồ 4 ô. Lý do là số đo, không phải thẩm mỹ: `LAUNCH_AT` là
+           2026-08-20 — đã qua, và sẽ qua mãi. Nghĩa là mỗi khách vào trang chủ đều
+           thấy khối 4 ô một nhịp rồi `openDoor()` thu nó lại thành một huy hiệu,
+           tức khối hero **co 64px** ở mọi lượt nạp. Đo bằng `scratchpad/probe_cls.py`
+           (4G 9 Mbps/RTT 150ms + CPU ×4): CLS **0,1184** ở 768px, 0,0947 ở 1440px.
+           ⚠️ Và nó không chỉ là chuyện nhảy bố cục: nút "Vào chơi ngay" trước đây
+              mang `hidden` trong HTML nên trên mạng chậm, trong ~1,5 giây đầu trang
+              chủ nói "hệ thống đã mở cửa" mà **không có chỗ nào để vào** — đúng cái
+              lỗi đã ghi ở khối chú thích ngay dưới, chỉ là ở dạng tạm thời.
+           ⚠️ `renderCountdown()` nay đóng cửa lại nếu `LAUNCH_AT` là tương lai
+              (`closeDoor()`), nên bất biến vẫn giữ khi ai đó đổi ngày mở cửa. Cái
+              giá phải trả, nói rõ: lúc đó khung sơn đầu tiên sẽ nói "đã mở cửa"
+              trong một nhịp trước khi JS đóng lại. Chấp nhận vì ngày mở cửa đã ở
+              QUÁ KHỨ; đổi nó thành tương lai là việc phải sửa cả chỗ này.
+           ⚠️ `data-i18n` là `cd_live` chứ không phải `cd_label` — chữ tĩnh trong HTML
+              phải khớp trạng thái tĩnh, không thì đổi ngôn ngữ xong nó nói ngược. -->
+      <div class="countdown live" id="countdown" aria-live="polite">
+        <div class="cd-label" id="cd-label" data-i18n="cd_live">SYSTEM IS LIVE</div>
         <div class="cd-grid">
           <div class="cd-cell"><b id="cd-d">--</b><span data-i18n="cd_d">days</span></div>
           <div class="cd-cell"><b id="cd-h">--</b><span data-i18n="cd_h">hours</span></div>
@@ -204,8 +221,8 @@
               chơi mới là việc chính, còn 500 tt là quà kèm. `renderCountdown` hạ nút
               waitlist xuống `btn-ghost` cho khỏi hai nút chính cạnh nhau. -->
       <div class="hero-actions">
-        <a class="btn-primary" id="hero-live" href="../landing-app.html" data-i18n="hero_live" hidden>Play now 🚀</a>
-        <a class="btn-primary" id="hero-wl" href="#waitlist" data-i18n="hero_cta">Get 100 Purple Meteors 🚀</a>
+        <a class="btn-primary" id="hero-live" href="../landing-app.html" data-i18n="hero_live">Play now 🚀</a>
+        <a class="btn-ghost" id="hero-wl" href="#waitlist" data-i18n="hero_cta">Get 100 Purple Meteors 🚀</a>
         <a class="btn-ghost" href="#what-is" data-i18n="hero_cta2">What is astroQ.org?</a>
       </div>
     </div>

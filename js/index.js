@@ -197,6 +197,17 @@
       openDoor();
       return false;                                  // dừng vòng lặp
     }
+    /* ⚠️⚠️ ĐÓNG CỬA LẠI — nhánh này MỚI (25/08/2026) và nó là nửa còn lại của việc
+       đổi mặc định trong `index.html` sang trạng thái "đã mở cửa". Trước đây HTML
+       xuất xưởng ở trạng thái ĐANG ĐẾM nên nhánh này không cần làm gì; nay HTML
+       xuất xưởng ở trạng thái ĐÃ MỞ, nên nếu `LAUNCH_AT` là tương lai thì phải
+       đóng lại, không thì trang chủ nói "đã mở cửa" trong khi chưa. Lý do đổi mặc
+       định (cú nhảy bố cục 64px mỗi lượt nạp + nút vào chơi đến muộn 1,5s trên
+       mạng chậm) ghi ở khối chú thích cạnh `#countdown` trong `index.html`.
+       ⚠️ Bất biến theo số lần gọi, đúng như `openDoor()`: `classList.remove` và
+          `hidden = true` chịu được gọi lại nhiều lần. */
+    closeDoor();
+    if(lbl) lbl.textContent = t("cd_label");
     var s = Math.floor(left / 1000);
     $("cd-d").textContent = pad(Math.floor(s / 86400));
     $("cd-h").textContent = pad(Math.floor(s % 86400 / 3600));
@@ -224,6 +235,17 @@
        `00 00 00 00` vĩnh viễn, đọc ra như một cái đồng hồ hỏng.
        `classList.add` chịu được gọi nhiều lần, đúng bất biến đã ghi ở trên. */
     if(cd) cd.classList.add("live");
+  }
+
+  /* Nghịch đảo của `openDoor()` — dùng khi `LAUNCH_AT` còn ở tương lai. Giữ đúng
+     ba thứ mà `openDoor` đổi, không nhiều hơn: nút vào chơi, hạng của nút waitlist,
+     và lớp `live` của đồng hồ. ⚠️ KHÔNG đụng chữ trong nút — `applyLang` lo qua
+     `data-i18n`, y như ghi chú ở `openDoor()`. */
+  function closeDoor(){
+    var live = $("hero-live"), wl = $("hero-wl"), cd = $("countdown");
+    if(live) live.hidden = true;
+    if(wl){ wl.classList.remove("btn-ghost"); wl.classList.add("btn-primary"); }
+    if(cd) cd.classList.remove("live");
   }
 
   /* ============================ Khởi tạo ============================ */

@@ -225,7 +225,16 @@
     /* Đang lọc / đang tìm thì ẨN khối nổi bật và cho lưới hiện MỌI kết quả khớp.
        Bản cũ luôn giữ bài `hero` ngoài lưới, nên tìm đúng tên bài đó lại ra
        "không tìm thấy bài viết phù hợp" — bài có thật mà máy bảo không có. */
-    if(filterOn() || !FEATURED.length){ box.innerHTML=""; return; }
+    /* ⚠️⚠️ `is-empty` KHÔNG PHẢI TRANG TRÍ — nó phân biệt "chưa vẽ" với "CỐ Ý rỗng".
+       `#hero-wrap` có `min-height` 632px ở css/library.css để mạng chậm không làm
+       trôi cả lưới ~680px (xem khối chú thích ở đó). Nhưng đúng nhánh này thì ô
+       rỗng là CHỦ ĐÍCH, và cái sàn đó sẽ thành một dải trắng 632px ngay giữa trang
+       mỗi lần trẻ gõ vào ô tìm. Không dùng được `:empty` vì lúc khung sơn đầu tiên
+       nó CŨNG rỗng — mà đó chính là lúc cần cái sàn. Nên phải nói ra bằng một lớp. */
+    if(filterOn() || !FEATURED.length){
+      box.innerHTML=""; box.classList.add("is-empty"); return;
+    }
+    box.classList.remove("is-empty");
     var a=FEATURED[0], rest=FEATURED.slice(1);
     /* ⚠️ Đoạn mở đầu của THẺ LỚN là thứ DUY NHẤT ở lưới cần tới thân bài, nên nó tải
        riêng đúng một file (`load`), không phải cả kho. Cố ý KHÔNG nhét một trường

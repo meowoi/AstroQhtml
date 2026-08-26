@@ -52,6 +52,23 @@
 .side-card{border-radius:16px;padding:14px 13px;border:1px solid var(--brd);background:rgba(15,23,42,.5);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 20px 46px -26px rgba(0,0,0,.7);}
 .side-title{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px;}
+/* ⚠️⚠️ KHUNG XƯƠNG CHỐNG NHẢY BỐ CỤC cho danh sách chủ đề — `#cats` do `renderCats()`
+   điền sau khi trang nạp, nên trên **mạng chậm** khung sơn đầu tiên là một ô cao 0.
+   Đo được 25/08/2026 (`scratchpad/probe_cls.py`, 4G 9 Mbps/RTT 150ms + CPU ×4):
+   ô này cao **536px** và khi nó xuất hiện, cả cột feed tụt xuống đúng **540px** —
+   `.side-card` nhảy từ y=171 xuống y=711, CLS **0,5695** ở 768px và **0,3650** ở
+   390px (Google xếp >0,25 là "kém").
+   ⚠️ Con số ra từ phép tính, không phải hằng số chép tay: **10 chủ đề** × 50px +
+      9 khoảng 4px = 536px (mỗi `.cat` có `margin-bottom:4px`, cái cuối bị bỏ nên
+      là 9 khoảng chứ không phải 10). Đo ở 390px và 1440px đều đúng 536,00px — cao
+      KHÔNG đổi theo khung nhìn vì mỗi chủ đề luôn một dòng.
+   ⚠️⚠️ ĐÂY LÀ CHỖ THỨ NĂM PHẢI SỬA KHI THÊM MỘT CHỦ ĐỀ. `renderCats()` ở
+      `library.html` đã ghi "cat mới thì phải sửa BỐN chỗ cùng lúc" (mảng `cats` ·
+      `CAT_ICON` · khoá i18n `cat_*` ở cả vi và en · rule `.cat--*` dưới đây) — nay
+      là NĂM: thêm cả `--cat-n` ngay dưới. Quên thì trang không hỏng, chỉ nhảy lại
+      50px, tức hỏng ÊM — nên `scratchpad/check_pages.py` đối chiếu hai con số. */
+#cats{--cat-h:50px;--cat-gap:4px;--cat-n:10;
+  min-height:calc(var(--cat-n) * var(--cat-h) + (var(--cat-n) - 1) * var(--cat-gap));}
 .cat{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;text-align:left;padding:9px 11px;border-radius:11px;color:var(--ink);
   border:1px solid transparent;background:transparent;transition:background .18s,border-color .18s,transform .15s;margin-bottom:4px;}
 .cat:hover{background:rgba(56,189,248,.08);} .cat:active{transform:scale(.97);}
@@ -102,6 +119,21 @@
 .feat-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-top:12px;}
 .feat h1{font-family:var(--font-display);font-weight:700;font-size:clamp(19px,2.6vw,26px);line-height:1.25;margin:6px 0 0;}
 .feat p{color:var(--ink-soft);font-size:13.5px;line-height:1.55;margin:10px 0 0;flex:1;}
+/* ⚠️⚠️ `#feat-lead` LÀ Ô RỖNG CHỜ CHỮ, nên nó là thứ làm nhảy bố cục nhiều thứ hai
+   ở trang này (sau `#cats`). `renderFeatured()` cố ý dựng thẻ NGAY rồi mới điền
+   đoạn mở đầu khi `js/article/<id>.js` về — quyết định đó đúng (thà thẻ hiện sớm
+   còn hơn chờ), nhưng cái ô rỗng thì phải CHIẾM CHỖ SẴN, không thì mọi thứ dưới
+   hero tụt xuống đúng 167px lúc chữ về (đo 25/08/2026: CLS 0,0865 ở 1440px).
+   ⚠️ 8 dòng là con số ĐO ĐƯỢC, không phải chọn bừa: đoạn mở đầu hiện tại 93 chữ,
+      cao 167px ở 1200–1600px với `line-height` 20,925px — tức đúng 8 dòng. Viết
+      bằng `em` (8 × 1,55em) chứ không viết 167px, để đổi `font-size` là nó tự theo.
+   ⚠️ KHÔNG cắt chữ bằng `-webkit-line-clamp` để chiều cao thành cố định tuyệt đối:
+      làm thế thì hết nhảy hẳn, nhưng nó CẮT MẤT chữ trẻ đang đọc — đổi một lỗi
+      hiển thị thành một lỗi nội dung. Đặt chỗ trước thì dư ra vài chục pixel ở một
+      số bề rộng (đo: 126px ở 560–620px, 272px ở 900px) mà không mất chữ nào.
+   ⚠️ Chỉ đặt cho `#feat-lead`, KHÔNG cho `.feat p` chung: thẻ thường ở `.feat-row`
+      không có ô chờ chữ nào, đặt chỗ trước ở đó là chừa khoảng trống vô cớ. */
+#feat-lead{min-height:calc(8 * 1.55em);}
 .read-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;align-self:flex-start;margin-top:16px;cursor:pointer;border:none;
   padding:12px 20px;border-radius:13px;font-family:var(--font-display);font-weight:700;font-size:14px;color:#04060f;
   background:linear-gradient(120deg,var(--cyan),var(--purple));box-shadow:0 12px 26px -12px rgba(56,189,248,.8);transition:transform .25s var(--jelly),filter .2s;}
@@ -113,6 +145,27 @@
    ở đây số thẻ cố định là 3, để auto-fill thì trên màn rộng chúng co lại và chừa
    một khoảng trống bên phải, đọc ra như thẻ thứ tư tải hỏng. Dưới 760px xuống 2
    cột rồi 1 cột — thẻ hẹp hơn ~215px thì tiêu đề bài viết vỡ thành 4 dòng. */
+/* ⚠️⚠️ SÀN CHIỀU CAO CHO KHỐI HERO — đây là cú nhảy LỚN NHẤT còn lại của trang.
+   `#hero-wrap` rỗng trong HTML; `renderFeatured()` dựng cả thẻ lớn + 3 thẻ thường
+   vào đó sau khi mục lục về. Trên mạng chậm, khung sơn đầu tiên có `#hero-wrap`
+   cao 0 nên `.feed-head` và cả lưới bên dưới **trôi ~680px** khi khối này hiện
+   (đo 25/08/2026: CLS 0,5695 ở 768px, 0,1120 ở 1440px).
+   ⚠️⚠️ KHÔNG THỂ đặt chỗ CHÍNH XÁC ở đây, và lý do đáng ghi: chiều cao thật đo được
+      trải từ **678px đến 1465px** tuỳ bề rộng (không đơn điệu — 843px ở 900px rồi
+      tụt còn 724px ở 768px, vì `.feat` đổi sang một cột ở 620px và `.feat-row` đổi
+      3→2→1 cột), VÀ nó còn phụ thuộc bài nào làm hero — `featured()` chọn "bài CHƯA
+      ĐỌC đầu tiên", tức mỗi đứa trẻ một bài, một độ dài chữ khác.
+   ⚠️ Vì thế đặt một SÀN chứ không đặt chiều cao đúng: sàn = cấu tạo NHỎ NHẤT có thể
+      (thẻ lớn 370px + khoảng 18px + thẻ thường 244px = 632px, đều là số đo). Sàn
+      thấp hơn mọi giá trị thật nên **không bao giờ chừa khoảng trống**, mà vẫn cắt
+      được ~632px trong ~680px của cú nhảy. Phần dư còn lại là cái giá của việc
+      không nói dối về một chiều cao mình không biết trước. */
+#hero-wrap{--feat-min:370px;--card-min:244px;--hero-gap:18px;
+  min-height:calc(var(--feat-min) + var(--hero-gap) + var(--card-min));}
+/* ⚠️ `renderFeatured()` gắn lớp này khi nó CỐ Ý xoá rỗng khối hero (đang tìm / đang
+   lọc). Không dùng `#hero-wrap:empty` được: lúc khung sơn ĐẦU TIÊN nó cũng rỗng, mà
+   đó đúng là lúc cần cái sàn — `:empty` sẽ tắt sàn ngay lúc nó có việc. */
+#hero-wrap.is-empty{min-height:0;}
 .feat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px;}
 @media(max-width:760px){.feat-row{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:460px){.feat-row{grid-template-columns:1fr;}}

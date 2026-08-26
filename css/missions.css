@@ -65,3 +65,23 @@
      pixel và cắt mất đuôi. */
   .sec-m{flex-basis:100%;text-align:left;}
 }
+
+/* ===== Khung xương chống nhảy bố cục =====
+   ⚠️⚠️ HAI Ô NÀY RỖNG Ở KHUNG SƠN ĐẦU TIÊN. `#daily` do `AstroQDaily.paint()` điền,
+   `#ov` do trang này điền, cả hai sau khi ảnh chụp tiến độ về. Trên **mạng chậm**,
+   ô rỗng nghĩa là hai panel bên dưới tụt xuống đúng lúc dữ liệu tới — đo được
+   25/08/2026 bằng `scratchpad/probe_cls.py` (4G 9 Mbps/RTT 150ms + CPU ×4):
+   CLS **0,1061** ở 768px (panel VIỆC HÔM NAY giãn 196→250px = đúng 54px của `#daily`,
+   panel kế giãn 196→254px = đúng 58px của `#ov`) và 0,0701 ở 1440px.
+
+   ⚠️ Hai con số là SÀN ĐO ĐƯỢC, không phải chiều cao đúng: quét bề rộng 1600→360px
+      thì `#daily` cao 54px ở mọi mức ≥480px (74px ở ≤390px) và `#ov` cao 58px ở
+      ≥520px (126px ở 480px, 194px ở ≤390px) — vì `.kv` là lưới `auto-fit` nên nó
+      xuống dòng ở màn hẹp. Đặt SÀN chứ không đặt chiều cao đúng: sàn thấp hơn mọi
+      giá trị thật nên không bao giờ chừa khoảng trống, mà vẫn cắt hết cú nhảy ở
+      những bề rộng gây ra nó.
+   ⚠️ An toàn khi dữ liệu chưa về: `AstroQDaily.paint()` LUÔN xuất `.dl-head` cộng
+      một dòng chú (nhánh `!snap` hiện dấu "—" và nói rõ lý do), nên `#daily` không
+      bao giờ rỗng thật — cái sàn này không tạo ra ô trống trong trạng thái nào. */
+#daily{min-height:54px;}
+#ov{min-height:58px;}
