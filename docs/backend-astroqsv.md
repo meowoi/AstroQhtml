@@ -776,6 +776,60 @@ Máy hiện tại chưa có `sam` trong PATH của bash; đường dẫn đầy 
   --no-fail-on-empty-changeset --no-confirm-changeset
 ```
 
+### Bật đường Conversions API của Meta *(thêm 26/08/2026)*
+
+> **Dự án CỐ Ý không gắn Meta Pixel lên trang.** Việc báo chuyển đổi đi qua
+> **Conversions API gửi từ server** (`Services/MetaCapi.cs`). Ba lý do, và cả ba đều
+> là số đo chứ không phải sở thích: giữ được hàng rào *"không script từ tên miền
+> ngoài"* (`check_pages` mục **[14]**) · không thêm ~50 KB vào trang của trẻ · và
+> **không gửi hành vi duyệt của từng đứa trẻ cho bên thứ ba**. Thứ duy nhất rời khỏi
+> server là một sự kiện *"đã tạo tài khoản"* kèm `fbc` — mã lượt bấm mà **chính Meta**
+> đã gắn vào link nó phát đi. Không IP, không user-agent, không email.
+
+**Dataset ID của astroQ: `1601174631375979`** (Events Manager, 26/08/2026).
+
+⚠️⚠️ **Nó KHÔNG nằm trong `Default` của `MetaDatasetId`, và đừng đưa vào.**
+`Default: ''` là **công tắc TẮT**; `scratchpad/check_meta_capi.py` mục **[2]** canh
+đúng chuyện đó và báo hỏng nếu ai điền vào. Lý do: đặt số vào `Default` biến một
+`sam deploy` trơn — kể cả lượt deploy chỉ để sửa một thứ chẳng liên quan — thành lượt
+**âm thầm bắt đầu gửi dữ liệu cho Meta**. Bật một đường gửi ra ngoài phải là một câu
+người ta **gõ ra**.
+
+**Hai bước, theo thứ tự:**
+
+```bash
+# ① Cất access token (KHÔNG phải Dataset ID) vào Secrets Manager.
+#    Lấy token ở Events Manager → dataset → Settings → Conversions API →
+#    "Set up without Dataset Quality API" → Generate access token.
+#    ⚠️ Dán token vào lệnh này ở terminal của bạn, đừng để nó vào file nào trong repo.
+aws secretsmanager create-secret --region ap-southeast-1 \
+  --name astroq/meta-capi-token --secret-string '<DÁN_TOKEN_VÀO_ĐÂY>'
+# (đã tồn tại thì dùng: aws secretsmanager put-secret-value --secret-id astroq/meta-capi-token --secret-string '...')
+```
+
+```powershell
+# ② Deploy KÈM cờ bật. Thiếu cờ = đường CAPI TẮT (hỏng nghiêng về không gửi gì cho ai).
+& "C:\Program Files\Amazon\AWSSAMCLI\bin\sam.cmd" deploy `
+  --stack-name astroqsv --region ap-southeast-1 `
+  --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-jte6tycqojsq `
+  --s3-prefix astroqsv --capabilities CAPABILITY_IAM `
+  --no-fail-on-empty-changeset --no-confirm-changeset `
+  --parameter-overrides MetaDatasetId=1601174631375979
+```
+
+⚠️ **Muốn TẮT lại thì deploy KHÔNG kèm cờ đó** — đừng xoá secret. Xoá secret chỉ làm
+lời gọi thất bại ở mỗi lượt đăng ký rồi nuốt lỗi (luật im lặng ở `MetaCapi.cs`), tức
+tốn thời gian mỗi lần mà chẳng ai biết.
+
+⚠️ **`check_meta_capi.py` soi VĂN BẢN, không gọi mạng — nó KHÔNG chứng minh được Meta
+nhận sự kiện.** Việc đó phải kiểm bằng **Test Events** trong Events Manager với token
+thật, sau khi deploy. Hai thứ bổ cho nhau: bộ đo canh *cái không được đổi*, Test Events
+canh *cái có chạy*.
+
+⚠️ **Chưa deploy được là chuyện đã biết:** `aws lambda update-function-code` /
+`sam deploy` bị bộ phân loại quyền của Claude Code chặn (mục 5 `CLAUDE.md`). Ba đường
+đi ghi ở đó.
+
 ### ⚠️ `sam build` hỏng giữa chừng → `sam deploy` gói thư mục RỖNG
 
 Đã xảy ra thật ngày 29/07/2026. Dự án nằm trong OneDrive nên `sam build` có thể chết
