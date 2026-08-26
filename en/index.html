@@ -46,10 +46,10 @@
   "browserRequirements": "Requires a browser with HTML5 and WebGL support",
   "inLanguage": ["en", "vi"],
   "datePublished": "2026-08-20",
-  "description": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
+  "description": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.",
   "educationalUse": ["Self-study", "Game-based learning", "STEM curriculum supplement"],
   "learningResourceType": ["Interactive Simulation", "Quiz", "Educational Game", "3D Explorer"],
-  "about": ["Astronomy", "The Solar System", "Quantum Physics", "Artificial Intelligence (AI)", "Robotics"],
+  "about": ["Astronomy", "The Solar System", "Artificial Intelligence (AI)", "Robotics", "Scientific Thinking", "Quantum Physics"],
   "audience": {
     "@type": "EducationalAudience",
     "educationalRole": "student",
@@ -78,7 +78,7 @@
       "name": "What is astroQ.org?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions."
+        "text": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions."
       }
     },
     {
@@ -86,7 +86,7 @@
       "name": "Who is astroQ.org for?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "astroQ.org is for children and beginners who want a visual way into Astronomy, AI and Quantum Physics. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory."
+        "text": "astroQ.org is for children and beginners who want a visual way into Astronomy, AI and scientific thinking. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory."
       }
     },
     {
@@ -94,7 +94,7 @@
       "name": "Which topics does astroQ.org cover?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Quantum Physics, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level."
+        "text": "Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Scientific Thinking, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level."
       }
     },
     {
@@ -179,7 +179,7 @@
 
       <h1 data-i18n="h1">Explore the Galaxy of Knowledge with astroQ.org</h1>
 
-      <p class="lede" data-i18n="lede">An interactive learning platform on Space, AI &amp; Quantum Physics for young explorers. We turn complex theory into thrilling cosmic missions.</p>
+      <p class="lede" data-i18n="lede">An interactive learning platform on Space, AI &amp; scientific thinking for young explorers. We turn complex theory into thrilling cosmic missions.</p>
 
       <!-- Đồng hồ đếm ngược tới ngày mở cửa -->
       <!-- ⚠️⚠️ MẶC ĐỊNH LÀ TRẠNG THÁI **ĐÃ MỞ CỬA** (đổi 25/08/2026), không phải khối
@@ -221,7 +221,7 @@
               chơi mới là việc chính, còn 500 tt là quà kèm. `renderCountdown` hạ nút
               waitlist xuống `btn-ghost` cho khỏi hai nút chính cạnh nhau. -->
       <div class="hero-actions">
-        <a class="btn-primary" id="hero-live" href="../landing-app.html" data-i18n="hero_live">Play now 🚀</a>
+        <a class="btn-primary" id="hero-live" href="../landing-app.html" data-i18n="hero_live">Find out more 🚀</a>
         <a class="btn-ghost" id="hero-wl" href="#waitlist" data-i18n="hero_cta">Get 100 Purple Meteors 🚀</a>
         <a class="btn-ghost" href="#what-is" data-i18n="hero_cta2">What is astroQ.org?</a>
       </div>
@@ -281,7 +281,30 @@
   <ul class="pillars">
     <li><span class="p-ic" id="ic-astro" aria-hidden="true"></span><b data-i18n="p1_t">Astronomy</b><span data-i18n="p1_d">The Solar System, the stars and a 3D galaxy map.</span></li>
     <li><span class="p-ic" id="ic-ai" aria-hidden="true"></span><b data-i18n="p2_t">Artificial Intelligence</b><span data-i18n="p2_d">How machines learn to think, explained for kids.</span></li>
-    <li><span class="p-ic" id="ic-quantum" aria-hidden="true"></span><b data-i18n="p3_t">Quantum Physics</b><span data-i18n="p3_d">Particles, waves and the strangest rules of the universe.</span></li>
+    <!-- ⚠️⚠️ TRỤ 3 ĐỔI TỪ "VẬT LÝ LƯỢNG TỬ" SANG "TƯ DUY KHOA HỌC" — 26/08/2026, VÌ SỐ ĐO.
+         `quantum` chỉ có **3/70 bài đọc (4%) + ~1 câu quiz** (`qubit-superposition.js`) mà
+         lại đứng hàng ba ngang với thiên văn (17 bài) và AI (14 bài) — đó là chỗ trang chủ
+         NÓI QUÁ thật sự, không phải chỗ nói về AI. Còn "tư duy khoa học" thì **đã có nội
+         dung sẵn**, chỉ là đang nằm dưới `cat:"ai"`: `art-algorithms-are-opinions` ·
+         `art-algorithmic-bias` · `art-chatbot-confidently-wrong` ·
+         `art-nobody-fully-understands-llm` · quiz `bias-who-is-served` ·
+         `ml-humans-still-check` · `ai-does-not-think-like-human`. Số đo đầy đủ ở mục 6
+         `docs/proposals/2026-08-26-review-dinh-vi-lai-landing-ai.md`.
+         ⚠️ **LƯỢNG TỬ KHÔNG BỊ XOÁ KHỎI TRANG** — nó vẫn nằm trong `about` của JSON-LD và
+            vẫn là một chip ở `library.html`; nó chỉ thôi đứng hàng ba. Bốn trụ là thứ
+            trang chủ ĐƯA RA TRƯỚC, không phải danh sách đầy đủ mọi chủ đề.
+         ⚠️ **`<title>` / `meta description` / `og:*` / `twitter:*` CỐ Ý GIỮ NGUYÊN chữ
+            "Lượng Tử"** — chúng là bề mặt Google/Facebook đang CACHE và `/` là trang duy
+            nhất được lập chỉ mục ở gốc; đổi từ khoá ở đó là một quyết định SEO riêng, cần
+            biết trang đang xếp hạng bằng chuỗi nào rồi mới đổi. Và nó **không sai**: nội
+            dung lượng tử có thật (3 bài + `wiki/vat-ly-luong-tu-la-gi.html`).
+         ⚠️ Câu "astroQ.org là gì?" (`aeo_answer`/`a1`) và `a3` ĐÃ SỬA THEO — chúng liệt kê
+            đúng bốn nhóm, để chữ trong FAQ không nói ngược với bốn thẻ ngay phía trên.
+            **FAQ hiển thị và khối `FAQPage` phải khớp 1-1** (luật ghi ở `<head>`), bản EN
+            thì `gen_home_en.py` tự dựng FAQPage TỪ từ điển `en` nên sửa `js/index.js` là đủ.
+         ⚠️ Icon `search` (kính lúp) chứ không phải `atom`: quan sát → đặt câu hỏi → kiểm
+            chứng. Ánh xạ id→icon ở `js/index.js` (`var map`), phải đổi CÙNG LÚC với id ở đây. -->
+    <li><span class="p-ic" id="ic-think" aria-hidden="true"></span><b data-i18n="p3_t">Scientific Thinking</b><span data-i18n="p3_d">Observe, ask questions and check against real sources.</span></li>
     <li><span class="p-ic" id="ic-robot" aria-hidden="true"></span><b data-i18n="p4_t">Robotics</b><span data-i18n="p4_d">How robots sense, move and make decisions.</span></li>
   </ul>
 
@@ -317,7 +340,15 @@
            `scratchpad/gen_home_en.py` tự lùi nó thành `../landing-app.html` cho bản
            EN (bản EN nằm sâu thêm một cấp — xem lỗi 404 đã sửa cùng ngày). -->
       <div class="wl-cta">
-        <a class="btn-primary" href="../landing-app.html" data-i18n="wl_cta">Create an account 🚀</a>
+        <!-- ⚠️⚠️ `#dangky` KHÔNG PHẢI TRANG TRÍ — thêm 26/08/2026. Trước đó nút này trỏ về
+           `landing-app.html` TRẦN, tức người vừa bấm đúng chữ "Tạo tài khoản" hạ cánh
+           xuống một trang mời "Bắt đầu khám phá" và phải bấm THÊM một lần nữa mới thấy
+           ô đăng ký. Một bước thừa đặt đúng chỗ người ta đã quyết xong rồi.
+           `landing-app.html` đọc neo này và mở thẳng ô ĐĂNG KÝ (khối `location.hash ===
+           "#dangky"` ở cuối file đó). Người đã đăng nhập thật thì vẫn về `dashboard.html`.
+      ⚠️ Neo sống sót qua bộ sinh bản EN: `gen_home_en.py` chỉ chèn `../` vào TRƯỚC
+         `landing-app.html`, phần `#dangky` giữ nguyên. -->
+        <a class="btn-primary" href="../landing-app.html#dangky" data-i18n="wl_cta">Create an account 🚀</a>
       </div>
 
       <p class="wl-hint" data-i18n="wl_hint">Free. Just an email and a password.</p>
@@ -328,7 +359,7 @@
   <section class="aeo" id="what-is">
     <div class="aeo-head">
       <h2 data-i18n="aeo_h2">What is astroQ.org?</h2>
-      <p class="answer" data-i18n="aeo_answer">astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.</p>
+      <p class="answer" data-i18n="aeo_answer">astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.</p>
     </div>
 
     <!-- ⚠️ 4 TRỤ KIẾN THỨC ĐÃ DỜI LÊN NGAY DƯỚI HERO (26/08/2026) — xem khối
@@ -342,17 +373,17 @@
 
       <details class="faq-item" open>
         <summary data-i18n="q1">What is astroQ.org?</summary>
-        <p data-i18n="a1">astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.</p>
+        <p data-i18n="a1">astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.</p>
       </details>
 
       <details class="faq-item">
         <summary data-i18n="q2">Who is astroQ.org for?</summary>
-        <p data-i18n="a2">astroQ.org is for children and beginners who want a visual way into Astronomy, AI and Quantum Physics. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory.</p>
+        <p data-i18n="a2">astroQ.org is for children and beginners who want a visual way into Astronomy, AI and scientific thinking. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory.</p>
       </details>
 
       <details class="faq-item">
         <summary data-i18n="q3">Which topics does astroQ.org cover?</summary>
-        <p data-i18n="a3">Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Quantum Physics, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level.</p>
+        <p data-i18n="a3">Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Scientific Thinking, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level.</p>
       </details>
 
       <details class="faq-item">

@@ -25,12 +25,12 @@
       status:"TRẠM ASTROQ",
       eyebrow:"MISSION 001",
       h1:"Khám Phá Ngân Hà Tri Thức Cùng astroQ.org",
-      lede:"Nền tảng học tập tương tác chủ đề Vũ trụ, AI & Vật lý Lượng tử dành cho các nhà khám phá trẻ. Biến lý thuyết phức tạp thành các nhiệm vụ vũ trụ kỳ thú.",
+      lede:"Nền tảng học tập tương tác chủ đề Vũ trụ, AI & tư duy khoa học dành cho các nhà khám phá trẻ. Biến lý thuyết phức tạp thành các nhiệm vụ vũ trụ kỳ thú.",
       cd_label:"HỆ THỐNG MỞ CỬA SAU", cd_d:"ngày", cd_h:"giờ", cd_m:"phút", cd_s:"giây",
       cd_live:"HỆ THỐNG ĐÃ MỞ CỬA",
       hero_cta:"Nhận 100 Purple Meteors 🚀", hero_cta2:"astroQ.org là gì?",
       /* Chỉ hiện sau khi đồng hồ về 0 — xem `renderCountdown`. */
-      hero_live:"Vào chơi ngay 🚀",
+      hero_live:"Tìm hiểu ngay 🚀",
       crew_comet:"Mèo phi công vũ trụ — dẫn đường qua từng hành tinh và giao nhiệm vụ khám phá cho bạn.",
       crew_byte:"Robot trợ lý AI — giải thích thuật ngữ khó bằng ngôn ngữ của trẻ em và chấm bài quiz.",
 
@@ -54,19 +54,19 @@
 
 
       aeo_h2:"astroQ.org là gì?",
-      aeo_answer:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Vật lý Lượng tử, AI và Robotics thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
+      aeo_answer:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Trí tuệ nhân tạo, Robotics và tư duy khoa học thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
       p1_t:"Thiên văn học", p1_d:"Hệ Mặt Trời, các vì sao và bản đồ ngân hà 3D.",
       p2_t:"Trí tuệ nhân tạo", p2_d:"Máy học nghĩ như thế nào, giải thích cho trẻ em.",
-      p3_t:"Vật lý Lượng tử", p3_d:"Hạt, sóng và những điều kỳ lạ nhất của vũ trụ.",
+      p3_t:"Tư duy khoa học", p3_d:"Quan sát, đặt câu hỏi và kiểm chứng bằng nguồn thật.",
       p4_t:"Robotics", p4_d:"Robot cảm nhận, di chuyển và ra quyết định ra sao.",
 
       faq_h:"Câu hỏi thường gặp",
       q1:"astroQ.org là gì?",
-      a1:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Vật lý Lượng tử, AI và Robotics thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
+      a1:"astroQ.org là nền tảng giáo dục STEM gamification tương tác 3D, giúp trẻ em và người mới bắt đầu học Thiên văn học, Trí tuệ nhân tạo, Robotics và tư duy khoa học thông qua giao diện khoang lái phi thuyền và các nhiệm vụ khám phá ngân hà.",
       q2:"astroQ.org dành cho ai?",
-      a2:"astroQ.org dành cho trẻ em và người mới bắt đầu muốn tiếp cận Thiên văn học, AI và Vật lý Lượng tử theo cách trực quan. Người học điều khiển khoang lái phi thuyền, nhận nhiệm vụ và khám phá từng hành tinh thay vì đọc lý thuyết khô khan.",
+      a2:"astroQ.org dành cho trẻ em và người mới bắt đầu muốn tiếp cận Thiên văn học, AI và tư duy khoa học theo cách trực quan. Người học điều khiển khoang lái phi thuyền, nhận nhiệm vụ và khám phá từng hành tinh thay vì đọc lý thuyết khô khan.",
       q3:"astroQ.org có những chủ đề nào?",
-      a3:"Bốn nhóm chủ đề chính: Thiên văn học và Hệ Mặt Trời, Trí tuệ nhân tạo, Vật lý Lượng tử, và Robotics. Mỗi chủ đề được chia thành các nhiệm vụ ngắn kèm quiz, bài đọc và mô phỏng 3D để người học tiến bộ theo cấp độ.",
+      a3:"Bốn nhóm chủ đề chính: Thiên văn học và Hệ Mặt Trời, Trí tuệ nhân tạo, Tư duy khoa học, và Robotics. Mỗi chủ đề được chia thành các nhiệm vụ ngắn kèm quiz, bài đọc và mô phỏng 3D để người học tiến bộ theo cấp độ.",
       q4:"Purple Meteors là gì?",
       a4:"Purple Meteors (Thiên thạch tím) là đơn vị phần thưởng trong astroQ.org. Người học kiếm Purple Meteors khi hoàn thành quiz, đọc bài và chơi mini-game, rồi dùng để nâng cấp phi thuyền và mở khóa hành tinh mới.",
       q5:"astroQ.org đã mở cửa chưa?",
@@ -91,11 +91,11 @@
       status:"ASTROQ STATION",
       eyebrow:"MISSION 001",
       h1:"Explore the Galaxy of Knowledge with astroQ.org",
-      lede:"An interactive learning platform on Space, AI & Quantum Physics for young explorers. We turn complex theory into thrilling cosmic missions.",
+      lede:"An interactive learning platform on Space, AI & scientific thinking for young explorers. We turn complex theory into thrilling cosmic missions.",
       cd_label:"SYSTEM GOES LIVE IN", cd_d:"days", cd_h:"hours", cd_m:"mins", cd_s:"secs",
       cd_live:"SYSTEM IS LIVE",
       hero_cta:"Get 100 Purple Meteors 🚀", hero_cta2:"What is astroQ.org?",
-      hero_live:"Play now 🚀",
+      hero_live:"Find out more 🚀",
       crew_comet:"Space-pilot cat — guides you planet by planet and hands out exploration missions.",
       crew_byte:"AI assistant robot — explains hard terms in kid-friendly language and grades your quizzes.",
 
@@ -109,19 +109,19 @@
 
 
       aeo_h2:"What is astroQ.org?",
-      aeo_answer:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
+      aeo_answer:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.",
       p1_t:"Astronomy", p1_d:"The Solar System, the stars and a 3D galaxy map.",
       p2_t:"Artificial Intelligence", p2_d:"How machines learn to think, explained for kids.",
-      p3_t:"Quantum Physics", p3_d:"Particles, waves and the strangest rules of the universe.",
+      p3_t:"Scientific Thinking", p3_d:"Observe, ask questions and check against real sources.",
       p4_t:"Robotics", p4_d:"How robots sense, move and make decisions.",
 
       faq_h:"Frequently asked questions",
       q1:"What is astroQ.org?",
-      a1:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
+      a1:"astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.",
       q2:"Who is astroQ.org for?",
-      a2:"astroQ.org is for children and beginners who want a visual way into Astronomy, AI and Quantum Physics. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory.",
+      a2:"astroQ.org is for children and beginners who want a visual way into Astronomy, AI and scientific thinking. Learners fly a spaceship cockpit, take on missions and explore planet by planet instead of reading dry theory.",
       q3:"Which topics does astroQ.org cover?",
-      a3:"Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Quantum Physics, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level.",
+      a3:"Four core tracks: Astronomy and the Solar System, Artificial Intelligence, Scientific Thinking, and Robotics. Each track is split into short missions with quizzes, readings and 3D simulations so learners progress level by level.",
       q4:"What are Purple Meteors?",
       a4:"Purple Meteors are the reward currency inside astroQ.org. Learners earn them by finishing quizzes, reading articles and playing mini-games, then spend them to upgrade their ship and unlock new planets.",
       q5:"Is astroQ.org open yet?",
@@ -180,7 +180,11 @@
 
   /* ============================ Icon 4 trụ kiến thức ============================ */
   function paintIcons(){
-    var map = { "ic-astro":"telescope", "ic-ai":"cpu", "ic-quantum":"atom", "ic-robot":"bot" };
+    /* ⚠️ `ic-think` -> `search` (kính lúp): trụ 3 đổi từ "Vật lý Lượng tử" sang "Tư duy
+       khoa học" ngày 26/08/2026 — lý do đầy đủ ở chú thích khối `.pillars` trong
+       index.html. Id ở HTML và khoá ở đây phải đổi CÙNG LÚC, lệch một bên là ô icon
+       trống trơn mà không có lỗi nào báo. */
+    var map = { "ic-astro":"telescope", "ic-ai":"cpu", "ic-think":"search", "ic-robot":"bot" };
     Object.keys(map).forEach(function(id){
       var el = $(id); if(el) el.innerHTML = lic(map[id]);
     });

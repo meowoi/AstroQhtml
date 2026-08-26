@@ -138,7 +138,13 @@ h1 .grad{
   transition:transform .25s var(--ease), border-color .25s var(--ease);
 }
 .card:hover{transform:translateY(-4px);border-color:var(--glass-brd-strong);}
-.card .ico{font-size:28px;margin-bottom:12px;}
+/* ⚠️ ICON CĂN GIỮA THẺ (26/08/2026, chủ dự án yêu cầu). Chữ trong thẻ vẫn căn TRÁI —
+   `.card{text-align:left}` ngay trên — nên phải đặt riêng ở đây; đổi `text-align` của
+   cả `.card` là kéo theo cả tiêu đề lẫn đoạn mô tả.
+   ⚠️ `text-align` chứ không phải `margin:0 auto`: nội dung là một EMOJI (nút văn bản),
+      không phải khối có bề rộng — `margin:auto` trên một `div` block chiếm hết bề ngang
+      thì không dịch được gì. */
+.card .ico{font-size:28px;margin-bottom:12px;text-align:center;}
 .card h3{font-family:var(--font-display);font-weight:600;font-size:18px;margin:0 0 6px;}
 .card p{color:var(--ink-soft);font-size:14px;line-height:1.55;margin:0;}
 

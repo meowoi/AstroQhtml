@@ -78,10 +78,10 @@ EN_APP_JSONLD = """{
   "browserRequirements": "Requires a browser with HTML5 and WebGL support",
   "inLanguage": ["en", "vi"],
   "datePublished": "2026-08-20",
-  "description": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Quantum Physics, AI and Robotics through a spaceship-cockpit interface and galaxy exploration missions.",
+  "description": "astroQ.org is an interactive 3D gamified STEM education platform that helps children and beginners learn Astronomy, Artificial Intelligence, Robotics and scientific thinking through a spaceship-cockpit interface and galaxy exploration missions.",
   "educationalUse": ["Self-study", "Game-based learning", "STEM curriculum supplement"],
   "learningResourceType": ["Interactive Simulation", "Quiz", "Educational Game", "3D Explorer"],
-  "about": ["Astronomy", "The Solar System", "Quantum Physics", "Artificial Intelligence (AI)", "Robotics"],
+  "about": ["Astronomy", "The Solar System", "Artificial Intelligence (AI)", "Robotics", "Scientific Thinking", "Quantum Physics"],
   "audience": {
     "@type": "EducationalAudience",
     "educationalRole": "student",

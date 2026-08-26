@@ -567,18 +567,50 @@ AstroQ.initLang(applyLang);
 
   var showToast = AstroQ.makeToast(toast, 2800);
 
+  /* Chỉ vào thẳng dashboard khi hồ sơ gắn với một tài khoản Firebase thật (có uid).
+     Hồ sơ cũ từ thời demo không có uid → vẫn phải đăng nhập, nếu không thì chỉ cần
+     localStorage còn sót là bỏ qua được toàn bộ xác thực.
+     ⚠️ TÁCH RA THÀNH HÀM 26/08/2026 vì nay có HAI lối gọi (nút hero + neo `#dangky`).
+        Chép điều kiện `authed` sang chỗ thứ hai là dựng ngay một bản sao sẽ nói cái cũ
+        vào đúng ngày luật này đổi — đúng lớp lỗi `js/index-gate.js` đã ghi. */
+  function isAuthed(u){
+    return !!(u && u.character && (!window.AstroQAuth || !AstroQAuth.isConfigured || u.uid));
+  }
+
   // Một lối vào duy nhất: bấm nút chính của hero (`#btn-try`, khoá `cta_try` — nay là
   // "Bắt đầu khám phá") mới mở popup (Đăng ký; có link sang Đăng nhập).
   if(btnTry) btnTry.addEventListener("click", function(e){
     e.preventDefault();
     var u = getUser();
-    // Chỉ vào thẳng dashboard khi hồ sơ gắn với một tài khoản Firebase thật (có uid).
-    // Hồ sơ cũ từ thời demo không có uid → vẫn phải đăng nhập, nếu không thì
-    // chỉ cần localStorage còn sót là bỏ qua được toàn bộ xác thực.
-    var authed = u && u.character && (!window.AstroQAuth || !AstroQAuth.isConfigured || u.uid);
-    if(authed) window.location.href = "dashboard.html";
+    if(isAuthed(u)) window.location.href = "dashboard.html";
     else open(!u);            // chưa có gì → ĐĂNG KÝ; có hồ sơ cũ → ĐĂNG NHẬP
   });
+
+  /* ============================================================
+     ⚠️⚠️ `#dangky` — ĐẾN THẲNG Ô ĐĂNG KÝ, KHÔNG BẮT BẤM THÊM LẦN NỮA.
+
+     Nút "Tạo tài khoản 🚀" ở khối waitlist trang chủ trỏ vào `landing-app.html#dangky`.
+     Trước 26/08/2026 nó trỏ vào trang này TRẦN, nên người vừa bấm đúng chữ "Tạo tài
+     khoản" hạ cánh xuống một màn chào mời "Bắt đầu khám phá" và phải bấm THÊM một lần
+     nữa mới thấy ô đăng ký. Đó là một bước thừa đặt đúng chỗ người ta đã quyết xong.
+
+     ⚠️ LUÔN MỞ Ô ĐĂNG KÝ (`open(true)`), không phải `open(!u)` như nút hero — người ta
+        vừa bấm đúng hai chữ đó. Riêng người ĐÃ đăng nhập thật thì vẫn về dashboard:
+        đưa họ một cái form tạo tài khoản là nói với họ rằng họ chưa có tài khoản.
+     ⚠️ XOÁ NEO SAU KHI MỞ bằng `replaceState`: đóng popup rồi tải lại trang thì đây là
+        một màn chào bình thường, không phải cái popup tự bật lại mãi. Dùng
+        `replaceState` chứ không phải `pushState` để nút Quay-lại không kẹt ở đây.
+        Bọc `try` vì trang này còn mở được bằng `file://`, nơi `replaceState` ném lỗi.
+     ⚠️ Đặt SAU khi `open`/`isAuthed` đã khai — khối này chạy NGAY lúc nạp, không đợi
+        sự kiện nào. ============================================================ */
+  if(location.hash === "#dangky"){
+    if(isAuthed(getUser())) window.location.href = "dashboard.html";
+    else {
+      open(true);
+      try { history.replaceState(null, "", location.pathname + location.search); }
+      catch(e){ /* file:// — không xoá được neo thì thôi, popup vẫn mở đúng */ }
+    }
+  }
   if(closeBtn) closeBtn.addEventListener("click", close);
   overlay.addEventListener("click", function(e){ if(e.target===overlay) close(); });   // bấm nền = đóng
   document.addEventListener("keydown", function(e){ if(e.key==="Escape" && overlay.classList.contains("show")) close(); });
