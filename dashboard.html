@@ -76,45 +76,70 @@
      là chặng đầu của chuỗi đăng nhập, nên mọi thứ sau nó (SDK → xác thực phiên →
      `/me/achievements`) đều dịch lên sớm theo. -->
 <script type="module" src="js/firebase-auth.js"></script>
-<script src="js/icons.js"></script>
-<script src="js/sticker-icons.js"></script>
-<script src="js/locks.js"></script>
+<script defer src="js/icons.js"></script>
+<script defer src="js/sticker-icons.js"></script>
+<script defer src="js/locks.js"></script>
 <script src="js/ui-common.js"></script>
+<!-- ⚠️⚠️ CHỜ NGÔN NGỮ — CHỈ CHO TRẺ CHỌN TIẾNG ANH, VÀ ĐÂY LÀ NỬA THỨ HAI CỦA VIỆC
+     THÊM `defer`. Đo được 25/08/2026: sau khi 18 thư viện mang `defer`, FCP xuống
+     4144 → 2756 ms, NHƯNG khối nội tuyến (nơi có `applyLang`) nay chạy ở
+     `DOMContentLoaded`, nên trẻ chọn EN thấy chữ **tiếng Việt ở 1305 ms rồi đổi
+     sang tiếng Anh ở 1985 ms** — một cú loé ngôn ngữ 680 ms mà trước đây KHÔNG có.
+     ⚠️ Không tách được `applyLang` ra chạy sớm: nó gọi `renderStats()`,
+        `paintDesk()`, `paintLockBadge()`, `paintSess()` — tức chính nó cần
+        `AstroQBadges`/`AstroQRanks`/`AstroQLocks`. ĐÓ mới là thứ thật sự ghim 361 KB
+        vào đường tải, không phải cái khối nội tuyến. Tách chữ khỏi dữ liệu là một
+        việc riêng, đáng làm, chưa làm.
+     ⚠️ Nên: che phần chữ CHỈ khi ngôn ngữ là EN. Trẻ chọn EN nhận đúng cái họ vốn
+        đã có (không đọc được gì cho tới ~DCL) — KHÔNG mất gì; trẻ dùng VI (mặc định,
+        và là phần lớn) được nguyên 1.388 ms. Không đứa nào đọc phải chữ sai.
+     ⚠️ CÓ ĐƯỜNG CỨU: nếu `applyLang` không bao giờ chạy (lỗi JS, thư viện 404) thì
+        lớp này tự rơi sau 4 giây. Một cái che không có đường cứu là một trang trắng
+        vĩnh viễn — tệ hơn hẳn cú loé nó đang chữa. -->
+<script>
+try{
+  if(localStorage.getItem("astroq-lang") === "en"){
+    var r = document.documentElement;
+    r.classList.add("lang-wait");
+    setTimeout(function(){ r.classList.remove("lang-wait"); }, 4000);
+  }
+}catch(e){}
+</script>
 <script defer src="js/utm.js"></script>
 <!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
      (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
 <script type="module" defer src="js/utm-beacon.js"></script>
 <!-- Menu thả dùng chung. ⚠️ `AstroQUserMenu.init()` phải chạy TRƯỚC
      `AstroQ.initLang()` — lý do ghi ở đầu js/user-menu.js. -->
-<script src="js/user-menu.js"></script>
+<script defer src="js/user-menu.js"></script>
 <!-- Dùng chung với profile.html / achievements.html -->
-<script src="js/badges.js"></script>
-<script src="js/ranks.js"></script>
+<script defer src="js/badges.js"></script>
+<script defer src="js/ranks.js"></script>
 <!-- Đường vào trang báo cáo hệ thống cho tài khoản admin. Tự thoát êm khi không
      phải admin, và KHÔNG gọi mạng — chỉ đọc cờ trong hồ sơ máy do `login()`
      đóng dấu (xem js/admin-link.js). -->
-<script src="js/admin-link.js"></script>
-<script src="js/planets.js"></script>
+<script defer src="js/admin-link.js"></script>
+<script defer src="js/planets.js"></script>
 <!-- Ten + emoji mau vat cho hang "trung o ban dieu khien" (10,7 KB gzip). Cho DUY
      NHAT giu ten mau vat; server giu dieu kien mo khoa. -->
-<script src="js/specimens.js"></script>
+<script defer src="js/specimens.js"></script>
 <!-- Tranh 21 mẫu vật (SVG, mọi hệ điều hành hiện y hệt nhau). Nạp SAU
      js/specimens.js: `icon()` ở đó hỏi `AstroQSpecimenArt`, thiếu file này thì nó
      lùi về emoji như cũ — xem ghi chú ở `icon()`. -->
-<script src="js/specimen-art.js"></script>
-<script src="js/depth.js"></script>
+<script defer src="js/specimen-art.js"></script>
+<script defer src="js/depth.js"></script>
 <script src="js/cosmetics.js"></script>
 <!-- Nhân vật: chỗ DUY NHẤT khai luật nhân vật. Nạp ở đây vì trang này CÓ token,
      nên nó là chỗ đẩy nhân vật do `select.html` chọn lên server / kéo từ server về
      (xem `AstroQChars.sync` và `syncIdentity` trong js/progress.js). Cùng lý do
      `js/depth.js` được nạp ở đây. -->
-<script src="js/characters.js"></script>
-<script src="js/progress.js"></script>
+<script defer src="js/characters.js"></script>
+<script defer src="js/progress.js"></script>
 <!-- Cổng lộ trình: trang này CÓ token nên nó là chỗ làm mới cache cho
      explorer.html (trang đó cố ý không nạp SDK Firebase). Xem js/route-gate.js. -->
-<script src="js/route-gate.js"></script>
-<script src="js/onboard-tour.js"></script>
-<script src="js/space-scene.js"></script>
+<script defer src="js/route-gate.js"></script>
+<script defer src="js/onboard-tour.js"></script>
+<script defer src="js/space-scene.js"></script>
 <!-- `js/warp-screen.js` + `js/space-scene.js` — màn loading Luna, dùng làm CHUYỂN
      CẢNH dashboard → Bản Đồ Thiên Hà (thẻ MOD-03). Xem khối "CHUYỂN CẢNH" ở cuối
      script của trang này.
@@ -122,7 +147,7 @@
         nhiệm vụ 1 nên `onFinish` không còn dẫn sang đây, và `js/mission-intro.js`
         — người dùng còn lại của `space-scene` — đã nghỉ hưu. Chủ dự án chốt **cho nó
         việc mới** thay vì xoá 625 dòng đang chạy tốt. `docs/decisions/003`. -->
-<script src="js/warp-screen.js"></script>
+<script defer src="js/warp-screen.js"></script>
 </head>
 <body>
 
@@ -600,8 +625,22 @@
 
 
 <!-- Hệ thống số dư Thiên thạch tím -->
-<script src="economy.js"></script>
+<script defer src="economy.js"></script>
 <script>
+/* ⚠️⚠️ BỌC VÀO `DOMContentLoaded` LÀ **BẮT BUỘC**, KHÔNG PHẢI CẨN THẬN THÊM.
+   Từ 25/08/2026 mười tám file thư viện của trang này mang `defer`, và script `defer`
+   chạy **sau khi parse xong** — tức SAU khối này nếu khối này vẫn chạy lúc parse.
+   Không bọc thì `AstroQ`, `AstroQBadges`, `AstroQProgress`… đều chưa tồn tại khi
+   khối chạy: trang trắng, và lỗi sẽ đọc như một lỗi của khối này chứ không như hệ
+   quả của việc thêm `defer`. `DOMContentLoaded` bắn SAU khi mọi script `defer` đã
+   chạy, nên đó đúng là mốc cần chờ.
+   ⚠️ Bọc chứ KHÔNG thụt lại 1.052 dòng bên trong: giữ IIFE nguyên vẹn thì bản khác
+      biệt đọc được, và `"use strict"` vẫn đúng phạm vi của nó.
+   ⚠️ Không cần nhánh `readyState !== "loading"`: khối này nằm nội tuyến giữa lúc
+      parse, nên `DOMContentLoaded` chắc chắn CHƯA bắn. Thêm nhánh đó ở đây là thêm
+      một đường không bao giờ đi qua, tức thêm một đường không ai kiểm được.
+   Số đo trước/sau ở `scratchpad/probe_dash_boot.py`. */
+document.addEventListener("DOMContentLoaded", function(){
 (function(){
   "use strict";
 
@@ -1341,6 +1380,8 @@
   });
 
   applyLang(LANG);
+  /* Chu da dung ngon ngu -> bo che. Xem chu thich o the <script> dat lop nay. */
+  document.documentElement.classList.remove("lang-wait");
   /* ⚠️ THỨ TỰ BẮT BUỘC: SAU `applyLang` (nó gọi `paintDesk(null)` — chưa có cache
      thì ẩn vách, gọi sau là xoá luôn thứ vừa vẽ) và TRƯỚC `loadStats` (câu trả lời
      mới của server ghi đè, đó là ý muốn). Xem khối chú thích ở `paintCachedHud`. */
@@ -1653,6 +1694,7 @@
     }
   });
 })();
+});   /* het DOMContentLoaded — xem chu thich o dau khoi */
 </script>
 <!-- `js/firebase-auth.js` đã chuyển lên <head> (23/08/2026) để nó được TẢI sớm.
      Thứ tự CHẠY không đổi — module luôn hoãn tới sau khi parse xong. Xem chú thích

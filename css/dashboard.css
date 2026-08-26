@@ -645,3 +645,16 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
    15/08/2026 — cả hai nay là mục trong menu thả sau avatar. Sự phân biệt
    "của trẻ" và "của người lớn" mà nét đứt từng mang KHÔNG mất: nó đi theo
    sang `.um-item.um-parent` (vẫn nét đứt, vẫn chữ nhạt) ở css/user-menu.css. */
+
+/* ⚠️⚠️ CHỜ NGÔN NGỮ — xem khối chú thích dài ở thẻ `<script>` đặt lớp này trong
+   `dashboard.html`. Chỉ bật cho trẻ chọn EN, và chỉ tới khi `applyLang` chạy xong
+   (hoặc 4 giây, đường cứu). Che bằng `visibility` chứ KHÔNG bằng `display:none`:
+   `visibility` giữ nguyên bố cục nên lúc bỏ che không có cú nhảy nào; `display:none`
+   thì cả trang dựng lại và ta vừa đổi một lỗi loé chữ thành một lỗi nhảy bố cục.
+   Nền + ảnh khoang lái VẪN hiện — trẻ thấy trang đang tới, chỉ chưa thấy chữ. */
+/* ⚠️ `main`, KHÔNG phải `.wrap`: trang này không có `.wrap` (bản đầu tôi viết
+   `.lang-wait .wrap` và nó che ĐÚNG KHÔNG GÌ CẢ — phép đo mới lộ ra, vì bộ chọn
+   trong bộ đo cũng không tìm thấy tiêu đề). Header cố ý KHÔNG che: chữ hiện của nó
+   là số liệu buồng lái và mã toạ độ, không phụ thuộc ngôn ngữ; phần chữ có dịch của
+   nó (`data-i18n-title`, menu thả) đều đang ẩn. */
+.lang-wait main{visibility:hidden;}
