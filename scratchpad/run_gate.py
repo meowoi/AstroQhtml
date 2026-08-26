@@ -18,10 +18,17 @@ In ra mot dong moi bo: TEN | dat/hong | ma thoat | giay.
      2. `verify_*`, `perf_prod_return` — do tren BAN THAT, chay SAU khi push.
      3. `perf_ab`, `sync_font_preload`, `gen_*`, `split_*`, `make_*`, `stamp_*`,
         `bundle_*` — bo SINH: chung GHI FILE vao repo.
-     4. `perf_*` (con lai), `measure_shell`, `gap_lv`, `probe_globe_daynight`,
-        `probe_earth_flat`, `probe_flat_*`, `probe_field_*`, `probe_warp_*` — bo
+     4. `perf_*` (con lai), `measure_shell`, `gap_lv`, `probe_earth_flat`,
+        `probe_flat_*`, `probe_field_*`, `probe_warp_*`, va moi bo `_probe_*` — bo
         DO, khong co pass/fail; chung in ra so lieu roi thoi, nen `exit 1` cua
-        chung khong noi len dieu gi ve san pham.
+        chung khong noi len dieu gi ve san pham. (Dau `_` o dau ten la dau hieu
+        "do MOT LAN de tra loi mot cau hoi cu the", vd `_probe_earth_blocker` bac
+        bo mot suy doan, `_probe_declutter_cost` do gia mot vong lap.)
+   ✅ NGUOC LAI, `probe_globe_daynight` NAY DA VAO DUOC CONG (25/08/2026): truoc no
+      bi loai vi hai le that — chet giua duong ~2/3 luot, va can nguoi chay
+      `python -m http.server 8123` truoc. Ca hai da sua: co duong lui khi cu bam
+      that bai, va no TU DUNG server o cong 8143. `probe_label_overlap` (moi cung
+      ngay) cung tu dung server, cung vao cong duoc.
    ⚠️ Cac bo `pha_*` thi chay RIENG (chung sua file nguon roi khoi phuc); dong
       tong ket cua chung duoc doc theo mau "n/m loi co y bi bat" o duoi.
 """

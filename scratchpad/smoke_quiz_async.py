@@ -19,7 +19,26 @@ import http.server, socketserver
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = 8133
-URL = "http://127.0.0.1:%d/quiz.html" % PORT
+# ⚠️⚠️ `?nosw=1` — TAT SERVICE WORKER CHO BO DO NAY, VA DAY LA VIEC BAT BUOC CHU
+#    KHONG PHAI CHO CHAC. Muc [3] gia lap MAT MANG bang `pg.route("**/js/quiz/*.js")`
+#    roi doi hop thoai "chua tai duoc cau hoi". Nhung `pg.route` KHONG chan fetch
+#    phat ra tu SERVICE WORKER — nen khi sw kip gianh quyen dieu khien trang, no tu
+#    lay file quiz ve, trang vao luot binh thuong, va hop thoai khong bao gio hien:
+#    bo do treo o `wait_for_selector("#load-modal.show")` roi chet giua duong.
+#    ⚠️ Do duoc 26/08/2026, chay MOT MINH khong co gi khac chay cung: **1/3 luot
+#       hong** (8 dat / exit 1) — tuc ghi chep cu ("chay mot minh thi 23/0") dua
+#       tren qua it luot. Sau khi them `?nosw=1`: **12/12 luot sach**. Neu ti le hong
+#       van la 1/3 thi 12 luot sach lien tiep chi co xac suat **0,77%** — nen day la
+#       bang chung du manh, du van la [Inference]: to chua CHUNG MINH duoc service
+#       worker la nguyen nhan, chi thay tat no di thi cai chap chon bien mat, va co
+#       che thi khop (log server cho thay `GET /sw.js` + `GET /offline.html` chay
+#       ngay trong luc bo do dang do).
+#    ⚠️ `?nosw=1` la cong tac CO SAN cua `js/ui-common.js`, dung cho dung viec nay
+#       ("can cho luc do" — chu thich o chinh file do). KHONG phai ta bia them mot
+#       duong ri cho san pham de bo do de chay.
+#    ⚠️ Doi lai: bo do nay KHONG con noi gi ve hanh vi cua trang KHI CO service
+#       worker. Do la viec cua `probe_sw_fast` va `smoke_sw`, khong phai cua no.
+URL = "http://127.0.0.1:%d/quiz.html?nosw=1" % PORT
 
 ok_n = bad_n = 0
 
@@ -131,12 +150,17 @@ def main():
             ctx, pg, errs = new_page(b)
             pg.route("**/js/quiz/*.js", lambda r: r.abort())
             pg.goto(URL, wait_until="load")
-            # ⚠️ MOC 30 GIAY, KHONG PHAI 15. Cong day du 25/08/2026 do duoc bo nay
-            #    het han o dung day roi CHET GIUA DUONG (8 dat / exit 1) trong khi
-            #    chay MOT MINH thi 23/0 — tuc chap chon theo tai may, khong phai loi
-            #    san pham. Mot phep kiem hay bao oan thi som muon nguoi ta bo qua no,
-            #    ma o day cai gia cua viec cho lau hon chi la vai giay o mot nhanh
-            #    HONG (nhanh dat khong bao gio cho het moc).
+            # ⚠️ MOC 30 GIAY, KHONG PHAI 15 — noi rong 25/08/2026 khi bo nay chet
+            #    giua duong o dung day trong cong day du (8 dat / exit 1).
+            # ⚠️⚠️ NHUNG NOI RONG MOC KHONG PHAI LA CHUA, VA GHI CHEP CU O DAY DA SAI.
+            #    Ngay 25/08 toi ghi la "chay MOT MINH thi 23/0, tuc chap chon theo tai
+            #    may". Do lai 26/08 voi nhieu luot hon: chay mot minh, KHONG co gi
+            #    khac chay cung, van **hong 1/3 luot**. Tuc ket luan "tai may" dua
+            #    tren qua it luot, va cai moc 30 giay chi lam cai chap chon thua ra
+            #    it hon chu khong bo duoc no.
+            #    Nguyen nhan (va cach chua) o `?nosw=1` — xem khoi chu thich dai o
+            #    dong khai `URL` dau file. Giu moc 30 giay: no vo hai (nhanh DAT khong
+            #    bao gio cho het moc) va no la luoi do neu co nguyen nhan thu hai.
             pg.wait_for_selector("#load-modal.show", timeout=30000)
             check("hien hop thoai 'chua tai duoc cau hoi'", True)
             vis = pg.evaluate("""() => {

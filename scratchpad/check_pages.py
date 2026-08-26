@@ -5016,5 +5016,170 @@ check("[37] gen_sw.py co hang rao tran dung luong cai vo",
 # offline.html phai la noindex,nofollow: no khong phai trang de tre di toi.
 check("[37] offline.html: noindex,nofollow", 'content="noindex,nofollow"' in _off)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# [38] KHUNG XUONG CHONG NHAY BO CUC — con so dat truoc phai KHOP so muc that.
+#
+# ⚠️⚠️ DAY LA LOAI LOI HONG EM, VA DO LA LY DO PHAI CO PHEP KIEM NAY. Cac
+#    `min-height` them 25/08/2026 (`css/library.css` cho `#cats`, `css/achievements.css`
+#    cho `.ranks`) dat cho san mot cho cao dung bang noi dung SAP TOI, de mang cham
+#    thi trang khong nhay. Neu ai them mot chu de (10 -> 11) ma khong sua `--cat-n`
+#    thi KHONG CO GI HONG THAY DUOC: trang van chay, van dung, chi nhay lai 50px
+#    tren may cham. Khong ai bat duoc bang mat, nen phai bat bang so.
+#    `renderCats()` o library.html da ghi "cat moi thi phai sua BON cho cung luc";
+#    phep kiem nay la cai bao dam cho cho THU NAM.
+import re as _re38
+
+_lib_html = io.open("library.html", encoding="utf-8").read()
+_lib_css = io.open("css/library.css", encoding="utf-8").read()
+
+_m = _re38.search(r"var cats\s*=\s*\[(.*?)\]\s*;", _lib_html, _re38.S)
+_n_cats = len(_re38.findall(r'"([a-z]+)"', _m.group(1))) if _m else -1
+_m2 = _re38.search(r"--cat-n\s*:\s*(\d+)", _lib_css)
+_n_var = int(_m2.group(1)) if _m2 else -1
+check("[38] library: so chu de trong `var cats` doc duoc", _n_cats > 0, str(_n_cats))
+check("[38] library: `--cat-n` trong CSS doc duoc", _n_var > 0, str(_n_var))
+check("[38] library: `--cat-n` KHOP so muc trong `var cats`", _n_cats == _n_var,
+      "cats=%d / --cat-n=%d" % (_n_cats, _n_var))
+check("[38] library: `#cats` co min-height tinh tu --cat-n",
+      "min-height:calc(var(--cat-n)" in _lib_css.replace(" ", ""))
+
+# `.ranks` = mot bac moi cap huan luyen. So bac lay tu `js/ranks.js` (nguon that),
+# khong lay tu chinh CSS — lay tu chinh no thi phep kiem chi tu xac nhan.
+_ach_css = io.open("css/achievements.css", encoding="utf-8").read()
+_m3 = _re38.search(r"--rk-n\s*:\s*(\d+)", _ach_css)
+_n_rk = int(_m3.group(1)) if _m3 else -1
+check("[38] achievements: `--rk-n` doc duoc", _n_rk > 0, str(_n_rk))
+# Nguon that cua so bac la `var R = [...]` trong js/ranks.js (bien noi bo cua module,
+# lo ra ngoai duoi ten `AstroQRanks.ALL`).
+_rk_src = io.open("js/ranks.js", encoding="utf-8").read()
+_m4 = _re38.search(r"var R\s*=\s*\[(.*?)\n\s*\]\s*;", _rk_src, _re38.S)
+if _m4:
+    _n_ranks = len(_re38.findall(r"\{\s*key:", _m4.group(1)))
+    check("[38] achievements: doc duoc so bac trong js/ranks.js", _n_ranks > 0,
+          str(_n_ranks))
+    check("[38] achievements: `--rk-n` KHOP so bac trong js/ranks.js",
+          _n_ranks == _n_rk, "ranks.js=%d / --rk-n=%d" % (_n_ranks, _n_rk))
+else:
+    # ⚠️ KHONG im lang bo qua: neu khong tim thay nguon that thi phai NOI RA, chu
+    #    khong duoc de phep kiem tu dong "dat" — mot phep kiem im lang khi khong
+    #    doc duoc du lieu la mot phep kiem da chet.
+    check("[38] achievements: tim thay `var R = [` trong js/ranks.js de doi chieu",
+          False, "mau khong khop — sua lai bieu thuc, dung bo qua")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [39] ANH TRANG TRI CUA landing-app: be rong ban AVIF/WebP phai = 2 × MAX trong CSS.
+#
+# ⚠️⚠️ LOAI LOI NAY HONG EM Y NHU MUC [38]. `scratchpad/make_landing_assets.py` sinh
+#    anh theo `clamp(min, ..vw, MAX)` cua tung nhan vat trong `css/landing-app.css`,
+#    nhan 2 cho man retina. Ai noi `clamp` len (vd 124px -> 160px) ma khong chay lai
+#    bo sinh thi anh bi PHONG TO tu 248px len 320px — nhoe, nhung khong ai bao loi,
+#    va tren may thuong (dpr 1) thi khong thay gi ca. Nen phai bat bang so.
+_la_css = io.open("css/landing-app.css", encoding="utf-8").read()
+_la_html = io.open("landing-app.html", encoding="utf-8").read()
+_gen = io.open("scratchpad/make_landing_assets.py", encoding="utf-8").read()
+
+# ten -> selector giu `clamp()` cua no. `.floaty` la mac dinh cho luna1/cho1/m1.
+_SEL = {"raica1": r"\.f-raica1\{width:clamp\([^)]*?,\s*(\d+)px\)",
+        "b1":     r"\.f-b1\{width:clamp\([^)]*?,\s*(\d+)px\)",
+        "luna1":  r"\.floaty\{[^}]*?width:clamp\([^)]*?,\s*(\d+)px\)",
+        "cho1":   r"\.floaty\{[^}]*?width:clamp\([^)]*?,\s*(\d+)px\)",
+        "m1":     r"\.floaty\{[^}]*?width:clamp\([^)]*?,\s*(\d+)px\)",
+        "qg1":    r"\.ic-qg1\{width:clamp\([^)]*?,\s*(\d+)px\)",
+        "qb1":    r"\.ic-qb1\{width:clamp\([^)]*?,\s*(\d+)px\)",
+        "q1":     r"\.ic-q1\s*\{width:clamp\([^)]*?,\s*(\d+)px\)",
+        "3qok":   r"\.ic-3qok\{width:clamp\([^)]*?,\s*(\d+)px\)"}
+
+_want = dict(_re38.findall(r'"([\w]+)":\s*(\d+),', _gen))
+check("[39] doc duoc bang WANT cua make_landing_assets.py", len(_want) == 9,
+      "%d muc" % len(_want))
+for _nm, _rx in sorted(_SEL.items()):
+    _m = _re38.search(_rx, _la_css, _re38.S)
+    if not _m:
+        check("[39] %s: doc duoc MAX trong clamp() cua CSS" % _nm, False,
+              "mau khong khop — sua bieu thuc, dung bo qua")
+        continue
+    _mx = int(_m.group(1))
+    _gw = int(_want.get(_nm, -1))
+    check("[39] %-6s: be rong anh = 2 x MAX cua CSS" % _nm, _gw == _mx * 2,
+          "CSS MAX %dpx -> can %dpx, bo sinh ghi %dpx" % (_mx, _mx * 2, _gw))
+    # File phai co that, va HTML phai tro dung vao no.
+    for _ext in ("avif", "webp"):
+        _p = "img/%s-%d.%s" % (_nm, _gw, _ext)
+        check("[39] %-6s: co %s" % (_nm, _p), os.path.exists(_p))
+        check("[39] %-6s: HTML tro vao %s" % (_nm, _p), _p in _la_html)
+
+# ⚠️ 9 anh trang tri PHAI co `loading="lazy"` — do la thu giu dien thoai khoi tai
+#    525 KB anh bi `display:none` (so do o chinh landing-app.html). Bo mot cai la
+#    mat mot phan tiet kiem ma khong ai thay.
+check("[39] ca 9 anh trang tri co loading=lazy",
+      _la_html.count('<img loading="lazy" src="img/') == 9,
+      "%d anh" % _la_html.count('<img loading="lazy" src="img/'))
+check("[39] css/landing-app.css khai `picture` la block (khong thi lech day anh)",
+      "picture{display:block" in _la_css.replace(" ", ""))
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [40] dashboard.html: `defer` cho thu vien, VA HAI NGOAI LE PHAI DUNG NGUYEN CHO.
+#
+# ⚠️⚠️ CA HAI CHIEU DEU HONG EM, nen phai bat ca hai:
+#    · Them mot `<script src>` MOI ma quen `defer` -> mat phan da cat duoc (FCP
+#      4144 -> 2756 ms, do 25/08/2026 bang `scratchpad/probe_dash_boot.py`) va
+#      khong ai thay, vi trang van chay dung.
+#    · Them `defer` cho `js/cosmetics.js` -> buong lai NHAP mot cai tu tong mac
+#      dinh sang tong cua tre. Chinh `js/cosmetics.js` da ghi ly do: no goi
+#      `apply()` NGAY khi nap de dat `data-*` len <html> TRUOC khung son dau.
+#      Va `js/ui-common.js` phai chay TRUOC `cosmetics.js` vi `cosmetics` doc
+#      `AstroQ.getUser()` — thieu no thi `user()` tra `{}` va ap tong MAC DINH,
+#      tuc dung cai nhap ta dang tranh.
+_dash = io.open("dashboard.html", encoding="utf-8").read()
+_KEEP_EAGER = ("js/ui-common.js", "js/cosmetics.js")
+_tags = _re38.findall(r"<script\b([^>]*\bsrc=\"[^\"]+\"[^>]*)>", _dash)
+_eager, _deferred = [], []
+for _t in _tags:
+    _src = _re38.search(r'src="([^"]+)"', _t).group(1)
+    if 'type="module"' in _t:
+        continue                      # module luon hoan san, khong xet o day
+    (_deferred if (" defer" in _t or " async" in _t) else _eager).append(_src)
+
+check("[40] dashboard: dung 2 script co dien chay som", len(_eager) == 2, str(_eager))
+for _s in _KEEP_EAGER:
+    check("[40] dashboard: %s KHONG mang defer (chong nhap tong)" % _s,
+          _s in _eager,
+          "" if _s in _eager else
+          ("DANG MANG defer" if _s in _deferred else "KHONG THAY the script nay"))
+check("[40] dashboard: >= 15 thu vien mang defer", len(_deferred) >= 15,
+      "%d file" % len(_deferred))
+check("[40] dashboard: ui-common dung TRUOC cosmetics trong tai lieu",
+      _dash.find("js/ui-common.js") < _dash.find("js/cosmetics.js"))
+check("[40] dashboard: khoi noi tuyen boc trong DOMContentLoaded",
+      'document.addEventListener("DOMContentLoaded", function(){\n(function(){' in _dash)
+
+# ⚠️⚠️ CHOT `lang-wait` — day la NUA THU HAI cua viec them `defer`, va bo mot manh
+#    nao cua no thi tre chon EN se doc phai chu TIENG VIET roi thay no doi (do duoc
+#    680 ms). Bon manh phai co du: dat lop som, rule CSS che, bo lop sau applyLang,
+#    va duong cuu 4 giay. Thieu duong cuu la trang trang vinh vien khi JS loi — te
+#    hon han cai cu loe no dang chua.
+_dcss = io.open("css/dashboard.css", encoding="utf-8").read()
+check("[40] lang-wait: dat lop khi astroq-lang la 'en'",
+      'localStorage.getItem("astroq-lang") === "en"' in _dash
+      and 'classList.add("lang-wait")' in _dash)
+# ⚠️ KHONG dung `replace(" ", "")` cho bo chon HAU DUE: dau cach trong
+#    `.lang-wait main` LA MOT TOAN TU, bo no di thi thanh `.lang-waitmain` va phep
+#    kiem bao hong oan (da xay ra dung mot lan, 25/08/2026). Dung regex.
+check("[40] lang-wait: CSS che `main` (KHONG phai .wrap — trang nay khong co .wrap)",
+      _re38.search(r"\.lang-wait\s+main\s*\{[^}]*visibility\s*:\s*hidden", _dcss)
+      is not None)
+check("[40] lang-wait: bo lop NGAY SAU applyLang(LANG)",
+      _re38.search(r"applyLang\(LANG\);\s*\n\s*/\*[^*]*\*/\s*\n\s*"
+                   r'document\.documentElement\.classList\.remove\("lang-wait"\)',
+                   _dash) is not None)
+check("[40] lang-wait: co duong cuu bang setTimeout (chong trang trang)",
+      _re38.search(r'setTimeout\(function\(\)\{\s*r\.classList\.remove\("lang-wait"\);'
+                   r'\s*\},\s*\d+\)', _dash) is not None)
+# ⚠️ Cung loi dau cach nhu tren: bieu thuc cu KHONG BAO GIO khop, tuc phep kiem
+#    nay "dat" ma khong kiem gi ca — mot phep kiem dat rong con te hon khong co.
+check("[40] lang-wait: che bang `visibility`, KHONG `display` (chong nhay bo cuc)",
+      _re38.search(r"\.lang-wait\s+main\s*\{[^}]*display\s*:\s*none", _dcss)
+      is None)
+
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)
