@@ -18,7 +18,7 @@
         fanpage/tin nhắn vẫn tới thẳng đây bình thường — `noindex` chỉ chặn LẬP CHỈ MỤC,
         không chặn truy cập. `follow` vẫn cho bot đi tiếp vào các trang app. -->
 <meta name="robots" content="noindex,follow" />
-<title>AstroQ — Khám phá Hệ Mặt Trời</title>
+<title>AstroQ — Vũ trụ, AI và tư duy khoa học</title>
 
 <!-- Cùng bộ font với index: Space Grotesk (display) + Inter (body) -->
 <!-- FONT-PRELOAD:BEGIN -->
@@ -112,43 +112,91 @@
 </div>
 
 <main class="wrap">
-  <span class="badge"><span class="dot"></span><span data-i18n="badge">Bản đồ 3D tương tác</span></span>
+  <!-- ⚠️⚠️ CÂU CHỮ CỦA CẢ KHỐI NÀY ĐỔI 26/08/2026 — VÌ SỐ ĐO, KHÔNG VÌ THẨM MỸ.
+       Số đo + lập luận đầy đủ: `docs/proposals/2026-08-26-review-dinh-vi-lai-landing-ai.md`.
+
+       Vấn đề: kho bài đọc có **32/70 bài (46%) là AI + máy tính + robot**, NHIỀU HƠN
+       thiên văn (17 bài, 24%) — và có sẵn cả nhánh "tư duy phản biện về AI"
+       (`art-algorithms-are-opinions`, `art-algorithmic-bias`,
+       `art-chatbot-confidently-wrong`, `art-nobody-fully-understands-llm`…). Nhưng
+       trang này — **TRANG NGAY TRƯỚC NÚT ĐĂNG KÝ** — trước hôm nay nói 100% về Hệ Mặt
+       Trời: badge "Bản đồ 3D tương tác", ba thẻ đều là hành tinh/3D/bảng dữ liệu. Quảng
+       cáo đang chạy hứa "AI cần tư duy phản biện", nên người bấm vào hạ cánh xuống một
+       lời hứa KHÁC lời hứa đã kéo họ tới. Hàng có trong kho, cửa trước không trưng.
+
+       ⚠️ VÌ SAO SỬA Ở ĐÂY TRƯỚC, KHÔNG SỬA `index.html`: trang này `noindex,follow` (có
+          chủ ý — xem chú thích đầu file) nên đổi câu chữ **không tốn một đồng SEO nào**,
+          không phải cân nhắc từ khoá, không phải chạm hai khối JSON-LD/FAQ của trang
+          chủ, và i18n của nó là hằng `I18N` **nội trang** nên không lan ra `js/index.js`
+          lẫn bộ sinh bản EN (`scratchpad/gen_home_en.py`).
+
+       ⚠️⚠️ LUẬT CỨNG, KHÔNG ĐƯỢC NỚI: "AI" ở đây là **CHỦ ĐỀ TRẺ HỌC**, KHÔNG phải công
+          nghệ trong sản phẩm. astroQ **không có bề mặt AI nào cho trẻ chạm vào**;
+          `AstroqSV/Services/Adapt.cs` là ngưỡng tỉ lệ trả lời đúng, không phải mô hình.
+          Nên KHÔNG BAO GIỜ viết "AI cá nhân hoá lộ trình", "gia sư AI", hay "trợ lý AI
+          Byte" — Byte là **lời thoại viết tay** (`wiki/comet-va-byte-la-ai.html` nói
+          thẳng điều đó ra). Lý do đầy đủ: mục 7 file review, và mục 5 của
+          `docs/proposals/2026-08-19-ai-dong-vai-gi-trong-astroq.md`.
+
+       ⚠️ THẺ 1 GIỮ CHỮ "3D TƯƠNG TÁC" NGAY Ở TIÊU ĐỀ — sửa lại 26/08/2026 ngay trong
+          ngày. Bản đầu đặt tiêu đề là "Vũ trụ để khám phá" rồi đẩy "xoay, phóng to"
+          xuống cuối câu mô tả. Sai: bản đồ 3D là thứ **cụ thể nhất và khác biệt nhất**
+          astroQ có — nó là cái người ta không xem được ở một trang chữ — nên nó phải
+          đứng ở dòng người đọc lướt qua, không nằm ở vế sau của một câu. Mở rộng định
+          vị (mục dưới) là để THÊM nhánh, không phải để pha loãng nhánh mạnh nhất.
+
+       ⚠️ MỖI THẺ DƯỚI ĐÂY CÓ NỘI DUNG CHỐNG LƯNG, không phải câu quảng cáo đi mượn:
+          thẻ 1 ↔ `explorer.html` + `mission-*.html` · thẻ 2 ↔
+          `js/article/art-chatbot-confidently-wrong.js` (đúng câu "sai mà nói rất chắc")
+          · thẻ 3 ↔ trường `srcQuote` + `scratchpad/check_srcquote.py` (91/91 câu dẫn
+          đúng nguyên văn trang nguồn). Đổi câu chữ mà không còn file chống lưng là quay
+          lại đúng cái lỗi đang đi sửa.
+
+       ⚠️ `.features` là `repeat(auto-fit, minmax(200px,1fr))` (css/landing-app.css:128)
+          nên số thẻ đổi được mà không phải sửa CSS — nhưng ĐANG LÀ BA THẺ và ba trụ
+          này khớp với ba trụ đề nghị cho trang chủ. Thêm thẻ thứ tư thì phải hỏi nó
+          chống lưng bằng nội dung nào. -->
+  <span class="badge"><span class="dot"></span><span data-i18n="badge">Khoa học · Công nghệ · Vũ trụ</span></span>
 
   <h1><span data-i18n="hero_welcome">Chào mừng đến</span> <span class="grad">AstroQ</span></h1>
 
   <p class="lead" data-i18n="lead">
-    Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to
-    và tìm hiểu từng hành tinh với giao diện trực quan, sống động.
+    Bắt đầu từ Hệ Mặt Trời, trẻ 8–15 khám phá thiên văn, AI và tư duy khoa học
+    qua nhiệm vụ, bài đọc và trò chơi.
   </p>
 
   <div class="actions">
     <a class="btn btn-primary" id="btn-try" href="#">
-      <span data-i18n="cta_try">Trải nghiệm ngay</span>
+      <span data-i18n="cta_try">Bắt đầu khám phá</span>
       <span class="arrow">→</span>
     </a>
   </div>
 
   <section class="features" id="features">
     <div class="card">
-      <div class="ico">🪐</div>
-      <h3 data-i18n="f1_title">8 hành tinh</h3>
-      <p data-i18n="f1_desc">Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.</p>
+      <div class="ico">🌌</div>
+      <h3 data-i18n="f1_title">Vũ trụ 3D tương tác</h3>
+      <p data-i18n="f1_desc">Xoay, phóng to và bay tới từng hành tinh trong Hệ Mặt Trời 3D — đủ cả 8 hành tinh, mỗi chặng một nhiệm vụ.</p>
     </div>
     <div class="card">
-      <div class="ico">🔭</div>
-      <h3 data-i18n="f2_title">Tương tác 3D</h3>
-      <p data-i18n="f2_desc">Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.</p>
+      <div class="ico">🤖</div>
+      <h3 data-i18n="f2_title">AI &amp; Công nghệ</h3>
+      <p data-i18n="f2_desc">Máy học từ đâu, robot cảm nhận thế nào, và vì sao chatbot sai mà nói rất chắc.</p>
     </div>
     <div class="card">
-      <div class="ico">✨</div>
-      <h3 data-i18n="f3_title">Thông tin trực quan</h3>
-      <p data-i18n="f3_desc">Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.</p>
+      <div class="ico">🧠</div>
+      <h3 data-i18n="f3_title">Tư duy khoa học</h3>
+      <p data-i18n="f3_desc">Quan sát, đặt câu hỏi, và kiểm chứng bằng nguồn thật — mỗi câu trả lời đều dẫn tới trang gốc.</p>
     </div>
   </section>
 </main>
 
+<!-- ⚠️ "AstroQ · Solar System Explorer" trước 26/08/2026 là chữ TĨNH, KHÔNG có
+     `data-i18n` — nghĩa là khách tiếng Việt vẫn đọc một dòng tiếng Anh, và dòng đó
+     lại thu cả sản phẩm về đúng một nhánh (thiên văn) ở ngay chân trang. Nay có khoá
+     `foot_tag` để nó dịch được như mọi chữ khác trên trang này. -->
 <footer>
-  AstroQ · Solar System Explorer &nbsp;·&nbsp;
+  <span data-i18n="foot_tag">AstroQ · Khoa học cho nhà khám phá trẻ</span> &nbsp;·&nbsp;
   <a href="explorer.html" data-i18n="footer_link">Mở trình khám phá →</a>
 </footer>
 
@@ -267,20 +315,21 @@ const I18N = {
       a_lang:"Ngôn ngữ", lang_head:"Ngôn ngữ", lang_soon_h:"Sắp ra mắt", lang_soon_tag:"Sắp ra mắt", lang_soon_msg:"{n} sắp ra mắt — bọn mình đang dịch nốt!",
       a_close:"Đóng",
       reg_name_ph:"Nguyễn Văn A",
-    title: "AstroQ — Khám phá Hệ Mặt Trời",
-    badge: "Bản đồ 3D tương tác",
+    title: "AstroQ — Vũ trụ, AI và tư duy khoa học",
+    badge: "Khoa học · Công nghệ · Vũ trụ",
     hero_welcome: "Chào mừng đến",
-    lead: "Du hành qua Hệ Mặt Trời trong không gian 3D thời gian thực — xoay, phóng to và tìm hiểu từng hành tinh với giao diện trực quan, sống động.",
+    lead: "Bắt đầu từ Hệ Mặt Trời, trẻ 8–15 khám phá thiên văn, AI và tư duy khoa học qua nhiệm vụ, bài đọc và trò chơi.",
     cta_primary: "Bắt đầu khám phá",
     cta_secondary: "Khám phá ngay",
-    cta_try: "Trải nghiệm ngay",
+    cta_try: "Bắt đầu khám phá",
     cta_login: "Đăng nhập",
-    f1_title: "8 hành tinh",
-    f1_desc: "Mô phỏng quỹ đạo và tỉ lệ của toàn bộ hành tinh trong Hệ Mặt Trời.",
-    f2_title: "Tương tác 3D",
-    f2_desc: "Kéo, thả, zoom mượt mà để quan sát vũ trụ từ mọi góc nhìn.",
-    f3_title: "Thông tin trực quan",
-    f3_desc: "Bảng dữ liệu dạng kính hiện đại cho từng thiên thể bạn chọn.",
+    f1_title: "Vũ trụ 3D tương tác",
+    f1_desc: "Xoay, phóng to và bay tới từng hành tinh trong Hệ Mặt Trời 3D — đủ cả 8 hành tinh, mỗi chặng một nhiệm vụ.",
+    f2_title: "AI & Công nghệ",
+    f2_desc: "Máy học từ đâu, robot cảm nhận thế nào, và vì sao chatbot sai mà nói rất chắc.",
+    f3_title: "Tư duy khoa học",
+    f3_desc: "Quan sát, đặt câu hỏi, và kiểm chứng bằng nguồn thật — mỗi câu trả lời đều dẫn tới trang gốc.",
+    foot_tag: "AstroQ · Khoa học cho nhà khám phá trẻ",
     footer_link: "Mở trình khám phá →",
     auth_login_title: "Đăng nhập",
     auth_login_sub: "Đăng nhập để mở khoá mọi tính năng của AstroQ.",
@@ -315,20 +364,21 @@ const I18N = {
       a_lang:"Language", lang_head:"Language", lang_soon_h:"Coming soon", lang_soon_tag:"Coming soon", lang_soon_msg:"{n} is coming soon — we're still translating it!",
       a_close:"Close",
       reg_name_ph:"Alex Nguyen",
-    title: "AstroQ — Explore the Solar System",
-    badge: "Interactive 3D map",
+    title: "AstroQ — Space, AI and scientific thinking",
+    badge: "Science · Technology · Space",
     hero_welcome: "Welcome to",
-    lead: "Travel through the Solar System in real-time 3D — rotate, zoom, and learn about every planet through a vivid, intuitive interface.",
+    lead: "Starting from the Solar System, kids aged 8–15 explore astronomy, AI and scientific thinking through missions, readings and games.",
     cta_primary: "Start exploring",
     cta_secondary: "Explore now",
-    cta_try: "Try it now",
+    cta_try: "Start exploring",
     cta_login: "Log in",
-    f1_title: "8 planets",
-    f1_desc: "Simulated orbits and scale of every planet in the Solar System.",
-    f2_title: "3D interaction",
-    f2_desc: "Drag, drop and zoom smoothly to view the universe from any angle.",
-    f3_title: "Visual insights",
-    f3_desc: "A modern glass data panel for every celestial body you select.",
+    f1_title: "Interactive 3D universe",
+    f1_desc: "Rotate, zoom and fly to any planet in a 3D Solar System — all 8 of them, each with a mission of its own.",
+    f2_title: "AI & Technology",
+    f2_desc: "Where machines learn from, how robots sense the world, and why a chatbot can be wrong and still sound certain.",
+    f3_title: "Scientific thinking",
+    f3_desc: "Observe, ask questions, and check against real sources — every answer links back to the page it came from.",
+    foot_tag: "AstroQ · Science for young explorers",
     footer_link: "Open the explorer →",
     auth_login_title: "Log in",
     auth_login_sub: "Sign in to unlock all of AstroQ's features.",
@@ -517,7 +567,8 @@ AstroQ.initLang(applyLang);
 
   var showToast = AstroQ.makeToast(toast, 2800);
 
-  // Một lối vào duy nhất: bấm "Trải nghiệm ngay" mới mở popup (Đăng ký; có link sang Đăng nhập).
+  // Một lối vào duy nhất: bấm nút chính của hero (`#btn-try`, khoá `cta_try` — nay là
+  // "Bắt đầu khám phá") mới mở popup (Đăng ký; có link sang Đăng nhập).
   if(btnTry) btnTry.addEventListener("click", function(e){
     e.preventDefault();
     var u = getUser();

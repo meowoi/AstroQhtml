@@ -309,6 +309,36 @@ footer a:hover{color:var(--accent);}
   .contact-cta{display:none;}
 }
 
+/* ⚠️⚠️ CHIP `.badge` PHẢI NẰM DƯỚI NÚT NGÔN NGỮ TRÊN MÁY HẸP — thêm 26/08/2026.
+   `.lang-pick` là `position:fixed; top:20px; right:20px` (xem dưới), tức nó KHÔNG
+   chiếm chỗ trong luồng; còn `.badge` thì căn giữa trong `.wrap` và giãn theo độ dài
+   chữ. Hai thứ đó gặp nhau ở góc trên bên phải, và chip chui xuống dưới cái nút.
+
+   ⚠️ ĐÂY LÀ LỖI CŨ, KHÔNG PHẢI LỖI MỚI — nhưng lần đổi câu chữ 26/08/2026 làm nó
+      RỘNG RA. Số đo (Chromium thật, `.lang-pick` bản 62px):
+        chữ cũ "Bản đồ 3D tương tác"     (rộng 237px) → đè nhau ở ≤ 360px
+        chữ mới "Khoa học · Công nghệ…"  (rộng 324px) → đè nhau ở ≤ 480px
+      Tức nó vỡ đúng trên nhóm máy mà đợt sửa câu chữ đó nhắm tới (lưu lượng quảng
+      cáo Facebook phần lớn là điện thoại). Sửa câu chữ mà không sửa chỗ này là đổi
+      một lời hứa rõ hơn lấy một cái chip bị cắt ngang.
+
+   ⚠️ VÌ SAO ĐẨY XUỐNG (`margin-top`) CHỨ KHÔNG THU HẸP CHIP hay CHỪA LỀ PHẢI:
+      `.badge` căn giữa nên chừa `padding-right` ở `.wrap` sẽ kéo LỆCH TÂM cả h1,
+      lead và nút — sửa một chip mà làm lệch cả trang. Còn ép `max-width` cho chip
+      thì ở 320px nó chỉ còn ~150px, tức chữ xuống hai dòng trong một viên thuốc.
+      Đẩy xuống dưới đáy nút thì hết đè ở MỌI bề rộng, và không đụng gì khác.
+
+   ⚠️ 34px = 20px (`top` của nút) + 34px (cao nút) − 20px (đỉnh cũ của chip), làm
+      tròn lên cho khoảng thở. Mốc 620px chọn rộng hơn 480px đo được để còn chỗ cho
+      chữ dài hơn ở các ngôn ngữ sắp thêm (`lang-soon` ở js/user-menu.js).
+   ⚠️ Đo lại sau khi sửa: 0 chỗ đè trên 64 tổ hợp (vi/en × 8 bề rộng 320→760 × 4 bề
+      cao 600→1000), không cắt đỉnh, không tràn ngang. `.wrap` là
+      `justify-content:center` nên ở khung cao thì chip vốn đã nằm thấp hơn — thêm
+      lề chỉ có tác dụng ở đúng lúc nội dung tràn và bị ghim lên đỉnh. */
+@media (max-width:620px){
+  .badge{margin-top:34px;}
+}
+
 /* ---- Nút chuyển ngôn ngữ ---- */
 /* ⚠️ DINH VI NAY NAY THUOC `.lang-pick` (vo cua menu tha), KHONG con thuoc
    `.lang-switch`. Tu 20/08/2026 `.lang-switch` la DANH SACH BEN TRONG tam tha
