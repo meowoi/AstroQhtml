@@ -826,9 +826,12 @@ nhận sự kiện.** Việc đó phải kiểm bằng **Test Events** trong Eve
 thật, sau khi deploy. Hai thứ bổ cho nhau: bộ đo canh *cái không được đổi*, Test Events
 canh *cái có chạy*.
 
-⚠️ **Chưa deploy được là chuyện đã biết:** `aws lambda update-function-code` /
-`sam deploy` bị bộ phân loại quyền của Claude Code chặn (mục 5 `CLAUDE.md`). Ba đường
-đi ghi ở đó.
+⚠️ **Bị chặn là chuyện thường gặp, KHÔNG phải chuyện chắc chắn:** `aws lambda
+update-function-code` / `sam deploy` **thường** bị bộ phân loại quyền của Claude Code
+chặn (mục 5 `CLAUDE.md`, ba đường đi ghi ở đó) — nhưng lượt **26/08/2026 chạy thẳng,
+không chặn, không hỏi**. ⇒ Cứ **chuẩn bị gói cho xong** (tải gói đang chạy làm mốc
+rollback · `dotnet publish` ra ngoài OneDrive · đối chiếu artifact) **rồi thử một lần**;
+đừng bỏ cuộc trước khi thử, cũng đừng cho là sẽ chạy được.
 
 ### ⚠️ `sam build` hỏng giữa chừng → `sam deploy` gói thư mục RỖNG
 
