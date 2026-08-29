@@ -37,8 +37,12 @@ except Exception:
 
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-BASE = "http://127.0.0.1:8000"
-API_MODE = "prod" if "--prod" in sys.argv else "local"
+# `--prod`  -> trang van mo tu may chu tinh o may, chi doi dich API len AWS.
+# `--live`  -> mo THANG astroq.org: do dung cap **client da push + server da deploy**,
+#              tuc thu ma tre that dang thay. Chay sau khi GitHub Pages xay xong.
+LIVE = "--live" in sys.argv
+BASE = "https://astroq.org" if LIVE else "http://127.0.0.1:8000"
+API_MODE = "prod" if (LIVE or "--prod" in sys.argv) else "local"
 LANDING = "/landing-app.html?api=" + API_MODE
 TABLE = "astroq-main"
 PW = "Astroq!2026-kiemtra"
@@ -126,7 +130,7 @@ def try_login(pg, email, pw):
 
 
 email = "success+e2e-%s@simulator.amazonses.com" % uuid.uuid4().hex[:8]
-print("API: %s   ·   email: %s" % (API_MODE, email))
+print("Trang: %s   ·   API: %s   ·   email: %s" % (BASE, API_MODE, email))
 
 try:
     with sync_playwright() as p:
