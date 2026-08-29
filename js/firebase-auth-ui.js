@@ -34,6 +34,12 @@ const TXT = {
            thì người dùng kích hoạt xong sẽ đăng nhập bằng mật khẩu vừa gõ và không
            vào được, mà chẳng có gì giải thích. */
         v_pwkept:"Email này đang có một đăng ký chờ kích hoạt. Mình đã gửi lại link, nhưng mật khẩu vẫn là mật khẩu bạn đặt lần đầu nhé.",
+        /* Đăng nhập bằng một tài khoản CHƯA kích hoạt. Trước 29/08/2026 ca này nhận
+           câu "Email hoặc mật khẩu không đúng." của Firebase — sai, và đẩy người ta
+           đi sửa đúng cái đang không hỏng. Xem `pendingState` ở js/firebase-auth.js. */
+        v_title_notyet:"Tài khoản chưa kích hoạt",
+        v_sub_notyet:"Mật khẩu của bạn đúng rồi! Chỉ còn thiếu một bước: mở email và bấm link kích hoạt là vào được ngay.",
+        v_sub_expired:"Mật khẩu của bạn đúng rồi! Nhưng link trong email đã hết hạn — bấm “Gửi lại link” để nhận link mới nhé.",
         // Thông báo sau khi bấm link trong email (server chuyển hướng kèm ?activated=…&reason=…)
         a_ok:"Kích hoạt thành công! Đăng nhập để lên tàu nhé.",
         a_already:"Tài khoản này đã kích hoạt rồi. Đăng nhập thôi!",
@@ -47,6 +53,9 @@ const TXT = {
         v_sent:"Activation email sent again!",
         v_nomail:"We couldn't send the email. Please tap “Resend”.",
         v_pwkept:"This email already has a sign-up waiting to be activated. We resent the link, but your password stays the one you set the first time.",
+        v_title_notyet:"Account not activated yet",
+        v_sub_notyet:"Your password is correct! One step left: open your email and tap the activation link.",
+        v_sub_expired:"Your password is correct! But the link in your email has expired — tap “Resend link” to get a new one.",
         a_ok:"Activated! Sign in to board the ship.",
         a_already:"This account is already active. Just sign in!",
         a_expired:"That link has expired. Register again to get a new one.",
@@ -99,13 +108,54 @@ function demoRegister(name, email){
    nên phải tự nhớ email để còn gọi "Gửi lại" và điền sẵn ô đăng nhập. */
 let verifyEmail = "";
 
-function showVerify(email){
+/* `reason` quyết định hai dòng chữ trên cùng của pane:
+     ""        → vừa đăng ký xong, thư đang trên đường (chữ mặc định trong HTML)
+     "notyet"  → đang ĐĂNG NHẬP bằng tài khoản chưa kích hoạt
+     "expired" → như trên, và link trong thư đã quá 10 phút
+
+   ⚠️ ĐƯỜNG ĐĂNG NHẬP PHẢI ĐỔI CHỮ, không được dùng lại chữ mặc định. Câu mặc định là
+      "Chúng tớ VỪA GỬI một email kích hoạt" — người đăng ký từ hôm qua rồi hôm nay
+      mới thử đăng nhập mà đọc câu đó sẽ đi tìm một lá thư không tồn tại.
+
+   ⚠️ Ghi đè bằng `textContent` chứ không đụng `data-i18n`: bộ chuyển ngôn ngữ của
+      landing-app.html quét đúng thuộc tính đó và sẽ ghi đè lại chữ của mình ngay lần
+      bấm cờ tiếp theo. Nên xoá luôn `data-i18n` khỏi hai thẻ này khi đã đổi chữ —
+      và trả lại khi về ca mặc định, không thì pane sau khi đăng ký mất tiếng Anh. */
+function showVerify(email, reason){
   verifyEmail = email || "";
   $("auth-login").hidden = true;
   $("auth-register").hidden = true;
   $("auth-verify").hidden = false;
   const slot = $("verify-mail");
   if(slot) slot.textContent = verifyEmail;
+
+  const title = $("auth-verify").querySelector(".auth-title");
+  const sub   = $("auth-verify").querySelector(".auth-sub");
+  const notActivated = reason === "notyet" || reason === "expired";
+  if(title) setPaneText(title, notActivated ? tx("v_title_notyet") : "", "verify_title");
+  if(sub)   setPaneText(sub,
+              reason === "expired" ? tx("v_sub_expired")
+            : reason === "notyet"  ? tx("v_sub_notyet") : "", "verify_sub");
+}
+
+/* Đặt chữ tuỳ ca, hoặc trả thẻ về cho bộ i18n của trang lo (khi `text` rỗng).
+
+   ⚠️ TRẢ VỀ thì phải VIẾT LẠI chữ ngay, không chỉ gắn lại `data-i18n`: `applyTexts`
+      của js/ui-common.js chỉ chạy khi ĐỔI ngôn ngữ, nên chỉ gắn thuộc tính thôi là
+      để nguyên câu của ca trước nằm đó cho tới lần bấm cờ tiếp theo. Lấy chữ qua
+      `UI.t` (từ điển của chính trang) nên nó luôn đúng ngôn ngữ đang hiển thị.
+   ⚠️ `dataset.orig` là lưới đỡ cho trường hợp `UI.t` là bản dự phòng trả về chính
+      cái khoá — thà hiện lại câu tiếng Việt gốc còn hơn hiện chữ "verify_sub". */
+function setPaneText(el, text, i18nKey){
+  if(!el.dataset.orig) el.dataset.orig = el.textContent;
+  if(text){
+    el.removeAttribute("data-i18n");
+    el.textContent = text;
+    return;
+  }
+  el.setAttribute("data-i18n", i18nKey);
+  const back = UI.t(i18nKey);
+  el.textContent = (back && back !== i18nKey) ? back : el.dataset.orig;
 }
 
 /* Về pane Đăng nhập, điền sẵn email vừa dùng để người dùng chỉ phải gõ mật khẩu. */
@@ -131,7 +181,19 @@ $("auth-login").addEventListener("submit", async (e) => {
   busy(form, true);
   const res = await AstroQAuth.login(email, pass);
   busy(form, false);
-  if(res.needVerify){ showVerify(res.email || email); return; }   // đúng mật khẩu nhưng chưa xác minh
+  /* Đúng mật khẩu nhưng chưa vào được. `notActivated` = đăng ký còn đang chờ ở
+     DynamoDB, tài khoản Firebase còn chưa ra đời (ca thường gặp); không có cờ đó là
+     tài khoản Firebase cũ có `emailVerified=false` (dữ liệu trước kiến trúc 2 giai
+     đoạn). Cả hai đều dừng ở pane này, chỉ khác lời giải thích.
+     ⚠️ CÓ TOAST, không chỉ đổi pane. Popup đổi nội dung mà không ai nói gì thì người
+        dùng không chắc mình vừa bấm sai hay trang vừa hỏng — và câu cần nói nhất
+        ("mật khẩu bạn không sai đâu") chính là câu đang thiếu suốt từ đầu. */
+  if(res.needVerify){
+    showVerify(res.email || email,
+               res.notActivated ? (res.linkExpired ? "expired" : "notyet") : "");
+    if(res.message) UI.toast(res.message);
+    return;
+  }
   if(!res.ok){ UI.toast(res.message); $("login-pass").focus(); return; }
 
   UI.close();
@@ -160,7 +222,8 @@ $("auth-register").addEventListener("submit", async (e) => {
   if(!res.ok){ UI.toast(res.message); return; }
 
   // CHƯA có tài khoản nào cả — chỉ mới ghi nhận đăng ký và gửi link kích hoạt.
-  showVerify(res.email || email);
+  // Không truyền `reason`: đây ĐÚNG là ca "vừa gửi thư", tức chữ mặc định trong HTML.
+  showVerify(res.email || email, "");
   /* Một toast thôi. Không gửi được email là việc CẦN LÀM NGAY ("bấm Gửi lại"),
      nên nó thắng; chồng hai toast lên nhau thì cái sau che mất cái trước. */
   if(!res.mailSent)          UI.toast(tx("v_nomail"));

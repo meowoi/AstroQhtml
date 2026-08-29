@@ -93,6 +93,11 @@ const ERR = {
     // Mã do backend AstroqSV trả về (không có tiền tố "auth/")
     "name-too-long":              "Tên hơi dài — dùng tối đa 60 ký tự nhé.",
     "no-pending":                 "Không có đăng ký nào đang chờ với email này. Đăng ký lại nhé.",
+    /* Hai câu dưới KHÔNG tới từ Firebase mà từ `POST /auth/status`: tài khoản chưa
+       kích hoạt thì chưa tồn tại trên Firebase, nên thứ Firebase trả về là
+       `auth/invalid-credential` — xem chú thích ở `login()`. */
+    "not-activated":              "Tài khoản này chưa kích hoạt. Mở email và bấm link kích hoạt giúp mình nhé — mật khẩu của bạn không sai đâu.",
+    "link-expired":               "Tài khoản này chưa kích hoạt, và link trong email đã hết hạn. Bấm “Gửi lại link” để nhận link mới nhé.",
     "net":                        "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.",
     _default:                     "Có lỗi xảy ra. Thử lại sau ít phút nhé."
   },
@@ -113,6 +118,9 @@ const ERR = {
     // Codes returned by the AstroqSV backend (no "auth/" prefix)
     "name-too-long":              "That name is a bit long — 60 characters max.",
     "no-pending":                 "No pending sign-up for that email. Please register again.",
+    // Not from Firebase but from `POST /auth/status` — see the note in `login()`.
+    "not-activated":              "This account isn't activated yet. Open your email and tap the activation link — your password is fine.",
+    "link-expired":               "This account isn't activated yet, and the link in your email has expired. Tap “Resend link” to get a new one.",
     "net":                        "Can't reach the server. Check your connection and try again.",
     _default:                     "Something went wrong. Please try again."
   }
@@ -137,6 +145,52 @@ const LS_SIGNOUT = "astroq-signout-pending";
 
 const fail = (e) => ({ ok: false, code: e && e.code, message: errMsg(e && e.code) });
 const NOT_CONFIGURED = { ok: false, notConfigured: true, message: "" };
+
+/* ---------------- "Sai mật khẩu" hay "chưa kích hoạt"? ----------------
+   ⚠️⚠️ ĐÂY LÀ BẢN VÁ CHO MỘT CÂU NÓI SAI SỰ THẬT (29/08/2026).
+
+   Tài khoản CHƯA kích hoạt nằm ở DynamoDB (`PENDING#email`) và **chưa hề tồn tại
+   trên Firebase** — đó là cả điểm của kiến trúc 2 giai đoạn ghi ở đầu file. Hệ quả:
+   người đăng ký xong, chưa bấm link trong thư, rồi quay lại gõ ĐÚNG email + ĐÚNG mật
+   khẩu của mình thì `signInWithEmailAndPassword` trả `auth/invalid-credential`, và
+   bảng ERR ở trên dịch thành **"Email hoặc mật khẩu không đúng."**
+
+   Câu đó sai theo hướng tệ nhất: nó đẩy người dùng đi sửa đúng cái đang không hỏng —
+   gõ lại mật khẩu, rồi bấm "Quên mật khẩu?" (Firebase không có tài khoản đó nên cũng
+   chẳng có thư nào tới), rồi kết luận là mất tài khoản. Việc cần làm thật ra chỉ là
+   mở hòm thư bấm cái link.
+
+   Nên: Firebase từ chối bằng một mã "cặp này không mở được cửa nào" thì hỏi thêm
+   backend đúng MỘT câu, rồi mới chọn lời để nói.
+
+   ⚠️ CHỈ HỎI KHI FIREBASE ĐÃ TỪ CHỐI, và chỉ với đúng những mã dưới đây. Hỏi trước
+      là thêm một vòng HTTP vào đường đăng nhập của mọi người để phục vụ một thiểu số;
+      hỏi với mã khác (`too-many-requests`, `user-disabled`, `network-request-failed`)
+      là đắp một câu sai khác lên trên một câu vốn đã đúng.
+   ⚠️ CÓ `auth/invalid-login-credentials`: Firebase trả mã này thay cho
+      `invalid-credential` tuỳ phiên bản SDK và tuỳ cấu hình chống dò tài khoản của
+      dự án. Thiếu nó thì bản vá này im lặng không chạy, mà không có triệu chứng nào. */
+const CRED_CODES = new Set([
+  "auth/invalid-credential",
+  "auth/invalid-login-credentials",
+  "auth/wrong-password",
+  "auth/user-not-found"
+]);
+
+/** Email + mật khẩu này có phải một đăng ký ĐANG CHỜ kích hoạt không.
+    → "pending" | "expired" | "none"
+
+    ⚠️ Hỏng thì trả "none", tức GIỮ NGUYÊN câu trả lời của Firebase. Mất mạng giữa
+       chừng mà lại nói "tài khoản chưa kích hoạt" là đoán mò hộ người dùng.
+    ⚠️ Gửi mật khẩu lên backend: route `/auth/status` đòi nó làm bằng chứng sở hữu,
+       không có thì nó thành máy dò "ai vừa đăng ký astroQ" (lý do đầy đủ ở
+       AuthEndpoints). Cùng một mật khẩu vừa gửi cho Google ở dòng trên, cùng HTTPS. */
+async function pendingState(email, password){
+  if(!isApiConfigured) return "none";
+  const r = await apiPost("/auth/status", { email, password });
+  if(!r.ok || !r.data) return "none";
+  return r.data.state || "none";
+}
 
 /* ---------------- Cờ admin: ĐỌC MỘT LẦN, ĐÓNG DẤU VÀO HỒ SƠ MÁY ----------------
    Claim `admin` nằm trong ID token do Google ký. Đọc nó cần một `User` của SDK, tức
@@ -244,8 +298,20 @@ const AstroQAuth = {
     if(!isApiConfigured) return NOT_CONFIGURED;
     pendingName = name || "";
 
-    const src = (typeof window !== "undefined" && window.AstroQUtm) ? window.AstroQUtm.get() : "";
-    const r = await apiPost("/auth/register", { name, email, password, src });
+    const utm = (typeof window !== "undefined" && window.AstroQUtm) ? window.AstroQUtm : null;
+    const src = utm ? utm.get() : "";
+    /* ⚠️ Mã lượt bấm quảng cáo Meta, cho đường Conversions API ở server (26/08/2026).
+       Không tới từ link Meta thì `click()` trả null và hai trường này không được gửi —
+       server thấy rỗng thì KHÔNG báo gì cho Meta (xem Services/MetaCapi.cs).
+       ⚠️ Gửi ở ĐÂY chứ không ở `POST /visit`: route đó có lời hứa "không lưu gì về
+          người ghé". Ở đây người dùng đang chủ động tạo tài khoản, và giá trị này chỉ
+          được chuyển tiếp một lần rồi xoá cùng bản ghi giữ chỗ. */
+    const click = utm && utm.click ? utm.click() : null;
+    const r = await apiPost("/auth/register", {
+      name, email, password, src,
+      fbclid: click ? click.fbclid : undefined,
+      fbclidAt: click ? click.at : undefined
+    });
     if(r.netError)       return { ok: false, code: "net", message: errMsg("net") };
     if(r.notConfigured)  return NOT_CONFIGURED;
     if(!r.ok)            return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
@@ -266,8 +332,11 @@ const AstroQAuth = {
     };
   },
 
-  /** Đăng nhập. Email chưa xác minh → KHÔNG cho vào, trả needVerify.
-      → { ok:true } | { ok:false, needVerify:true, email } | { ok:false, message } */
+  /** Đăng nhập. Chưa xác minh / chưa kích hoạt → KHÔNG cho vào, trả needVerify.
+      → { ok:true }
+      | { ok:false, needVerify:true, email }                              (có tài khoản Firebase nhưng emailVerified=false — dữ liệu cũ)
+      | { ok:false, needVerify:true, notActivated:true, linkExpired, email, message }  (đăng ký còn đang chờ ở DynamoDB — xem `pendingState`)
+      | { ok:false, message } */
   async login(email, password){
     if(!(await boot())) return NOT_CONFIGURED;
     try{
@@ -288,7 +357,23 @@ const AstroQAuth = {
          gọi dùng cache đó để chọn trang đích. Lý do đầy đủ ở `hydrateProfile`. */
       await hydrateProfile(this);
       return { ok: true, user: cred.user };
-    }catch(e){ return fail(e); }
+    }catch(e){
+      /* Firebase nói "không mở được cửa nào". Có thể là sai mật khẩu thật, mà cũng
+         có thể là tài khoản CHƯA kích hoạt nên chưa tồn tại ở Firebase — hai chuyện
+         khác hẳn nhau về việc người dùng phải làm. Hỏi backend rồi mới nói. */
+      if(CRED_CODES.has(e && e.code)){
+        const st = await pendingState(email, password);
+        if(st === "pending" || st === "expired"){
+          const code = st === "expired" ? "link-expired" : "not-activated";
+          return {
+            ok: false, needVerify: true, notActivated: true,
+            linkExpired: st === "expired",
+            email, code, message: errMsg(code)
+          };
+        }
+      }
+      return fail(e);
+    }
   },
 
   /** Gửi lại link kích hoạt. Cần `email` vì lúc này CHƯA có phiên Firebase nào —

@@ -204,7 +204,16 @@ with sync_playwright() as p:
             # `js/firebase-auth-ui.js` la module ES nen no chay SAU script co dien;
             # bam truoc khi no gan handler thi form khong gui di dau ca.
             page.wait_for_function("() => !!window.AstroQAuth", timeout=15000)
-            page.click("#btn-try")
+            # ⚠️ CHI BAM `#btn-try` KHI POPUP CHUA MO. CTA cua khoi waitlist tro vao
+            #    `landing-app.html#dangky`, va tu 26/08/2026 cai neo do TU MO SAN o
+            #    dung pane Dang ky (roi `replaceState` don neo khoi URL). Ban cu bam
+            #    `#btn-try` vo dieu kien nen no bam vao mot nut DANG BI CHINH LOP PHU
+            #    CHE -> Playwright cho het 30s roi bao "gui duoc form dang ky: HONG".
+            #    Doc ra y het mot loi san pham, trong khi san pham dang lam DUNG cai
+            #    viec no duoc sua de lam. Da soi bang `elementFromPoint`: thang chen
+            #    con tro la `#reg-email` cua chinh popup.
+            if not page.locator("#auth-overlay.show").count():
+                page.click("#btn-try")
             page.wait_for_selector("#auth-register:not([hidden])", timeout=15000)
             page.fill("#reg-name", "Bin")
             page.fill("#reg-email", mail)
@@ -278,6 +287,87 @@ with sync_playwright() as p:
     check("landing-app cung bat duoc nhan", utm_of(q) == "fb/post/bai-b", utm_of(q))
     check("0 loi trang", not e4, e4[:2])
     c.close()
+
+    # ------------------------------------------------- [5] fbclid: luoi do + duong CAPI
+    #
+    # ⚠️⚠️ MUC NAY THEM 26/08/2026, VA TRUOC DO BO NAY KHONG CO MOT CHU `fbclid` NAO —
+    #    tuc nhanh luoi do (`js/utm.js`: khong co utm_source thi doc `fbclid`) chua
+    #    tung duoc kiem luc CHAY, du no da song tu 23/08. Cung luot nay them viec giu
+    #    `fbclid` THO cho duong Conversions API (server-side, xem
+    #    `AstroqSV/.../Services/MetaCapi.cs`), nen day la cho phai canh ca hai.
+    print("")
+    print("[5] fbclid: luoi do, va gia tri THO cho Conversions API")
+    c = new_ctx(br)
+    seen5 = []
+    stub_api(c, seen5)
+    q = c.new_page()
+    e5 = []
+    q.on("pageerror", lambda e: e5.append(str(e)))
+
+    # (a) Chi co fbclid, khong co nhan -> roi vao luoi do
+    q.goto(BASE + "/index.html?fbclid=IwAR_TEST_abc123", wait_until="domcontentloaded")
+    check("[5a] chi co fbclid -> nhan la `facebook/fbclid`",
+          utm_of(q) == "facebook/fbclid", utm_of(q))
+    click = q.evaluate("() => window.AstroQUtm ? AstroQUtm.click() : null")
+    check("[5a] click() tra ve dung fbclid THO",
+          click and click.get("fbclid") == "IwAR_TEST_abc123", click)
+    check("[5a] click() kem moc thoi gian cham dau tien (ms)",
+          click and isinstance(click.get("at"), (int, float)) and click["at"] > 1e12,
+          click.get("at") if click else None)
+    # ⚠️ Client KHONG duoc tu dung khuon `fb.1.` — luat do thuoc server.
+    check("[5a] click() tra THO, khong dung khuon `fb.1.`",
+          click and not str(click.get("fbclid", "")).startswith("fb.1."), click)
+
+    # (b) ⚠️⚠️ CO CA NHAN LAN fbclid — DAY LA TRUONG HOP QUAN TRONG NHAT, va la cho
+    #     ban dau de sai: link quang cao gan nhan DUNG thi Meta VAN them `fbclid` vao.
+    #     Neu chi giu fbclid o nhanh luoi do thi ta chi do duoc dung nhung link minh
+    #     QUEN gan nhan — nguoc han y muon.
+    c2 = new_ctx(br)
+    seen5b = []
+    stub_api(c2, seen5b)
+    q2 = c2.new_page()
+    q2.on("pageerror", lambda e: e5.append(str(e)))
+    q2.goto(BASE + "/index.html?utm_source=facebook&utm_medium=paid&utm_campaign=aug2026"
+                   "&fbclid=IwAR_TEST_xyz789", wait_until="domcontentloaded")
+    check("[5b] nhan tu dat duoc uu tien tuyet doi",
+          utm_of(q2) == "facebook/paid/aug2026", utm_of(q2))
+    cl2 = q2.evaluate("() => window.AstroQUtm ? AstroQUtm.click() : null")
+    check("[5b] VAN giu duoc fbclid tho khi da co nhan",
+          cl2 and cl2.get("fbclid") == "IwAR_TEST_xyz789", cl2)
+
+    # (c) Khong co fbclid -> click() tra null, va khong bia ra gi
+    c3 = new_ctx(br)
+    stub_api(c3, [])
+    q3 = c3.new_page()
+    q3.on("pageerror", lambda e: e5.append(str(e)))
+    q3.goto(BASE + "/index.html?utm_source=zalo&utm_medium=post&utm_campaign=x",
+            wait_until="domcontentloaded")
+    check("[5c] khong tu link Meta -> click() tra null",
+          q3.evaluate("() => window.AstroQUtm ? AstroQUtm.click() : 'khong co AstroQUtm'")
+          is None)
+
+    # (d) ⚠️⚠️ BAT BIEN RIENG TU: `POST /visit` KHONG duoc mang fbclid. Route do co loi
+    #     hua "khong luu gi ve nguoi ghe"; `fbclid` chi duoc di theo luc NGUOI DUNG chu
+    #     dong tao tai khoan. Day la phep kiem luc CHAY cho loi hua do.
+    q.wait_for_timeout(1200)
+    visits = [x for x in seen5 if "/visit" in x["url"]]
+    check("[5d] co goi POST /visit (co nhan nen phai goi)", len(visits) >= 1,
+          "%d loi goi" % len(visits))
+    # ⚠️ SOI TEN TRUONG VA GIA TRI, KHONG SOI CHUOI CON. Ban dau phep kiem nay tim
+    #    chu "fbclid" o bat ky dau trong than request va bao hong vi `src` la
+    #    `facebook/fbclid` — mot NHAN hoan toan hop le theo thiet ke (luoi do cua
+    #    js/utm.js). Bat oan mot thu dung la cach nhanh nhat de phep kiem bi bo qua.
+    bad = [v for v in visits
+           if "fbclid" in [k.lower() for k in (v["body"] or {}).keys()]
+           or "IwAR_TEST_abc123" in json.dumps(v["body"])]
+    check("[5d]⚠️ than request /visit KHONG mang truong fbclid, KHONG mang gia tri do",
+          not bad, bad[:1])
+    check("[5d] /visit chi mang dung truong `src`",
+          sorted((visits[0]["body"] or {}).keys()) == ["src"] if visits else False,
+          sorted((visits[0]["body"] or {}).keys()) if visits else None)
+
+    check("[5] 0 loi trang", not e5, e5[:2])
+    c.close(); c2.close(); c3.close()
 
     br.close()
 

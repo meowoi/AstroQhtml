@@ -74,6 +74,26 @@
       .slice(0, MAX_PART);
   }
 
+  /* ⚠️⚠️ BỘ LỌC RIÊNG CHO `fbclid` — ĐỪNG DÙNG `clean()` CHO NÓ. Đã trả giá đúng một
+     lần (26/08/2026): bản đầu tôi cho `fbclid` đi qua `clean()`, và `smoke_utm` mục
+     [5] bắt ngay lúc chạy — `IwAR_TEST_abc123` đọc ra `iwar_test_abc123`.
+     Hai thứ `clean()` làm mà ở đây là PHÁ HOẠI:
+       · `toLowerCase()` — `fbclid` là token PHÂN BIỆT CHỮ HOA/THƯỜNG;
+       · `slice(0, 24)` — `fbclid` thật dài ~100+ ký tự, cắt còn 24 là mất hẳn.
+     Và cả hai đều hỏng IM LẶNG: Meta vẫn nhận sự kiện, trả 200, rồi không khớp được
+     lượt bấm nào. Không có bộ đo lúc chạy thì không ai thấy.
+     ⚠️ Vẫn phải LỌC, không nhận thô: đây là chuỗi từ địa chỉ, tức người khác đặt được.
+        Giữ đúng bộ ký tự base64url mà Meta dùng, và chặn độ dài để không ai nhét được
+        một chuỗi khổng lồ vào `localStorage` rồi vào thân request đăng ký. */
+  var MAX_ID = 255;
+
+  function cleanId(v) {
+    return String(v == null ? "" : v)
+      .trim()
+      .replace(/[^A-Za-z0-9._-]/g, "")
+      .slice(0, MAX_ID);
+  }
+
   function read() {
     try {
       var o = JSON.parse(global.localStorage.getItem(KEY) || "null");
@@ -95,12 +115,26 @@
     try { q = new global.URLSearchParams(global.location.search); }
     catch (e) { return null; }
 
+    /* ⚠️⚠️ GIỮ `fbclid` THÔ Ở CẢ HAI NHÁNH (thêm 26/08/2026). Trước đó file này chỉ
+       dùng SỰ CÓ MẶT của `fbclid` để suy ra nhãn `facebook/fbclid` rồi bỏ giá trị đi.
+       Nay đường Conversions API cần chính giá trị đó: `AstroqSV` dựng
+       `fb.1.{ms}.{fbclid}` và chuyển tiếp cho Meta đúng MỘT LẦN lúc tạo tài khoản.
+       ⚠️ Phải giữ ở CẢ nhánh `utm_source` nữa, không chỉ nhánh lưới đỡ: link quảng cáo
+          gắn nhãn ĐÚNG thì Meta VẪN thêm `fbclid` vào, và đó chính là nhóm link ta
+          quan tâm nhất. Chỉ giữ ở nhánh lưới đỡ là chỉ đo được đúng những link mình
+          quên gắn nhãn — ngược hẳn ý muốn.
+       ⚠️ CHỈ NẰM TRONG `localStorage` CỦA MÁY NGƯỜI DÙNG, và chỉ rời khỏi máy MỘT LẦN
+          khi người ta bấm "Tạo tài khoản". `POST /visit` KHÔNG mang nó — lời hứa
+          "không dấu vết lần được về một người" của route đó giữ nguyên. */
+    var fbclid = cleanId(q.get("fbclid"));   // ⚠️ cleanId, KHONG clean — xem trên
+
     var source = clean(q.get("utm_source"));
     if (source) {
       return {
         source: source,
         medium: clean(q.get("utm_medium")),
         campaign: clean(q.get("utm_campaign")),
+        fbclid: fbclid,
         at: Date.now(), sent: false
       };
     }
@@ -121,9 +155,10 @@
        ⚠️ CHỈ LÀ LƯỚI ĐỠ, KHÔNG THAY THẾ VIỆC GẮN NHÃN. Nó không tách được chiến
           dịch nào ra chiến dịch nào: mọi link Meta quên nhãn đều dồn vào một dòng
           `facebook/fbclid`. Thấy dòng đó lớn lên là dấu hiệu phải đi sửa link. */
-    if (clean(q.get("fbclid"))) {
+    if (fbclid) {
       return {
         source: "facebook", medium: "fbclid", campaign: "",
+        fbclid: fbclid,
         at: Date.now(), sent: false
       };
     }
@@ -165,6 +200,22 @@
       if (!o || o.sent) return;
       o.sent = true;
       save(o);
+    },
+
+    /**
+     * Mã lượt bấm quảng cáo Meta THÔ + mốc chạm đầu tiên, cho đường Conversions API.
+     * Trả `null` khi lượt đến này không tới từ một link Meta.
+     *
+     * ⚠️ TRẢ THÔ, KHÔNG DỰNG KHUÔN `fb.1.{ms}.{fbclid}` Ở ĐÂY. Khuôn đó là luật của
+     *    Meta và nó thuộc về server (`MetaCapi.BuildFbc`) — dựng ở client là hai nơi
+     *    cùng giữ một luật, và bản ở client sẽ nói cái cũ vào đúng ngày Meta đổi
+     *    khuôn. Cùng phân công với giá đồ trang trí (`js/cosmetics.js`) và bảng huy
+     *    hiệu (`js/badges.js`): client giữ CHỮ, server giữ LUẬT.
+     */
+    click: function () {
+      var o = read();
+      if (!o || !o.fbclid) return null;
+      return { fbclid: o.fbclid, at: o.at || 0 };
     },
 
     /** Chuỗi gọn gửi lên server: "nguồn/kênh/chiến-dịch", bỏ phần rỗng. */

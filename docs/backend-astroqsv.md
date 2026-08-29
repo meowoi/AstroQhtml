@@ -53,6 +53,9 @@ chứa thêm những đăng ký đang chờ. Email phải duy nhất trên **c�
    │ + continueUrl      │                    │ 5. xoá bản ghi chờ     │
    └────────────────────┘                    │ 6. redirect ?activated │
      CHƯA có Firebase                        └────────────────────────┘
+            ▲
+            │  POST /auth/status  (email + mật khẩu)
+            │  ↳ "đang chờ kích hoạt", không phải "sai mật khẩu" — xem mục dưới
 ```
 
 **Mật khẩu không bao giờ được lưu ở dạng thô.** Lúc đăng ký, Lambda băm ngay bằng
@@ -70,9 +73,42 @@ kích hoạt thì đẩy chính hash đó lên Firebase qua `ImportUsersAsync` +
 | `POST /auth/register` | 202 · ghi bản ghi chờ + gửi link 10 phút · 409 nếu email đã có tài khoản |
 | `POST /auth/resend` | 200 · cấp token mới (token cũ chết ngay) + gia hạn 10 phút |
 | `GET /auth/activate?e=&t=` | 302 về `VERIFY_CONTINUE_URL?activated=1|0&reason=…` |
+| `POST /auth/status` | 200 · `{state}` = `pending` \| `expired` \| `none` · **vì sao đăng nhập không được** |
 
 `reason` có thể là `ok · already · expired · badtoken · notfound · missing · error` —
 `js/firebase-auth-ui.js` ánh xạ từng giá trị sang một câu VI/EN.
+
+### `POST /auth/status` — "chưa kích hoạt" chứ không phải "sai mật khẩu"
+
+Hệ quả trực tiếp của kiến trúc 2 giai đoạn: tài khoản **chưa kích hoạt chưa hề tồn
+tại trên Firebase**. Nên người đăng ký xong, chưa bấm link, rồi quay lại gõ **đúng**
+email và **đúng** mật khẩu của mình thì `signInWithEmailAndPassword` trả
+`auth/invalid-credential`, và trước 29/08/2026 trang dịch nó thành *"Email hoặc mật
+khẩu không đúng."* — một câu sai, đẩy người dùng đi sửa đúng cái đang không hỏng (gõ
+lại mật khẩu, bấm "Quên mật khẩu?" mà Firebase không có tài khoản nào để gửi thư).
+
+`js/firebase-auth.js` gọi route này **chỉ khi Firebase đã từ chối**, và chỉ với các mã
+`invalid-credential · invalid-login-credentials · wrong-password · user-not-found`
+(`CRED_CODES`). Hỏi trước là thêm một vòng HTTP vào đường đăng nhập của mọi người;
+hỏi với mã khác (`too-many-requests`, `user-disabled`) là đắp một câu sai khác lên
+trên một câu vốn đã đúng.
+
+⚠️ **Thân request BẮT BUỘC có `password`, và đó là chuyện bảo mật.** Route trả lời
+"email này có đang chờ kích hoạt không" — không đòi bằng chứng sở hữu thì nó thành
+máy dò *ai vừa đăng ký astroQ*. Mật khẩu không khớp bản ghi chờ → trả `none`, **không**
+trả "sai mật khẩu": bản ghi chờ giữ mật khẩu của người đăng ký ĐẦU TIÊN (xem chốt
+chặn chiếm quyền ở `/register`), nên khớp-hay-không ở đó là thông tin về *người khác*.
+
+⚠️ **Đọc DynamoDB trước, băm sau.** Không có bản ghi chờ thì thoát ngay, chưa chạy
+PBKDF2 — kẻ bơm request vào địa chỉ bừa bãi chỉ tốn của server một lượt `GetItem`.
+Với địa chỉ đang chờ thật thì giá đúng bằng giá `/register` vẫn trả từ trước.
+
+⚠️ `expired` **tách khỏi** `pending` vì việc người dùng phải làm khác nhau: còn hạn thì
+thư đang nằm trong hòm, hết hạn thì phải bấm "Gửi lại link". Bản ghi sống thêm 1 ngày
+sau hạn (`ttl = expiresAt + 86400`) nên nhánh này gặp được thật.
+
+Kiểm thử: `scratchpad/test_auth_status.py` (17 phép, endpoint) ·
+`scratchpad/e2e_login_notactivated.py` (25 phép, trình duyệt thật + Firebase thật).
 
 ### Email duy nhất — DynamoDB quyết, không phải Firebase
 
