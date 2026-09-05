@@ -412,6 +412,21 @@ footer a:hover{color:var(--accent);}
 }
 .auth-field input::placeholder{color:var(--ink-faint);}
 .auth-field input:focus{outline:none;border-color:var(--accent);background:rgba(95,211,255,.08);}
+/* ⚠️ VÙNG CHẠM CỦA BA Ô ĐĂNG KÝ ĐO ĐƯỢC **43px** TRÊN ĐIỆN THOẠI (29/08/2026) —
+   dưới cả mốc TỐI THIỂU 44px của WCAG 2.5.5, mà đây là ba ô người dùng phải chạm
+   trúng thì mới có tài khoản. Sàn của dự án là **48px, không phải 44** (lý do đầy
+   đủ ở `css/common.css`: đặt đúng mốc tối thiểu là không còn biên an toàn nào, và
+   dự án đã có một ca phép kiểm chập chờn thật vì lý do đó).
+   ⚠️ Gắn `pointer: coarse` chứ không gắn theo bề rộng — bóp hẹp cửa sổ Chrome trên
+      laptop vẫn là chuột, ở đó 48px làm popup phình vô cớ.
+   ⚠️ Dùng `min-height`, KHÔNG `height`: `.pw-wrap input[type]` còn ghi đè
+      `padding-right` cho nút hiện/ẩn mật khẩu, khoá cứng chiều cao là cắt chữ. */
+@media (pointer: coarse){
+  .auth-field input{min-height:48px;}
+  /* Nút gửi đo được 47px — qua mốc 44 nhưng vẫn dưới sàn 48 của dự án, và nó là
+     HÀNH ĐỘNG CHÍNH của cả popup. Cùng một lý do, sửa cùng một lượt. */
+  .auth-submit{min-height:48px;}
+}
 .auth-submit{
   width:100%;margin-top:6px;border:none;cursor:pointer;
   padding:14px;border-radius:var(--radius-lg);font-family:var(--font-display);font-weight:600;font-size:15px;color:#0a1030;

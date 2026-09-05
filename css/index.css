@@ -330,44 +330,12 @@ a{text-decoration:none;}
 .foot a{color:var(--ink-soft);}
 .foot a:hover{color:var(--cyan);}
 
-/* ============================================================
-   DẢI KHUYẾN NGHỊ DÙNG MÁY TÍNH (chỉ hiện trên điện thoại / tablet nhỏ)
-   ⚠️ NEO DƯỚI ĐÁY, KHÔNG CHE NỘI DUNG. Trang này đã go-live và Google lập chỉ mục
-      theo mobile-first; một lớp phủ chắn hết nội dung trên điện thoại bị xếp vào
-      "intrusive interstitial". Dải cao ~96px, người dùng vẫn đọc và đăng ký được.
-   ⚠️ `env(safe-area-inset-bottom)` cho iPhone có thanh gesture — thiếu nó thì nút
-      đóng nằm dưới vạch home và bấm không ăn.
-   ============================================================ */
-.mob-note{
-  position:fixed;left:10px;right:10px;z-index:60;
-  bottom:calc(10px + env(safe-area-inset-bottom, 0px));
-  display:flex;align-items:flex-start;gap:11px;
-  padding:13px 13px 14px;border-radius:16px;
-  background:rgba(10,14,30,.96);border:1px solid rgba(0,255,255,.34);
-  box-shadow:0 12px 34px -10px rgba(0,0,0,.8), 0 0 22px -8px rgba(0,255,255,.35);
-  backdrop-filter:blur(8px);
-  /* Bắt đầu ở dưới mép + trong suốt; `.show` mới đưa lên. */
-  transform:translateY(120%);opacity:0;
-  transition:transform .34s cubic-bezier(.34,1.4,.64,1),opacity .28s ease;
-}
-.mob-note.show{transform:translateY(0);opacity:1;}
-.mob-note .mn-ic{font-size:24px;line-height:1.15;flex:none;}
-.mob-note .mn-body{min-width:0;flex:1;}
-.mob-note strong{display:block;font-family:var(--font-display,inherit);
-  font-size:13.5px;color:#fff;margin-bottom:3px;}
-.mob-note p{margin:0;font-size:12px;line-height:1.55;color:var(--ink-soft);}
-.mob-note p b{color:var(--cyan);}
-.mob-note .mn-x{
-  flex:none;width:34px;height:34px;border-radius:10px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);
-  color:var(--ink-soft);font-size:20px;line-height:1;
-}
-.mob-note .mn-x:hover{color:#fff;border-color:rgba(0,255,255,.45);}
-
-@media (prefers-reduced-motion:reduce){
-  /* Giữ dải (nó là thông tin), chỉ bỏ phần trượt lên. */
-  .mob-note{transition:none;transform:none;}
-}
+/* ⚠️⚠️ TOÀN BỘ KHỐI `.mob-note` ĐÃ BỎ 29/08/2026 — ĐỪNG DỰNG LẠI Ở TRANG CHỦ.
+   Dải "Trải nghiệm tốt nhất trên máy tính" nay là kind `wide` của `#perf-note`
+   trong `explorer.html`; lý do + số đo ghi ở khối markup đã bỏ trong `index.html`.
+   ⚠️ Xoá HẲN chứ không để lại rule mồ côi: `check_pages` mục [1] canh HAI CHIỀU
+      (class thiếu CSS **và** CSS bỏ không), nên rule chết vừa làm phép kiểm đỏ vừa
+      là bẫy cho người sửa sau. */
 
 /* Vùng chạm 44px trên thiết bị cảm ứng — lý do ghi ở `css/common.css`.
    Đo trên iPad: link logo về trang chủ cao 32px. */
@@ -384,17 +352,17 @@ a{text-decoration:none;}
 
 /* ============================================================
    DẢI MỜI SANG BẢN NGÔN NGỮ KIA (`.lang-note`)
-   Dùng lại đúng khuôn `.mob-note` ngay trên — neo đáy, không che nội dung,
-   `env(safe-area-inset-bottom)` cho iPhone có thanh gesture.
-   ⚠️ `--ln-lift` do JS đặt: khi dải "nên dùng laptop" cũng đang hiện (khách
-      quốc tế vào bằng điện thoại — hoàn toàn có thật), hai dải cùng neo đáy sẽ
-      CHỒNG LÊN NHAU. JS đo chiều cao dải kia rồi nâng dải này lên trên.
-   ⚠️ Tông TÍM chứ không cyan: `.mob-note` đã là cyan, hai dải cùng màu cạnh
-      nhau đọc ra như một khối bị vỡ làm đôi.
+   Neo đáy, không che nội dung, `env(safe-area-inset-bottom)` cho iPhone có
+   thanh gesture. (Khuôn lấy từ dải `.mob-note` đã bỏ 29/08/2026.)
+   ⚠️ `--ln-lift` ĐÃ BỎ cùng dải kia: nó dựng ra để hai dải cùng neo đáy khỏi
+      chồng nhau, mà nay đây là dải đáy DUY NHẤT của trang chủ. Thêm dải đáy thứ
+      hai thì phải dựng lại nó (JS đo chiều cao dải kia rồi nâng dải này lên).
+   ⚠️ Tông TÍM giữ nguyên — nay không còn dải cyan nào cạnh nó, nhưng tím vẫn là
+      màu đúng cho một lời mời đổi ngôn ngữ, và đổi màu là đổi thứ không hỏng.
    ============================================================ */
 .lang-note{
   position:fixed;left:10px;right:10px;z-index:61;
-  bottom:calc(10px + var(--ln-lift, 0px) + env(safe-area-inset-bottom, 0px));
+  bottom:calc(10px + env(safe-area-inset-bottom, 0px));
   display:flex;align-items:flex-start;gap:11px;
   padding:12px 13px 13px;border-radius:16px;
   background:rgba(10,14,30,.96);border:1px solid rgba(143,123,255,.42);

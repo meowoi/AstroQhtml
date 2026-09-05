@@ -336,6 +336,9 @@ window.I18N = {
     perfNoteGo:'Turn it on', perfNoteX:'Dismiss',
     sceneFailNote:'The 3D map could not load — your connection may be weak. Taking you straight to the mission; it does not need the 3D map.',
     sceneFailGo:'Go to the mission',
+    /* Dời từ `index.html` sang 29/08/2026 — xem lý do ở khối markup đã bỏ bên đó. */
+    wideNote:'This map is best on a wide screen. You can still explore here, but a laptop or PC gives you the full ride!',
+    wideNoteX:'Got it',
     resetCam:'Reset camera', wholeSystem:'Whole Solar System', home:'Back',
     hint:'Drag to orbit · Scroll to zoom · Right-drag to pan',
     prev:'Previous', next:'Next', navSystem:'Solar System', flySun:'Fly to Sun',
@@ -382,6 +385,17 @@ window.I18N = {
     perfNoteGo:'Bật giúp mình', perfNoteX:'Bỏ qua',
     sceneFailNote:'Không dựng được bản đồ 3D — có thể mạng đang yếu. Mình đưa bạn vào thẳng nhiệm vụ nhé, nhiệm vụ không cần bản đồ 3D đâu.',
     sceneFailGo:'Vào nhiệm vụ',
+    /* Dời từ `index.html` sang 29/08/2026 — xem lý do ở khối markup đã bỏ bên đó.
+       ⚠️ Câu này nói về CHÍNH bản đồ trẻ đang mở ("bản đồ này"), không nói chung
+          chung về cả app như bản cũ ở trang chủ. Đó là cả điểm của việc dời chỗ:
+          lời khuyên chỉ có nghĩa khi đứng cạnh đúng thứ cần nó. */
+    /* ⚠️ CÂU NGẮN, VÀ ĐÓ LÀ SỐ ĐO: bản đầu dài 145 ký tự cho ra dải cao **199px =
+       24% màn 390×844** — một lời KHUYÊN chiếm gần một phần tư màn hình của thứ nó
+       đang khuyên về. Dải cũ ở trang chủ chỉ ~96px. Rút còn một câu.
+       ⚠️ GIỮ vế "vẫn khám phá được ở đây" — bỏ đi thì câu đọc ra như một hàng rào,
+          mà trẻ thì KHÔNG bị chặn gì cả. */
+    wideNote:'Bản đồ này xem trên màn rộng là đã nhất. Vẫn khám phá được ở đây, nhưng mở bằng laptop hoặc PC thì trọn vẹn hơn!',
+    wideNoteX:'Đã hiểu',
     resetCam:'Đặt lại máy quay', wholeSystem:'Toàn Hệ Mặt Trời', home:'Quay lại',
     hint:'Kéo để xoay · Cuộn để phóng · Chuột phải để di chuyển',
     prev:'Trước', next:'Tiếp', navSystem:'Hệ Mặt Trời', flySun:'Bay tới Mặt Trời',
@@ -2850,18 +2864,28 @@ try{
         đang hiện thì câu phải dịch theo, không đứng lại ở tiếng cũ. Đây đúng là lỗi
         đã phải đi sửa ở lời báo lỗi form waitlist ngày 02/08. */
   var PERF_NOTE_KEY = 'astroq-perf-note';
-  var perfNoteKind = null;         // null · 'slow' · 'fail'
+  /* ⚠️ KHOÁ RIÊNG CHO `wide`, KHÔNG DÙNG CHUNG `PERF_NOTE_KEY`. Hai dải nói hai
+     điều khác hẳn nhau: một cái MỜI bật giảm cấu hình (có việc để làm), một cái chỉ
+     KHUYÊN đổi thiết bị. Dùng chung một cờ thì bỏ qua lời khuyên màn rộng là mất
+     luôn lời mời giảm cấu hình — tức im lặng lấy đi một thứ đang có ích. */
+  var WIDE_NOTE_KEY = 'astroq-wide-note';
+  var perfNoteKind = null;         // null · 'slow' · 'fail' · 'wide'
   function paintPerfNote(){
     var box=$('perf-note'); if(!box) return;
     if(!perfNoteKind){ box.hidden=true; return; }
     box.hidden=false;
     $('perf-note-txt').textContent =
-      T(perfNoteKind==='fail' ? 'sceneFailNote' : 'perfNote');
-    $('perf-note-go').textContent =
+      T(perfNoteKind==='fail' ? 'sceneFailNote' :
+        perfNoteKind==='wide' ? 'wideNote' : 'perfNote');
+    var go=$('perf-note-go');
+    /* ⚠️ `wide` KHÔNG CÓ NÚT HÀNH ĐỘNG — không có gì để bấm. Một cái nút mà bấm
+       vào chẳng để làm gì là một ngõ cụt (bài học `mission-tree.html`). */
+    go.hidden = perfNoteKind==='wide';
+    if(!go.hidden) go.textContent =
       T(perfNoteKind==='fail' ? 'sceneFailGo' : 'perfNoteGo');
     var x=$('perf-note-x');
     x.hidden = perfNoteKind==='fail';   // đường lùi thì không có gì để bỏ qua
-    x.setAttribute('aria-label', T('perfNoteX'));
+    x.setAttribute('aria-label', T(perfNoteKind==='wide' ? 'wideNoteX' : 'perfNoteX'));
   }
   function showPerfNote(kind){
     perfNoteKind = kind;
@@ -2878,13 +2902,36 @@ try{
       try{ localStorage.setItem(PERF_NOTE_KEY,'1'); }catch(e){}
     });
     x.addEventListener('click', function(){
+      var k = perfNoteKind;
       showPerfNote(null);
-      try{ localStorage.setItem(PERF_NOTE_KEY,'1'); }catch(e){}
+      try{ localStorage.setItem(k==='wide' ? WIDE_NOTE_KEY : PERF_NOTE_KEY,'1'); }catch(e){}
     });
     /* Chỉ mời khi CHƯA bật và CHƯA từng bỏ qua — mời lại một thứ trẻ đã từ chối
        là phiền, và mời bật một thứ đang bật là nói sai. */
     var seen=false; try{ seen = localStorage.getItem(PERF_NOTE_KEY)==='1'; }catch(e){}
-    if(!seen && window.AstroQ && AstroQ.slowLink() && !AstroQ.getPerf()) showPerfNote('slow');
+    if(!seen && window.AstroQ && AstroQ.slowLink() && !AstroQ.getPerf()){ showPerfNote('slow'); return; }
+
+    /* ═══ KHUYẾN NGHỊ MÀN RỘNG (dời từ `index.html` sang 29/08/2026) ═══
+       ⚠️ ƯU TIÊN THẤP NHẤT, và `return` ở trên là thứ bảo đảm điều đó. Dải "mạng
+          kém" trao một VIỆC LÀM ĐƯỢC NGAY (bật giảm cấu hình); dải này chỉ khuyên
+          đổi thiết bị. Đè lời khuyên lên lời mời là đổi thứ có ích lấy thứ ít ích
+          hơn. `fail` thì càng không bao giờ tới đây (nó `location.replace` đi rồi).
+       ⚠️ NHẬN DIỆN BẰNG `pointer:coarse` CỘNG BỀ RỘNG, KHÔNG CHỈ BỀ RỘNG. Chỉ xét
+          bề rộng thì cửa sổ Chrome kéo hẹp trên laptop cũng bị nhắc "hãy dùng
+          laptop" — vô nghĩa và làm người dùng mất tin. Chỉ xét cảm ứng thì laptop
+          màn chạm và iPad Pro 12,9" cũng bị nhắc dù dư sức chạy.
+       ⚠️ CHỜ MỘT NHỊP rồi mới hiện: đây là lời nhắc, không phải thứ đầu tiên trẻ
+          phải xử lý khi bản đồ vừa dựng xong.
+       ⚠️ KHÔNG hiện khi đang trong màn Comet dẫn đường (`?onboard=1`) — ở đó trẻ
+          đang được dẫn từng bước, chen một dải vào là cắt ngang mạch. */
+    var wseen=false; try{ wseen = localStorage.getItem(WIDE_NOTE_KEY)==='1'; }catch(e){}
+    var small=false;
+    try{ small = window.matchMedia &&
+                 window.matchMedia('(max-width: 860px) and (pointer: coarse)').matches; }catch(e){}
+    var onboarding = /(\?|&)onboard=1(&|$)/.test(location.search);
+    if(!wseen && small && !onboarding){
+      setTimeout(function(){ if(!perfNoteKind) showPerfNote('wide'); }, 1600);
+    }
   }
 
   // Expose a tiny hook so future code can refresh/relocalize the navigation tree.

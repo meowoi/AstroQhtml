@@ -46,9 +46,9 @@
       wl_title:"Tạo Tài Khoản, Nhận 100 Purple Meteors!",
       wl_desc:"Tạo tài khoản miễn phí là có ngay <b>100 PURPLE METEORS</b> trong ví (đơn vị tiền thưởng trên astroQ.org) — dùng để nâng cấp phi thuyền &amp; mở khóa hành tinh.", wl_cta:"Tạo tài khoản 🚀",
       wl_hint:"Miễn phí. Chỉ cần email và mật khẩu.",
-      mob_title:"Trải nghiệm tốt nhất trên máy tính",
-      mob_body:"astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!",
-      mob_aria:"Khuyến nghị thiết bị", mob_close:"Đã hiểu, đóng",
+      // ⚠️ 4 khoá `mob_*` đã bỏ 29/08/2026 cùng dải khuyến nghị dùng máy tính; chữ
+      //    nay nằm ở `explorer.html` (khoá `wideNote`/`wideNoteX`). Giữ lại ở đây là
+      //    khoá khai mà không dùng — `check_pages` mục [1] bắt ngay.
       // Dùng khi server nhận được đăng ký nhưng SES chưa gửi được thư. Đừng bảo
       // "kiểm tra hòm thư" về một lá thư chưa đi.
 
@@ -103,9 +103,7 @@
       wl_title:"Create An Account, Get 100 Purple Meteors!",
       wl_desc:"Create a free account and <b>100 PURPLE METEORS</b> land in your wallet right away (the reward currency on astroQ.org) — spend them upgrading your ship &amp; unlocking planets.", wl_cta:"Create an account 🚀",
       wl_hint:"Free. Just an email and a password.",
-      mob_title:"Best experienced on a computer",
-      mob_body:"astroQ has a 3D galaxy map and mini-games that need a wide screen. You can still browse this page on a phone, but open it on a <b>laptop or PC</b> for the full ride!",
-      mob_aria:"Device recommendation", mob_close:"Got it, dismiss",
+      // (4 khoá `mob_*` đã bỏ — xem ghi chú ở từ điển `vi`.)
 
 
       aeo_h2:"What is astroQ.org?",
@@ -267,52 +265,16 @@
     if(!renderCountdown()) clearInterval(ticker);
   }, 1000);
 
-  /* ============================================================
-     KHUYẾN NGHỊ DÙNG MÁY TÍNH — chỉ trên thiết bị cảm ứng màn hình nhỏ.
-
-     ⚠️ NHẬN DIỆN BẰNG `pointer: coarse` CỘNG BỀ RỘNG, KHÔNG CHỈ BỀ RỘNG.
-        Chỉ xét bề rộng thì một cửa sổ Chrome kéo hẹp trên laptop cũng bị nhắc
-        "hãy dùng laptop" — vô nghĩa và làm người dùng mất tin. Chỉ xét cảm ứng thì
-        laptop màn hình chạm (Windows 2-trong-1) và iPad Pro 12,9" cũng bị nhắc, dù
-        chúng dư sức chạy. Hai điều kiện cùng lúc mới ra đúng "điện thoại / tablet nhỏ".
-
-     ⚠️ CHỈ NHẮC MỘT LẦN MỖI MÁY. Nhắc lại mỗi lần vào là quấy rối, và người dùng sẽ
-        học cách bấm X mà không đọc. Cờ ở localStorage; bị chặn thì im lặng bỏ qua.
-
-     ⚠️ KHÔNG khoá cuộn, KHÔNG bẫy tiêu điểm. Xem ghi chú ở markup: trang này đã
-        go-live và Google lập chỉ mục theo mobile-first — lớp phủ chắn nội dung trên
-        điện thoại bị xếp vào "intrusive interstitial" và ăn phạt xếp hạng.
-     ============================================================ */
-  var MOB_KEY = "astroq-mob-note";
-
-  function mobNoteSeen(){
-    try { return localStorage.getItem(MOB_KEY) === "1"; } catch(e){ return false; }
-  }
-  function markMobNoteSeen(){
-    try { localStorage.setItem(MOB_KEY, "1"); } catch(e){}
-  }
-  function isSmallTouch(){
-    try {
-      return window.matchMedia &&
-             window.matchMedia("(max-width: 860px) and (pointer: coarse)").matches;
-    } catch(e){ return false; }
-  }
-
-  function initMobNote(){
-    var box = document.getElementById("mob-note");
-    if(!box) return;
-    var x = document.getElementById("mob-x");
-    if(x) x.addEventListener("click", function(){
-      box.classList.remove("show");
-      markMobNoteSeen();
-      // Chờ hiệu ứng mờ xong mới ẩn hẳn, không thì nó biến mất cụt ngủn.
-      setTimeout(function(){ box.hidden = true; }, 260);
-    });
-    if(!isSmallTouch() || mobNoteSeen()) return;
-    /* Chờ một nhịp để dải không bật lên giữa lúc trang đang dựng — nó là lời nhắc,
-       không phải thứ đầu tiên người dùng phải xử lý. */
-    setTimeout(function(){ box.hidden = false; box.classList.add("show"); }, 900);
-  }
+  /* ⚠️⚠️ KHUYẾN NGHỊ DÙNG MÁY TÍNH ĐÃ BỎ KHỎI TRANG CHỦ (29/08/2026) — ĐỪNG DỰNG LẠI
+     Ở ĐÂY. Chủ dự án chốt đặt lời khuyên đó "ở phần cần nó nhất", và nay nó là kind
+     `wide` của dải `#perf-note` trong `explorer.html` (bản đồ 3D — thứ THẬT SỰ cần
+     màn rộng). Lý do đầy đủ + số đo ghi ở khối markup đã bỏ trong `index.html`.
+     ⚠️ Ba bài học của dải cũ KHÔNG mất, chúng đi theo sang `explorer.html`: nhận diện
+        bằng `(max-width:860px) and (pointer:coarse)` chứ không chỉ bề rộng · chỉ nhắc
+        một lần mỗi máy · không khoá cuộn, không bẫy tiêu điểm.
+     ⚠️ `isSmallTouch()` và `MOB_KEY` xoá theo vì hết người gọi — một hàm không ai gọi
+        là mã chết, thứ dự án đã trả giá nhiều lần (`termsData.ts` phải sửa hai lần,
+        `AstroQRanks.ALL` ngủ 8 ngày). Bản dùng thật nay nằm ở `explorer.html`. */
 
   /* ============================================================
      DẢI MỜI SANG BẢN NGÔN NGỮ KIA
@@ -358,18 +320,13 @@
     if(guess === LANG) return;              /* đang ở đúng bản rồi */
 
     setTimeout(function(){
-      /* Hai dải cùng neo đáy sẽ chồng nhau — khách quốc tế vào bằng điện thoại
-         là ca hoàn toàn có thật. Đo dải kia rồi nâng dải này lên trên. */
-      var mob = document.getElementById("mob-note");
-      if(mob && !mob.hidden){
-        var h = Math.round(mob.getBoundingClientRect().height);
-        if(h > 0) box.style.setProperty("--ln-lift", (h + 10) + "px");
-      }
+      /* ⚠️ Khối đo `--ln-lift` đã bỏ 29/08/2026 cùng dải `.mob-note`: nó dựng ra để
+         hai dải cùng neo đáy khỏi chồng nhau, mà nay trang chủ chỉ còn MỘT dải đáy
+         nên không còn gì để tránh. Thêm dải đáy thứ hai thì phải dựng lại nó. */
       box.hidden = false; box.classList.add("show");
     }, 1200);
   }
 
-  initMobNote();
   initLangNote();
 
 })();

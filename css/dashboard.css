@@ -343,6 +343,17 @@ main{position:relative;z-index:10;max-width:1120px;margin:0 auto;padding:clamp(1
 .sess .go:hover{filter:brightness(1.06);}
 .sess .go[hidden]{display:none;}   /* bẫy [hidden] lần thứ chín — xem ghi chú trên */
 .sess button.go{border:0;cursor:pointer;font-family:var(--font-display);}
+
+/* ─── Dải MỜI BẤM LINK KÍCH HOẠT (04/09/2026) ───────────────────────────────────
+   Dùng lại toàn bộ `.sess` ở trên; đây chỉ là lớp sơn phân biệt. Lý do dải này tồn
+   tại nằm ở khối chú thích cạnh `#verify` trong dashboard.html.
+   ⚠️ TÔNG TÍM, không hổ phách: nó nói về THIÊN THẠCH TÍM đang chờ trong hòm thư, và
+      hai dải có thể cùng hiện (mất phiên + chưa kích hoạt) — cùng màu thì đọc ra
+      thành một dải bị lặp. Vẫn KHÔNG animation, cùng lý do đã ghi cho `.sess`. */
+.sess--gift{border-color:rgba(192,132,252,.36);background:rgba(192,132,252,.10);color:#e9dcff;}
+.sess--gift .tx b{color:#fff;}
+.sess--gift .go{color:#1a0f2b;background:linear-gradient(135deg,#dcc4ff,#a855f7);
+  box-shadow:0 10px 22px -14px rgba(168,85,247,.9);}
 @media (max-width:560px){ .sess .go{width:100%;justify-content:center;} }
 /* ⚠️ `min-width:0` LÀ BẮT BUỘC khi ba ô nằm ngang — lỗi ĐO ĐƯỢC, không phải phòng
    xa. Ô lưới mặc định không co xuống dưới bề rộng nội dung, mà nhãn `.st-lbl` khai

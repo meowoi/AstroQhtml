@@ -4,17 +4,37 @@
    HAI NƠI GIỮ TÀI KHOẢN, HAI VAI TRÒ KHÁC NHAU:
 
      ĐĂNG KÝ  →  backend AstroqSV (AWS)      — js/api.js
-        Lưu đăng ký vào DynamoDB rồi gửi email kích hoạt sống 10 phút.
-        CHƯA có tài khoản Firebase nào được tạo ở bước này.
-        Người dùng bấm link trong email → server mới tạo tài khoản Firebase
-        (đã sẵn emailVerified=true) rồi chuyển hướng về landing-app.html?activated=1.
+        Server TẠO TÀI KHOẢN NGAY (`emailVerified=false`) rồi gửi thêm một email
+        kích hoạt sống 10 phút. Trả về `account:true` nghĩa là email + mật khẩu
+        vừa gõ đã đăng nhập được — file này tự `signInWithEmailAndPassword` luôn,
+        không bắt ai mở hòm thư mới được chơi.
 
      ĐĂNG NHẬP → Firebase Authentication      — SDK tải động
-        Firebase là nơi giữ danh tính chính thức, chỉ chứa tài khoản ĐÃ kích hoạt.
+        Firebase là nơi giữ danh tính chính thức.
 
-   Vì sao không để client tự gọi createUserWithEmailAndPassword: Firebase tạo tài
-   khoản NGAY khi gọi, không có luồng "xác minh xong mới tạo" — làm vậy sẽ tích tụ
-   tài khoản rác chưa xác thực, và không đặt được hạn 10 phút cho link.
+   ⚠️⚠️ BỨC TƯỜNG XÁC MINH ĐÃ GỠ KHỎI PHIÊN ĐẦU (04/09/2026) — ĐỌC TRƯỚC KHI DỰNG LẠI.
+      Luồng cũ: tài khoản Firebase chỉ ra đời ĐÚNG LÚC bấm link, và `login()` chặn
+      cứng mọi tài khoản `emailVerified=false`. Đo CloudWatch 14 ngày ra **3 lượt đăng
+      ký thật của người ngoài, 2 trong 3 không bao giờ bấm link** — tức bức tường đó
+      đang chặn đúng những người đã chịu điền form, và họ rời đi với con số 0: không
+      tài khoản, không tiến độ, không dấu vết nào để mời quay lại.
+
+   ⚠️⚠️ CÂU HỎI GÁC CỬA ĐỔI, KHÔNG PHẢI BỎ: từ *"email này đã xác minh chưa"* sang
+      *"tài khoản này có hồ sơ do server tạo không"*. Cổng thật nằm ở server
+      (`Services/AccountGate.cs`); ở client, `login()` chỉ ký xuất khi server nói thẳng
+      `code:"no-profile"` — người tự `signUp` bằng apiKey CÔNG KHAI trong mã client.
+      Mã 403 khác (`email-unverified`) là chuyện của RIÊNG ba việc cần email thật (thư
+      cho phụ huynh · thanh toán · khu quản trị), không phải chuyện của đường vào.
+
+   ⚠️ QUÀ KHỞI ĐẦU VẪN CHỈ CẤP SAU KHI BẤM LINK (chủ dự án chốt). Nên ví của tài khoản
+      mới là 0 tt: nhiệm vụ và quiz vẫn chơi được (chúng CỘNG tiền), còn mini-game thì
+      chưa — đó là lý do còn lại để người ta mở hòm thư, và giao diện phải NÓI RA
+      (xem `v_ready_*` ở js/firebase-auth-ui.js).
+
+   Vì sao đăng ký vẫn đi qua server chứ không gọi `createUserWithEmailAndPassword`:
+   server còn phải giành chỗ email trong DynamoDB, gửi thư kích hoạt có hạn 10 phút,
+   ghi nhãn chiến dịch và báo chuyển đổi cho Meta. Để client tạo tài khoản là bỏ hết
+   những việc đó — và mở đường cho tài khoản không có hồ sơ.
 
    ES MODULE: nạp bằng <script type="module">, nên luôn chạy SAU mọi script cổ điển
    → AstroQ (js/ui-common.js) và Economy chắc chắn đã tồn tại.
@@ -98,6 +118,9 @@ const ERR = {
        `auth/invalid-credential` — xem chú thích ở `login()`. */
     "not-activated":              "Tài khoản này chưa kích hoạt. Mở email và bấm link kích hoạt giúp mình nhé — mật khẩu của bạn không sai đâu.",
     "link-expired":               "Tài khoản này chưa kích hoạt, và link trong email đã hết hạn. Bấm “Gửi lại link” để nhận link mới nhé.",
+    /* Đăng nhập được vào Firebase nhưng astroQ không có hồ sơ nào cho tài khoản này —
+       tức nó không ra đời từ `/auth/register`. Xem `AccountGate` ở server. */
+    "no-profile":                 "Tài khoản này chưa có hồ sơ trên astroQ. Đăng ký lại bằng form Tạo tài khoản giúp mình nhé.",
     "net":                        "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.",
     _default:                     "Có lỗi xảy ra. Thử lại sau ít phút nhé."
   },
@@ -121,6 +144,8 @@ const ERR = {
     // Not from Firebase but from `POST /auth/status` — see the note in `login()`.
     "not-activated":              "This account isn't activated yet. Open your email and tap the activation link — your password is fine.",
     "link-expired":               "This account isn't activated yet, and the link in your email has expired. Tap “Resend link” to get a new one.",
+    // Signed in to Firebase, but astroQ has no profile for it — see `AccountGate` on the server.
+    "no-profile":                 "This account has no astroQ profile. Please sign up again with the Create account form.",
     "net":                        "Can't reach the server. Check your connection and try again.",
     _default:                     "Something went wrong. Please try again."
   }
@@ -222,7 +247,15 @@ function syncProfile(user, extra){
     uid:   user.uid,
     email: user.email || old.email || "",
     name:  (extra && extra.name) || user.displayName || old.name ||
-           (user.email || "").split("@")[0]
+           (user.email || "").split("@")[0],
+    /* ⚠️ CỜ NÀY LÀ GỢI Ý GIAO DIỆN, KHÔNG PHẢI QUYỀN — đúng khuôn `admin` ở dưới.
+       Từ 04/09/2026 tài khoản chưa xác minh vẫn vào chơi được, nên trang nào cần
+       nhắc "còn 500 tt đang chờ trong hòm thư" thì đọc đây thay vì gọi thêm một
+       vòng mạng. Cổng thật của ba việc cần email là 403 `email-unverified` từ
+       server (Services/AccountGate.cs).
+       ⚠️ GHI CẢ KHI FALSE, không phải chỉ khi true: người vừa bấm link mà cache cũ
+          còn `false` thì lời nhắc kia hiện mãi. */
+    emailVerified: user.emailVerified === true
   }, extra || {}));
 }
 
@@ -253,13 +286,20 @@ function syncProfile(user, extra){
    ⚠️ CHỈ GHI TRƯỜNG SERVER CÓ. Hồ sơ server rỗng (trẻ chọn nhân vật trước khi có cầu
       nối này) thì đừng ghi "" đè lên — cứ để `go()` đưa về `select.html`, rồi
       `AstroQChars.sync()` ở dashboard đẩy lên cho lượt sau. */
+/* → { hasCharacter:boolean, noProfile:boolean }
+
+   ⚠️ `noProfile` CHỈ true khi server NÓI THẲNG `code:"no-profile"` (403). Hết hạn
+      chờ, mất mạng, 500 — tất cả trả false, tức FAIL-OPEN: cứ cho vào. Đoán "tài
+      khoản này không có hồ sơ" từ một lời gọi hỏng là đá một đứa trẻ có hồ sơ thật
+      ra ngoài vì mạng nhà nó chậm. Xem `login()` để biết cờ này dùng làm gì. */
 async function hydrateProfile(auth){
   try{
     const r = await Promise.race([
       auth.getProfile(),
       new Promise(res => setTimeout(() => res({ ok:false, reason:"timeout" }), HYDRATE_MS))
     ]);
-    if(!r || !r.ok) return false;
+    if(!r || !r.ok)
+      return { hasCharacter:false, noProfile: !!(r && r.status === 403 && r.code === "no-profile") };
     const p = (r.data && r.data.profile) || {};
     const old = (window.AstroQ && AstroQ.getUser()) || {};
     const next = Object.assign({}, old);
@@ -267,6 +307,17 @@ async function hydrateProfile(auth){
     if(p.character) { next.character = p.character; next.selectedCharacter = p.character; }
     if(p.avatar)      next.avatar = p.avatar;
     if(p.depth)       next.depth  = p.depth;     // js/depth.js đọc đúng trường này
+    /* ⚠️⚠️ SERVER THẮNG FIREBASE VỀ CỜ NÀY, và thứ tự phải đúng như vậy. `syncProfile`
+       ngay trước đó đã ghi cờ suy từ `user.emailVerified` — tức từ CLAIM trong ID
+       token, mà trẻ bấm link ở máy khác thì còn cầm token cũ tới cả giờ nữa. Nguồn sự
+       thật là DynamoDB, và `/me/profile` đọc đúng nguồn đó (xem MeEndpoints).
+       ⚠️ ĐÒI `typeof === "boolean"`, không phải `=== true`: server CHƯA deploy bản mới
+          không trả trường này, và ghi `false` khi không biết là bật dải mời kích hoạt
+          cho những tài khoản đã kích hoạt từ lâu. */
+    if(typeof p.emailVerified === "boolean") next.emailVerified = p.emailVerified;
+    /* Món quà đang chờ trong hòm thư (0 = không còn gì chờ). Mức do server quyết —
+       500 tt cho người đã ghi danh, 100 tt cho người còn lại — nên client KHÔNG đoán. */
+    if(p.starterBonus != null) next.starterBonus = Number(p.starterBonus) || 0;
     if(window.AstroQ && AstroQ.setUser) AstroQ.setUser(next);
     /* ⚠️ CỜ ONBOARDING PHẢI VỀ CACHE, và đây KHÔNG phải tối ưu.
        `logout()` xoá cả `astroq-map01-seen`, mà `select.html` CỐ Ý không nạp SDK
@@ -279,8 +330,37 @@ async function hydrateProfile(auth){
           trẻ đã xem, tức bắt nó xem lại. Server cũ không trả trường này thì
           `undefined !== true` nên không đụng gì. */
     try{ if(p.map01Seen === true) localStorage.setItem("astroq-map01-seen", "1"); }catch(e){}
-    return !!p.character;
-  }catch(e){ return false; }
+    return { hasCharacter: !!p.character, noProfile:false };
+  }catch(e){ return { hasCharacter:false, noProfile:false }; }
+}
+
+/* ---------------- VỪA CÓ PHIÊN FIREBASE — LÀM NỐT BA VIỆC GIỐNG NHAU ----------------
+
+   ⚠️ TÁCH RA THÀNH HÀM NGÀY 04/09/2026 vì từ hôm nay có HAI đường vào phiên: `login()`
+      như cũ, và `register()` — nay tự đăng nhập luôn sau khi server tạo tài khoản. Ba
+      việc dưới đây phải xảy ra ở CẢ HAI đường, cùng thứ tự; chép làm hai bản là dựng
+      sẵn ngày một bản được sửa còn bản kia thì không (đã có tiền lệ: `readAdminClaim`).
+
+   ⚠️ NGƯỜI KHÔNG CÓ HỒ SƠ THÌ KÝ XUẤT NGAY, ĐỪNG ĐỂ PHIÊN SỐNG. Phiên còn sống mà mọi
+      lời gọi `/me` trả 403 thì app hiện ra một khoang lái rỗng không giải thích được —
+      tệ hơn một câu từ chối thẳng. Cổng thật vẫn ở server, đây chỉ là lời dẫn đường.
+   → { ok:true, hasCharacter } | { ok:false, code:"no-profile", message } */
+async function afterSignIn(api, user){
+  /* Đóng dấu cờ admin NGAY ĐÂY — chỗ duy nhất trong dự án đọc claim. Đọc từ `user`
+     (đã có trong tay) nên không phải chờ `onAuthStateChanged`, tức không có nguy cơ
+     treo đường vào. Lý do đầy đủ ở `readAdminClaim`.
+     ⚠️ Ghi cả khi FALSE, không phải chỉ khi true: tài khoản bị rút quyền admin mà hồ
+        sơ cũ trong máy còn `admin:true` thì cái link vẫn hiện mãi. */
+  syncProfile(user, { admin: await readAdminClaim(user) });
+
+  /* Rồi kéo hồ sơ (nhân vật · tên · bậc) về cache TRƯỚC khi trả lời, vì người gọi
+     dùng cache đó để chọn trang đích. Lý do đầy đủ ở `hydrateProfile`. */
+  const h = await hydrateProfile(api);
+  if(h.noProfile){
+    try{ await api.logout(); }catch(e){}
+    return { ok:false, code:"no-profile", message: errMsg("no-profile") };
+  }
+  return { ok:true, hasCharacter: h.hasCharacter };
 }
 
 /* ============================ API công khai ============================ */
@@ -290,10 +370,19 @@ const AstroQAuth = {
   /** Có backend AstroqSV hay không — giao diện dùng để chọn lời nhắc phù hợp. */
   hasBackend: isApiConfigured,
 
-  /** Đăng ký qua backend AstroqSV. KHÔNG tạo tài khoản Firebase ở bước này —
-      chỉ ghi nhận vào DynamoDB và gửi email kích hoạt sống `expiresInMinutes` phút.
-      Tài khoản Firebase chỉ ra đời khi người dùng bấm link trong email.
-      → { ok:true, needVerify:true, email, expiresInMinutes } | { ok:false, message } */
+  /** Đăng ký qua backend AstroqSV — server tạo tài khoản NGAY (`emailVerified=false`),
+      gửi thêm email kích hoạt sống `expiresInMinutes` phút, rồi file này TỰ ĐĂNG NHẬP
+      bằng đúng email + mật khẩu vừa gõ. Lý do đầy đủ ở đầu file.
+
+      → { ok:true, signedIn:true,  emailVerified:false, hasCharacter, email, mailSent }
+          Vào chơi được ngay. Đường thường từ 04/09/2026.
+      → { ok:true, signedIn:false, account:true,  email, mailSent, passwordKept, code }
+          Tài khoản CÓ, nhưng chưa vào được phiên: mật khẩu vừa gõ bị server bỏ qua
+          (`passwordKept`), hoặc Firebase không với tới. Giao diện mời đăng nhập.
+      → { ok:true, signedIn:false, needVerify:true, email, mailSent, expiresInMinutes }
+          CHƯA có tài khoản — chỉ còn xảy ra ở nhánh gửi lại cho bản ghi chờ KIỂU CŨ
+          (đăng ký trước 04/09/2026). Giao diện giữ nguyên màn chờ kích hoạt.
+      → { ok:false, message } */
   async register(name, email, password){
     if(!isApiConfigured) return NOT_CONFIGURED;
     pendingName = name || "";
@@ -316,47 +405,92 @@ const AstroQAuth = {
     if(r.notConfigured)  return NOT_CONFIGURED;
     if(!r.ok)            return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
 
-    return {
-      ok: true, needVerify: true,
+    const base = {
+      ok: true,
       email: r.data.email || email,
       expiresInMinutes: r.data.expiresInMinutes || 10,
-      // Email gửi hỏng thì vẫn trả ok (bản ghi chờ đã lưu) nhưng báo để mời bấm "Gửi lại".
+      // Email gửi hỏng thì vẫn trả ok (tài khoản đã tạo) nhưng báo để mời bấm "Gửi lại".
       mailSent: r.data.mailSent !== false,
       /* Email này đã có một đăng ký đang chờ, và mật khẩu vừa gõ KHÁC mật khẩu của lượt
          đầu nên server BỎ QUA nó (chốt chặn chiếm quyền đăng ký chưa kích hoạt — xem
-         AuthEndpoints). Giao diện phải nói ra: người dùng kích hoạt xong rồi đăng nhập
-         bằng mật khẩu vừa gõ sẽ không vào được, mà không có gì giải thích vì sao.
+         AuthEndpoints). Giao diện phải nói ra: người dùng đăng nhập bằng mật khẩu vừa
+         gõ sẽ không vào được, mà không có gì giải thích vì sao.
          ⚠️ `=== true`, không phải truthy: server cũ chưa có trường này thì `undefined`
             → false, và màn hình giữ nguyên như trước. */
       passwordKept: r.data.passwordKept === true
     };
+
+    /* ⚠️⚠️ ĐỌC `account`, KHÔNG ĐỌC `pending`. Hai trường này trùng nghĩa cho tới
+          04/09/2026 rồi TÁCH RA: nay `pending` là "chưa có tài khoản", còn `account`
+          là "đăng nhập được ngay". Server cũ (chưa deploy bản mới) không trả
+          `account` → `undefined !== true` → rơi về đúng màn chờ kích hoạt như trước,
+          nên client mới chạy được với server cũ. Xem đường ra của `/auth/register`. */
+    if(r.data.account !== true)
+      return Object.assign(base, { signedIn:false, needVerify:true });
+
+    /* ⚠️ MẬT KHẨU BỊ GIỮ THÌ ĐỪNG THỬ ĐĂNG NHẬP. Server giữ mật khẩu của lượt đăng ký
+       ĐẦU, nên cái vừa gõ chắc chắn sai — thử là ăn một `auth/invalid-credential` và
+       đốt luôn hạn mức `auth/too-many-requests` của địa chỉ IP này. Mời đăng nhập kèm
+       câu giải thích, đó là việc duy nhất còn đúng để làm. */
+    if(base.passwordKept)
+      return Object.assign(base, { signedIn:false, account:true });
+
+    if(!(await boot()))
+      return Object.assign(base, { signedIn:false, account:true, code:"notConfigured" });
+
+    try{
+      const cred = await fb.signInWithEmailAndPassword(auth, email, password);
+      /* ⚠️ KHÔNG `reload()` và KHÔNG kiểm `emailVerified` ở đây. Tài khoản vừa được
+         server tạo với `emailVerified=false` — đó là ĐÚNG trạng thái mong đợi, không
+         phải lỗi. Đây chính là bức tường mà việc 2 gỡ xuống. */
+      const after = await afterSignIn(this, cred.user);
+      /* Vừa tạo hồ sơ ở server xong mà server lại nói "không có hồ sơ" thì dữ liệu đã
+         lệch nhau. Không giấu: trả về như một lượt đăng ký hỏng. */
+      if(!after.ok) return Object.assign(base, { ok:false, code:after.code, message:after.message });
+      return Object.assign(base, {
+        signedIn:true, account:true, emailVerified:false,
+        hasCharacter: after.hasCharacter, user: cred.user
+      });
+    }catch(e){
+      /* ⚠️ TÀI KHOẢN VẪN TỒN TẠI — `ok` PHẢI GIỮ `true`. Server đã tạo xong rồi;
+         trả `ok:false` ở đây là mời người ta bấm Đăng ký lần nữa, và lần đó sẽ ăn
+         `email-already-in-use` — một ngõ cụt không tự thoát ra được. */
+      console.warn("[AstroQ] Đăng ký xong nhưng chưa tự đăng nhập được:", e && e.code);
+      return Object.assign(base, { signedIn:false, account:true, code: e && e.code });
+    }
   },
 
-  /** Đăng nhập. Chưa xác minh / chưa kích hoạt → KHÔNG cho vào, trả needVerify.
-      → { ok:true }
-      | { ok:false, needVerify:true, email }                              (có tài khoản Firebase nhưng emailVerified=false — dữ liệu cũ)
-      | { ok:false, needVerify:true, notActivated:true, linkExpired, email, message }  (đăng ký còn đang chờ ở DynamoDB — xem `pendingState`)
-      | { ok:false, message } */
+  /** Đăng nhập.
+   *
+   * ⚠️⚠️ CHƯA XÁC MINH EMAIL **VẪN VÀO ĐƯỢC** (04/09/2026). Bản trước dừng ở đây với
+   *    `needVerify` cho mọi tài khoản `emailVerified=false`; lý do gỡ bức tường đó,
+   *    bằng số, ghi ở đầu file. Cổng nay là "CÓ HỒ SƠ do server tạo không" —
+   *    `afterSignIn` hỏi, và chỉ ký xuất khi server nói thẳng `no-profile`.
+   * ⚠️ `needVerify` CHỈ CÒN cho bản ghi chờ KIỂU CŨ (đăng ký trước 04/09/2026, tài
+   *    khoản Firebase còn chưa ra đời nên Firebase từ chối cặp email+mật khẩu) — xem
+   *    `pendingState`. Đó là lý do nó nằm ở nhánh `catch`, không ở nhánh thành công.
+   *
+   * → { ok:true, emailVerified, hasCharacter, user }
+   * | { ok:false, needVerify:true, notActivated:true, linkExpired, email, message }
+   * | { ok:false, code:"no-profile", message }
+   * | { ok:false, message } */
   async login(email, password){
     if(!(await boot())) return NOT_CONFIGURED;
     try{
       const cred = await fb.signInWithEmailAndPassword(auth, email, password);
-      await fb.reload(cred.user);                    // lấy trạng thái emailVerified mới nhất
-      if(!cred.user.emailVerified){
-        // Giữ nguyên phiên (không signOut) để còn gửi lại được email xác minh.
-        // Không ghi hồ sơ → vẫn không vào được app.
-        return { ok: false, needVerify: true, email: cred.user.email };
-      }
-      /* Đóng dấu cờ admin NGAY ĐÂY — chỗ duy nhất trong dự án đọc claim. Đọc từ
-         `cred.user` (đã có trong tay) nên không phải chờ `onAuthStateChanged`, tức
-         không có nguy cơ treo đường đăng nhập. Lý do đầy đủ ở `readAdminClaim`.
-         ⚠️ Ghi cả khi FALSE, không phải chỉ khi true: tài khoản bị rút quyền admin mà
-            hồ sơ cũ trong máy còn `admin:true` thì cái link vẫn hiện mãi. */
-      syncProfile(cred.user, { admin: await readAdminClaim(cred.user) });
-      /* Rồi kéo hồ sơ (nhân vật · tên · bậc) về cache TRƯỚC khi trả lời, vì người
-         gọi dùng cache đó để chọn trang đích. Lý do đầy đủ ở `hydrateProfile`. */
-      await hydrateProfile(this);
-      return { ok: true, user: cred.user };
+      /* ⚠️ VẪN `reload()`, VÀ VẪN CẦN. Không còn để gác cửa, mà để cờ `emailVerified`
+         trong hồ sơ máy nói đúng sự thật: trẻ bấm link ở máy khác rồi quay lại đây thì
+         `cred.user` đang cầm bản cũ, và lời nhắc "còn 500 tt trong hòm thư" sẽ hiện
+         cho một người đã kích hoạt xong. Hỏng thì bỏ qua — một cái nhắc sai không đáng
+         để chặn đường vào. */
+      try{ await fb.reload(cred.user); }catch(e){}
+      const after = await afterSignIn(this, cred.user);
+      if(!after.ok) return { ok:false, code:after.code, message:after.message };
+      return {
+        ok: true, user: cred.user,
+        emailVerified: cred.user.emailVerified === true,
+        hasCharacter: after.hasCharacter
+      };
     }catch(e){
       /* Firebase nói "không mở được cửa nào". Có thể là sai mật khẩu thật, mà cũng
          có thể là tài khoản CHƯA kích hoạt nên chưa tồn tại ở Firebase — hai chuyện

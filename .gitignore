@@ -8,6 +8,13 @@
 # một lần mất `gen_wiki_data.py` vì nó chỉ nằm trên máy). Nhưng ảnh chụp thì không:
 # 88 file PNG = 35 MB, chỉ dùng để soi mắt trong một lượt làm việc.
 scratchpad/*.png
+# ⚠️ `scratchpad/*.png` CHỈ CHẶN MỘT TẦNG — nó KHÔNG với tới `scratchpad/_mobile/*.png`.
+#    Đo 29/08/2026: `scratchpad/_mobile/` (ảnh chụp của probe điện thoại) là **2,2 MB**
+#    và `git check-ignore` trả về RỖNG, tức nó sẽ vào thẳng một repo deploy công khai ở
+#    lượt `git add -A` kế tiếp. Probe nào ghi ảnh vào thư mục con là lọt hết. Chặn theo
+#    ĐỆ QUY để probe sau đặt ảnh ở đâu cũng không lo (bài học 30/07/2026: kiểm
+#    `.gitignore` TRƯỚC `git add -A`, không thì đẩy 38 MB rác lên Pages).
+scratchpad/**/*.png
 scratchpad/*.log
 # Bản đổ log của một lượt chạy, đặt tên `_…txt` theo cách làm ghi ở nhật ký
 # 01/08/2026 (`python … | Out-File` chỉ ghi khi pipeline kết thúc, nên script

@@ -16,7 +16,9 @@
 
 /* Thanh nhiên liệu nhỏ ngay trong chip — dài ngắn theo mức còn, đọc được từ đuôi mắt. */
 .chip.fuel .bar{
-  display:block;width:52px;height:4px;border-radius:3px;margin-top:3px;
+  /* ⚠ `flex:none`: tu khi `.v` gian ra lap kin hang (css/game-shell.css) thi mot
+     phan tu khong khoa co lai se bi bop. Thanh nay la thuoc do — bop no la doc sai. */
+  display:block;flex:none;width:52px;height:4px;border-radius:3px;margin-top:3px;
   background:rgba(148,163,184,.28);overflow:hidden;
 }
 .chip.fuel .bar i{display:block;height:100%;width:100%;background:var(--green,#63e6a8);

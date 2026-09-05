@@ -329,7 +329,12 @@
             n:    x.signups   || 0,
             a7:   x.active7   || 0,
             done: x.earthDone || 0,
-            vis:  x.visits    || 0
+            vis:  x.visits    || 0,
+            /* ⚠️⚠️ `null` = CHUA DO NHAN NAY, khac han `0`. `|| 0` o day la xoa
+               mat ranh gioi do va bien moi nhan chay truoc 05/09/2026 thanh "0% o
+               lai" — mot loi khang dinh ve mot quang thoi gian khong he co phep do.
+               Xem `SrcRow.Engaged` o Services/Insights.cs. */
+            eng:  (x.engaged == null ? null : (Number(x.engaged) || 0))
           };
         });
       },
@@ -349,6 +354,14 @@
                        note: r.n > 0
                          ? "cứ " + Math.round(r.vis / r.n) + " người đến thì 1 người đăng ký"
                          : "chưa ai trong số này đăng ký" });
+          /* ⚠️ HÀNG "ở lại" CHỈ VẼ KHI ĐO ĐƯỢC (`eng` khác null) VÀ CÓ MẪU SỐ. Cùng
+             luật với hàng "lượt đến" ngay trên: `0` khẳng định "không ai ở lại", còn
+             không vẽ thì không nói gì — và với mọi nhãn chạy trước 05/09/2026 thì
+             "không nói gì" mới là câu đúng. */
+          if (r.eng != null && r.vis > 0)
+            out.push({ label: "· ở lại đọc", value: r.eng, cls: "s5",
+                       note: Math.round(r.eng * 100 / r.vis) + "% số người đến ở lại "
+                             + "quá 10 giây hoặc cuộn qua màn đầu" });
           /* Nguon chua ra tai khoan nao thi KHONG ve hang thu hai: mot thanh 0 kem
              chu "con hoat dong" doc ra thanh mot loi phan xet, trong khi that ra
              chua co gi de do. */
@@ -370,13 +383,22 @@
         V.table(el, {
           caption:"Nhãn chiến dịch lấy từ chính link mình đăng. Mỗi người được tính theo LƯỢT CHẠM ĐẦU TIÊN — đăng ký lại không đổi nguồn. " +
                   "“Lượt đến” đếm KHÁCH MỚI mở được trang từ link có nhãn, không đếm lượt bấm: cùng một người bấm hai lần chỉ tính một. " +
-                  "Số “link clicks” của Meta vì thế luôn lớn hơn — nó tính cả lượt bấm lặp, bot, và người thoát trước khi trang tải xong.",
-          head:["Nguồn","Lượt đến","Hàng chờ","Tài khoản","Còn hoạt động (7 ngày)","Xong Trái Đất"],
+                  "Số “link clicks” của Meta vì thế luôn lớn hơn — nó tính cả lượt bấm lặp, bot, và người thoát trước khi trang tải xong. " +
+                  "“Ở lại đọc” là số người trong đó ở quá 10 giây (chỉ tính lúc tab đang hiện) hoặc cuộn qua màn hình đầu — đo từ 05/09/2026, " +
+                  "nên nhãn chạy trước ngày đó hiện “—”. Tỉ lệ này thấp thì phải sửa QUẢNG CÁO (hứa một đằng, trang nói một nẻo); " +
+                  "cao mà vẫn không ai đăng ký thì phải sửa TRANG.",
+          head:["Nguồn","Lượt đến","Ở lại đọc","Hàng chờ","Tài khoản","Còn hoạt động (7 ngày)","Xong Trái Đất"],
           rows: CARDS.sources.rows().map(function(r){
             /* ⚠️ "—" CHU KHONG PHAI "0" cho nguon khong do duoc luot den. Số 0 khẳng
                định "khong ai den", con dau gach noi "khong do duoc" - hai chuyen khac
                han nhau, va moi nguon co truoc 23/08/2026 deu thuoc ve thu hai. */
+            /* ⚠️ "—" CHỨ KHÔNG PHẢI "0" cho nhãn chưa đo được lượt ở lại — cùng
+               lý do với cột "Lượt đến" ngay bên trái. `eng` là `null` với mọi nhãn
+               chạy trước 05/09/2026. */
             return [r.name, r.vis > 0 ? num(r.vis) : "—",
+                    (r.eng != null && r.vis > 0)
+                      ? num(r.eng) + " (" + Math.round(r.eng * 100 / r.vis) + "%)"
+                      : "—",
                     num(r.wait), num(r.n), num(r.a7), num(r.done)];
           })
         });

@@ -34,6 +34,16 @@ const TXT = {
            thì người dùng kích hoạt xong sẽ đăng nhập bằng mật khẩu vừa gõ và không
            vào được, mà chẳng có gì giải thích. */
         v_pwkept:"Email này đang có một đăng ký chờ kích hoạt. Mình đã gửi lại link, nhưng mật khẩu vẫn là mật khẩu bạn đặt lần đầu nhé.",
+        /* ─── Đăng ký xong và ĐÃ Ở TRONG PHIÊN (04/09/2026) ───────────────────────
+           ⚠️ CÂU NÀY LÀ CHỖ DUY NHẤT CÒN MỜI NGƯỜI TA MỞ HÒM THƯ trên đường đăng ký,
+              nên nó phải nói cái ĐƯỢC (quà khởi đầu) chứ không phải cái PHẢI LÀM.
+              "Xác minh email của bạn" là câu của bức tường vừa gỡ; nó không cho người
+              đọc một lý do nào để đứng lên đi mở hòm thư. */
+        r_in_gift:"Xong! Tàu của con đã sẵn sàng 🚀 Mở email bấm link kích hoạt để nhận Purple Meteors quà khởi đầu nhé!",
+        r_in_nomail:"Xong! Tàu của con đã sẵn sàng 🚀 (Thư kích hoạt chưa gửi được — vào Hồ sơ bấm “Gửi lại” để nhận quà khởi đầu nhé.)",
+        /* Tài khoản đã có nhưng chưa vào được phiên — việc cần làm là ĐĂNG NHẬP. */
+        r_signin:"Tài khoản đã tạo xong! Đăng nhập bằng email và mật khẩu vừa đặt để lên tàu nhé.",
+        r_pwkept:"Email này đã có tài khoản từ trước. Mật khẩu vẫn là mật khẩu bạn đặt lần đầu — đăng nhập bằng mật khẩu đó nhé.",
         /* Đăng nhập bằng một tài khoản CHƯA kích hoạt. Trước 29/08/2026 ca này nhận
            câu "Email hoặc mật khẩu không đúng." của Firebase — sai, và đẩy người ta
            đi sửa đúng cái đang không hỏng. Xem `pendingState` ở js/firebase-auth.js. */
@@ -53,6 +63,11 @@ const TXT = {
         v_sent:"Activation email sent again!",
         v_nomail:"We couldn't send the email. Please tap “Resend”.",
         v_pwkept:"This email already has a sign-up waiting to be activated. We resent the link, but your password stays the one you set the first time.",
+        // Signed up AND already in the session (04/09/2026) — see the VI note above.
+        r_in_gift:"You're in! Your ship is ready 🚀 Open your email and tap the activation link to claim your starter Purple Meteors!",
+        r_in_nomail:"You're in! Your ship is ready 🚀 (We couldn't send the activation email — tap “Resend” in your Profile to claim your starter gift.)",
+        r_signin:"Account created! Sign in with the email and password you just set to board the ship.",
+        r_pwkept:"This email already had an account. Your password stays the one you set the first time — please sign in with that one.",
         v_title_notyet:"Account not activated yet",
         v_sub_notyet:"Your password is correct! One step left: open your email and tap the activation link.",
         v_sub_expired:"Your password is correct! But the link in your email has expired — tap “Resend link” to get a new one.",
@@ -221,8 +236,37 @@ $("auth-register").addEventListener("submit", async (e) => {
   busy(form, false);
   if(!res.ok){ UI.toast(res.message); return; }
 
-  // CHƯA có tài khoản nào cả — chỉ mới ghi nhận đăng ký và gửi link kích hoạt.
-  // Không truyền `reason`: đây ĐÚNG là ca "vừa gửi thư", tức chữ mặc định trong HTML.
+  /* ══════════ ĐƯỜNG THƯỜNG TỪ 04/09/2026: ĐÃ Ở TRONG PHIÊN, VÀO CHƠI LUÔN ══════════
+     ⚠️⚠️ KHÔNG hiện màn chờ kích hoạt ở đây nữa. Màn đó là bức tường mà việc 2 gỡ
+        xuống: nó nói "mở hòm thư đi" với một người ĐÃ đăng nhập xong, tức chỉ họ đi
+        làm một việc không cần thiết để đi tiếp — và 2 trong 3 người ngoài đo được đã
+        rời đi đúng ở chỗ này.
+     ⚠️ NHƯNG VẪN PHẢI NHẮC MỘT CÂU VỀ CÁI LINK, vì quà khởi đầu chỉ cấp SAU khi bấm
+        link (chốt của chủ dự án). Ví đang 0 tt: nhiệm vụ và quiz chơi được ngay, còn
+        mini-game thì chưa — không nói ra thì trẻ gặp "không đủ Purple Meteors" ở games
+        mà chẳng biết tiền nằm ở đâu. Đây là toast MỜI, không phải cửa chặn. */
+  if(res.signedIn){
+    UI.close();
+    UI.toast(res.mailSent ? tx("r_in_gift") : tx("r_in_nomail"));
+    go();
+    return;
+  }
+
+  /* Tài khoản CÓ nhưng chưa vào được phiên. Hai ca, và ca nào cũng phải nói ra vì
+     người dùng vừa gõ một mật khẩu mà nó không dùng được:
+       · `passwordKept` — server giữ mật khẩu của lượt đăng ký ĐẦU.
+       · còn lại        — Firebase không với tới (mất mạng / chưa cấu hình).
+     Cả hai đưa về ô Đăng nhập với email điền sẵn, không phải màn chờ kích hoạt: việc
+     cần làm là ĐĂNG NHẬP, không phải mở hòm thư. */
+  if(res.account){
+    backToLogin(res.email || email);
+    UI.toast(res.passwordKept ? tx("r_pwkept") : tx("r_signin"));
+    return;
+  }
+
+  /* CHƯA có tài khoản nào cả — chỉ còn xảy ra với bản ghi chờ KIỂU CŨ (đăng ký trước
+     04/09/2026, xem `register()` ở js/firebase-auth.js). Giữ nguyên hành vi cũ.
+     Không truyền `reason`: đây ĐÚNG là ca "vừa gửi thư", tức chữ mặc định trong HTML. */
   showVerify(res.email || email, "");
   /* Một toast thôi. Không gửi được email là việc CẦN LÀM NGAY ("bấm Gửi lại"),
      nên nó thắng; chồng hai toast lên nhau thì cái sau che mất cái trước. */

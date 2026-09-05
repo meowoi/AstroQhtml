@@ -15,6 +15,11 @@
       ẩn mọi `.chip .k` ở màn ≤560px, và một chip chỉ còn số "3" thì vô nghĩa. */
 .chip.lvl{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.42);}
 .chip.lvl .v{color:#fde68a;font-size:13px;letter-spacing:.04em;}
+/* ⚠ Chip nay la mot HUY HIEU, khong phai cap nhan-so nhu 4 chip so lieu: chu
+   "Cap 3" da mang ca nhan lan gia tri. Can phai nhu cac chip kia thi no dat han
+   ve mep phai trong khi moi nhan khac cham mep trai — doc ra nhu bi day lech.
+   Can giua chi ap o console doc; man hep chip nam ngang nen khong doi gi. */
+@media (min-width: 901px){ .hud .chip.lvl .v{text-align:center;} }
 
 /* 3 ngôi sao chấm điểm ở bảng kết quả */
 .stars{display:flex;justify-content:center;gap:8px;margin:14px 0 4px;}

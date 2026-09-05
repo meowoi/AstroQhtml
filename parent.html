@@ -150,6 +150,13 @@
       mail_cool:"Vừa gửi xong rồi — thử lại sau {n} phút nhé.",
       mail_fail:"Đường gửi thư đang trục trặc, chưa gửi được. Thử lại sau nhé.",
       mail_auth:"Cần đăng nhập mới gửi được báo cáo.",
+      /* ⚠️ CỔNG MUỘN (04/09/2026). Từ hôm nay tài khoản chưa xác minh email vẫn chơi
+         được bình thường, nhưng GỬI THƯ thì không — thư đi tới một hòm thư chưa chứng
+         minh được là có thật, và tỉ lệ bounce cao thì AWS khoá quyền gửi của cả tài
+         khoản (xem `AccountGate.RequireVerifiedEmail`). Không có câu riêng cho ca này
+         thì phụ huynh nhận "Cần đăng nhập mới gửi được báo cáo." trong khi họ ĐANG
+         đăng nhập — đúng loại câu sai đã phải sửa ở đường đăng nhập. */
+      mail_unverified:"Hòm thư này chưa được xác minh. Mở email astroQ đã gửi và bấm link kích hoạt, rồi gửi lại báo cáo nhé.",
       k_days:"Số ngày có học", k_quiz:"Lượt Đấu Trường", k_ans:"Số câu đã làm",
       k_acc:"Độ chính xác", k_steps:"Bước nhiệm vụ", k_read:"Bài đã đọc",
       k_games:"Lượt huấn luyện", k_xp:"XP nhận được",
@@ -186,6 +193,8 @@
       mail_cool:"Just sent one — try again in {n} minutes.",
       mail_fail:"Our mail service is having trouble, nothing was sent. Try again later.",
       mail_auth:"You need to sign in to email the report.",
+      // Late gate (04/09/2026) — see the VI note above.
+      mail_unverified:"This inbox isn't verified yet. Open the astroQ email and tap the activation link, then send the report again.",
       k_days:"Days active", k_quiz:"Quiz rounds", k_ans:"Questions answered",
       k_acc:"Accuracy", k_steps:"Mission steps", k_read:"Articles read",
       k_games:"Training runs", k_xp:"XP earned",
@@ -400,7 +409,16 @@
 
     AstroQAuth.sendReportEmail(WEEK).then(function(r){
       btn.disabled = false;
-      if (!r || !r.ok){ msg.className="pt-mail-msg bad"; msg.textContent = t("mail_auth"); return; }
+      if (!r || !r.ok){
+        msg.className = "pt-mail-msg bad";
+        /* ⚠️ HAI LÝ DO, HAI CÂU. `email-unverified` (403) là "đăng nhập rồi nhưng
+           chưa bấm link kích hoạt" — xem `mail_unverified` ở bảng chữ. Gộp nó vào
+           "cần đăng nhập" là chỉ phụ huynh đi làm một việc họ đã làm xong; cùng bài
+           học với ba lý do `sent:false` ngay dưới. */
+        msg.textContent = (r && r.code === "email-unverified")
+          ? t("mail_unverified") : t("mail_auth");
+        return;
+      }
       var d = r.data || {};
       /* ⚠️ `sent:false` KHÔNG phải lỗi — server trả lời thật. Ba lý do ba câu khác
          nhau; gộp thành "gửi thất bại" là nói sai với phụ huynh trong 2/3 trường hợp. */

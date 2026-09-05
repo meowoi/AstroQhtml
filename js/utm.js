@@ -7,7 +7,9 @@
           AstroQUtm.clear()  → xoá (dùng khi test)
           AstroQUtm.pending()   → nhãn NẾU lượt đến này chưa báo được về server
           AstroQUtm.markSent()  → đánh dấu đã báo (chỉ gọi khi server đã nhận)
-                                  Hai hàm trên là của `js/utm-beacon.js`.
+          AstroQUtm.pendingEngaged() → nhãn NẾU chưa báo được lượt "ở lại đủ lâu"
+          AstroQUtm.markEngaged()    → đánh dấu đã báo lượt đó
+                                  Bốn hàm trên là của `js/utm-beacon.js`.
 
    Gắn link ở fanpage:
        https://astroq.org/?utm_source=facebook&utm_medium=post&utm_campaign=ra-mat-20-08
@@ -29,7 +31,7 @@
    Cách này: **0 byte tải thêm, 0 cookie, 0 bên thứ ba**, và thứ duy nhất rời khỏi
    máy là NHÃN CHIẾN DỊCH do chính mình đặt trong link của mình.
 
-   ⚠️⚠️ TỪ 23/08/2026 CÓ ĐÚNG MỘT REQUEST, VÀ CHỈ CHO KHÁCH MANG NHÃN.
+   ⚠️⚠️ TỪ 23/08/2026 CÓ REQUEST, VÀ CHỈ CHO KHÁCH MANG NHÃN (05/09/2026: NHIỀU NHẤT HAI).
    `js/utm-beacon.js` gọi `POST /visit` một lần khi lượt nạp này là chạm-đầu-tiên MỚI.
    Vì sao phải có: bảng báo cáo trước đây chỉ đếm được lượt ĐĂNG KÝ, mà nhãn chỉ ghi
    vào DB lúc đăng ký thành công — nên một chiến dịch mang về 200 người mà 0 người
@@ -37,6 +39,17 @@
    ⚠️ Người vào thẳng `astroq.org` (không nhãn, không `fbclid`) thì **vẫn 0 request**
       như trước — `pending()` trả "" nên beacon không gửi gì. Đó là điều kiện để thêm
       phép đo này mà không đổi cái giá người dùng thường phải trả.
+
+   ⚠️⚠️ REQUEST THỨ HAI THÊM 05/09/2026 (việc 4 của bản phân tích 04/09) — `ev:"engaged"`,
+      bắn khi khách **ở lại 10 giây HOẶC cuộn qua màn hình đầu**. Lý do bằng số: 14 ngày
+      đo được **828 khách mang nhãn và 4 lượt đăng ký**, tức ~99,6% mất TRƯỚC form. Với
+      một con số `n` duy nhất thì "mở ra rồi đóng ngay" và "có đọc mà vẫn không đăng ký"
+      đọc ra y hệt nhau — mà cái thứ nhất phải sửa QUẢNG CÁO còn cái thứ hai phải sửa
+      TRANG. Sự kiện thứ hai là chỗ ranh giới đó được ghi lại.
+   ⚠️ CÙNG ĐIỀU KIỆN RIÊNG TƯ, KHÔNG NỚI MỘT LY: chỉ khách mang nhãn, chỉ một lần cho
+      mỗi chạm-đầu-tiên, và thân request vẫn đúng hai trường (`src` + `ev`) — không mốc
+      thời gian, không độ sâu cuộn, không `fbclid`. Bản ghi phía server vẫn là bộ đếm
+      cộng dồn theo (ngày × nhãn), thêm đúng một con số.
    ⚠️ NẠP Ở CẢ 37 TRANG (23/08/2026), không chỉ trang chủ: quảng cáo trỏ vào trang
       nào thì trang đó phải bắt được nhãn. Trước đó chỉ `index.html` và
       `landing-app.html` có, nên một quảng cáo trỏ vào `pricing.html` là mất sạch số
@@ -199,6 +212,32 @@
       var o = read();
       if (!o || o.sent) return;
       o.sent = true;
+      save(o);
+    },
+
+    /**
+     * Nhãn NẾU lượt đến này CHƯA báo được sự kiện "ở lại đủ lâu"; "" nếu đã báo
+     * (hoặc không có nhãn).
+     *
+     * ⚠️⚠️ CỜ RIÊNG (`eng`), KHÔNG DÙNG CHUNG `sent`. Hai sự kiện độc lập nhau và
+     *    thứ tự tới server KHÔNG bảo đảm: người mở trang lúc mất sóng rồi đọc mười
+     *    giây, tới lúc bắn `engaged` thì mạng đã về — dùng chung một cờ thì hoặc mất
+     *    lượt "ở lại", hoặc đánh dấu khống lượt "mở trang" chưa bao giờ tới nơi.
+     * ⚠️ ĐẾM KHÁCH, KHÔNG ĐẾM PHIÊN. Cờ nằm trong `localStorage` cùng bản ghi
+     *    chạm-đầu-tiên (60 ngày), nên một người đọc kỹ ba lần trong ba ngày vẫn chỉ
+     *    được đếm MỘT — đúng đơn vị của `n` để `e/n` là một tỉ lệ có nghĩa. Đổi sang
+     *    `sessionStorage` là lặng lẽ đổi mẫu số của phép chia.
+     */
+    pendingEngaged: function () {
+      var o = read();
+      return (o && !o.eng) ? API.get() : "";
+    },
+
+    /** Đánh dấu đã báo được lượt "ở lại đủ lâu". Chỉ gọi khi server đã nhận (204). */
+    markEngaged: function () {
+      var o = read();
+      if (!o || o.eng) return;
+      o.eng = true;
       save(o);
     },
 

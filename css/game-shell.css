@@ -385,7 +385,18 @@ canvas{width:100%;height:100%;}
         man hep thi `tabular-nums` o rule chung da du: no khu cai nhay giua cac
         so CUNG SO CHU SO (111 vs 999), von la truong hop thuong gap nhat.
      `flex:none` de khi tranh cho voi nhan thi NHAN co, khong phai con so. */
-  .hud .chip .v{font-size:19px;min-width:5.5ch;text-align:right;flex:none;}
+  /* ⚠⚠ `flex:1` chu KHONG `flex:none` — va day la sua mot LOI, khong phai doi
+     thiet ke. `text-align:right` da khai san tu dau, tuc y dinh von la CAN PHAI;
+     nhung `flex:none` lam hop `.v` chi rong dung 5.5ch va nam o MEP TRAI hang,
+     nen "phai" o day la mep phai cua cai hop 68px do, khong phai mep phai cua chip.
+     Do duoc tren console doc 150px (30/08/2026): DIEM · QUANG DUONG · KY LUC deu
+     dung cach mep phai **59px**, con chip Thien thach tim (co 2 phan tu nen
+     `space-between` day so sang phai) dung cach **1px** — bon chi so khong nam tren
+     mot cot nao. `flex:1` cho hop lap kin hang con lai, moi so ve dung mep phai.
+     ⚠ `min-width:5.5ch` GIU NGUYEN: no la thu chan cai nhay so da tra gia 14/08/2026.
+     ⚠ Chip nao co phan tu THU BA cung hang (thanh nhien lieu 52px cua Duong Dua)
+        thi phan tu do phai tu khoa `flex:none`, khong thi `.v` gian ra bop no lai. */
+  .hud .chip .v{font-size:19px;min-width:5.5ch;text-align:right;flex:1;}
   .hud-btns{margin-left:0;margin-top:10px;justify-content:center;}
   .play{grid-area:play;}
   .gs-bar{grid-area:bar;}

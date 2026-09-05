@@ -117,12 +117,13 @@ body.theme-light .deck-collapse{background:rgba(255,255,255,.5);}
 .deck-collapse:active{transform:scale(.92);}
 .deck-collapse svg{width:17px;height:17px;}
 /* Floating button to reopen the collapsed deck */
-/* ---- Dải nhắc mạng kém / đường lùi khi cảnh 3D không dựng được ----
+/* ---- Dải nhắc mạng kém / đường lùi khi cảnh 3D không dựng được / khuyến nghị màn rộng ----
    (`docs/decisions/005` mục 6). Neo ĐÁY-GIỮA chứ không góc trên: góc trên-trái đã có
    nút menu + nút mở bảng, góc trên-phải là bảng thông tin rộng 400px.
    ⚠️ `bottom` phải cao hơn box thoại Comet của lượt onboarding (`.mo-say`) — nhưng
-      hai thứ này KHÔNG BAO GIỜ cùng hiện: dải "mạng kém" chỉ hiện lúc vào trang
-      (trước khi Comet nói), còn dải "không dựng được cảnh" thì Comet chưa từng chạy. */
+      BA kind này KHÔNG BAO GIỜ cùng hiện với box thoại đó: "mạng kém" chỉ hiện lúc
+      vào trang (trước khi Comet nói), "không dựng được cảnh" thì Comet chưa từng
+      chạy, còn `wide` (thêm 29/08/2026) thì CỐ Ý không hiện khi `?onboard=1`. */
 #perf-note{position:fixed;z-index:24;left:50%;transform:translateX(-50%);
   bottom:clamp(14px,4vh,32px);max-width:min(560px,calc(100vw - 24px));
   display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;}
@@ -131,6 +132,12 @@ body.theme-light .deck-collapse{background:rgba(255,255,255,.5);}
 #perf-note .go{flex:none;min-height:44px;padding:0 14px;border-radius:11px;cursor:pointer;
   font-family:inherit;font-size:12.5px;font-weight:700;color:#04121e;border:none;
   background:linear-gradient(135deg,#5fd3ff,#8f7bff);}
+/* ⚠️ Khai lại `[hidden]` cho CẢ HAI nút. Kind `wide` ẩn nút hành động, mà dự án đã
+   trả giá ~12 lần cho đúng cái bẫy này: `display` của tác giả THẮNG `display:none`
+   mà trình duyệt áp cho `[hidden]`. Ở đây `.go` chưa khai `display` nên nó đang
+   đúng nhờ may — khai tường minh để lần ai đó thêm `display:flex` vào không làm
+   nút hiện ra ở một kind không có gì để bấm. */
+#perf-note .go[hidden]{display:none;}
 #perf-note .x{flex:none;min-width:44px;min-height:44px;border-radius:11px;cursor:pointer;
   font-family:inherit;font-size:14px;color:inherit;border:1px solid rgba(255,255,255,.18);
   background:transparent;}
@@ -138,6 +145,12 @@ body.theme-light .deck-collapse{background:rgba(255,255,255,.5);}
 @media (max-width:620px){
   #perf-note{flex-wrap:wrap;justify-content:flex-end;}
   #perf-note .txt{flex:1 1 100%;}
+  /* ⚠️ ĐÃ THỬ RỒI BỎ (29/08/2026) — ĐỪNG THỬ LẠI: cho kind `wide` (chỉ có nút ✕)
+     đứng CÙNG HÀNG với chữ bằng `flex-wrap:nowrap`. Tôi ước lượng tiết kiệm ~56px;
+     ĐO THẬT trên 390×844 thì **xuống hàng 180px · cùng hàng 182px**, tức KHÔNG tiết
+     kiệm gì mà còn nhỉnh hơn 2px — vì chữ phải chia chỗ với nút 44px nên xuống thêm
+     một dòng, bù đúng phần vừa bớt. Thứ quyết định chiều cao ở đây là ĐỘ DÀI CÂU,
+     không phải cách xếp nút. Muốn dải thấp hơn thì rút chữ. */
 }
 
 #deck-reopen{position:fixed;z-index:13;top:16px;left:16px;width:46px;height:46px;border-radius:14px;display:none;place-items:center;}

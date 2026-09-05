@@ -18,7 +18,15 @@
    HUD của Né Thiên Thạch, 14/08). */
 .rc-g .v{margin-left:auto;flex:none;font-family:var(--font-display);font-weight:700;
   font-size:13px;font-variant-numeric:tabular-nums;min-width:3ch;text-align:right;}
-.rc-bar{height:7px;border-radius:99px;overflow:hidden;background:rgba(120,160,255,.14);}
+/* ⚠⚠ `display:block` LA BAT BUOC, khong phai cho gon: markup dung `<span class="rc-bar">`
+   ma `<span>` mac dinh `inline` — `height` KHONG ap cho phan tu inline, nen thanh do
+   ra chieu cao cua hop dong chu. Do duoc 30/08/2026: thanh cao **23px** thay vi 7px,
+   `.rc-g` tran 15px (scrollH 54 / clientH 39) va thanh de len dong chu ngay duoi —
+   chong lan do duoc 663–1920px2 tren CA 4 kho man. Doc CSS thi thay dung 7px.
+   ⚠ Day la lan THU HAI cua cung mot loi: `.prog`/`.bar` cua achievements.html
+     (30/07/2026) cung la `<span>` nen `height:6px` bi bo qua va thanh tien do
+     KHONG HIEN. `.chip.fuel .bar` von da khai `display:block` dung vi ly do nay. */
+.rc-bar{display:block;height:7px;border-radius:99px;overflow:hidden;background:rgba(120,160,255,.14);}
 .rc-bar i{display:block;height:100%;border-radius:99px;transition:width .45s var(--ease);}
 
 /* Ba mức: ổn · thấp · nguy cấp. ⚠️ Đỏ ở đây là trạng thái CỦA TRẠM, không phải

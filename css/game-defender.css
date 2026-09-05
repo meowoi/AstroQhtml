@@ -34,6 +34,19 @@
 @keyframes hullPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.45);}}
 .hullwrap .pct{font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;min-width:40px;text-align:right;}
 .hullwrap.low .pct{color:#ffb4b4;}
+/* ⚠ CONSOLE DOC: nhan chiem ca mot hang, giong het `.chip` da lam tu 22/08/2026.
+   Cot console chi rong 150px (trong long 128px) ma mot hang phai chua nhan "Giap tram"
+   (~56px) + thanh 132px + so "100%" (40px) + 2 khe = ~244px — do duoc thanh giap bi
+   bop con **47px**, tuc 36% be rong da khai. Dot sua 22/08 chi phu `.chip`, `.hullwrap`
+   bi bo sot vi no khong mang class do.
+   ⚠ `.pct` de `flex:none` va thanh `flex:1` — khi tranh cho thi THANH co, khong phai
+      con so; va nho vay con so dung dung mep phai nhu 4 chip kia (xem css/game-shell.css). */
+@media (min-width: 901px){
+  .hullwrap{flex-wrap:wrap;row-gap:2px;}
+  .hullwrap .k{flex:1 0 100%;}
+  .hullwrap .hullbar{flex:1;width:auto;}
+  .hullwrap .pct{flex:none;}
+}
 
 /* ===== Chip CẤP PHÁO + nút XUNG KÍCH EMP (thêm 08/08/2026) =====
    ⚠️ Nhãn của chip nằm TRONG `.v` (JS ghi "Pháo 2"), không dùng `.k`:
@@ -41,6 +54,11 @@
       thì vô nghĩa. Cùng lý do với chip CẤP của game-dodge. */
 .chip.gun{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.42);}
 .chip.gun .v{color:#bfe9ff;font-size:13px;letter-spacing:.04em;}
+/* ⚠ Cung ly do voi `.chip.lvl` cua Ne Thien Thach: day la mot HUY HIEU, chu
+   "Phao 3" da mang ca nhan lan gia tri nen khong co nhan rieng o hang tren.
+   Can phai nhu 3 chip so lieu thi no dat han ve mep phai trong khi moi nhan khac
+   cham mep trai — doc ra nhu bi day lech. Chi ap o console doc. */
+@media (min-width: 901px){ .hud .chip.gun .v{text-align:center;} }
 
 /* Nút EMP: thanh nạp chạy dọc mép dưới nút, nên trẻ thấy nó ĐANG đầy dần chứ không
    phải chỉ thấy "khoá/mở". Nút dùng lại .iconbtn của game-shell nên vùng chạm 44px

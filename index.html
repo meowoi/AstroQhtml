@@ -426,25 +426,25 @@
   </footer>
 </div>
 
-<!-- ============ KHUYẾN NGHỊ DÙNG MÁY TÍNH (chỉ hiện trên máy cảm ứng nhỏ) ============
-     ⚠️ CỐ Ý LÀ DẢI DƯỚI ĐÁY ĐÓNG ĐƯỢC, KHÔNG PHẢI MODAL CHE KÍN. Trang này ĐÃ
-        GO-LIVE và đang được Google lập chỉ mục (`index,follow`), mà Google dùng
-        **mobile-first indexing** — một lớp phủ chắn hết nội dung trên điện thoại bị
-        xếp vào "intrusive interstitial" và ăn phạt xếp hạng. Dải này không che nội
-        dung, không bẫy tiêu điểm bàn phím, và người dùng vẫn đọc + đăng ký waitlist
-        được ngay trên điện thoại.
-     ⚠️ KHÔNG phải `role="dialog"`: đây không phải hộp thoại chặn luồng. Dùng
-        `role="region"` + nhãn, nên trình đọc màn hình thông báo mà không khoá người
-        dùng lại trong đó. -->
-<div class="mob-note" id="mob-note" role="region" data-i18n-aria="mob_aria"
-     aria-label="Khuyến nghị thiết bị" hidden>
-  <span class="mn-ic" aria-hidden="true">🖥️</span>
-  <div class="mn-body">
-    <strong data-i18n="mob_title">Trải nghiệm tốt nhất trên máy tính</strong>
-    <p data-i18n-html="mob_body">astroQ có bản đồ thiên hà 3D và mini-game cần màn hình rộng. Bạn vẫn xem được trang này trên điện thoại, nhưng hãy mở bằng <b>laptop hoặc PC</b> để chơi trọn vẹn nhé!</p>
-  </div>
-  <button type="button" class="mn-x" id="mob-x" data-i18n-aria="mob_close" aria-label="Đã hiểu, đóng">&times;</button>
-</div>
+<!-- ⚠️⚠️ DẢI "TRẢI NGHIỆM TỐT NHẤT TRÊN MÁY TÍNH" ĐÃ BỎ KHỎI ĐÂY (29/08/2026) —
+     ĐỪNG ĐẶT LẠI. Chủ dự án chốt: *"lời khuyên trải nghiệm tốt nhất trên máy tính
+     sẽ để ở phần cần nó nhất"*.
+     ⚠️ Lý do là một SỐ ĐO, không phải sở thích: trang chủ là đích của quảng cáo trả
+        tiền, mà lưu lượng Facebook phần lớn là điện thoại — dải này hiện với mọi
+        khách `(max-width:860px) and (pointer:coarse)`, tức nó bảo GẦN TRỌN nhóm
+        khách vừa tốn tiền quảng cáo rằng *hãy quay lại bằng máy tính*, ngay trên
+        màn hình đầu tiên và ngay dưới cụm nút hành động (đo 29/08: chiếm **15%**
+        màn 390×844). Đo cùng ngày: `facebook/paid/aug2026-ai-crit` mang về **555
+        khách → 0 tài khoản, 0 waitlist**.
+     ⚠️ Lời khuyên KHÔNG bị xoá, nó ĐƯỢC DỜI tới đúng chỗ cần: dải này nêu hai thứ
+        cần màn rộng — **bản đồ thiên hà 3D** và **mini-game**. Mini-game vốn đã có
+        lời nhắc "xoay ngang" riêng ở `js/game-shell.js` (đúng cỡ: xoay máy, không
+        phải đi tìm laptop); còn bản đồ 3D thì nay có kind `wide` của dải
+        `#perf-note` trong `explorer.html`. Tức lời khuyên chỉ tới tay người ĐANG
+        mở đúng thứ cần màn rộng, không tới tay người vừa bấm quảng cáo.
+     ⚠️ Khoá `astroq-mob-note` thành MỒ CÔI (không mã nào đọc). Cố ý không đi dọn
+        localStorage của người dùng cũ — 4 bộ đo còn gieo khoá đó để dải khỏi chen
+        vào phép đo, gieo một khoá không ai đọc thì vô hại. -->
 
 <!-- ============================================================
      DẢI MỜI SANG BẢN NGÔN NGỮ KIA
@@ -464,10 +464,12 @@
         `applyTexts` đổ theo ngôn ngữ CỦA TRANG nên sẽ dịch ngược; JS tự đổ chữ
         từ từ điển của ngôn ngữ kia (xem initLangNote trong js/index.js).
 
-     ⚠️ Cùng khuôn `.mob-note`: neo đáy, KHÔNG che nội dung, KHÔNG bẫy tiêu điểm
-        (`role="region"` chứ không phải `dialog`). Trang đã go-live và Google
-        lập chỉ mục theo mobile-first — lớp phủ chắn nội dung bị xếp vào
-        "intrusive interstitial" và ăn phạt xếp hạng. -->
+     ⚠️ Neo đáy, KHÔNG che nội dung, KHÔNG bẫy tiêu điểm (`role="region"` chứ
+        không phải `dialog`). Trang đã go-live và Google lập chỉ mục theo
+        mobile-first — lớp phủ chắn nội dung bị xếp vào "intrusive interstitial"
+        và ăn phạt xếp hạng. (Khuôn này vốn lấy từ dải `.mob-note` đã bỏ
+        29/08/2026; nay nó là dải đáy DUY NHẤT của trang chủ, nên `--ln-lift`
+        cũng đã bỏ theo — xem `css/index.css`.) -->
 <div class="lang-note" id="lang-note" role="region" hidden>
   <span class="ln-ic" aria-hidden="true">🌐</span>
   <div class="ln-body">

@@ -3197,8 +3197,29 @@ check("template.yaml KHONG dat PAY_WEBHOOK_SECRET (khoa phai o Secrets Manager)"
       re.search(r"^\s*PAY_WEBHOOK_SECRET\s*:", _tmpl, re.M) is None)
 
 # ── Quyen ──
-check("nhom /me/billing doi dang nhap DA XAC MINH email",
-      'MapGroup("/me/billing").RequireAuthorization("verified")' in _bep_cs)
+# ⚠️ DOI CACH GAC 04/09/2026, KHONG DOI YEU CAU. Truoc do nhom nay mang policy
+#    "verified" (doc claim `email_verified` trong ID token); nay la HAI bo loc doc
+#    DynamoDB. Van la "phai xac minh email moi mua duoc" — chi khac la cau tra loi
+#    dung ngay lap tuc thay vi tre toi mot gio, va 403 co mang `code`.
+#    Do tren `_bep_1l` (da gop khoang trang) vi chuoi goi nam tren nhieu dong.
+check("nhom /me/billing doi CO HO SO (RequireProfile)",
+      "MapGroup(\"/me/billing\") .RequireAuthorization() "
+      ".AddEndpointFilter(AccountGate.RequireProfile)" in _bep_1l)
+check("nhom /me/billing doi DA XAC MINH email (RequireVerifiedEmail)",
+      ".AddEndpointFilter(AccountGate.RequireVerifiedEmail)" in _bep_1l)
+# ⚠️ THU TU LA MOT CHOT: RequireProfile la cho DOC co tu DynamoDB va ghi vao
+#    HttpContext.Items; RequireVerifiedEmail chi doc lai. Dao lai thi cong thu hai
+#    LUC NAO CUNG thay "chua xac minh" — tuc dong cua ca duong thanh toan, im lang.
+check("RequireProfile dat TRUOC RequireVerifiedEmail",
+      _bep_1l.find(".AddEndpointFilter(AccountGate.RequireProfile)")
+      < _bep_1l.find(".AddEndpointFilter(AccountGate.RequireVerifiedEmail)"))
+# ⚠️ CHI DOC CHUOI GOI CUA CHINH MapGroup, khong quet ca file: khoi chu thich ngay
+#    tren no CO Y trich lai `.RequireAuthorization("verified")` de ke ra cai da bo va
+#    vi sao — quet ca file thi phep kiem nay hong oan vi mot cau giai thich.
+_bep_grp = _bep_1l[_bep_1l.find('MapGroup("/me/billing")'):]
+_bep_grp = _bep_grp[:_bep_grp.find(";")]
+check("nhom /me/billing KHONG con dung policy doc claim",
+      len(_bep_grp) > 20 and 'RequireAuthorization("verified")' not in _bep_grp)
 check("uid lay TU TOKEN, khong tu than request",
       'u.FindFirst("user_id")' in _bep_cs and "req.Uid" not in _bep_cs)
 # ⚠️ 404 chu KHONG phai 403: 403 noi rang ma don do CO THAT, tuc mot duong do xem
@@ -5193,6 +5214,262 @@ check("[40] lang-wait: co duong cuu bang setTimeout (chong trang trang)",
 check("[40] lang-wait: che bang `visibility`, KHONG `display` (chong nhay bo cuc)",
       _re38.search(r"\.lang-wait\s+main\s*\{[^}]*display\s*:\s*none", _dcss)
       is None)
+
+# ══════════════════════════════════════════════════════════════════════════════
+print("\n=== [41] KHONG CON BUC TUONG XAC MINH O PHIEN DAU (viec 2, 04/09/2026) ===")
+# ⚠️⚠️ MUC NAY CANH MOT VIEC DE BI DUNG LAI MA KHONG AI THAY. Phan tich 04/09/2026 doc
+#    CloudWatch 14 ngay: 3 luot dang ky that cua nguoi ngoai, **2 trong 3 khong bao gio
+#    bam link kich hoat**. Bang cach dung tai khoan NGAY luc dang ky va bo cong
+#    `emailVerified` khoi duong vao, hai nguoi do nay se co tai khoan + tien do. Neu ai
+#    do sau nay "sua lai cho an toan" bang cach doi cong ve doc claim, ca ket qua do
+#    bien mat — va se KHONG co trieu chung nao ngoai mot con so dang ky thap.
+# ⚠️ Phai giu DUNG BA lat cat: (a) tai khoan ra doi o /auth/register, (b) cong /me doi
+#    CO HO SO chu khong doi email da xac minh, (c) qua khoi dau VAN chi cap sau khi bam
+#    link (chu du an chot) — bo (c) la moi dia chi go bua deu rut duoc tien that.
+_auth_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/AuthEndpoints.cs"))
+_auth_1l = re.sub(r"\s+", " ", _auth_cs)
+_me_cs   = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/MeEndpoints.cs"))
+_me_1l   = re.sub(r"\s+", " ", _me_cs)
+_gate_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/AccountGate.cs"))
+_prog_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Program.cs"))
+_dyn_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.cs"))
+_fba_js  = rd("js/firebase-auth.js")
+_fbu_js  = rd("js/firebase-auth-ui.js")
+_par41   = rd("parent.html")
+_dash41  = rd("dashboard.html")
+
+# ── (a) Tai khoan ra doi ngay o /auth/register ──
+check("[41] /auth/register tao tai khoan Firebase voi emailVerified: false",
+      "ImportUserAsync(email, effName, pwdHash, pwdSalt," in _auth_1l
+      and "emailVerified: false)" in _auth_1l)
+# ⚠️ GIANH CHO EMAIL TRUOC KHI DUNG FIREBASE. Ghi co dieu kien cua DynamoDB bao dam hai
+#    request song song thi dung mot cai thang; de Firebase quyet thi ImportUsersAsync
+#    trung email se AM THAM GHI DE tai khoan da co.
+check("[41] /auth/register giu cho email TRUOC khi goi Firebase",
+      _auth_1l.find("if (!await db.ClaimEmailAsync(email))")
+      < _auth_1l.find("await fb.ImportUserAsync(email, effName"))
+# ⚠️ THU HOI DU CA HAI DAU khi tao that bai: bo lai ban giu cho email la khoa vinh vien
+#    dia chi do (khong ai dang ky duoc, cung khong co tai khoan nao de dang nhap); bo
+#    lai tai khoan Firebase mo coi thi te hon — no dang nhap duoc ma khong co ho so.
+check("[41] tao that bai thi thu hoi CA tai khoan Firebase VA cho giu email",
+      "fb.DeleteUserAsync(newUid)" in _auth_1l
+      and "db.ReleaseEmailAsync(email)" in _auth_1l)
+# ⚠️ `account` la truong client doc de biet co dang nhap duoc ngay khong; `pending` giu
+#    lai cho ban ghi cho KIEU CU. Hai truong nay TACH NGHIA tu 04/09/2026 — bo mot cai
+#    la client roi ve man cho kich hoat, tuc dung lai buc tuong.
+check("[41] /auth/register tra ca `account` va `pending`",
+      "account          = newUid.Length > 0" in _auth_cs
+      and "pending          = newUid.Length == 0" in _auth_cs)
+
+# ── (b) Cong /me doi CO HO SO, khong doi email da xac minh ──
+check("[41] nhom /me gac bang AccountGate.RequireProfile",
+      'MapGroup("/me") .RequireAuthorization() .AddEndpointFilter(AccountGate.RequireProfile)'
+      in _me_1l)
+check("[41] policy doc claim 'verified' da bien khoi Program.cs",
+      'AddPolicy("verified"' not in _prog_cs)
+# ⚠️ HO SO CU (truoc 04/09/2026) KHONG CO COT `emailVerified`. Thieu cot phai coi la
+#    TRUE: hoi do ho so CHI sinh ra sau khi bam link, nen mac dinh false se khoa nham
+#    TOAN BO nguoi dung cu ra khoi bao cao va thanh toan.
+check("[41] thieu cot emailVerified => coi la DA xac minh (nguoi dung cu)",
+      '!res.Item.TryGetValue("emailVerified", out var v) || (v.BOOL ?? false)' in _dyn_cs)
+# ⚠️ CHI HAI CHO duoc doi email da xac minh. Them cho thu ba ma khong co ly do bang so
+#    la dung lai buc tuong tung mieng mot.
+# ⚠️ DEM LOI GOI THAT (`.AddEndpointFilter(...)`), khong dem lan NHAC TEN: ca hai file
+#    deu co khoi chu thich noi ve bo loc nay, va dem chuoi tran thi phep kiem hong oan
+#    ngay lan ai do them mot cau giai thich.
+_rve = ".AddEndpointFilter(AccountGate.RequireVerifiedEmail)"
+check("[41] dung 2 cho GAN RequireVerifiedEmail (thu phu huynh + thanh toan)",
+      (_me_cs.count(_rve) + _bep_cs.count(_rve)) == 2,
+      "me=%d billing=%d" % (_me_cs.count(_rve), _bep_cs.count(_rve)))
+check("[41] /me/report/email la route cua nhom /me co cong muon",
+      re.search(r'MapPost\("/report/email"', _me_cs) is not None
+      and "AccountGate.RequireVerifiedEmail" in _me_cs)
+check("[41] 403 mang code 'email-unverified' cho client noi dung cau",
+      'code    = "email-unverified"' in _gate_cs)
+check("[41] parent.html noi dung cau khi chua xac minh (khong bao 'can dang nhap')",
+      'r.code === "email-unverified"' in _par41 and "mail_unverified" in _par41)
+
+# ── (c) Qua khoi dau VAN chi cap sau khi bam link ──
+# ⚠️⚠️ CHOT CHONG RUT TIEN BANG DIA CHI GO BUA. Viec 2 bo buc tuong khoi phien dau,
+#    nhung chu du an chot ro: qua chi cap SAU khi bam link. Goi GrantStarterBonusAsync
+#    tu /auth/register la bien moi email bat ky thanh 100 tt.
+_reg_body = _auth_cs[_auth_cs.find('g.MapPost("/register"'):_auth_cs.find('g.MapPost("/resend"')]
+check("[41] /auth/register KHONG cap qua khoi dau",
+      len(_reg_body) > 1000 and "GrantStarterBonusAsync" not in _reg_body)
+check("[41] /auth/activate cap qua o CA HAI nhanh (tai khoan co san + ban ghi cu)",
+      _auth_cs.count("await GrantStarterBonusAsync(db, log, email,") == 2,
+      "%d cho" % _auth_cs.count("await GrantStarterBonusAsync(db, log, email,"))
+# ⚠️ NHANH "TAI KHOAN CO SAN" KHONG DUOC GOI ClaimEmailAsync: cho email da giu tu luc
+#    dang ky, nen loi goi do chac chan tra FALSE va luong se re vao nhanh "already" —
+#    tuc moi luot kich hoat hop le bi hieu nham thanh bam link lan hai va KHONG AI NHAN
+#    DUOC QUA. Day la cai bay de vap nhat khi doc luot doan do roi chep lai.
+_i0 = _auth_cs.find("if (!string.IsNullOrEmpty(p.Uid))")
+_i1 = _auth_cs.find("ClaimEmailAsync(email)", _i0)
+_act_new = _auth_cs[_i0:_i1] if _i0 >= 0 and _i1 > _i0 else ""
+check("[41] nhanh 'tai khoan co san' cua /activate KHONG goi ClaimEmailAsync",
+      _i0 >= 0 and "MarkProfileVerifiedAsync" in _act_new
+      and _act_new.count("GrantStarterBonusAsync") == 1)
+check("[41] kich hoat bat co o DynamoDB (nguon su that) roi moi tren Firebase",
+      0 <= _act_new.find("db.MarkProfileVerifiedAsync")
+      < _act_new.find("fb.MarkEmailVerifiedAsync"))
+
+# ── Client: dang ky xong la vao choi, dang nhap khong con bi chan ──
+check("[41] register() tu dang nhap khi server tra account:true",
+      "if(r.data.account !== true)" in _fba_js
+      and "fb.signInWithEmailAndPassword(auth, email, password)" in _fba_js)
+# ⚠️ MAT KHAU BI GIU (`passwordKept`) thi DUNG thu dang nhap: cai vua go chac chan sai,
+#    thu la an `auth/invalid-credential` va dot han muc `auth/too-many-requests`.
+check("[41] register() khong thu dang nhap khi passwordKept",
+      re.search(r"if\(base\.passwordKept\)\s*\n\s*return Object\.assign\(base,\s*\{ signedIn:false",
+                _fba_js) is not None)
+# ⚠️ TAI KHOAN VAN TON TAI khi tu dang nhap that bai — `ok` phai giu true. Tra ok:false
+#    la moi nguoi ta bam Dang ky lan nua, va lan do se an `email-already-in-use`: mot
+#    ngo cut khong tu thoat ra duoc.
+check("[41] register() tu dang nhap that bai van tra ok:true",
+      "signedIn:false, account:true, code: e && e.code" in _fba_js)
+# ⚠️⚠️ DONG QUAN TRONG NHAT CUA CA MUC NAY: `login()` KHONG duoc chan emailVerified nua.
+check("[41] login() KHONG con chan tai khoan chua xac minh",
+      "if(!cred.user.emailVerified){" not in _fba_js)
+# ⚠️ Nhung van phai chan tai khoan KHONG CO HO SO: Firebase cho bat ky ai `signUp` bang
+#    apiKey CONG KHAI trong ma client. Cong that o server; day chi la loi dan duong.
+check("[41] login() ky xuat khi server noi 'no-profile'",
+      'code:"no-profile"' in _fba_js and "api.logout()" in _fba_js)
+# ⚠️ CHI khi server NOI THANG no-profile. Het han cho / mat mang -> FAIL-OPEN, cu cho
+#    vao: doan tu mot loi goi hong la da mot dua tre co ho so that ra ngoai vi mang cham.
+check("[41] no-profile chi suy tu 403 + code, khong suy tu loi goi hong",
+      'r.status === 403 && r.code === "no-profile"' in _fba_js)
+check("[41] giao dien dang ky xong thi dong popup va di tiep (khong hien man cho thu)",
+      "if(res.signedIn){" in _fbu_js and 'tx("r_in_gift")' in _fbu_js)
+
+# ── Dai moi bam link o dashboard: lay 500 tt khong con ngo cut ──
+# ⚠️⚠️ VI SAO PHEP KIEM NAY CAN THIET. Qua chi cap sau khi bam link, nen vi tai khoan
+#    moi la 0 tt: nhiem vu va quiz choi duoc (chung CONG tien) nhung mini-game thi chua.
+#    Khong co dai nay thi tre gap "khong du Thien thach tim" o Khu Huan Luyen ma khong
+#    co cho nao trong app noi tien nam o dau — tuc vua go mot cua chan xong lai dung
+#    mot ngo cut im lang o cho khac.
+check("[41] /me/profile tra emailVerified + starterBonus cho dai moi",
+      "emailVerified = verified," in _me_cs and "starterBonus" in _me_cs)
+# ⚠️ LAY TU CONG, khong doc them luot nao: RequireProfile vua doc ho so o bo loc cap
+#    nhom va da ghi ket qua vao HttpContext.Items dung cho viec nay.
+check("[41] emailVerified lay tu AccountGate.IsVerified, khong doc lai DynamoDB",
+      "AccountGate.IsVerified(http)" in _me_cs)
+# ⚠️ CHI doc bang cho khi CON NO kich hoat: da xac minh thi khong co gi de moi, nen
+#    khong hoi — tai khoan da kich hoat tra dung bang cai gia cu.
+check("[41] chi doc WAITLIST khi chua xac minh (khong them 1 GetItem cho moi nguoi)",
+      re.search(r"if \(!verified\) \{ starterBonus = Wallet\.StarterBonus;", _me_1l)
+      is not None)
+check("[41] dashboard co dai moi bam link + nut gui lai",
+      'id="verify"' in _dash41 and 'id="verify-send"' in _dash41
+      and "AstroQAuth.resendVerification" in _dash41)
+# ⚠️ `undefined` = CHUA BIET (chua keo duoc ho so ve, hoac server con ban cu) va "chua
+#    biet" thi phai IM. Hien dai "con qua dang cho" cho mot dua tre da kich hoat tu lau
+#    la noi sai ve vi cua no.
+check("[41] dai chi hien khi emailVerified === false ro rang",
+      "u.emailVerified !== false || !u.email || n <= 0" in _dash41)
+# ⚠️ DUNG LAI `.sess` chu khong dung khung moi — luat 2 muc 2 CLAUDE.md.
+check("[41] dai moi dung lai khung .sess (khong chep khung moi)",
+      'class="sess sess--gift"' in _dash41
+      and re.search(r"\.sess--gift\{", rd("css/dashboard.css")) is not None)
+# ⚠️ `hydrateProfile` phai DOI `typeof === "boolean"`: server chua deploy ban moi khong
+#    tra truong nay, ghi `false` khi khong biet la bat dai moi cho ca nguoi dung cu.
+check("[41] client chi ghi co khi server that su tra ve (chong server ban cu)",
+      'typeof p.emailVerified === "boolean"' in _fba_js)
+
+print("\n=== [42] BEACON `engaged` — CHE DOI O 'CO VAO NHUNG KHONG DANG KY' (viec 4, 05/09/2026) ===")
+# ⚠️⚠️ MUC NAY CANH MOT PHEP DO CO THE HONG HOAN TOAN IM LANG. 14 ngay do duoc 828 khach
+#    mang nhan va 4 luot dang ky — ~99,6% mat TRUOC form. Voi mot con so `n` duy nhat thi
+#    "mo ra roi dong ngay" va "co doc ma van khong dang ky" doc ra Y HET nhau, ma cai thu
+#    nhat phai sua QUANG CAO con cai thu hai phai sua TRANG. Su kien thu hai la cho ranh
+#    gioi do duoc ghi lai.
+# ⚠️ BA lat cat phai giu: (a) client bat DU HAI dieu kien va dung ho dong ho khi tab an,
+#    (b) co ben RIENG cho luot "o lai" — dung chung `sent` la mat luot, (c) "chua do"
+#    phai doc ra "—" chu khong phai "0" o ca server lan trang bao cao.
+_vis_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Endpoints/VisitEndpoints.cs"))
+_visd_cs = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Data/DynamoContext.Visits.cs"))
+_ins_cs  = rd_abs(os.path.join(SV, "src/AstroqSV.Api/Services/Insights.cs"))
+_ins_1l  = re.sub(r"\s+", " ", _ins_cs)
+_utm_js  = rd("js/utm.js")
+_bea_js  = rd("js/utm-beacon.js")
+_adm_js  = rd("js/admin-report.js")
+
+# ── (a) Client bat dung hai dieu kien ──
+# ⚠️ HAI DIEU KIEN, KHONG PHAI MOT. Chi do thoi gian thi tab mo nen cung tinh la "co doc";
+#    chi do cuon thi nguoi doc ky dung man hero tren dien thoai khong bao gio duoc tinh.
+check("[42] beacon co CA nguong thoi gian VA nguong cuon",
+      "STAY_MS" in _bea_js and "SCROLL_R" in _bea_js
+      and "addEventListener(\"scroll\"" in _bea_js)
+check("[42] nguong la 10 giay va 60% khung nhin",
+      re.search(r"STAY_MS\s*=\s*10000", _bea_js) is not None
+      and re.search(r"SCROLL_R\s*=\s*0\.6", _bea_js) is not None)
+# ⚠️⚠️ DONG HO PHAI DUNG KHI TAB AN. Link mo trong tab nen se du 10 giay ma KHONG AI NHIN
+#    — tuc bom thang vao dung con so dung de ket luan "trang giu duoc nguoi".
+check("[42] dong ho dung khi tab an (khong dem tab mo nen)",
+      "visibilitychange" in _bea_js and "document.hidden" in _bea_js
+      and "stopClock" in _bea_js)
+# ⚠️ HEN PHAN CON LAI, KHONG HEN LAI DU 10 GIAY: nguoi chuyen tab qua lai vai lan ma lan
+#    nao cung dat lai dong ho thi khong bao gio toi dich.
+check("[42] chuyen tab thi cong don, khong dat lai dong ho tu dau",
+      re.search(r"setTimeout\(fire,\s*Math\.max\(0,\s*STAY_MS\s*-\s*seen\)\)", _bea_js)
+      is not None)
+# ⚠️ `passive:true` BAT BUOC: listener cuon khong passive lam khung dung thao tac no dang do.
+check("[42] listener cuon la passive (khong lam giat trang)",
+      re.search(r"addEventListener\(\"scroll\", onScroll, \{ passive: true \}\)", _bea_js)
+      is not None)
+# ⚠️ CHI KHACH MANG NHAN. Nguoi vao thang astroq.org van 0 request — dieu kien de them
+#    phep do nay ma khong pha loi hua o dau js/utm.js.
+check("[42] khong nhan thi 0 request (giu nguyen loi hua rieng tu)",
+      "if (!engSrc) return;" in _bea_js)
+
+# ── (b) Co ben RIENG cho luot "o lai" ──
+# ⚠️⚠️ DUNG CHUNG `sent` LA MAT LUOT: hai su kien doc lap va thu tu toi server KHONG bao
+#    dam. Nguoi mo trang luc mat song roi doc muoi giay thi hoac mat luot "o lai", hoac
+#    danh dau khong luot "mo trang" chua bao gio toi noi.
+check("[42] co ben RIENG (`eng`), khong dung chung `sent`",
+      "pendingEngaged" in _utm_js and "markEngaged" in _utm_js
+      and re.search(r"return \(o && !o\.eng\) \? API\.get\(\) : \"\";", _utm_js) is not None)
+# ⚠️ HOI NHAN LAN NUA, khong dung lai bien `src` cua luot mo trang: `src` rong nghia la
+#    luot MO TRANG da bao xong tu mot luot nap truoc, nhung nguoi do van co the chua bao
+#    duoc luot "o lai" — tuc im lang bo qua dung nhom khach quay lai.
+check("[42] hoi nhan lan nua cho luot 'o lai', khong dung lai bien cua luot mo trang",
+      "utm.pendingEngaged()" in _bea_js
+      and _bea_js.find("utm.pending()") < _bea_js.find("utm.pendingEngaged()"))
+# ⚠️ CHI danh dau khi server DA NHAN (204). Danh dau lac quan la mat luot moi khi mang hong.
+check("[42] chi danh dau khi server da nhan (r.ok), khong lac quan",
+      re.search(r"if \(r && r\.ok\) \{ try \{ mark\(\); \} catch \(e\) \{\} \}", _bea_js)
+      is not None)
+
+# ── (c) "Chua do" phai doc ra "—", khong phai "0" ──
+# ⚠️⚠️ `ADD` TREN DUNG MOT THUOC TINH MOI LUOT. Viet "ADD n :one, e :zero" cho gon thi moi
+#    luot mo trang se TAO RA `e = 0`, va ban ghi co `e = 0` khong con phan biet duoc voi
+#    ban ghi CHUA DO — tuc xoa mat dung cai ranh gioi "—" o trang bao cao.
+check("[42] mot luot chi ADD mot thuoc tinh (khong tao `e = 0` cho moi luot mo trang)",
+      re.search(r'UpdateExpression = engaged \? "ADD e :one" : "ADD n :one"', _visd_cs)
+      is not None)
+# ⚠️ SO SANH CHINH XAC chu `engaged`, KHONG dung Campaign.Clean: day la TU KHOA cua giao
+#    thuc, khong phai nhan do nguoi dat.
+check("[42] `ev` so khop chinh xac 'engaged', khong qua bo loc nhan",
+      re.search(r'string\.Equals\(req\?\.Ev, "engaged", StringComparison\.Ordinal\)', _vis_cs)
+      is not None)
+# ⚠️ CLIENT CU (con trong may nguoi dung, service worker con giu cache) khong gui `ev` —
+#    mac dinh phai la LUOT MO TRANG, khong phai loi.
+check("[42] thieu `ev` => luot mo trang (client cu khong gay loi)",
+      "public record VisitRequest(string? Src, string? Ev);" in _vis_cs)
+# ⚠️⚠️ `LongOf` tra 0 cho thuoc tinh vang mat, nen cong thang vao la dat khoa cho MOI nhan
+#    — ke ca nhan chi co ban ghi truoc 05/09/2026 — va trang bao cao in "0% o lai" cho mot
+#    quang thoi gian chua he do.
+check("[42] server chi ghi khoa khi ban ghi THAT SU co thuoc tinh `e`",
+      'if (item.ContainsKey("e"))' in _ins_cs)
+check("[42] SrcRow.Engaged la `long?` (null = chua do, khac han 0)",
+      "long Visits, long? Engaged);" in _ins_1l)
+check("[42] doc bang TryGetValue, khong GetValueOrDefault (giu ranh gioi chua-do)",
+      re.search(r"_engagedBySrc\.TryGetValue\(k, out var eng\) \? eng : null", _ins_cs)
+      is not None)
+# ⚠️ `|| 0` o client la xoa mat ranh gioi do — bien moi nhan chay truoc 05/09/2026 thanh
+#    "0% o lai", mot loi khang dinh ve mot quang thoi gian khong he co phep do.
+check("[42] trang bao cao KHONG ha null ve 0 (`|| 0` la sai o cot nay)",
+      "(x.engaged == null ? null : (Number(x.engaged) || 0))" in _adm_js)
+check("[42] cot 'O lai doc' in '—' khi chua do",
+      '"Ở lại đọc"' in _adm_js and "r.eng != null && r.vis > 0" in _adm_js)
 
 print(f"\n=== KET QUA: {ok_n} dat / {bad_n} hong ===")
 sys.exit(0 if bad_n == 0 else 1)

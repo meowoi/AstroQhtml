@@ -397,6 +397,28 @@ try{
     <button class="go" id="sess-ok" type="button" data-i18n="sess_ok" hidden>Đã hiểu</button>
   </div>
 
+  <!-- ============ DẢI MỜI BẤM LINK KÍCH HOẠT (04/09/2026) ============
+       ⚠️⚠️ VÌ SAO CÓ. Việc 2 của bản phân tích 04/09/2026 bỏ bức tường xác minh khỏi
+          phiên đầu: tài khoản ra đời ngay lúc đăng ký, trẻ vào chơi liền, không ai
+          bị chặn ở cửa nữa. Nhưng QUÀ KHỞI ĐẦU vẫn chỉ cấp SAU khi bấm link (chủ dự
+          án chốt) — nên tài khoản mới có ví 0 tt. Không có dải này thì trẻ gặp
+          "không đủ Thiên thạch tím" ở Khu Huấn Luyện mà **không có chỗ nào trong app
+          nói tiền nằm ở đâu và làm sao lấy** — tức vừa gỡ một cửa chặn xong lại dựng
+          một ngõ cụt im lặng ở chỗ khác.
+       ⚠️ MỜI, KHÔNG GIỤC: nói cái ĐƯỢC (quà) chứ không nói cái PHẢI LÀM ("hãy xác
+          minh email"). Câu thứ hai là câu của bức tường vừa gỡ và nó không cho ai
+          một lý do nào để đứng lên mở hòm thư.
+       ⚠️ DÙNG LẠI `.sess` chứ không dựng khung mới (luật 2 mục 2 CLAUDE.md) — cùng
+          bố cục icon · chữ · nút, cùng tông hổ phách "chưa mất gì cả". `--gift` chỉ
+          đổi màu viền để hai dải phân biệt được khi cùng hiện.
+       ⚠️ Chữ do JS sinh (có email của trẻ) nên KHÔNG gắn `data-i18n` cho `.tx`;
+          `applyTexts` chạy trước sẽ ghi đè. Chỉ nút mới có. -->
+  <div class="sess sess--gift" id="verify" role="status" hidden>
+    <span class="ic" aria-hidden="true">🎁</span>
+    <span class="tx" id="verify-tx"></span>
+    <button class="go" id="verify-send" type="button" data-i18n="verify_btn">Gửi lại link</button>
+  </div>
+
   <!-- ============ BẢNG THỐNG KÊ HÀNH TRÌNH ============
        ⚠️⚠️ Ở TRÊN 6 THẺ KHU VỰC, NHƯNG PHẢI GIỮ MỎNG (chủ dự án chốt 15/08/2026).
           Lịch sử: bản gốc để nó ở đây và nó cao 481px — cộng với sáu đường vào
@@ -676,6 +698,15 @@ document.addEventListener("DOMContentLoaded", function(){
       sess_done:"Đã lưu xong {n} việc lên tàu mẹ.",
       sess_btn:"Đăng nhập lại", sess_ok:"Đã hiểu",
       sess_unit:"việc", sess_unit1:"việc",
+      /* Dải mời bấm link kích hoạt — xem khối chú thích cạnh `#verify` ở trên.
+         ⚠️ `{e}` là email của trẻ, `{n}` là số Thiên thạch tím đang chờ. KHÔNG gõ cứng
+            con số vào câu: quà là 500 tt cho người đã ghi danh và 100 tt cho người
+            còn lại (Wallet.StarterBonusFor ở server) — một câu ghi cứng "500" là nói
+            sai với phần lớn tài khoản mới. */
+      verify_tx:"Còn {n} Thiên thạch tím quà khởi đầu đang chờ! Mở hòm thư <b>{e}</b> và bấm link kích hoạt là nhận được ngay.",
+      verify_btn:"Gửi lại link",
+      verify_sent:"Đã gửi lại link kích hoạt. Kiểm tra hòm thư nhé!",
+      verify_fail:"Chưa gửi lại được. Thử lại sau một phút nhé.",
       unit_hour:"giờ", unit_min:"phút",
       log_badge:"Mở khoá huy hiệu ‘{n}’",
       log_empty:"Chưa có hoạt động nào, hãy tham gia khám phá hoặc huấn luyện nhé",
@@ -738,6 +769,11 @@ document.addEventListener("DOMContentLoaded", function(){
       sess_done:"Saved to the mothership: {n}.",
       sess_btn:"Log back in", sess_ok:"Got it",
       sess_unit:"things", sess_unit1:"thing",
+      // Activation nudge — see the note next to `#verify` above.
+      verify_tx:"{n} starter Purple Asteroids are waiting! Open <b>{e}</b> and tap the activation link to claim them.",
+      verify_btn:"Resend link",
+      verify_sent:"Activation link sent again. Check your inbox!",
+      verify_fail:"Couldn't resend. Please try again in a minute.",
       unit_hour:"h", unit_min:"min",
       log_badge:"Unlocked ‘{n}’ badge",
       log_empty:"No activity yet — go explore or start training!",
@@ -1123,6 +1159,66 @@ document.addEventListener("DOMContentLoaded", function(){
     el.hidden = false;
   }
 
+  /* ---------------- DẢI MỜI BẤM LINK KÍCH HOẠT (04/09/2026) ----------------
+     Lý do dải này tồn tại: khối chú thích cạnh `#verify` trong phần HTML.
+
+     ⚠️⚠️ CHỈ HIỆN KHI CỜ LÀ `false` RÕ RÀNG. `undefined` nghĩa là CHƯA BIẾT (chưa kéo
+        được hồ sơ về, hoặc server còn bản cũ chưa trả trường này) — và "chưa biết" thì
+        phải im. Hiện dải "còn quà đang chờ" cho một trẻ đã kích hoạt từ lâu là nói sai
+        về ví của nó, đúng loại lỗi mà `p.map01Seen === true` ở `hydrateProfile` đã
+        phải đặt luật để tránh.
+     ⚠️ KHÔNG CÓ EMAIL THÌ KHÔNG HIỆN: nút duy nhất của dải là "Gửi lại link", mà lời
+        gọi đó cần email (chưa có phiên Firebase nào lúc đăng ký — xem
+        `resendVerification`). Một dải có nút không bấm được thì tệ hơn không có dải.
+     ⚠️ MỨC QUÀ DO SERVER NÓI (`starterBonus`), client không đoán: 500 tt cho người đã
+        ghi danh, 100 tt cho người còn lại (Wallet.StarterBonusFor). `0` = không còn gì
+        chờ → ẩn. */
+  function paintVerify(){
+    var el = $("verify"), tx = $("verify-tx");
+    if(!el || !tx) return;
+    var u = AstroQ.getUser() || {};
+    var n = Number(u.starterBonus) || 0;
+    if(u.emailVerified !== false || !u.email || n <= 0){ el.hidden = true; return; }
+    tx.innerHTML = t("verify_tx")
+      .replace("{n}", "<b>" + n + "</b>")
+      .replace("{e}", AstroQ.esc(u.email));
+    el.hidden = false;
+  }
+
+  /* Hỏi lại server xem còn nợ lượt kích hoạt không, rồi vẽ.
+
+     ⚠️⚠️ CHỈ HỎI KHI CACHE NÓI CÒN NỢ. Cờ trong máy do `hydrateProfile()` ghi lúc đăng
+        nhập; tài khoản đã kích hoạt thì không có gì để mời, nên thêm một vòng
+        `/me/profile` vào đường mở buồng lái của MỌI đứa trẻ để phục vụ một thiểu số là
+        đúng cái lỗi `smoke_earth_done.py` đã bắt được ở `GET /me/missions`.
+     ⚠️ NHƯNG VỚI NGƯỜI CÒN NỢ THÌ PHẢI HỎI: trẻ bấm link ở điện thoại của phụ huynh
+        rồi quay lại máy này thì cache ở đây vẫn nói "chưa", và dải mời sẽ ở lại vĩnh
+        viễn với một việc đã làm xong. Server là nguồn sự thật (xem `/me/profile`).
+     ⚠️ HỎNG THÌ GIỮ NGUYÊN CACHE, không đoán: `paintVerify()` vẫn chạy với thứ đang
+        có, và mất mạng thì dải chỉ đơn giản là không đổi. */
+  function refreshVerify(){
+    paintVerify();
+    var u = AstroQ.getUser() || {};
+    if(u.emailVerified !== false) return;
+    /* ⚠️ PHẢI CHỜ `AstroQAuth`, KHÔNG ĐƯỢC KIỂM RỒI BỎ. File đó là `type="module"` nên
+       nó luôn chạy SAU khối script này (lời hứa ở đầu js/firebase-auth.js) — kiểm
+       `window.AstroQAuth` ở đây thì LÚC NÀO CŨNG rỗng, và lời gọi này **không bao giờ
+       xảy ra**, im lặng. Đúng cái bẫy `whenAuth()` được dựng ra để đỡ. */
+    whenAuth(4000).then(function(ready){
+      if(!ready || !AstroQAuth.getProfile) return;
+      return AstroQAuth.getProfile();
+    }).then(function(r){
+      if(!r || !r.ok) return;
+      var p = (r.data && r.data.profile) || {};
+      if(typeof p.emailVerified !== "boolean") return;
+      var cur = AstroQ.getUser() || {};
+      cur.emailVerified = p.emailVerified;
+      cur.starterBonus  = Number(p.starterBonus) || 0;
+      AstroQ.setUser(cur);
+      paintVerify();
+    }, function(){});
+  }
+
   /* ⚠️⚠️ SỐ VIỆC ĐÃ GỬI XONG PHẢI HỎI `js/progress.js`, TRANG KHÔNG TỰ ĐẾM ĐƯỢC.
      `flush()` chạy ngay khi file đó nạp; với một phiên đăng nhập còn tốt thì nó xong
      TRƯỚC cả lúc script này chạy tới — đo được ở `smoke_session_note.py` mục [5].
@@ -1287,6 +1383,7 @@ document.addEventListener("DOMContentLoaded", function(){
     AstroQ.markLangButtons(LANG);
     paintDesk(null);   // ten mau vat co hai ngon ngu -> ve lai
     paintSess();       // chu do JS sinh (co con so) -> applyTexts khong voi toi
+    paintVerify();     // chu co email cua tre -> cung ly do, applyTexts khong voi toi
     var name = userName();
     $("user-name").textContent = name;
     // Avatar: dùng ảnh nhân vật đã chọn (thư mục ava) nếu có, ngược lại hiện chữ cái đầu.
@@ -1392,6 +1489,31 @@ document.addEventListener("DOMContentLoaded", function(){
   if(sessOk) sessOk.addEventListener("click", function(){
     var P = prog(); if(P) P.clearDropped();
     paintSess();
+  });
+
+  /* Dải mời kích hoạt: vẽ từ cache ngay, rồi đối chiếu với server nếu còn nợ.
+     ⚠️ CHẠY TRƯỚC `initLang` LÀ ĐÚNG, không phải sơ suất: `applyLang` gọi lại
+        `paintVerify()` với chữ đúng ngôn ngữ ngay sau đó — y hệt `paintSess()` vẫn
+        được `loadStats()` gọi từ trước đó. Vẽ sớm để dải không nhảy vào giữa trang
+        sau khi trẻ đã bắt đầu đọc. */
+  refreshVerify();
+  var vSend = $("verify-send");
+  if(vSend) vSend.addEventListener("click", function(){
+    var u = AstroQ.getUser() || {};
+    if(!u.email || !window.AstroQAuth || !AstroQAuth.resendVerification) return;
+    /* ⚠️ KHOÁ NÚT TRONG LÚC GỌI. Server có cooldown 60 giây theo ĐÍCH cho
+       `/auth/resend` (xem AuthEndpoints) và trả OK mà không gửi khi còn trong cửa đó —
+       nên bấm dồn không đốt hạn ngạch SES, nhưng vẫn cho trẻ ba câu "đã gửi" cho một
+       lá thư. */
+    vSend.disabled = true;
+    AstroQAuth.resendVerification(u.email).then(function(r){
+      vSend.disabled = false;
+      var ok = !!(r && r.ok);
+      toast(ok ? t("verify_sent") : t("verify_fail"), ok ? "ok" : "");
+    }, function(){
+      vSend.disabled = false;
+      toast(t("verify_fail"));
+    });
   });
   tickTelemetry(); setInterval(tickTelemetry, 2500);
 

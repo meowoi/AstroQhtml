@@ -45,7 +45,18 @@
 .cm-wait{flex:none;border-radius:13px;padding:11px 13px;text-align:center;
   border:1px solid rgba(56,189,248,.35);background:rgba(8,26,48,.8);}
 .cm-wait p{margin:0 0 8px;font-size:12.6px;color:#bfe9ff;}
-.cm-bar{position:relative;height:6px;border-radius:99px;overflow:hidden;
+/* ⚠⚠ `display:block` LA BAT BUOC. Markup dung `<span class="cm-bar">`, ma `<span>`
+   mac dinh `inline` — `width`/`height` KHONG ap cho phan tu inline, va `position:relative`
+   KHONG blockify no (chi `absolute`/`fixed` moi lam the). Con `<i>` ben trong thi
+   `position:absolute;inset:0` nen no khong tao ra chieu cao nao. Do duoc 30/08/2026:
+   thanh render ra **0×0px** trong mot `.cm-wait` cao 32px — thanh cho VO HINH HOAN TOAN.
+   ⚠ Day khong phai loi trang tri: chinh thanh nay dien ta DO TRE 7 phut moi chieu —
+     bai hoc trung tam cua ARCADE-08. Mat no thi tre chi thay mot khoang lang 2,7 giay.
+   ⚠ Vi sao `.hullbar` cua Phong Thu (cung la `<span>`, cung khai `height`) van song:
+     cha cua no `.hullwrap` la `display:flex` nen con duoc BLOCKIFY tu dong. Cha cua
+     `.cm-bar` va `.rc-bar` thi khong — dung o do hai thanh nay chet. Khai `display`
+     ngay tren THANH la cach duy nhat khong phu thuoc vao cha. */
+.cm-bar{display:block;position:relative;height:6px;border-radius:99px;overflow:hidden;
   background:rgba(120,160,255,.16);}
 .cm-bar i{position:absolute;inset:0;width:0;border-radius:99px;
   background:linear-gradient(90deg,#5fd3ff,#8f7bff);}
