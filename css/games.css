@@ -86,6 +86,10 @@
    cùng tông với 📏 của bài đọc nguồn. Dùng chung `sic--gold` với Ghép Chòm Sao
    là chấp nhận được (xem ghi chú `.card--recycle` ngay trên). */
 .card--units  {--neon:rgba(255,207,107,.42);--neonS:rgba(255,207,107,.95);--ic-bg:rgba(255,207,107,.18);}
+/* ARCADE-12 Trạm Phân Loại — tông lam-điện của chương trình `mlearn`.
+   ⚠️ Chọn lam chứ không chọn tím: tím đã là màu của Thiên thạch tím, một thẻ game
+      tông tím đứng cạnh chip số dư thì hai thứ đọc ra như một. */
+.card--classify{--neon:rgba(129,140,248,.42);--neonS:rgba(129,140,248,.95);--ic-bg:rgba(129,140,248,.18);}
 /* ARCADE-11 Trạm Dẫn Tuyến — vàng CHANH, đậm hơn hẳn tông vàng nhạt của Trạm Đối
    Chiếu ngay trên. ⚠️ Hai thẻ dùng CHUNG `sic--gold` cho icon (xem ghi chú
    `.card--recycle`), nên `--neon` là thứ duy nhất phân biệt chúng trong lưới —

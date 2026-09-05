@@ -117,6 +117,19 @@
                en: "See the whole path something travels — and know that one missing link kills all of it" }
     },
 
+    /* ⚠️ CHƯƠNG TRÌNH MỚI, KHÔNG thêm khoá vào một chương trình đang có — cấp
+       của một chương trình là cấp THẤP NHẤT trong các khoá, nên thêm khoá là **hạ
+       cấp của mọi người đã đạt nó**. Luật đầy đủ ghi ở `Services/Training.cs`.
+       ⚠️ KỸ NĂNG Ở ĐÂY KHÁC HẴN "Kiểm chứng dữ liệu" (Trạm Đối Chiếu): bên kia
+          là soi một bảng đã có sẵn xem ai ghi sai; bên này là hiểu rằng một cỗ máy
+          chỉ biết đúng bằng thứ người ta cho nó xem. */
+    mlearn: {
+      ic: "🤖",
+      name: { vi: "Dạy máy học", en: "Teaching machines" },
+      skill: { vi: "Hiểu rằng máy chỉ biết đúng bằng những ví dụ con đã cho nó xem",
+               en: "Understand that a machine only knows as much as the examples you showed it" }
+    },
+
     survival: {
       ic: "🛟",
       name: { vi: "Sinh tồn", en: "Survival" },
@@ -158,7 +171,9 @@
     comms:         { vi: "xếp đúng {n} lệnh",                en: "get {n} commands in the right order" },
     recycle:       { vi: "đạt {n} điểm giữ hệ",              en: "reach {n} life-support points" },
     units:         { vi: "duyệt đúng {n} bảng",              en: "clear {n} sheets correctly" },
-    route:         { vi: "nối xong {n} tuyến trong một lượt", en: "complete {n} runs in one game" }
+    route:         { vi: "nối xong {n} tuyến trong một lượt", en: "complete {n} runs in one game" },
+    classify:      { vi: "dạy máy qua {n} vòng không gán sai nhãn nào",
+                     en: "teach the machine through {n} rounds with no wrong label" }
   };
 
   function pick(o, lang) {

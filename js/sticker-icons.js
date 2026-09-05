@@ -386,6 +386,20 @@
       line: '<path d="M38.8 14.2 44.5 19.9M32.7 20.3 36.2 23.8M26.5 26.5 32.2 32.2' +
             'M20.3 32.7 23.8 36.2M14.2 38.8 19.9 44.5"/>',
       lite: '<path d="M45 8 34 19l3 3L48 11Z"/>' + spark(14, 15, 5) + dust(52, 47, 1.3)
+    },
+
+    tag: { /* 🏷️ Tram Phan Loai (ARCADE-12) — chuong trinh Day may hoc.
+       ⚠️ VE CAI NHAN chu khong ve mot con chip: chan chip la nhung net manh dat
+          sat nhau, ma khe mep-toi-mep duoi ~2,2 don vi la hai net HAN thanh mot
+          khoi o co 26px (bai hoc `comet` phai ve lai BON lan, va `rock` doc ra
+          thanh chu so "17"). Cai nhan la MOT khoi lien — khong co gi de han.
+       ⚠️ LO TRON PHAI DU TO. Tam (46,17) ban kinh 5, cach canh tren va canh phai
+          deu 11 don vi, nen o co nho no van la mot cai lo chu khong bi bit lai.
+          Vong tron ve NGUOC CHIEU voi ngu giac de `fill-rule` mac dinh (nonzero)
+          khoet thanh lo that. */
+      body: '<path d="M34 6 H56 V28 L28 56 6 34 Z' +
+            'M46 12 a5 5 0 1 0 0 10 5 5 0 1 0 0-10 Z"/>',
+      lite: '<path d="M34 6 H45 L23 28 19 24Z"/>' + spark(50, 48, 4.6) + dust(13, 41, 1.2)
     }
   };
 

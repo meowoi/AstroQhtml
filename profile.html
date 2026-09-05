@@ -234,8 +234,8 @@
       rec_dodge:"Né Thiên Thạch", rec_defender:"Phòng Thủ Không Gian", rec_constellation:"Ghép Chòm Sao",
       rec_catch:"Bắt Sao Băng", rec_maze:"Mê Cung Thiên Hà", rec_racer:"Đường Đua Sao Chổi",
       rec_survival:"Trạm Sinh Tồn", rec_comms:"Trạm Liên Lạc", rec_recycle:"Trạm Tuần Hoàn",
-      rec_units:"Trạm Đối Chiếu", rec_route:"Trạm Dẫn Tuyến",
-      rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm", rec_right:"đúng", rec_cmd:"lệnh", rec_gauge:"vạch", rec_sheet:"bảng", rec_run:"tuyến",
+      rec_units:"Trạm Đối Chiếu", rec_route:"Trạm Dẫn Tuyến", rec_classify:"Trạm Phân Loại",
+      rec_none:"Chưa có", rec_pts:"điểm", rec_done:"chòm", rec_right:"đúng", rec_cmd:"lệnh", rec_gauge:"vạch", rec_sheet:"bảng", rec_run:"tuyến", rec_round:"vòng",
       off_guest:"Bạn đang xem dữ liệu tạm trong máy này. <a href=\"landing-app.html\">Đăng nhập</a> để hồ sơ theo bạn sang mọi thiết bị.",
       off_net:"Không kết nối được máy chủ — đang hiện số liệu lưu trong máy. Thử tải lại trang sau nhé.",
       saved_name:"Đã đổi tên thành \"{n}\"", saved_suit:"Đã đổi trang phục sang {n}",
@@ -272,8 +272,8 @@
       rec_dodge:"Asteroid Dodge", rec_defender:"Space Defender", rec_constellation:"Constellation Match",
       rec_catch:"Star Catcher", rec_maze:"Galaxy Maze", rec_racer:"Comet Racer",
       rec_survival:"Survival Station", rec_comms:"Comms Station", rec_recycle:"Recycling Station",
-      rec_units:"Cross-Check Station", rec_route:"Route Station",
-      rec_none:"None yet", rec_pts:"pts", rec_done:"done", rec_right:"correct", rec_cmd:"cmds", rec_gauge:"gauges", rec_sheet:"sheets", rec_run:"runs",
+      rec_units:"Cross-Check Station", rec_route:"Route Station", rec_classify:"Sorting Station",
+      rec_none:"None yet", rec_pts:"pts", rec_done:"done", rec_right:"correct", rec_cmd:"cmds", rec_gauge:"gauges", rec_sheet:"sheets", rec_run:"runs", rec_round:"rounds",
       off_guest:"You are viewing data saved on this device. <a href=\"landing-app.html\">Sign in</a> so your profile follows you everywhere.",
       off_net:"Can't reach the server — showing numbers stored on this device. Try reloading later.",
       saved_name:"Name changed to \"{n}\"", saved_suit:"Suit changed to {n}",
@@ -566,7 +566,8 @@
       /* ARCADE-11 — `unit` la "tuyen" chu khong phai "diem": diem o day la SO
          BAN NOI XONG trong mot luot (toi da 5), goi la diem thi tre tuong no cung
          thang do voi diem cua game canh no. Cung ly do da ghi cho survival/comms. */
-      { key:"route",         ic:"⚡", nm:t("rec_route"),         unit:t("rec_run"),   ls:"astroq-route-best" }
+      { key:"route",         ic:"⚡", nm:t("rec_route"),         unit:t("rec_run"),   ls:"astroq-route-best" },
+      { key:"classify",      ic:"🤖", nm:t("rec_classify"),      unit:t("rec_round"), ls:"astroq-classify-best" }
     ];
     $("recs").innerHTML = rows.map(function(r){
       var v = r.key === "constellation" ? num(cDone) : num(bests[r.key]);

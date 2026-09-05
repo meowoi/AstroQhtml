@@ -1,0 +1,107 @@
+/* ARCADE-12 Trạm Phân Loại — phần RIÊNG. Nạp sau css/decision-game.css.
+   Khuôn: DẠY MÁY MỘT KHÁI NIỆM. Nó cần hai thứ mà năm game lớp quyết định trước
+   không có: một LƯỚI ẢNH mà mỗi ô là một mẫu dữ liệu, và trên mỗi ô là một cặp
+   nút gán nhãn có trạng thái đã-chọn.
+   ⚠️ Để ở đây chứ không nhét vào file dùng chung — hôm nay chỉ một game dùng, mà
+      nhét vào chung là mời game sau dùng lại khuôn này (`docs/decisions/002`). */
+
+/* ── Lưới mẫu ────────────────────────────────────────────────────────────── */
+/* ⚠️ SỐ CỘT CỐ ĐỊNH, KHÔNG `auto-fill minmax()`. Bài học lưới khoang mẫu vật và
+   bức tường Phi Hành Đoàn: `auto-fill` + `minmax(~190px,…)` rơi về MỘT cột ở màn
+   390px, và lúc đó mỗi ô to bằng cả màn hình còn trẻ phải cuộn 8 lần để gán nhãn
+   xong một vòng. */
+/* ⚠️⚠️ KẸP BỀ RỘNG LƯỚI Ở MÀN RỘNG — SỐ ĐO, KHÔNG PHẢI SỞ THÍCH. Bản đầu để
+   lưới trải hết 1054px, nên ô rộng 238px và `aspect-ratio:1` đẩy ảnh quét lên
+   238px cao ⇒ **một hàng ô cao 365px trong khi vùng cuộn `.dg-body` chỉ cao
+   317px**. Hậu quả không phải xấu mà là HỎNG: ở màn hình đầu trẻ thấy ảnh và
+   nút nhãn THỨ NHẤT, còn nút "Nhiễu" nằm hẳn dưới mép — tức một nửa hành động
+   chính của cả game không nhìn thấy được, và không có dấu hiệu nào nói còn
+   nội dung bên dưới. Kẹp 704px thì ô rộng 160 ⇒ hàng ~285px: thấy TRỌN một
+   hàng và còn hé phần trên của hàng sau (chính cái hé đó nói "còn nữa, cuộn
+   đi"). Màn hẹp không cần kẹp — ở đó ô đã là 166px và hàng 275px < 289px.
+   ⚠️ Đổi cỡ nút nhãn, số cột hay `--ar` của sân thì ĐO LẠI con số này. */
+.cl-grid{display:grid;grid-template-columns:repeat(var(--cl-cols,4),minmax(0,1fr));
+  gap:10px;max-width:var(--cl-max,none);margin-inline:auto;}
+@media (min-width:901px){ .cl-grid{--cl-max:704px;} }
+
+.cl-phase{margin:0 0 9px;font-family:var(--font-display);font-size:12.5px;
+  letter-spacing:.02em;color:var(--ink);}
+
+.cl-cell{display:flex;flex-direction:column;gap:7px;padding:8px;border-radius:13px;
+  border:1px solid rgba(120,160,255,.2);background:rgba(15,23,42,.55);
+  transition:border-color .18s,background .18s;}
+.cl-cell.done{border-color:rgba(192,132,252,.6);background:rgba(38,20,64,.5);}
+
+/* Khung ảnh quét. `aspect-ratio` khoá vuông để một mẻ 8 ảnh không nhấp nhô theo
+   nội dung; ảnh do `AstroQTeach.svg()` vẽ nên 0 file tải thêm. */
+.cl-shot{aspect-ratio:1;border-radius:10px;overflow:hidden;
+  border:1px solid rgba(120,160,255,.16);background:#070c1c;}
+.cl-shot svg{display:block;width:100%;height:100%;}
+
+/* ── Hai nút gán nhãn ────────────────────────────────────────────────────── */
+/* ⚠️ XẾP DỌC, KHÔNG XẾP NGANG. Ở màn rộng mỗi ô chỉ ~250px, chia đôi là mỗi nút
+   ~120px trong khi riêng chữ "Tiểu hành tinh" đã cần ~90px cộng emoji — chữ sẽ
+   bị cắt đúng ở nhãn quyết định cả lượt gán. Thà ô cao thêm một dòng còn hơn
+   một cái nhãn mất chữ (bài học ô thống kê ở hồ sơ, 29/07/2026). */
+.cl-btns{display:flex;flex-direction:column;gap:6px;}
+
+/* ⚠️ 48px LÀ SÀN CỦA DỰ ÁN, KHÔNG PHẢI 44. 44 là mốc TỐI THIỂU của WCAG 2.5.5;
+   đặt đúng mốc là không còn biên an toàn nào, và dự án đã có một ca phép kiểm
+   chập chờn thật vì lý do đó (nút VI của explorer đo ra đúng 44×44). */
+.cl-lb{min-height:48px;padding:6px 9px;border-radius:11px;
+  border:1px solid rgba(120,160,255,.26);background:rgba(15,23,42,.6);
+  color:var(--ink);font:inherit;font-size:12px;line-height:1.3;cursor:pointer;
+  transition:border-color .18s,background .18s,transform .16s var(--jelly);}
+.cl-lb:hover{border-color:rgba(56,189,248,.6);}
+.cl-lb:active{transform:scale(.97);}
+
+/* Trạng thái đã chọn phải đọc được KHÔNG CHỈ bằng màu — nền đậm hẳn cộng viền
+   dày, để người phân biệt màu kém vẫn thấy ô nào đang bật. */
+.cl-lb[aria-pressed="true"]{border-width:2px;font-weight:600;}
+.cl-lb.ast[aria-pressed="true"]{border-color:rgba(192,132,252,.95);
+  background:rgba(70,30,110,.7);color:#f0dcff;}
+.cl-lb.noise[aria-pressed="true"]{border-color:rgba(150,180,255,.8);
+  background:rgba(30,44,78,.75);color:#dce8ff;}
+
+/* ── Ô kết quả (máy đã đoán) ─────────────────────────────────────────────── */
+/* ⚠️ MÁY ĐOÁN SAI THÌ TÔ HỔ PHÁCH, KHÔNG TÔ ĐỎ. Đây là màn học, và cái sai ở
+   đây là của MÁY chứ không phải của trẻ — đỏ rực đọc ra thành một lời trách.
+   Cùng nguyên tắc `.sum-note` ở quiz và cột "cần luyện thêm" ở trang phụ huynh.
+   ⚠️ Và khác CẢ DẤU (✔ / ✘) chứ không chỉ khác màu — bài học "bỏ sót và báo
+   nhầm trông y hệt nhau" của ARCADE-10. */
+.cl-cell.res{gap:5px;}
+.cl-cell.res.ok{border-color:rgba(74,222,128,.6);background:rgba(10,32,24,.5);}
+.cl-cell.res.bad{border-color:rgba(255,207,107,.6);background:rgba(40,30,8,.5);}
+
+.cl-said{font-family:var(--font-display);font-size:12px;color:var(--ink);}
+.cl-mark{font-size:11.5px;font-weight:600;}
+.cl-cell.res.ok  .cl-mark{color:#b9f6d0;}
+.cl-cell.res.bad .cl-mark{color:#ffd7a6;}
+
+/* Câu "tớ chưa từng thấy cái nào giống thế này" — nó nói máy CHƯA CHẮC, KHÔNG
+   nói máy sai; máy không có cách nào biết mình sai. Vì thế nó để tông trung
+   tính, không dùng màu của ô đúng hay ô sai. */
+.cl-unsure{font-size:11px;line-height:1.4;color:var(--ink-faint);}
+
+/* ── Hộp bài học ─────────────────────────────────────────────────────────── */
+.cl-lesson{margin:0 0 11px;border:1px solid rgba(255,207,107,.4);border-radius:13px;
+  padding:10px 13px;font-size:12.6px;line-height:1.55;
+  background:rgba(40,30,8,.45);color:#ffd7a6;}
+.cl-lesson b{color:#fff0cf;}
+.cl-lesson i{color:#ffe9c2;}
+
+/* ── Nhãn MÔ PHỎNG ───────────────────────────────────────────────────────── */
+/* ⚠️⚠️ KHÔNG ĐƯỢC BỎ ĐI CHO GỌN. Hai đặc trưng và mọi con số của bộ phân loại
+   này là một mô hình đồ chơi dựng ra để chơi — NASA không công bố bộ đặc trưng
+   nào như thế. Cùng luật đã áp cho nhãn "MÔ PHỎNG" của `game-recycle`,
+   `game-units`, `game-route` và `mission-orbit`. */
+.cl-sim{flex:none;margin:0;text-align:center;font-family:var(--font-mono);
+  font-size:8.5px;letter-spacing:.12em;color:var(--ink-faint);opacity:.8;}
+
+/* ── Màn hẹp ─────────────────────────────────────────────────────────────── */
+@media (max-width:900px){ .cl-grid{--cl-cols:3;} }
+@media (max-width:560px){
+  .cl-grid{--cl-cols:2;gap:8px;}
+  .cl-lb{font-size:11.5px;}
+  .cl-phase{font-size:12px;}
+}

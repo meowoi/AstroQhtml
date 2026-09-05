@@ -250,7 +250,20 @@
           Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
     { key:"route", prog:"systems", pal:"sic--gold", code:"ARCADE-11", cls:"card--route", icon:"bolt", cost:3, diff:"easy", status:"ready", file:"game-route.html",
       name:{vi:"Trạm Dẫn Tuyến", en:"Route Station"},
-      desc:{vi:"Thiên thạch làm lệch hết đường dẫn điện của trạm! Xoay từng đoạn cho dòng điện đi liền một mạch từ pa-nô mặt trời tới đúng thiết bị đang cần nó.", en:"A meteor knocked every conduit on the station out of line! Turn the pieces until the current runs unbroken from the solar panel to the unit that actually needs it."} }
+      desc:{vi:"Thiên thạch làm lệch hết đường dẫn điện của trạm! Xoay từng đoạn cho dòng điện đi liền một mạch từ pa-nô mặt trời tới đúng thiết bị đang cần nó.", en:"A meteor knocked every conduit on the station out of line! Turn the pieces until the current runs unbroken from the solar panel to the unit that actually needs it."} },
+    /* ⚠️ ARCADE-12 — khuôn thứ SÁU của lớp quyết định: DẠY MÁY MỘT KHÁI
+       NIỆM. Năm khuôn trước là *chọn thẻ · xếp thứ tự · chia ngân sách · soi lỗi
+       bảng · nối tuyến*; ở đây trẻ **dạy một hệ thống rồi chịu hậu quả của việc
+       mình vừa dạy**, và cái sai không hiện ra lúc bấm mà hiện ở bước sau
+       — `docs/decisions/002`.
+       ⚠️ `pal` dùng bảng màu MỚI `sic--iris`: chương trình `mlearn` là chương
+          trình mới, và sáu bảng đang có đều đã thuộc về chương trình khác.
+          ⛔ Đừng dùng tông TÍM — tím là màu của Thiên thạch tím, lẫn ngay.
+       ⚠️ Mô tả CỐ Ý không hứa một con số nào (số ảnh, số vòng) — bài học thẻ
+          Đường Đua từng hứa "về đích 1.200 m" khi `raceLen` đã là 14.000. */
+    { key:"classify", prog:"mlearn", pal:"sic--iris", code:"ARCADE-12", cls:"card--classify", icon:"tag", cost:3, diff:"easy", status:"ready", file:"game-classify.html",
+      name:{vi:"Trạm Phân Loại", en:"Sorting Station"},
+      desc:{vi:"Máy chưa biết tiểu hành tinh trông thế nào. Bạn gán nhãn cho từng ảnh quét để dạy nó, rồi xem nó tự đoán — và xem điều gì xảy ra khi bạn dạy thiếu.", en:"The machine has no idea what an asteroid trail looks like. You label each scan to teach it, then watch it guess on its own — and watch what happens when you leave a gap."} }
   ];
 
   /* ================= Số dư ================= */

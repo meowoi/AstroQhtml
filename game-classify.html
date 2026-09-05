@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- Trang app chưa mở cửa (dự kiến 20/08/2026) — noindex. XOÁ khi app mở cửa. -->
+<meta name="robots" content="noindex,follow" />
+<title>AstroQ — Trạm Phân Loại</title>
+<!-- OG:BEGIN — sinh bằng scratchpad/make_og_tags.py · ĐỪNG sửa tay phần dưới -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="astroQ.org" />
+<meta property="og:locale" content="vi_VN" />
+<meta property="og:url" content="https://astroq.org/game-classify.html" />
+<meta property="og:title" content="Trạm Phân Loại · astroQ.org" />
+<meta property="og:description" content="Máy chưa biết tiểu hành tinh trông thế nào. Bạn gán nhãn cho từng ảnh quét để dạy nó, rồi xem nó tự đoán — và xem điều gì xảy ra khi bạn dạy thiếu." />
+<meta property="og:image" content="https://astroq.org/img/og/game-classify.jpg" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Thẻ chia sẻ astroQ.org — Trạm Phân Loại" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Trạm Phân Loại · astroQ.org" />
+<meta name="twitter:description" content="Máy chưa biết tiểu hành tinh trông thế nào. Bạn gán nhãn cho từng ảnh quét để dạy nó, rồi xem nó tự đoán — và xem điều gì xảy ra khi bạn dạy thiếu." />
+<meta name="twitter:image" content="https://astroq.org/img/og/game-classify.jpg" />
+<meta name="twitter:image:alt" content="Thẻ chia sẻ astroQ.org — Trạm Phân Loại" />
+<!-- OG:END -->
+
+<!-- FONT-PRELOAD:BEGIN -->
+<!-- ĐỪNG SỬA TAY khối này — sinh bởi `python scratchpad/sync_font_preload.py`.
+     Vì sao preload (kèm số đo) + vì sao BẮT BUỘC có `crossorigin`: xem đầu script đó. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/inter-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-vietnamese.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/space-grotesk-latin.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/share-tech-mono-latin.woff2" />
+<!-- FONT-PRELOAD:END -->
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/guest-claim.css" />
+<link rel="stylesheet" href="css/decision-game.css" />
+<link rel="stylesheet" href="css/game-classify.css" />
+<script src="js/ui-common.js"></script>
+<script defer src="js/utm.js"></script>
+<script type="module" defer src="js/utm-beacon.js"></script>
+<script src="js/guest-claim.js"></script>
+<script src="js/game-shell.js"></script>
+<script src="js/game-run.js"></script>
+<script src="js/teach-machine.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <button class="back-btn" id="back"><span>&lt;</span> <span data-i18n="back">Về Khu Huấn Luyện</span></button>
+  <span class="tag" id="gtag">[ ASTROQ ]</span>
+  <div class="currency" data-i18n-title="tt_name" title="Thiên thạch tím">
+    <span class="gem" id="gem"><img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /></span>
+    <span class="c-val" id="bal">0</span>
+  </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="vi">VI</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-rotate="off">
+  <div class="hud" id="hud">
+    <div class="chip"><span class="k" data-i18n="round_lbl">Vòng</span><span class="v" id="hb-round">0/0</span></div>
+    <div class="chip"><span class="k" data-i18n="score_lbl">Đạt</span><span class="v" id="hb-score">0</span></div>
+    <div class="chip mtr" data-i18n-title="tt_name" title="Thiên thạch tím">
+      <img src="img/tt.png" data-i18n-alt="tt_name" alt="Thiên thạch tím" /><span class="v" id="hb-mtr">0</span>
+    </div>
+    <div class="chip"><span class="k" data-i18n="best_lbl">Kỷ lục</span><span class="v" id="hb-best">0</span></div>
+    <div class="hud-btns">
+      <button class="iconbtn" id="btn-sfx" type="button" data-i18n-aria="sfx_aria" data-i18n-title="sfx_aria" aria-label="Âm thanh">
+        <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.4a8 8 0 0 1 0 11.2"/></svg>
+        <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="play" id="play">
+    <div class="field" id="field">
+      <div class="dg" id="dg">
+        <div class="dg-steps" id="steps" aria-hidden="true"></div>
+        <p class="dg-brief" id="brief"></p>
+
+        <div class="dg-body">
+          <!-- Giai đoạn DẠY: khay ảnh cần gán nhãn -->
+          <div class="cl-teach" id="teach">
+            <p class="cl-phase" id="teach-h"></p>
+            <div class="cl-grid" id="teach-grid"></div>
+          </div>
+
+          <!-- Giai đoạn KIỂM: máy đoán trên mẫu MỚI -->
+          <!-- ⚠️⚠️ HỘP BÀI HỌC ĐẶT TRÊN LƯỚI, KHÔNG ĐẶT DƯỚI ĐÁY — số đo, không
+               phải sở thích. Vùng cuộn trên điện thoại chỉ cao ~289px còn lưới
+               kết quả cao 950–1540px, nên để nó ở đáy nghĩa là **trẻ phải cuộn
+               qua 6–12 ô mới đọc được thứ cả game tồn tại để dạy** — mà đó lại
+               là câu duy nhất giải thích vì sao máy sai. Đặt trên thì mạch đọc
+               là *kết luận trước, bằng chứng sau*, và `scrollTop = 0` lúc sang
+               màn kiểm bảo đảm nó là thứ đầu tiên mắt gặp. Cùng bài học "hộp VÌ
+               SAO phải tự cuộn vào tầm mắt" của ARCADE-07. -->
+          <div class="cl-test" id="test" hidden>
+            <div class="cl-lesson" id="lesson" hidden></div>
+            <p class="cl-phase" id="test-h"></p>
+            <div class="cl-grid" id="test-grid"></div>
+          </div>
+        </div>
+
+        <p class="cl-sim" id="sim">BỘ PHÂN LOẠI MÔ PHỎNG</p>
+        <div class="dg-acts">
+          <button class="dg-btn primary" id="train" type="button" data-i18n="train_btn">▶ Huấn luyện</button>
+          <button class="dg-btn primary" id="next" type="button" hidden data-i18n="next">Vòng tiếp →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov show" id="ov-start">
+      <div class="ov-card">
+        <span class="ov-tag">[ MISSION_BRIEF ]</span>
+        <div class="ov-ic">🤖</div>
+        <h2 data-i18n="start_title">Trạm Phân Loại</h2>
+        <div class="how">
+          <span data-i18n-html="how1">🏷️ Máy chưa biết gì cả. Bạn <b>gán nhãn</b> từng ảnh quét để dạy nó.</span>
+          <span data-i18n-html="how2">▶ Bấm <b>Huấn luyện</b>, rồi xem máy tự đoán trên những ảnh <b>nó chưa từng thấy</b>.</span>
+          <span data-i18n-html="how3">⚠️ Máy chỉ biết đúng bằng thứ bạn đã cho nó xem — <b>thiếu ví dụ là nó đoán sai</b>.</span>
+        </div>
+        <div class="cost" data-i18n-html="cost_line">Mỗi lượt: <b>3</b> <img src="img/tt.png" alt="Thiên thạch tím" /></div>
+        <div class="acts">
+          <button class="primary" id="start-btn" data-i18n="start_btn">Bắt đầu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="ov-card">
+        <span class="ov-tag">[ RUN_COMPLETE ]</span>
+        <div class="ov-ic" id="over-ic">🤖</div>
+        <h2 id="over-h" data-i18n="over_title">Hết ca trực!</h2>
+        <p id="over-p"></p>
+        <div class="res">
+          <div class="cell"><div class="rv" id="r-score">0</div><div class="rl" data-i18n="score_lbl">Đạt</div></div>
+          <div class="cell time"><div class="rv" id="r-max">0</div><div class="rl" data-i18n="max_lbl">Trên tổng số</div></div>
+          <div class="cell time"><div class="rv" id="r-best">0</div><div class="rl" data-i18n="best_lbl">Kỷ lục</div></div>
+          <div class="cell mtr"><div class="rv" id="r-mtr">0</div><div class="rl" data-i18n="mined_lbl">Thiên thạch tím</div></div>
+        </div>
+        <div class="paid" id="paid"></div>
+        <div class="acts">
+          <a class="dg-read" id="read-link" href="library.html?a=art-ai-tags-nasa-data" data-i18n="read_more">📖 Đọc bài: Dữ liệu chính là bài học</a>
+        </div>
+        <div class="acts">
+          <button class="primary" id="again-btn" data-i18n-html="again_btn">Chơi lại · <b>3</b></button>
+          <button id="hub-btn" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+          <button id="home-btn" data-i18n="home_btn">Trung Tâm Điều Hướng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-need">
+      <div class="ov-card">
+        <div class="ov-ic">🪐</div>
+        <h2 data-i18n="need_title">Chưa đủ Thiên thạch tím!</h2>
+        <p id="need-body"></p>
+        <div class="acts">
+          <button class="primary" id="need-quiz" data-i18n="need_go">Làm Quiz ngay</button>
+          <button id="need-hub" data-i18n="to_hub">Về Khu Huấn Luyện</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="economy.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/progress.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     TRẠM PHÂN LOẠI (ARCADE-12) — game LỚP QUYẾT ĐỊNH thứ sáu.
+     Khuôn: **DẠY MÁY MỘT KHÁI NIỆM** — trẻ gán nhãn ví dụ, máy học từ đúng
+     những ví dụ đó, rồi trẻ xem nó đoán trên ảnh nó CHƯA TỪNG THẤY.
+
+     ⚠️⚠️ KHUÔN THỨ SÁU, VÀ NÓ PHẢI KHÁC CẢ NĂM CÁI TRƯỚC (`docs/decisions/002`:
+        một khuôn không dùng quá 2 lần). Năm khuôn đã có: chọn thẻ (07) · xếp
+        thứ tự (08) · chia ngân sách (09) · soi lỗi bảng (10) · nối tuyến (11).
+        Ở đây trẻ không dựng cũng không soi — trẻ **DẠY một hệ thống rồi chịu
+        hậu quả của việc mình vừa dạy**. Cái sai không hiện ra ngay lúc bấm; nó
+        hiện ra ở BƯỚC SAU, dưới dạng máy đoán trượt. Đó là chỗ nó khác hẳn
+        ARCADE-07: chọn thẻ thì sai/đúng lộ ra tức thì.
+
+     ⚠️⚠️ KHÔNG CÓ CÁCH THUA (nên phí vào cửa là 3 tt, hạng "Dễ" theo luật đã
+        ghi ở `Wallet.FeeByDiff`). Gán nhãn sai thì máy học sai, trẻ NHÌN THẤY
+        hậu quả rồi sửa lại và đi tiếp — vòng đó không tính điểm, thế thôi.
+        ⛔ Đừng thêm "hết lượt khi sai": bài học của game này CHÍNH LÀ được sai
+           rồi thấy vì sao mình sai.
+
+     ⚠️⚠️ MỌI CON SỐ Ở ĐÂY LÀ MÔ PHỎNG — nhãn `.cl-sim` thường trực, cùng luật đã
+        áp cho `game-recycle` · `game-units` · `game-route` · `mission-orbit`.
+        NASA không công bố bộ đặc trưng nào như bộ hai trục ở đây; thứ CÓ nguồn
+        là *tiểu hành tinh để lại VỆT CONG trên ảnh phơi sáng* và *dữ liệu huấn
+        luyện quyết định chất lượng mô hình*. Ba bài đọc đã có trong kho:
+          `art-ai-finds-asteroids-hubble` — vệt cong · 30.000 ảnh Hubble → 1.031
+            tiểu hành tinh mới · và con số đáng nhớ hơn: đó là AI **cộng với**
+            khoảng 11.000 tình nguyện viên.
+          `art-ai-found-binary-stars` — *"máy lọc bớt phần khổng lồ để con người
+            chỉ phải xem phần đáng xem"*.
+          `art-ai-tags-nasa-data` — *"dữ liệu chính là bài học"*.
+        ⛔ ĐỪNG viết rằng NASA phân loại ảnh bằng "độ dài và độ cong của vệt".
+
+     ⚠️ PHẦN LÕI (kho mẫu · bộ phân loại · bản vẽ) nằm ở `js/teach-machine.js`
+        vì chặng ② của nhiệm vụ "Mắt Máy" (Đợt 2) sẽ dùng lại — chép sang trang
+        thứ hai là hai bản sẽ trôi khỏi nhau. File này chỉ lo LUẬT CHƠI và MÀN.
+        Bộ đo của lõi: `scratchpad/check_teach_engine.py` (41/0) và phép thử phá
+        hoại `scratchpad/pha_teach_engine.py` (4/4).
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var $  = AstroQ.$;
+  var TM = window.AstroQTeach;
+
+  var I18N = {
+    vi: {
+      title:"AstroQ — Trạm Phân Loại", gname:"Trạm Phân Loại",
+      back:"Về Khu Huấn Luyện", to_hub:"Về Khu Huấn Luyện",
+      home_btn:"Trung Tâm Điều Hướng", tt_name:"Thiên thạch tím",
+      sfx_aria:"Âm thanh",
+      round_lbl:"Vòng", score_lbl:"Đạt", best_lbl:"Kỷ lục",
+      max_lbl:"Trên tổng số", mined_lbl:"Thiên thạch tím",
+      start_title:"Trạm Phân Loại", start_btn:"Bắt đầu",
+      how1:"🏷️ Máy chưa biết gì cả. Bạn <b>gán nhãn</b> từng ảnh quét để dạy nó.",
+      how2:"▶ Bấm <b>Huấn luyện</b>, rồi xem máy tự đoán trên những ảnh <b>nó chưa từng thấy</b>.",
+      how3:"⚠️ Máy chỉ biết đúng bằng thứ bạn đã cho nó xem — <b>thiếu ví dụ là nó đoán sai</b>.",
+      cost_line:"Mỗi lượt: <b>3</b> <img src='img/tt.png' alt='Thiên thạch tím' />",
+      sim:"BỘ PHÂN LOẠI MÔ PHỎNG",
+      train_btn:"▶ Huấn luyện", next:"Vòng tiếp →",
+      teach_h:"Gán nhãn cho {n} ảnh quét này để dạy máy:",
+      test_h:"Máy vừa xem {n} ảnh MỚI. Nó đoán thế này:",
+      lb_ast:"☄️ Tiểu hành tinh", lb_noise:"✖ Không phải",
+      pred_ast:"☄️ Tiểu hành tinh", pred_noise:"✖ Không phải",
+      unsure:"tớ chưa từng thấy cái nào giống thế này",
+      right:"Đúng", wrong:"Sai",
+      need_label:"Còn {n} ảnh chưa gán nhãn — kéo xuống xem nốt nhé.",
+      wrong_label:"Có {n} ảnh bạn gán nhãn chưa đúng. Sửa lại rồi huấn luyện tiếp nhé — vòng này sẽ không tính điểm.",
+      over_title:"Hết ca trực!",
+      over_p:"Bạn dạy máy qua {n}/{m} vòng.",
+      read_more:"📖 Đọc bài: Dữ liệu chính là bài học",
+      /* ⚠️ NHÃN SUY TỪ `CONFIG.COST`, KHÔNG GÕ CỨNG SỐ 3 — phí do `Wallet.Diff`
+         quyết, gõ tay ở đây là hai nơi giữ một con số và bên nói SAI với trẻ
+         chính là cái nút nó sắp bấm. ⚠️ Phải là GETTER: `CONFIG` khai SAU từ
+         điển này, nội suy thẳng lúc dựng là `Cannot read properties of
+         undefined` — giết cả chuỗi khởi động. Cùng khuôn 4 game lớp quyết
+         định trước, và cùng bài học 4 khoá `kb_*` của `js/pick-place.js`. */
+      get again_btn(){ return "<span class='btn-fee'>Chơi lại · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Thiên thạch tím'/></span>"; },
+      need_title:"Chưa đủ Thiên thạch tím!",
+      need_body:"Cần {cost} để vào một lượt, bạn đang có {bal}.",
+      need_go:"Làm Quiz ngay",
+      best_toast:"Kỷ lục mới!",
+      /* Lời brief và bài học của từng vòng. */
+      b1:"Máy chưa biết tiểu hành tinh trông thế nào. Hãy cho nó xem vài ví dụ.",
+      l1:"Máy đoán trượt {n} ảnh — và <b>không phải vì nó dở</b>. Bạn mới chỉ dạy nó vệt cong <b>DÀI</b> và chấm <b>NGẮN</b>, nên một vệt cong mà ngắn thì nó chẳng có gì để dựa vào. Nó còn tự nói ra: <i>“chưa từng thấy cái nào giống thế này”</i>.",
+      b2:"Vệt ngắn cũng là tiểu hành tinh đấy — chỉ là nó lướt qua một góc khung nên vệt ngắn và cong ít hơn. Hãy dạy máy chính mấy ảnh nó vừa trượt.",
+      l2:"Cùng một bộ máy, cùng một cách tính — chỉ khác là <b>bạn đã cho nó xem thêm ví dụ</b>. Đây chính là câu mà NASA viết về việc dạy máy gắn nhãn kho dữ liệu của họ: <b>dữ liệu không phải thứ phụ, dữ liệu chính là bài học</b>.",
+      b3:"Cẩn thận: mấy vệt này <b>rất sáng</b> nhưng <b>thẳng băng</b> — đó là tia vũ trụ đâm vào cảm biến, không phải tiểu hành tinh.",
+      l3:"Sáng hay mờ <b>không</b> nói lên điều gì cả: máy này không hề nhìn độ sáng. Thứ phân biệt là <b>hình dạng vệt</b> — cong hay thẳng, dài hay ngắn.",
+      b4:"Mẻ cuối: cho máy xem nốt những gì nó còn thiếu, rồi kiểm trên một mẻ trộn.",
+      l4:"Máy nay lọc được cả mẻ lớn. Nhưng nhớ điều này: 1.031 tiểu hành tinh mà Hubble tìm ra là công của AI <b>cộng với khoảng 11.000 người thật</b> cùng soi ảnh. Máy lọc bớt phần khổng lồ — <b>người vẫn là người quyết định</b>."
+    },
+    en: {
+      title:"AstroQ — Sorting Station", gname:"Sorting Station",
+      back:"Back to Training Simulator", to_hub:"Back to Training Simulator",
+      home_btn:"Navigation Hub", tt_name:"Purple Meteor",
+      sfx_aria:"Sound",
+      round_lbl:"Round", score_lbl:"Passed", best_lbl:"Best",
+      max_lbl:"Out of", mined_lbl:"Purple Meteors",
+      start_title:"Sorting Station", start_btn:"Start",
+      how1:"🏷️ The machine knows nothing yet. You <b>label</b> each scan to teach it.",
+      how2:"▶ Hit <b>Train</b>, then watch it guess on images <b>it has never seen</b>.",
+      how3:"⚠️ It only knows what you showed it — <b>missing examples means wrong guesses</b>.",
+      cost_line:"Per run: <b>3</b> <img src='img/tt.png' alt='Purple Meteor' />",
+      sim:"SIMULATED CLASSIFIER",
+      train_btn:"▶ Train", next:"Next round →",
+      teach_h:"Label these {n} scans to teach the machine:",
+      test_h:"The machine just saw {n} NEW scans. Here are its guesses:",
+      lb_ast:"☄️ Asteroid", lb_noise:"✖ Not one",
+      pred_ast:"☄️ Asteroid", pred_noise:"✖ Not one",
+      unsure:"I have never seen anything like this",
+      right:"Right", wrong:"Wrong",
+      need_label:"{n} scans still need a label — scroll down to finish.",
+      wrong_label:"{n} of your labels are not right yet. Fix them and train again — this round will not score.",
+      over_title:"Shift over!",
+      over_p:"You taught the machine through {n}/{m} rounds.",
+      read_more:"📖 Read: The data IS the lesson",
+      get again_btn(){ return "<span class='btn-fee'>Play again · <b>"+CONFIG.COST+"</b> <img src='img/tt.png' alt='Purple Meteor'/></span>"; },
+      need_title:"Not enough Purple Meteors!",
+      need_body:"You need {cost} for a run, you have {bal}.",
+      need_go:"Take a quiz",
+      best_toast:"New best!",
+      b1:"The machine has no idea what an asteroid trail looks like. Show it some examples.",
+      l1:"It missed {n} scans — and <b>not because it is bad at its job</b>. You only taught it <b>LONG</b> curved trails and <b>SHORT</b> dots, so a short curved trail gives it nothing to go on. It even says so: <i>“never seen anything like this”</i>.",
+      b2:"Short trails are asteroids too — they just clip a corner of the frame, so the trail is short and the curve is harder to see. Teach it the very scans it just missed.",
+      l2:"Same machine, same maths — the only change is that <b>you showed it more examples</b>. This is exactly what NASA wrote about teaching a machine to tag their archive: <b>the data is not a side note, the data IS the lesson</b>.",
+      b3:"Careful: these trails are <b>very bright</b> but <b>dead straight</b> — cosmic rays hitting the sensor, not asteroids.",
+      l3:"Bright or faint tells you <b>nothing</b> here: this machine never looks at brightness at all. What separates them is <b>the shape of the trail</b> — curved or straight, long or short.",
+      b4:"Final batch: show it what it is still missing, then test on a mixed batch.",
+      l4:"It can now filter a big batch. But remember: the 1,031 asteroids Hubble turned up were found by AI <b>plus about 11,000 real people</b> looking at the images. The machine trims the huge pile — <b>people still decide</b>."
+    }
+  };
+
+  var LANG = AstroQ.getLang();
+  function t(k){ var d=I18N[LANG]||I18N.vi; return d[k]!=null?d[k]:k; }
+  var toast = AstroQ.makeToast("toast", 2600);
+
+  var CONFIG = {
+    COST: 3,        // khớp Wallet.Fees["classify"] (easy) và `cost` ở GAMES
+    TT_PER_ROUND: 3 // ⚠️ tt cho mỗi vòng ĐẠT. Trần một lượt = 4 × 3 = 12 tt cho
+                    //    phí vào cửa 3 tt (4×). Luật đã ghi ở ARCADE-10: thưởng
+                    //    tối đa phải ≥ 3× phí, không thì chơi giỏi hết mức vẫn
+                    //    gần như không được gì.
+  };
+
+  /* ── BỐN VÒNG ────────────────────────────────────────────────────────────
+     `teach` = vùng mẫu ĐƯA THÊM vào bộ dạy ở vòng này (cộng dồn).
+     `test`  = vùng mẫu đem ra kiểm (máy CHƯA từng thấy chúng ở vòng này).
+
+     ⚠️⚠️ THỨ TỰ BỐN VÒNG LÀ BÀI HỌC, KHÔNG PHẢI ĐỘ KHÓ TĂNG DẦN:
+       ① dạy thiếu  → máy sai  → *"máy chỉ biết bằng thứ nó được xem"*
+       ② bổ sung    → máy đúng → *"dữ liệu chính là bài học"*
+       ③ bẫy sáng   → máy đúng → *"đặc trưng nào thật sự quan trọng"*
+       ④ mẻ trộn    → máy đúng → *"người vẫn phải kiểm"*
+     ⛔ Đảo thứ tự là mất mạch: vòng ② chỉ có nghĩa ngay sau cú trượt của vòng ①.
+     ⚠️ Bộ số của các vùng nằm ở `js/teach-machine.js` và đã được ĐO để vòng ①
+        CHẮC CHẮN sai — đổi vùng nào ở đây thì chạy lại `check_teach_engine.py`. */
+  var ROUNDS = [
+    { teach:["curved_bright","dots"],  test:["curved_mid","curved_short"], b:"b1", l:"l1" },
+    { teach:["curved_short"],          test:["curved_short","curved_mid"], b:"b2", l:"l2" },
+    { teach:["rays"],                  test:["rays","curved_faint"],       b:"b3", l:"l3" },
+    { teach:["curved_faint","curved_mid"], test:["curved_bright","dots","rays"], b:"b4", l:"l4" }
+  ];
+  var MAXP = ROUNDS.length;
+
+  var LS_SFX = "astroq-sfx";
+  var SFX = {
+    on:function(){ return AstroQSfx.on(); },
+    flip:function(){ try{ localStorage.setItem(LS_SFX, AstroQSfx.on()?"off":"on"); }catch(e){} },
+    tick:function(){ AstroQSfx.beep(640); },
+    good:function(){ AstroQSfx.ready(); },
+    bad:function(){ AstroQSfx.nope(); },
+    done:function(){ AstroQSfx.fanfare(); }
+  };
+
+  /* ── Trạng thái ─────────────────────────────────────────────────────────── */
+  var idx = 0;         // vòng đang chơi (0-based)
+  var taught = [];     // bộ dạy cộng dồn: [{sample,label}]
+  var tray = [];       // mẫu đang chờ gán nhãn ở vòng này
+  var picks = [];      // nhãn trẻ đặt cho từng mẫu trong `tray` (null = chưa đặt)
+  var results = null;  // kết quả kiểm của vòng này
+  var clean = true;    // vòng này trẻ gán nhãn đúng NGAY LẦN ĐẦU chưa
+  var score = 0, mined = 0;
+
+  var RUN = AstroQGameRun.create({
+    game:"classify", cost:CONFIG.COST, t:t,
+    onStart:function(){ idx=0; score=0; mined=0; taught=[]; newRound(); AstroQSfx.wake(); }
+  });
+
+  function cur(){ return ROUNDS[idx]; }
+
+  function collect(zones){
+    var out = [];
+    zones.forEach(function(z){ TM.pool(z).forEach(function(s){ out.push(s); }); });
+    return out;
+  }
+
+  function newRound(){
+    var r = cur();
+    tray  = collect(r.teach);
+    picks = tray.map(function(){ return null; });
+    results = null;
+    clean = true;
+    $("test").hidden = true;
+    $("lesson").hidden = true;
+    $("teach").hidden = false;
+    $("next").hidden = true;
+    $("train").hidden = false;
+    render();
+  }
+
+  /* ── Vẽ ─────────────────────────────────────────────────────────────────── */
+  function paintHud(){
+    $("hb-round").textContent = Math.min(idx+1, MAXP) + "/" + MAXP;
+    $("hb-score").textContent = String(score);
+    $("hb-mtr").textContent   = String(mined);
+    $("hb-best").textContent  = String(RUN.best());
+  }
+
+  function paintSteps(){
+    var out = "";
+    for(var i=0;i<MAXP;i++){
+      out += '<span class="' + (i<idx ? "dg-dot done" : (i===idx ? "dg-dot now" : "dg-dot")) + '"></span>';
+    }
+    $("steps").innerHTML = out;
+  }
+
+  function paintTeach(){
+    var out = "";
+    for(var i=0;i<tray.length;i++){
+      var p = picks[i];
+      /* ⚠️ `aria-pressed` trên hai nút chứ không phải một nhãn chữ rời: trình đọc
+         màn hình phải biết ô này đã được gán nhãn nào, mà nhãn ở đây là một LỰA
+         CHỌN chứ không phải một dòng mô tả. */
+      out += '<div class="cl-cell' + (p ? " done" : "") + '">' +
+               '<div class="cl-shot">' + TM.svg(tray[i], { alt: "" }) + '</div>' +
+               '<div class="cl-btns">' +
+                 '<button type="button" class="cl-lb ast" data-i="' + i + '" data-v="ast"' +
+                   ' aria-pressed="' + (p==="ast") + '">' + t("lb_ast") + '</button>' +
+                 '<button type="button" class="cl-lb noise" data-i="' + i + '" data-v="noise"' +
+                   ' aria-pressed="' + (p==="noise") + '">' + t("lb_noise") + '</button>' +
+               '</div>' +
+             '</div>';
+    }
+    $("teach-grid").innerHTML = out;
+    $("teach-h").textContent = t("teach_h").replace("{n}", String(tray.length));
+
+  }
+
+  function paintTest(){
+    if(!results) return;
+    var out = "";
+    for(var i=0;i<results.length;i++){
+      var r = results[i];
+      var ok = r.got === r.truth;
+      out += '<div class="cl-cell res ' + (ok ? "ok" : "bad") + '">' +
+               '<div class="cl-shot">' + TM.svg(r.sample, { alt: "" }) + '</div>' +
+               '<div class="cl-said">' + (r.got==="ast" ? t("pred_ast") : t("pred_noise")) + '</div>' +
+               (r.far ? '<div class="cl-unsure">🤔 ' + t("unsure") + '</div>' : "") +
+               '<div class="cl-mark">' + (ok ? "✔ " + t("right") : "✘ " + t("wrong")) + '</div>' +
+             '</div>';
+    }
+    $("test-grid").innerHTML = out;
+    $("test-h").textContent = t("test_h").replace("{n}", String(results.length));
+    var miss = results.filter(function(r){ return r.got !== r.truth; }).length;
+    $("lesson").innerHTML = t(cur().l).replace("{n}", "<b>" + miss + "</b>");
+  }
+
+  function render(){
+    paintHud(); paintSteps();
+    $("brief").innerHTML = t(cur().b);
+    $("sim").textContent = t("sim");
+    if(results) paintTest(); else paintTeach();
+  }
+
+  /* ── Luật chơi ──────────────────────────────────────────────────────────── */
+  function pick(i, v){
+    if(results) return;                 // đã huấn luyện xong thì thôi
+    picks[i] = v; SFX.tick(); paintTeach();
+  }
+
+  function train(){
+    if(results) return;
+
+    /* ⚠️⚠️ CHƯA GÁN HẾT THÌ NÓI RA VÀ ĐƯA MẮT TỚI Ô CÒN THIẾU, ĐỪNG KHOÁ NÚT.
+       Bản đầu để nút `disabled`, và số đo cho thấy vì sao nó hỏng: vùng cuộn
+       chỉ cao ~317px trong khi lưới cao 740px, nên **ô chưa gán thường nằm
+       NGOÀI tầm nhìn** — trẻ thấy bốn ô đầu đã gán xong, nút thì xám, và không
+       có gì nói vì sao. Một cái nút vô hiệu im lặng thì trẻ chỉ tưởng game
+       lỗi (bài học đã ghi ở `mission-tree.html` và `js/route-gate.js`).
+       Nay: nút luôn bấm được, thiếu thì nói còn mấy ô và CUỘN tới ô đầu tiên
+       còn trống — chữa đúng chỗ, vì vấn đề là ô nằm ngoài tầm mắt. */
+    var miss = picks.indexOf(null);
+    if(miss >= 0){
+      var left = 0;
+      for(var m=0;m<picks.length;m++) if(picks[m] === null) left++;
+      SFX.bad();
+      toast(t("need_label").replace("{n}", String(left)), "bad");
+      var cell = $("teach-grid").children[miss];
+      if(cell && cell.scrollIntoView) cell.scrollIntoView({ block:"center" });
+      return;
+    }
+
+    /* ⚠️⚠️ NHÃN SAI THÌ NÓI RA VÀ CHO SỬA, KHÔNG ÂM THẦM DÙNG.
+       Để nguyên nhãn sai thì bộ dạy lệch hẳn khỏi thiết kế và ba vòng sau mất
+       bài học; nhưng lặng lẽ sửa hộ thì trẻ không biết mình vừa dạy sai. Nên:
+       chỉ ra đúng mấy ô sai, bắt sửa, và vòng này thôi tính điểm. */
+    var bad = [];
+    for(var i=0;i<tray.length;i++){
+      if(picks[i] !== tray[i].truth) bad.push(i);
+    }
+    if(bad.length){
+      clean = false;
+      for(var j=0;j<bad.length;j++) picks[bad[j]] = null;
+      SFX.bad();
+      AstroQGameShell.mate("oops");
+      toast(t("wrong_label").replace("{n}", String(bad.length)), "bad");
+      paintTeach();
+      return;
+    }
+
+    /* Bộ dạy CỘNG DỒN qua các vòng — đó là cả điểm của vòng ②. */
+    for(var k=0;k<tray.length;k++) taught.push({ sample: tray[k], label: picks[k] });
+
+    var model = TM.train(taught);
+    results = collect(cur().test).map(function(s){
+      var p = TM.predict(model, s);
+      return { sample:s, got:p.label, truth:s.truth, far:TM.isFar(p) };
+    });
+
+    if(clean){ score++; mined += CONFIG.TT_PER_ROUND; }
+
+    $("teach").hidden = true;
+    $("test").hidden = false;
+    var body = document.querySelector(".dg-body");
+    if(body) body.scrollTop = 0;
+    $("lesson").hidden = false;
+    $("train").hidden = true;
+    $("next").hidden = false;
+    SFX.good();
+    AstroQGameShell.mate("cheer");
+    render();
+  }
+
+  function next(){
+    idx++;
+    if(idx >= MAXP){ endRun(); return; }
+    newRound();
+  }
+
+  function endRun(){
+    var res = RUN.finish({ score: score, seconds: 0, meteors: mined });
+    $("r-score").textContent = String(score);
+    $("r-max").textContent   = String(MAXP);
+    $("r-best").textContent  = String(res.best);
+    $("r-mtr").textContent   = String(res.paid);
+    $("over-p").textContent  = t("over_p")
+      .replace("{n}", String(score)).replace("{m}", String(MAXP));
+    RUN.hideAllOv(); RUN.showOv("ov-over");
+    SFX.done();
+    if(res.newBest) toast(t("best_toast"), "ok");
+    paintHud();
+  }
+
+  /* ── Ngôn ngữ ───────────────────────────────────────────────────────────── */
+  function applyLang(lang){
+    if(lang==="en"||lang==="vi") LANG=lang;
+    document.documentElement.lang = LANG;
+    document.title = t("title");
+    AstroQ.applyTexts(t);
+    AstroQ.markLangButtons(LANG);
+    $("gtag").textContent = "[ " + t("gname") + " ]";
+    RUN.paintPaid();
+    $("need-body").textContent = t("need_body")
+      .replace("{cost}", CONFIG.COST).replace("{bal}", Economy.getAsteroids());
+    if(RUN.state() !== "idle") render();
+  }
+
+  /* ── Bề mặt điều khiển cho bộ đo (`scratchpad/play_classify.py`) ──────────
+     ⚠️ Không hàm nào trả Promise — `page.evaluate` của Playwright tự chờ promise
+        được trả về, nên script test sẽ treo thay vì báo hỏng. */
+  window.__dbg = {
+    cfg:      function(){ return { cost:CONFIG.COST, ttPerRound:CONFIG.TT_PER_ROUND,
+                                   rounds:MAXP }; },
+    maxScore: function(){ return MAXP; },
+    round:    function(){ return idx; },
+    tray:     function(){ return tray.map(function(s){ return { id:s.id, truth:s.truth }; }); },
+    picks:    function(){ return picks.slice(); },
+    taught:   function(){ return taught.length; },
+    results:  function(){
+      return results ? results.map(function(r){
+        return { id:r.sample.id, got:r.got, truth:r.truth, far:r.far };
+      }) : null;
+    },
+    clean:    function(){ return clean; },
+    /* Gán nhãn ĐÚNG hết một lượt — bộ đo dùng để đi nhanh tới phần cần đo mà
+       không phải bấm 8 nút bằng toạ độ. */
+    labelAll: function(right){
+      for(var i=0;i<tray.length;i++){
+        picks[i] = right === false
+          ? (tray[i].truth === "ast" ? "noise" : "ast")
+          : tray[i].truth;
+      }
+      paintTeach();
+    },
+    start: function(){ RUN.start(); }
+  };
+
+  /* ── Nối dây ────────────────────────────────────────────────────────────── */
+  $("teach-grid").addEventListener("click", function(e){
+    var b = e.target.closest(".cl-lb");
+    if(b) pick(parseInt(b.getAttribute("data-i"), 10), b.getAttribute("data-v"));
+  });
+  $("train").addEventListener("click", train);
+  $("next").addEventListener("click", next);
+  $("start-btn").addEventListener("click", function(){ RUN.start(); });
+  $("again-btn").addEventListener("click", function(){ RUN.start(); });
+  $("back").addEventListener("click", function(){ location.href = "games.html"; });
+  $("hub-btn").addEventListener("click", function(){ location.href = "games.html"; });
+  $("need-hub").addEventListener("click", function(){ location.href = "games.html"; });
+  $("home-btn").addEventListener("click", function(){ location.href = "dashboard.html"; });
+  $("need-quiz").addEventListener("click", function(){ location.href = "quiz.html"; });
+
+  var sfxBtn = $("btn-sfx");
+  function syncSfx(){ sfxBtn.classList.toggle("off", !SFX.on()); }
+  sfxBtn.addEventListener("click", function(){ SFX.flip(); syncSfx(); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ location.href = "games.html"; }
+  });
+
+  AstroQ.initLang(applyLang);
+  applyLang(LANG);
+  RUN.paintBalance();
+  syncSfx();
+  newRound();
+})();
+</script>
+</body>
+</html>

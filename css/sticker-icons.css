@@ -103,6 +103,10 @@
    Dùng chung màu chỉ đúng khi hai game thuộc CÙNG chương trình, như Né Thiên Thạch
    và Bắt Sao Băng đều `cyan` (Phản xạ). */
 .sic--teal  { --sic-a: #ccfbf1; --sic-b: #2dd4bf; --sic-c: #115e59; }
+/* ARCADE-12 Trạm Phân Loại — chương trình `mlearn`. Lam-điện, CỐ Ý không phải tím:
+   tím là màu của Thiên thạch tím, một icon tông tím đứng cạnh chip số dư thì hai
+   thứ đọc ra như một. Cũng đủ xa `sic--cyan` để không lẫn với ba thẻ cyan. */
+.sic--iris  { --sic-a: #ddd6fe; --sic-b: #818cf8; --sic-c: #3730a3; }
 
 /* Trạng thái KHOÁ / CHƯA MỞ — bạc xám + nhạt bớt.
    ⚠️ KHÔNG dùng `filter:grayscale()` (bài học đã trả giá 3 lần trong dự án: trên
