@@ -795,6 +795,48 @@
     pending: function () { return queue().length; },
 
     /**
+     * Số CHẶNG KHÁC NHAU của một nhiệm vụ đang nằm trong hàng chờ (chưa gửi được).
+     *
+     * Dùng cho thẻ "Lưu tiến độ của con" ở `js/guest-claim.js`: nó cần biết
+     * *trẻ đã chơi bao nhiêu chặng mà CHƯA cứu được*, chứ không phải tổng số việc
+     * trong hàng chờ (một lượt quiz và một chặng nhiệm vụ đều là một phần tử).
+     *
+     * ⚠️ Đếm chặng KHÁC NHAU, không đếm số phần tử: một chặng chơi lại hai lần
+     *    nằm trong hàng chờ thành HAI việc (mỗi việc một `opId`, và đều phải gửi
+     *    để server tự chống trùng) — đếm cả hai là thổi con số lên và nói với trẻ
+     *    rằng nó đã chơi 4 chặng trong khi mới có 3.
+     */
+    /**
+     * Số LƯỢT CHƠI game đang nằm trong hàng chờ (chưa gửi được).
+     *
+     * ⚠️⚠️ ĐẾM SỐ PHẦN TỬ, KHÁC HẲN `queuedSteps` NGAY DƯỚI — và khác có lý do,
+     *    không phải quên. Ở nhiệm vụ, chơi lại một chặng đã xong **không phải
+     *    tiến độ mới** (server chỉ tính một lần), nên đếm cả hai là thổi con số
+     *    lên. Ở game thì ngược lại: mỗi lượt là một lượt THẬT — có điểm riêng,
+     *    có thể có kỷ lục mới, và server ghi từng lượt vào `gamesPlayed`. Chơi
+     *    Né Thiên Thạch ba lần là ba việc đáng cứu, không phải một.
+     */
+    queuedGames: function () {
+      var n = 0;
+      queue().forEach(function (it) { if (it && it.type === "game") n++; });
+      return n;
+    },
+
+    queuedSteps: function (mission) {
+      var m = String(mission || "");
+      var seen = {};
+      var n = 0;
+      queue().forEach(function (it) {
+        if (!it || it.type !== "mission" || String(it.mission) !== m) return;
+        var k = String(it.step || "");
+        if (!k || seen[k]) return;
+        seen[k] = 1;
+        n++;
+      });
+      return n;
+    },
+
+    /**
      * Số việc đã bị hàng chờ VỨT ĐI vì đầy (trần `MAX_QUEUE`). Trang nào nói với
      * trẻ về hàng chờ thì phải nói cả con số này — bỏ qua nó là im lặng đúng chỗ
      * dữ liệu THẬT SỰ mất, và im lặng ở đó thì trẻ chỉ thấy tt tự nhiên hụt đi.

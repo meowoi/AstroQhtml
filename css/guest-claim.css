@@ -1,0 +1,119 @@
+/* ============================================================================
+   css/guest-claim.css — THẺ "LƯU TIẾN ĐỘ CỦA CON" của đường chơi thử.
+
+   Đi cùng `js/guest-claim.js` (vỏ tự dựng markup, trang không chép một dòng HTML
+   nào — cùng khuôn `js/game-shell.js`, `js/user-menu.js`, `js/mission-stage.js`).
+
+   ⚠️ VÌ SAO KHÔNG DÙNG LẠI `.me-win` CỦA `css/mission-stage.css`. Vỏ đó chỉ tồn tại
+      ở TRANG NHIỆM VỤ (`mission-earth.html`, `mission-orbit.html` nạp
+      `css/mission-stage.css`), còn thẻ này phải mở được ở bất kỳ trang nào có hàng
+      chờ chưa cứu — game, quiz, trang nhiệm vụ. Gắn nó vào một stylesheet của riêng
+      màn nhiệm vụ là hẹn sẵn ngày nó hiện ra KHÔNG CÓ KIỂU ở trang khác, và lỗi đó
+      im lặng (thẻ vẫn chạy, chỉ xấu).
+   ⚠️ Nhưng NGÔN NGỮ THỊ GIÁC thì giữ nguyên của `.me-win`: nền tối + thẻ viền vàng +
+      nút chính vàng, nút phụ `ghost`. Trẻ chỉ phải học một kiểu hộp.
+
+   ⚠️ CHỈ DÙNG BIẾN DO `css/common.css` KHAI (`--ink`, `--ink-soft`, `--ink-faint`,
+      `--ease`) — mọi biến khác (`--gold`, `--brd`, `--font-display`, `--jelly`) đều
+      có FALLBACK viết ngay tại chỗ. Bài học đã ghi ở đầu `css/common.css`: một biến
+      không được khai ở trang đang nạp thì thuộc tính đó **rơi mất hoàn toàn**, và
+      với `background` thì cái rơi mất là cả cái nút.
+   ============================================================================ */
+
+.gc{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;
+  background:rgba(3,5,15,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  opacity:0;visibility:hidden;transition:opacity .38s,visibility .38s;}
+
+.gc.show{opacity:1;visibility:visible;}
+
+.gc-card{width:min(420px,100%);max-height:calc(100vh - 32px);overflow-y:auto;
+  padding:24px clamp(18px,4vw,26px) 20px;border-radius:8px;
+  border:2px solid rgba(255,207,107,.85);
+  background:linear-gradient(180deg,rgba(28,20,6,.96),rgba(12,10,22,.97));
+  box-shadow:0 34px 80px -22px rgba(0,0,0,.95),0 0 60px -10px rgba(255,207,107,.55),
+             inset 0 0 48px -18px rgba(255,207,107,.7);
+  transform:scale(.92);transition:transform .42s var(--jelly,cubic-bezier(.22,.61,.36,1));}
+
+.gc.show .gc-card{transform:scale(1);}
+
+.gc h2{font-family:var(--font-display,system-ui,sans-serif);font-weight:700;
+  font-size:clamp(17px,3.8vw,22px);margin:0;text-align:center;color:#fff3d6;line-height:1.25;}
+
+.gc .gc-sub{margin:10px 0 0;text-align:center;font-size:13.4px;line-height:1.55;color:#f0e2c4;}
+
+/* Dòng "chỉ hỏi một ô email" — lời hứa của cả đường này, nên nó phải đọc được
+   TRƯỚC ô nhập, không phải nằm dưới dạng chữ nhỏ sau khi đã gõ xong. */
+.gc .gc-only{margin:12px 0 0;padding:9px 12px;border-radius:9px;
+  border:1px dashed rgba(255,207,107,.3);background:rgba(255,207,107,.07);
+  font-family:var(--font-mono,ui-monospace,monospace);font-size:11.4px;line-height:1.5;
+  color:#f4dda6;text-align:center;}
+
+.gc form{margin-top:14px;}
+
+.gc .gc-lb{display:block;font-family:var(--font-mono,ui-monospace,monospace);font-size:9.8px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;}
+
+.gc input[type="email"]{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:8px;
+  border:1px solid var(--brd,rgba(255,255,255,.16));background:rgba(255,255,255,.06);
+  color:var(--ink);font-size:15.5px;font-family:inherit;}
+
+/* 16px trở lên thì Safari trên iPhone không phóng to trang khi ô nhập được focus.
+   Ô này nằm giữa một lượt chơi — trang tự phóng là trẻ mất luôn màn hình vừa chơi. */
+@media (max-width:520px){.gc input[type="email"]{font-size:16px;}}
+
+.gc input[type="email"]:focus{outline:2px solid var(--accent,#5fd3ff);outline-offset:1px;
+  border-color:transparent;background:rgba(255,255,255,.09);}
+
+.gc input[type="email"][aria-invalid="true"]{border-color:rgba(248,113,113,.75);}
+
+.gc .gc-acts{display:flex;flex-direction:column;gap:9px;margin-top:14px;}
+
+/* ⚠️ SÀN 48px, KHÔNG PHẢI 44. 44 là mốc TỐI THIỂU của WCAG 2.5.5; đặt đúng mốc
+   là không còn biên an toàn nào, và dự án đã có một ca phép kiểm chập chờn thật
+   vì lý do đó (`.lang-switch button` của explorer đo ra đúng 44×44 nên
+   `audit_viewports` khi 683/1 khi 684/0 mà không đụng một dòng nào).
+   ⚠️ Đo được TRƯỚC khi thêm dòng này: **41px** — dưới cả mốc tối thiểu, ở đúng
+   hai cái nút quyết định việc một lượt chơi có được cứu hay không. `padding`
+   một mình không bảo đảm chiều cao khi cỡ chữ nhỏ đi. */
+.gc .gc-acts button{cursor:pointer;border:none;width:100%;padding:13px 16px;border-radius:6px;
+  min-height:48px;
+  font-family:var(--font-mono,ui-monospace,monospace);font-size:clamp(11.5px,2.6vw,13px);
+  letter-spacing:.13em;text-transform:uppercase;text-align:center;
+  transition:transform .28s var(--jelly,cubic-bezier(.22,.61,.36,1)),filter .18s;}
+
+.gc .gc-go{color:#04060f;
+  background:linear-gradient(120deg,var(--gold,#ffcf6b),var(--gold2,#ff9d3d));
+  box-shadow:0 12px 26px -12px rgba(255,157,61,.9);}
+
+.gc .gc-go:hover{filter:brightness(1.07);transform:translateY(-2px);}
+
+/* Đang gửi: KHÔNG đổi chữ trên nút bằng CSS (chữ do JS đặt để còn đọc được bằng
+   trình đọc màn hình), chỉ làm nó rõ ràng là không bấm được nữa. */
+.gc .gc-go[disabled]{cursor:default;filter:none;transform:none;opacity:.6;}
+
+.gc .gc-skip{color:var(--ink);background:rgba(255,255,255,.07);
+  border:1px solid var(--brd,rgba(255,255,255,.16));}
+
+.gc .gc-skip:hover{background:rgba(255,255,255,.14);}
+
+/* ⚠️ `[hidden]` khai lại: `.gc-acts` là flex nên con của nó là flex item, và
+   `display:flex` của tác giả thắng `display:none` mà trình duyệt áp cho `[hidden]`.
+   Dự án đã vấp đúng bẫy này 5 lần (`#time-ok` · `.lk-btn` · `.pt-empty` ·
+   `.co-steps` · `.pbtn`) — khai tường minh thì không phải đoán quy tắc nào thắng. */
+.gc .gc-acts [hidden]{display:none;}
+
+/* Dòng trạng thái: LUÔN có mặt trong DOM (aria-live), chỉ rỗng khi chưa có gì để
+   nói. Chèn/gỡ node là trình đọc màn hình không đọc ra. */
+.gc .gc-msg{margin:11px 0 0;text-align:center;font-size:12.8px;line-height:1.5;
+  color:var(--ink-soft);min-height:1em;}
+
+.gc .gc-msg.ok{color:#a7f3d0;}
+.gc .gc-msg.bad{color:#fca5a5;}
+
+.gc .gc-fine{margin:12px 0 0;text-align:center;font-size:11.4px;line-height:1.5;
+  color:var(--ink-faint);}
+
+@media (prefers-reduced-motion:reduce){
+  .gc,.gc .gc-card,.gc .gc-acts button{transition:none;}
+  .gc-card{transform:none;}
+}

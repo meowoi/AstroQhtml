@@ -625,6 +625,31 @@
       $("after").setAttribute("aria-hidden", "true");
     }
 
+    /* ───────────── ĐƯỜNG CHƠI THỬ: HỎI MỘT Ô EMAIL ĐỂ CỨU TIẾN ĐỘ ─────────────
+       Trẻ chơi mà không đăng nhập thì MỌI chặng nó vừa làm đều nằm trong hàng chờ
+       của `js/progress.js` — chỉ sống trong máy này, và mất khi trẻ đổi máy hoặc
+       trình duyệt dọn dữ liệu. Sau `TRIAL_STEPS` chặng thì mời nó lưu lại.
+
+       ⚠️ ĐẶT Ở ĐÂY CHỨ KHÔNG Ở TỪNG NHIỆM VỤ. Vỏ này phục vụ mọi nhiệm vụ, nên
+          nhiệm vụ thứ ba thêm sau cũng có đường cứu tiến độ mà không phải nhớ nối
+          lại — cùng lý do `say()` tự nhấc box thoại thay vì bắt mỗi chặng tự nhớ.
+
+       ⚠️ GỌI SAU KHI `report()` ĐÃ CHẠY, và đó là thứ tự do engine giữ
+          (`outro → report → afterReport → onStepDone`). Nhờ vậy chặng vừa chơi
+          ĐÃ nằm trong hàng chờ, nên con số hiện ra cho trẻ đọc là con số đúng.
+
+       ⚠️ Không có module (trang quên nạp `js/guest-claim.js`) thì trả `null` và
+          mọi thứ chạy y như trước. Đây là phần THÊM, không phải chốt chặn. */
+    function claimIfDue() {
+      var G = global.AstroQGuestClaim, P = global.AstroQProgress;
+      if (!G || !G.due || !G.open) return null;
+      if (!P || !P.queuedSteps) return null;
+      var n = P.queuedSteps(mission);
+      if (!G.due(n)) return null;
+      /* Thẻ hỏng thì nuốt lỗi: nó là lời mời, không được phép chặn đường chơi. */
+      return G.open({ steps: n, lang: langOf() }).catch(function () {});
+    }
+
     /** Móc `onStepDone` của js/mission-engine.js. Trả `true` = engine ĐỪNG tự đi tiếp. */
     function afterStep(id, last) {
       /* Ôn lại một chặng cũ: không có chặng nào vừa mở ra để đi tiếp và tiến độ
@@ -632,6 +657,20 @@
          MỞ HỘP (chứ không lặng lẽ nhảy trang) để nói rõ vì sao lần này không có
          thưởng: để trẻ tự phát hiện bằng dòng "+0" là cách tệ nhất. */
       if (serverDone.has(id)) { openAsk(id, true); return true; }
+
+      /* ⚠️ THẺ LƯU TIẾN ĐỘ CHẠY TRƯỚC, HỘP "TIẾP HAY DỪNG" CHẠY SAU — hai lớp
+         phủ cùng lúc là trẻ không biết trả lời cái nào. Trả về một lời hứa, engine
+         chờ nó xong rồi mới xét giá trị (xem `finish()` ở js/mission-engine.js). */
+      var claim = claimIfDue();
+      if (claim) {
+        return claim.then(function () {
+          /* Chặng cuối → `false` để engine mở màn tổng kết, y như nhánh dưới. */
+          if (last) return false;
+          openAsk(id, false);
+          return true;
+        });
+      }
+
       /* Chặng cuối → trả `false` để engine mở màn tổng kết. Ở đó không còn gì để hỏi. */
       if (last) return false;
       openAsk(id, false);

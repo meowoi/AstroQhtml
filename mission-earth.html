@@ -44,6 +44,7 @@
      vụ ở Trái Đất) → phần RIÊNG của nhiệm vụ này. Thứ tự đó là thứ tự ghi đè:
      nhiệm vụ được phép chỉnh lại vỏ, không bao giờ ngược lại. -->
 <link rel="stylesheet" href="css/mission-stage.css" />
+<link rel="stylesheet" href="css/guest-claim.css" />
 <link rel="stylesheet" href="css/earth2d.css" />
 <link rel="stylesheet" href="css/mission-earth.css" />
 <script src="js/ui-common.js"></script>
@@ -77,6 +78,19 @@
      còn khai NỘI DUNG 7 chặng + 5 khoá riêng (`tag`, `win_h`, `win_badge`,
      `win_badge_sub`, `win_next`). Xem đầu `js/mission-stage.js`. -->
 <script src="js/mission-stage.js"></script>
+
+<!-- Thẻ "Lưu tiến độ của con" của ĐƯỜNG CHƠI THỬ (việc 3, 05/09/2026).
+     Trang này CỐ Ý không nạp SDK Firebase (xem ghi chú ở js/progress.js phía
+     trên), nên mọi chặng trẻ chơi đều nằm trong hàng chờ. Thẻ này là chỗ đổi
+     hàng chờ đó lấy một phiên thật — nó CHỈ hỏi một ô email.
+     ⚠️ Nó tự tải `js/firebase-auth.js` bằng `import()` ĐỘNG khi trẻ bấm Lưu,
+        nên nạp file này KHÔNG kéo theo 64 KB SDK vào lượt mở trang; `check_pages`
+        mục [4] canh danh sách trang được phép nạp SDK và trang này không nằm
+        trong đó. Đừng đổi thành thẻ `<script src="js/firebase-auth.js">`.
+     ⚠️ Nạp SAU `js/mission-stage.js`: vỏ màn chơi hỏi `AstroQGuestClaim` lúc
+        một chặng vừa xong, tức lâu sau khi cả hai file đã nạp — nhưng giữ đúng
+        thứ tự đọc cho người sửa sau. -->
+<script src="js/guest-claim.js"></script>
 <!-- Khuon "the -> o": keo-tha bang chuot VA choi duoc bang ban phim. -->
 <script src="js/pick-place.js"></script>
 </head>

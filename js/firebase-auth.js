@@ -112,6 +112,13 @@ const ERR = {
     "auth/requires-recent-login":  "Phiên đã cũ. Đăng nhập lại rồi thử tiếp nhé.",
     // Mã do backend AstroqSV trả về (không có tiền tố "auth/")
     "name-too-long":              "Tên hơi dài — dùng tối đa 60 ký tự nhé.",
+    /* Hai mã dưới tới từ `POST /auth/claim` (đường chơi thử — xem `claimGuest`).
+       ⚠️ Câu chữ ở đây KHÁC bản `auth/email-already-in-use` của Firebase, và đó là
+          cả lý do phải viết thêm một dòng: chỗ này đang CỨU MỘT LƯỢT CHƠI, không
+          phải đang đăng ký, nên phải mời đăng nhập ĐỂ LƯU — nói "thử đăng nhập"
+          là bỏ mất đúng thứ đứa trẻ vừa được hứa. */
+    "email-already-in-use":       "Email này đã có tài khoản rồi. Đăng nhập để lưu tiến độ nhé!",
+    "token-failed":               "Đã tạo tài khoản nhưng chưa lưu được tiến độ. Mở thư kích hoạt rồi thử lại giúp mình nhé.",
     "no-pending":                 "Không có đăng ký nào đang chờ với email này. Đăng ký lại nhé.",
     /* Hai câu dưới KHÔNG tới từ Firebase mà từ `POST /auth/status`: tài khoản chưa
        kích hoạt thì chưa tồn tại trên Firebase, nên thứ Firebase trả về là
@@ -140,6 +147,9 @@ const ERR = {
     "auth/requires-recent-login":  "Session too old. Please sign in again.",
     // Codes returned by the AstroqSV backend (no "auth/" prefix)
     "name-too-long":              "That name is a bit long — 60 characters max.",
+    // From `POST /auth/claim` (guest trial path) — see `claimGuest`.
+    "email-already-in-use":       "That email already has an account. Sign in to save your progress!",
+    "token-failed":               "Account created, but the progress was not saved. Open the activation email, then try again.",
     "no-pending":                 "No pending sign-up for that email. Please register again.",
     // Not from Firebase but from `POST /auth/status` — see the note in `login()`.
     "not-activated":              "This account isn't activated yet. Open your email and tap the activation link — your password is fine.",
@@ -457,6 +467,92 @@ const AstroQAuth = {
          `email-already-in-use` — một ngõ cụt không tự thoát ra được. */
       console.warn("[AstroQ] Đăng ký xong nhưng chưa tự đăng nhập được:", e && e.code);
       return Object.assign(base, { signedIn:false, account:true, code: e && e.code });
+    }
+  },
+
+  /** NHAN TIEN DO CUA LUOT CHOI THU — CHI HOI MOT O EMAIL (viec 3, 05/09/2026).
+   *
+   * Tre choi 3 chang o `mission-earth.html` ma khong dang nhap, nen moi buoc no lam
+   * deu nam trong hang cho cua `js/progress.js`. Ham nay la cho doi hang cho do lay
+   * mot phien that: `POST /auth/claim` tao tai khoan roi tra ve **custom token**, doi
+   * lay phien bang `signInWithCustomToken`. Nguoi goi (`js/guest-claim.js`) gui not
+   * hang cho ngay sau do.
+   *
+   * ⚠️⚠️ VI SAO KHONG DUNG `register()`. Duong nay chi hoi MOT o email — khong
+   *    ten, khong mat khau. Mat khau cua tai khoan nay do SERVER duc ngau nhien va
+   *    **khong ai biet**, ke ca ham nay: server khong tra no ve, va dung tim cach
+   *    lam cho no tra ve. He qua phai noi thang voi nguoi dung: tai khoan nay CHUA
+   *    CO mat khau dung duoc, duong quay lai o may khac la **bam link trong thu**.
+   *    (Khoi chu thich day du o `AuthEndpoints.cs`, route `/claim`.)
+   *
+   * ⚠️⚠️ `customToken` LA MOT CHIA KHOA VAO THANG TAI KHOAN, KHONG PHAI MA XAC MINH.
+   *    Ai cam duoc chuoi nay thi dang nhap duoc. Nen no **chi song trong pham vi ham
+   *    nay**: doi lay phien roi vut. Dung ghi localStorage, dung dua vao URL, dung
+   *    `console.log` no — mot dong log con lai trong may dung chung la mot tai khoan
+   *    bi mo.
+   *
+   * ⚠️ KHONG CO PHIEN THI VAN CO THE `ok:true`. Nhanh `throttled` cua server (vua gui
+   *    thu cho hom thu nay trong cooldown) tra 202 va **khong kem token** — do la mot
+   *    cau tra loi hop le, khong phai loi. Giao dien phai doc `signedIn`, khong doc `ok`.
+   *
+   * → { ok:true, signedIn:true,  email, mailSent, hasCharacter, user }
+   * | { ok:true, signedIn:false, email, mailSent, code }   // throttled / khong duc duoc phien
+   * | { ok:false, code, message } */
+  async claimGuest(email, name){
+    if(!isApiConfigured) return NOT_CONFIGURED;
+
+    /* Cung nhan chien dich + ma luot bam quang cao nhu `register()`: day cung la mot
+       tai khoan ra doi, va no phai dem theo dau "toi den tu dau". Khong toi tu link
+       Meta thi `click()` tra null va hai truong nay khong duoc gui — server thay rong
+       thi KHONG bao gi cho Meta (xem Services/MetaCapi.cs). */
+    const utm   = (typeof window !== "undefined" && window.AstroQUtm) ? window.AstroQUtm : null;
+    const src   = utm ? utm.get() : "";
+    const click = utm && utm.click ? utm.click() : null;
+
+    const r = await apiPost("/auth/claim", {
+      email, name: name || "", src,
+      fbclid:   click ? click.fbclid : undefined,
+      fbclidAt: click ? click.at     : undefined
+    });
+    if(r.netError)      return { ok: false, code: "net", message: errMsg("net") };
+    if(r.notConfigured) return NOT_CONFIGURED;
+    if(!r.ok)           return { ok: false, code: r.data.code, message: errMsg(r.data.code) };
+
+    const base = {
+      ok: true,
+      email: r.data.email || email,
+      // Thu gui hong thi tai khoan VAN da tao — bao ra de giao dien moi bam "Gui lai".
+      mailSent: r.data.mailSent !== false,
+      expiresInMinutes: r.data.expiresInMinutes || 10,
+      /* Cau chu cua server, khong dich lai o client: no la loi bao THANH CONG chu
+         khong phai ma loi, va no doi theo tung nhanh (co thu / khong gui duoc thu). */
+      message: r.data.message || ""
+    };
+
+    const ct = r.data.customToken;
+    if(!ct) return Object.assign(base, { signedIn: false, code: "no-token" });
+
+    if(!(await boot()))
+      return Object.assign(base, { signedIn: false, code: "notConfigured" });
+
+    try{
+      const cred  = await fb.signInWithCustomToken(auth, ct);
+      /* ⚠️ DI QUA `afterSignIn`, KHONG TU GHI HO SO. Ba viec cua no (dong dau co admin,
+         keo ho so ve cache, ky xuat khi server noi `no-profile`) phai xay ra o CA BA
+         duong vao — chep rieng mot ban o day la dung san ngay mot ban duoc sua con hai
+         ban kia thi khong (tien le: `readAdminClaim`). */
+      const after = await afterSignIn(this, cred.user);
+      if(!after.ok) return Object.assign(base, { ok:false, code:after.code, message:after.message });
+      return Object.assign(base, {
+        signedIn: true, emailVerified: false,
+        hasCharacter: after.hasCharacter, user: cred.user
+      });
+    }catch(e){
+      /* ⚠️ TAI KHOAN VAN TON TAI — `ok` GIU `true`, cung ly do voi `register()`. Tra
+         `ok:false` o day la moi tre gui lai email lan nua, va lan do se an
+         `email-already-in-use`: mot ngo cut khong tu thoat ra duoc. */
+      console.warn("[AstroQ] Nhan tien do xong nhung chua vao duoc phien:", e && e.code);
+      return Object.assign(base, { signedIn: false, code: e && e.code });
     }
   },
 
