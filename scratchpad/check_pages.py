@@ -335,8 +335,12 @@ for page, (call, dep) in WIRED.items():
 print("\n=== [3b] Trang nhiem vu: khong tu quyet phan thuong ===")
 me = rd("mission-earth.html")
 check("mission-earth.html nap js/sfx.js (am thanh dung chung)", 'src="js/sfx.js"' in me)
+# ⚠️ SOI BẢN ĐÃ BỎ CHÚ THÍCH. Từ 05/09/2026 trang này mang một khối chú thích
+#    dặn người sửa sau "đừng đổi thành thẻ <script src=js/firebase-auth.js>" —
+#    và phép kiểm cũ đọc thẳng HTML thô nên bắt luôn chính dòng dặn đó. Đây là
+#    lần thứ N dự án này đếm nhầm chữ trong ghi chú của chính mình.
 check("mission-earth.html KHONG nap firebase-auth.js (SDK 233 KB)",
-      'src="js/firebase-auth.js"' not in me)
+      'src="js/firebase-auth.js"' not in strip_comments(me))
 # Bảng luật ở AstroqSV/Services/Missions.cs — client chỉ gửi {mission, step}.
 # Bất kỳ con số thưởng nào lọt vào đây là dấu hiệu client tự tính lại.
 import re as _re
@@ -1058,9 +1062,58 @@ allowed = {"dashboard.html", "achievements.html", "profile.html", "landing-app.h
 for f in sorted(os.listdir(ROOT)):
     if not f.endswith(".html"):
         continue
-    if 'src="js/firebase-auth.js"' in rd(f):
+    # ⚠️ strip_comments: xem ghi chú cùng nội dung ở mục [3b]. Một trang ĐƯỢC
+    #    PHÉP viết tên file này trong chú thích mà không bị tính là nạp nó.
+    if 'src="js/firebase-auth.js"' in strip_comments(rd(f)):
         check(f"{f}: nap firebase-auth.js", f in allowed,
               "khong nen nap o day" if f not in allowed else "")
+
+# ══════════════════════════════════════════════════════════════
+print("\n=== [4b] Nut ROI TRANG cua 11 game vs LEAVE_IDS o js/game-shell.js ===")
+# ⚠️⚠️ VÌ SAO CÓ MỤC NÀY. `wireClaim()` ở `js/game-shell.js` nhận ra một cú bấm
+#    RỜI TRANG bằng cách tra id của nút trong bảng `LEAVE_IDS` ghim sẵn — vỏ
+#    không biết nút nào đi đâu (đích nằm trong closure của từng trang), nên nó
+#    chỉ có thể ghim TÊN. Bảng ghim thì lặng lẽ mục ruỗng: game thứ 12 thêm một
+#    nút rời trang tên khác là thẻ "Lưu tiến độ của con" **không bao giờ bật lên
+#    ở trang đó**, và không có gì hỏng để mà thấy — trẻ chỉ mất một lời mời.
+# ⚠️ Đối chiếu HAI CHIỀU: id quét được phải ⊆ bảng ghim (bắt nút mới), và bảng
+#    ghim không được chứa id KHÔNG trang nào dùng (bắt bảng ghim mục ruỗng sau
+#    một lượt dọn markup) — cùng kỷ luật `LEGACY_SRC` / `SIC_IDLE` đã dùng.
+# ⚠️ Quét trên bản ĐÃ BÓC CHÚ THÍCH: mọi phép kiểm dạng "đếm chuỗi trong file
+#    của chính mình" đều đã trả giá một lần vì đếm luôn chữ trong ghi chú.
+_shell = strip_comments(rd("js/game-shell.js"))
+_m = re.search(r"var\s+LEAVE_IDS\s*=\s*\{(.*?)\}", _shell, re.S)
+check("js/game-shell.js khai LEAVE_IDS", _m is not None)
+_pin = set(re.findall(r'"([a-z0-9-]+)"\s*:', _m.group(1))) if _m else set()
+check("LEAVE_IDS khai it nhat 4 id", len(_pin) >= 4, str(sorted(_pin)))
+
+# Nút rời trang: $("<id>").addEventListener("click", function(){ … location.href … })
+# ⚠️ `[^{}]*` KẸP PHÉP KHỚP TRONG ĐÚNG MỘT THÂN HÀM, và đó không phải cầu kỳ:
+#    bản đầu viết `[^{]*\{[^}]*` nên với `$("start-btn").addEventListener("click",
+#    startRound);` (handler là một THAM CHIẾU HÀM, không có ngoặc nhọn) nó nhảy
+#    qua luôn câu lệnh đó, bắt lấy dấu `{` của handler KẾ TIẾP rồi báo
+#    `start-btn`/`resume-btn` là nút rời trang — hai id đó chỉ bắt đầu lượt chơi
+#    và tạm dừng. Đòi `function(){` liền ngay sau `"click",` thì tham chiếu hàm
+#    không khớp gì cả, đúng như phải thế.
+_PAT = re.compile(
+    r'\$\("([a-z0-9-]+)"\)\.addEventListener\(\s*"click"\s*,\s*'
+    r'function\s*\([^)]*\)\s*\{[^{}]*location\.href')
+_games = sorted(f for f in os.listdir(ROOT)
+                if f.startswith("game-") and f.endswith(".html"))
+check("Tim thay 11 trang game", len(_games) == 11, str(len(_games)))
+
+_seen = {}
+for _g in _games:
+    for _id in _PAT.findall(strip_comments(rd(_g))):
+        _seen.setdefault(_id, []).append(_g)
+
+check("Quet ra it nhat 4 id roi trang", len(_seen) >= 4, str(sorted(_seen)))
+_thieu = sorted(set(_seen) - _pin)
+check("Moi nut roi trang deu co trong LEAVE_IDS", not _thieu,
+      "thieu: " + str(_thieu) if _thieu else "")
+_du = sorted(_pin - set(_seen))
+check("LEAVE_IDS khong ghim id khong trang nao dung", not _du,
+      "thua: " + str(_du) if _du else "")
 
 # ══════════════════════════════════════════════════════════════
 print("\n=== [5] Huy hieu: server khai vs js/badges.js co ten ===")
@@ -5239,21 +5292,50 @@ _par41   = rd("parent.html")
 _dash41  = rd("dashboard.html")
 
 # ── (a) Tai khoan ra doi ngay o /auth/register ──
-check("[41] /auth/register tao tai khoan Firebase voi emailVerified: false",
-      "ImportUserAsync(email, effName, pwdHash, pwdSalt," in _auth_1l
-      and "emailVerified: false)" in _auth_1l)
+# ⚠⚠ CAT LAY THAN HAM `CreateAccountAsync` ROI MOI DO. Tu 05/09/2026 khoi tao
+#    tai khoan la ham DUNG CHUNG cho `/auth/register` va `/auth/claim`, nen
+#    `ClaimEmailAsync` xuat hien nhieu lan trong file -- so thu tu tren CA FILE la
+#    so nham hai cho khac nhau. Va dung ghim TEN BIEN (`effName`/`newUid`): mot phep
+#    kiem khop ten bien se bao hong dung luc ma nguon duoc don dung cach.
+_mk = re.search(r"CreateAccountAsync\(\s*FirebaseService fb.*?\n    \}", _auth_cs, re.S)
+_mk_src = _mk.group(0) if _mk else ""
+_mk_1l  = re.sub(r"\s+", " ", _mk_src)
+check("[41] co ham dung chung CreateAccountAsync (doc duoc than ham)",
+      len(_mk_src) > 200, "%d ky tu" % len(_mk_src))
+# ⚠ Ca HAI duong vao phai di qua DUNG ham nay. Chep lai khoi tao tai khoan cho
+#    mot duong thu ba la hai ban se troi khoi nhau -- ma day la ma tao TAI KHOAN.
+_reg_i   = _auth_cs.find('MapPost("/register"')
+_clm_i   = _auth_cs.find('MapPost("/claim"')
+_reg_blk = _auth_cs[_reg_i:_clm_i] if 0 <= _reg_i < _clm_i else ""
+_clm_blk = _auth_cs[_clm_i:] if _clm_i >= 0 else ""
+check("[41] /auth/register va /auth/claim dung CHUNG mot ham tao tai khoan",
+      "CreateAccountAsync(fb, db, log" in _reg_blk
+      and "CreateAccountAsync(fb, db, log" in _clm_blk)
+# ⚠⚠ CAT RIENG TUNG LOI GOI ROI MOI HOI. Than ham co HAI cho mang chuoi
+#    `emailVerified: false` (fb.ImportUserAsync va db.CreateUserAsync). Hoi "co chuoi
+#    do trong ham khong" thi doi RIENG loi goi Firebase sang `true` van xanh -- phep
+#    thu pha hoai 05/09/2026 da chung minh dung ca do LOT. Ma cai gia la buc tuong
+#    xac minh mo lai ma KHONG co trieu chung nao ngoai mot con so dang ky thap.
+_fb_call = re.search(r"fb\.ImportUserAsync\([^;]*;", _mk_1l)
+_db_call = re.search(r"db\.CreateUserAsync\([^;]*;", _mk_1l)
+check("[41] fb.ImportUserAsync dat emailVerified: false",
+      _fb_call is not None and "emailVerified: false" in _fb_call.group(0),
+      _fb_call.group(0)[:90] if _fb_call else "khong tim thay loi goi")
+check("[41] db.CreateUserAsync ghi ho so voi emailVerified: false",
+      _db_call is not None and "emailVerified: false" in _db_call.group(0),
+      _db_call.group(0)[:90] if _db_call else "khong tim thay loi goi")
 # ⚠️ GIANH CHO EMAIL TRUOC KHI DUNG FIREBASE. Ghi co dieu kien cua DynamoDB bao dam hai
 #    request song song thi dung mot cai thang; de Firebase quyet thi ImportUsersAsync
 #    trung email se AM THAM GHI DE tai khoan da co.
-check("[41] /auth/register giu cho email TRUOC khi goi Firebase",
-      _auth_1l.find("if (!await db.ClaimEmailAsync(email))")
-      < _auth_1l.find("await fb.ImportUserAsync(email, effName"))
+check("[41] giu cho email TRUOC khi goi Firebase",
+      0 <= _mk_1l.find("db.ClaimEmailAsync(email)")
+      < _mk_1l.find("fb.ImportUserAsync("))
 # ⚠️ THU HOI DU CA HAI DAU khi tao that bai: bo lai ban giu cho email la khoa vinh vien
 #    dia chi do (khong ai dang ky duoc, cung khong co tai khoan nao de dang nhap); bo
 #    lai tai khoan Firebase mo coi thi te hon — no dang nhap duoc ma khong co ho so.
 check("[41] tao that bai thi thu hoi CA tai khoan Firebase VA cho giu email",
-      "fb.DeleteUserAsync(newUid)" in _auth_1l
-      and "db.ReleaseEmailAsync(email)" in _auth_1l)
+      re.search(r"fb\.DeleteUserAsync\(\w+\)", _mk_1l) is not None
+      and "db.ReleaseEmailAsync(email)" in _mk_1l)
 # ⚠️ `account` la truong client doc de biet co dang nhap duoc ngay khong; `pending` giu
 #    lai cho ban ghi cho KIEU CU. Hai truong nay TACH NGHIA tu 04/09/2026 — bo mot cai
 #    la client roi ve man cho kich hoat, tuc dung lai buc tuong.

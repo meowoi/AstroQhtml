@@ -24,6 +24,7 @@ sót một lời gọi ra ngoài, nó hỏng ngay chứ không lặng lẽ đi q
    UnicodeEncodeError ngay dòng tiêu đề (bài học đã ghi ở CLAUDE.md mục 6).
 """
 
+import re
 import sys
 
 BASE = "http://127.0.0.1:8123"
@@ -69,6 +70,21 @@ def run(pw, blocked):
     if blocked:
         for d in BLOCK:
             ctx.route("**://*%s/**" % d, lambda r: r.abort())
+
+    # KHONG PHAI LOI SAN PHAM: bo do chay o cong 8123, ma cong do CO Y khong
+    # nam trong ALLOWED_ORIGINS cua backend (day la cau hinh SAN XUAT — mo them
+    # mot origin that chi de lam xanh mot phep kiem la doi thu khong thuoc san
+    # xuat). Nen preflight bi CORS chan va TRINH DUYET TU ghi mot dong do
+    # `net::ERR_FAILED` — khong `catch` nao chan duoc.
+    # `login()` hoi `/auth/status` khi Firebase tu choi bang `invalid-credential`
+    # (them 29/08/2026), tuc dung duong ma probe nay di qua. Tra mot phan hoi
+    # co dinh thay vi chan: no vua sach console vua di qua dung nhanh code that.
+    # Cung cach da lam cho `/billing/catalog` (11/08) va `/crew` (16/08).
+    # Neo cuoi chuoi, KHONG dung glob `**/auth/status*` — bai hoc `**/crew*`
+    # khop ca `/crew.html` (16/08). Dang ky SAU khoi chan o tren: Playwright
+    # khop nguoc, luat hep phai dung sau luat rong (bai hoc 29/08/2026).
+    ctx.route(re.compile(r".*/auth/status(\?.*)?$"), lambda r: r.fulfill(
+        status=200, content_type="application/json", body='{"state":"none"}'))
 
     # ---------- explorer.html: cảnh 3D three.js ----------
     print("\n[1] explorer.html — canh 3D three.js")

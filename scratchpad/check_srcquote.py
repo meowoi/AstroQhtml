@@ -84,11 +84,34 @@ def page_text(url):
     #    mo duoc trang" — bao oan, va mot phep kiem hay bao oan thi som muon bi bo qua.
     #    ⚠️ Cung mot loi nay co O HAI FILE: da sua `check_quiz_bank.py` truoc, roi quen
     #       ban sao o day. Sua mot loi thi di tim het cac ban sao cua no.
-    _UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-           "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    req = urllib.request.Request(url, headers={"User-Agent": _UA, "Accept": "text/html"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        raw = r.read().decode("utf-8", "replace")
+    # ⚠️⚠️ KHONG GHIM MOT USER-AGENT — do 05/09/2026 thi KHONG CO chuoi nao
+    #    dung cho moi ten mien nguon, va HAI CHIEU DEU CO THAT CUNG LUC:
+    #      · exploratorium.edu : UA tron -> 403 · chuoi Chrome day du -> 200
+    #      · ai4k12.org       : UA tron -> 200 · chuoi Chrome day du -> 403
+    #    Ghi chu cu (23/08/2026) viet 'ai4k12 tra 403 voi bo tai tu dong nhung 200
+    #    voi UA Chrome day du' — NAY DA NGUOC LAI; trang doi bo loc bot, va mot ghi
+    #    chu noi sai ve mang con te hon khong co ghi chu. [Suy luan] 'Chrome/120' nay
+    #    da qua cu nen chinh no thanh dau hieu bot gia mao.
+    # ⚠️ Day KHONG phai noi long: dieu can bao dam (URL nguon con SONG) giu nguyen,
+    #    chi thoi ghim MOT cach goi. Bao hong khi va chi khi MOI cach deu that bai.
+    _UAS = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "curl/8.4.0",
+    )
+    raw = None
+    _err = None
+    for _ua in _UAS:
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": _ua, "Accept": "text/html"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read().decode("utf-8", "replace")
+            break
+        except Exception as e:  # noqa: BLE001
+            _err = e
+    if raw is None:
+        raise _err
     # ⚠️ Boc script/style TRUOC — day la ca "375em" da lam toi doc sai mot lan.
     raw = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", raw)
     raw = re.sub(r"<[^>]+>", " ", raw)

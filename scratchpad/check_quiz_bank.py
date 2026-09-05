@@ -334,8 +334,15 @@ def main():
             #    day du -> 200. Trang van song, chi la no chan bot theo User-Agent. De chuoi
             #    ngan thi phep kiem bao mot URL SONG la CHET — va mot phep kiem hay bao oan
             #    thi som muon bi bo qua, do moi la cai gia that.
-            UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            # ⚠️⚠️ KHONG GHIM MOT USER-AGENT — do 05/09/2026 thi KHONG CO chuoi nao
+            #    dung cho moi ten mien nguon, va HAI CHIEU DEU CO THAT CUNG LUC:
+            #      · exploratorium.edu : UA tron -> 403 · chuoi Chrome day du -> 200
+            #      · ai4k12.org       : UA tron -> 200 · chuoi Chrome day du -> 403
+            #    Ghi chu cu (06/08 va 23/08/2026) chi ke chieu THU NHAT, va tin no thi
+            #    bo do bao 4 URL SONG la CHET. Bao hong khi va chi khi MOI cach deu hong.
+            UAS = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                   "curl/8.4.0")
             # ⚠️ CACHE THEO NGAY (them 23/08/2026): 82 URL x mot lan goi mang moi luot
             #    la phan cham nhat cua ca bo do (~6 phut). Bon chot de cache khong lam
             #    mat rang: chi nho URL TRA 200 · het NGAY la kiem lai · `--fresh` bo
@@ -348,14 +355,19 @@ def main():
                     _tu_cache += 1
                     check(f"URL tra 200: {url}", True, "cache trong ngay")
                     continue
+                # ⚠️⚠️ THU NHIEU USER-AGENT — xem khoi ghi chu o `UAS` phia tren.
+                #    Ghim mot chuoi la chac chan bao oan MOT trong hai ben.
                 code = 0
-                try:
-                    req = urllib.request.Request(url, headers={"User-Agent": UA,
-                                                               "Accept": "text/html"})
-                    with urllib.request.urlopen(req, timeout=25) as r:
-                        code = r.status
-                except Exception as e:  # noqa: BLE001
-                    code = f"loi: {e}"
+                for _ua in UAS:
+                    try:
+                        req = urllib.request.Request(
+                            url, headers={"User-Agent": _ua, "Accept": "text/html"})
+                        with urllib.request.urlopen(req, timeout=25) as r:
+                            code = r.status
+                        if code == 200:
+                            break
+                    except Exception as e:  # noqa: BLE001
+                        code = f"loi: {e}"
                 check(f"URL tra 200: {url}", code == 200, f"{code}")
                 if code == 200:
                     _moi200.append(url)

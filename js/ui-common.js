@@ -205,7 +205,7 @@
         lần commit chứa nó thì chưa tồn tại lúc đóng dấu, nên mọi cách nhét SHA
         vào đây đều lệch một commit. Ngày + số thứ tự trong ngày thì luôn đúng,
         và đủ để đối chiếu với lịch sử git. */
-  var VERSION = "2026.08.29.1";   /* stamp_version.py sửa dòng này */
+  var VERSION = "2026.09.05.1";   /* stamp_version.py sửa dòng này */
 
   var VER_LBL = { vi: "Phiên bản", en: "Version" };
 

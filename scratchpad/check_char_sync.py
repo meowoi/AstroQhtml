@@ -121,11 +121,30 @@ def static_tests():
     # Lo hong [B]: khong await thi nguoi goi chuyen trang truoc khi loi goi ve.
     m = re.search(r"async login\(.*?\n  \},", fa_c, re.S)
     body = m.group(0) if m else ""
-    chk("login() co AWAIT hydrateProfile (khong bo chay nen)",
-        bool(re.search(r"await\s+hydrateProfile\(", body)))
+
+    # ⚠️⚠️ ĐI THEO MỘT CẤP `await`, KHÔNG GHIM HÌNH DẠNG CODE. Bản cũ đòi
+    #    `await hydrateProfile(` nằm THẲNG trong thân `login()`; ngày 05/09/2026 nó
+    #    báo hỏng 2 phép kiểm trong khi sản phẩm hoàn toàn đúng — `syncProfile` và
+    #    `await hydrateProfile` đã tách ra hàm `afterSignIn(api, user)` mà `login()`
+    #    await, tức HÀNH VI KHÔNG ĐỔI, chỉ ĐỔI CHỖ. (Chứng minh nó là lỗi CÓ SẴN chứ
+    #    không phải hồi quy: thân `login()` cắt ra từ HEAD và từ bản hiện tại dài y
+    #    hệt 993 ký tự và cùng thiếu chuỗi đó.)
+    # ⚠️ KHÔNG nới lỏng: điều phải bảo đảm — *đường đăng nhập CHỜ hydrateProfile xong
+    #    rồi mới trả lời* — giữ nguyên; chỉ thôi đòi nó nằm ở đúng một chỗ. Người gọi
+    #    chuyển trang NGAY sau khi `login()` trả về, nên bỏ chạy nền là `unload` cắt
+    #    giữa đường và lỗi "đăng nhập lại phải chọn lại nhân vật" quay lại.
+    def _than(ten):
+        """Thân một hàm khai ở cấp 0 (`async function x(...)` / `function x(...)`)."""
+        mm = re.search(r"(?:async\s+)?function\s+" + re.escape(ten) + r"\s*\(.*?\n\}",
+                       fa_c, re.S)
+        return mm.group(0) if mm else ""
+
+    _ung = [body] + [_than(t) for t in
+                     set(re.findall(r"await\s+([A-Za-z_$][\w$]*)\s*\(", body))]
+    _cho = next((b for b in _ung if re.search(r"await\s+hydrateProfile\(", b)), "")
+    chk("duong dang nhap CHO hydrateProfile xong (khong bo chay nen)", bool(_cho))
     chk("hydrateProfile goi SAU syncProfile",
-        body.find("syncProfile(") >= 0
-        and body.find("syncProfile(") < body.find("hydrateProfile("))
+        bool(_cho) and 0 <= _cho.find("syncProfile(") < _cho.find("hydrateProfile("))
     chk("hydrateProfile co HAN CHO (fail-open, khong chan cua vao app)",
         "HYDRATE_MS" in fa_c and "Promise.race" in fa_c)
     chk("hydrateProfile ghi character vao cache", "next.character" in fa_c)
