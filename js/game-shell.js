@@ -399,9 +399,102 @@
     if (el) el.classList.add("show");
   }
 
+  /* ═════ THẺ "LƯU TIẾN ĐỘ CỦA CON" Ở KHU HUẤN LUYỆN (việc 3, 05/09/2026) ═════
+     Trang game **cố ý không nạp** SDK Firebase (để màn chơi mượt), nên mọi lượt
+     chơi của một đứa trẻ chưa đăng nhập rơi vào `astroq-progress-queue` — đúng
+     cái hàng chờ mà `js/guest-claim.js` sinh ra để cứu. Trước lượt này thẻ chỉ
+     móc ở vỏ màn chơi NHIỆM VỤ, nên trẻ vào thẳng Khu Huấn Luyện chơi rồi bỏ đi
+     thì **không có gì mời nó lưu**.
+
+     ⚠️⚠️ MÓC Ở VỎ, KHÔNG CHÉP VÀO 11 GAME. `js/game-shell.js` nạp ở cả 11 trang
+        game; `js/game-run.js` thì chỉ 5 game lớp quyết định dùng (6 game canvas
+        cũ cố ý chưa chuyển sang), nên nó KHÔNG phủ đủ. Game thứ 12 tự có.
+
+     ⚠️⚠️ CHẶN Ở ĐƯỜNG RỜI TRANG, KHÔNG BẬT LÚC KẾT LƯỢT — quyết định chính của
+        cả lượt. Bảng kết quả mang phần thưởng (điểm, sao, kỷ lục, số tt vừa
+        nhận); phủ một hộp hỏi email lên đó là **cướp mất đúng khoảnh khắc trẻ
+        vừa làm được một việc**. Còn "Chơi lại" thì tuyệt đối không chặn — trẻ
+        đang muốn chơi tiếp. Lúc nó bấm một đường RỜI TRANG là lúc nó đã tự
+        quyết định dừng: một chỗ yên tĩnh, không cắt ngang gì.
+
+     ⚠️⚠️ ĐỪNG VIẾT "ĐÂY LÀ KHOẢNH KHẮC CUỐI CÙNG CÒN CỨU ĐƯỢC" — bản nháp đầu
+        của khối này ghi đúng câu đó và nó **SAI**: hàng chờ nằm trong
+        `localStorage`, nên rời sang `games.html` hay `dashboard.html` KHÔNG làm
+        mất gì. Thứ thật sự làm mất là ① trẻ đóng tab rồi không quay lại, hoặc
+        ② hàng chờ vượt 40 việc — `enqueue()` khi đó **vứt việc CŨ NHẤT**. Đây là
+        chỗ tốt nhất để HỎI, không phải chỗ cuối cùng để cứu.
+
+     ⚠️ KHÔNG cứu được ca trẻ đóng thẳng tab (`beforeunload` không mở được hộp
+        thoại), và ca rời trang bằng phím Escape ở game lớp quyết định
+        (`location.href` thẳng trong handler bàn phím). Ghi ra để không ai tưởng
+        chỗ này phủ kín. */
+
+  /* ⚠️⚠️ CẢ 11 TRANG GAME CÓ **0 THẺ `<a href>`** — mọi đường rời trang là một
+     `<button>` gọi `location.href` trong closure của trang. Đo được trước khi
+     viết; bản nháp đầu bắt `a[href]` nên nó **bắt trượt hoàn toàn**, và không có
+     gì báo lỗi cả. Sáu id dưới đây trùng khớp ở CẢ 11 game — `check_pages` mục
+     [4b] đối chiếu hai chiều, nên game thứ 12 thêm một nút rời trang tên khác là
+     nó báo ngay thay vì lặng lẽ bỏ sót. */
+  var LEAVE_IDS = { "back": 1, "hub-btn": 1, "home-btn": 1,
+                    "need-hub": 1, "need-quiz": 1, "pause-hub": 1 };
+
+  function claimSteps() {
+    var G = global.AstroQGuestClaim, P = global.AstroQProgress;
+    if (!G || !G.due || !G.open) return 0;
+    if (!P || !P.queuedGames) return 0;
+    var n = P.queuedGames();
+    return G.due(n) ? n : 0;
+  }
+
+  function claimOpen(n) {
+    return global.AstroQGuestClaim.open({
+      steps: n, kind: "game",
+      lang: (global.AstroQ && AstroQ.getLang && AstroQ.getLang()) || "vi"
+    })["catch"](function () {});   /* thẻ hỏng thì nuốt: nó là lời mời, không phải chốt chặn */
+  }
+
+  /* Đang phát lại cú bấm của chính mình — cho nó đi qua, không hỏi lần hai. */
+  var replaying = false;
+
+  function wireClaim() {
+    doc.addEventListener("click", function (ev) {
+      if (replaying) return;
+      /* ⚠️ TÔN TRỌNG MỌI CÁCH MỞ CỦA TRÌNH DUYỆT — Ctrl/Cmd-click, Shift-click,
+         chuột giữa. `preventDefault` bừa là lấy đi một hành vi người dùng không
+         hiểu vì sao mất (bài học `js/index-gate.js`, 01/08/2026). */
+      if (ev.defaultPrevented || ev.button !== 0) return;
+      if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      var t = ev.target;
+      var b = t && t.closest ? t.closest("button[id]") : null;
+      if (!b || !LEAVE_IDS[b.id]) return;
+      /* ⚠️ `playing()` TRẢ TRUE KHI KHÔNG LỚP PHỦ NÀO ĐANG MỞ, tức đang giữa lượt
+         chơi. Không cắt ngang ở đó — lượt đó đã trừ phí vào cửa rồi. */
+      if (playing()) return;
+      var n = claimSteps();
+      if (!n) return;
+
+      /* ⚠️⚠️ CHẶN Ở PHA **CAPTURE** RỒI PHÁT LẠI CÚ BẤM, thay vì tự điều hướng.
+         Vỏ này KHÔNG biết nút nào đi đâu — đích nằm trong closure của từng trang.
+         Ghim một bảng "id → trang đích" ở đây là dựng bản sao thứ hai của một sự
+         thật đã có, và nó sẽ nói sai vào đúng ngày ai đó đổi đích ở trang. Phát
+         lại thì chính trang lo việc đi đâu. */
+      ev.preventDefault();
+      ev.stopPropagation();
+      claimOpen(n).then(function () {
+        replaying = true;
+        try { b.click(); } finally {
+          /* Nhả cờ sau một nhịp: nếu vì lý do nào đó cú điều hướng không xảy ra
+             thì trang không bị kẹt ở trạng thái "bỏ qua mọi lời hỏi". */
+          global.setTimeout(function () { replaying = false; }, 1200);
+        }
+      });
+    }, true);
+  }
+
   /* ── Nối dây ───────────────────────────────────────────────────────── */
 
   function boot() {
+    wireClaim();
     mountSide();
     mountCorners();
     sizeField();

@@ -37,6 +37,7 @@
 <link rel="stylesheet" href="css/fonts.css" />
 <link rel="stylesheet" href="css/common.css" />
 <link rel="stylesheet" href="css/game-shell.css" />
+<link rel="stylesheet" href="css/guest-claim.css" />
 <link rel="stylesheet" href="css/decision-game.css" />
 <link rel="stylesheet" href="css/game-comms.css" />
 <script src="js/ui-common.js"></script>
@@ -44,6 +45,15 @@
 <!-- Bắt nhãn chiến dịch + đếm một lượt đến. CHỈ gửi request khi link có nhãn
      (hoặc có fbclid). Xem js/utm.js và js/utm-beacon.js. -->
 <script type="module" defer src="js/utm-beacon.js"></script>
+<!-- Thẻ "Lưu tiến độ của con" của ĐƯỜNG CHƠI THỬ (việc 3, 05/09/2026).
+     Trang game CỐ Ý không nạp SDK Firebase (màn chơi phải mượt), nên mọi lượt
+     chơi của một đứa trẻ chưa đăng nhập nằm trong `astroq-progress-queue`.
+     `js/game-shell.js` là chỗ móc — nó nạp ở CẢ 11 game nên không phải chép
+     dây nối này 11 lần; xem `wireClaim()` ở file đó.
+     ⚠️ SDK Firebase chỉ tải bằng `import()` ĐỘNG khi trẻ thật sự bấm Lưu, nên
+        nạp file này KHÔNG kéo theo 64 KB vào lượt mở trang. Đừng đổi thành
+        một thẻ script trỏ thẳng vào firebase-auth.js. -->
+<script src="js/guest-claim.js"></script>
 <script src="js/game-shell.js"></script>
 <script src="js/game-run.js"></script>
 </head>
