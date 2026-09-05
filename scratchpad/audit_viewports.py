@@ -90,6 +90,7 @@ PAGES = [
     # ARCADE-11 — lop QUYET DINH, nhung khac bon game kia: san co mot LUOI VUONG
     # do bang JS (`fitBoard`), nen day la trang de bi TRAN hoac bi CAT mat hang cuoi.
     "game-route.html",
+    "game-classify.html",
     "explorer.html", "mission-earth.html", "mission-orbit.html",
 ]
 

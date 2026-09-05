@@ -108,6 +108,9 @@ ck("khong game nao thuoc 2 chuong trinh", len(games) == len(set(games)), str(gam
 print("\n[2] Tai khoan moi — chua co cap nao")
 mail = f"trn-{int(time.time())}@simulator.amazonses.com"
 uid, token, _pw = _fbtest.make_verified(mail)
+# ⚠️ Nhom `/me` doi CO HO SO tu 05/09/2026 (`AccountGate.RequireProfile`).
+#    Thieu dong nay thi moi loi goi `/me/*` tra 403 — doc ra y nhu token hong.
+_fbtest.seed_profile(uid, mail)
 print(f"       uid={uid}")
 
 try:

@@ -107,6 +107,31 @@ def make_verified(email, pw=None):
     return uid, token, pw
 
 
+def seed_profile(uid, email, name="Bin", table="astroq-main", created=None):
+    """Gieo ban ghi PROFILE cho `uid`. Tra True neu ghi duoc.
+
+    ⚠️⚠️ TU 05/09/2026 NHOM `/me` DOI **CO HO SO**, khong con doi `email_verified`
+       (`AccountGate.RequireProfile`, doi cung dot bo buc tuong xac minh email o
+       phien dau). Nen mot token do `make_verified` mint ra van bi **403** neu tai
+       khoan chua co ho so — va 403 do doc ra y nhu "token hong", de di sua nham
+       cho. Bo do nao cham `/me/*` thi goi ham nay ngay sau `make_verified`.
+
+    ⚠️ CO Y KHONG gieo ngam trong `make_verified`: `test_profile` co phep kiem
+       *chua co ho so thi `/me/profile` tra 404 `no-profile` va KHONG tao ban ghi
+       nao* — gieo ngam la giet dung phep kiem do.
+    """
+    import datetime as _dt
+    c = created or (_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(days=21))
+    item = {"PK": {"S": "USER#" + uid}, "SK": {"S": "PROFILE"},
+            "uid": {"S": uid}, "email": {"S": email}, "name": {"S": name},
+            "createdAt": {"S": c.strftime("%Y-%m-%dT%H:%M:%S.%f0Z")}}
+    r = subprocess.run(["aws", "dynamodb", "put-item", "--table-name", table,
+                        "--item", json.dumps(item)],
+                       capture_output=True, text=True, encoding="utf-8",
+                       errors="replace")
+    return r.returncode == 0
+
+
 def reset_quiz_day(uid, table="astroq-main", hours=48):
     """Xoa dong nhat ky quiz gan day cua `uid`, tra ve danh sach SK da xoa.
 

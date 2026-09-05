@@ -77,7 +77,7 @@ def open_game(br, page, tt=60, w=1500, h=950, lang="vi"):
 GAMES = ["game-dodge.html", "game-defender.html", "game-constellation.html",
          "game-racer.html", "game-maze.html", "game-catch.html",
          "game-survival.html", "game-comms.html", "game-recycle.html",
-         "game-units.html", "game-route.html"]
+         "game-units.html", "game-route.html", "game-classify.html"]
 
 
 def main():

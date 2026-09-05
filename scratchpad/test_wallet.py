@@ -187,6 +187,8 @@ def main():
     # ⚠️ TOKEN ĐÃ XÁC MINH EMAIL. /me/* nay đòi email_verified=true (chặn tự-đăng-ký);
     #    token từ signUp trơn mang email_verified=false nên sẽ 403. Xem scratchpad/_fbtest.py.
     uid, token, _pw = _fbtest.make_verified(email)
+    # ⚠️ Nhom `/me` doi CO HO SO tu 05/09/2026 (`AccountGate.RequireProfile`).
+    _fbtest.seed_profile(uid, email)
     check("Co idToken + uid", bool(uid and token), f"uid={uid}")
 
     try:

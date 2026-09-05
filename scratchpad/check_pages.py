@@ -1100,7 +1100,16 @@ _PAT = re.compile(
     r'function\s*\([^)]*\)\s*\{[^{}]*location\.href')
 _games = sorted(f for f in os.listdir(ROOT)
                 if f.startswith("game-") and f.endswith(".html"))
-check("Tim thay 11 trang game", len(_games) == 11, str(len(_games)))
+# ⚠️ ĐỪNG GÁN CỨNG SỐ TRANG GAME. Bản cũ viết `len(_games) == 11`, nên thêm
+#    ARCADE-12 là nó báo hỏng đúng lúc sản phẩm làm đúng — cùng anti-pattern đã
+#    trả giá 6 lần trong dự án. Nay hỏi ĐIỀU MUỐN BIẾT và siết thêm: tập file
+#    `game-*.html` trên đĩa phải TRÙNG KHỚP tập `file:` khai trong mảng GAMES ở
+#    games.html. Nhờ vậy nó bắt được cả hai chiều — một trang game mồ côi không
+#    ai vào được, và một thẻ khai đích là trang không tồn tại (trẻ bấm ra 404).
+_hub_files = set(re.findall(r'file:"(game-[a-z-]+\.html)"', rd("games.html")))
+check("moi trang game deu duoc games.html khai (va nguoc lai)",
+      set(_games) == _hub_files,
+      f"dia={sorted(_games)} hub={sorted(_hub_files)}")
 
 _seen = {}
 for _g in _games:

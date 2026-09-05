@@ -136,11 +136,14 @@ def main():
     try:
         print("\n[3] Chua co ho so")
         st, d = call("GET", "/me/profile", token=token)
-        check("GET /me/profile -> 404 no-profile",
-              st == 404 and d.get("code") == "no-profile", f"status={st} data={d}")
+        # ⚠️ 403 TU BO LOC CAP NHOM (`AccountGate.RequireProfile`, 05/09/2026) hoac
+        #    404 tu nhanh trong than endpoint — deu la cau tra loi DUNG. Thu phai
+        #    bao dam la: bi TU CHOI, dung ma `no-profile`, va khong tao ban ghi nao.
+        check("GET /me/profile bi tu choi voi ma no-profile",
+              st in (403, 404) and d.get("code") == "no-profile", f"status={st} data={d}")
         st, d = call("PUT", "/me/profile", token=token, body={"name": "X"})
-        check("PUT /me/profile -> 404 no-profile",
-              st == 404 and d.get("code") == "no-profile", f"status={st} data={d}")
+        check("PUT /me/profile bi tu choi voi ma no-profile",
+              st in (403, 404) and d.get("code") == "no-profile", f"status={st} data={d}")
         check("Khong tao ra ban ghi nao", len(rows(uid)) == 0)
 
         made, err = put_profile(uid, email)

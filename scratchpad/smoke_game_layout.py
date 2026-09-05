@@ -41,7 +41,8 @@ GAMES = [("game-dodge.html", 1.6), ("game-defender.html", 1.0),
          # 6x6 chi con 36px (duoi moc 48px). San hep lai mot chut nhung CAO hon thi
          # o len ~49px. Ti le man rong GIU nguyen 2.05 (o do san chia hai cot).
          # Ly do day du + so do ghi o dau `css/game-route.css`.
-         ("game-route.html", (2.05, 0.62))]
+         ("game-route.html", (2.05, 0.62)),
+         ("game-classify.html", (2.05, 0.72))]
 
 ok_n = bad_n = 0
 

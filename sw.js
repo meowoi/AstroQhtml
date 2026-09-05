@@ -7,7 +7,7 @@
       `vendor/<gói>/<phiên-bản>/` là cache-trước, vì đường dẫn của chúng BẤT BIẾN
       nên không dựng nổi cảnh lệch phiên bản mà ① cấm. ⛔ Đừng nới `FAST`.
    ⚠️ Xoá file này khỏi repo = trình duyệt tự gỡ đăng ký (công tắc tắt). */
-var VERSION = "2026.09.05.1";
+var VERSION = "2026.09.06.1";
 var CACHE = "astroq-" + VERSION;
 var OFFLINE = "offline.html";
 var SHELL = [
